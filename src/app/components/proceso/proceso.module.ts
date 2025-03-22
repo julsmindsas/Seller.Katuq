@@ -1,0 +1,30 @@
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SharedModule } from '../../../app/shared/shared.module';
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+import { ProcesoRoutingModule } from './proceso-routing.module';
+import { GenerosComponent } from './generos/generos.component';
+import {TabViewModule} from 'primeng/tabview';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { CrearGenerosComponent } from './generos/crear-generos/crear-generos.component';
+import { OcasionesComponent } from './ocasiones/ocasiones.component';
+import { CrearOcasionesComponent } from './ocasiones/crear-ocasiones/crear-ocasiones.component';
+import { VariablesComponent } from './variables/variables.component';
+import { CrearVariablesComponent } from './variables/crear-variables/crear-variables.component';
+import { TableModule } from 'primeng/table';
+
+
+@NgModule({
+  imports: [
+    NgSelectModule,
+    CommonModule,
+    SharedModule,
+    ProcesoRoutingModule,
+    NgxDatatableModule,
+    TabViewModule,
+    TableModule
+
+  ],
+  declarations: [GenerosComponent, CrearGenerosComponent, OcasionesComponent, CrearOcasionesComponent, VariablesComponent, CrearVariablesComponent]
+})
+export class ProcesoModule { }

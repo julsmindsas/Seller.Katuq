@@ -1,0 +1,18 @@
+<!-- Se utiliza p-steps de PrimeNG para la barra de navegación -->
+<p-steps [model]="items" [(activeIndex)]="activeIndex" styleClass="wizard-steps" (onChange)="onStepChange($event)"></p-steps>
+
+<!-- Nuevo wrapper con soporte a gestos en móviles -->
+<div class="wizard-content" tabindex="0" 
+     (keydown.enter)="next()"
+     (swipeleft)="next()"
+     (swiperight)="prev()">
+  <ng-container *ngIf="steps && steps.toArray().length > 0">
+    <ng-container *ngTemplateOutlet="steps.toArray()[activeIndex].template"></ng-container>
+  </ng-container>
+</div>
+
+<div class="wizard-buttons">
+  <button type="button" (click)="prev()" [disabled]="activeIndex === 0">Anterior</button>
+  <button type="button" (click)="next()" *ngIf="activeIndex < stepsArray.length - 1">Siguiente</button>
+  <button type="button" (click)="finalizar()" *ngIf="activeIndex === stepsArray.length - 1">Finalizar</button>
+</div>

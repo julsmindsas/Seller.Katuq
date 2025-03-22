@@ -1,0 +1,1410 @@
+<app-breadcrumb [title]="edit ? 'Editar Producto':	'Crear Producto'" [items]="['Maestros/Productos']"
+	[active_item]="'Crear Producto'">
+</app-breadcrumb>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="card">
+				<!-- <form cForm [formGroup]="formGeneral"> -->
+
+				<div class="card-body">
+					<p-tabView [scrollable]="true">
+						<p-tabPanel header="K.A.I">
+							<form [formGroup]="kaiForm">
+								<div class="container mt-4">
+									<div class="row mb-3">
+										<div class="col-12">
+											<label class="form-label" for="validationCustom01">
+												Prompt para llenar el producto con datos sugeridos (procura ser lo mas
+												detallado posible) <span class="text-danger">*</span>
+
+											</label>
+											<input formControlName="tituloKai" class="form-control" id="prompt"
+												type="text" placeholder="Ingresa tu título" required />
+											<br />
+											<label *ngIf="kaiForm.value.isAnalizeImageForPrompt == true">Imagen para
+												analizar</label>
+											<input *ngIf="kaiForm.value.isAnalizeImageForPrompt == true" type="file"
+												class="form-control-file"
+												(change)="fileChangeEventForKAI($event,'KAI') " id="imagenPrincipal">
+										</div>
+									</div>
+
+									<div class="row mb-3">
+										<div class="col-12">
+											<textarea formControlName="textoBase" class="form-control" id="prompt"
+												rows="4" placeholder="Ingresa tu texto base" required maxlength="200">
+									  </textarea>
+										</div>
+									</div>
+									<div class="row mb-3">
+										<app-katuqintelligence [titleInput]="'Llenar datos a partir del prompt'"
+											[katuqIntelligencePrompt]="getKatuqPrompt()"
+											[textToSwalHeader]="'Por favor espera mientras generamos la información del producto'"
+											[textToQuiestionSwal]="'¿Desea llenar información del pedido a partir de este prompt?'"
+											(katuqIntelligenceResponse)="katuqIntelligeceResponse($event)"
+											[photoToAnalize]="kaiForm.value.photoToAnalize"
+											[isAnalizeImageForPrompt]="kaiForm.value.isAnalizeImageForPrompt"
+											[isGenerateImage]="kaiForm.value.isGenerateImage" [buttonStyle]="'button'">
+										</app-katuqintelligence>
+									</div>
+								</div>
+							</form>
+						</p-tabPanel>
+						<p-tabPanel header="Datos básicos">
+							<form [formGroup]="crearProducto">
+								<div class="row">
+									<h5>Datos básicos</h5>
+								</div>
+								<div class="row">
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Título<span
+												class="redasteris">*</span></label>
+										<textarea formControlName="titulo" class="form-control" id="Nombre" type="text"
+											placeholder="Nombre" required=""> </textarea>
+
+										<div *ngIf="crearProducto.controls['titulo'].invalid && crearProducto.controls['titulo'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Fecha Inicial</label>
+										<input formControlName="fechaInicial" class="form-control"
+											id="validationCustom01" type="date" placeholder="Descripcion" />
+
+										<!-- <div *ngIf="crearProducto.controls['fechaInicial'].invalid && crearProducto.controls['fechaInicial'].touched"
+											class="error-message">
+											Campo requerido
+										</div> -->
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Fecha final</label>
+										<input formControlName="fechaFinal" class="form-control" id="validationCustom01"
+											type="date" placeholder="Descripcion" />
+										<!-- <div *ngIf="crearProducto.controls['fechaFinal'].invalid && crearProducto.controls['fechaFinal'].touched"
+											class="error-message">
+											Campo requerido
+										</div> -->
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Características
+											Adicionales <span class="redasteris">*</span></label>
+										<textarea formControlName="caracAdicionales" class="form-control"
+											id="validationCustom01" type="text" placeholder="Caracteristicas"
+											required=""> </textarea>
+										<div *ngIf="crearProducto.controls['caracAdicionales'].invalid && crearProducto.controls['caracAdicionales'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+
+								</div>
+								<!-- codigo viejo -->
+								<!-- <div class="row">
+									<div class="col-md-12 mb-3">
+										
+										<label class="form-label" for="validationCustom01">Descripción y
+											contenido<span class="redasteris">*</span></label>
+										<ckeditor formControlName="descripcion" [editor]="ClassicEditor"
+											data="<p>Descripcion</p>"></ckeditor>
+										<div *ngIf="crearProducto.controls['descripcion'].invalid && crearProducto.controls['descripcion'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+								</div> -->
+
+								<div class="row">
+									<div class="col-md-12 mb-3">
+										<div class="row">
+											<div class="col-md-3">
+												<label class="form-label" for="validationCustom01">
+													Descripción y contenido<span class="redasteris">*</span>
+												</label>
+											</div>
+
+											<div class="col-md-7 text-end">
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-md-12">
+												<ckeditor formControlName="descripcion" [editor]="ClassicEditor"
+													data="<p>Descripcion</p>"></ckeditor>
+												<div *ngIf="crearProducto.controls['descripcion'].invalid && crearProducto.controls['descripcion'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+
+
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Garantías propias del
+											producto><span class="redasteris">*</span></label>
+										<textarea formControlName="garantiasProducto" class="form-control"
+											id="validationCustom01" type="text" placeholder="Garantias"
+											required=""></textarea>
+										<div *ngIf="crearProducto.controls['garantiasProducto'].invalid && crearProducto.controls['garantiasProducto'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label"
+											for="validationCustom01">Condiciones/Restricciones<span
+												class="redasteris">*</span></label>
+										<textarea formControlName="restriccionesProducto" class="form-control"
+											id="Nombre" type="text" placeholder="Condiciones" required=""> </textarea>
+										<div *ngIf="crearProducto.controls['restriccionesProducto'].invalid && crearProducto.controls['restriccionesProducto'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Como debe cuidarse /
+											consumirse<span class="redasteris">*</span></label>
+										<textarea formControlName="cuidadoConsumo" class="form-control"
+											id="validationCustom01" type="text" placeholder="Cuidado"
+											required=""></textarea>
+										<div *ngIf="crearProducto.controls['cuidadoConsumo'].invalid && crearProducto.controls['cuidadoConsumo'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+								</div>
+							</form>
+						</p-tabPanel>
+						<!-- *ngIf="edit != null" -->
+						<p-tabPanel header="Imágenes">
+							<!-- *ngIf="edit != null" es provisional-->
+							<div class="col-sm-12 mb-3">
+
+								<label class="form-label" for="validationCustom01">Imágenes y videos
+									<strong>(Aquí puedes subir imágenes y videos)</strong></label>
+								<div class="form-group">
+									<label class="form-label" id="lblImagenPrincipal" for="imagenPrincipal">Imagen
+										Principal:</label>
+									<input type="file" class="form-control-file"
+										(change)="fileChangeEvent($event,'principal') " id="imagenPrincipal" multiple>
+
+									<label class="form-label" id="lblimagenSecundaria" for="imagenSecundaria">Imágenes
+										Secundarias:</label>
+
+									<input type="file" class="form-control-file" id="imagenSecundaria"
+										(change)="fileChangeEvent($event,'secundaria')">
+								</div>
+								<div class="form-group">
+									<label>{{'Images to save:' | translate}}</label>
+									<!-- <div class="row"> -->
+									<div class="row">
+										<!-- <div class="col-md-2 item" *ngFor="let img of carrouselImg; let i = index"> -->
+										<div class="col-md-2 item"
+											*ngFor="let img of crearProducto.value.imagenesPrincipales; let i = index">
+											<div class="card" style="width: 10rem;">
+												<img src="{{img.urls}}" class="card-img-top" alt="Image"
+													style="width: 100%; height: auto;">
+												<button class="btn btn-danger btn-sm" (click)="deleteImg(img?.path,i)">
+													Eliminar
+												</button>
+
+											</div>
+										</div>
+									</div>
+									<!-- </div> -->
+								</div>
+							</div>
+						</p-tabPanel>
+						<p-tabPanel header="Precio">
+							<form [formGroup]="precio">
+								<div class="row">
+									<h4>
+										Precio Unitario individual
+									</h4>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Precio unitario (sin
+											IVA)<span class="redasteris">*</span></label>
+										<input formControlName="precioUnitarioSinIva" class="form-control" id="Nombre"
+											type="number" placeholder="$" required="" />
+										<div *ngIf="precio.controls['precioUnitarioSinIva'].invalid && precio.controls['precioUnitarioSinIva'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Porcentaje Iva<span
+												class="redasteris">*</span></label>
+										<select formControlName="precioUnitarioIva" required class="form-control digits"
+											name="" id="">
+											<option value="19">19%</option>
+											<option value="8">8%</option>
+											<option value="5">5%</option>
+											<option value="0" selected>0%</option>
+										</select>
+										<div *ngIf="precio.controls['precioUnitarioIva'].invalid && precio.controls['precioUnitarioIva'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+									<div class="col-md-3 mb-3" style="text-align: right">
+										<label class="form-label" for="validationCustom01">Valor IVA</label><br />
+										<div class="currencyDivInfo currencyDivInfoTax">
+											<strong>{{precio.controls['valorIva'].value |
+												currency:'USD':'symbol'}}</strong>
+										</div>
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Precio unitario Total(con
+											IVA)</label>
+										<div class="currencyDivInfo currencyDivInfoNumber">
+											<strong>{{precio.controls['precioUnitarioConIva'].value |
+												currency:'USD':'symbol'}}</strong>
+										</div>
+										<div *ngIf="precio.controls['precioUnitarioConIva'].invalid && precio.controls['precioUnitarioConIva'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+								</div>
+								<p class="notaprecio"><strong>Nota:</strong> Este precio es por unidad; Si la
+									cantidad no llega hasta donde empieza la cantidad inicial de precio por volumen,
+									siempre será el mismo precio. Y si no hay precios por volumen configurados
+									siempre será ese el precio base.</p>
+								<br />
+								<h4>
+									Precio Por Rango / Volumen<button class="btn btn-primary" style="margin-left: 10px;"
+										(click)="addRow()"> Añadir precio por
+										Volumen +</button>
+								</h4>
+								<div class="row">
+									<div class="col-sm 12">
+									</div>
+								</div>
+								<div class="table-responsive">
+
+									<table class="table">
+										<thead class="thead-light">
+											<tr>
+												<th scope="col">Numero de unidades Inicial</th>
+												<th scope="col"> Numero limite de Unidades</th>
+												<th scope="col">Precio Unitario (sin IVA)</th>
+												<th scope="col">Porcentaje IVA</th>
+												<th scope="col">Valor IVA</th>
+												<th scope="col">Precio unitario Total(con
+													IVA)</th>
+
+											</tr>
+										</thead>
+										<tbody formArrayName="preciosVolumen">
+											<tr [formGroupName]="i"
+												*ngFor="let item of precio.get('preciosVolumen').controls; let i = index">
+
+												<th scope="row">
+													<input formControlName="numeroUnidadesInicial"
+														placeholder="Desde Cantidad" class="form-control" type="number">
+													<div *ngIf="item.get('numeroUnidadesInicial').errors">
+														<small class="form-text text-danger"
+															*ngIf="item.get('numeroUnidadesInicial').hasError('required')">Este
+															campo es requerido</small>
+														<small class="form-text text-danger"
+															*ngIf="item.get('numeroUnidadesInicial').hasError('greaterThanLimit')">El
+															valor inicial no puede ser mayor que el valor límite</small>
+														<small class="form-text text-danger"
+															*ngIf="item.get('numeroUnidadesInicial').errors && item.get('numeroUnidadesInicial').hasError('min')">
+															El valor mínimo es {{
+															item.get('numeroUnidadesInicial').errors.min.min }}
+														</small>
+													</div>
+												</th>
+												<td><input class="form-control" formControlName="numeroUnidadesLimite"
+														placeholder="Hasta Cantidad" type="number">
+													<div *ngIf="item.get('numeroUnidadesLimite').errors">
+														<small class="form-text text-danger"
+															*ngIf="item.get('numeroUnidadesLimite').hasError('required')">Este
+															campo es requerido</small>
+													</div>
+												</td>
+												<td><input class="form-control"
+														formControlName="valorUnitarioPorVolumenSinIVA"
+														style="align-items: center;" type="number" placeholder="$">
+												</td>
+												<td><select class="form-control" formControlName="valorIVAPorVolumen"
+														style="align-items: center;">
+														<option value="19" selected>19%</option>
+														<option value="8">8%</option>
+														<option value="5">5%</option>
+														<option value="0">0%</option>
+													</select>
+												</td>
+
+												<td>
+													<strong class="currencyDivInfo currencyDivInfoTax">
+														{{item.controls['valorUnitarioPorVolumenIva'].value |
+														currency:'USD':'symbol'}}
+													</strong>
+												</td>
+												<td>
+													<strong class="currencyDivInfo currencyDivInfoNumber">
+														{{item.controls['valorUnitarioPorVolumenConIVA'].value |
+														currency:'USD':'symbol'}}
+													</strong>
+												</td>
+												<td>
+													<button class="btn btn-primary" (click)="lessRow(i)"> X</button>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</form>
+						</p-tabPanel>
+						<p-tabPanel header="Dimensiones">
+							<form [formGroup]="Dimensiones">
+								<div class="row">
+									<h5>Dimensiones</h5>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Largo(cm.) <span
+												class="redasteris">*</span> </label>
+										<input formControlName="largoProductoCm" class="form-control" id="Nombre"
+											type="number" placeholder="cm." required="" />
+										<div *ngIf="Dimensiones.controls['largoProductoCm'].invalid && Dimensiones.controls['largoProductoCm'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Alto(cm.) <span
+												class="redasteris">*</span></label>
+										<input formControlName="altoProductoCm" class="form-control"
+											id="validationCustom01" type="number" placeholder="cm." required="" />
+										<div *ngIf="Dimensiones.controls['altoProductoCm'].invalid && Dimensiones.controls['altoProductoCm'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Ancho(cm.)<span
+												class="redasteris">*</span></label>
+										<input formControlName="anchoProductoCm" class="form-control"
+											id="validationCustom01" type="number" placeholder="cm." required="" />
+										<div *ngIf="Dimensiones.controls['anchoProductoCm'].invalid && Dimensiones.controls['anchoProductoCm'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Peso de la
+											unidad(kg.)<span class="redasteris">*</span></label>
+										<input formControlName="pesoUnitarioProductoKg" class="form-control"
+											id="validationCustom01" type="number" placeholder="kg." required="" />
+										<div *ngIf="Dimensiones.controls['pesoUnitarioProductoKg'].invalid && Dimensiones.controls['pesoUnitarioProductoKg'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+								</div>
+							</form>
+						</p-tabPanel>
+						<p-tabPanel header="Disponibilidad">
+							<form [formGroup]="disponibilidad">
+								<h5>Disponibilidad</h5>
+								<div class="row ">
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Tipo de entrega<span
+												class="redasteris">*</span>
+										</label>
+										<select formControlName="tipoEntrega" class="form-control" required="">
+											<option value="seleccione" selected disabled>Seleccione</option>
+											<option *ngFor="let item of formaEntrega" value="{{item.nombreInterno}}">
+												{{item.nombreInterno}}</option>
+										</select>
+
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Tiempo de entrega <span
+												class="redasteris">*</span>
+										</label>
+										<select formControlName="tiempoEntrega" class="form-control">
+											<option value="seleccione" selected disabled>Seleccione</option>
+											<option *ngFor="let item of tiempoEntrega" value="{{item.minDias}}">
+												{{item.nombreInterno}}</option>
+										</select>
+									</div>
+									<div class="col-md-3 mb-3" *ngIf="disponibilidad.controls['inventariable'].value">
+										<label class="form-label" for="validationCustom01">Cantidad
+											disponible global <span class="redasteris">*</span></label>
+										<input formControlName="cantidadDisponible" class="form-control"
+											id="validationCustom01" type="number" placeholder="Cantidad
+											disponible" required="" />
+										<div *ngIf="disponibilidad.controls['cantidadDisponible'].invalid && disponibilidad.controls['cantidadDisponible'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+
+
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="validationCustom01">Cantidad Mínima de
+											Venta <span class="redasteris">*</span></label>
+										<input formControlName="cantidadMinVenta" class="form-control"
+											id="validationCustom01" type="number" placeholder="Descripción"
+											required="" />
+										<div *ngIf="disponibilidad.controls['cantidadMinVenta'].invalid && disponibilidad.controls['cantidadMinVenta'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+								</div>
+								<div class="row">
+
+									<div class="col-md-3 mb-3 form-control">
+										<label class="form-label" for="validationCustom01">Inventario de
+											Seguridad <span class="redasteris">*</span></label>
+										<input formControlName="inventarioSeguridad" class="form-control"
+											id="validationCustom01" type="number" placeholder="Descripción"
+											required="" />
+										<div *ngIf="disponibilidad.controls['inventarioSeguridad'].invalid && disponibilidad.controls['inventarioSeguridad'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+										<label class="form-label">¿Este producto es inventariable?</label>
+										<input id="Nombre" type="checkbox" placeholder="12344554" required=""
+											formControlName="inventariable" />
+									</div>
+								
+								</div>
+							</form>
+						</p-tabPanel>
+						<p-tabPanel header="Identificación">
+							<form [formGroup]="identificacion">
+								<div class="row">
+									<h4>Identificación</h4>
+									<h5>Referencia</h5>
+									<div class="row">
+										<div class="col-md-3">
+											<label class="form-label" for="validationCustom01">Tipo Referencia<span
+													class="redasteris">*</span>
+											</label>
+
+											<select formControlName="tipoReferencia" class="form-control">
+												<option value="externo" selected>Manual</option>
+												<option value="propio">Automática</option>
+											</select>
+										</div>
+										<div class="col-md-3 mb-3">
+
+											<label class="form-label" for="validationCustom01">Referencia <span
+													class="redasteris">*</span></label>
+
+											<input #referencia formControlName="referencia" class="form-control"
+												id="referencia" type="text" placeholder="12344554" required=""
+												(blur)="generarCodigoBarras()" />
+										</div>
+									</div>
+									<h5>Código de barras</h5>
+
+
+									<div class="col-md-3 mb-3">
+
+										<label class="form-label" for="validationCustom01">Tipo producto <span
+												class="redasteris">*</span></label>
+
+										<select formControlName="tipoProducto" class="form-control">
+											<option value="propio" selected>Propio</option>
+											<option value="externo">Externo</option>
+										</select>
+									</div>
+									<div class="col-md-3 mb-3">
+
+										<label class="form-label" for="validationCustom01">Nro Código Barras
+										</label>
+
+										<input #codigoBarra formControlName="codigoBarras" class="form-control"
+											id="Nombre" type="text" placeholder="12344554" required=""
+											(blur)="generarCodigoBarrasByCodigoBarras()" />
+									</div>
+									<div class="col-md-4">
+										<h6>*Código barras sugerido</h6>
+										<div *ngIf="barCodeGen">
+											<ngx-barcode [bc-value]="valorBarCode" [bc-display-value]="true"
+												[bc-format]="'CODE128'"></ngx-barcode>
+										</div>
+									</div>
+
+									<h5>Marca</h5>
+									<div class="col-md-4 mb-3">
+										<label class="form-label" for="validationCustom01">Marca <span
+												class="redasteris">*</span></label>
+										<input formControlName="marca" class="form-control" id="validationCustom01"
+											type="text" placeholder="Descripción" required="" />
+										<div *ngIf="identificacion.controls['marca'].invalid && identificacion.controls['marca'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+
+
+								</div>
+							</form>
+						</p-tabPanel>
+
+						<p-tabPanel header="Exposición">
+							<form action="" [formGroup]="exposicion">
+								<div class="row">
+									<h4>Exposición</h4>
+									<div class="grid-container-exposicion">
+										<div class="grid-item">
+											<h5>Obligatorias</h5>
+											<br />
+											<div class="row">
+												<div class="col-sm-2">
+													<label class="form-label" for="validationCustom01">Activar <span
+															class="redasteris">*</span>
+													</label>
+												</div>
+												<div class="col-sm-10">
+													<input id="Nombre" type="checkbox" placeholder="12344554"
+														required="" formControlName="activar" />
+													<div *ngIf="exposicion.controls['activar'].invalid && exposicion.controls['activar'].touched"
+														class="error-message">
+														Campo requerido
+													</div>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-sm-2">
+													<label class="form-label" for="validationCustom01">Disponible<span
+															class="redasteris">*</span>
+													</label>
+												</div>
+												<div class="col-sm-10">
+													<input id="Nombre" type="checkbox" placeholder="" required=""
+														formControlName="disponible" />
+												</div>
+												<div *ngIf="exposicion.controls['disponible'].invalid && exposicion.controls['disponible'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-sm-2">
+													<label class="form-label" for="validationCustom01">Posición<span
+															class="redasteris">*</span>
+													</label>
+												</div>
+												<div class="col-sm-10">
+													<input id="Nombre" type="number" placeholder="0" required=""
+														formControlName="posicion" style="max-width: 10%;" />
+													<div *ngIf="exposicion.controls['posicion'].invalid && exposicion.controls['posicion'].touched"
+														class="error-message">
+														Campo requerido
+													</div>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-sm-2">
+													<label class="form-label" for="validationCustom01">Etiquetas<span
+															class="redasteris">*</span>
+													</label>
+												</div>
+												<div class="col-sm-10">
+													<input id="etiqueta" type="text" placeholder="" required=""
+														(keyup.enter)="onEnter($event.target.value)" /> <br />
+													<span>Nota*: Agrega una palabra dando Enter cada que terminas de
+														escribirla. </span>
+												</div>
+												<div *ngIf="exposicion.controls['etiquetas'].invalid && exposicion.controls['etiquetas'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+												<div *ngFor="let value of etiquetas; let i = index">
+													<span class="badge badge-primary" style="cursor:pointer;"
+														(click)="eliminarEtiqueta(i)">
+														{{ value }}
+														<i class="fa fa-times"></i>
+													</span>
+												</div>
+
+
+											</div>
+
+
+										</div>
+										<div class="grid-item">
+											<h5>Opcionales</h5>
+											<br />
+
+											<div class="row">
+												<div class="col-sm-6">
+													<label class="form-label" for="validationCustom01">Oferta
+													</label>
+												</div>
+												<div class="col-sm-6">
+													<input id="Nombre" type="checkbox" placeholder="12344554"
+														required="" formControlName="oferta" />
+												</div>
+												<div *ngIf="exposicion.controls['oferta'].invalid && exposicion.controls['oferta'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-sm-6">
+													<label class="form-label" for="validationCustom01">Recomendado
+													</label>
+												</div>
+												<div class="col-sm-6">
+													<input id="Nombre" type="checkbox" placeholder="12344554"
+														required="" formControlName="recomendado" />
+												</div>
+												<div *ngIf="exposicion.controls['recomendado'].invalid && exposicion.controls['recomendado'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+
+											</div>
+
+											<div class="row">
+												<div class="col-sm-6">
+													<label class="form-label" for="validationCustom01">Destacado
+													</label>
+												</div>
+												<div class="col-sm-6">
+													<input id="Nombre" type="checkbox" placeholder="12344554"
+														required="" formControlName="destacado" />
+												</div>
+												<div *ngIf="exposicion.controls['destacado'].invalid && exposicion.controls['destacado'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-sm-6">
+													<label class="form-label" for="validationCustom01">Nuevo
+													</label>
+												</div>
+												<div class="col-sm-6">
+													<input id="Nombre" type="checkbox" placeholder="12344554"
+														required="" formControlName="nuevo" />
+												</div>
+												<div *ngIf="exposicion.controls['nuevo'].invalid && exposicion.controls['nuevo'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-sm-6">
+													<label class="form-label" for="validationCustom01">Mas
+														vendido</label>
+												</div>
+												<div class="col-sm-6">
+													<input id="Nombre" type="checkbox" placeholder="12344554"
+														required="" formControlName="masvendido" />
+												</div>
+												<div *ngIf="exposicion.controls['masvendido'].invalid && exposicion.controls['masvendido'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+
+										</div>
+									</div>
+								</div>
+							</form>
+						</p-tabPanel>
+						<p-tabPanel header="Categorías">
+							<form [formGroup]="categoriasForm">
+
+								<div class="row">
+									<h5>Categorías <span class="redasteris">*</span></h5>
+									<div class="row">
+										<div class="col-sm-12">
+											<span>{{pathParentRoute}}</span>
+										</div>
+									</div>
+
+									<p-treeSelect [options]="categorias" formControlName="categorias"
+										placeholder="Seleccione una categoria"></p-treeSelect>
+								</div>
+							</form>
+						</p-tabPanel>
+						<p-tabPanel header="Proceso Comercial">
+							<form [formGroup]="procesoComercial">
+
+								<h5>Proceso Comercial</h5>
+								<div class="row m-b-10">
+
+									<!-- <div class="row"> -->
+									<button *ngIf="!activar" class="btn btn-lg btn-primary"
+										(click)="activarProcesoComercial()">Activar Configuración Proceso
+										Comercial</button>
+									<button *ngIf="activar" class="btn btn-lg btn-primary"
+										(click)="activarProcesoComercial()">Desactivar Configuración Proceso
+										Comercial</button>
+									<!-- </div> -->
+								</div>
+								<div class="grid-container-exposicion" *ngIf="activar">
+									<div class="grid-item">
+										<div class="row">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">¿Aceptar
+													Calendario?</label>
+											</div>
+											<div class="col-sm-6">
+												<input type="checkbox" formControlName="llevaCalendario" />
+												<div *ngIf="procesoComercial.controls['llevaCalendario'].invalid && procesoComercial.controls['llevaCalendario'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">¿Aceptar
+													Ocasion?</label>
+											</div>
+											<div class="col-sm-6">
+												<input type="checkbox" formControlName="aceptaOcasion" />
+												<div *ngIf="procesoComercial.controls['llevaCalendario'].invalid && procesoComercial.controls['llevaCalendario'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+										<div class="row" *ngIf="procesoComercial.controls['aceptaOcasion'].value">
+
+											<div class="col-sm-6">
+
+											</div>
+											<div class="col-sm-6">
+
+												<ng-select [items]="ocasiones" bindLabel="name" bindValue="id"
+													placeholder="Seleccione una ocasión"
+													style="font-family: roboto;color: #ffffff !important;"
+													[multiple]="true" formControlName="ocasion" [closeOnSelect]="false">
+												</ng-select>
+												<div *ngIf="procesoComercial?.controls['ocasion']?.invalid && procesoComercial.controls['ocasion'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">¿Aceptar
+													Genero?</label>
+											</div>
+											<div class="col-sm-6">
+												<input type="checkbox" formControlName="aceptaGenero" />
+												<div *ngIf="procesoComercial.controls['llevaCalendario'].invalid && procesoComercial.controls['llevaCalendario'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+										<div class="row" *ngIf="procesoComercial.controls['aceptaGenero'].value">
+											<div class="col-sm-6">
+
+											</div>
+											<div class="col-sm-6">
+												<ng-select [items]="generos" bindLabel="name" bindValue="id"
+													placeholder="Seleccione un genero"
+													style="font-family: roboto;color: #ffffff !important;"
+													[multiple]="true" formControlName="genero" [closeOnSelect]="false">
+												</ng-select>
+												<div *ngIf="procesoComercial.controls['genero'].invalid && procesoComercial.controls['genero'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+										<div class="row m-t-10">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">¿Acepta Color
+													Preferencia Decoración?</label>
+											</div>
+											<div class="col-sm-6">
+												<div class="row">
+													<div class="col-1">
+														<input type="checkbox"
+															formControlName="aceptaColorDecoracion" />
+													</div>
+													<div class="col-4 row">
+														<input type="color"
+															*ngIf="procesoComercial.controls['aceptaColorDecoracion'].value"
+															class="col-4 m-r-5" id="colorescogido" #colorescogido />
+														<span class="col-6" (click)="addColor($event)"
+															style="cursor: pointer;"
+															*ngIf="procesoComercial.controls['aceptaColorDecoracion'].value"><i
+																class="fa fa-plus"></i></span>
+													</div>
+													<div class="col-sm-6">
+														<ul class="product-color"
+															*ngIf="procesoComercial.controls['aceptaColorDecoracion'].value">
+															<li *ngFor="let item of procesoComercial?.controls['colorDecoracion']?.value"
+																[style.backgroundColor]="item"
+																(click)="removeColor(item)"
+																title="Dale click para eliminar"
+																style="cursor: pointer;">
+															</li>
+														</ul>
+													</div>
+												</div>
+
+												<div *ngIf="procesoComercial.controls['aceptaColorDecoracion'].invalid && procesoComercial.controls['aceptaColorDecoracion'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">¿Aceptar
+													Observaciones?</label>
+											</div>
+											<div class="col-sm-6">
+												<input type="checkbox" formControlName="aceptaComentarios" />
+												<div *ngIf="procesoComercial.controls['aceptaComentarios'].invalid && procesoComercial.controls['aceptaComentarios'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+
+									</div>
+
+									<div class="grid-item">
+
+										<div class="row">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">¿Lleva
+													tarjeta?</label>
+											</div>
+											<div class="col-sm-6">
+												<input type="checkbox" formControlName="llevaTarjeta" />
+												<div *ngIf="procesoComercial.controls['llevaTarjeta'].invalid && procesoComercial.controls['llevaTarjeta'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+
+									</div>
+
+									<div class="grid-item">
+
+
+										<div class="row">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">¿Acepta
+													adiciones?</label>
+											</div>
+											<div class="col-sm-6">
+												<input type="checkbox" formControlName="aceptaAdiciones" />
+												<div *ngIf="procesoComercial.controls['aceptaAdiciones'].invalid && procesoComercial.controls['aceptaAdiciones'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+										<div class="row m-t-10">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">Formas de pago que no
+													se aceptan
+												</label>
+											</div>
+											<div class="col-sm-6">
+												<ng-select [items]="formasPago" bindLabel="nombre" bindValue="id"
+													style="font-family: roboto;color: #ffffff !important;"
+													[multiple]="true" formControlName="pago" [closeOnSelect]="false">
+
+												</ng-select>
+												<div *ngIf="procesoComercial.controls['pago'].invalid && procesoComercial.controls['pago'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-sm-6">
+												<label class="form-label" for="validationCustom01">Opciones o
+													Variables
+													dinámicas de contenido</label>
+											</div>
+											<div class="col-sm-6">
+												<input type="checkbox" formControlName="aceptaVariable" />
+												<div *ngIf="procesoComercial.controls['aceptaVariable'].invalid && procesoComercial.controls['aceptaVariable'].touched"
+													class="error-message">
+													Campo requerido
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</form>
+
+							<div class="row m-t-10" *ngIf="procesoComercial.controls['aceptaVariable'].value">
+
+								<button class="btn btn-lg btn-primary" (click)="addVariable()"> Añadir
+									variable</button>
+								<div class="table">
+									<div class="row">
+
+										<p-treeTable [value]="variables" [reorderableColumns]="true">
+											<ng-template pTemplate="header">
+												<tr>
+													<th scope="col">Título</th>
+													<th scope="col">SubTítulo</th>
+													<th scope="col">Tipo variable</th>
+													<!-- <th scope="col">Imagen</th> -->
+													<th scope="col">Valor Unitario (sin IVA)</th>
+													<th scope="col">Porcentaje IVA</th>
+													<th scope="col">Valor IVA</th>
+													<th scope="col">Precio Total Por Unidad (Con Iva)</th>
+													<th scope="col">Para producción</th>
+													<th scope="col">Acciones</th>
+													<th scope="col">Crear Fila</th>
+												</tr>
+											</ng-template>
+											<ng-template pTemplate="body" let-rowNode let-node="node"
+												let-rowIndex="rowIndex">
+												<tr>
+													<td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+														<p-treeTableToggler [rowNode]="rowNode"
+															*ngIf="node?.children?.length > 0 "></p-treeTableToggler>
+														<p-treeTableCellEditor>
+															<ng-template pTemplate="input">
+																<input pInputText type="text"
+																	*ngIf="node.data.tipoImagen != 'adicion'"
+																	[ngStyle]="{'width': '100%'}"
+																	[(ngModel)]="node.data.titulo"
+																	style="border-color: black;">
+
+																<ng-select *ngIf="node.data.tipoImagen == 'adicion'"
+																	[items]="adicionesPreferencias" bindLabel="titulo"
+																	bindValue="titulo" [ngStyle]="{'width': '200px'}"
+																	placeholder="Seleccione una adición"
+																	[multiple]="false" [(ngModel)]="node.data.titulo"
+																	[closeOnSelect]="true">
+																</ng-select>
+
+															</ng-template>
+															<ng-template pTemplate="output">{{node.data.titulo}}
+															</ng-template>
+														</p-treeTableCellEditor>
+													</td>
+													<td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+														<p-treeTableCellEditor>
+															<ng-template pTemplate="input">
+																<input pInputText type="text"
+																	[ngStyle]="{'width': '100%'}"
+																	[(ngModel)]="node.data.subtitulo"
+																	style="border-color: black;">
+
+															</ng-template>
+															<ng-template pTemplate="output">{{node.data.subtitulo}}
+															</ng-template>
+														</p-treeTableCellEditor>
+													</td>
+													<td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+														<p-treeTableCellEditor>
+															<ng-template pTemplate="input">
+																<select [(ngModel)]="node.data.tipoImagen"
+																	class="form-control">
+																	<option value="imagen" selected>Imagen</option>
+																	<option value="texto">Texto</option>
+																	<option value="archivo">Adjuntar archivo</option>
+																	<option value="adicion">Adición</option>
+																</select>
+															</ng-template>
+															<ng-template pTemplate="output">{{node.data.tipoImagen}}
+															</ng-template>
+														</p-treeTableCellEditor>
+													</td>
+													<!-- <td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+
+														<p-treeTableCellEditor>
+															<ng-template pTemplate="input">
+																<input pInputFile type="file"
+																	[ngStyle]="{'width': '100%'}"
+																	(change)="onFileSelectedByNode($event,node)"
+																	style="border-color: black;">
+															</ng-template>
+															<ng-template pTemplate="output"><img
+																	*ngIf="node.data.imagen" [src]="node.data.imagen"
+																	alt="Miniatura"
+																	style="max-width: 20%; max-height: 20%;" />
+															</ng-template>
+														</p-treeTableCellEditor>
+													</td> -->
+													<td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+														<p-treeTableCellEditor>
+															<ng-template pTemplate="input">
+																<input pInputText type="number"
+																	[(ngModel)]="node.data.valorUnitarioSinIva"
+																	(ngModelChange)="onValorUnitarioSinIvaChanged(node, $event)"
+																	[ngStyle]="{'width': '100%'}"
+																	style="border-color: black;">
+															</ng-template>
+															<ng-template pTemplate="output">
+																{{node.data.valorUnitarioSinIva |
+																currency:'USD':'symbol'}}</ng-template>
+														</p-treeTableCellEditor>
+													</td>
+													<td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+														<p-treeTableCellEditor>
+															<ng-template pTemplate="input">
+																<p-dropdown [options]="porcentajesIva"
+																	[(ngModel)]="node.data.porcentajeIva"
+																	placeholder="Select porcentaje"
+																	(ngModelChange)="onPrecioUnitarioIvaChanged(node, $event)"
+																	[virtualScroll]="true" [virtualScrollItemSize]="38">
+																</p-dropdown>
+															</ng-template>
+															<ng-template pTemplate="output">{{node.data.porcentajeIva}}%
+															</ng-template>
+														</p-treeTableCellEditor>
+													</td>
+													<td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+														{{node.data.valorIva |
+														currency:'USD':'symbol'}}
+													</td>
+													<td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+														{{node.data.precioTotalConIva|currency:'USD':'symbol'}}
+													</td>
+													<td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+														<input type="checkbox" [(ngModel)]="node.data.paraProduccion"
+															(ngModelChange)="onParaProduccionChanged(node, $event)" />
+													<td>
+														<button (click)="addChild(node)"> <i
+																class="pi pi-plus"></i></button>
+														<button (click)="deleteChild(node)"> <i
+																class="pi pi-trash"></i></button>
+													</td>
+													<td>
+														<button (click)="addSibling(node, node.data.index)">Crear fila
+														</button>
+
+													</td>
+												</tr>
+											</ng-template>
+										</p-treeTable>
+									</div>
+								</div>
+							</div>
+
+
+						</p-tabPanel>
+
+						<!-- <p-tabPanel header="PROCESO / "></p-tabPanel>
+						<p-tabPanel header="PROCESO / TRAZABILIDAD MÓDULOS VARIABLES"></p-tabPanel>
+						<p-tabPanel header="PROCESO / TRAZABILIDAD MÓDULOS COMPLEMENTARIOS"></p-tabPanel> -->
+
+						<p-tabPanel header="Canales de Venta">
+							<form action="" [formGroup]="marketplace">
+								<h5>Propios:</h5>
+								<div class="row">
+									<div class="col-sm-2">
+										<label class="form-label" for="">Seller Center</label>
+									</div>
+									<div class="col-sm-10">
+										<input id="Nombre" type="checkbox" placeholder="12344554" required=""
+											formControlName="sellerCenter" />
+									</div>
+
+								</div>
+								<div class="row">
+									<div class="col-sm-2">
+										<label class="form-label" for="">Página Web</label>
+
+
+									</div>
+									<div class="col-sm-10">
+										<input id="Nombre" type="checkbox" placeholder="12344554" required=""
+											formControlName="paginaWeb" />
+									</div>
+
+								</div>
+								<div class="row">
+									<div class="col-sm-2">
+										<label class="form-label" for="">Punto de venta</label>
+
+									</div>
+									<div class="col-sm-10">
+										<input id="Nombre" type="checkbox" placeholder="12344554" required=""
+											formControlName="puntoDeVenta" />
+									</div>
+
+								</div>
+								<h5>Marketplace:</h5>
+								<div formArrayName="campos">
+									<div [formGroupName]="j"
+										*ngFor="let item2 of marketplace.get('campos').controls; let j = index">
+
+										<div class="row">
+											<div class="col-sm-2">
+												<label class="form-label"
+													for="validationCustom01">{{item2.value.nameMP}}</label>
+											</div>
+											<div class="col-sm-10">
+												<input id="Nombre" type="checkbox" required=""
+													formControlName="activo" />
+											</div>
+
+										</div>
+									</div>
+								</div>
+							</form>
+						</p-tabPanel>
+
+						<p-tabPanel header="Ciudad">
+							<form [formGroup]="ciudades">
+								<div class="row">
+									<h5>Ciudad</h5>
+									<div class="col-sm-4">
+										<label class="form-label" for="validationCustom01">Ciudades de
+											Origen</label>
+										<ng-select [items]="empresaActual?.ciudadess?.ciudadesOrigen"
+											style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+											formControlName="ciudadesOrigen" [closeOnSelect]="false">
+
+										</ng-select>
+										<div *ngIf="ciudades.controls['ciudadesOrigen'].invalid && ciudades.controls['ciudadesOrigen'].touched"
+											class="error-message">
+											Campo requerido
+										</div>
+
+									</div>
+									<div class="col-sm-4">
+										<label class="form-label" for="validationCustom01">Ciudades de
+											Entrega</label>
+										<ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega"
+											style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+											formControlName="ciudadesEntrega" [closeOnSelect]="false">
+
+										</ng-select>
+										<div *ngIf="ciudades?.controls['ciudadesEntrega']?.invalid && ciudades?.controls['ciudadesEntrega']?.touched"
+											class="error-message">
+											Campo requerido
+										</div>
+									</div>
+								</div>
+							</form>
+						</p-tabPanel>
+						<p-tabPanel header="Otros Procesos">
+							<div class="card">
+								<div class="card-body default-accordion">
+									<ngb-accordion #acc="ngbAccordion">
+										<ngb-panel>
+											<ng-template ngbPanelTitle>
+												<span>&#9733; <b>PROCESO MÓDULOS FIJOS</b></span>
+											</ng-template>
+											<ng-template ngbPanelContent>
+												<div class="row">
+													<div class="col-sm-12" style="color: black;">
+
+														<div class="row">
+															<div class="col-sm-4">
+																<b>Titulo &nbsp;&nbsp;&nbsp;:</b>
+
+															</div>
+														</div>
+													</div>
+												</div>
+											</ng-template>
+										</ngb-panel>
+										<ngb-panel>
+											<ng-template ngbPanelTitle>
+												<span>&#9733; <b>PROCESO MÓDULOS VARIABLES</b></span>
+											</ng-template>
+											<ng-template ngbPanelContent>
+												<div class="">
+													<div class="form-control">
+														<label class="form-label">¿Este producto se produce?</label>
+														<div class="form-check">
+															<input class="form-check-input" type="checkbox"
+																[(ngModel)]="paraProduccion"
+																(change)="producirProducto()">
+														</div>
+													</div>
+
+													<div class="">
+														<div class="form-label">
+															Agregar campos al proceso
+														</div>
+														<div class="">
+															<form [formGroup]="moduloVariable"
+																(ngSubmit)="addArticuloOfProduct()">
+																<div class="row">
+																	<div class="col-md-4 mb-3">
+																		<label class="form-label">¿Este articulo es una
+																			adicion?</label>
+																		<div class="form-check">
+																			<input class="form-check-input"
+																				type="checkbox"
+																				formControlName="articuloProduccionAdicion">
+																		</div>
+																	</div>
+																	<div class="col-md-4 mb-3"
+																		*ngIf="!moduloVariable.value.articuloProduccionAdicion">
+																		<label for="titulo"
+																			class="form-label">Título:</label>
+																		<input type="text" class="form-control"
+																			id="titulo" formControlName="titulo">
+																	</div>
+
+																	<div class="col-md-4 mb-3"
+																		*ngIf="moduloVariable.value.articuloProduccionAdicion">
+																		<label for="cantidadUnitaria"
+																			class="form-label">Adición</label>
+																		<ng-select [items]="adicionesPreferencias"
+																			bindLabel="titulo" bindValue="titulo"
+																			placeholder="Seleccione una adición"
+																			[multiple]="false" formControlName="adicion"
+																			[closeOnSelect]="true">
+																		</ng-select>
+																	</div>
+																	<div class="col-md-4 mb-3">
+																		<label for="cantidadUnitaria"
+																			class="form-label">Cantidad
+																			Unitaria:</label>
+																		<input type="number" class="form-control"
+																			id="cantidadUnitaria"
+																			formControlName="cantidadUnitaria">
+																	</div>
+																	<div class="col-12">
+																		<button type="submit"
+																			class="btn btn-primary">Agregar</button>
+																		<button type="button" class="btn btn-danger"
+																			(click)="limpiarProcesoProduccion()">Limpiar</button>
+																	</div>
+																</div>
+															</form>
+
+
+															<table class="table">
+																<thead>
+																	<tr>
+																		<th scope="col">Título</th>
+																		<!-- <th scope="col">Unidad de Medida</th>
+																		<th scope="col">Cantidad Total</th> -->
+																		<th scope="col">Cantidad Unitaria</th>
+																		<!-- <th scope="col">Medida Unitaria</th> -->
+																		<th>Acciones</th>
+																	</tr>
+																</thead>
+																<tbody id="tbodyArticulos">
+																	<tr *ngFor="let producto of productosArticulos">
+																		<td>{{ producto.titulo }}</td>
+																		<!-- <td>{{ producto.unidadMedida }}
+																		</td> -->
+																		<!-- <td class="right-align">{{
+																			producto.cantidadTotal
+																			}}</td> -->
+																		<td class="text-center">{{
+																			producto.cantidadUnitaria
+																			}}</td>
+																		<!-- <td class="right-align">{{
+																			producto.medidaUnitaria
+																			}}</td>-->
+																		<td>
+																			<button class="btn btn-danger"
+																				(click)="deleteArticuloOfProduct(producto)">
+																				<i class="fa fa-trash-o"></i>
+																			</button>
+																			<button type="button"
+																				class="btn btn-primary"
+																				data-bs-toggle="modal"
+																				(click)="openModal(NuevoProcesoModal, producto)"
+																				data-bs-target="#exampleModal">
+																				<i class="fa fa-gears"></i>
+
+																			</button>
+																		</td>
+																	</tr>
+																</tbody>
+															</table>
+
+
+
+														</div>
+													</div>
+												</div>
+
+
+											</ng-template>
+										</ngb-panel>
+										<ngb-panel>
+											<ng-template ngbPanelTitle>
+												<span>&#9733; <b>PROCESO MÓDULOS COMPLEMENTARIOS</b></span>
+											</ng-template>
+											<ng-template ngbPanelContent>
+												<div class="row">
+													<div class="col-sm-12" style="color: black;">
+
+														<div class="row">
+															<div class="col-sm-4">
+																<b>Titulo &nbsp;&nbsp;&nbsp;:</b>
+
+															</div>
+														</div>
+													</div>
+												</div>
+											</ng-template>
+										</ngb-panel>
+									</ngb-accordion>
+								</div>
+							</div>
+						</p-tabPanel>
+
+					</p-tabView>
+
+					<div class="row">
+						<div class="col-sm-6">
+							<button *ngIf="mostrarCrear" class="btn btn-lg btn-primary"
+								(click)="guardarProductos()">Guardar</button>
+							<button class="btn btn-lg btn-primary" (click)="viewProduct()">Vista
+								Previa</button>
+
+							<button *ngIf="!mostrarCrear" class="btn btn-lg btn-primary"
+								(click)="editarProducto()">Guardar</button>
+
+						</div>
+
+					</div>
+
+				</div>
+				<!-- </form> -->
+			</div>
+		</div>
+	</div>
+</div>
+
+<ng-template #NuevoProcesoModal let-modal>
+
+	<div class="modal-header">
+		<h5 class="modal-title" id="exampleModalLabel">Agregar proceso</h5>
+		<button type="button" class="btn-close" (click)="modal.dismiss('Cross click')" aria-label="Close"></button>
+	</div>
+	<div class="modal-body">
+		<!-- Aquí puedes agregar el formulario para agregar un nuevo proceso -->
+		<p-pickList [source]="procesosProduccion" [target]="procesosProduccionSeleccionados"
+			sourceHeader="Procesos disponible" targetHeader="Procesos seleccionados" [dragdrop]="true"
+			[responsive]="true" [sourceStyle]="{'height':'30rem'}" [targetStyle]="{'height':'30rem'}" filterBy="nombre"
+			sourceFilterPlaceholder="Buscar por nombre" targetFilterPlaceholder="Buscar por nombre">
+			<ng-template let-center pTemplate="item">
+				<!-- style="font-size:14px;float:right;margin:15px 5px 0 0" -->
+				<div>{{center?.nombre}}</div>
+
+			</ng-template>
+		</p-pickList>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-secondary" (click)="modal.dismiss('Cross click')">Cerrar</button>
+		<button type="button" class="btn btn-primary" (click)="guardarProcesoParaArticulo()">Guardar Procesos</button>
+	</div>
+</ng-template>

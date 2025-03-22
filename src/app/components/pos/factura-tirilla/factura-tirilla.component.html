@@ -1,0 +1,41 @@
+<style>
+  @media print {
+    .factura-tirilla { width: 100% !important; margin: 0 !important; }
+    .no-print { display: none !important; }
+  }
+</style>
+<div class="factura-tirilla" style="width:300px; margin:auto; font-family:monospace;">
+  <!-- Encabezado sin imágenes para impresión -->
+  <div style="text-align: center;">
+    <h3>Factura POS</h3>
+  </div>
+  <!-- Datos generales del pedido -->
+  <p>Pedido: {{ pedido.nroPedido }}</p>
+  <p>Fecha: {{ pedido.fechaCreacion | date:'short' }}</p>
+  <hr>
+  <!-- Listado de productos en formato tabular reducido -->
+  <table style="width:100%; font-size:12px;">
+    <tr *ngFor="let item of pedido.carrito">
+      <td>{{ item.producto.crearProducto.titulo }}</td>
+      <td style="text-align:center;">x{{ item.cantidad }}</td>
+      <td style="text-align:right;">
+        {{ (item.cantidad * item.producto.precio.precioUnitarioConIva) | currency:'USD':'symbol':'1.0-0' }}
+      </td>
+    </tr>
+  </table>
+  <!-- Mostrar impuestos -->
+  <p style="text-align:right; font-weight:bold;">
+    Impuestos: {{ pedido.totalImpuesto | currency:'USD':'symbol':'1.0-0' }}
+  </p>
+  <hr>
+  <!-- Totales -->
+  <p style="text-align:right; font-weight:bold;">
+    Total: {{ (pedido.totalPedididoConDescuento) | currency:'USD':'symbol':'1.0-0' }}
+  </p>
+  <!-- Pie de página -->
+  <p style="text-align:center;">¡Gracias por su compra!</p>
+</div>
+<div style="text-align: center; margin-top: 20px;">
+  <button class="no-print" (click)="print()" style="margin-right: 10px;">Imprimir Factura</button>
+  <button class="no-print" (click)="goBack()" style="margin-left: 10px;">Regresar / Nueva Compra</button>
+</div>

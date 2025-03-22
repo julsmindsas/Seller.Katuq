@@ -1,0 +1,145 @@
+<div class="survey-container">
+  <!-- Logo posicionado en la esquina superior izquierda -->
+  <img class="survey-logo" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo">
+  <div class="survey-form animate-fancy">
+    <!-- Mostrar mensaje de éxito -->
+    <div *ngIf="submissionSuccess">
+      <!-- Si isProcessing es true se muestra el mensaje "Procesando" -->
+      <div *ngIf="isProcessing" class="processing-message">
+        <div class="welcome-text" style="margin-top:20px;">
+          {{ 'Muchas gracias por completar el cuestionario,Estamos configurando tu sitio, por favor espera...' | translate }}
+        </div>
+        <!-- <p style="font-size:1.75rem; margin-top:20px;"></p> -->
+        <div class="spinner"></div>
+      </div>
+      <!-- Cuando isProcessing es false se muestra el mensaje de Bienvenida -->
+      <div *ngIf="!isProcessing" class="welcome-message">
+        
+        <div class="welcome-text">
+          {{ '¡BIENVENIDO' | translate }} <span class="highlight">{{ welcomeMessage | uppercase }}</span> {{ 'AL UNIVERSO KATUQ,!' | translate }}
+        </div>
+        <div class="welcome-text-sm">
+          {{ 'TE ENVIAMOS UN CORREO CON TU USUARIO Y CONTRASEÑA PARA QUE PUEDAS INGRESAR A TU SITIO WEB' | translate }}
+        </div>
+
+      </div>
+    </div>
+    <!-- Secciones según currentStep -->
+    <div *ngIf="!submissionSuccess">
+      <!-- Paso 1: Cuestionario -->
+      <div *ngIf="currentStep === 'questionnaire'">
+        <h1>{{ surveyData.formTitle }}</h1>
+        <h3 class="subtitle">{{ surveyData.formDescription }}</h3>
+        <h3>{{ currentSection.sectionTitle }}</h3>
+        <div class="question">
+          <p>{{ currentQuestion.question }}</p>
+          <div class="options">
+            <button *ngFor="let option of currentQuestion.options" (click)="selectOption(option)" class="option-button"
+              [ngClass]="{'selected': responses[currentQuestion.id] === option}">
+              {{ option }}
+            </button>
+          </div>
+        </div>
+        <div class="navigation-buttons">
+          <button *ngIf="canGoBack()" class="back-button" (click)="backQuestion()">{{ 'Volver' | translate }}</button>
+          <button class="next-button" (click)="moveNextStep()">
+            {{ isLastQuestion() ? ('Siguiente paso' | translate) : '→' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Paso Introductorio para Registro -->
+      <div *ngIf="currentStep === 'introduction'" class="introduction-step">
+        <h2>{{ '¡Excelente trabajo!' | translate }}</h2>
+        <p style="font-size:1.8rem;">
+          {{ 'Ahora, para continuar, ingresa los datos básicos de tu empresa. Si eres persona natural, utiliza tus datos personales.' | translate }}
+        </p>
+        <div class="navigation-buttons">
+          <button type="button" class="next-button" (click)="moveNextStep()">{{ 'Continuar al registro' | translate }}</button>
+        </div>
+      </div>
+
+      <!-- Paso de Registro: mostrar un input por cada pregunta de forma step by step -->
+      <div *ngIf="currentStep === 'registration'" [formGroup]="mainForm.get('registration')">
+        <h2>{{ 'Registro de Personas y Configuración de Empresa' | translate }}</h2>
+        <!-- Nombre Completo -->
+        <ng-container *ngIf="registrationIndex === 0">
+          <div class="survey-question">
+            <p style="font-size: 2rem; margin-bottom:10px;">
+              {{ registrationQuestions[0].question }}
+            </p>
+            <input type="text" class="material-input" [placeholder]="registrationQuestions[0].placeholder"
+              formControlName="nombre" (keyup.enter)="moveNextStep()">
+          </div>
+        </ng-container>
+        <!-- Nombre Comercial -->
+        <ng-container *ngIf="registrationIndex === 1">
+          <div class="survey-question">
+            <p style="font-size: 2rem; margin-bottom:10px;">
+              {{ registrationQuestions[1].question }}
+            </p>
+            <input type="text" class="material-input" [placeholder]="registrationQuestions[1].placeholder"
+              formControlName="nomComercial" (keyup.enter)="moveNextStep()">
+          </div>
+        </ng-container>
+        <!-- CC o NIT -->
+        <ng-container *ngIf="registrationIndex === 2">
+          <div class="survey-question">
+            <p style="font-size: 2rem; margin-bottom:10px;">
+              {{ registrationQuestions[2].question }}
+            </p>
+            <input type="text" class="material-input" [placeholder]="registrationQuestions[2].placeholder"
+              formControlName="nit" (keyup.enter)="moveNextStep()">
+          </div>
+        </ng-container>
+        <!-- DV -->
+        <ng-container *ngIf="registrationIndex === 3">
+          <div class="survey-question">
+            <p style="font-size: 2rem; margin-bottom:10px;">
+              {{ registrationQuestions[3].question }}
+            </p>
+            <input type="text" class="material-input" [placeholder]="registrationQuestions[3].placeholder"
+              formControlName="digitoVerificacion" (keyup.enter)="moveNextStep()">
+          </div>
+        </ng-container>
+        <!-- Correo -->
+        <ng-container *ngIf="registrationIndex === 4">
+          <div class="survey-question">
+            <p style="font-size: 2rem; margin-bottom:10px;">
+              {{ registrationQuestions[4].question }}
+            </p>
+            <input type="email" class="material-input" [placeholder]="registrationQuestions[4].placeholder"
+              formControlName="correo" (keyup.enter)="moveNextStep()">
+          </div>
+        </ng-container>
+        <!-- Celular -->
+        <ng-container *ngIf="registrationIndex === 5">
+          <div class="survey-question">
+            <p style="font-size: 2rem; margin-bottom:10px;">
+              {{ registrationQuestions[5].question }}
+            </p>
+            <input type="text" class="material-input" [placeholder]="registrationQuestions[5].placeholder"
+              formControlName="celular" (keyup.enter)="moveNextStep()">
+          </div>
+        </ng-container>
+        <div class="navigation-buttons">
+          <button type="button" class="back-button" (click)="backRegistration()"
+            *ngIf="registrationIndex > 0">{{ 'Volver' | translate }}</button>
+          <button type="button" class="next-button" (click)="moveNextStep()">
+            {{ registrationIndex === registrationQuestions.length - 1 ? ('Siguiente paso' | translate) : '→' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Paso 3: Resumen de Respuestas -->
+      <div *ngIf="currentStep === 'summary'">
+        <h1>{{ 'Resumen de respuestas' | translate }}</h1>
+        <div class="summary-container" [innerHTML]="summaryHTML"></div>
+        <div class="navigation-buttons">
+          <button class="back-button" (click)="editResponses()">{{ 'Revisar respuestas' | translate }}</button>
+          <button class="next-button" (click)="submitResponses()">{{ 'Confirmar envío' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

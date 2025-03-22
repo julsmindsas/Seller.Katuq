@@ -1,0 +1,10 @@
+@import '~bootstrap/dist/css/bootstrap.min.css';
+
+@media print {
+    body {
+        padding: 0;
+        font-size: small;
+        line-height: 1.2;
+        /* Otros ajustes específicos para la impresión */
+    }
+}

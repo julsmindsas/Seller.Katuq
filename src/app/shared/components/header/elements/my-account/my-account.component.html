@@ -1,0 +1,16 @@
+<div class="d-flex profile-media" (click)="toggleAccount()">
+  <img class="b-r-10" [src]="user.image ? user.image : 'assets/images/user/user.png'" alt="profile" style="max-height: 50px; width: auto;">
+  <div class="media-body">
+    <span>{{user.name}}</span><i class="middle fa fa-angle-down"></i>
+    <p class="mb-0 font-roboto">{{user?.company }} </p>
+    <p class="mb-0 font-roboto">{{user?.rol }}</p>
+  </div>
+</div>
+<ul class="profile-dropdown onhover-show-div" [class.active]="openAccount">
+  <li><a href="/usuarios/editarUsuario"><app-feather-icons [icon]="'user'"></app-feather-icons><span>{{'Cuenta' }} </span></a></li>
+  <!-- <li><a href="#"><app-feather-icons [icon]="'mail'"></app-feather-icons><span>Inbox</span></a></li>
+  <li><a href="#"><app-feather-icons [icon]="'file-text'"></app-feather-icons><span>Taskboard</span></a></li>
+  <li><a href="#"><app-feather-icons [icon]="'settings'"></app-feather-icons><span>Settings</span></a></li> -->
+  <li><a (click)="logOut()"><app-feather-icons [icon]="'log-in'"></app-feather-icons><span>{{'Cerrar
+        sesión' }}</span></a></li>
+</ul>

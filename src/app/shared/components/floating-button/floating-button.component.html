@@ -1,0 +1,14 @@
+<!-- <button class="floating-button"  (click)="openForm()">KAI✨.</button> -->
+
+<div class="floating-button-container" 
+     *ngIf="authService.isLoggedIn"
+     [ngClass]="{'open': chatFormVisible}">
+  <!-- Quitado el evento (mousedown) temporalmente -->
+  <button class="floating-button" 
+          (click)="toggleChatForm($event)" 
+          [ngClass]="{'active': chatFormVisible}"></button>
+  <span class="tooltip-text-floating" *ngIf="!chatFormVisible">Pregúntale a K.A.I.</span>
+  <div *ngIf="chatFormVisible" class="floating-chat-overlay">
+    <app-chat [isFloating]="true" class="floating-chat"></app-chat>
+  </div>
+</div>

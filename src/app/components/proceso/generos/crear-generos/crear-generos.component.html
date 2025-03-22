@@ -1,0 +1,48 @@
+<app-breadcrumb [title]="'Crear Géneros'" [items]="['Proceso/Géneros']" [active_item]="'Crear Géneros'">
+</app-breadcrumb>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <form [formGroup]="genreForm">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="id">Activo</label>
+                                <br>
+                                <input  type="checkbox" id="id" formControlName="activo">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="image">Imagen</label>
+                                <input class="form-control" type="file" id="image">
+                            </div>
+                            
+
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="name">Nombre</label>
+                                <input class="form-control" type="text" id="name" formControlName="name">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label class="form-label" for="position">Posición</label>
+                                <input class="form-control" type="number" id="position" formControlName="position">
+                            </div>
+                            
+                        </div>
+                       
+
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <button *ngIf="mostrarCrear" (click)="guardar()" class="btn btn-primary" type="submit">Crear Género</button>
+                                <button *ngIf="!mostrarCrear" (click)="editar()" class="btn btn-primary" type="submit">Editar Género</button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

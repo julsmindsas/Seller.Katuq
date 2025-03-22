@@ -1,0 +1,102 @@
+<app-breadcrumb [title]="'Categorias'" [items]="['Maestros']" [active_item]="'Categorias'"></app-breadcrumb>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <i class="icon-bg" width="80" height="80"
+                    style="opacity: 0.4;position: absolute; color: #6ec0d4; top: 10px; left: 10px;"></i>
+                <div class="loader-box" *ngIf="cargando">
+                    <div class="loader-8"></div>
+                </div>
+
+                <div class="card-body custom-datatable" *ngIf="!cargando">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <!-- <input type='text' class="filter-ngx form-control mb-3" style="width: 100% !important;"
+                                placeholder="{{'Escribe texto que deseas filtrar' | translate}}"
+                                (keyup)='updateFilter($event)' /> -->
+
+                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="create()">
+                                <span style="color:white ;">{{'Agregar categoría' | translate}}</span>
+                                <i placement="top" ngbTooltip="{{'Nuevo' | translate}}"
+                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                                    class="icofont icofont-plus"></i>
+                            </button>
+
+                        </div>
+                        <div class="col-sm-6 mb-3" style="text-align: end;">
+
+
+                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="guardar()">
+                                <span style="color:white ;">{{'Guardar categorías' | translate}}</span>
+                                <i placement="top" ngbTooltip="{{'Nuevo' | translate}}"
+                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                                    class="icofont icofont-plus"></i>
+                            </button>
+                        </div>
+
+                    </div>
+                    <div class="col-12">
+
+                        <p-treeTable [value]="data" [style]="{'margin-top':'20px'}">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th>{{'Nombre' | translate}}</th>
+                                    <th>{{'Posición' | translate}}</th>
+                                    <th>{{'Activo' | translate}}</th>
+                                    <th>{{'Imagen' | translate}}</th>
+                                    <th>{{'Acciones' | translate}}</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-rowNode let-node="node">
+                                <tr>
+                                    <!-- <td><p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>{{node.data.name}}
+                                    </td> -->
+
+                                    <td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+                                        <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+                                        <p-treeTableCellEditor>
+
+                                            <ng-template pTemplate="input">
+
+                                                <input pInputText type="text" [(ngModel)]="node.data.nombre"
+                                                    [ngStyle]="{'width': '100%'}" style="border-color: black;">
+                                            </ng-template>
+                                            <ng-template pTemplate="output">{{node.data.nombre}}</ng-template>
+                                        </p-treeTableCellEditor>
+                                    </td>
+                                    <td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+                                        <p-treeTableCellEditor>
+                                            <ng-template pTemplate="input">
+                                                <input pInputText type="text" [(ngModel)]="node.data.posicion"
+                                                    [ngStyle]="{'width': '100%'}" style="border-color: black;">
+                                            </ng-template>
+                                            <ng-template pTemplate="output">{{node.data.posicion}}</ng-template>
+                                        </p-treeTableCellEditor>
+                                    </td>
+                                    <td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+                                        <p-treeTableCellEditor>
+                                            <ng-template pTemplate="input">
+                                                <input pInputText type="text" [(ngModel)]="node.data.activo"
+                                                    [ngStyle]="{'width': '100%'}" style="border-color: black;">
+                                            </ng-template>
+                                            <ng-template pTemplate="output">{{node.data.activo}}</ng-template>
+                                        </p-treeTableCellEditor>
+                                    </td>
+                                    <td [ngClass]="{'p-toggler-column': true}">
+                                        {{node.data.imagen}}
+                                    </td>
+                                    <td>
+                                        <button (click)="addChild(node)"> <i class="pi pi-plus"></i></button>
+                                        <button (click)="deleteChild(node)"> <i class="pi pi-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-treeTable>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,548 @@
+<div class="alert alert-info">
+  Después de crear o buscar el cliente, por favor seleccione o ingrese los datos de Entrega correspondientes.
+</div>
+<p-tabView [activeIndex]="activeIndex">
+  <p-tabPanel header="Mis Direcciones de Entrega" *ngIf="!datosEntregaNoEncontradosParaCiudadSeleccionada">
+    <div class="card-header">
+      <h2><label for="">Datos Entrega</label></h2>
+    </div>
+    <div class="row">
+      <h3>Dirección de Envio seleccionada: {{ pedidoGral.envio?.direccionEntrega}} </h3>
+    </div>
+    <hr />
+    <div class="row">
+      <div class="col-sm-6">
+        <input type="file" class="form-control" (change)="handleFileInput($event)">
+
+      </div>
+      <div class="col-sm-3">
+        <button class="btn btn-success" (click)="readExcel()">
+          <i class="icofont icofont-file-excel"></i>
+          Cargar Excel
+        </button>
+      </div>
+      <div class="col-sm-3">
+        <button class="btn btn-success" (click)="downloadExcel()">
+          <i class="icofont icofont-file-excel"></i>
+          Plantilla
+        </button>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+
+
+
+      </div>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Referencia</th>
+          <th>Nombres/Razon Social</th>
+
+          <th>Direccion</th>
+          <th>Opciones</th>
+
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of datosEntregas; let i = index">
+          <td>
+            <button class="btn btn-primary" (click)="seleccionarDireccionEntrega(i)">
+              Usar Esta Direccion
+            </button>
+          </td>
+          <td>{{ item.alias }}</td>
+          <td>{{ item.nombres }} {{ item.apellidos }}</td>
+
+          <td>{{ item.direccionEntrega }}</td>
+
+          <td>
+            <i placement="top" ngbTooltip="{{ 'Editar' | translate }}" style="
+                  font-size: 18px;
+                  margin-left: 10px;
+                  color: cornflowerblue;
+                  cursor: pointer;
+                " class="icofont icofont-pencil-alt-5" (click)="editarDatos(entrega, i)"></i>
+            <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}" style="
+                  font-size: 18px;
+                  margin-left: 10px;
+                  color: cornflowerblue;
+                  cursor: pointer;
+                " class="icofont icofont icofont-trash" (click)="eliminarDato1(i)"></i>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </p-tabPanel>
+  <p-tabPanel header="Crear Dirección de Entrega">
+    <input [(ngModel)]="entregar" type="checkbox" (change)="datosEntregass($event)" />
+    <label class="form-label" for="razon_social">Los datos de Entrega son iguales a los datos de
+      cliente</label>
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="form-label" for="alias_entrega">Referencia Para Datos de Entrega</label>
+        <input class="form-control" type="text" id="alias_entrega" [(ngModel)]="alias_entrega" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">
+        <label class="form-label" for="nombres_entrega">Nombres:</label>
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label" for="nombres_entrega">Apellidos:</label>
+      </div>
+
+      <div class="col-sm-6">
+        <label class="form-label" for="indicativo_entrega">Número de Celular:</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="nombres_entrega" [(ngModel)]="nombres_entrega" />
+      </div>
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="apellidos_entrega" [(ngModel)]="apellidos_entrega" />
+      </div>
+
+      <div class="col-sm-3 mb-3">
+        <select autocomplete="on" [(ngModel)]="indicativo_celular_entrega" class="form-control select-default"
+          id="validationCustom01" type="number" required="">
+          <option disabled selected>
+            Indicativo Celular
+          </option>
+          <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+            {{ item.nombre }} (+{{ item.phone_code }})
+          </option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="numero_celular_entrega" [(ngModel)]="numero_celular_entrega" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <label class="form-label" for="otro_numero_entrega">Agregar Otro Número:</label>
+      </div>
+
+      <div class="col-sm-6">
+        <label class="form-label" for="direccion_entrega">Dirección:</label>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">
+        <select autocomplete="on" [(ngModel)]="indicativo_celular_entrega2" class="form-control select-default"
+          id="validationCustom01" type="number" required="">
+          <option disabled selected>
+            Indicativo Celular
+          </option>
+          <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+            {{ item.nombre }} (+{{ item.phone_code }})
+          </option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="otro_numero_entrega" [(ngModel)]="otro_numero_entrega" />
+      </div>
+      <div class="col-sm-6">
+        <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <label class="form-label" for="observaciones">Nombre de la Unidad o Edificio</label>
+        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="nombreUnidad" />
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="observaciones">Especificaciones Internas: Torre, Apto,
+          Oficina</label>
+        <input class="form-control" type="text" id="especificaciones_internas" [(ngModel)]="especificacionesInternas" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="form-label" for="observaciones">Observaciones Adicionales / Generales para la
+          entrega:</label>
+        <textarea class="form-control" id="observaciones" [(ngModel)]="observaciones"></textarea>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="form-label" for="observaciones">Barrio/Sector</label>
+        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="barrio" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">País</label>
+
+        <select [(ngModel)]="pais_entrega" class="form-control select-default" name="" id=""
+          (change)="identificarDepto1()">
+          <option disabled selected>País</option>
+          <option *ngFor="let item of paises" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">Departamento</label>
+        <select [(ngModel)]="departamento_entrega" class="form-control select-default" id="validationCustom01"
+          type="text" placeholder="Departamento" required="" (change)="identificarCiu1()">
+          <option disabled selected>Departamento</option>
+          <option *ngFor="let item of departamentos1" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">Ciudad</label>
+        <select [(ngModel)]="ciudad_municipio_entrega" class="form-control select-default" id="validationCustom01"
+          type="text" placeholder="Ciudad" required="" (change)="idBillingZone('')">
+          <option disabled selected>
+            Ciudad / Municipio
+          </option>
+          <option *ngFor="let item of ciudades1" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <label class="form-label" class="form-label" for="validationCustom01">Zona Cobro</label>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label" for="codigo_postal_entrega">Código Postal:</label>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+
+        <select class="form-control select-default" [(ngModel)]="zona_cobro" id="validationCustom01" type="text"
+          placeholder="Zona Cobro" required="" (change)="idBillingZone($event)">
+          <option disabled selected>
+            Zona Cobro
+          </option>
+          <option *ngFor="let item of filteredResults" value="{{ item.nombreZonaCobro }}">
+            {{ item.nombreZonaCobro }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-4">
+
+        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="codigo_postal_entrega" />
+      </div>
+      <div class="col-md-4 mb-3">
+        <button class="btn btn-primary" (click)="redirectToPostalCode()">
+          Conoce Tu Codigo Postal
+        </button>
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" class="btn btn-primary" (click)="guardarDatosEntrega()">
+        Guardar
+      </button>
+    </div>
+  </p-tabPanel>
+
+</p-tabView>
+
+<ng-template #entrega let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Crear Datos de Entrega</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="form-label" for="alias_entrega">Referencia Para Datos de Entrega</label>
+        <input class="form-control" type="text" id="alias_entrega" [(ngModel)]="alias_entrega" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">
+        <label class="form-label" for="nombres_entrega">Nombres:</label>
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label" for="nombres_entrega">Apellidos:</label>
+      </div>
+
+      <div class="col-sm-6">
+        <label class="form-label" for="indicativo_entrega">Número de Celular:</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="nombres_entrega" [(ngModel)]="nombres_entrega" />
+      </div>
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="apellidos_entrega" [(ngModel)]="apellidos_entrega" />
+      </div>
+
+      <div class="col-sm-3 mb-3">
+        <select autocomplete="on" [(ngModel)]="indicativo_celular_entrega" class="form-control select-default"
+          id="validationCustom01" type="number" required="">
+          <option disabled selected>Indicativo Celular</option>
+          <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+            {{ item.nombre }} (+{{ item.phone_code }})
+          </option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="numero_celular_entrega" [(ngModel)]="numero_celular_entrega" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <label class="form-label" for="otro_numero_entrega">Agregar Otro Número:</label>
+      </div>
+
+      <div class="col-sm-6">
+        <label class="form-label" for="direccion_entrega">Dirección:</label>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">
+        <select autocomplete="on" [(ngModel)]="indicativo_celular_entrega2" class="form-control select-default"
+          id="validationCustom01" type="number" required="">
+          <option disabled selected>Indicativo Celular</option>
+          <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+            {{ item.nombre }} (+{{ item.phone_code }})
+          </option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="otro_numero_entrega" [(ngModel)]="otro_numero_entrega" />
+      </div>
+      <div class="col-sm-6">
+        <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <label class="form-label" for="observaciones">Nombre de la Unidad o Edificio</label>
+        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="nombreUnidad" />
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="observaciones">Especificaciones Internas: Torre, Apto, Oficina</label>
+        <input class="form-control" type="text" id="especificaciones_internas" [(ngModel)]="especificacionesInternas" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="form-label" for="observaciones">Observaciones Adicionales / Generales para la entrega:</label>
+        <textarea class="form-control" id="observaciones" [(ngModel)]="observaciones"></textarea>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="form-label" for="observaciones">Barrio/Sector</label>
+        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="barrio" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">País</label>
+
+        <select [(ngModel)]="pais_entrega" class="form-control select-default" name="" id=""
+          (change)="identificarDepto1()">
+          <option disabled selected>País</option>
+          <option *ngFor="let item of paises" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">Departamento</label>
+        <select [(ngModel)]="departamento_entrega" class="form-control select-default" id="validationCustom01"
+          type="text" placeholder="Departamento" required="" (change)="identificarCiu1()">
+          <option disabled selected>Departamento</option>
+          <option *ngFor="let item of departamentos1" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">Ciudad</label>
+        <select [(ngModel)]="ciudad_municipio_entrega" class="form-control select-default" id="validationCustom01"
+          type="text" placeholder="Ciudad" required="" (change)="idBillingZone('')">
+          <option disabled selected>Ciudad / Municipio</option>
+          <option *ngFor="let item of ciudades1" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <label class="form-label" class="form-label" for="validationCustom01">Zona Cobro</label>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label" for="codigo_postal_entrega">Código Postal:</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+
+        <select class="form-control select-default" [(ngModel)]="zona_cobro" id="validationCustom01" type="text"
+          placeholder="Zona Cobro" required="" (change)="idBillingZone($event)">
+          <option disabled selected>
+            Zona Cobro
+          </option>
+          <option *ngFor="let item of filteredResults" value="{{ item.nombreZonaCobro }}">
+            {{ item.nombreZonaCobro}} ({{item.valorZonaCobro | currency}})
+          </option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="codigo_postal_entrega" />
+      </div>
+      <div class="col-md-4 mb-3">
+        <button class="btn btn-primary" (click)="redirectToPostalCode()">
+          Conoce Tu Codigo Postal
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button *ngIf="editandodato" type="button" class="btn btn-outline-dark" (click)="editarDatosEntrega()">
+      Guardar
+    </button>
+  </div>
+</ng-template>
+<ng-template #facturacion let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">
+      Crear Datos Facturacion Electrónica
+    </h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="row">
+      <div class="col-sm-6">
+        <label class="form-label" for="razon_social">Referencia para guardar datos:</label>
+        <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social"
+          [(ngModel)]="alias_facturacion" />
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="razon_social">Razón Social / Nombre Completo:</label>
+        <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social" />
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="tipo_documento_facturacion">Tipo de Documento:</label>
+        <select class="form-control" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion">
+          <option value="CC-NIT">Cedula de Ciudadania</option>
+          <option value="PA">PA</option>
+          <option value="TI">TI</option>
+          <option value="NIT">NIT</option>
+        </select>
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="tipo_documento_facturacion">Documento:</label>
+        <input class="form-control" type="text" id="numero_documento_facturacion"
+          [(ngModel)]="numero_documento_facturacion" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <label class="form-label" for="indicativo">Número de Celular:</label>
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="correo_electronico">Correo Electrónico:</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-3 mb-3">
+        <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion" class="form-control select-default"
+          id="validationCustom01" type="number" required="">
+          <option disabled selected>Indicativo Celular</option>
+          <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+            {{ item.nombre }} (+{{ item.phone_code }})
+          </option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="numero_celular" [(ngModel)]="numero_celular_facturacion" />
+      </div>
+
+      <div class="col-sm-6">
+        <input class="form-control" type="email" id="correo_electronico" [(ngModel)]="correo_electronico_facturacion" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="form-label" for="direccion">Dirección del Comprador:</label>
+        <input class="form-control" type="text" id="direccion" [(ngModel)]="direccion_facturacion" />
+      </div>
+      <div class="col-sm-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">País</label>
+
+        <select [(ngModel)]="pais" class="form-control select-default" name="" id="" (change)="identificarDepto()">
+          <option disabled selected>País</option>
+          <option *ngFor="let item of paises" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">Departamento</label>
+        <select [(ngModel)]="departamento" class="form-control select-default" id="validationCustom01" type="text"
+          placeholder="Departamento" required="" (change)="identificarCiu()">
+          <option disabled selected>Departamento</option>
+          <option *ngFor="let item of departamentos" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label" class="form-label" for="validationCustom01">Ciudad</label>
+        <select [(ngModel)]="ciudad_municipio" class="form-control select-default" id="validationCustom01" type="text"
+          placeholder="Ciudad" required="">
+          <option disabled selected>Ciudad / Municipio</option>
+          <option *ngFor="let item of ciudades" value="{{ item }}">
+            {{ item }}
+          </option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <label class="form-label" for="codigo_postal">Código Postal:</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <input class="form-control" type="text" id="codigo_postal" [(ngModel)]="codigo_postal" />
+      </div>
+      <div class="col-md-4 mb-3">
+        <button class="btn btn-primary" (click)="redirectToPostalCode()">
+          Conoce Tu Codigo Postal
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" *ngIf="editandodato" class="btn btn-outline-dark" (click)="editarDatosFacturacion()">
+      Guardar
+    </button>
+  </div>
+</ng-template>

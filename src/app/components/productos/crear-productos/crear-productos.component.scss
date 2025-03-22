@@ -1,0 +1,155 @@
+@import '~dropzone/dist/min/dropzone.min.css';
+
+.form-label {
+  font-weight: bold;
+  color: black;
+}
+
+.currencyDivInfo {
+  text-align: right;
+  font-size: 22px;
+}
+
+.currencyDivInfoTax {
+  color: red;
+}
+
+.currencyDivInfoNumber {
+  color: green;
+}
+
+.ng-select.custom .ng-select-container {
+  min-height: 0px;
+  border-radius: 0;
+}
+
+.ng-dropdown-panel {
+  background-color: white;
+}
+
+.ng-option {
+  background-color: white !important;
+}
+
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected,
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected.ng-option-marked {
+  color: #fff !important;
+  background-color: #313131 !important;
+}
+
+.ng-select.custom {
+
+  height: 38px;
+
+  background-color: white !important;
+  font-size: 1rem;
+
+  font-family: sans-serif;
+}
+
+.ng-select.custom .ng-option {
+  background-color: red !important;
+}
+
+.error-message {
+  color: red;
+}
+
+.notaprecio {
+  font-size: 1.1rem;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: #313131 1px;
+  border-style: dashed;
+  padding: 10px;
+  opacity: calc(80%);
+}
+
+h4 {
+  margin-bottom: 18px;
+}
+
+.grid-container-exposicion {
+  display: grid;
+  row-gap: 4x;
+  grid-template-columns: auto;
+  padding: 5px;
+}
+
+.grid-item {
+  padding: 0px;
+}
+
+
+.redasteris {
+  color: red;
+}
+
+.btn-small {
+  max-width: 10px;
+}
+
+.form-control {
+  color: black;
+}
+
+td {
+  color: black;
+}
+
+#tbodyArticulos {
+  color: black;
+}
+
+#tbodyArticulos>tr>td.right-align {
+  text-align: right;
+  color: black;
+}
+
+.ai-button-image {
+  width: 25px;
+  /* Ajusta el tamaño según sea necesario */
+  height: 25px;
+  /* Ajusta el tamaño según sea necesario */
+  padding: 2px;
+  /* Añade un poco de espacio alrededor de la imagen */
+  cursor: pointer;
+  border: 1px solid #9b00ff;
+  transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
+  border-radius: 50%;
+  /* Hace que la imagen sea circular */
+}
+
+.ai-button-image:hover {
+  transform: scale(1.1);
+  /* Aumenta el tamaño al pasar el ratón */
+  box-shadow: 0 0 15px rgba(212, 0, 255, 0.5);
+  /* Añade un efecto de iluminación verde */
+  border: 2px solid #9b00ff;
+  /* Añade un borde verde */
+}
+
+// nueva ia
+
+.btn-ia {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-ia svg {
+  margin-right: 10px;
+}
+
+.btn-ia:hover {
+  background-color: #3700b3;
+}
+
+// fin nueva ia

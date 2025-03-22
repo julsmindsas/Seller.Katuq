@@ -1,0 +1,126 @@
+<app-breadcrumb [title]="'Carga de Ventas'" [items]="['Ventas']" [active_item]="'Carga de Ventas'"></app-breadcrumb>
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col-sm-6">
+        <h5>Carga masiva de ventas</h5>
+        <p>Utilice esta herramienta para cargar ventas desde un archivo JSON o Excel.</p>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label">Seleccione el tipo de archivo:</label>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'json', 'btn-outline-primary': selectedFileType !== 'json'}" (click)="selectedFileType = 'json'">JSON</button>
+            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'excel', 'btn-outline-primary': selectedFileType !== 'excel'}" (click)="selectedFileType = 'excel'">Excel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label" for="file">Seleccione el archivo:</label>
+          <input type="file" class="form-control" id="file" (change)="onFileSelected($event)" 
+                 [accept]="selectedFileType === 'json' ? '.json' : '.xlsx,.xls'">
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div *ngIf="selectedFile" class="alert alert-info">
+          <strong>Archivo seleccionado:</strong> {{selectedFile.name}}
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-4" *ngIf="selectedFile">
+      <div class="col-md-12">
+        <button class="btn btn-primary me-2" (click)="processFile()">
+          <i class="fa fa-upload me-1"></i> Procesar Archivo
+        </button>
+        <button class="btn btn-success" (click)="processWithKAI()">
+          <i class="fa fa-robot me-1"></i> Procesar con KAI
+        </button>
+      </div>
+    </div>
+
+    <!-- Vista previa de datos -->
+    <div class="row mt-4" *ngIf="fileData && fileData.length > 0">
+      <div class="col-md-12">
+        <h5>Vista previa de datos</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th *ngFor="let header of dataHeaders">{{header}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of fileData.slice(0, 10)">
+                <td *ngFor="let header of dataHeaders">{{row[header]}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div *ngIf="fileData.length > 10" class="text-muted">
+          Mostrando 10 de {{fileData.length}} registros.
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados del procesamiento -->
+    <div class="row mt-4" *ngIf="processingResult">
+      <div class="col-md-12">
+        <div [ngClass]="{'alert alert-success': processingSuccess, 'alert alert-danger': !processingSuccess}">
+          <h5>Resultado del procesamiento:</h5>
+          <p>{{processingResult}}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ayuda sobre formatos -->
+    <div class="row mt-5">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Información sobre formatos</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Formato JSON</h6>
+                <pre>
+[
+  {{'{{'}}
+    "id": "1",
+    "cliente": "Nombre Cliente",
+    "fecha": "2023-05-15",
+    "monto": 1500.00,
+    "productos": [
+      {{'{{'}} "nombre": "Producto 1", "cantidad": 2, "precio": 750.00 {{'}}'}}
+    ]
+  {{'}}'}}
+]
+                </pre>
+              </div>
+              <div class="col-md-6">
+                <h6>Formato Excel</h6>
+                <p>El archivo Excel debe contener las siguientes columnas:</p>
+                <ul>
+                  <li>ID</li>
+                  <li>Cliente</li>
+                  <li>Fecha</li>
+                  <li>Monto</li>
+                  <li>Productos (formato: "nombre:cantidad:precio")</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

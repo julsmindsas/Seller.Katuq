@@ -1,0 +1,87 @@
+<!-- <div *ngIf="isLoading$ | async" class="overlay">
+    <div class="spinner">
+        <div class="double-bounce1"></div>
+        <div class="double-bounce2"></div>
+    </div>
+</div> -->
+
+<div *ngIf="isLoading$ | async" class="overlay">
+    <!-- SVG Loader Personalizado -->
+    <div *ngIf="isLoading$ | async" class="overlay" role="status" aria-live="assertive" aria-busy="true">
+        <!-- SVG Loader Personalizado -->
+        <svg width="100" height="1000" viewBox="30 2 100 55.248439" version="1.1" id="svg1"
+            xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+            <style>
+                @keyframes colorChange {
+                    0% {
+                        fill: #00fcd6;
+                    }
+
+                    50% {
+                        fill: #9b00ff;
+                    }
+
+                    100% {
+                        fill: #00fcd6;
+                    }
+                }
+
+                @keyframes colorChange2 {
+                    0% {
+                        fill: #9b00ff;
+                    }
+
+                    50% {
+                        fill: #00fcd6;
+                    }
+
+                    100% {
+                        fill: #9b00ff;
+                    }
+                }
+
+                #path1 {
+                    animation: colorChange 2s infinite;
+                }
+
+                #path4 {
+                    animation: colorChange2 3s infinite;
+                }
+            </style>
+            <defs id="defs1">
+                <!-- 
+              <clipPath clipPathUnits="userSpaceOnUse" id="clipPath2">
+                <path d="M 0,768 H 1366 V 0 H 0 Z" transform="translate(-495.06811,-481.70231)" id="path2" class="svg-elem-1">
+                </path>
+              </clipPath>
+              <clipPath clipPathUnits="userSpaceOnUse" id="clipPath5">
+                <path d="M 0,768 H 1366 V 0 H 0 Z" transform="matrix(1.3333333,0,0,-1.3333333,0,1024)" id="path5"
+                  class="svg-elem-2"></path>
+              </clipPath>
+              <clipPath clipPathUnits="userSpaceOnUse" id="clipPath3">
+                <path d="M 430.877,481.941 H 555.598 V 327.895 H 430.877 Z" transform="translate(-555.59761,-481.91561)"
+                  id="path3" class="svg-elem-3"></path>
+              </clipPath> 
+              -->
+            </defs>
+            <g id="layer1" transform="translate(28.045829,25.66458)">
+                <path id="path1" class="animate-path"
+                    d="M 0,0 C 0.765,0.064 1.639,0.201 2.513,0.202 22.65,0.206 42.787,0.199 62.925,0.179 c 0.869,-0.001 1.739,-0.143 2.693,-0.227 0.485,-1.241 0.952,-2.373 1.373,-3.52 10.973,-29.897 21.941,-59.796 32.912,-89.695 3.796,-10.346 7.683,-20.454 12.106,-30.496 3.342,-7.589 6.685,-15.178 10.027,-22.767 0.817,-1.854 3.837,-5.241 1.036,-6.367 -0.816,-0.329 -2.407,-0.039 -3.287,-0.053 -3.201,-0.051 -6.402,-0.103 -9.604,-0.154 -8.572,-0.138 -17.144,-0.275 -25.716,-0.413 -5.37,-0.086 -10.741,-0.172 -16.112,-0.258 -4.873,-0.078 -10.275,0.452 -15.049,-0.369 -0.637,1.283 -1.099,2.702 -1.572,4.06 -6.204,17.835 -12.394,35.676 -18.614,53.506 -0.437,1.253 -1.086,2.431 -1.624,3.649 -0.406,0.917 -0.845,1.824 -1.176,2.768 -2.847,8.123 -5.676,16.25 -8.503,24.379 -5.508,15.835 -11.016,31.67 -16.512,47.509 C 3.544,-13.2 1.814,-8.122 0.089,-3.041 -0.225,-2.115 -0.729,-1.176 0,0"
+                    style="display: inline; fill: rgb(0, 252, 214); fill-opacity: 1; fill-rule: nonzero; stroke: none;"
+                    transform="matrix(0.35277776,0,0,-0.35277776,-1.6024259,-25.189)" clip-path="url(#clipPath2)">
+                </path>
+                <g opacity="0.899994" id="g4" clip-path="url(#clipPath5)" style="display:inline"
+                    transform="matrix(0.26458333,0,0,0.26458333,-176.25145,-126.18847)">
+                    <path class="animate-path"
+                        d="m 0,0 c -0.765,0.064 -2.577,-0.012 -3.45,-0.012 -20.138,0.005 -40.275,-0.002 -60.412,-0.022 -0.87,-0.001 -1.74,-0.144 -2.694,-0.228 -0.485,-1.241 -0.952,-2.372 -1.373,-3.519 -10.973,-29.898 -21.941,-59.797 -32.911,-89.695 -3.797,-10.346 -7.684,-20.454 -12.107,-30.496 -3.342,-7.589 -5.996,-15.626 -9.338,-23.216 -0.817,-1.853 -1.572,-3.279 -2.412,-5.312 -0.336,-0.813 3.094,-0.645 3.974,-0.659 3.201,-0.052 6.403,-0.103 9.604,-0.154 8.572,-0.138 17.144,-0.275 25.716,-0.413 5.371,-0.086 10.742,-0.172 16.112,-0.258 4.873,-0.078 10.482,-0.016 15.318,0.046 0.49,1.285 0.831,2.287 1.303,3.644 6.204,17.836 12.394,35.676 18.614,53.507 0.437,1.252 1.086,2.43 1.625,3.649 0.405,0.917 0.845,1.824 1.175,2.768 2.847,8.122 5.677,16.25 8.504,24.379 5.507,15.835 11.015,31.67 16.511,47.509 1.759,5.069 3.489,10.147 5.214,15.228 C -0.713,-2.329 -0.544,-1.755 0,0"
+                        style="fill: rgb(155, 0, 255); fill-opacity: 1; fill-rule: nonzero; stroke: none;"
+                        transform="matrix(1.3333333,0,0,-1.3333333,740.7968,381.44587)" clip-path="url(#clipPath3)"
+                        id="path4" class="svg-elem-5"></path>
+                </g>
+            </g>
+            <span class="sr-only">Cargando...</span>
+        </svg>
+    </div>
+
+
+</div>

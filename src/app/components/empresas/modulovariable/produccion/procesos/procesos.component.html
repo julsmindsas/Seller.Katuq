@@ -1,0 +1,115 @@
+<app-breadcrumb [title]="'Procesos'" [items]="['Empresa','Modulo Variable','Produccion']"
+    [active_item]="'Procesos'"></app-breadcrumb>
+
+<div class="container-fluid">
+    <div class="row">
+
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-9"></div>
+                        <div class="col-sm-3">
+                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button"
+                                (click)="open(myModal)">
+                                <span style="color: white;">{{'Crear Nuevo Proceso' | translate}}</span>
+                                <i placement="top"
+                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                                    class="icofont icofont-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <p-organizationChart [value]="procesosConCentrosTrabajos" selectionMode="single"
+                                [(selection)]="selectedNode" (onNodeSelect)="onNodeSelect($event)" styleClass="company">
+                                <ng-template let-node pTemplate="person">
+                                    <div class="node-header">{{node.label}}</div>
+                                    <!-- <div class="node-content">
+                                        <div>{{node.data.nombre}}</div>
+                                    </div> -->
+                                </ng-template>
+                            </p-organizationChart>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--crear modal para crear procesos y centros de trabajo-->
+<ng-template #myModal let-modal>
+    <!-- <div class="modal-dialog" role="document"> -->
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">{{'Crear Proceso o Centro de Trabajo' | translate}}</h5>
+            <button type="button" class="close" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="exampleInputEmail1">{{'Nombre' | translate}}</label>
+                <input type="text" class="form-control" id="exampleInputEmail1" [(ngModel)]="procesoNuevo.nombre"
+                    aria-describedby="emailHelp" placeholder="{{'Nombre del proceso o centro de trabajo' | translate}}">
+            </div>
+            <hr>
+            <!-- Aquí puedes poner el formulario para crear el proceso o centro de trabajo -->
+            <p-pickList [source]="centrosTrabajoSource" [target]="procesoNuevo.centrosTrabajo"
+                sourceHeader="{{'Centros de trabajo disponible' | translate}}" targetHeader="{{'Centros de trabajo seleccionados' | translate}}"
+                [dragdrop]="true" [responsive]="true" [sourceStyle]="{'height':'30rem'}"
+                [targetStyle]="{'height':'30rem'}" filterBy="nombre" sourceFilterPlaceholder="{{'Buscar por nombre' | translate}}"
+                targetFilterPlaceholder="{{'Buscar por nombre' | translate}}">
+                <ng-template let-center pTemplate="item">
+                    <!-- style="font-size:14px;float:right;margin:15px 5px 0 0" -->
+                    <div>{{center?.nombre}}</div>
+
+                </ng-template>
+            </p-pickList>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="cerrarModal()">{{'Cerrar' | translate}}</button>
+            <button type="button" class="btn btn-primary" (click)="createProcessAndCentroTrabajo()">{{'Guardar cambios' | translate}}</button>
+        </div>
+    </div>
+    <!-- </div> -->
+</ng-template>
+
+<!--modal para editar o eliminar proceso con solo dos botones -->
+
+<ng-template #editDeleteModal let-modal>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">{{'Editar o Eliminar Proceso' | translate}}</h5>
+            <button type="button" class="close" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- dos botones opciones eliminar o editar -->
+            <div class="container ">
+                <div class="row">
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-8">
+                        <div class="row">
+                            <div class="col-6">
+                                <button class="btn btn-danger" (click)="deleteProcess()">{{'Eliminar' | translate}}</button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-primary" (click)="editProcess()">{{'Editar' | translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-2">
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+
+        </div>
+    </div>
+</ng-template>

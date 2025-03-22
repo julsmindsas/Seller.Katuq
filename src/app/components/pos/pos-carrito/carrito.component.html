@@ -1,0 +1,206 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <!-- Vista para pantallas grandes: tabla original -->
+      <div *ngIf="!isMobile">
+        <div class="card p-1 m-1">
+          <div class="card-header p-1 m-1">
+            <h5>Productos en la venta</h5>
+          </div>
+          <div class="card-body p-1 m-1">
+            <div class="table-responsive">
+              <table class="table">
+                <thead class="thead-light d-sm-table-header-group">
+                  <tr>
+                    <th>Producto</th>
+                    <th>Nombre Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Acción</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="productos.length === 0">
+                    <td colspan="6" class="text-center">No hay productos en el carrito</td>
+                  </tr>
+                  <br>
+                  <ng-container *ngFor="let itemCarrito of productos">
+                    <tr class="d-none d-sm-table-row">
+                      <td>
+                        <div class="cart-image">
+                          <img class="img-fluid"
+                            *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
+                            [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                            alt="{{ itemCarrito?.producto?.crearProducto?.titulo }}">
+                        </div>
+                      </td>
+                      <td>
+                        <div class="product-name">{{ itemCarrito?.producto?.crearProducto?.titulo }}</div>
+                      </td>
+                      <td>{{ checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0' }}</td>
+                      <td>
+                        <div class="qty-box">
+                          <div class="input-group">
+                            <span class="input-group-prepend">
+                              <button class="btn quantity-left-minus" type="button"
+                                (click)="menosCantidad(itemCarrito)">
+                                &minus;
+                              </button>
+                            </span>
+                            <input class="form-control input-number" type="text" readonly
+                              [value]="itemCarrito?.cantidad">
+                            <span class="input-group-prepend">
+                              <button class="btn quantity-right-plus" type="button"
+                                (click)="masCantidad(itemCarrito)">
+                                &plus;
+                              </button>
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <i class="fa fa-trash-o" style="cursor:pointer; text-align: center;margin: auto; width: 100%;" title="Eliminar"
+                          (click)="removeThisProduct(itemCarrito)"></i>
+                      </td>
+                      <td>{{ checkPriceScale(itemCarrito) * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0' }}</td>
+                    </tr>
+                    <ng-container *ngIf="itemCarrito.configuracion.adiciones.length > 0">
+                      <tr class="d-none d-sm-table-row">
+                        <td colspan="6"><strong>Adiciones:</strong></td>
+                      </tr>
+                      <tr class="d-none d-sm-table-row" *ngFor="let ad of itemCarrito?.configuracion?.adiciones">
+                        <td colspan="2">{{ ad.titulo }}</td>
+                        <td>{{ ad.referencia.precioTotal | currency:'USD':'symbol':'1.0-0' }}</td>
+                        <td>{{ ad.cantidad * itemCarrito?.cantidad }}</td>
+                        <td></td>
+                        <td>{{ ad.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0' }}</td>
+                      </tr>
+                    </ng-container>
+                    <ng-container *ngIf="itemCarrito.configuracion.preferencias.length > 0">
+                      <tr class="d-none d-sm-table-row">
+                        <td colspan="6"><strong>Preferencias:</strong></td>
+                      </tr>
+                      <tr class="d-none d-sm-table-row" *ngFor="let pref of itemCarrito?.configuracion?.preferencias">
+                        <td colspan="2">{{ pref.titulo }}</td>
+                        <td>{{ pref.precioTotalConIva | currency:'USD':'symbol':'1.0-0' }}</td>
+                        <td>{{ pref.cantidad * itemCarrito?.cantidad }}</td>
+                        <td></td>
+                        <td>{{ pref.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0' }}</td>
+                      </tr>
+                    </ng-container>
+                  </ng-container>
+                  <tr class="d-none d-sm-table-row">
+                    <td colspan="6"><hr></td>
+                  </tr>
+                  
+                  <tr>
+                    <td colspan="2">
+                      <div class="input-group">
+                        <input class="form-control mr-2" maxlength="10" [(ngModel)]="cupon" type="text"
+                          placeholder="Ingresa codigo de cupón">
+                        <a class="btn btn-primary" (click)="validarCuponYAplica()">Aplicar</a>
+                      </div>
+                    </td>
+                    <td class="total-amount">
+                      <h6 class="m-0 text-right"><span class="f-w-600">Descuento (%):</span></h6>
+                    </td>
+                    <td>{{ porcentajeDescuento }}%</td>
+                    <td class="total-amount">
+                      <h6 class="m-0 text-right"><span class="f-w-600">Subtotal:</span></h6>
+                    </td>
+                    <td><strong>{{getTotalProductPriceInCart() | currency:'USD':'symbol':'1.0-0' }}</strong></td>
+                  </tr>
+                  <tr>
+                    <td colspan="4"></td>
+                    <td class="total-amount">
+                      <h6 class="m-0 text-right"><span class="f-w-600">Descuento:</span></h6>
+                    </td>
+                    <td style="font-weight: 900;"><strong>{{ valorDescuento | currency:'USD':'symbol':'1.0-0' }}</strong></td>
+                  </tr>
+                  <tr>
+                    <td colspan="4"></td>
+                    <td class="total-amount">
+                      <h6 class="m-0 text-right"><span class="f-w-600">Total:</span></h6>
+                    </td>
+                    <td><strong>{{ getTotalProductPriceWithDescountInCart() | currency:'USD':'symbol':'1.0-0' }}</strong></td>
+                  </tr>
+                  <!-- <tr>
+                    <td colspan="4"></td>
+                    <td>
+                        <label>Estos valores incluyen impuestos</label>
+                        <label>y no incluyen el envío.</label>
+                    </td>
+                  </tr> -->
+                </tbody>
+              </table>
+              <div class="mt-2" style="right: 10px; text-align: right;">
+                <label>Estos valores incluyen impuestos</label>
+                <label> y no incluyen el envío.</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista para móviles: cards -->
+      <div *ngIf="isMobile">
+        <!-- Contenedor con scroll para las cards -->
+        <div class="mobile-card-list">
+          <div class="row">
+            <div class="col-12" *ngFor="let itemCarrito of productos">
+              <div class="card carrito-card mb-2">
+                <!-- Imagen en la parte superior -->
+                <img class="card-img-top" 
+                     *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
+                     [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                     alt="{{ itemCarrito?.producto?.crearProducto?.titulo }}">
+                <div class="card-body">
+                  <h6 class="card-title">{{ itemCarrito?.producto?.crearProducto?.titulo }}</h6>
+                  <p class="card-text">
+                    <small>{{ itemCarrito?.producto?.identificacion?.referencia }}</small>
+                  </p>
+                  <p class="card-text">
+                    <strong>Precio:</strong> {{ checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0' }}
+                  </p>
+                  <p class="card-text">
+                    <strong>Cantidad:</strong> {{ itemCarrito?.cantidad }}
+                  </p>
+                  <p class="card-text">
+                    <strong>Total:</strong> {{ checkPriceScale(itemCarrito) * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0' }}
+                  </p>
+                  <button class="btn btn-sm btn-danger" (click)="removeThisProduct(itemCarrito)">
+                    <i class="fa fa-trash-o"></i> Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Resumen de costos permanece igual -->
+        <div class="cost-summary">
+          <div class="total-item">
+            <h6>Descuento (%):</h6>
+            <p>{{ porcentajeDescuento }}%</p>
+          </div>
+          <div class="total-item">
+            <h6>Total sin descuento:</h6>
+            <p>{{ getTotalProductPriceInCart() | currency:'USD':'symbol':'1.0-0' }}</p>
+          </div>
+          <div class="total-item">
+            <h6>Descuento:</h6>
+            <p>{{ valorDescuento | currency:'USD':'symbol':'1.0-0' }}</p>
+          </div>
+          <div class="total-item">
+            <h6>Total con descuento:</h6>
+            <p>{{ getTotalProductPriceWithDescountInCart() | currency:'USD':'symbol':'1.0-0' }}</p>
+          </div>
+          <div class="mt-2">
+            <label>Estos valores incluyen impuestos</label>
+            <label> y no incluyen el envío.</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

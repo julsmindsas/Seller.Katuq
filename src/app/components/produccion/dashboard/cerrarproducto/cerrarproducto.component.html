@@ -1,0 +1,28 @@
+<!-- producto-table.component.html -->
+<div *ngFor="let producto of productsToClose">
+    <div class="row">
+        <div class="col">
+            <h4>{{ producto.producto }}</h4>
+        </div>
+        <div class="col">
+            <button (click)="cambiarProductoEstado(producto)" *ngIf="verificarProduccionTotal(producto)"
+                class="btn btn-primary">Cerrar producto</button>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Artículo</th>
+                <th *ngFor="let proceso of producto.procesosUnicos">{{ proceso }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let articulo of producto.articulosConProcesos">
+                <td>{{ articulo.articulo }}</td>
+                <td *ngFor="let proceso of producto.procesosUnicos">
+                    {{ getProcesoIcono(getStatusProceso(articulo.procesos, proceso)) }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,203 @@
+Solicito a una IA analizar las respuestas del Diagnostic Survey y, basándose en el siguiente contexto y ejemplo de módulos, determinar cuáles son los módulos imprescindibles para optimizar el negocio del cliente. Al finalizar el análisis, la IA debe devolver la salida en formato JSON, filtrando y retornando sólo los menús (objetos) de los módulos necesarios.
+
+Contexto de módulos disponibles (estructura JSON ejemplo, con todos los módulos):
+
+{
+  "modules": [
+    {
+      "title": "Graficos",
+      "path": "dashboards",
+      "children": []
+    },
+    {
+      "title": "Seguridad",
+      "children": [
+        { "title": "Roles", "path": "rol/rol" },
+        { "title": "Usuarios*", "path": "usuarios" }
+      ]
+    },
+    {
+      "title": "Empresa",
+      "children": [
+        { "title": "Empresas", "path": "empresas" },
+        { "title": "Módulos Fijos*", "path": "empresas" },
+        { "title": "Módulos Variables", "path": "empresas/modulovariable/produccion/opciones" },
+        { "title": "Módulos Adicionales*", "path": "empresas" },
+        { "title": "Modulos Aliados*", "path": "empresas" },
+        { "title": "Integraciones*", "path": "empresas" }
+      ]
+    },
+    {
+      "title": "Notificaciones",
+      "children": [
+        { "title": "Notificaciones*", "path": "notificaciones" }
+      ]
+    },
+    {
+      "title": "Entregas",
+      "children": [
+        { "title": "Formas Entrega", "path": "formasEntrega" },
+        { "title": "Tipo de Entrega", "path": "formasEntrega/tipoentrega/lista" },
+        { "title": "Tiempos de entrega", "path": "tiempoentrega" }
+      ]
+    },
+    {
+      "title": "Promociones",
+      "children": [
+        { "title": "Generales %$*", "path": "" },
+        { "title": "Envios gratis %$*", "path": "" },
+        { "title": "Códigos %$*", "path": "" },
+        { "title": "Bonos de Regalo $*", "path": "" }
+      ]
+    },
+    {
+      "title": "Funcionalidades",
+      "children": [
+        { "title": "Bloqueo fechas y horarios*", "path": "" },
+        { "title": "Cambio precios*", "path": "" }
+      ]
+    },
+    {
+      "title": "Proceso",
+      "children": [
+        { "title": "Ocasiones", "path": "proceso/ocasiones" },
+        { "title": "Géneros", "path": "proceso/generos" }
+      ]
+    },
+    {
+      "title": "Catalogo",
+      "children": [
+        { "title": "Productos", "path": "productos" },
+        { "title": "Categorías", "path": "categorias" },
+        { "title": "Adiciones", "path": "ecommerce/adiciones/listar" },
+        { "title": "Lista Lite*", "path": "" }
+      ]
+    },
+    {
+      "title": "Extras",
+      "children": [
+        { "title": "Formas de pago", "path": "extras/formasPago" },
+        { "title": "Zonas Cobro", "path": "extras/zonasCobro" },
+        { "title": "Formas de pagos POS", "path": "extras/pos/formasPago" }
+      ]
+    },
+    {
+      "title": "Inventarios",
+      "children": [
+        { "title": "Catalogo", "path": "inventario/catalogo" }
+      ]
+    },
+    {
+      "title": "CRM",
+      "children": [
+        { "title": "Crear Clientes", "path": "ventas/clientes" },
+        { "title": "Lista de clientes", "path": "ventas/clienteslista" }
+      ]
+    },
+    {
+      "title": "Gestor de Pedidos",
+      "children": [
+        { "title": "Crear Ventas", "path": "ventas/crear-ventas" }
+      ]
+    },
+    {
+      "title": "Pedidos",
+      "children": [
+        { "title": "Lista", "path": "ventas/pedidos" }
+      ]
+    },
+    {
+      "title": "Tesoreria",
+      "children": [
+        { "title": "Tesoreria", "path": "" }
+      ]
+    },
+    {
+      "title": "Produccion",
+      "children": [
+        { "title": "Lista", "path": "produccion/dashboard" }
+      ]
+    },
+    {
+      "title": "Despachos",
+      "children": [
+        { "title": "Lista", "path": "despachos" }
+      ]
+    },
+    {
+      "title": "PdV",
+      "children": [
+        { "title": "PdV", "path": "" }
+      ]
+    },
+    {
+      "title": "Marketing",
+      "children": [
+        { "title": "Promociones", "path": "" },
+        { "title": "Landing Page", "path": "" },
+        { "title": "Email Marketing", "path": "" },
+        { "title": "SMS Marketing", "path": "" }
+      ]
+    },
+    {
+      "title": "Punto de Venta",
+      "children": [
+        { "title": "Ventas POS", "path": "pos/ventas" },
+        { "title": "Listado Ventas POS", "path": "pos/list-ventas" }
+      ]
+    },
+    {
+      "title": "Soporte Katuq",
+      "children": [
+        { "title": "Crear", "path": "soporte" },
+        { "title": "Mis Tickets", "path": "misTickets" },
+        { "title": "Mis Ideas", "path": "misIdeas" }
+      ]
+    },
+    {
+      "title": "IA (K.A.I)",
+      "children": [
+        { "title": "Asistencia", "path": "chat" }
+      ]
+    },
+    {
+      "title": "Katuq",
+      "children": [
+        { "title": "Información", "path": "" }
+      ]
+    }
+  ]
+}
+
+Formato esperado para las respuestas del cliente (similar al que se envía al servidor):
+
+{
+    answer =
+    'Productos físicos'
+    question =
+    '¿Cuál es el principal tipo de productos o servicios que ofrece su negocio?'
+    questionId =
+    'q1'
+}
+
+Ejemplo robusto del prompt de análisis:
+"Basándote en las respuestas del cliente y en el contexto de módulos proporcionado, analiza cada respuesta para identificar y justificar la selección de los módulos necesarios. Por ejemplo, si el cliente indica 'Productos físicos' y un catálogo amplio, se recomienda incluir el módulo 'Inventarios' (para la gestión del catálogo) y el módulo 'Gestor de Pedidos' o 'Ventas' para la administración de pedidos. Asimismo, si se evidencia interés en marketing digital, sugiere el módulo 'Marketing'. En caso de requerir personalización, automatización o análisis avanzado, considera 'Funcionalidades' y 'IA (K.A.I)'."
+
+La salida esperada de la IA debe ser en formato JSON, devolviendo únicamente los menús (objetos) de los módulos recomendados, en el siguiente formato:
+{
+  "recommendedModules": [
+    {
+      moduleTitle: "Inventarios",
+      modulePath: "inventario/catalogo",
+      justification: "El extenso catálogo y la respuesta indican la necesidad de una gestión robusta en inventario."
+    },
+    {
+      moduleTitle: "Ventas",
+      modulePath: "ventas",
+      justification: "El volumen de ventas y la gestión de pedidos hacen imprescindible este módulo."
+    }
+    // ...otros módulos recomendados...
+  ]
+}
+
+Utiliza la información proporcionada para brindar una solución integral que detalle, mediante análisis de las respuestas, cuáles son los módulos imprescindibles, especificando sus rutas y estructura de padres e hijos, y retorna únicamente en formato JSON los menús de los módulos recomendados.

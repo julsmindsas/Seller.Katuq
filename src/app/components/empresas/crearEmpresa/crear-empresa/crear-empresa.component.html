@@ -1,0 +1,1005 @@
+<app-breadcrumb [title]="'Crear Empresa'" [items]="['Maestros/Empresas']" [active_item]="'Crear Empresas'">
+</app-breadcrumb>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+
+                <form [formGroup]="f">
+
+                    <div class="card-body">
+                        <p-tabView [scrollable]="true">
+                            <p-tabPanel header="Datos Básicos">
+                                <div class="row">
+                                    <h5>Datos Básicos</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Nombre Completo o Razón
+                                            Social</label>
+                                        <input formControlName="nombre" class="form-control" id="validationCustom01"
+                                            type="text" placeholder="Nombre Empresa" required="">
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Nombre Comercial</label>
+                                        <input formControlName="nomComercial" class="form-control"
+                                            id="validationCustom01" type="text" placeholder="Nombre Comercial Empresa"
+                                            required="">
+
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label" for="validationCustom01">CC o Nit </label>
+                                        <input formControlName="nit" class="form-control" id="validationCustom01"
+                                            type="text" placeholder="Nit/CC sin DV" required="">
+
+                                    </div>
+                                    <div class="col-md-1 mb-3">
+                                        <label class="form-label" for="validationCustom01">DV</label>
+                                        <input formControlName="digitoVerificacion" class="form-control"
+                                            id="validationCustom01" type="text" maxlength="1" placeholder="DV"
+                                            required="">
+
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="validationCustom01">Número de teléfono
+                                            fijo</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="validationCustom01">Número de Celular</label>
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-2 mb-3">
+
+                                        <select autocomplete="on" formControlName="indicativoFijoLocal"
+                                            class="form-control select-default" id="validationCustom01" type="number"
+                                            placeholder="Indicativo Local">
+                                            <option disabled selected>Código Area</option>
+                                            <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
+                                                {{item.Ciudad}} (+{{item.CodigoArea}})</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-2 mb-3">
+
+                                        <input formControlName="fijo" class="form-control" id="validationCustom01"
+                                            type="number" placeholder="Número de telefono
+                                            fijo">
+
+                                    </div>
+                                    <div class="col-md-1 mb-3">
+
+                                        <input formControlName="extensionFijo" class="form-control"
+                                            id="validationCustom01" type="number" placeholder="Ext">
+                                    </div>
+                                    <div class="col-md-1"></div>
+                                    <div class="col-md-2 mb-3">
+
+                                        <select autocomplete="on" formControlName="indicativoCel"
+                                            class="form-control select-default" id="validationCustom01" type="number"
+                                            placeholder="Número de Celular" required="">
+                                            <option disabled selected>Código País</option>
+                                            <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
+                                                {{item.nombre}} (+{{item.phone_code}})</option>
+                                        </select>
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+
+                                        <input formControlName="cel" class="form-control" id="validationCustom01"
+                                            type="number" placeholder="Número de Celular" required="">
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Email Para Facturación
+                                            Electrónica</label>
+                                        <input formControlName="emailFactuElec" class="form-control"
+                                            id="validationCustom01" type="text" placeholder="Correo Electrónico"
+                                            required="">
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Email Contacto
+                                            General</label>
+                                        <input formControlName="emailContactoGeneral" class="form-control"
+                                            id="validationCustom01" type="text" placeholder="Correo Electrónico"
+                                            required="">
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Email Para Notificaciones del
+                                            Sistema</label>
+                                        <input formControlName="emailNotificacionesSistema" class="form-control"
+                                            id="validationCustom01" type="text" placeholder="Correo Electrónico"
+                                            required="">
+
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Dirección</label>
+                                        <input formControlName="direccion" class="form-control" id="validationCustom01"
+                                            type="text" placeholder="Dirección" required="">
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Barrio</label>
+                                        <input formControlName="barrio" class="form-control" id="validationCustom01"
+                                            type="text" placeholder="Barrio" required="">
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">País</label>
+
+                                        <select formControlName="pais" class="form-control select-default" name="" id=""
+                                            (change)="identificarDepto()">
+                                            <option disabled selected>País</option>
+                                            <option *ngFor="let item of paises" value="{{item}}">{{item}}</option>
+                                        </select>
+
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Departamento</label>
+                                        <select formControlName="departamento" class="form-control select-default"
+                                            id="validationCustom01" type="text" placeholder="Departamento" required=""
+                                            (change)="identificarCiu()">
+                                            <option disabled selected>Departamento</option>
+                                            <option *ngFor="let item of departamentos" value="{{item}}">{{item}}
+                                            </option>
+                                        </select>
+
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Ciudad</label>
+                                        <select formControlName="ciudad" class="form-control select-default"
+                                            id="validationCustom01" type="text" placeholder="Ciudad" required="">
+                                            <option disabled selected>Ciudad</option>
+                                            <option *ngFor="let item of ciudades" value="{{item}}">{{item}}</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Código Postal</label>
+                                        <input formControlName="codPostal" class="form-control" type="text">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <button class="btn btn-primary" (click)="redirectToPostalCode()">Conoce Tu
+                                            Codigo Postal</button>
+                                    </div>
+
+                                </div>
+                            </p-tabPanel>
+                            <p-tabPanel header="Personifica tu marca">
+
+                                <div class="row text-center">
+                                    <h5>Personifica tu marca: ¡Dale vida a tus datos!</h5>
+                                </div>
+                                <div class="row">
+
+                                    <form [formGroup]="frmPersonificaTuMarca" style="align-items: center;">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="marcaProyeccion">¿Cómo quieres que tu marca
+                                                se proyecte?</label>
+                                            <textarea formControlName="marcaProyeccion" class="form-control"
+                                                id="marcaProyeccion" rows="4"
+                                                placeholder="Ej., inspiradora, confiable, innovadora."
+                                                required></textarea>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="marcaHabla">¿Cómo habla tu marca?</label>
+                                            <textarea formControlName="marcaHabla" class="form-control" id="marcaHabla"
+                                                rows="4"
+                                                placeholder="Ej., cercano pero profesional, formal, creativo, etc."
+                                                required></textarea>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="colaboradoresHablan">¿Cómo hablan tus
+                                                colaboradores?</label>
+                                            <textarea formControlName="colaboradoresHablan" class="form-control"
+                                                id="colaboradoresHablan" rows="4"
+                                                placeholder="Ej., siempre dirigirse al cliente por su nombre, mantener un tono respetuoso pero amigable."
+                                                required></textarea>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="tonoMarca">Describe el tono de tu marca en
+                                                tres palabras.</label>
+                                            <textarea formControlName="tonoMarca" class="form-control" id="tonoMarca"
+                                                rows="2" placeholder="Ej., profesional, amistoso, cercano."
+                                                required></textarea>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="frasesKai">¿Cuáles son las frases de saludo y
+                                                despedida que te gustaría que KAI use con los clientes?</label>
+                                            <textarea formControlName="frasesKai" class="form-control" id="frasesKai"
+                                                rows="4"
+                                                placeholder="Ej., ¡Bienvenido a [Nombre del Comercio]!, Gracias por tu preferencia. ¡Hasta pronto!"
+                                                required></textarea>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="manejoQuejas">¿Cómo manejas las preguntas o
+                                                quejas de clientes?</label>
+                                            <textarea formControlName="manejoQuejas" class="form-control"
+                                                id="manejoQuejas" rows="4"
+                                                placeholder="Describe aquí el proceso o tono que KAI debe usar."
+                                                required></textarea>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="terminosEvitar">¿Qué términos específicos
+                                                debe evitar KAI en sus respuestas?</label>
+                                            <textarea formControlName="terminosEvitar" class="form-control"
+                                                id="terminosEvitar" rows="4"
+                                                placeholder="Especifica palabras o frases que KAI no debe usar."
+                                                required></textarea>
+                                        </div>
+
+                                        <!-- Sección única para subir archivos -->
+                                        <div class="col-md-12 mb-3">
+                                            <h4>Carga de Archivos para Personalizar la Experiencia con KAI</h4>
+                                            <p>Sube documentos clave para que KAI entienda a fondo tu marca y pueda
+                                                brindar una experiencia personalizada.</p>
+                                            <ul>
+                                                <li>Manual de Marca</li>
+                                                <li>Modelo de Negocio</li>
+                                                <li>Preguntas Frecuentes (FAQ)</li>
+                                                <li>Manuales de Atención al Cliente</li>
+                                                <li>Presentaciones de Venta</li>
+                                                <li>Otros documentos importantes para tu identidad de marca</li>
+                                            </ul>
+                                            <label class="form-label" for="archivoUnico">Carga tus archivos
+                                                aquí:</label>
+                                            <app-images-manager [initialFiles]="uploadedFiles"
+                                                (filesUploaded)="handleFilesUploaded($event)"
+                                                (fileDeleted)="handleFileDeleted($event)">
+                                            </app-images-manager>
+                                            <hr class="divider my-3">
+                                            <div class="table-container" *ngIf="uploadedFiles?.length > 0">
+                                                <table class="file-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Nombre del Archivo</th>
+                                                            <th>URL</th>
+                                                            <th>Acciones</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr *ngFor="let file of uploadedFiles">
+                                                            <td>{{ file.name }}</td>
+                                                            <td><a [href]="file.url" target="_blank">Ver archivo</a>
+                                                            </td>
+                                                            <td>
+                                                                <button class="delete-button"
+                                                                    (click)="removeFile(file)">Eliminar</button>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <!-- 
+                                        <button type="submit" class="btn btn-primary"
+                                            [disabled]="!frmPersonificaTuMarca.valid">Enviar</button> -->
+                                    </form>
+
+                                </div>
+                            </p-tabPanel>
+                            <p-tabPanel header="Archivos Tributarios">
+
+                                <div class="row">
+                                    <h5>Datos Tributarios</h5>
+                                </div>
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">RUT</label>
+                                        <input class="form-control" id="validationCustom01" type="file"
+                                            placeholder="First name" required="">
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Cámara de Comercio</label>
+                                        <input class="form-control" id="validationCustom01" type="file"
+                                            placeholder="First name" required="">
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Certificado Bancario</label>
+                                        <input class="form-control" id="validationCustom01" type="file"
+                                            placeholder="First name" required="">
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Cédula Representante
+                                            legal</label>
+                                        <input class="form-control" id="validationCustom01" type="file"
+                                            placeholder="First name" required="">
+
+                                    </div>
+
+
+                                </div>
+                            </p-tabPanel>
+                            <p-tabPanel header="Contrato">
+                                <div class="row">
+                                    <h5>Contrato</h5>
+                                </div>
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <label class="form-label" for="validationCustom01">Aceptación Términos y
+                                                    Condiciones</label>
+                                            </td>
+                                            <td>
+                                                <input formControlName="terminosYCondiciones" id="validationCustom01"
+                                                    type="checkbox" placeholder="First name" required="">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><label class="form-label" for="validationCustom01">Aceptación política
+                                                    de tratamiento de datos
+                                                    personales</label>
+                                            </td>
+                                            <td><input formControlName="tratamientoDeDatosPersonales"
+                                                    id="validationCustom01" type="checkbox" placeholder="First name"
+                                                    required="">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td> <label class="form-label" for="validationCustom01">Contrato</label>
+                                            </td>
+                                            <td> <input class="form-control" id="validationCustom01" type="file"
+                                                    placeholder="First name" required="">
+                                            </td>
+                                        </tr>
+                                    </tbody>
+
+                                </table>
+
+
+
+                            </p-tabPanel>
+                            <p-tabPanel header="Contactos">
+                                <div class="row">
+                                    <h5>Datos de Contacto</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Nombre Completo</label>
+                                        <input #nomCompletoContacto class="form-control" id="validationCustom01"
+                                            type="text" placeholder="Nombre" required="">
+
+                                    </div>
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label" for="validationCustom01">Indicativo País</label>
+                                        <select #indicativoTelContacto class="form-control select-default"
+                                            id="validationCustom01" type="text" placeholder="Indicativo" required="">
+                                            <option disabled selected>Indicativo Area</option>
+                                            <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
+                                                {{item.nombre}} (+{{item.phone_code}})</option>
+                                        </select>
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Número de Celular</label>
+                                        <input #telContacto class="form-control" id="validationCustom01" type="text"
+                                            placeholder="Celular" required="">
+
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label" for="validationCustom01">Indicativo Local</label>
+                                        <select #indicativoFijoContacto class="form-control select-default"
+                                            id="validationCustom01" type="text" placeholder="Indicativo" required="">
+                                            <option disabled selected>Indicativo Local</option>
+                                            <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
+                                                {{item.Ciudad}} (+{{item.CodigoArea}})</option>
+                                        </select>
+
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Número de Telefono
+                                            Fijo</label>
+                                        <input #fijoContacto class="form-control" id="validationCustom01" type="text"
+                                            placeholder="Fijo" required="">
+
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label" for="validationCustom01">Extensión</label>
+                                        <input #extensionFijoContacto class="form-control" id="validationCustom01"
+                                            type="text" placeholder="Extensión" required="">
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Email de contacto</label>
+                                        <input #emailContacto class="form-control" id="validationCustom01" type="text"
+                                            placeholder="Correo" required="">
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Cargo</label>
+                                        <select #cargoContacto class="form-control select-default"
+                                            id="validationCustom01" type="text">
+                                            <option value="Ventas">Ventas</option>
+                                            <option value="Representante legal">Representante legal</option>
+                                            <option value="Contabilidad y Facturación.">Contabilidad y Facturación
+                                            </option>
+                                        </select>
+
+
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <button class="btn btn-primary" (click)="addRowContact()">Añadir
+                                            Contacto</button>
+                                    </div>
+                                    <div class="col-md-12 table-responsive">
+                                        <table class="table table-border-vertical table-xs">
+                                            <thead>
+                                                <tr>
+                                                    <th>Id</th>
+                                                    <th>Nombre Contacto</th>
+                                                    <th>indicativo Cel</th>
+                                                    <th>Cel</th>
+                                                    <th>Indicativo Fijo Sede</th>
+                                                    <th>Fijo</th>
+                                                    <th>Extension</th>
+                                                    <th>Email</th>
+                                                    <th>Cargo</th>
+                                                </tr>
+
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let item of contactos;let i = index">
+                                                    <td>{{i}}</td>
+                                                    <td>{{item.nomCompletoContacto}}</td>
+                                                    <td>{{item.indicativoTelContacto}}</td>
+                                                    <td>{{item.telContacto}}</td>
+                                                    <td>{{item.indicativoFijoContacto}}</td>
+                                                    <td>{{item.fijoContacto}}</td>
+                                                    <td>{{item.extensionFijoContacto}}</td>
+                                                    <td>{{item.emailContacto}}</td>
+                                                    <td>{{item.cargoContacto}}</td>
+                                                    <td><i class="fa fa-trash-o" (click)="deleteItemContact(i)"></i>
+                                                    </td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </p-tabPanel>
+                            <p-tabPanel header="Recursos Gráficos Principales">
+                                <div class="row">
+                                    <h5>Recursos Gráficos</h5>
+                                </div>
+                                <div class="row">
+                                    <!-- Logo -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="logoInput">Logo</label>
+                                        <input class="form-control" id="logoInput" type="file"
+                                            (change)="onFileSelected($event, 'logo')" placeholder="Correo" required>
+                                    </div>
+
+                                    <!-- Banners -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="bannerInput">Banners</label>
+                                        <input class="form-control" id="bannerInput" type="file"
+                                            (change)="onFileSelected($event, 'banner')" placeholder="Correo" required>
+                                    </div>
+
+                                    <!-- Email Encabezado -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="emailHeaderInput">Email Encabezado</label>
+                                        <input class="form-control" id="emailHeaderInput" type="file"
+                                            (change)="onFileSelected($event, 'imageEmail.encabezado')"
+                                            placeholder="Correo" required>
+                                    </div>
+
+                                    <!-- Email Pie de Página -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="emailFooterInput">Email Pie de Página</label>
+                                        <input class="form-control" id="emailFooterInput" type="file"
+                                            (change)="onFileSelected($event, 'imageEmail.piepagina')"
+                                            placeholder="Correo" required>
+                                    </div>
+                                </div>
+
+                                <!-- Visor de imágenes basado en el formulario -->
+                                <div class="row mt-4">
+                                    <div class="col-md-3" *ngIf="f.get('logo')?.value">
+                                        <h5>Logo</h5>
+                                        <img [src]="f.get('logo').value" class="img-thumbnail" alt="Logo"
+                                            style="max-height: 150px;">
+                                    </div>
+                                    <div class="col-md-3" *ngIf="f.get('banner')?.value">
+                                        <h5>Banners</h5>
+                                        <img [src]="f.get('banner').value" class="img-thumbnail" alt="Banner"
+                                            style="max-height: 150px;">
+                                    </div>
+                                    <div class="col-md-3" *ngIf="f.get('imageEmail.encabezado')?.value">
+                                        <h5>Email Encabezado</h5>
+                                        <img [src]="f.get('imageEmail.encabezado').value"
+                                            class="img-thumbnail" alt="Email Encabezado" style="max-height: 150px;">
+                                    </div>
+                                    <div class="col-md-3" *ngIf="f.get('imageEmail.piepagina')?.value">
+                                        <h5>Email Pie de Página</h5>
+                                        <img [src]="f.get('imageEmail.piepagina').value"
+                                            class="img-thumbnail" alt="Email Pie de Página" style="max-height: 150px;">
+                                    </div>
+                                </div>
+
+                            </p-tabPanel>
+
+                            <p-tabPanel header="Sedes">
+                                <div class="row">
+                                    <h5>Sedes</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Nombre Sede</label>
+                                        <input #nombreSede class="form-control" id="validationCustom01" type="text"
+                                            placeholder="Nombre Sede" required="">
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Dirección</label>
+                                        <input #direccionSede class="form-control" id="validationCustom01" type="text"
+                                            placeholder="Dirección" required="">
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Barrio</label>
+
+                                        <input #barrio class="form-control" id="validationCustom01" type="text"
+                                            placeholder="Dirección" required="">
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">País</label>
+
+                                        <select #paisSede class="form-control select-default" name="" id=""
+                                            (change)="identificarDepto1()">
+                                            <option disabled selected>País</option>
+                                            <option *ngFor="let item of paises1" value="{{item}}">{{item}}</option>
+                                        </select>
+
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Departamento</label>
+                                        <select #dptoSede class="form-control select-default" id="validationCustom01"
+                                            type="text" placeholder="Departamento" required=""
+                                            (change)="identificarCiu1()">
+                                            <option disabled selected>Departamento</option>
+                                            <option *ngFor="let item of departamentos" value="{{item}}">{{item}}
+                                            </option>
+                                        </select>
+
+                                    </div>
+
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label" for="validationCustom01">Ciudad</label>
+                                        <select #ciudadSede class="form-control select-default" id="validationCustom01"
+                                            type="text" placeholder="Ciudad" required="">
+                                            <option disabled selected>Ciudad</option>
+                                            <option *ngFor="let item of ciudades" value="{{item}}">{{item}}</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Código Postal</label>
+                                        <input class="form-control" #codigoPostalSede type="text"
+                                            placeholder="Codigo Postal">
+
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+
+
+                                        <br>
+                                        <button class="btn btn-primary" (click)="redirectToPostalCode()">Conoce Tu
+                                            Codigo Postal</button>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Rotulo Dirección</label>
+                                        <select #rotuloDireccionSede class="form-control select-default"
+                                            id="validationCustom01" type="text" placeholder="Ciudad" required="">
+                                            <option value="Punto de Venta"> Punto de Venta</option>
+                                            <option value="Planta de Fábrica"> Planta de Fábrica</option>
+                                            <option value="Planta de Producción"> Planta de Producción</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Como llegar</label>
+                                        <input class="form-control" #comoLlegarSede type="text"
+                                            placeholder="Como llegar">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Link Google Maps</label>
+                                        <input class="form-control" #linkGoogleMapsSede type="text"
+                                            placeholder="Como llegar">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <button class="btn btn-primary" (click)="addRow()">Añadir Sede</button>
+                                    </div>
+                                    <div class="col-md-12 table-responsive">
+                                        <table class="table table-border-vertical table-xs">
+                                            <thead>
+                                                <tr>
+                                                    <th>Id</th>
+                                                    <th>Nombre Sede</th>
+                                                    <th>Dirección Sede</th>
+                                                    <th>Barrio Sede</th>
+                                                    <th>País Sede</th>
+                                                    <th>Departamento Sede</th>
+                                                    <th>Ciudad Sede</th>
+                                                    <th>Código Postal Sede</th>
+                                                    <th>Rotulo Dirección Sede</th>
+                                                    <th>Como llegar Sede</th>
+                                                    <th>Link Google Maps</th>
+                                                </tr>
+
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let item of sedess; let i = index">
+                                                    <td>{{i}}</td>
+                                                    <td>{{item.nombreSede}}</td>
+                                                    <td>{{item.direccionSede}}</td>
+                                                    <td>{{item.barrio}}</td>
+                                                    <td>{{item.paisSede}}</td>
+                                                    <td>{{item.dptoSede}}</td>
+                                                    <td>{{item.ciudadSede}}</td>
+                                                    <td>{{item.codigoPostalSede}}</td>
+                                                    <td>{{item.rotuloDireccionSede}}</td>
+                                                    <td>{{item.comoLlegarSede}}</td>
+
+                                                    <td>{{item.linkGoogleMaps}}</td>
+                                                    <td><i class="fa fa-trash-o" (click)="deleteItem(i)"></i>
+                                                    </td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+
+                            </p-tabPanel>
+                            <p-tabPanel header="Horarios de atención">
+                                <div class="row">
+                                    <h5>Horarios de atención</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="card">
+                                        <div class="car-header">
+
+                                            <h6>Servicio Al Cliente, Información Y Ventas en Canales Telefónicos y
+                                                Digitales</h6>
+
+                                        </div>
+                                        <div class="car-body">
+
+                                            <div class="row">
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label" for="validationCustom01">Apertura</label>
+                                                    <input formControlName="apeturaSac" class="form-control"
+                                                        id="validationCustom01" type="time" placeholder="First name"
+                                                        required="">
+
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label" for="validationCustom01">Cierre</label>
+                                                    <input formControlName="cierreSac" class="form-control"
+                                                        id="validationCustom01" type="time" placeholder="First name"
+                                                        required="">
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="card">
+                                        <div class="car-header">
+
+                                            <h6>Horarios Sedes</h6>
+
+                                        </div>
+                                        <div class="car-body">
+                                            <table>
+                                                <tbody formArrayName="horarioPV">
+                                                    <tr [formGroupName]="i"
+                                                        *ngFor="let item of f.value.horarioPV; let i = index">
+                                                        <td>
+                                                            <div class="row">
+                                                                <div class="col-md-4 ">
+                                                                    <label class="form-label"
+                                                                        for="validationCustom01">Punto de Venta </label>
+                                                                    <input disabled formControlName="nombrePV"
+                                                                        class="form-control" id="validationCustom01"
+                                                                        type="text" required="">
+
+                                                                </div>
+                                                                <div class="col-md-4 ">
+                                                                    <label class="form-label"
+                                                                        for="validationCustom01">Apertura </label>
+                                                                    <input formControlName="aperturaPv"
+                                                                        class="form-control" id="validationCustom01"
+                                                                        type="time" required="">
+
+                                                                </div>
+                                                                <div class="col-md-4 ">
+                                                                    <label class="form-label"
+                                                                        for="validationCustom01">Cierre </label>
+                                                                    <input formControlName="cierrePv"
+                                                                        class="form-control" id="validationCustom01"
+                                                                        type="time" required="">
+
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+
+
+
+
+
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="car-header">
+
+                                            <h6>Horarios de disponibilidad Pagina Web</h6>
+
+                                        </div>
+                                        <div class="car-body">
+
+                                            <div class="row">
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label" for="validationCustom01">Apertura</label>
+                                                    <input formControlName="aperturaPagweb" class="form-control"
+                                                        id="validationCustom01" type="time" placeholder="First name"
+                                                        required="">
+
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label" for="validationCustom01">Cierre</label>
+                                                    <input formControlName="cierrePagweb" class="form-control"
+                                                        id="validationCustom01" type="time" placeholder="First name"
+                                                        required="">
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </p-tabPanel>
+                            <p-tabPanel header="Ubicación">
+                                <div class="row">
+                                    <h5>Ubicación</h5>
+                                </div>
+                                <form [formGroup]="ciudadess">
+                                    <div class="row">
+                                        <h5>Ciudad</h5>
+                                        <div class="col-sm-4">
+                                            <label class="form-label" for="validationCustom01">Ciudades de
+                                                Origen</label>
+                                            <ng-select [items]="ciudadesOrigen"
+                                                style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+                                                formControlName="ciudadesOrigen" [closeOnSelect]="false">
+
+                                            </ng-select>
+
+
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <label class="form-label" for="validationCustom01">Ciudades de
+                                                Entregas</label>
+                                            <ng-select [items]="ciudadesEntrega"
+                                                style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+                                                formControlName="ciudadesEntrega" [closeOnSelect]="false">
+
+                                            </ng-select>
+
+                                        </div>
+
+                                    </div>
+                                </form>
+                            </p-tabPanel>
+                            <p-tabPanel header="Marketplace">
+                                <div class="row">
+                                    <h5>Marketplace</h5>
+                                </div>
+
+                                <div class="row">
+                                    <div>
+                                        <button class="btn btn-primary" (click)="addRowMP()">+Añadir Market
+                                            Place</button>
+                                    </div>
+
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th scope="col">Logo</th>
+                                                <th scope="col"> Nombre</th>
+                                                <th scope="col">Link</th>
+                                                <th scope="col">Activo</th>
+
+
+                                            </tr>
+                                        </thead>
+                                        <tbody formArrayName="marketPlace">
+                                            <tr [formGroupName]="i"
+                                                *ngFor="let item of this.f.get('marketPlace')['controls'];let i = index">
+
+                                                <th scope="row"><input aria-label="Selecciona un archivo "
+                                                        class="form-control" type="file" placeholder="First name"
+                                                        required="">
+
+
+                                                </th>
+                                                <td scope="row"><input formControlName="nombreMP" class="form-control"
+                                                        placeholder="Nombre" type="text" required="">
+                                                </td>
+                                                <td scope="row"><input formControlName="linkMP" class="form-control"
+                                                        type="text" placeholder="link marketplace" required="">
+                                                </td>
+                                                <td scope="row"><input formControlName="activoMp" type="checkbox"
+                                                        placeholder="link marketplace" required="">
+                                                </td>
+
+                                                <td><button class="btn btn-primary" (click)="lessRowMP(i)">X</button>
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </p-tabPanel>
+                            <p-tabPanel header="Redes Sociales">
+                                <div class="row">
+                                    <h5>Redes Sociales</h5>
+                                </div>
+                                <div class="row">
+                                    <div>
+                                        <button class="btn btn-primary" (click)="addRowRS()">+Añadir Redes
+                                            Sociales</button>
+                                    </div>
+
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th scope="col">Logo</th>
+                                                <th scope="col">Nombre</th>
+                                                <th scope="col">Link</th>
+                                                <th scope="col">Activo</th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody formArrayName="redesSociales">
+                                            <tr [formGroupName]="i"
+                                                *ngFor="let item of this.f.get('redesSociales')['controls'];let i = index">
+
+                                                <th scope="row"><input formControlName="logoRS" class="form-control"
+                                                        id="validationCustom01" type="file" placeholder="First name"
+                                                        required="" aria-label="Selecciona un archivo ">
+
+
+                                                </th>
+                                                <td><input formControlName="nombreRS" class="form-control"
+                                                        id="validationCustom01" type="text" placeholder="Nombre"
+                                                        required="">
+                                                </td>
+                                                <td><input formControlName="linkRS" class="form-control"
+                                                        id="validationCustom01" type="text"
+                                                        placeholder="Link Red Social" required="">
+                                                </td>
+                                                <td scope="row"><input formControlName="activoRs" type="checkbox"
+                                                        placeholder="link marketplace" required="">
+                                                </td>
+                                                <td><button class="btn btn-primary" (click)="lessRowRS(i)">X</button>
+                                                </td>
+
+
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </p-tabPanel>
+                            <p-tabPanel header="Canales de comunicación">
+                                <div class="row">
+                                    <h5>Canales de comunicación</h5>
+                                </div>
+                                <div class="row">
+                                    <div>
+                                        <button class="btn btn-primary" (click)="addRowCC()">+Añadir canales de
+                                            comunicación</button>
+                                    </div>
+
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th scope="col">Logo</th>
+                                                <th scope="col">Nombre</th>
+                                                <th scope="col">Link</th>
+                                                <th scope="col">Activo</th>
+
+
+                                            </tr>
+                                        </thead>
+                                        <tbody formArrayName="canalesComunicacion">
+                                            <tr [formGroupName]="i"
+                                                *ngFor="let item of this.f.get('canalesComunicacion')['controls'];let i = index">
+
+                                                <th scope="row"><input formControlName="logoCC" class="form-control"
+                                                        id="validationCustom01" type="file"
+                                                        aria-label="Selecciona un archivo " placeholder="First name"
+                                                        required="">
+
+
+                                                </th>
+                                                <td><input formControlName="nombreCC" class="form-control"
+                                                        id="validationCustom01" type="text" placeholder="Nombre"
+                                                        required="">
+                                                </td>
+                                                <td><input formControlName="linkCC" class="form-control"
+                                                        id="validationCustom01" type="text"
+                                                        placeholder="Link Canal de Comunicación" required="">
+                                                </td>
+                                                <td scope="row"><input formControlName="activoCc" type="checkbox"
+                                                        placeholder="link marketplace" required="">
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-primary" (click)="lessRowCC(i)">X</button>
+                                                </td>
+
+
+
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </p-tabPanel>
+                            <hr class="divider my-3" />
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <button *ngIf="mostrarCrear" (click)="guardar()"
+                                        class="btn btn-lg btn-primary">Guardar</button>
+                                    <button *ngIf="!mostrarCrear" (click)="editar()"
+                                        class="btn btn-lg btn-primary">Editar</button>
+                                </div>
+                            </div>
+                        </p-tabView>
+                    </div>
+
+
+
+                </form>
+            </div>
+        </div>
+    </div>

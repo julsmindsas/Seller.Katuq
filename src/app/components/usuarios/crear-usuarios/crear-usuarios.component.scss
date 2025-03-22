@@ -1,0 +1,7 @@
+.select-default {
+    color: gray; /* Cambia "gray" por el color que desees */
+  }
+  select ::selection {
+    background-color: transparent;
+    color: gray; /* Cambia "gray" por el color que desees */
+  }

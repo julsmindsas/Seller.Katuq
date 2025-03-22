@@ -1,0 +1,82 @@
+<app-breadcrumb [title]="'Ocasiones ¿Cuál Momento deseas Celebrar?'" [items]="['Proceso/Ocasiones']" [active_item]="'Ocasiones'"></app-breadcrumb>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+
+        <div class="loader-box" *ngIf="cargando">
+          <div class="loader-8"></div>
+        </div>
+
+        <div class="card-body custom-datatable" *ngIf="!cargando">
+          <div class="row">
+            <div class="col-sm-9">
+              <input type='text' class="filter-ngx form-control mb-3"
+                placeholder="{{'Escribe el texto que desees filtrar' | translate}}" (keyup)='updateFilter($event)' />
+            </div>
+            <div class="col-sm-3 mb-3" style="text-align: end;">
+
+              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearOcasiones()">
+                <span style="color: white;">{{'Crear Ocasiones' | translate}}</span>
+                <i placement="top" ngbTooltip="Nuevo"
+                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                  class="icofont icofont-plus"></i>
+              </button>
+            </div>
+            <div class="col-sm-6 mb-3" style="text-align: end;">
+
+              <button class="btn btn-primary btn-previous ml-3" *ngIf="userNit === '1'" type="button"
+                (click)="crear()">{{'New' | translate}}
+                <i placement="top" ngbTooltip="{{'New' | translate}}"
+                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                  class="icofont icofont-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <p-table [value]="rows" [paginator]="true" [rows]="10" [scrollable]="true" [responsive]="true" [scrollHeight]="'400px'" [sortField]="'id'" [sortOrder]="1">
+            <ng-template pTemplate="header">
+              <tr>
+                <th *ngIf="!isMobile" pSortableColumn="id">{{'Id' | translate}}
+                  <p-sortIcon field="id"></p-sortIcon>
+                </th>
+                <th pSortableColumn="name">{{'Nombre' | translate}}
+                  <p-sortIcon field="name"></p-sortIcon>
+                </th>
+                <th pSortableColumn="position">{{'Posición' | translate}}
+                  <p-sortIcon field="position"></p-sortIcon>
+                </th>
+                <th *ngIf="!isMobile" pSortableColumn="activo">{{'Activo' | translate}}
+                  <p-sortIcon field="activo"></p-sortIcon>
+                </th>
+                <th>{{'Acciones' | translate}}</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td *ngIf="!isMobile">{{ row.id }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ row.position }}</td>
+                <td *ngIf="!isMobile">{{ row.activo ? 'Si' : 'No' }}</td>
+                <td>
+                  <i placement="top" ngbTooltip="{{'Editar' | translate}}"
+                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                    class="icofont icofont-pencil-alt-5" (click)="editarOcasiones(row)"></i>
+                  <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
+                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                    class="icofont icofont-ui-delete" (click)="deleteOcasiones(row)"></i>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <button class="btn btn-primary" style="color: white;">
+            <i class="icofont icofont-file-excel"></i>Excel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

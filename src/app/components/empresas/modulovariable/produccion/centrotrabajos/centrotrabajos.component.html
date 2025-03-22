@@ -1,0 +1,82 @@
+<app-breadcrumb [title]="'Modulos variables'" [items]="['Empresa']" [active_item]="'centrosTrabajo'"></app-breadcrumb>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+        <div class="loader-box" *ngIf="cargando">
+          <div class="loader-8"></div>
+        </div>
+
+        <div class="card-body custom-datatable" *ngIf="!cargando">
+
+          <div class="row">
+            <div class="col-sm-6">
+              <input type='text' class="filter-ngx form-control mb-3"
+                placeholder="{{'Escribe el texto que desees filtrar' | translate}}" (keyup)='updateFilter($event)' />
+            </div>
+            <div class="col-sm-6 mb-3" style="text-align: end;">
+              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="abrirModal()">
+                <span style="color: white;">{{'Crear Nuevo Centro de Trabajo' | translate}}</span>
+                <i placement="top" ngbTooltip="{{'Nuevo' | translate}}"
+                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                  class="icofont icofont-plus"></i>
+              </button>
+            </div>
+            <div class="col-sm-6 mb-3" style="text-align: end;">
+              <button class="btn btn-primary btn-previous ml-3" *ngIf="userNit === '1'" type="button"
+                (click)="crear()">{{'Nuevo' | translate}}
+                <i placement="top" ngbTooltip="{{'Nuevo' | translate}}"
+                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                  class="icofont icofont-plus"></i>
+              </button>
+            </div>
+          </div>
+          <table class="table mt-3">
+            <thead>
+              <tr>
+                <th>{{'Posición' | translate}}</th>
+                <th>{{'Nombre' | translate}}</th>
+                <th>{{'Acciones' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let centro of centrosTrabajo; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ centro.nombre }}</td>
+                <td>
+                  <!-- <button class="btn btn-primary" (click)="editarCentroTrabajo(centro.id)">{{'Editar' | translate}}</button> -->
+                  <i placement="top" (click)="eliminarCentroTrabajo(centro)" ngbTooltip="{{'Eliminar' | translate}}"
+                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                    class="icofont icofont-trash" alt="vista previa" title="{{'Eliminar' | translate}}"></i>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para crear un nuevo centro de trabajo -->
+<ng-template #modalCrearCentroTrabajo let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{'Nuevo Centro de Trabajo' | translate}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form>
+      <div class="form-group">
+        <label for="nombreCentroTrabajo">{{'Nombre del Centro de Trabajo' | translate}}</label>
+        <input type="text" id="nombreCentroTrabajo" [(ngModel)]="nuevoCentroTrabajo" name="nombreCentroTrabajo"
+          class="form-control" placeholder="{{'Ingrese el nombre' | translate}}">
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-danger" (click)="modal.dismiss()">{{'Cancelar' | translate}}</button>
+    <button class="btn btn-primary" (click)="agregarCentroTrabajo(); modal.close();">{{'Guardar' | translate}}</button>
+  </div>
+</ng-template>

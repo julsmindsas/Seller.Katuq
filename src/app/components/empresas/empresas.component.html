@@ -1,0 +1,82 @@
+<!-- <app-breadcrumb [title]="'Empresas'" [items]="['Maestros']" [active_item]="'Empresas'"></app-breadcrumb> -->
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <br />
+      <div class="card">
+
+        <div class="loader-box" *ngIf="cargando">
+          <div class="loader-8"></div>
+        </div>
+
+        <div class="row col-12 m-2">
+          <div class="col-6">
+              <p class="text-left fc-info fs-24 m-0 p-0">{{'Empresas' | translate}}</p>
+              <!-- <p class="text-left text-muted fs-18 m-0 p-0">
+                  Listado de clientes.
+              </p> -->
+          </div>
+        </div>
+
+        <div class="card-body custom-datatable" *ngIf="!cargando">
+          <div class="row">
+            <div class="col-sm-6">
+              <input type='text' class="filter-ngx form-control mb-3"
+                placeholder="{{'Escribe el texto que desees filtrar' | translate}}" (keyup)='updateFilter($event)' />
+            </div>
+            <div *ngIf="isJulsmind" class="col-sm-6 mb-3" style="text-align: end;">
+              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearEmpresa()">
+                <span style="color: white;">{{'Crear Empresa' | translate}}</span>
+                <i placement="top" ngbTooltip="{{ 'Nuevo' | translate }}"
+                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                  class="icofont icofont-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabla usando p-table de PrimeNG -->
+          <p-table [value]="rows" [paginator]="true" [rows]="10" [loading]="cargando" [sortField]="'nit'"
+            [sortOrder]="1">
+            <ng-template pTemplate="header">
+              <tr>
+                <th *ngIf="!isMobile" pSortableColumn="nit">{{ 'Nit' | translate }}</th>
+                <th>{{ 'Razón Social' | translate }}</th>
+                <th>{{ 'Nombre Comercial' | translate }}</th>
+                <th>{{ 'Teléfono' | translate }}</th>
+                <th *ngIf="!isMobile">{{ 'Celular' | translate }}</th>
+                <th *ngIf="!isMobile">{{ 'Email' | translate }}</th>
+                <th *ngIf="!isMobile">{{ 'País' | translate }}</th>
+                <th *ngIf="!isMobile">{{ 'Activo' | translate }}</th>
+                <th>{{ 'Acciones' | translate }}</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr style="font-size: small;">
+                <td *ngIf="!isMobile">{{ row.nit }}-{{ row.digitoVerificacion }}</td>
+                <td>{{ row?.nombre }}</td>
+                <td>{{ row?.nomComercial }}</td>
+                <td>{{ row.fijo }}</td>
+                <td *ngIf="!isMobile">{{ row.celular }}</td>
+                <td *ngIf="!isMobile">{{ row?.emailContactoGeneral }}</td>
+                <td *ngIf="!isMobile">{{ row?.pais }}</td>
+                <td *ngIf="!isMobile">
+                  <p-checkbox [binary]="true" [(ngModel)]="row.activo" disabled></p-checkbox>
+                </td>
+                <td>
+                  <i placement="top" ngbTooltip="{{'Edit' | translate}}"
+                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                    class="icofont icofont-pencil-alt-5" (click)="editarEmpresa(row)"></i>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <button class="btn btn-primary" style="color: white;">
+            <i class="icofont icofont-file-excel"></i>{{ 'Excel' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

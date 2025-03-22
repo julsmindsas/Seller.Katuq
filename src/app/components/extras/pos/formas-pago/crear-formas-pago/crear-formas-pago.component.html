@@ -1,0 +1,113 @@
+<app-breadcrumb [title]="'Crear Formas de Pago'" [items]="['Extras/Formas de Pago']"
+    [active_item]="'Crear Formas de Pago'">
+</app-breadcrumb>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <form [formGroup]="fomrasPagoForm">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label for="image">Id</label>
+                                <input class="form-control" type="number" id="image" formControlName="id">
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="row">
+                                    <label for="id">Clasificación forma de pago:</label>
+                                </div>
+                                <div class="row">
+                                    <select class="form-control" id="id" formControlName="online">
+                                        <option value="Online">Online</option>
+                                        <option
+                                            value="Offline (Efectivo, Datafono, consignación, Transferencia, App, QR)">
+                                            Offline (efectivo, datafono, consignación, transferencia, App, QR)</option>
+                                        <option value="Billeteras Virtuales">Billeteras virtuales</option>
+                                        <option value="Criptomonedas">Criptomonedas</option>
+                                        <option value="Pago a Credito">Pago a crédito</option>
+                                        <option value="Envío de dinero a Colombia desde cualquier lugar del mundo">Envío
+                                            de dinero a Colombia desde cualquier lugar del mundo</option>
+                                    </select>
+                                </div>
+
+
+
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="image">Título</label>
+                                <input class="form-control" type="text" id="image" formControlName="nombre">
+                            </div>
+
+
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="name">Posición</label>
+                                <input class="form-control" type="number" id="name" formControlName="posicion">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label for="position">Integración</label>
+                                <select class="form-control" formControlName="integracion">
+                                    <option value="Si">Si</option>
+                                    <option value="No" selected>No</option>
+                                </select>
+                            </div>
+
+
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="row">
+                                    <label for="name">Activo</label>
+                                </div>
+                                <div class="row">
+                                    <input type="checkbox" id="name" formControlName="activo">
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="name">Descripción Correo Electrónico</label>
+                                <textarea class="form-control" style="width: 100%;"
+                                    formControlName="descripcionCorreoElectronico"></textarea>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label for="position">Recordatorio Cobro</label>
+                                <textarea class="form-control" style="width: 100%;"
+                                    formControlName="recordatorioCobro"></textarea>
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="name">Imagen Interna:</label>
+                                <input class="form-control" type="file" id="name">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label for="position">Imagen Carrito:</label>
+                                <input class="form-control" type="file" id="name">
+                            </div>
+
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <button *ngIf="!editando" (click)="guardar()" class="btn btn-primary"
+                                    type="submit">Crear Forma Pago</button>
+                                <button *ngIf="editando" (click)="editar()" class="btn btn-primary"
+                                    type="submit">Guardar</button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

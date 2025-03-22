@@ -1,0 +1,113 @@
+<p-tabView>
+<p-tabPanel header="Pagos asentados">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Forma de Pago</th>
+                <th>Número de Comprobante</th>
+                <th>Archivo</th>
+                <th>Notas</th>
+                <th>Número de Pedido</th>
+                <th>Fecha de Transacción</th>
+                <th>Valor Total de Venta</th>
+                <th>Valor Registrado</th>
+                <th>Valor Restante</th>
+                <th>Usuario de Registro</th>
+                <th>Fecha y Hora de Carga</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let pago of pedido?.PagosAsentados">
+                <td>{{pago.formaPago}}</td>
+                <td>{{pago.numeroComprobante}}</td>
+                <td><a [href]="pago.archivo" target="_blank">Ver archivo</a></td>
+                <td>{{pago.notas}}</td>
+                <td>{{pago.numeroPedido}}</td>
+                <td>{{pago.fecha}}</td>
+                <td>{{pago.valorTotalVenta | currency:'USD':'symbol':'1.0-0'}}</td>
+                <td>{{pago.valorRegistrado | currency:'USD':'symbol':'1.0-0'}}</td>
+                <td>{{pago.valorRestante | currency:'USD':'symbol':'1.0-0'}}</td>
+                <td>{{pago.usuarioRegistro}}</td>
+                <td>{{pago.fechaHoraCarga | date: 'yyyy-MM-dd hh:mm'}}</td>
+                <td>
+                    <!-- <button class="btn btn-primary" (click)="editarPago(pago)">Editar</button> -->
+                    <button class="btn btn-danger" (click)="eliminarPago(pago)">Eliminar</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</p-tabPanel>
+
+    <p-tabPanel header="Asentar un pago" *ngIf="permiteAsentarPago">
+        <form [formGroup]="transaccionForm" class="container">
+            <!-- Fecha de la transacción -->
+            <div class="form-group">
+                <label for="fecha">Fecha de la transacción:</label>
+                <input type="date" id="fecha" formControlName="fecha" class="form-control">
+                <div *ngIf="transaccionForm.get('fecha').touched && transaccionForm.get('fecha').errors"
+                    class="alert alert-danger">
+                    <div *ngIf="transaccionForm.get('fecha').errors.required">La fecha de la transacción es requerida.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forma de pago -->
+            <div class="form-group">
+                <label for="formaPago">Forma de pago:</label>
+                <select id="formaPago" formControlName="formaPago" class="form-control">
+                    <option *ngFor="let formaPago of formasPago" [value]="formaPago.id">{{formaPago.nombre}}</option>
+                </select>
+                <div *ngIf="transaccionForm.get('formaPago').touched && transaccionForm.get('formaPago').errors"
+                    class="alert alert-danger">
+                    <div *ngIf="transaccionForm.get('formaPago').errors.required">La forma de pago es requerida.</div>
+                </div>
+            </div>
+
+            <!-- Valor -->
+            <div class="form-group">
+                <label for="valor">Valor:</label>
+                <input type="number" id="valor" formControlName="valor" class="form-control">
+                <div *ngIf="transaccionForm.get('valor').touched && transaccionForm.get('valor').errors"
+                    class="alert alert-danger">
+                    <div *ngIf="transaccionForm.get('valor').errors.required">El valor es requerido.</div>
+                </div>
+                <div *ngIf="valorExcedido" class="alert alert-danger">
+                    El valor ingresado es mayor que el valor que falta por pagar que es: {{ pedido.faltaPorPagar | currency }}.
+                  </div>
+            </div>
+
+            <!-- Número de comprobante -->
+            <div class="form-group">
+                <label for="numeroComprobante">Número de comprobante:</label>
+                <input type="text" id="numeroComprobante" formControlName="numeroComprobante" class="form-control">
+                <div *ngIf="transaccionForm.get('numeroComprobante').touched && transaccionForm.get('numeroComprobante').errors"
+                    class="alert alert-danger">
+                    <div *ngIf="transaccionForm.get('numeroComprobante').errors.required">El número de comprobante es
+                        requerido.</div>
+                </div>
+            </div>
+
+            <!-- Agregar archivo -->
+            <div class="form-group">
+                <label for="archivo">Agregar archivo:</label>
+                <input type="file" id="archivo" class="form-control" (change)="onFileChange($event)">
+                <!-- No hay validación directa en el input de archivo en este ejemplo, ajusta según necesidad -->
+            </div>
+
+            <!-- Notas -->
+            <div class="form-group">
+                <label for="notas">Notas:</label>
+                <textarea id="notas" formControlName="notas" class="form-control"></textarea>
+                <div *ngIf="transaccionForm.get('notas').touched && transaccionForm.get('notas').errors"
+                    class="alert alert-danger">
+                    <div *ngIf="transaccionForm.get('notas').errors.required">Las notas son requeridas.</div>
+                </div>
+            </div>
+
+            <!-- Botón de registro -->
+            <button type="submit" (click)="registrarTransaccion()" class="btn btn-primary">Registrar
+                transacción</button>
+        </form>
+    </p-tabPanel>
+</p-tabView>

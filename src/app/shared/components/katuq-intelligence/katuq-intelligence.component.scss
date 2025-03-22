@@ -1,0 +1,51 @@
+
+.ai-button-image {
+    width: 30px;
+    /* Ajusta el tamaño según sea necesario */
+    height: 30px;
+    /* Ajusta el tamaño según sea necesario */
+    padding: 2px;
+    /* Añade un poco de espacio alrededor de la imagen */
+    cursor: pointer;
+    border: 1px solid #9b00ff;
+    transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
+    border-radius: 50%;
+    /* Hace que la imagen sea circular */
+  }
+  
+  .ai-button-image:hover {
+    transform: scale(1.1);
+    /* Aumenta el tamaño al pasar el ratón */
+    box-shadow: 0 0 15px rgba(212, 0, 255, 0.5);
+    /* Añade un efecto de iluminación verde */
+    border: 2px solid #9b00ff;
+    /* Añade un borde verde */
+  }
+  
+  // nueva ia
+  
+  .btn-ia {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn-ia svg {
+    margin-right: 10px;
+  }
+  
+  .btn-ia:hover {
+    transform: scale(1.1);
+    /* Aumenta el tamaño al pasar el ratón */
+    box-shadow: 0 0 15px rgba(212, 0, 255, 0.5);
+    /* Añade un efecto de iluminación verde */
+    border: 2px solid #9b00ff;
+  }
+  
+  // fin nueva ia

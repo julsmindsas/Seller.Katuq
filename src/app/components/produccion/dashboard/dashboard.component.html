@@ -1,0 +1,309 @@
+<app-breadcrumb [title]="'Produccion'" [items]="['Produccion/Tablero']" [active_item]="'Tablero'"></app-breadcrumb>
+<div class="container-xl withoutmargin">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="order-history table-responsive custom-datatable product-list-custom">
+                        <p-tabView [scrollable]="false" (onChange)="handleChange($event)">
+                            <p-tabPanel header="Ensamble">
+                                <p-table #dtEnsamble [value]="ordersEnsamble" dataKey="nombreArticulo" [rows]="10"
+                                    [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading"
+                                    styleClass="p-datatable-customers p-datatable-gridlines" [paginator]="true"
+                                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
+                                    [globalFilterFields]="['nombreProducto', 'nombreArticulo']">
+                                    <!-- CAPTION: Filtros y botones arriba de la tabla -->
+                                    <ng-template pTemplate="caption">
+                                        <div class="row p-grid">
+                                            <div class="col-4 p-col-12 p-md-6 p-lg-3">
+                                                <label for="fechaInicial" class="labelHead">Proceso</label>
+                                                <p-dropdown [options]="filterProcessCombo"
+                                                    [(ngModel)]="selectedProcesosFilter"
+                                                    placeholder="Seleccione un proceso" optionLabel="label"
+                                                    optionValue="value"
+                                                    (onChange)="filterOrderByProcess($event)"></p-dropdown>
+                                            </div>
+                                            <div class="col-4 p-col-12 p-md-6 p-lg-3">
+                                                <label for="fechaInicial">Fecha Inicial</label>
+                                                <p-calendar id="fechaInicial" [(ngModel)]="fechaInicial"
+                                                    inputId="fechaInicial" [showIcon]="false"
+                                                    dateFormat="d/m/yy"></p-calendar>
+                                            </div>
+                                            <div class="col-4 p-col-12 p-md-6 p-lg-3">
+                                                <label for="fechaFinal">Fecha Final</label>
+                                                <p-calendar id="fechaFinal" [(ngModel)]="fechaFinal"
+                                                    inputId="fechaFinal" [showIcon]="false"></p-calendar>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <button pButton label="Buscar" class="col-2 p-button-outlined"
+                                                icon="pi pi-refresh" (click)="refrescarDatosEnsamble()"></button>
+                                            <button pButton label="Limpiar" class="col-2 p-button-outlined"
+                                                icon="pi pi-filter-slash" (click)="clear(dtEnsamble)"></button>
+                                            <button pButton label="Para hoy" icon="pi pi-calendar"
+                                                (click)="filtrarParaHoy()"
+                                                class="p-mr-2 col-2 p-button-outlined"></button>
+                                            <button pButton label="Para mañana" icon="pi pi-calendar-plus"
+                                                (click)="filtrarParaManana()"
+                                                class="p-mr-2 col-2 p-button-outlined"></button>
+                                            <button pButton label="Para pasado mañana" icon="pi pi-calendar-times"
+                                                (click)="filtrarParaPasadoManana()"
+                                                class="col-3 p-button-outlined"></button>
+                                            <button pButton label="Cerrar Producto" icon="pi pi-inbox p-button-outlined"
+                                                (click)="cerrarProductosSeleccionados(cerrarProductoModal)"
+                                                class="col-3 p-button-outlined mt-5"></button>
+                                        </div>
+                                    </ng-template>
+
+                                    <!-- HEADER: Dos filas (títulos y filtros) -->
+                                    <ng-template pTemplate="header">
+                                        <tr class="p-table-tr-th">
+                                            <td style="width: 4rem !important"></td>
+                                            <th>
+                                                Nombre del Artículo
+                                                <p-columnFilter (onFilter)="handleFilter($event)" field="nombreArticulo"
+                                                    matchMode="contains"></p-columnFilter>
+                                            </th>
+                                            <th>
+                                                Nombre del Producto
+                                                <p-columnFilter field="nombreProducto"
+                                                    matchMode="contains"></p-columnFilter>
+                                            </th>
+                                            <th>Tracking de proceso</th>
+                                            <th>
+                                                Cantidad Total del Producto
+                                                <p-columnFilter field="cantidadTotalProducto"
+                                                    matchMode="equals"></p-columnFilter>
+                                            </th>
+                                            <th>
+                                                Cantidad Total del Producto Ensamble
+                                                <p-columnFilter field="cantidadTotalProductoEnsamble"
+                                                    matchMode="equals"></p-columnFilter>
+                                            </th>
+                                            <th>
+                                                Fecha entrega programada
+                                                <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega"
+                                                    [showMatchModes]="false" [showOperator]="false"
+                                                    [showAddButton]="false" type="date" display="menu">
+                                                    <ng-template pTemplate="filter" let-value
+                                                        let-filter="filterCallback">
+                                                        <p-calendar [(ngModel)]="dateFilter" (onSelect)="filter($event)"
+                                                            dateFormat="yy-mm-dd"></p-calendar>
+                                                    </ng-template>
+                                                </p-columnFilter>
+                                            </th>
+                                            <th>
+                                                Horario entrega programada
+                                                <p-columnFilter field="horarioEntrega" matchMode="in" [showMenu]="false"
+                                                    [showMatchModes]="false" [showOperator]="false"
+                                                    [showAddButton]="false" [matchMode]="'horarioEntregaCustom'">
+                                                    <ng-template pTemplate="filter" let-value
+                                                        let-filter="filterCallback">
+                                                        <p-multiSelect [ngModel]="value" [options]="horariosEntrega"
+                                                            placeholder="Horarios" (onChange)="filter($event.value)"
+                                                            optionLabel="horarioEntrega">
+                                                            <ng-template let-option pTemplate="item">
+                                                                <div class="p-multiselect-representative-option">
+                                                                    <span class="ml-1">{{option.horarioEntrega}}</span>
+                                                                </div>
+                                                            </ng-template>
+                                                        </p-multiSelect>
+                                                    </ng-template>
+                                                </p-columnFilter>
+                                            </th>
+                                        </tr>
+                                    </ng-template>
+
+                                    <!-- CUERPO: filas y row expansion -->
+                                    <ng-template pTemplate="body" let-agrupacionProducto let-expanded="expanded">
+                                        <tr class="p-table-tr-td">
+                                            <td>
+                                                <button type="button" pButton pRipple icon="pi pi-arrow-circle-up"
+                                                    (click)="seleccionarProcesoACerrar(processSelecteModal, agrupacionProducto)"></button>
+                                            </td>
+                                            <td>{{ agrupacionProducto.nombreArticulo }}</td>
+                                            <td>{{ agrupacionProducto.nombreProducto }}</td>
+                                            <td>
+                                                <p-button label="Ver Tracking" icon="pi pi-external-link"
+                                                    (onClick)="mostrarTracking(trackinModal, agrupacionProducto)"></p-button>
+                                            </td>
+                                            <td>{{ agrupacionProducto.cantidadTotalProducto }}</td>
+                                            <td>{{ agrupacionProducto.cantidadTotalProductoEnsamble }}</td>
+                                            <td>{{ agrupacionProducto.fechaEntrega}}</td>
+                                            <td>{{ agrupacionProducto.horarioEntrega}}</td>
+                                        </tr>
+                                    </ng-template>
+
+                                    <!-- MENSAJE SI LA TABLA ESTÁ VACÍA -->
+                                    <ng-template pTemplate="emptymessage">
+                                        <tr>
+                                            <td colspan="7" style="text-align: center; font-size: 3em !important;">No
+                                                hay productos en el carrito
+                                                para este pedido.</td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </p-tabPanel>
+                            <p-tabPanel header="Lista pedidos">
+                                <app-list-orders [isFromProduction]="true" #listOrders
+                                    (producirPedido)="producirPedido($event)"></app-list-orders>
+                            </p-tabPanel>
+                        </p-tabView>
+                    </div>
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td colspan="8">No hay productos en el carrito para este pedido.</td>
+                        </tr>
+                    </ng-template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Modales-->
+<ng-template #modalContent let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Vista pedido para imprimir</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div [innerHtml]="htmlModal" id="htmlPdf"></div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Cerrar</button>
+        <button type="button" class="btn btn-outline-dark" (click)="imprimirToPdf()">Imprimir</button>
+    </div>
+</ng-template>
+
+<ng-template #clientesModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title"></h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <app-clientes #clientes name="clientes" id="clientes" [isEdit]="true"
+            [clienteEdit]="clienteSeleccionado"></app-clientes>
+    </div>
+</ng-template>
+
+<ng-template #datosEnregaModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title"></h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+    </div>
+</ng-template>
+
+<ng-template #cerrarArticuloModal let-modal>
+    <div class="modal-header">
+        <h3 class="modal-title"> <span class="spanProccesName">Configuración {{selectedProcesos}}</span></h3>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <app-cerrararticulo #cerrarArticuloApp [selectedOrdersEnsamble]="selectedOrdersEnsamble"
+            [processSelected]="selectedProcesos" [isEdit]="true"></app-cerrararticulo>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" (click)="modal.close('cerrar')">Guardar</button>
+        <button type="button" class="btn btn-outline-dark" (click)="modal.close('Cross click')">Cancelar</button>
+    </div>
+</ng-template>
+
+<ng-template #notasModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title"></h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <app-notas #notaspedidos [pedido]="pedidoSeleccionado" [isEdit]="true"></app-notas>
+    </div>
+</ng-template>
+
+<ng-template #cambioEstadoPagoModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Cambiar estado de pago</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <p>Estás a punto de cambiar el estado de pago. Por favor, selecciona el nuevo estado de pago:</p>
+        <select class="form-control" [(ngModel)]="pedidoSeleccionado.estadoPago">
+            <option *ngFor="let estado of estadosPago" [value]="estado">{{estado}}</option>
+        </select>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)">Confirmar</button>
+    </div>
+</ng-template>
+
+<!--modal pára app-conf-product-to-cart-->
+<ng-template #processSelecteModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Procesos de {{
+            selectedOrdersEnsamble[0]?.nombreArticulo}}
+        </h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <p-timeline [value]="filterProcess" align="alternate">
+            <ng-template pTemplate="marker" let-event>
+                <span *ngIf="(event.status !='Producidas Totalmente' && event.statusJararquiaProcess)"
+                    class="custom-marker shadow-2" [style.backgroundColor]="event.color" style="cursor: pointer;"
+                    (click)="cerrarArticuloEnsamble(cerrarArticuloModal, event)">
+                    <i [ngClass]="event.icon"></i>
+                </span>
+                <span *ngIf="(event.status =='Producidas Totalmente' || !event.statusJararquiaProcess ) "
+                    class="custom-marker shadow-2" [style.backgroundColor]="event.color">
+                    <i [ngClass]="event.icon"></i>
+                </span>
+            </ng-template>
+            <ng-template pTemplate="content" let-event>
+                <p-card [header]="event.status" [subheader]="event.date" >
+                    <p style="font-size: 1rem !important;">{{event.label}} ({{event.status}})</p>
+                </p-card>
+            </ng-template>
+        </p-timeline>
+    </div>
+</ng-template>
+
+<ng-template #cerrarProductoModal let-modal>
+    <div class="modal-header">
+        <h3 class="modal-title" id="modal-basic-title">Cerrar productos para el macro {{procesoGlobal}}</h3>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <app-produccion-cerrarproducto [productsToClose]="productsToClose"></app-produccion-cerrarproducto>
+    </div>
+</ng-template>
+
+<ng-template #trackinModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Trackin del producto {{articuloEnsambleSelected?.nombreArticulo}}
+        </h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <app-tracking [articuloEnsamble]="articuloEnsambleSelected"></app-tracking>
+    </div>
+</ng-template>
+<!--Fin Modales-->

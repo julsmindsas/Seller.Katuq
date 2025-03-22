@@ -1,0 +1,149 @@
+<app-breadcrumb [title]="'Crear Usuarios'" [items]="['Maestros/Usuarios']" [active_item]="'Crear Usuarios'">
+</app-breadcrumb>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <form cForm [formGroup]="f">
+
+
+                    <div class="card-body">
+                        <div class="row">
+                            <h5>Datos Básicos</h5>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="nombre">Nombres</label>
+                                <input formControlName="nombre" class="form-control" id="Nombre" type="text"
+                                    placeholder="Nombres" required="">
+
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="validationCustom01">Apellidos</label>
+                                <input formControlName="apellido" class="form-control" id="apellido" type="text"
+                                    placeholder="Apellidos" required="">
+
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="validationCustom01">Tipo de Identificación</label>
+                                <select formControlName="tipoIdentificacion" class="form-control digits" name=""
+                                    id="tipoIdentificacion">
+                                    <option value="1">Seleccione</option>
+                                    <option value="TI">TI</option>
+                                    <option value="CC">CC</option>
+                                    <option value="CE">CE</option>
+                                    <option value="PASAPORTE">PASAPORTE</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="validationCustom01">Identificación</label>
+                                <input formControlName="identificacion" class="form-control" id="identificacion"
+                                    type="text" placeholder="Identificacion" required="">
+
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="email">Email</label>
+                                <input formControlName="email" autocomplete="off" class="form-control" id="email"
+                                    type="text" placeholder="Email" required="">
+
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="validationCustom01">Contraseña</label>
+                                <input formControlName="password" autocomplete="off" class="form-control" id="password"
+                                    type="password" placeholder="Contraseña" required="">
+
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label" for="validationCustom01">Número de teléfono fijo</label>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="validationCustom01">Número de Celular</label>
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-md-2 mb-3">
+
+                                <select autocomplete="on" formControlName="indicativoFijoLocal"
+                                    class="form-control select-default" id="validationCustom01" type="number"
+                                    placeholder="Indicativo Local">
+                                    <option disabled selected class="select-default">Indicativo Area</option>
+                                    <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
+                                        {{item.Ciudad}} (+{{item.CodigoArea}})</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 mb-3">
+
+                                <input formControlName="fijo" class="form-control" id="validationCustom01" type="number"
+                                    placeholder="Número de telefono
+                                    fijo">
+
+                            </div>
+                            <div class="col-md-1 mb-3">
+
+                                <input formControlName="extensionFijo" class="form-control" id="validationCustom01"
+                                    type="number" placeholder="Extension">
+                            </div>
+                            <div class="col-md-1"></div>
+                            <div class="col-md-2 mb-3">
+
+                                <select autocomplete="on" formControlName="indicativoCel"
+                                    class="form-control select-default" id="validationCustom01" type="number"
+                                    placeholder="Número de Celular" required="">
+                                    <option disabled selected class="select-default">Indicativo País</option>
+                                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
+                                        (+{{item.phone_code}})</option>
+                                </select>
+
+                            </div>
+                            <div class="col-md-4 mb-3">
+
+                                <input formControlName="cel" class="form-control" id="validationCustom01" type="number"
+                                    placeholder="Número de Celular" required="">
+
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="validationCustom01">Roles</label>
+                                <select formControlName="roles" class="form-control digits" name="" id="">
+                                    <option value="1">Seleccione</option>
+                                    <option *ngFor="let role of roles" [value]="role.rol">{{ role.rol }}</option>
+                                </select>
+
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="validationCustom01">Activo</label>
+                                <input id="checkbox-primary-1" type="checkbox" formControlName="activo">
+
+                            </div>
+
+                        </div>
+                        <div class="row" *ngIf="showCompanySelect">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="empresa">Empresa</label>
+                                <select formControlName="empresa" class="form-control" id="empresa">
+                                    <option *ngFor="let company of empresas" [value]="company.nomComercial">{{ company.nomComercial }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <button (click)="guardar()" class="btn btn-lg btn-primary">Guardar</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,429 @@
+<!-- =========================================
+     POS-LIST (list.component.html optimizado)
+     ========================================= -->
+
+<app-breadcrumb [title]="'Lista pedidos POS'" [items]="['Punto de venta']" [active_item]="'Listado Ventas POS'">
+</app-breadcrumb>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+
+            <!-- CAPTION: filtros y botones arriba -->
+            <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50" [paginator]="true"
+                [rowsPerPageOptions]="[5, 10, 25, 50]" [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos" [loading]="loading"
+                [resizableColumns]="true" [reorderableColumns]="true" [autoLayout]="true" [scrollable]="true"
+                [scrollHeight]="'calc(100vh - 450px)'"
+                styleClass=" p-datatable-sm p-datatable-customers p-datatable-gridlines"
+                [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
+                style="font-size: 0.9em;">
+
+                <!-- =========================
+  1) CAPTION (parte superior)
+  ========================= -->
+                <ng-template pTemplate="caption">
+                    <div class="container withoutmargin">
+                        <div class="row mb-4">
+                            <div class="col-md-2 col-sm-2">
+                                <label for="fechaInicial">Fecha Inicial</label>
+                                <p-calendar id="fechaInicial" dateFormat="dd/mm/yy" [(ngModel)]="fechaInicial"
+                                    inputId="fechaInicial" [showIcon]="true">
+                                </p-calendar>
+                            </div>
+
+                            <div class="col-md-2 col-sm-2">
+                                <label for="fechaFinal">Fecha Final</label>
+                                <p-calendar id="fechaFinal" dateFormat="dd/mm/yy" [(ngModel)]="fechaFinal"
+                                    inputId="fechaFinal" [showIcon]="true">
+                                </p-calendar>
+                            </div>
+
+                            <div class="col-md-8 col-sm-8">
+                                <label for="busqueda">Buscar pedido</label>
+                                <br />
+                                <p-autoComplete id="busqueda" [(ngModel)]="nroPedido"
+                                    [suggestions]="filteredOrderNumbers" (completeMethod)="filtroGlobal($event)"
+                                    field="nroPedido" placeholder="Busca pedido" (onSelect)="onOrderSelect($event)">
+                                </p-autoComplete>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-12 d-flex align-items-end justify-content-start" style="gap: 5px;">
+                                <button pButton label="Buscar" class="p-button-outlined" icon="pi pi-refresh"
+                                    (click)="refrescar(dt1)" style="font-size: 0.8em;"></button>
+
+                                <button pButton label="Limpiar" class="p-button-outlined" icon="pi pi-filter-slash"
+                                    (click)="clear(dt1)" style="font-size: 0.8em;"></button>
+
+                                <button pButton label="Para hoy" icon="pi pi-calendar" (click)="filtrarParaHoy()"
+                                    class="p-button-outlined" style="font-size: 0.8em;"></button>
+                                <button pButton label="Para mañana" icon="pi pi-calendar-plus"
+                                    (click)="filtrarParaManana()" class="p-button-outlined"
+                                    style="font-size: 0.8em;"></button>
+                                <button pButton label="Para pasado mañana" icon="pi pi-calendar-times"
+                                    (click)="filtrarParaPasadoManana()" class="p-button-outlined"
+                                    style="font-size: 0.8em;"></button>
+
+                                <button pButton label="Exportar a Excel" icon="pi pi-excel" (click)="exportarExcel()"
+                                    class="p-button-outlined" style="font-size: 0.8em;"></button>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+
+                <!-- =========================
+  2) HEADER con multi-level
+  ========================= -->
+                <ng-template pTemplate="header">
+
+                    <!-- Fila de filtros por columna -->
+                    <tr style="font-size: 0.8em;">
+                        <th style="min-width: 7rem;">Detalles</th>
+                        <!-- Filtro nroPedido -->
+                        <th>
+                            <div class="flex align-items-center">
+                                Número de Pedido
+                                <p-columnFilter type="text" field="nroPedido" display="menu"
+                                    placeholder="Buscar número de pedido" matchMode="contains" [showMenu]="true">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <!-- Filtro factura -->
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align-items-center">Número de Factura
+                                <p-columnFilter type="text" field="facturacion?.nrofactura" display="menu"
+                                    [showMenu]="true" placeholder="N° factura" matchMode="contains">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <!-- Opciones sin filtro -->
+                        <th>Opciones</th>
+                        <!-- Filtro estadoPago (multiSelect) -->
+                        <th>
+                            <div class="flex align-items-center">
+                                Estado de Pago
+                                <p-columnFilter field="estadoPago" matchMode="in" [showMenu]="true" display="menu">
+                                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                        <p-multiSelect [ngModel]="value" [options]="estadosPago"
+                                            placeholder="Seleccione" (onChange)="filter($event.value)"
+                                            style="width: 100%; font-size: 0.8em;">
+                                        </p-multiSelect>
+                                    </ng-template>
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <!-- Filtro Cliente -->
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align-items-center">Cliente
+                                <p-columnFilter type="text" field="cliente.nombres_completos" matchMode="contains"
+                                    placeholder="Cliente" [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+
+                        <!-- 7 filtros de valores: Bruto, Desc., Subt., IVA, Total, Anticipo, Falta -->
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align-items-center">
+                                Bruto
+                                <p-columnFilter type="numeric" field="totalPedidoSinDescuento" matchMode="contains"
+                                    placeholder="Bruto" [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align-items-center">
+                                Desc.
+                                <p-columnFilter type="numeric" field="totalDescuento" matchMode="contains"
+                                    placeholder="Desc." [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+
+                        </th>
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align-items-center">
+                                Subt.
+                                <p-columnFilter type="numeric" field="subtotal" matchMode="contains" placeholder="Subt."
+                                    [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align items-center">
+                                IVA
+                                <p-columnFilter type="numeric" field="totalImpuesto" matchMode="contains"
+                                    placeholder="IVA" [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align items-center">Total
+                                <p-columnFilter type="numeric" field="totalPedididoConDescuento" matchMode="contains"
+                                    placeholder="Total" [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align items-center">Anticipo
+                                <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
+                                    placeholder="Anticipo" [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align items-center">Falta
+                                <p-columnFilter type="numeric" field="faltaPorPagar" matchMode="contains"
+                                    placeholder="Falta" [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+
+                        <!-- Filtro fechaCreacion (customDate) -->
+                        <th>
+                            <div class="flex align-items-center">
+                                Fecha de compra
+                                <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion" type="date"
+                                    display="menu" [showMatchModes]="false" [showOperator]="false"
+                                    [showAddButton]="false">
+                                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                        <p-calendar (onSelect)="filter($event)" dateFormat="yy-mm-dd">
+                                        </p-calendar>
+                                    </ng-template>
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <!-- Filtro asesorAsignado -->
+                        <th *ngIf="!isFromProduction">
+                            <div class="flex align items-center">Vendedor
+                                <p-columnFilter type="text" field="asesorAsignado.name" matchMode="contains"
+                                    placeholder="Vendedor" [showMenu]="true" display="menu">
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                    </tr>
+                </ng-template>
+
+                <!-- =========================
+  3) BODY: filas principales
+  ========================= -->
+                <ng-template pTemplate="body" let-pedido let-expanded="expanded">
+                    <tr class="p-table-tr-td" style="font-size: 0.85em;">
+                        <!-- Botón para row expansion -->
+                        <td style="width: 10px;">
+                            <button type="button" pButton pRipple [pRowToggler]="pedido"
+                                class="p-button-text p-button-rounded p-button-plain"
+                                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+                            </button>
+                        </td>
+                        <!-- Número de pedido -->
+                        <td>{{ pedido.nroPedido }}</td>
+                        <!-- Número de factura -->
+                        <td *ngIf="!isFromProduction">{{ pedido?.nroFactura }}</td>
+                        <!-- Opciones (iconos) -->
+                        <td>
+                            <i class="fa fa-file-pdf-o" title="Imprimir Pdf" style="cursor: pointer;"
+                                (click)="pdfOrder(modalContent, pedido)">
+                            </i>
+
+                            <i *ngIf="!isFromProduction" class="fa fa-gears" title="Cambiar estado pago"
+                                style="cursor: pointer; margin-left: 4px;"
+                                (click)="editarEstadoPago(cambioEstadoPagoModal, pedido)">
+                            </i>
+
+                            <i *ngIf="!isFromProduction" class="fa fa-bank" title="Historial pagos y asentar pagos"
+                                style="cursor: pointer; margin-left: 4px;" (click)="AsentarPago(pagosModal, pedido)">
+                            </i>
+
+                            <i *ngIf="UserLogged?.email === 'jarango@almara.com'" class="fa fa-trash"
+                                title="Eliminar Pedido" style="cursor: pointer; margin-left: 4px;"
+                                (click)="deleteOrder(pedido)">
+                            </i>
+                        </td>
+
+                        <!-- EstadoPago -->
+                        <td>{{ pedido?.estadoPago }}</td>
+                        <!-- Cliente -->
+                        <td *ngIf="!isFromProduction">
+                            <span (click)="editDatosClientes(clientesModal, pedido)">
+                                {{ pedido.cliente.nombres_completos }} {{ pedido.cliente.apellidos_completos }}
+                            </span>
+                        </td>
+
+                        <!-- "Valores": Bruto, Desc, Subt, IVA, Total, Anticipo, Falta -->
+                        <td *ngIf="!isFromProduction" class="td-money">
+                            {{ pedido?.totalPedidoSinDescuento | currency }}
+                        </td>
+                        <td *ngIf="!isFromProduction" class="td-money">
+                            {{ pedido?.totalDescuento | currency }}
+                        </td>
+                        <td *ngIf="!isFromProduction" class="td-money">
+                            {{ pedido?.subtotal | currency }}
+                        </td>
+                        <td *ngIf="!isFromProduction" class="td-money">
+                            {{ pedido?.totalImpuesto | currency }}
+                        </td>
+                        <td *ngIf="!isFromProduction" class="td-money">
+                            {{ pedido?.totalPedididoConDescuento | currency }}
+                        </td>
+                        <td *ngIf="!isFromProduction" class="td-money">
+                            {{ pedido?.anticipo | currency }}
+                        </td>
+                        <td *ngIf="!isFromProduction" class="td-money">
+                            {{ pedido?.faltaPorPagar | currency }}
+                        </td>
+
+                        <!-- Fecha de compra -->
+                        <td>{{ pedido.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+
+                        <!-- Vendedor -->
+                        <td *ngIf="!isFromProduction">
+                            {{ pedido.asesorAsignado?.name }}
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <!-- ============================
+  4) ROW EXPANSION (nivel 1)
+  ============================ -->
+                <ng-template pTemplate="rowexpansion" let-pedido>
+                    <tr style="width: 50%; font-size: 0.85em;">
+                        <td colspan="5">
+                            <div class="p-3">
+                                <p-table [value]="pedido.carrito" dataKey="pedido.carrito">
+                                    <!-- Header interno -->
+                                    <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 2rem;"></th>
+                        <th>Imagen</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </ng-template>
+
+                <!-- Body del carrito -->
+                <ng-template pTemplate="body" let-item let-expanded="expanded">
+                    <tr style="width: 50%;">
+                        <td>
+                            <button type="button" pButton pRipple [pRowToggler]="item"
+                                class="p-button-text p-button-rounded p-button-plain"
+                                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+                            </button>
+                        </td>
+                        <td>
+                            <img height="50" width="50" class="shadow-4"
+                                [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
+                                [alt]="item.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen" />
+                        </td>
+                        <td>{{ item.producto?.crearProducto?.titulo }}</td>
+                        <td>{{ item.cantidad }}</td>
+                    </tr>
+                </ng-template>
+
+                <!-- ROW EXPANSION (nivel 2) para preferencias y adiciones -->
+                <ng-template pTemplate="rowexpansion" let-configuracion>
+                    <tr>
+                        <td colspan="7">
+                            <div class="p-4">
+                                <!-- Preferencias -->
+                                <h4>Preferencias</h4>
+                                <p-table [value]="configuracion?.configuracion?.preferencias">
+                                    <ng-template pTemplate="header">
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Titulo</th>
+                        <th>SubTitulo</th>
+                        <th>Iva</th>
+                        <th>Total Iva</th>
+                        <th>Total sin Iva</th>
+                        <th>Cantidad</th>
+                        <th>Total con Iva</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-itemconf>
+                    <tr style="width: 50%;">
+                        <td>
+                            <img height="50" width="50" class="shadow-4" [src]="itemconf.imagen" />
+                        </td>
+                        <td>{{ itemconf.titulo }}</td>
+                        <td>{{ itemconf.subtitulo }}</td>
+                        <td>{{ itemconf.porcentajeIva }}</td>
+                        <td>{{ itemconf.valorIva | currency }}</td>
+                        <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
+                        <td>1</td>
+                        <td>{{ itemconf.precioTotalConIva | currency }}</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+
+            <!-- Adiciones -->
+            <h4 *ngIf="configuracion?.configuracion?.adiciones.length > 0">
+                Adiciones
+            </h4>
+            <p-table *ngIf="configuracion?.configuracion?.adiciones.length > 0"
+                [value]="configuracion?.configuracion?.adiciones">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Titulo</th>
+                        <th>SubTitulo</th>
+                        <th>Iva</th>
+                        <th>Total Iva</th>
+                        <th>Total sin Iva</th>
+                        <th>Cantidad</th>
+                        <th>Total con Iva</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-itemconf>
+                    <tr style="width: 50%;">
+                        <td>
+                            <img height="50" width="50" class="shadow-4" [src]="itemconf.imagen" />
+                        </td>
+                        <td>{{ itemconf.titulo }}</td>
+                        <td>{{ itemconf.subtitulo }}</td>
+                        <td>{{ itemconf.porcentajeIva }}</td>
+                        <td>{{ itemconf.valorIva | currency }}</td>
+                        <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
+                        <td>1</td>
+                        <td>{{ itemconf.precioTotalConIva | currency }}</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+        </td>
+        </tr>
+        </ng-template>
+        </p-table>
+    </div>
+    </td>
+    </tr>
+    </ng-template>
+
+    <!-- =========================
+  5) MENSAJE SIN DATOS
+  ========================= -->
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="15" style="text-align: center;">No hay datos para mostrar</td>
+        </tr>
+    </ng-template>
+    <!-- FOOTER (igual que antes) -->
+    <ng-template pTemplate="footer" *ngIf="!isFromProduction">
+        <tr style="font-size: 0.85em;">
+            <td colspan="6" style="text-align: right;">Total</td>
+            <td class="td-money">{{ calculateValorBruto() | currency }}</td>
+            <td class="td-money">{{ calculateDescuento() | currency }}</td>
+            <td class="td-money">{{ calculateSubtotal() | currency }}</td>
+            <td class="td-money">{{ calculateTotalImpuestos() | currency }}</td>
+            <td class="td-money">{{ calculateTotal() | currency }}</td>
+            <td class="td-money">{{ calculateAnticipo() | currency }}</td>
+            <td class="td-money">{{ calculateFaltaPorPagar() | currency }}</td>
+            <td colspan="8"></td>
+        </tr>
+    </ng-template>
+
+    </p-table>
+</div>
+</div>
+</div>

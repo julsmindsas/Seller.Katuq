@@ -1,0 +1,55 @@
+<div class="card mb-0">
+    <div class="modal-header">
+        <h4 class="modal-title">{{'Horario' | translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="activeModal.close('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <div class="card-body">
+
+        <form [formGroup]="form" (ngSubmit)="submit()">
+            <div class="row">
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <label for="text1">Nombre :</label>
+                    <input type="text" id="nombre" formControlName="nombre" class="form-control">
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <label for="">Posición</label>
+                    <input formControlName="posicion" id="checkThree" type="number" class="form-control" />
+                </div>
+
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <label for="time1">Hora Inicio :</label>
+                    <input type="time" id="time1" formControlName="horaFin" class="form-control">
+                </div>
+
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <label for="time2">Hora Fin:</label>
+                    <input type="time" id="time2" formControlName="horaInicio" class="form-control">
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <label for="text2">Color Horario :</label>
+                    <input type="color" id="text2" formControlName="colorHorario" class="form-control"
+                        style="height: 40px;">
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <label for="">Activo/InActivo</label>&nbsp;<br>
+                    <input formControlName="activo" id="checkThree" type="checkbox" class="checkboxK" />
+                </div>
+            </div>
+            <!-- <div class="row">
+
+                        <div class="col-4 mb-3">
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </div> -->
+        </form>
+
+    </div>
+    <div class="card-footer p-3">
+        <button type="button" class="btn btn-primary pull-right" (click)="submit()"><i class="icofont icofont-save"></i>&nbsp;
+            Guardar</button>
+    </div>
+
+</div>

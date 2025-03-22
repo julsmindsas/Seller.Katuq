@@ -1,0 +1,31 @@
+.nombre-largo {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    // width: 100px !important;
+  }
+  .two-column-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .two-column-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .two-column-list .title {
+    flex: 1;
+    text-align: left;
+    font-weight: bold;
+  }
+  
+  .two-column-list .value {
+    flex: 1;
+    text-align: right;
+    color: #333;
+  }
+
+  

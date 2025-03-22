@@ -1,0 +1,95 @@
+<!-- <h3 class="mb-4"> <span class="spanProccesName">Configuración {{processSelected}}</span></h3> -->
+<form [formGroup]="formulario" (ngSubmit)="onSubmit()">
+    <fieldset class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="cantidad">Cantidad producidas:</label>
+                        <input type="number" id="cantidad" formControlName="cantidad" min="0"
+                            [max]="getCantidadTotalProductoEnsamble()" class="form-control"
+                            [ngClass]="{'is-invalid': formulario.controls.cantidad.invalid && (formulario.controls.cantidad.dirty || formulario.controls.cantidad.touched)}">
+                        <div *ngIf="formulario.get('cantidad').invalid && formulario.get('cantidad').touched"
+                            class="alert alert-danger">La cantidad es obligatoria</div>
+                        <div *ngIf="formulario.get('cantidad').value > getCantidadTotalProductoEnsamble().toString()"
+                            class="alert alert-danger">La cantidad no puede ser mayor al faltante</div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="faltante">Faltante por producir:</label>
+                        <div id="faltante" class="form-control-plaintext">{{formulario.value.faltante}}</div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="cantidadPorRepartir" class="d-block">Cantidad por repartir:</label>
+                        <div id="cantidadPorRepartir" class="form-control-plaintext">
+                            {{formulario.value.piezasFaltantesPorRepartir}}</div>
+
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="form-group">
+                        <label for="cantidadPorRepartir" class="d-block">Total producidas historicas:</label>
+                        <div id="cantidadPorRepartir" class="form-control-plaintext">
+                            {{formulario.value.totalHistoricoProducido}}</div>
+
+                    </div>
+                </div>
+            </div>
+            <!--generar el div de resumen-->
+            <div class="row" *ngIf="formulario.value.resumen !==''">
+                <div class="col-12 resumen" [ngClass]="{resumen: formulario.value.resumen !==''}">
+                    <div class="form-group">
+                        <label for="resumen" style="margin-top: 24px;">{{formulario.value.resumen}}</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </fieldset>
+</form>
+<div class="row">
+    <div class="col-4">
+        <h4 class="mb-4">Repartición de piezas a cada pedido </h4>
+    </div>
+    <div class="col-4"> </div>
+    <div class="col-4">
+        <h4>Total Piezas Producidas Sumadas: {{totalPiezasProducidasSumadas}}</h4>
+    </div>
+</div>
+
+
+<fieldset class="card mb-4" *ngFor="let item of selectedOrdersEnsamble">
+    <div class="card-body" *ngFor="let detalle of item.detallePedido">
+        <div class="row mb-3">
+            <div class="col-6">
+                <label for="piezas">Pedido:</label>
+                <div id="piezas" class="form-control-plaintext">{{detalle.nroPedido}}</div>
+            </div>
+            <div class="col-6">
+                <label for="piezas">Piezas a producir:</label>
+                <div id="piezas" class="form-control-plaintext">{{detalle.cantidadArticulosPorPedido}}</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <label for="piezas">Piezas producidas:</label>
+            </div>
+            <div class="col-6">
+                <input type="number" max="{{getMaxActualizarPiezasPorRepartir(detalle)}}" id="piezas"
+                    [(ngModel)]="detalle.piezasProducidas" (ngModelChange)="actualizarPiezasPorRepartir(detalle)"
+                    class="form-control">
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-6">
+                <label for="piezasPorRepartir">Piezas por repartir:</label>
+            </div>
+            <div class="col-6">
+                <div id="piezasPorRepartir" class="form-control-plaintext">{{detalle.piezasPorRepartir}}</div>
+            </div>
+        </div>
+    </div>
+</fieldset>

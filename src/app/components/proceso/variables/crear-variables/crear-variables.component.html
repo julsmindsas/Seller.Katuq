@@ -1,0 +1,46 @@
+<app-breadcrumb [title]="'Crear Variables'" [items]="['Proceso/Variables']" [active_item]="'Crear Variables'">
+</app-breadcrumb>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <form [formGroup]="variableForm">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="id">ID</label>
+                                <input class="form-control" type="text" id="id" formControlName="id">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="image">Título</label>
+                                <input class="form-control" type="text" id="image" formControlName="titulo">
+                            </div>
+                            
+
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="name">Variable</label>
+                                <input class="form-control" type="text" id="name" formControlName="variable">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label for="position">Valor</label>
+                                <input class="form-control" type="text" id="position" formControlName="valor">
+                            </div>
+                            
+                        </div>
+                        
+
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <button (click)="guardar()" class="btn btn-primary" type="submit">Crear Género</button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

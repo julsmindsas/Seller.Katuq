@@ -1,0 +1,9 @@
+<img *ngIf="buttonStyle == 'circle'" title="{{titleInput}}"
+    src="../../../../assets/images/logo/Katuq/katuq-intelligence/katuqintelligence.svg" alt="{{titleInput}}"
+    class="ai-button-image" (click)="IA()" style="cursor: pointer !important;" />
+
+<button *ngIf="buttonStyle == 'button'" title="{{titleInput}}" class="btn-ia" (click)="IA()">
+    Generate
+    <img src="../../../../assets/images/logo/Katuq/katuq-intelligence/katuqintelligence.svg" alt="{{titleInput}}"
+        class="ai-button-image" />
+</button>

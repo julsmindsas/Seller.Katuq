@@ -1,0 +1,88 @@
+/* ...existing estilos... */
+
+/* Contenedor con scroll para listado de cards en móvil */
+.mobile-card-list {
+  max-height: 400px; /* Ajusta la altura según convenga */
+  overflow-y: auto;
+  padding-right: 10px; /* Espacio para scrollbar */
+}
+
+/* Nuevo estilo para el resumen de costos */
+.cost-summary {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.cost-summary .total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.cost-summary h6 {
+  margin: 0;
+  font-weight: bold;
+  font-size: 1rem;
+}
+.cost-summary p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+/* Nueva definición para el card del carrito en móvil similar al ecommerce */
+@media (max-width: 767px) {
+  .carrito-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin: 0.5rem auto;
+  }
+  .carrito-card .card-img-top {
+    height: 150px;  /* Altura fija para la imagen */
+    object-fit: cover;
+    width: 100%;
+  }
+  .carrito-card .card-body {
+    padding: 10px;
+    text-align: left;
+  }
+  .carrito-card .card-title {
+    font-size: 1rem;
+    margin-bottom: 5px;
+  }
+  .carrito-card .card-text {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+  }
+}
+
+/* Nuevo estilo para mejorar la presentación de la imagen en PC */
+.cart-image {
+  width: 70px;               // Ajusta el ancho según convenga
+  height: 70px;              // Ajusta la altura según convenga
+  overflow: hidden;
+  border-radius: 4px;
+  margin: auto;
+}
+.cart-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+tbody, td, tfoot, th, thead, tr {
+  border-color: inherit; 
+  border-style: none;
+  border-width: 0;
+}
+
+table{
+font-family: 'Roboto', sans-serif;
+
+
+}

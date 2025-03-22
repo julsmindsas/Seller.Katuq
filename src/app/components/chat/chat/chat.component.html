@@ -1,0 +1,94 @@
+<!-- <app-breadcrumb [title]="'Asistencia'" [items]="['IA']" [active_item]="'Asistencia'"></app-breadcrumb> -->
+<div class="modern-chat-container" [ngClass]="{'floating-mode': isFloating}">
+  <div class="chat-card">
+    <div class="chat-header">
+      <div class="chat-header-content">
+        <h4>{{ 'KAI - Tu asistente personal' | translate }}</h4>
+        <p class="subtitle" *ngIf="!isFloating">{{ 'Consulta y obtén respuestas rápidas para mejorar tu desempeño' | translate }}</p>
+      </div>
+    </div>
+
+    <div class="messages-container" #chatHistoryContainer>
+      <div class="chat-messages-wrapper">
+        <!-- Mensaje de bienvenida inicial -->
+        <ng-container *ngIf="!chats?.message?.length">
+          <div class="welcome-message">
+            <img src="assets/images/kai-avatar.png" alt="KAI" class="ai-avatar"
+              onerror="this.src='assets/images/start-conversion.jpg'">
+            <div class="welcome-text">
+              <h3>{{ '¡Hola! Soy KAI, tu asistente personal.' | translate }}</h3>
+              <p>{{ '¿En qué puedo ayudarte hoy? Puedes preguntarme sobre cualquier tema relacionado con tu trabajo.' | translate }}</p>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Mensajes del chat -->
+        <ng-container *ngFor="let chat of chats?.message; let i = index">
+          <!-- Mensaje del usuario -->
+          <div *ngIf="chat.sender === profile.id" class="message-row user-message animate-message">
+            <div class="message-content">
+              <p [innerHTML]="chat?.text"></p>
+            </div>
+            <div class="message-timestamp">{{chat?.time}}</div>
+          </div>
+
+          <!-- Mensaje del asistente -->
+          <div *ngIf="chat.sender !== profile.id" class="message-row assistant-message animate-message">
+            <div class="avatar-container">
+              <div class="avatar">
+                <img [src]="chatUser?.profile" alt="KAI" class="ai-avatar"
+                  onerror="this.src='assets/images/default-avatar.png'">
+              </div>
+            </div>
+            <div class="message-content">
+              <div class="formatted-content" [innerHTML]="chat?.text"></div>
+              <div *ngIf="chat?.image" class="image-content">
+                <img [src]="chat?.image" class="response-image" alt="Image Response">
+              </div>
+            </div>
+            <div class="message-timestamp">{{chat?.time}}</div>
+          </div>
+        </ng-container>
+
+        <!-- Indicador de escritura -->
+        <div *ngIf="chatUser?.typing" class="message-row assistant-message typing-indicator">
+          <div class="avatar-container">
+            <div class="avatar">
+              <img [src]="chatUser?.profile" alt="KAI" class="ai-avatar"
+                onerror="this.src='assets/images/default-avatar.png'">
+            </div>
+          </div>
+          <div class="typing-animation">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Área de entrada de mensaje -->
+    <div class="chat-input-area">
+      <form #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)" class="input-form">
+        <button type="button" class="emoji-button" (click)="toggleEmojiPicker()">
+          <img src="assets/images/smiley.png" alt="Emoji">
+        </button>
+
+        <div class="input-container">
+          <input type="text" class="message-input" [class.error]="error" placeholder="{{ 'Escribe un mensaje...' | translate }}"
+            [(ngModel)]="chatText" name="message" (keydown.enter)="$event.preventDefault(); sendMessage(chatForm)">
+        </div>
+
+        <button type="submit" class="send-button" [disabled]="!chatText?.trim()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+          </svg>
+        </button>
+
+        <div class="emoji-picker-container" *ngIf="showEmojiPicker">
+          <emoji-mart (emojiClick)="addEmoji($event)" set="apple" useButton="true"></emoji-mart>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

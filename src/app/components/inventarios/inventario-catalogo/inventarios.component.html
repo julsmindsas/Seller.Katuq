@@ -1,0 +1,230 @@
+<app-breadcrumb [title]="'Inventario Catalogo'" [items]="['Inventarios']" [active_item]="'Catalogo'"></app-breadcrumb>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="">
+
+                <div class="loader-box" *ngIf="cargando">
+                    <div class="loader-8"></div>
+                </div>
+
+                <div class="custom-datatable">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <input type='text' class="filter-ngx form-control mb-3" style="width: 100% !important;"
+                                placeholder="{{'Escribe lo que quieres filtrar y luego pulsa enter para accionar' | translate}}"
+                                (keyup)='updateFilter($event)' />
+                        </div>
+                        <div class="col-sm-6 mb-3" style="text-align: end;">
+                            <button pButton class="p-button-outlined" (click)="sortByQuantity()">
+                                {{ 'Ordenar por cantidad' | translate }}
+                            </button>
+                            <button pButton class="p-button-outlined" (click)="filterOutOfStock()">
+                                {{ 'Filtrar productos agotados' | translate }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <p-table [value]="rows" [scrollable]="true" scrollHeight="400px" [paginator]="false"
+                        [rows]="pageSize" [totalRecords]="totalItems"
+                        styleClass="p-datatable-customers p-datatable-gridlines" [sortField]="'nombre'" [sortOrder]="1"
+                        [responsive]="true" [loading]="cargando" [tableStyle]="{'min-width': '50rem'}">
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th rowspan="2">
+                                    <span>{{ '' | translate }}</span>
+                                </th>
+                                <th rowspan="2">
+                                    <span>{{ 'Titulo' | translate }}</span>
+                                </th>
+                                <th *ngIf="!isMobile" rowspan="2">
+                                    <span>{{ 'Referencia' | translate }}</span>
+                                </th>
+                                <th *ngIf="!isMobile" rowspan="2">
+                                    <span>{{ 'Cantidad disponible' | translate }}</span>
+                                </th>
+
+                                <th *ngIf="!isMobile" rowspan="2">
+                                    <span>{{ 'Acciones' | translate }}</span>
+                                </th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-row>
+                            <tr [ngClass]="{'outofstock': row.disponibilidad.cantidadDisponible === 0, 'lowstock': (row.disponibilidad.cantidadDisponible > 0 && row.disponibilidad.cantidadDisponible < 10),'instock': row.disponibilidad.cantidadDisponible > 10}"
+                                style="font-size: small !important;">
+                                <td>
+                                    <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
+                                        [src]="row.crearProducto?.imagenesPrincipales[0]?.urls" [alt]="row.titulo"
+                                        width="40" height="40" (click)="viewProduct(row)" style="cursor:pointer"
+                                        class="shadow-4">
+                                    <img *ngIf="row.crearProducto?.imagenesPrincipales?.length == 0"
+                                        src="../../../../assets/images/ecommerce/01.jpg"
+                                        [alt]="row.crearProducto.titulo" width="40" height="40">
+                                </td>
+                                <td>{{ row.crearProducto.titulo }}</td>
+                                <td *ngIf="!isMobile">{{ row.identificacion.referencia }}</td>
+                                <td *ngIf="!isMobile">
+                                    <div style="text-align: center;"
+                                        [ngClass]="{'outofstock': row.disponibilidad.cantidadDisponible === 0, 'lowstock': (row.disponibilidad.cantidadDisponible > 0 && row.disponibilidad.cantidadDisponible < 10),'instock': row.disponibilidad.cantidadDisponible > 10}">
+                                        {{ row.disponibilidad.cantidadDisponible }}
+                                    </div>
+                                </td>
+
+                                <td *ngIf="!isMobile" style="text-align: center;">
+                                    <i placement="top" ngbTooltip="{{'Movimiento inventario' | translate}}"
+                                        style="font-size: 25px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                                        class="icofont icofont-industries-alt-2"
+                                        (click)="openInventoryModal(row,inventoryModal)"></i>
+                                    <i placement="top"
+                                        ngbTooltip="{{'Historial movimientos de inventario' | translate}}"
+                                        style="font-size: 25px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                                        class="icofont icofont-history"
+                                        (click)="getMovimientosInventarioByProduct(row,inventoryHistoryModal)"></i>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                    <p-paginator [rows]="10" [totalRecords]="totalItems" (onPageChange)="onPageChange($event)"
+                        [showJumpToPageDropdown]="true" [showPageLinks]="false"></p-paginator>
+                    <br />
+                    <button class="btn btn-primary" style="color: white;" (click)="exportToExcel()">
+                        <i class="icofont icofont-file-excel"></i> Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal de Movimiento de Inventario -->
+<ng-template #inventoryModal let-modal>
+    <!-- Modal header -->
+    <div class="modal-header">
+        <h5 class="modal-title text-center mb-4">Gestionar Inventario por bodegas
+            ({{selectedRow.identificacion?.referencia}})</h5>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <!-- Modal body -->
+    <div class="modal-body">
+        <!-- Sección de otros Bodegas Principales -->
+        <div class="other-channels-section">
+            <h4 class="section-title">
+                {{ 'Inventario global' }}
+                <span style="text-align: center;"
+                    [ngClass]="{'outofstock': selectedRow.disponibilidad.cantidadDisponible === 0, 'lowstock': (selectedRow.disponibilidad.cantidadDisponible > 0 && selectedRow.disponibilidad.cantidadDisponible < 10),'instock': selectedRow.disponibilidad.cantidadDisponible > 10}">
+                    {{ selectedRow.disponibilidad.cantidadDisponible }}
+                </span>
+            </h4>
+            <hr class="divider my-3">
+            <h5 class="section-title">Bodegas Principales</h5>
+            <div class="other-channels-grid">
+                <div class="other-channel-item">
+                    <div class="channel-label">
+                        <i class="fas fa-store-alt me-2"></i>
+                        <label class="mb-0">Punto de Venta</label>
+                    </div>
+                    <input type="number" class="form-control input-inventario"
+                        [(ngModel)]="inventarioPorMarketplace.puntoDeVenta" placeholder="Cantidad"
+                        (input)="actualizarInventarioTemp('puntoDeVenta', inventarioPorMarketplace.puntoDeVenta)" />
+                </div>
+                <div class="other-channel-item">
+                    <div class="channel-label">
+                        <i class="fas fa-warehouse me-2"></i>
+                        <label class="mb-0">Seller Center</label>
+                    </div>
+                    <input type="number" class="form-control input-inventario"
+                        [(ngModel)]="inventarioPorMarketplace.sellerCenter" placeholder="Cantidad"
+                        (input)="actualizarInventarioTemp('sellerCenter', inventarioPorMarketplace.sellerCenter)" />
+                </div>
+                <div class="other-channel-item">
+                    <div class="channel-label">
+                        <i class="fas fa-globe me-2"></i>
+                        <label class="mb-0">Página Web</label>
+                    </div>
+                    <input type="number" class="form-control input-inventario"
+                        [(ngModel)]="inventarioPorMarketplace.paginaWeb" placeholder="Cantidad"
+                        (input)="actualizarInventarioTemp('paginaWeb', inventarioPorMarketplace.paginaWeb)" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider visual para separar marketplaces de otros canales -->
+        <hr class="divider my-3" *ngIf="bodegasActivasMarketPlaces.length > 0">
+
+        <!-- Sección de marketplaces -->
+        <div class="marketplaces-section" *ngIf="bodegasActivasMarketPlaces.length > 0">
+            <h6 class="section-title">Marketplaces</h6>
+            <div class="marketplace-grid">
+                <div *ngFor="let campo of bodegasActivasMarketPlaces; let i = index" class="marketplace-item">
+                    <div class="marketplace-label">
+                        <label class="mb-0">{{ campo.nameMP }}</label>
+                    </div>
+                    <input type="number" class="form-control input-inventario" [(ngModel)]="inventarioPorMarketplace[i]"
+                        placeholder="Cantidad" (input)="actualizarInventarioTemp(i, inventarioPorMarketplace[i])" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal footer -->
+    <div class="modal-footer text-center mt-4">
+        <button class="btn btn-primary w-100" (click)="guardarInventario()">Guardar Cambios</button>
+    </div>
+
+</ng-template>
+<ng-template #inventoryHistoryModal let-modal>
+
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="movimientosModalLabel">Movimientos de Inventario</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Tabla de Movimientos -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Origen</th>
+                            <th>Documento Cliente</th>
+                            <th>Orden ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let movimiento of movimiento">
+                            <td>
+                                <span class="badge"
+                                    [ngClass]="{'bg-success': movimiento.tipoMovimiento === 'in', 'bg-danger': movimiento.tipoMovimiento === 'out'}">
+                                    <i class="bi"
+                                        [ngClass]="{'bi-arrow-up-circle': movimiento.tipoMovimiento === 'in', 'bi-arrow-down-circle': movimiento.tipoMovimiento === 'out'}"></i>
+                                    {{ movimiento.tipoMovimiento | titlecase }}
+                                </span>
+                            </td>
+                            <td>{{ movimiento.cantidadCambio }}</td>
+                            <td>{{ movimiento.fecha | date: 'short' }}</td>
+                            <td>{{ movimiento.usuario }}</td>
+                            <td>{{ movimiento.origenMovimiento | titlecase }}</td>
+                            <td>{{ movimiento.clienteDocumento }}</td>
+                            <td>{{ movimiento.ordenId }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+    </div>
+
+</ng-template>

@@ -1,0 +1,40 @@
+.form-control-plaintext {
+    color: #000;
+    /* Cambia esto al color que prefieras */
+}
+
+fieldset.card {
+    border: 1px dashed #000;
+    /* Cambia esto al color que prefieras */
+
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 0%;
+}
+
+.is-invalid {
+    border-color: #dc3545;
+    /* Cambia esto al color que prefieras */
+}
+
+.resumen {
+    background-color: #f8d7da;
+    /* Cambia esto al color que prefieras */
+    border-color: #f5c6cb;
+    /* Cambia esto al color que prefieras */
+    color: #721c24;
+    /* Cambia esto al color que prefieras */
+
+    //centrado y justificado    
+    text-align: center;
+    padding: 20px;
+    text-justify: inter-word;
+
+}
+
+.spanProccesName {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #aa1515 !important;
+    /* Cambia esto al color que prefieras */
+}

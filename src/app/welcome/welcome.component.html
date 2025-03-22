@@ -1,0 +1,389 @@
+<div class="container-fluid mt-5 p-t-30">
+    <div class="row d-flex align-items-stretch">
+        <div class="col-sm-8 m-b-15">
+            <div class="card o-hidden welcome-card h-100 shadow-2 backColorSwitch" >
+                <div class="card-body">
+                    <h4 class="mb-3 mt-1 f-w-800 mb-0 f-22">
+                        KATUQ - ECOMMERCE<span>&nbsp;✨&nbsp;<strong>Especialistas en IA</strong>&nbsp;✨</span>
+                    </h4>
+                    <p class="f-18">
+                        Con KATUQ - ECOMMERCE tienes el control total de tu
+                        empresa, productos, pedidos, ventas, inventarios y
+                        envíos, además de analíticas en tiempo real.
+                    </p>
+                    <p class="f-18">
+                        Utilizamos la inteligencia artificial (IA) para mejorar
+                        la precisión de los procesos automáticos. Tenemos
+                        nuestra aplicación en constante mejora, siéntete en
+                        confianza de hacernos tus sugerencias.
+                    </p>
+                </div>
+                <img src="assets/images/dashboard/katuqIA.png" alt="katuq IA" class="welcome-img" />
+            </div>
+        </div>
+        <div class="col-md-4 m-b-15">
+            <div class="card social-profile h-100 shadow-2">
+                <div class="card-body backColorSwitch">
+                    <div class="social-img-wrap ">
+                        <div>
+                            <!-- <img class="avatar-image" [src]="userActive.image ? userActive.image : 'assets/images/user/user.png'" alt="profile" /> -->
+                            <img class="avatar-image" [src]="userActive.image ? userActive.image : 'assets/images/user/user.png'" alt="profile" style="max-height: 60px; width: auto; padding: 0px">
+                        </div>
+                        <!-- <div class="edit-icon"><svg>
+                <use href="assets/svg/icon-sprite.svg#profile-check"></use>
+              </svg></div> -->
+                    </div>
+                    <div class="social-details pt-3">
+                        <div class="d-flex justify-content-center align-items-center">
+                            <h5 class="mb-1 ml-2">
+                                <a href="social-app.html" style="color: white">Bienvenido/a</a>
+                            </h5>
+                            <span class="f-18"><i class="fa fa-edit ml-2"
+                                    routerLink="/usuarios/editarUsuario"></i></span>
+                        </div>
+                        <br />
+                        <span class="f-light">{{ userActive.name }} -
+                            {{ userActive.email }}</span>
+                        <ul class="social-follow d-flex justify-content-center">
+                            <li>
+                                <h5 class="mb-0">ID</h5>
+                                <span class="f-light">{{
+                                    userActive.nit
+                                    }}</span>
+                            </li>
+                            <li>
+                                <h5 class="mb-0">Rol</h5>
+                                <span class="f-light">{{
+                                    userActive.rol
+                                    }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt-50">
+    <div class="row">
+        <div class="col-sm-12">
+            <p class="firma">Accesos directos</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid m-t-35">
+    <div class="row widget-grid">
+        <div class="col-md-4 col-sm-6 box-col-4">
+            <div class="card profile-box bg-swayp card-body-item shadow-2">
+                <div class="card-body">
+                    <div class="imagenCard">
+                        <img src="assets/images/dashboard/katuqProductos.png" class="img-fluid" style="z-index: 0"
+                            alt="katuq productos" />
+                    </div>
+                    <div class="media">
+                        <div class="media-body">
+                            <div class="greeting-user">
+                                <h4 class="f-w-600 font-black">Productos</h4>
+                                <p class="text-p">
+                                    Lista y crea tus productos con IA
+                                </p>
+                                <div>
+                                    <a class="btn btn-outline-white" routerLink="/productos">Ver más</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="clockbox">
+                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                                    <g id="face">
+                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
+                                        <path
+                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
+                                            class="hour-marks"></path>
+                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
+                                    </g>
+                                    <g id="hour">
+                                        <path d="M300.5 298V142" class="hour-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="minute">
+                                        <path d="M300.5 298V67" class="minute-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="second">
+                                        <path d="M300.5 350V55" class="second-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div id="txt" class="badge f-10 p-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-6 box-col-4">
+            <div class="card profile-box bg-swayp card-body-item shadow-2">
+                <div class="card-body">
+                    <div class="imagenCard">
+                        <img src="assets/images/dashboard/productoskatuq.png" class="img-fluid" alt="katuq Pos" />
+                    </div>
+                    <div class="media">
+                        <div class="media-body">
+                            <div class="greeting-user">
+                                <h4 class="f-w-600 font-black">Ventas</h4>
+                                <p class="text-p">
+                                    Crea una venta asistida.
+                                </p>
+                                <div>
+                                    <a class="btn btn-outline-white" routerLink="/ventas/crear-ventas">Ver más</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="clockbox">
+                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                                    <g id="face">
+                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
+                                        <path
+                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
+                                            class="hour-marks"></path>
+                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
+                                    </g>
+                                    <g id="hour">
+                                        <path d="M300.5 298V142" class="hour-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="minute">
+                                        <path d="M300.5 298V67" class="minute-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="second">
+                                        <path d="M300.5 350V55" class="second-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div id="txt" class="badge f-10 p-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-6 box-col-4">
+            <div class="card profile-box bg-swayp card-body-item shadow-2">
+                <div class="card-body">
+                    <div class="imagenCard">
+                        <img src="assets/images/dashboard/katuqPos.png" class="img-fluid" alt="katuq Pos" />
+                    </div>
+                    <div class="media">
+                        <div class="media-body">
+                            <div class="greeting-user">
+                                <h4 class="f-w-600 font-black">POS</h4>
+                                <p class="text-p">
+                                    Punto de venta flexible y rápido.
+                                </p>
+                                <div>
+                                    <a class="btn btn-outline-white" routerLink="/pos/ventas">Ver más</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="clockbox">
+                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                                    <g id="face">
+                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
+                                        <path
+                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
+                                            class="hour-marks"></path>
+                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
+                                    </g>
+                                    <g id="hour">
+                                        <path d="M300.5 298V142" class="hour-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="minute">
+                                        <path d="M300.5 298V67" class="minute-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="second">
+                                        <path d="M300.5 350V55" class="second-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div id="txt" class="badge f-10 p-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 box-col-4">
+            <div class="card profile-box bg-swayp card-body-item shadow-2">
+                <div class="card-body">
+                    <div class="media">
+                        <div class="media-body">
+                            <div class="greeting-user">
+                                <h4 class="f-w-600 font-black">Clientes</h4>
+                                <p class="text-p">
+                                    Gestiona tus clientes y sus datos.
+                                </p>
+                                <div>
+                                    <a class="btn btn-outline-white" routerLink="/ventas/clienteslista">Ver más</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="clockbox">
+                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                                    <g id="face">
+                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
+                                        <path
+                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
+                                            class="hour-marks"></path>
+                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
+                                    </g>
+                                    <g id="hour">
+                                        <path d="M300.5 298V142" class="hour-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="minute">
+                                        <path d="M300.5 298V67" class="minute-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="second">
+                                        <path d="M300.5 350V55" class="second-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div id="txt" class="badge f-10 p-0"></div>
+                        </div>
+                    </div>
+                    <div class="imagenCard">
+                        <img src="assets/images/dashboard/katuqclientes.png" alt="katuq Clientes" class="img-fluid"
+                            style="z-index: 0" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 box-col-4">
+            <div class="card profile-box bg-swayp card-body-item shadow-2">
+                <div class="card-body">
+                    <div class="media">
+                        <div class="media-body">
+                            <div class="greeting-user">
+                                <h4 class="f-w-600 font-black">Pedidos</h4>
+                                <p class="text-p">
+                                    Visualiza el 360 de tus pedidos.
+                                </p>
+                                <div>
+                                    <a class="btn btn-outline-white" routerLink="/ventas/pedidos">Ver más</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="clockbox">
+                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                                    <g id="face">
+                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
+                                        <path
+                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
+                                            class="hour-marks"></path>
+                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
+                                    </g>
+                                    <g id="hour">
+                                        <path d="M300.5 298V142" class="hour-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="minute">
+                                        <path d="M300.5 298V67" class="minute-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="second">
+                                        <path d="M300.5 350V55" class="second-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div id="txt" class="badge f-10 p-0"></div>
+                        </div>
+                    </div>
+                    <div class="imagenCard">
+                        <img src="assets/images/dashboard/katuqwallet.png" alt="katuq Wallet" class="img-fluid" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 box-col-4">
+            <div class="card profile-box bg-swayp shadow-2">
+                <div class="card-body">
+                    <div class="media">
+                        <div class="media-body">
+                            <div class="greeting-user">
+                                <h4 class="f-w-600 font-black">Analíticas</h4>
+                                <p class="text-p">
+                                    Analiza tus métricas con K.A.I.
+                                </p>
+                                <div>
+                                    <a class="btn btn-outline-white" routerLink="/dashboards">Ver más</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="clockbox">
+                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                                    <g id="face">
+                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
+                                        <path
+                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
+                                            class="hour-marks"></path>
+                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
+                                    </g>
+                                    <g id="hour">
+                                        <path d="M300.5 298V142" class="hour-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="minute">
+                                        <path d="M300.5 298V67" class="minute-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                    <g id="second">
+                                        <path d="M300.5 350V55" class="second-hand"></path>
+                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div id="txt" class="badge f-10 p-0"></div>
+                        </div>
+                    </div>
+                    <div class="imagenCard">
+                        <img src="assets/images/dashboard/katuqAnalitica.png" alt="katuq Analitica" class="img-fluid" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <div>
+  Pruebas
+  <app-search-phone></app-search-phone>
+  <br>
+  <br>
+  <br>
+</div> -->
+
+<!-- <div class="welcome-page">
+  <h1>Bienvenido</h1>
+  <p>Accesos directos a tus menús más utilizados:</p>
+  <ul>
+    <li *ngFor="let shortcut of shortcuts">
+      <a [routerLink]="['/', shortcut.path]">{{ shortcut.title }}</a>
+    </li>
+  </ul>
+</div> -->

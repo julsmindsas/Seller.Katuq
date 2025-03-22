@@ -1,0 +1,33 @@
+name: Deploy to Firebase Hosting on merge
+
+on:
+  push:
+    branches: [ main ] 
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3  # Node.js setup
+        with:
+          node-version: '20'  # Adjust Node.js version if needed
+
+      - name: Cache dependencies  # Optional, but recommended
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - run: npm ci --force  # Install dependencies
+
+      - run: npm run build:prod  # Angular production build
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JULSMIND_KATUQ }}'
+          channelId: live
+          projectId: julsmind-katuq 

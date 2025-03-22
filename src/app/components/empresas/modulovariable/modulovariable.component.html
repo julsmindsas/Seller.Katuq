@@ -1,0 +1,36 @@
+<app-breadcrumb [title]="'Modulos variables'" [items]="['Empresa']" [active_item]="'centrosTrabajo'"></app-breadcrumb>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12 text-center">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button"
+                                [routerLink]="['/empresas/modulovariable/produccion/centrotrabajos']"
+                                routerLinkActive="router-link-active">
+                                <span style="color: white;">{{'Ir a centro de trabajo' | translate}}</span>
+                                <i placement="top"
+                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                                    class="icofont icofont-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button"
+                                [routerLink]="['/empresas/modulovariable/produccion/procesos']"
+                                routerLinkActive="router-link-active">
+                                <span style="color: white;">{{'Ir a procesos' | translate}}</span>
+                                <i placement="top" ngbTooltip="Nuevo"
+                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                                    class="icofont icofont-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

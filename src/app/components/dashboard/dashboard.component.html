@@ -1,0 +1,174 @@
+<!-- <app-breadcrumb [title]="'Dashboard'" [items]="['Inicio']" [active_item]="'Dashboard'"></app-breadcrumb> -->
+<br />
+<div class="row mt-1 mb-3 p-3">
+    <div class="col-6 p-l-5">
+        <p class="text-left fw-bold fs-24 m-0 p-0">{{ 'Panel de Control' | translate }}</p>
+        <p class="text-left text-muted fs-18 m-0 p-0">
+            {{ 'Visualiza las métricas clave de ventas y rendimiento.' | translate }}
+        </p>
+    </div>
+    <div class="col-6">
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 py-3 rounded">
+            <div class="date-control">
+                <label for="fechaInicial" class="fw-bold text-muted fs-18">{{ 'Fecha Inicial' | translate }}</label>
+                <input type="date" id="fechaInicial" class="form-control fs-18" [(ngModel)]="fechaInicial"
+                    (change)="onFechaChange()" />
+            </div>
+            <div class="date-control">
+                <label for="fechaFinal" class="fw-bold text-muted fs-18">{{ 'Fecha Final' | translate }}</label>
+                <input type="date" id="fechaFinal" class="form-control fs-18" [(ngModel)]="fechaFinal"
+                    (change)="onFechaChange()" />
+            </div>
+            <button class="btn btn-primary fs-18" (click)="cargarDatos()">
+                {{ 'Actualizar' | translate }}
+            </button>
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <!-- Ventas del Mes, Top Productos -->
+    <div class="row col-12 p-3">
+
+        <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-primary text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Ventas del Mes' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart3" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="fc-primary py-3">
+                    <h6 class="mb-0 text-center">{{ 'Análisis de K.A.I.' | translate }}</h6>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="row">
+
+
+        <div class="col-sm-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-secondary text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Top 10 Menos Vendidos' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart1" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-success text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Top 10 Más Vendidos' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart2" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br />
+    <!-- Administración -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-primary text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Costos vs Ganancias' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-costos-ganancias" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-secondary text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Conversión de Clientes' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-conversion-clientes" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Producción -->
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-primary text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Uso de Materiales' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-uso-materiales" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-success text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Eficiencia de Producción' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-eficiencia-produccion" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logística -->
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-primary text-white py-3">
+                    <h6 class="mb-0 text-center">
+                        {{ 'Tiempo Promedio de Despacho' | translate }}
+                    </h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-tiempo-despacho" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-secondary text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Entregas Fallidas' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-entregas-fallidas" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajeros -->
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-primary text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Ranking de Mensajeros' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-ranking-mensajeros" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header gradient-secondary text-white py-3">
+                    <h6 class="mb-0 text-center">{{ 'Rutas Frecuentes' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="chart-rutas-frecuentes" class="apex-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

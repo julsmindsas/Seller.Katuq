@@ -1,0 +1,471 @@
+// Definición de fuentes
+@font-face {
+    font-family: 'Geometr415BlkBTBlack';
+    src: url('../../../assets/images/logo/Katuq/Geometr415 Blk BT Black.ttf') format('truetype');
+    font-weight: bold; // Fuente bold
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Geometr415L';
+    src: url('../../../assets/images/logo/Katuq/GEO415L.ttf') format('truetype');
+    font-weight: normal; // Fuente delgada
+    font-style: normal;
+}
+
+/* Contenedor principal */
+.survey-container {
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center; // Centrado completo horizontal y vertical
+    padding: 0; // Se elimina cualquier padding adicional
+}
+
+/* Logo en parte inferior derecha */
+.survey-logo {
+    position: absolute;
+    bottom: 20px; // Posición desde abajo
+    right: 10px;  // Posición desde la derecha
+    max-height: 50px; // Tamaño base reducido
+}
+
+/* Formulario sin bordes y con layout alineado a la izquierda */
+.survey-form {
+    width: 90%;
+    max-width: none;
+    padding: 20px;
+    background: #fff;
+    text-align: left;
+    font-family: 'Geometr415L', sans-serif;
+    font-size: 0.9rem; /* Aumentado de 0.8rem */
+}
+
+/* Tamaño de tipografía ajustado para mayor legibilidad */
+.survey-form h1 {
+    font-size: 1.7rem; /* Aumentado de 1.5rem */
+    color: #0C0042;
+    margin-bottom: 20px;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+}
+
+.survey-form h3 {
+    font-size: 1.4rem; /* Aumentado de 1.2rem */
+    color: #0C0042;
+    margin-bottom: 15px;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+}
+
+/* Aumentar tamaño de los label */
+.survey-form label {
+    font-size: 0.9rem; /* Aumentado ligeramente */
+}
+
+/* Otros textos y botones */
+.survey-form p,
+.option-button {
+    font-size: 0.9rem; /* Aumentado ligeramente */
+}
+
+.survey-card {
+    background: white;
+    border-radius: 10px;
+    padding: 40px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    // Se eliminó la animación Angular y se delega a la clase animate-fancy
+}
+
+.animate-fancy {
+    animation: smoothBounce 1s ease-out;
+}
+
+// Animación más elaborada con varios pasos
+@keyframes smoothBounce {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0.9);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: translateY(-10px) scale(1.05);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+// Nueva animación para la transición del mensaje de bienvenida (más suave y lenta)
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOutSlide {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+// Aplicar animación al contenedor del mensaje de bienvenida con mayor duración
+.welcome-message {
+    animation: fadeInSlide 1s ease-out;
+    transition: opacity 1s ease, transform 1s ease;
+    // ...más estilos personalizados si es necesario...
+}
+
+/* Puedes aplicar la animación de salida agregando la clase fade-out antes de desvanecer */
+/* Ejemplo:
+.fade-out {
+  animation: fadeOutSlide 1s ease-out forwards;
+}
+*/
+
+/* Opciones */
+.option-button {
+    margin: 10px 5px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #9020FF;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.option-button:hover {
+    transform: scale(1.1);
+}
+
+/* Resalta la opción seleccionada con un efecto más claro */
+.option-button.selected {
+    background-color: lighten(#9020FF, 15%);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s;
+}
+
+/* Navegación */
+.navigation-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+}
+
+.next-button {
+    background-color: #9020FF;
+    padding: 8px 20px;
+    /* Se reduce el padding */
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.next-button:hover {
+    background-color: lighten(#9020FF, 10%);
+}
+
+.back-button {
+    background-color: #007BFF;
+    /* Nuevo color */
+}
+
+.back-button:hover {
+    background-color: lighten(#007BFF, 10%);
+}
+
+/* Reglas responsive */
+@media screen and (max-width: 768px) {
+    .survey-form h1 {
+        font-size: 1.75rem; // Antes: 2rem
+    }
+
+    .survey-form h3 {
+        font-size: 1.25rem; // Antes: 1.5rem
+    }
+
+    .survey-form p,
+    .survey-form label,
+    .option-button {
+        font-size: 0.9rem; // Antes: 1rem
+    }
+
+    .welcome-text {
+        font-size: 1.2rem; // Antes: 1.5rem
+    }
+
+    .welcome-text-sm {
+        font-size: 0.9rem; // Antes: 1rem
+    }
+
+    .navigation-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .survey-container {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+    }
+
+    .survey-logo {
+        position: relative; // Cambiar a relative para que no se superponga
+        display: block;
+        margin: 0 auto 10px auto; // Centramos y separamos del contenido
+        max-height: 40px; // Reducir tamaño del logo en móviles
+    }
+
+    .survey-form {
+        width: 100%;
+        padding: 10px;
+        font-size: 1.2rem;
+    }
+
+    .survey-form h1 {
+        font-size: 2rem;
+    }
+
+    .survey-form h3 {
+        font-size: 1.5rem;
+    }
+
+    .welcome-text {
+        font-size: 2rem;
+    }
+
+    .welcome-text-sm {
+        font-size: 1.2rem;
+    }
+
+    .option-button {
+        font-size: 1rem;
+        padding: 8px 10px;
+    }
+
+    .navigation-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navigation-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+
+        button {
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            padding: 12px;
+            border-radius: 4px;
+        }
+    }
+}
+
+/* Agregar estilos para el contenedor del resumen con scroll */
+.summary-container {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 10px;
+    background: #fff;
+    /* Fondo blanco */
+    color: #000;
+    /* Texto negro */
+    font-size: 2.5rem;
+    /* Texto más grande */
+}
+
+/* Títulos en el resumen con color diferente */
+.summary-container h3 {
+    font-size: 2.5rem;
+    color: #9020FF;
+    /* Color de título */
+    margin: 10px 0 5px;
+}
+
+/* Respuestas con otro color (por defecto negro o se puede ajustar) */
+.summary-container p {
+    font-size: 1.75rem;
+    color: #000;
+}
+
+/* Estilos para inputs de Material Design sin borde, ahora con mayor ancho */
+.material-input {
+    width: 100%;
+    /* Asegura que el input ocupe el ancho completo */
+    border: none;
+    border-bottom: 1px solid #ccc;
+    background: transparent;
+    padding: 8px 4px;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    /* Espaciado entre pasos */
+    transition: border-color 0.3s;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.material-input:focus {
+    border-bottom: 2px solid #9020FF;
+    outline: none;
+}
+
+.welcome-text {
+    font-size: 4rem;
+    /* Ajusta el tamaño de fuente según sea necesario */
+    font-weight: bold;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+}
+
+.welcome-text-sm {
+    font-size: 2rem;
+}
+
+.highlight {
+    color: #9020FF;
+}
+
+/* Estilos para el mensaje de procesamiento */
+.processing-message {
+    animation: fadeInSlide 1s ease-out;
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Estilo para un spinner sencillo */
+.spinner {
+    margin: 20px auto;
+    border: 8px solid #ccc;
+    border-top: 8px solid #9020FF;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@media screen and (max-width: 768px) {
+
+    // Cambiar contenedor a columna para reordenar elementos
+    .survey-container {
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        height: auto;
+        padding: 10px;
+    }
+
+    // El formulario (paso a paso) se coloca primero
+    .survey-form {
+        order: 1;
+        width: 100%;
+        padding: 10px;
+        font-size: 1.2rem;
+    }
+
+    // El logo se coloca al final
+    .survey-logo {
+        order: 2;
+        position: relative; // Se cambia a relative
+        display: block;
+        margin: 20px auto 0 auto; // Separar del contenido
+        max-height: 40px; // Reducir tamaño del logo
+    }
+
+    // Reducir tamaños de mensajes
+    .welcome-text {
+        font-size: 1.5rem;
+    }
+
+    .welcome-text-sm {
+        font-size: 1rem;
+    }
+
+    .processing-message {
+        font-size: 1rem;
+        margin-top: 10px;
+    }
+
+    .option-button {
+        font-size: 1rem;
+        padding: 8px 10px;
+    }
+
+    .navigation-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media screen and (max-width: 1024px) {
+    .survey-form h1 {
+        font-size: 2.5rem; // Ajuste para pantallas menores de PC
+    }
+    .survey-form h3 {
+        font-size: 2rem;
+    }
+    .survey-form p,
+    .survey-form label,
+    .option-button {
+        font-size: 1.25rem;
+    }
+    .welcome-text {
+        font-size: 3.5rem;
+    }
+    .welcome-text-sm {
+        font-size: 2.5rem;
+    }
+    // Reordenar layout si es necesario
+    .survey-container {
+        flex-direction: column;
+    }
+}
+
+// Nuevo media query para celulares (max-width: 480px)
+@media screen and (max-width: 480px) {
+    .survey-logo {
+        max-height: 30px; // Reducción adicional del tamaño del logo
+        margin: 40px auto 0 auto; // Mover el logo hacia abajo
+        bottom: 10px;
+        right: 5px;
+    }
+}

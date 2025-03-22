@@ -1,0 +1,57 @@
+<div class="container">
+    <div class="table-responsive">
+        <table class="table table-striped" *ngFor="let detalle of articuloEnsamble.detallePedido">
+            <caption class="table-caption">Detalle del pedido</caption>
+            <thead>
+                <tr>
+                    <th>Número de Pedido</th>
+                    <th>Fecha de Entrega</th>
+                    <th>Forma de Entrega</th>
+                    <th>Horario de Entrega</th>
+                    <th>Cantidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="color: black !important;">{{ detalle.nroPedido }}</td>
+                    <td style="color: black !important;">{{ detalle.fechaEntrega | date:'dd/MM/yyyy HH:mm ' }}</td>
+                    <td style="color: black !important;">{{ detalle.formaEntrega }}</td>
+                    <td style="color: black !important;">{{ detalle.horarioEntrega }}</td>
+                    <td style="color: black !important;">{{ detalle.cantidadArticulosPorPedido }}</td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <caption class="table-caption">Historial de producción</caption>
+                                <thead>
+                                    <tr>
+                                        <th>Fecha Producción</th>
+                                        <th>Responsable</th>
+                                        <th>Piezas producidas</th>
+                                        <th>Proceso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let historial of detalle.historialPiezasProducidas">
+                                        <td>{{ historial.fecha | date:'dd/MM/yyyy HH:mm ' }}</td>
+                                        <td>{{ historial.personaResponsable.name }}</td>
+                                        <td>{{ historial.piezasProducidas }}</td>
+                                        <td>{{ historial.proceso }}</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2">Total de piezas producidas</td>
+                                        <td colspan="2">{{ getTotalPiezasProducidas(detalle.historialPiezasProducidas)
+                                            }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

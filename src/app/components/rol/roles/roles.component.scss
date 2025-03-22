@@ -1,0 +1,25 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.btn-primary {
+  margin-top: 10px;
+}
+
+
+::ng-deep .p-picklist-buttons .p-button {
+  display: none;
+  /* Oculta todos los botones */
+}
+
+/* Muestra solo los botones individuales (mover uno a uno) */
+::ng-deep .p-picklist-buttons .p-button:nth-child(1),
+::ng-deep .p-picklist-buttons .p-button:nth-child(3) {
+  display: inline-flex;
+}

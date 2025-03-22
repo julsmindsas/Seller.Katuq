@@ -1,0 +1,971 @@
+<!-- <ng-template #quickView let-modal> -->
+<div class="modal-header">
+    <h4 class="modal-title">{{'Configuración del producto' | translate}}</h4>
+    <!-- <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button> -->
+</div>
+<div class="container-fluid modal-body">
+    <!-- <form [formGroupName]="productoConfigurado"></form> -->
+    <div>
+        <div class="row">
+            <div class="col-xl-6 xl-cs-65 box-col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <section>
+                            <ks-carousel [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
+                            </ks-carousel>
+                        </section>
+                        <section>
+
+                            <div class="product-page-details">
+                                <h3>{{producto?.crearProducto?.titulo}}</h3>
+                                <h4>{{producto?.identificacion?.referencia}}</h4>
+                                <h6>Cantidad minima de venta: {{producto?.disponibilidad?.cantidadMinVenta}}</h6>
+
+                                <h6>{{getTituloTiempoEntrega()}}</h6>
+
+                                <h6>
+                                    Unidades disponibles {{producto?.disponibilidad?.cantidadDisponible}}
+                                </h6>
+                                <h6>NO se incluye valor del domicilio</h6>
+                                <h6>Incluye impuestos </h6>
+                            </div>
+                            <div>
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <p class="product-price f-28" title="precio">
+                                            {{producto?.precio?.precioUnitarioConIva |
+                                            currency:'USD':'symbol':'1.0-0'}}*</p>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <button type="button" class="btn btn-secondary" data-toggle="tooltip"
+                                            data-placement="top" title="Tooltip on top" (click)="mostrarPrecios()">
+                                            Tabla de Cantidades
+                                        </button>
+                                    </div>
+
+
+                                </div>
+
+
+                                <!-- <del>$350.00 </del> -->
+                            </div>
+                            <div *ngIf="mostrarTabla">
+                                <table class="table">
+                                    <tr>
+                                        <th>
+                                            Desde
+                                        </th>
+                                        <th>
+                                            Hasta
+                                        </th>
+                                        <th>
+                                            Valor Unitario Con IVA
+                                        </th>
+                                    </tr>
+                                    <tr *ngFor="let item of producto.precio.preciosVolumen">
+                                        <td>{{item.numeroUnidadesInicial}} UND </td>
+                                        <td>{{item.numeroUnidadesLimite}} UND </td>
+                                        <td>{{item.valorUnitarioPorVolumenConIVA | currency}}
+                                        </td>
+
+                                    </tr>
+
+                                </table>
+                            </div>
+                            <hr>
+                            <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
+                            <hr>
+                            <div>
+                                <table class="product-page-width">
+                                    <tbody>
+                                        <tr>
+                                            <td> <b>Marca &nbsp;&nbsp;&nbsp;:</b></td>
+                                            <td>{{producto?.identificacion?.marca}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td> <b>Habilitado &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
+                                            <td class="txt-success">In stock</td>
+                                        </tr>
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <hr>
+
+                            <hr>
+                            <div class="rating">
+                                <form [formGroup]="ratingForm" class="rating">
+                                    <ngx-star-rating formControlName="rating" [id]="'rating'"></ngx-star-rating>
+                                    <div>Rating: {{ratingForm.value.rating}}</div>
+                                </form>
+                            </div>
+                            <hr>
+                            <h3 *ngIf="productPreference?.length > 0">Preferencias seleccionadas</h3>
+                            <table class="table table-dashed" *ngIf="productPreference?.length > 0">
+                                <thead>
+                                    <tr>
+                                        <th>Imagen</th>
+                                        <th>Título</th>
+                                        <th>Subtitulo</th>
+                                        <th>Valor Unitario sin IVA</th>
+                                        <th>% IVA</th>
+                                        <th>Valor IVA</th>
+                                        <th>Precio Total con IVA</th>
+                                        <th>Cantidad</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Sección de Preferencia -->
+                                    <tr *ngIf="hasPreferencia()">
+                                        <td colspan="8"><strong>Sección de Preferencias</strong></td>
+                                    </tr>
+                                    <ng-container *ngFor="let preference of productPreference">
+                                        <tr *ngIf="preference.tipo === 'preferencia'">
+                                            <td>
+                                                <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="50"
+                                                    height="50">
+                                            </td>
+                                            <td>{{ preference.titulo }}</td>
+                                            <td>{{ preference.subtitulo }}</td>
+                                            <td>{{ preference.valorUnitarioSinIva |
+                                                currency:'USD':'symbol':'1.2-2'}}</td>
+                                            <td>{{ preference.porcentajeIva + '%' }}</td>
+                                            <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
+                                            <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
+                                            </td>
+                                            <td>
+                                                <!-- <div class="quantity-controls" style="white-space: nowrap;">
+                                                        <button
+                                                            (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
+                                                        <span>{{preference.cantidad}}</span>
+                                                        <button
+                                                            (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
+                                                    </div> -->
+                                            </td>
+
+                                        </tr>
+                                    </ng-container>
+                                    <!-- Sección de Adición -->
+                                    <tr *ngIf="hasAdicion()">
+                                        <td colspan="8"><strong>Sección de adiciones</strong></td>
+                                    </tr>
+                                    <ng-container *ngFor="let preference of productPreference">
+                                        <tr *ngIf="preference.tipo === 'adicion'">
+                                            <td>
+                                                <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="50"
+                                                    height="50">
+                                            </td>
+                                            <td>{{ preference.titulo }}</td>
+                                            <td>{{ preference.subtitulo }}</td>
+                                            <td>{{ preference.valorUnitarioSinIva |
+                                                currency:'USD':'symbol':'1.2-2'}}</td>
+                                            <td>{{ preference.porcentajeIva + '%' }}</td>
+                                            <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
+                                            <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
+                                            </td>
+                                            <td>
+                                                <div class="quantity-controls" style="white-space: nowrap;">
+                                                    <button
+                                                        (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
+                                                    <span>{{preference.cantidad}}</span>
+                                                    <button
+                                                        (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </ng-container>
+                                    <tr *ngIf="hasOpcionesPersonalizacion()">
+                                        <td colspan="8"><strong>Sección de opciones de personalización</strong></td>
+                                    </tr>
+                                    <ng-container *ngFor="let preference of productPreference">
+                                        <tr *ngIf="preference.tipo === 'opcionPersonalizacion'">
+
+                                            <td colspan="12">
+                                                <div style="display: inline-block; white-space: nowrap;">
+                                                    <div class="row"
+                                                        *ngIf="datosEntrega?.controls?.colores?.value?.length > 0">
+                                                        <div class="col-sm-6">
+                                                            <strong>Color:</strong>
+                                                        </div>
+
+                                                        <div class="col-sm-6" style="margin-top: -1rem;">
+                                                            <ul class="product-color m-t-15">
+                                                                <li *ngFor="let item of datosEntrega?.controls?.colores?.value"
+                                                                    [style.backgroundColor]="item">
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                                <div [innerHtml]="preference.subtitulo"></div>
+                                            </td>
+                                            <!-- <td>{{ preference.valorUnitarioSinIva}}</td>
+                                                    <td>{{ preference.porcentajeIva}}</td>
+                                                    <td>{{ preference.valorIva }}</td> -->
+
+                                        </tr>
+                                    </ng-container>
+                                    <tr *ngIf="!SinTarjeta">
+                                        <td colspan="8"><strong>Sección Tarjetas</strong></td>
+                                    </tr>
+                                    <span *ngIf="!SinTarjeta">
+                                        <ng-container *ngFor="let tarjeta of this.tarjetas.value">
+                                            <table style="width: 250%;">
+                                                <tbody>
+                                                    <tr>
+                                                        <td colspan="5"><strong>Para:</strong> {{ tarjeta.para }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="5"><strong>Mensaje de la tarjeta:</strong> {{
+                                                            tarjeta.mensaje}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="5"><strong>De:</strong> {{ tarjeta.de }}</td>
+                                                    </tr>
+
+
+                                                </tbody>
+                                            </table>
+
+                                        </ng-container>
+                                    </span>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2"></td>
+                                        <td><strong>Resumen:</strong></td>
+                                        <td>{{ getTotalValorUnitarioSinIva() | currency:'USD':'symbol':'1.2-2' }}
+                                        </td>
+                                        <td> </td>
+                                        <td>{{ getTotalValorIva() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                        <td>{{ getTotalPrecioTotalConIva() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <!--Mitad del programa se separan las de configuracion y muestra el producto-->
+            <div class="col-xl-6 xl-cs-35 box-col-6">
+                <form>
+                    <aw-wizard #wizard id="wizard" name="wizard" navBarLayout="large-filled-symbols">
+                        <aw-wizard-step [navigationSymbol]="{ symbol: '1' }">
+                            <!-- fecha y hora de entrega -->
+
+                            <ng-template awWizardStepSymbol ngbTooltip="Datos entrega">
+                                <div class="f1-step">
+                                    <div class="f1-step-icon">
+                                        <i class="fa fa-user" tooltipClass="my-custom-tooltip"></i>
+                                    </div>
+                                </div>
+                            </ng-template>
+
+                            <div class="navigation">
+                                <div class="row mt-1">
+                                    <div class="navigation">
+
+                                        <button class="btn btn-primary pull-right" type="button" awNextStep>
+                                            Siguiente
+                                        </button>
+
+                                    </div>
+                                    <div class="col-6 col-sm-12 col-xl-12" *ngIf="!isRebuy">
+                                        <form [formGroup]="datosEntrega">
+                                            <div class="row">
+                                                <!-- TITULO-->
+                                                <div class="col-sm-12 col-sm-12 input-group">
+                                                    <h5 class="m-15">DATOS PARA LA ENTREGA</h5>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="producto?.procesoComercial?.llevaCalendario">
+                                                <!-- CALENDARIO FORMA ENTREGA-->
+
+                                                <div class="row">
+                                                    <div class="col-sm-12 col-sm-12 input-group">
+                                                        <h5 class="m-15">1. Fecha de entrega</h5>
+                                                    </div>
+                                                    <div class="col-sm-12 col-sm-12 input-group">
+
+                                                        <input class="form-control" placeholder="Fecha de entrega"
+                                                            name="dp" formControlName="fechaEntrega" ngbDatepicker
+                                                            #d3="ngbDatepicker" [minDate]="minDate"
+                                                            [placement]="placement" [positionTarget]="buttonEl"
+                                                            readonly />
+                                                        <button #buttonEl class="btn btn-primary calendar"
+                                                            (click)="d3.toggle()" type="button">
+                                                            <app-feather-icons [icon]="'calendar'">
+                                                            </app-feather-icons>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <br>
+                                                <div class="row" *ngIf="hasFechaEntrega()">
+                                                    <div class="col-sm-12 col-sm-12 input-group">
+                                                        <h5 class="m-15">2. Forma de entrega</h5>
+                                                    </div>
+                                                    <div class="col-sm-12 col-sm-12 input-group">
+
+                                                        <!-- <h6 class="m-t-20">TIPO DE ENTREGA: </h6>  -->
+                                                        <ng-select [items]="formasEntregaProducto" bindLabel="nombre"
+                                                            bindValue="nombre" placeholder="Forma de entrega"
+                                                            class="form-control"
+                                                            style="font-family: roboto;color: #ffffff !important;"
+                                                            [closeOnSelect]="true" formControlName="formaEntrega"
+                                                            (change)="changeTipoEntrega($event)">
+                                                        </ng-select>
+                                                    </div>
+                                                </div>
+                                                <br>
+                                                <div class="row" *ngIf="hasFechaEntrega()">
+                                                    <div class="col-sm-12 col-sm-12 input-group">
+                                                        <h5 class="m-15">3. Horarios</h5>
+                                                    </div>
+                                                    <div class="col-sm-12 col-sm-12 input-group">
+
+                                                        <ng-select [items]="horarios" class="form-control"
+                                                            placeholder="Horarios" class="form-control"
+                                                            formControlName="horarioEntrega"
+                                                            style="font-family: roboto;color: #ffffff !important;"
+                                                            [closeOnSelect]="true">
+                                                        </ng-select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <div *ngIf="!producto?.procesoComercial?.llevaCalendario">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <p>Entregamos este producto en un plazo que varía desde el
+                                                            mismo
+                                                            día de la compra hasta un máximo de 2 días hábiles.
+                                                            Recibirás una notificación tan pronto como comencemos el
+                                                            proceso de envío, para que estés preparado/a para
+                                                            recibirlo.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row"
+                                                *ngIf="producto?.procesoComercial?.aceptaOcasion || producto?.procesoComercial?.aceptaGenero || producto?.procesoComercial?.aceptaComentarios || producto?.procesoComercial.aceptaColorDecoracion">
+                                                <div class="col-sm-12 col-sm-12 input-group">
+                                                    <h5 class="m-15">OBSERVACIONES DE PERSONALIZACIÓN</h5>
+                                                </div>
+                                            </div>
+
+                                            <!-- SEGUNDA PARTE -->
+
+                                            <div class="row" *ngIf="producto?.procesoComercial?.aceptaOcasion">
+                                                <div class="col-sm-12 col-sm-12 input-group">
+                                                    <h5 class="m-15">Ocasión</h5>
+                                                </div>
+                                                <div class="col-sm-12 col-sm-12 input-group">
+
+                                                    <br>
+                                                    <ng-select [items]="ocasiones" formControlName="ocasion"
+                                                        class="form-control" placeholder="Ocasión"
+                                                        (change)="addOpcionesPersonalizacion()"
+                                                        style="font-family: roboto;color: #ffffff !important;"
+                                                        bindLabel="name" bindValue="id" [closeOnSelect]="true">
+                                                    </ng-select>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <div class="row" *ngIf="producto?.procesoComercial?.aceptaGenero">
+                                                <div class="col-sm-12 col-sm-12 input-group">
+                                                    <h5 class="m-15">Género</h5>
+                                                </div>
+                                                <div class="col-sm-12 col-sm-12 input-group">
+
+                                                    <br>
+                                                    <ng-select style="height:auto !important" [items]="generos"
+                                                        formControlName="genero" bindLabel="name" bindValue="id"
+                                                        (change)="addOpcionesPersonalizacion()" class="form-control"
+                                                        placeholder="Genero"
+                                                        style="font-family: roboto;color: #ffffff !important;"
+                                                        [multiple]="false" [closeOnSelect]="true">
+                                                    </ng-select>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <div class="row" *ngIf="producto?.procesoComercial?.aceptaComentarios">
+                                                <div class="col-sm-12 col-sm-12 input-group">
+                                                    <h5 class="m-15">Observaciones</h5>
+                                                </div>
+                                                <div class="col-sm-12 col-sm-12 input-group">
+
+                                                    <br>
+                                                    <textarea class="form-control" formControlName="observaciones"
+                                                        id="exampleFormControlTextarea1" rows="3"
+                                                        (keyup)="addOpcionesPersonalizacion()"
+                                                        placeholder="Observaciones"></textarea>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <div class="row" *ngIf="producto?.procesoComercial.aceptaColorDecoracion">
+                                                <div class="col-sm-12 col-sm-12 input-group">
+                                                    <h5 class="m-15">Seleccione el color</h5>
+                                                </div>
+                                                <div class="col-sm-12 col-sm-12 input-group">
+
+                                                    <br>
+                                                    <ul class="product-color m-t-15">
+                                                        <li *ngFor="let item of producto.procesoComercial?.colorDecoracion"
+                                                            [style.backgroundColor]="item"
+                                                            (click)="selectedColor($event,item)"
+                                                            title="Dale click para seleccionar"
+                                                            style="cursor: pointer;">
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            <br>
+
+                                        </form>
+                                        <!-- TERCERA PARTE : parte de las variables-->
+                                        <div class="row" *ngIf="producto?.procesoComercial?.aceptaVariable">
+                                            <div class="col-sm-12 col-sm-12 input-group">
+                                                <h5 class="m-15">PREFERENCIAS DEL PRODUCTO</h5>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <!--Preferencias del producto-->
+                                        <div class="row" *ngIf="producto?.procesoComercial?.aceptaVariable">
+                                            <div class="container">
+                                                <div class="row">
+                                                    <div class="col-sm-12">
+
+                                                        <form [formGroup]="formulario">
+                                                            <div formArrayName="variables">
+                                                                <div *ngFor="let item of getVariablesControls(); let i = index"
+                                                                    class="row">
+                                                                    <div [formGroupName]="i" class="col-sm-12">
+
+                                                                        <!-- Manejo de la propiedad data -->
+                                                                        <div class="form-group">
+                                                                            <h5>{{(i+1).toString()}}. {{
+                                                                                item.get('data')?.get('titulo').value
+                                                                                }}</h5>
+                                                                            <span>{{
+                                                                                item.get('data')?.get('subtitulo').value
+                                                                                }}</span>
+
+                                                                            <!-- Condiciones para el campo tipoImagen -->
+                                                                            <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'texto'"
+                                                                                class="form-group">
+                                                                                <textarea
+                                                                                    formControlName="textoIngresado"
+                                                                                    placeholder="Texto"
+                                                                                    (keyup)="selectedProductPreference($event, item)"
+                                                                                    class="form-control"
+                                                                                    rows="3"></textarea>
+                                                                            </div>
+                                                                            <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'imagen'"
+                                                                                class="form-group">
+                                                                                <input formControlName="imagenIngresado"
+                                                                                    type="file" accept="image/*"
+                                                                                    class="form-control"
+                                                                                    (change)="selectedProductPreference($event, item)"
+                                                                                    placeholder="Subir imagen">
+                                                                            </div>
+                                                                            <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'archivo'"
+                                                                                class="form-group">
+                                                                                <input
+                                                                                    formControlName="archivoIngresado"
+                                                                                    type="file"
+                                                                                    (change)="selectedProductPreference($event, item)"
+                                                                                    placeholder="Adjuntar archivo"
+                                                                                    class="form-control">
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div *ngIf="tieneHijos(item) "
+                                                                            class="form-group">
+                                                                            <!-- <select id="childrenSelect-{{i}}"
+                                                                                    formControlName="childrenSelected"
+                                                                                    class="form-control"
+                                                                                    (change)="selectedProductPreference($event, item)">
+                                                                                    <option value="-1">Selecciona una
+                                                                                        opción</option>
+                                                                                    <option
+                                                                                        *ngFor="let child of item.get('children').controls; let j = index"
+                                                                                        [value]="j">
+                                                                                        {{
+                                                                                        child.get('data').get('titulo')?.value
+                                                                                        }}
+                                                                                        +
+                                                                                        ({{
+                                                                                        child.get('data').get('precioTotalConIva')?.value
+                                                                                        | currency}})
+                                                                                    </option>
+                                                                                </select> -->
+
+
+
+                                                                            <ng-select
+                                                                                [items]="item.get('children').controls"
+                                                                                bindLabel="value.data.titulo"
+                                                                                bindValue="value.data.titulo"
+                                                                                (change)="selectedProductPreferenceForNgSelect($event, item)"
+                                                                                placeholder="Selecciona una opción"
+                                                                                [multiple]="false"
+                                                                                [closeOnSelect]="true">
+                                                                                <ng-template ng-label-tmp
+                                                                                    let-item="item">
+                                                                                    {{ item.value.data.titulo}} +
+                                                                                    ({{
+                                                                                    item.value.data.precioTotalConIva
+                                                                                    | currency}})
+                                                                                </ng-template>
+                                                                                <ng-template ng-option-tmp
+                                                                                    let-item="item">
+                                                                                    <img [src]="getImgAdicion(item.value.data.titulo)"
+                                                                                        alt="image" width="50"
+                                                                                        height="50" />
+                                                                                    {{ item.value.data.titulo}} +
+                                                                                    ({{
+                                                                                    item.value.data.precioTotalConIva
+                                                                                    | currency}})
+                                                                                </ng-template>
+                                                                            </ng-select>
+
+
+
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="navigation">
+
+                                            <button class="btn btn-primary pull-right" type="button" awNextStep>
+                                                Siguiente
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </aw-wizard-step>
+                        <aw-wizard-step (stepEnter)="enterStep($event,2)" [navigationSymbol]="{ symbol: '2' }">
+                            <div class="navigation">
+
+                                <!-- <button class="btn btn-primary pull-right" type="button" awNextStep>
+                                                Siguiente
+                                            </button> -->
+                                <button class="btn btn-secondary pull-right mr-1" type="button" awPreviousStep>
+                                    Anterior
+                                </button>
+                            </div>
+                            <ng-template awWizardStepSymbol ngbTooltip="Adiciones">
+                                <div class="f1-step">
+                                    <div class="f1-step-icon">
+                                        <i class="fa fa-user" tooltipClass="my-custom-tooltip"></i>
+                                    </div>
+                                </div>
+                            </ng-template>
+                            <div class="container ">
+                                <div class="container" *ngIf="producto?.procesoComercial?.llevaTarjeta">
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <div class="d-flex align-items-center">
+                                                <h5 class="m-15" *ngIf="!SinTarjeta">TARJETAS
+                                                    ({{tarjetas.length}})</h5>
+                                                <h5 class="m-15" *ngIf="SinTarjeta">SIN TARJETAS </h5>
+                                                <button class="btn btn-link ml-2" *ngIf="!SinTarjeta"
+                                                    title="Agregar otra tarjeta" (click)="agregarTarjeta()">
+                                                    <app-feather-icons [icon]="'plus'"></app-feather-icons>
+                                                </button>
+                                            </div>
+                                            <div class="form-check" *ngIf="!SinTarjeta">
+                                                <input type="checkbox" class="form-check-input" id="tarjetas"
+                                                    name="tarjetas" value="tarjetas"
+                                                    (change)="onChangeTarjetas($event)">
+                                                <label class="form-check-label" for="tarjetas">Solo quiero
+                                                    una tarjeta para este producto
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="tarjetas"
+                                                    name="tarjetas" value="tarjetas"
+                                                    (change)="onChangeNoTarjetas($event)">
+                                                <label class="form-check-label" for="tarjetas">No quiero
+                                                    tarjeta para este producto
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div *ngIf="!SinTarjeta">
+                                        <form [formGroup]="tarjetasForm">
+                                            <div formArrayName="tarjetas">
+                                                <div *ngFor="let tarjeta of tarjetas.controls; let i = index">
+                                                    <div [formGroupName]="i">
+                                                        <div class="row">
+                                                            <div class="col-sm-5"></div>
+                                                            <div class="col-sm-6">
+                                                                <h5 class="m-15">Tarjeta #{{ i + 1 }}
+                                                                    <app-katuqintelligence
+                                                                        [titleInput]="'Generate text with IA for tarjeta' + (i + 1)"
+                                                                        [katuqIntelligencePrompt]="getKatuqPrompt()"
+                                                                        [textToSwalHeader]="'Por favor espera mientras generamos el mensaje para la tarjeta ' + (i + 1) + '...'"
+                                                                        [textToQuiestionSwal]="'¿Desea generar texto para la tarjeta # ' + (i + 1) + '?'"
+                                                                        [objectToText]="tarjeta"
+                                                                        (katuqIntelligenceResponse)="katuqIntelligeceResponse($event)"></app-katuqintelligence>
+                                                                </h5>
+
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-sm-12">
+                                                                <input class="form-control" placeholder="Para:"
+                                                                    formControlName="para" />
+                                                            </div>
+                                                        </div>
+                                                        <br>
+                                                        <div class="row">
+                                                            <div class="col-sm-12">
+                                                                <textarea class="form-control"
+                                                                    placeholder="Mensaje Para La Tarjeta:"
+                                                                    formControlName="mensaje"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <br>
+                                                        <div class="row">
+                                                            <div class="col-sm-12">
+                                                                <input class="form-control" placeholder="De:"
+                                                                    formControlName="de" />
+                                                            </div>
+                                                        </div>
+                                                        <br>
+                                                        <button type="button" class="btn btn-danger"
+                                                            (click)="removeTarjetaForm(i)">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                    <hr>
+                                                </div>
+                                            </div>
+                                        </form>
+
+                                    </div>
+                                </div>
+                                <div class="container-fluid" *ngIf="producto?.procesoComercial?.aceptaAdiciones">
+                                    <div class="row">
+                                        <div class="col-sm-12 col-sm-12 input-group">
+                                            <h5 class="m-15">ADICIONES</h5>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <div class="card">
+                                                <div class="card-header col-sm-12 col-sm-12 input-group">
+                                                    <h5>Selecciona uno o varios</h5>
+                                                </div>
+                                                <div class="card-body scrollable-div">
+                                                    <div class="row g-sm-4 g-3" *ngFor="let item of adicionesrows">
+                                                        <div class="col-xl-12 col-md-6">
+                                                            <div class="prooduct-details-box" style="cursor: pointer;"
+                                                                (click)="addAdicionToProduct(item)"
+                                                                [ngClass]="{ 'active': item?.seleccionado }">
+                                                                <div class="media"><img
+                                                                        class="align-self-center img-fluid img-60"
+                                                                        src="{{item.imagenPrincipal[0]?.urls}}" alt="#"
+                                                                        alt="#">
+                                                                    <div class="media-body ms-3">
+                                                                        <div class="product-name">
+                                                                            <h6><a
+                                                                                    href="javascript:void(0);">{{item.titulo}}</a>
+                                                                            </h6>
+                                                                        </div>
+                                                                        <div class="price d-flex">
+                                                                            <div class="text-muted me-2">Price</div>
+                                                                            :
+                                                                            {{item.precioTotal |
+                                                                            currency:'USD':'symbol':'1.2-2'}}
+                                                                        </div>
+
+
+
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+
+
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-6 col-sm-12 col-xl-12">
+                                <div class="row">
+                                    <div class="col-sm-12 col-sm-12 input-group">
+                                        <h5 class="m-15">CANTIDAD</h5>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <h5 class="m-15">Cantidad mínima de venta:
+                                        {{producto?.disponibilidad?.cantidadMinVenta}}</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <h5 class="m-15">
+                                            Unidades disponibles: {{producto?.disponibilidad?.cantidadDisponible}}
+                                        </h5>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <h5 class="m-15">Cantidad a Comprar</h5>
+                                    </div>
+                                    <div class="col-sm-6">
+
+                                        <div class="qty-box">
+                                            <div class="input-group">
+                                                <span class="input-group-prepend">
+                                                    <button class="btn quantity-left-minus" type="button"
+                                                        data-type="minus" data-field="" (click)="menosCantidad()">
+                                                        <app-feather-icons [icon]="'minus'"></app-feather-icons>
+                                                    </button>
+                                                </span>
+                                                <input #cantidad class="form-control input-number" type="text"
+                                                    name="cantidad" id="cantidad" readonly
+                                                    min="{{producto?.disponibilidad?.cantidadMinVenta}}" max="100">
+                                                <span class="input-group-prepend">
+                                                    <button class="btn quantity-right-plus" type="button"
+                                                        data-type="plus" data-field="" (click)="masCantidad()">
+                                                        <app-feather-icons [icon]="'plus'"></app-feather-icons>
+                                                    </button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <p>
+                                        Las elecciones en este producto aplican a todos los productos idénticos en
+                                        tu compra. Si deseas productos iguales con elecciones diferentes completa la
+                                        configuración para cada uno agrégales al carrito y luego dale en continuar
+                                        comprando.
+                                    </p>
+                                </div>
+                                <br>
+                                <div class="navigation">
+
+                                    <!-- <button class="btn btn-primary pull-right" type="button" awNextStep>
+                                                    Siguiente
+                                                </button> -->
+                                    <button class="btn btn-secondary pull-right mr-1" type="button" awPreviousStep>
+                                        Anterior
+                                    </button>
+                                    <button class="btn btn-primary m-r-10 m-t-10" type="button" *ngIf="!isEdit" title=""
+                                        (click)="addToCar()"> <i class="fa fa-shopping-basket me-1"></i>Agregar al
+                                        carrito</button>
+                                    <button class="btn btn-primary m-r-10 m-t-10" type="button" *ngIf="isEdit"
+                                        (click)="addToCar()"> <i class="fa fa-shopping-basket me-1"></i>Actualizar
+                                        carrito</button>
+                                </div>
+                            </div>
+                        </aw-wizard-step>
+                    </aw-wizard>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="row product-page-main">
+            <div class="col-sm-12">
+                <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
+                    <li [ngbNavItem]="1">
+                        <a ngbNavLink>Características Adicionales *
+                        </a>
+                        <ng-template ngbNavContent>
+                            <!-- <p class="mb-0 m-t-20"> {{producto?.crearProducto?.descripcion}}</p> -->
+                            <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
+                        </ng-template>
+                    </li>
+                    <li [ngbNavItem]="2">
+                        <a ngbNavLink>Garantías propias del producto*
+                        </a>
+                        <ng-template ngbNavContent>
+                            <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                                industry. Lorem
+                                Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                                unknown
+                                printer took a
+                                galley of type and scrambled it to make a type specimen book. It has survived not
+                                only
+                                five centuries,
+                                but also the leap into electronic typesetting, remaining essentially unchanged. It
+                                was
+                                popularised in
+                                the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                                more
+                                recently with
+                                desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                            </p>
+                        </ng-template>
+                    </li>
+                    <li [ngbNavItem]="3">
+                        <a ngbNavLink>Condiciones/Restricciones*
+                        </a>
+                        <ng-template ngbNavContent>
+                            <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                                industry. Lorem
+                                Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                                unknown
+                                printer took a
+                                galley of type and scrambled it to make a type specimen book. It has survived not
+                                only
+                                five centuries,
+                                but also the leap into electronic typesetting, remaining essentially unchanged. It
+                                was
+                                popularised in
+                                the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                                more
+                                recently with
+                                desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                            </p>
+                        </ng-template>
+                    </li>
+                    <li [ngbNavItem]="4">
+                        <a ngbNavLink>Cómo debe cuidarse / consumirse*
+                        </a>
+                        <ng-template ngbNavContent>
+                            <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                                industry. Lorem
+                                Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                                unknown
+                                printer took a
+                                galley of type and scrambled it to make a type specimen book. It has survived not
+                                only
+                                five centuries,
+                                but also the leap into electronic typesetting, remaining essentially unchanged. It
+                                was
+                                popularised in
+                                the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                                more
+                                recently with
+                                desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                            </p>
+                        </ng-template>
+                    </li>
+                    <li [ngbNavItem]="4">
+                        <a ngbNavLink>Reseñas*
+                        </a>
+                        <ng-template ngbNavContent>
+                            <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                                industry. Lorem
+                                Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                                unknown
+                                printer took a
+                                galley of type and scrambled it to make a type specimen book. It has survived not
+                                only
+                                five centuries,
+                                but also the leap into electronic typesetting, remaining essentially unchanged. It
+                                was
+                                popularised in
+                                the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                                more
+                                recently with
+                                desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                            </p>
+                        </ng-template>
+                    </li>
+                    <li [ngbNavItem]="5">
+                        <a ngbNavLink>Preguntas y Respuestas*
+                        </a>
+                        <ng-template ngbNavContent>
+                            <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                                industry. Lorem
+                                Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                                unknown
+                                printer took a
+                                galley of type and scrambled it to make a type specimen book. It has survived not
+                                only
+                                five centuries,
+                                but also the leap into electronic typesetting, remaining essentially unchanged. It
+                                was
+                                popularised in
+                                the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                                more
+                                recently with
+                                desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                            </p>
+                        </ng-template>
+                    </li>
+
+
+
+
+                </ul>
+                <div [ngbNavOutlet]="nav" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+<!-- <div class="modal-footer">
+                <div class="product-button">
+                    <button class="btn btn-primary m-r-10 m-t-10" type="button" title="" (click)="addToCar()"> <i
+                            class="fa fa-shopping-basket me-1"></i>Agregar al carrito</button>
+                    <button class="btn btn-success m-r-10 m-t-10" type="button" title=""> <i
+                            class="fa fa-shopping-cart me-1"></i>Comprar ahora</button>
+                    <a class="btn btn-secondary m-t-10" href="javascript:void(0);"> <i class="fa fa-heart me-1"></i>Agregar a mi
+                        lista de deseos</a>
+                </div>
+            </div> -->
+<div class="modal-footer">
+    <div class="product-button">
+        <button class="btn btn-primary m-r-10 m-t-10" type="button" title="" *ngIf="isEdit == false"
+            [disabled]="datosEntrega.invalid" (click)="addToCar()"> <i class="fa fa-shopping-basket me-1"></i>Agregar al
+            carrito</button>
+        <!-- <button class="btn btn-success m-r-10 m-t-10" type="button" title=""> <i
+                            class="fa fa-shopping-cart me-1"></i>Comprar ahora</button>
+                    <a class="btn btn-secondary m-t-10" href="javascript:void(0);"> <i class="fa fa-heart me-1"></i>Agregar a mi
+                        lista de deseos</a> -->
+    </div>
+    <div class="product-summary">
+        <div class="row">
+            <div class="col-sm-8 footerprice">
+                <div class="row" style="--bs-gutter-x:10rem">
+                    <div class="col-sm-4"><strong>
+                            <h5>Producto:</h5>
+                        </strong>{{ precioproducto * (sumar1() || 1) |
+                        currency:'USD':'symbol':'1.0-0' }} </div>
+                    <div class="col-sm-4"> <strong>
+                            <h5>Adiciones:</h5>
+                        </strong> {{
+                        (getBigTotalProductWithPreferenceAndAdictions() - precioproducto) * (sumar1() || 1) |
+                        currency:'USD':'symbol':'1.0-0' }}</div>
+                    <div class="col-sm-4"> <strong>
+                            <h5>Total:</h5>
+                        </strong> {{
+                        (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) |
+                        currency:'USD':'symbol':'1.0-0' }}</div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- </ng-template> -->

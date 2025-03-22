@@ -1,0 +1,65 @@
+<app-breadcrumb [title]="'Tipos de entrega'" [items]="['Maestros']" [active_item]="'Tipos de entrega'"></app-breadcrumb>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+        <i class="icon-bg" width="80" height="80"
+           style="opacity: 0.4;position: absolute; color: #6ec0d4; top: 10px; left: 10px;"></i>
+
+        <div class="loader-box" *ngIf="cargando">
+          <div class="loader-8"></div>
+        </div>
+
+        <div class="card-body custom-datatable" *ngIf="!cargando">
+          <div class="row">
+            <div class="col-sm-6">
+              <input type='text' class="filter-ngx form-control mb-3" style="width: 100% !important;"
+                     placeholder="{{'Escribe aquí el texto que deseas filtrar' | translate}}"
+                     (keyup)='updateFilter($event)' />
+            </div>
+            <div class="col-sm-6 mb-3" style="text-align: end;">
+              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="create()">
+                <span style="color: white;">{{'Crear tipo de entrega' | translate}}</span>
+                <i placement="top" ngbTooltip="Nuevo"
+                   style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                   class="icofont icofont-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <p-table [value]="rows" [paginator]="true" [rows]="10" [sortField]="'posicion'" [sortOrder]="1">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="text-align: center">{{ 'Posición' | translate }}</th>
+                <th>{{ 'Nombre interno' | translate }}</th>
+                <th>{{ 'Activo' | translate }}</th>
+                <th>{{ 'Formas de entrega' | translate }}</th>
+                <th>{{ 'Acciones' | translate }}</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td style="text-align: center">{{ row.posicion }}</td>
+                <td>{{ row.nombreInterno }}</td>
+                <td>{{ row.activo ? 'Sí' : 'No' }}</td>
+                <td>{{ row.formaEntrega }}</td>
+                <td>
+                  <i placement="top" ngbTooltip="{{'Editar' | translate}}"
+                     style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                     class="icofont icofont-pencil-alt-5" (click)="editar(row)"></i>
+                  <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
+                     style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                     class="icofont icofont-trash" (click)="eliminarFila(row)"></i>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <button class="btn btn-primary" style="color: white;"><i class="icofont icofont-file-excel"></i>Excel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,86 @@
+<app-breadcrumb [title]="'Tickets'" [items]="['Crear Tickets']" [active_item]="'Crear Tickets'"></app-breadcrumb>
+<div class="create-ticket-container">
+    <h2 class="title">Crear Nuevo Ticket Usuario</h2>
+    <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="ticket-form">
+      <!-- Categoría -->
+      <div class="form-group">
+        <label for="categoria">Categoría</label>
+        <select id="categoria" formControlName="categoria" class="form-control" disabled>
+          <option value="funcionalidad katuq" selected>Funcionalidad Katuq</option>
+        </select>
+      </div>
+  
+      <!-- Subcategoría -->
+      <div class="form-group">
+        <label for="subcategoria">Subcategoría</label>
+        <select id="subcategoria" formControlName="subcategoria" class="form-control" disabled>
+          <option value="general" selected>General</option>
+        </select>
+      </div>
+       <!-- Subcategoría -->
+       <div class="form-group">
+        <label for="motivo">Motivo</label>
+        <select id="motivo" formControlName="motivo" class="form-control" >
+          <option value="soporte" selected>Soporte</option>
+          <option value="idea" selected>Idea</option>
+        </select>
+      </div>
+  
+      <!-- Nombre del Usuario que Reporta -->
+      <div class="form-group">
+        <label for="nombreUsuarioReporta">Nombre del Usuario que Reporta</label>
+        <input id="nombreUsuarioReporta" formControlName="nombreUsuarioReporta" type="text" class="form-control" required />
+        <div *ngIf="ticketForm.get('nombreUsuarioReporta')?.invalid && ticketForm.get('nombreUsuarioReporta')?.touched" class="error">
+          El nombre es obligatorio.
+        </div>
+      </div>
+  
+      <!-- Fecha del Evento -->
+      <div class="form-group">
+        <label for="fechaEvento">Fecha del Evento</label>
+        <input id="fechaEvento" formControlName="fechaEvento" type="date" class="form-control" required />
+        <div *ngIf="ticketForm.get('fechaEvento')?.invalid && ticketForm.get('fechaEvento')?.touched" class="error">
+          Fecha del evento es obligatoria.
+        </div>
+      </div>
+  
+      <!-- Descripción Detallada -->
+      <div class="form-group">
+        <label for="asunto">Descripción Detallada</label>
+        <textarea id="asunto" formControlName="asunto" rows="4" class="form-control" required></textarea>
+        <div *ngIf="ticketForm.get('asunto')?.invalid && ticketForm.get('asunto')?.touched" class="error">
+          La descripción es obligatoria.
+        </div>
+      </div>
+  
+      <!-- Adjuntar Imágenes -->
+      <div class="form-group">
+        <label for="adjuntos" class="custom-file-label">
+          <i class="fas fa-upload"></i> Adjuntar Imágenes
+        </label>
+        <br>
+        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" />
+        <small class="form-text text-muted">Puedes adjuntar múltiples imágenes.</small>
+      </div>
+  
+      <!-- Vista Previa de Imágenes -->
+      <div class="image-previews" *ngIf="imagePreviews.length > 0">
+        <h5>Vista previa de las imágenes</h5>
+        <div class="preview-container">
+          <div class="preview" *ngFor="let preview of imagePreviews">
+            <img [src]="preview" alt="Vista previa" class="preview-image" />
+            <button type="button" class="remove-image-btn" (click)="removeImage(preview)">
+              &times;
+            </button>
+          </div>
+        </div>
+      </div>
+      <br>
+  
+      <!-- Botón de Crear Ticket -->
+      <button type="submit" class="btn btn-primary btn-block" [disabled]="ticketForm.invalid">
+        Crear Ticket
+      </button>
+    </form>
+  </div>
+  

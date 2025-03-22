@@ -1,0 +1,691 @@
+// Variables
+:root {
+  --chat-primary: #4A90E2;
+  --chat-primary-darker: #3A80D2;
+  --chat-bg: #ffffff;
+  --chat-input-bg: #f8f9fa;
+  --user-message-bg: #e9f2ff;
+  --assistant-message-bg: #f8f9fa;
+  --chat-text: #2c3e50;
+  --chat-text-light: #636e72;
+  --chat-border: #e9ecef;
+  --chat-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.2s;
+}
+
+// Main Container - Ajustado para funcionar en modo flotante y normal
+.modern-chat-container {
+  padding: var(--container-padding, 1rem);
+  max-width: var(--container-max-width, 1200px);
+  margin: 0 auto;
+  height: var(--container-height, calc(100vh - 140px));
+  width: var(--container-width, 100%);
+  
+  // En modo flotante (dentro del botón) ajustamos dimensiones
+  &.floating-mode {
+    padding: 0;
+    height: 100%;
+    max-width: none;
+  }
+}
+
+.chat-card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--chat-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  height: 100%;
+  box-shadow: var(--chat-shadow);
+  border: 1px solid var(--chat-border);
+  border: 2px solid var(--chat-primary-darker);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  
+  // En modo flotante, ajustar bordes
+  .floating-mode & {
+    border-radius: var(--floating-border-radius, 12px);
+    border: none;
+  }
+}
+
+// Header - más compacto en modo flotante
+.chat-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--chat-border);
+  background-color: #fff;
+  
+  .floating-mode & {
+    padding: 0.75rem;
+    
+    h4 {
+      font-size: 1rem;
+    }
+    
+    .subtitle {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.chat-header-content {
+  text-align: center;
+  
+  h4 {
+    margin: 0;
+    color: var(--chat-text);
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  .subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--chat-text-light);
+    font-size: 0.9rem;
+  }
+}
+
+// Messages Container
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: rgba(248, 249, 250, 0.5);
+  scrollbar-width: thin;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+  
+  // Más compacto en modo flotante
+  .floating-mode & {
+    padding: 1rem 0.75rem;
+  }
+}
+
+.chat-messages-wrapper {
+  max-width: 850px;
+  margin: 0 auto;
+  padding-bottom: 20px;
+}
+
+// Welcome Message
+.welcome-message {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem;
+  background-color: rgba(74, 144, 226, 0.05);
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  
+  .ai-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    object-fit: cover;
+  }
+  
+  .welcome-text {
+    h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.1rem;
+      color: var(--chat-text);
+    }
+    
+    p {
+      margin: 0;
+      color: var(--chat-text-light);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+  }
+}
+
+// Message Rows
+.message-row {
+  display: flex;
+  margin-bottom: 1.5rem;
+  position: relative;
+  
+  .message-timestamp {
+    font-size: 0.75rem;
+    color: var(--chat-text-light);
+    opacity: 0.6;
+    margin-top: 0.25rem;
+    text-align: right;
+  }
+  
+  p {
+    font-size: 1rem;
+  }
+  
+  .floating-mode & {
+    margin-bottom: 1rem;
+    
+    .message-content {
+      max-width: 90%;
+    }
+  }
+}
+
+.user-message {
+  justify-content: flex-end;
+  
+  .message-content {
+    background-color: #3f87e2;
+    color: white;
+    border-radius: 18px 18px 0 18px;
+    padding: 0.75rem 1rem;
+    max-width: 80%;
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    
+    p {
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+  
+  .message-timestamp {
+    padding-right: 0.5rem;
+  }
+}
+
+.assistant-message {
+  justify-content: flex-start;
+  
+  .avatar-container {
+    margin-right: 0.75rem;
+    
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      overflow: hidden;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+  
+  .message-content {
+    background-color: #f5f8ff;
+    border: 1px solid var(--chat-primary-darker);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 18px 18px 18px 0;
+    padding: 0.75rem 1rem;
+    max-width: 80%;
+    
+    p {
+      margin: 0;
+      line-height: 1.5;
+      color: var(--chat-text);
+    }
+  }
+  
+  .formatted-content {
+    line-height: 1.6;
+    font-size: 1rem;
+    
+    a {
+      color: var(--chat-primary);
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+    
+    pre {
+      background: rgba(0,0,0,0.03);
+      border-radius: 6px;
+      padding: 0.75rem;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      border: 1px solid rgba(0,0,0,0.07);
+      margin: 0.75rem 0;
+      
+      code {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    }
+    
+    code {
+      background: rgba(0,0,0,0.03);
+      border-radius: 4px;
+      font-size: 0.9em;
+      padding: 0.2em 0.4em;
+      border: 1px solid rgba(0,0,0,0.07);
+    }
+    
+    table {
+      border-collapse: collapse;
+      margin: 1rem 0;
+      width: 100%;
+      
+      th, td {
+        border: 1px solid var(--chat-border);
+        padding: 0.5rem;
+      }
+      
+      th {
+        background-color: rgba(0,0,0,0.02);
+        font-weight: 600;
+        text-align: left;
+      }
+    }
+    
+    ul, ol {
+      padding-left: 1.5rem;
+      margin: 0.5rem 0;
+    }
+    
+    img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin: 0.5rem 0;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      margin: 0.75rem 0 0.5rem;
+    }
+  }
+  
+  .image-content {
+    margin-top: 0.75rem;
+    
+    img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+  }
+}
+
+// Typing Indicator
+.typing-indicator {
+  .typing-animation {
+    display: flex;
+    align-items: center;
+    background-color: var(--assistant-message-bg);
+    border: 1px solid var(--chat-border);
+    border-radius: 18px;
+    padding: 1rem;
+    width: 70px;
+    
+    span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin: 0 3px;
+      background-color: var(--chat-text-light);
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: typingAnimation 1.4s infinite;
+      
+      &:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      
+      &:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+    }
+  }
+}
+
+// Chat Input Area
+.chat-input-area {
+  padding: 1rem;
+  border-top: 1px solid var(--chat-border);
+  background-color: var(--chat-input-bg);
+  
+  .floating-mode & {
+    flex-shrink: 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+  }
+}
+
+.input-form {
+  display: flex;
+  align-items: center;
+  max-width: 850px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.emoji-button, .send-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  transition: opacity var(--transition-speed);
+  
+  &:hover {
+    opacity: 0.75;
+  }
+  
+  img {
+    width: 20px;
+    height: 20px;
+  }
+  
+  svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--chat-primary);
+  }
+  
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.input-container {
+  flex: 1;
+  position: relative;
+}
+
+.message-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 24px;
+  border: 1px solid var(--chat-border);
+  outline: none;
+  font-size: 1rem;
+  color: var(--chat-text);
+  background-color: #fff;
+  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+  
+  &:focus {
+    border-color: var(--chat-primary);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+  
+  &.error {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+  }
+}
+
+.emoji-picker-container {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  z-index: 100;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+// Animations
+@keyframes typingAnimation {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 0.3;
+  }
+}
+
+.animate-message {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .modern-chat-container {
+    padding: 0.5rem;
+    height: calc(100vh - 120px);
+  }
+  
+  .chat-header {
+    padding: 0.75rem 1rem;
+    
+    h4 {
+      font-size: 1.1rem;
+    }
+  }
+  
+  .messages-container {
+    padding: 1rem 0.75rem;
+  }
+  
+  .user-message,
+  .assistant-message {
+    .message-content {
+      max-width: 85%;
+    }
+  }
+}
+
+.chat-card {
+    height: calc(100vh - 180px);
+    display: flex;
+    flex-direction: column;
+}
+
+// Eliminar definición duplicada de card-body y unificar propiedades
+.card-body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; // Mantener overflow hidden para contener todo dentro del card
+}
+
+.row.flex-grow-1.m-0 {
+    flex: 1;
+    overflow: hidden; // Mantener overflow hidden para que el diseño flex funcione
+}
+
+.chat {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-history {
+    flex: 1;
+    scrollbar-width: thin;
+    padding-bottom: 20px; // Reducir el padding bottom excesivo
+    overflow-y: auto; // Mantener overflow-y auto para permitir scroll
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+    }
+}
+
+.message-bubble {
+    max-width: 85%;
+    word-wrap: break-word;
+    margin-bottom: 15px; // Añadir espacio entre mensajes uniformemente
+
+    @media (max-width: 576px) {
+        max-width: 95%;
+    }
+}
+
+.message-content {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 0.5rem; // Reducir margen inferior
+
+    // Estilos para contenido HTML en mensajes
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    pre,
+    code {
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    table {
+        max-width: 100%;
+        display: block;
+        overflow-x: auto;
+    }
+
+    iframe {
+        max-width: 100%;
+    }
+}
+
+.received-message .message-content {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.chat-input {
+    border-top: 1px solid #e9ecef;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+}
+
+.emoji-container {
+    position: absolute;
+    bottom: 70px;
+    z-index: 10;
+}
+
+@media (max-width: 768px) {
+    .chat-card {
+        height: calc(100vh - 150px);
+    }
+
+    .card-header {
+        padding: 0.75rem;
+
+        h4 {
+            font-size: 1.25rem;
+        }
+    }
+}
+
+/* Estilos para las tarjetas de productos */
+.product-card {
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    max-width: 300px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-card h3 {
+    font-size: 16px;
+    margin: 0 0 8px 0;
+    color: #333;
+    font-weight: 600;
+}
+
+.product-card p {
+    font-size: 14px;
+    margin: 0 0 10px 0;
+    color: #555;
+    line-height: 1.4;
+}
+
+.product-card .price {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.product-card .product-link {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: #4a6fb5;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.product-card .product-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/* Diseño responsive para mostrar productos en grid */
+@media (min-width: 768px) {
+    .product-recommendations {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .product-card {
+        margin-bottom: 0;
+    }
+  
+    .floating-mode .product-recommendations {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+// Cuando está en modo flotante, ajustar alturas para garantizar visibilidad del input
+.floating-mode {
+  .messages-container {
+    // Asegurar que el contenedor de mensajes no ocupe todo el espacio
+    height: calc(100% - 60px); // Reservar espacio para el input
+  }
+  
+  .chat-input-area {
+    height: 60px; // Altura fija para el área de input
+    min-height: 60px;
+  }
+}

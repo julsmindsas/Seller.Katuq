@@ -1,0 +1,210 @@
+<!-- <app-breadcrumb [title]="'Clientes'" [items]="['Ventas']" [active_item]="'Clientes'"></app-breadcrumb> -->
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12 p-2">
+            <br />
+            <div class="card">
+                <i class="icon-bg" width="80" height="80" style="
+                        opacity: 0.4;
+                        position: absolute;
+                        color: #6ec0d4;
+                        top: 10px;
+                        left: 10px;
+                    "></i>
+                <div class="loader-box" *ngIf="cargando">
+                    <div class="loader-8"></div>
+                </div>
+
+                <div class="row col-12 m-2">
+                    <div class="col-6">
+                        <p class="text-left fc-info fs-24 m-0 p-0">Clientes</p>
+                        <p class="text-left text-muted fs-18 m-0 p-0">
+                            Listado de clientes.
+                        </p>
+                    </div>
+
+                    <div class="col-6 p-3" style="text-align: end">
+                        <button class="btn btn-primary ml-2" type="button">
+                            <i placement="top" ngbTooltip="Nuevo" style="
+                                    font-size: 18px;
+                                    margin-left: 10px;
+                                    color: white;
+                                    cursor: pointer;
+                                " class="icofont icofont-plus"></i>&nbsp;
+                            <span style="color: white">{{
+                                "Crear cliente" | translate
+                                }}</span>
+                        </button>
+
+                        <button class="btn btn-primary ml-2" style="color: white" (click)="exportarExcel()">
+                            <i class="icofont icofont-file-excel"></i>
+                            {{ "Excel" | translate }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body custom-datatable p-4" *ngIf="!cargando">
+                    <p-table #dt [columns]="selectedColumns" [value]="clientes" [paginator]="true" [rows]="10"
+                        [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
+                        styleClass="p-datatable-gridlines" [rowsPerPageOptions]="[10, 20, 50]"
+                        [sortField]="'nombres_completos'" [sortOrder]="1" [globalFilterFields]="[
+                            'nombres_completos',
+                            'tipo_documento_comprador',
+                            'documento',
+                            'correo_electronico_comprador',
+                        ]" [tableStyle]="{ 'min-width': '10rem' }" [rowHover]="true" [showCurrentPageReport]="true"
+                        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
+
+                        <ng-template pTemplate="caption">
+                            <p-multiSelect style="margin: 10px" display="chip" [options]="cols"
+                                [(ngModel)]="selectedColumns" optionLabel="header"
+                                selectedItemsLabel="{0} columns selected" [style]="{ 'min-width': '200px' }"
+                                placeholder="Choose Columns"></p-multiSelect>
+                            <div class="flex">
+                                <p-iconField iconPosition="left" class="ml-auto">
+                                    <p-inputIcon>
+                                        <i class="pi pi-search p-2"></i>
+                                    </p-inputIcon>
+                                    <input pInputText type="text" (input)="
+                                            dt2.filterGlobal(
+                                                $event.target.value,
+                                                'contains'
+                                            )
+                                        " placeholder="{{
+                                            'Escribe el texto que deseas filtrar'
+                                                | translate
+                                        }}" />
+                                </p-iconField>
+                            </div>
+                        </ng-template>
+                        <ng-template pTemplate="header" let-columns let-cliente>
+                            <tr>
+                                <th style="width: 22%">
+                                    {{ "Cliente" | translate }}
+                                </th>
+                                <th *ngFor="let col of columns">
+                                    {{ col.header }}
+                                </th>
+                                <th style="width: 22%">
+                                    {{ "Opciones" | translate }}
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    <p-columnFilter type="text" field="nombres_completos" placeholder=""
+                                        ariaLabel="Filter Name"></p-columnFilter>
+                                </th>
+                                <th *ngFor="let col of columns">
+                                    <p-columnFilter type="text" field="{{ cliente[col.field] }}" placeholder=""
+                                        ariaLabel="Filter ">
+                                    </p-columnFilter>
+                                </th>
+                                <th></th>
+                            </tr>
+                            <!-- <tr>
+                                <th>
+                                    <p-columnFilter
+                                        type="text"
+                                        field="nombres_completos"
+                                        placeholder="Buscar por nombre"
+                                        ariaLabel="Filter Name" ></p-columnFilter>
+                                </th>
+                                <th>
+                                    <p-columnFilter
+                                        type="text"
+                                        field="tipo_documento_comprador"
+                                        placeholder="Search by tipo documento"
+                                        ariaLabel="Filter Country" ></p-columnFilter>
+                                </th>
+                                <th>
+                                    <p-columnFilter
+                                    type="text"
+                                    field="documento"
+                                    placeholder="Search by documento"
+                                    ariaLabel="Filter Country" ></p-columnFilter>
+                                </th>
+                                <th>
+                                    <p-columnFilter
+                                    type="text"
+                                    field="correo_electronico_comprador"
+                                    placeholder="Search by correo"
+                                    ariaLabel="Filter Country" ></p-columnFilter>
+                                </th>
+                                <th></th>
+                            </tr> -->
+                            <!-- <tr>
+                                <th pSortableColumn="nombres_completos">{{ 'Cliente' | translate }}
+                                    <p-sortIcon field="nombres_completos"></p-sortIcon>
+                                </th>
+                                <th pSortableColumn="tipo_documento_comprador">{{ 'Tipo Documento' | translate }}
+                                    <p-sortIcon field="tipo_documento_comprador"></p-sortIcon>
+                                </th>
+                                <th pSortableColumn="documento">{{ 'Documento' | translate }}
+                                    <p-sortIcon field="documento"></p-sortIcon>
+                                </th>
+                                <th pSortableColumn="correo_electronico_comprador">{{ 'Correo Electrónico' | translate
+                                    }}
+                                    <p-sortIcon field="correo_electronico_comprador"></p-sortIcon>
+                                </th>
+                                <th>{{ 'Opciones' | translate }}</th>
+                            </tr> -->
+                        </ng-template>
+
+                        <ng-template pTemplate="body" let-columns="columns" let-cliente>
+                            <tr>
+                                <td>
+                                    {{ cliente.nombres_completos }}
+                                    {{ cliente.apellidos_completos }}
+                                </td>
+                                <!-- <td *ngFor="let col of columns">
+                                    {{ cliente[col.field] }}
+                                </td> -->
+                                <td *ngFor="let col of columns">
+                                    <div class="fc-black" *ngIf="cliente[col.field] !== 'estado'">{{cliente[col.field]}}
+                                    </div>
+                                    <div *ngIf="cliente[col.field] === 'estado'">
+                                        <p-tag [value]="cliente[col.field]" [severity]="danger">
+                                        </p-tag>
+                                    </div>
+                                </td>
+                                <td>
+                                    <i placement="top" ngbTooltip="{{ 'Editar' | translate }}" style="
+                                            font-size: 18px;
+                                            margin-left: 10px;
+                                            color: cornflowerblue;
+                                            cursor: pointer;
+                                        " class="icofont icofont-pencil-alt-5" (click)="editarCliente(cliente)">
+                                    </i>
+                                    <i placement="top" ngbTooltip="{{
+                                            'Eliminar' | translate
+                                        }}" style="
+                                            font-size: 18px;
+                                            margin-left: 10px;
+                                            color: cornflowerblue;
+                                            cursor: pointer;
+                                        " class="icofont icofont-trash" (click)="eliminarCliente(cliente)">
+                                    </i>
+                                </td>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template pTemplate="emptymessage">
+                            <tr>
+                                <td colspan="5">
+                                    {{ "No hay datos disponibles" | translate }}
+                                </td>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template pTemplate="summary">
+                            <div class="flex align-items-center justify-content-between">
+                                Total en esta consulta: {{clientes ? clientes.length : 0 }} clientes.
+                            </div>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

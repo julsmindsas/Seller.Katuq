@@ -1,0 +1,85 @@
+<app-breadcrumb [title]="'Tickets'" [items]="['Mis Tickets']" [active_item]="'Mis tickets'"></app-breadcrumb>
+<div class="tickets-container">
+  <h1 class="text-center mb-4"><strong>Mis Tickets</strong></h1>
+  <div class="filter-container mb-3">
+    <label for="statusFilter" class="me-2">Filtrar por Estado:</label>
+    <select id="statusFilter" class="form-select w-auto" [(ngModel)]="selectedStatus" (change)="filterTickets()">
+      <option value="">Todos</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="haciendo">Haciendo</option>
+      <option value="resuelto">Resuelto</option>
+    </select>
+  </div>
+  
+  <div *ngFor="let ticket of filteredTasks; let i = index" class="ticket-card">
+    <div class="card compact-card" (click)="toggleTicket(i)">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="ticket-title mb-0 text-truncate" style="max-width: 70%;">
+          {{ ticket.asunto }}
+        </h5>
+        <span class="badge ticket-status" [ngStyle]="{ 'background-color': getStatusColor(ticket.status) }">
+          {{ ticket.status }}
+        </span>
+        <span class="toggle-icon">{{ expandedTickets[i] ? '▲' : '▼' }}</span>
+      </div>
+
+      <!-- Detalles colapsables -->
+      <div class="card-body details" [class.show]="expandedTickets[i]" *ngIf="expandedTickets[i]">
+        <p><strong>Fecha de Registro:</strong> {{ ticket.fechaRegistro }}</p>
+        <p><strong>Usuario Reporta:</strong> {{ ticket.nombreUsuarioReporta }}</p>
+
+        <!-- Adjuntos -->
+        <div *ngIf="ticket.adjuntos && ticket.adjuntos.length > 0">
+          <p><strong>Adjuntos:</strong></p>
+          <div class="attachments d-flex flex-wrap">
+            <img
+              *ngFor="let adjunto of ticket.adjuntos"
+              [src]="adjunto"
+              alt="Adjunto"
+              class="attachment-img"
+              (click)="openInNewTab(adjunto)"
+            />
+          </div>
+        </div>
+
+        <!-- Comentarios -->
+        <div *ngIf="ticket.ticketComments?.length">
+          <h6>Comentarios:</h6>
+          <div *ngFor="let comment of ticket.ticketComments" class="comment">
+            <div class="comment-header d-flex align-items-center">
+              <div class="comment-author" [ngStyle]="{ 'background-color': comment.autor.color }">
+                {{ comment.autor.iniciales }}
+              </div>
+              <p class="mb-0 ms-2">
+                {{ comment.autor.nombreCompleto }} - {{ comment.fechaCreacion | date: 'medium' }}
+              </p>
+            </div>
+            <p class="comment-content">{{ comment.contenido }}</p>
+          </div>
+        </div>
+
+        <!-- Añadir Nuevo Comentario -->
+        <div class="new-comment mt-3">
+          <textarea
+            [(ngModel)]="newComment"
+            class="form-control mb-2"
+            rows="2"
+            placeholder="Escribe tu comentario..."
+          ></textarea>
+          <input type="file" multiple (change)="onFileSelected($event)" class="form-control mb-2" />
+
+          <!-- Vista previa de imágenes -->
+          <div class="image-previews" *ngIf="imagePreviews.length > 0">
+            <div class="preview-container d-flex flex-wrap">
+              <div class="preview position-relative me-2" *ngFor="let preview of imagePreviews; let i = index">
+                <img [src]="preview" alt="Vista previa" class="thumbnail" />
+                <button class="btn btn-danger btn-sm delete-button" (click)="removeImage(i)">✖</button>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm mt-2" (click)="addNewComment(ticket)">Añadir Comentario</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,197 @@
+<ng-template #quickView let-modal>
+  <div class="modal-content">
+    <div class="modal-header product-modal">
+      <div class="product-box row">
+        <div class="product-img col-md-6"><img class="img-fluid"
+            [src]="producto.crearProducto.imagenesPrincipales[0]?.urls" alt=""></div>
+        <div class="product-details col-md-6 text-start">
+          <div class="product-page-details">
+            <h3>{{producto?.crearProducto?.titulo}}</h3>
+            <h4>{{producto?.identificacion?.referencia}}</h4>
+            <h6>Cantidad minima de venta: {{producto?.disponibilidad?.cantidadMinVenta}}</h6>
+            
+           
+            
+            <h6>
+                Unidades disponibles {{producto?.disponibilidad?.cantidadDisponible}}
+            </h6>
+            <h6>NO se incluye valor del domicilio</h6>
+            <h6>Incluye impuestos </h6>
+        </div>
+
+          <div class="product-price">{{producto.precio.precioUnitarioConIva
+            |currency:'USD':'symbol':'1.0-0'}}
+            <del>{{producto.precio.precioTotalVolumenConIva | currency:'USD':'symbol':'1.0-0'}} </del>
+          </div>
+          <div class="product-view">
+            <h6 class="f-w-600">Detalles del producto</h6>
+            <!-- <p class="mb-0">{{producto.crearProducto.descripcion}}</p> -->
+            <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
+          </div>
+
+          <div class="product-qnty">
+            <h6 class="f-w-600">Cantidad</h6>
+            <div class="qty-box">
+              <div class="input-group">
+                <span class="input-group-prepend">
+                  <button class="btn quantity-left-minus" type="button" data-type="minus" data-field=""
+                    (click)="menosCantidad()">
+                    <app-feather-icons [icon]="'minus'"></app-feather-icons>
+                  </button>
+                </span>
+                <input #cantidad (input)="handleInput($event)" class="form-control input-number" type="number"
+                  name="cantidad" id="cantidad" min="1" max="100" readonly value="1">
+                <span class="input-group-prepend">
+                  <button class="btn quantity-right-plus" type="button" data-type="plus" data-field=""
+                    (click)="masCantidad()">
+                    <app-feather-icons [icon]="'plus'"></app-feather-icons>
+                  </button>
+                </span>
+              </div>
+            </div>
+            <div class="addcart-btn">
+              <button class="btn btn-primary me-1" type="button" (click)="addToCar()">Agregar al carrito</button>
+            </div>
+          </div>
+          <div class="rating">
+            <label for="rating"> <h6>Calificacion:</h6> </label>
+            <ngx-star-rating [id]="'rating'"></ngx-star-rating>
+          </div>
+
+        </div>
+      </div>
+      <button class="btn-close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="card">
+      <div class="row product-page-main">
+          <div class="col-sm-12">
+              <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
+                  <li [ngbNavItem]="1">
+                      <a ngbNavLink>Características Adicionales *
+                      </a>
+                      <ng-template ngbNavContent>
+                          <!-- <p class="mb-0 m-t-20"> {{producto?.crearProducto?.descripcion}}</p> -->
+                          <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
+                      </ng-template>
+                  </li>
+                  <li [ngbNavItem]="2">
+                      <a ngbNavLink>Garantías propias del producto*
+                      </a>
+                      <ng-template ngbNavContent>
+                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                              industry. Lorem
+                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                              unknown
+                              printer took a
+                              galley of type and scrambled it to make a type specimen book. It has survived not
+                              only
+                              five centuries,
+                              but also the leap into electronic typesetting, remaining essentially unchanged. It
+                              was
+                              popularised in
+                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                              more
+                              recently with
+                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                          </p>
+                      </ng-template>
+                  </li>
+                  <li [ngbNavItem]="3">
+                      <a ngbNavLink>Condiciones/Restricciones*
+                      </a>
+                      <ng-template ngbNavContent>
+                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                              industry. Lorem
+                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                              unknown
+                              printer took a
+                              galley of type and scrambled it to make a type specimen book. It has survived not
+                              only
+                              five centuries,
+                              but also the leap into electronic typesetting, remaining essentially unchanged. It
+                              was
+                              popularised in
+                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                              more
+                              recently with
+                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                          </p>
+                      </ng-template>
+                  </li>
+                  <li [ngbNavItem]="4">
+                      <a ngbNavLink>Cómo debe cuidarse / consumirse*
+                      </a>
+                      <ng-template ngbNavContent>
+                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                              industry. Lorem
+                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                              unknown
+                              printer took a
+                              galley of type and scrambled it to make a type specimen book. It has survived not
+                              only
+                              five centuries,
+                              but also the leap into electronic typesetting, remaining essentially unchanged. It
+                              was
+                              popularised in
+                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                              more
+                              recently with
+                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                          </p>
+                      </ng-template>
+                  </li>
+                  <li [ngbNavItem]="4">
+                      <a ngbNavLink>Reseñas*
+                      </a>
+                      <ng-template ngbNavContent>
+                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                              industry. Lorem
+                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                              unknown
+                              printer took a
+                              galley of type and scrambled it to make a type specimen book. It has survived not
+                              only
+                              five centuries,
+                              but also the leap into electronic typesetting, remaining essentially unchanged. It
+                              was
+                              popularised in
+                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                              more
+                              recently with
+                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                          </p>
+                      </ng-template>
+                  </li>
+                  <li [ngbNavItem]="5">
+                      <a ngbNavLink>Preguntas y Respuestas*
+                      </a>
+                      <ng-template ngbNavContent>
+                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
+                              industry. Lorem
+                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                              unknown
+                              printer took a
+                              galley of type and scrambled it to make a type specimen book. It has survived not
+                              only
+                              five centuries,
+                              but also the leap into electronic typesetting, remaining essentially unchanged. It
+                              was
+                              popularised in
+                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
+                              more
+                              recently with
+                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+                          </p>
+                      </ng-template>
+                  </li>
+
+
+
+
+              </ul>
+              <div [ngbNavOutlet]="nav" class="mt-2"></div>
+          </div>
+      </div>
+  </div>
+  </div>
+</ng-template>

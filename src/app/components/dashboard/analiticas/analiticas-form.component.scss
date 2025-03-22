@@ -1,0 +1,16 @@
+::ng-deep .embedding-footer {
+    display: none;
+}
+
+::ng-deep ng2-reporting-footer {
+    display: none;
+}
+
+::ng-deep embedding-footer-bg {
+    display: none;
+}
+
+.dash {
+    width: 100%;
+    height: 95vh;
+}

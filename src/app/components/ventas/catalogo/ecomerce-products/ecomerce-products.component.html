@@ -1,0 +1,299 @@
+<div class="container-fluid product-wrapper" [class.sidebaron]="openSidebar">
+    <strong class="me-15">{{ 'Ciudad' | translate }}: {{ciudad |uppercase}}</strong>
+    <div class="product-grid">
+        <div class="feature-products">
+            <div class="row">
+                <div class="col-md-6 products-total">
+                    <div class="square-product-setting d-inline-block" (click)="toggleListView(false)">
+                        <a class="icon-grid grid-layout-view" href="javascript:void(0);">
+                            <i data-feather="grid"></i>
+                        </a>
+                    </div>
+                    <div class="square-product-setting d-inline-block" (click)="toggleListView(true)">
+                        <a class="icon-grid m-0 list-layout-view" href="javascript:void(0);">
+                            <i data-feather="list"></i>
+                        </a>
+                    </div>
+                    <span class="d-none-productlist filter-toggle">
+                        {{ 'Filtros' | translate }}
+                        <span class="ml-2">
+                            <i class="toggle-data" data-feather="chevron-down"></i>
+                        </span>
+                    </span>
+                    <div class="grid-options d-inline-block">
+                        <ul>
+                            <li (click)="gridColumn(6)"><a class="product-2-layout-view"
+                                    href="javascript:void(0);"><span
+                                        class="line-grid line-grid-1 bg-primary"></span><span
+                                        class="line-grid line-grid-2 bg-primary"></span></a></li>
+                            <li (click)="gridColumn(4)"><a class="product-3-layout-view"
+                                    href="javascript:void(0);"><span
+                                        class="line-grid line-grid-3 bg-primary"></span><span
+                                        class="line-grid line-grid-4 bg-primary"></span><span
+                                        class="line-grid line-grid-5 bg-primary"></span></a></li>
+                            <li (click)="gridColumn(3)"><a class="product-4-layout-view"
+                                    href="javascript:void(0);"><span
+                                        class="line-grid line-grid-6 bg-primary"></span><span
+                                        class="line-grid line-grid-7 bg-primary"></span><span
+                                        class="line-grid line-grid-8 bg-primary"></span><span
+                                        class="line-grid line-grid-9 bg-primary"></span></a></li>
+                            <li (click)="gridColumn(2)"><a class="product-6-layout-view"
+                                    href="javascript:void(0);"><span
+                                        class="line-grid line-grid-10 bg-primary"></span><span
+                                        class="line-grid line-grid-11 bg-primary"></span><span
+                                        class="line-grid line-grid-12 bg-primary"></span><span
+                                        class="line-grid line-grid-13 bg-primary"></span><span
+                                        class="line-grid line-grid-14 bg-primary"></span><span
+                                        class="line-grid line-grid-15 bg-primary"></span></a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 text-right">
+                    <span class="f-w-600 m-r-5">{{ 'Mostrando productos' | translate }} 1 -
+                        {{productos?.length}}
+                        {{ 'de' | translate }} {{productos?.length}}
+                        {{ 'Resultados' | translate }}</span>
+                    <div class="select2-drpdwn-product select-options d-inline-block">
+                        <select class="form-control btn-square" name="select">
+                            <option value="opt1">{{ 'Destacado' | translate }}</option>
+                            <option value="opt2">{{ 'Costo menor' | translate }}</option>
+                            <option value="opt3">{{ 'Costo mayor' | translate }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <form [formGroup]="filterForm">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="product-sidebar">
+                            <div class="filter-section">
+                                <div class="card">
+                                    <div class="card-header" (click)="sidebarToggle()">
+                                        <h6 class="mb-0 f-w-600">{{ 'Filtros' | translate }}<span class="pull-right"><i
+                                                    class="fa fa-chevron-down toggle-data"></i></span></h6>
+                                    </div>
+                                    <div class="left-filter">
+                                        <div class="card-body filter-cards-view animate-chk">
+
+                                            <div class="product-filter">
+                                                <div class="product-filter">
+                                                    <div class="checkbox-animated mt-0">
+                                                        <h6 class="f-w-600">{{ 'Géneros' | translate }}</h6>
+                                                        <label class="d-block"
+                                                            *ngFor="let genero of generos; let i = index">
+                                                            <input class="checkbox_animated" type="checkbox"
+                                                                [id]="'genero-' + genero.id" [value]="genero.id"
+                                                                (change)="onGenreChange($event, i)">
+                                                            <label class="form-check-label"
+                                                                [for]="'genero-' + genero.id">
+                                                                {{ genero.name }}
+                                                            </label>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="product-filter">
+                                                    <div class="checkbox-animated mt-0">
+                                                        <h6 class="f-w-600">{{ 'Ocasiones' | translate }}</h6>
+                                                        <label class="d-block"
+                                                            *ngFor="let ocasion of ocasiones; let i = index">
+                                                            <input class="checkbox_animated" type="checkbox"
+                                                                [id]="'ocasion-' + ocasion.id" [value]="ocasion.id"
+                                                                (change)="onOccasionChange($event, i)">
+                                                            <label class="form-check-label"
+                                                                [for]="'ocasion-' + ocasion.id">
+                                                                {{ ocasion.name }}
+                                                            </label>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="product-filter">
+                                                    <h6 class="f-w-600">{{ 'Tiempos de entrega' | translate }}</h6>
+                                                    <div class="checkbox-animated mt-0">
+                                                        <label class="d-block"
+                                                            *ngFor="let tiempo of tiempoEntrega; let i = index">
+                                                            <input class="checkbox_animated" type="checkbox"
+                                                                [id]="'tiempo-' + tiempo.nombreInterno"
+                                                                [value]="tiempo.nombreInterno"
+                                                                (change)="onDeliveryTimeChange($event, i)">
+                                                            <label class="form-check-label"
+                                                                [for]="'tiempo-' + tiempo.nombreInterno">
+                                                                {{ tiempo.nombreInterno }}
+                                                            </label>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+
+                                            </div>
+
+                                            <div class="product-filter">
+                                                <h6 class="f-w-600">{{ 'Exposición' | translate }}</h6>
+                                                <div class="checkbox-animated mt-0">
+                                                    <label class="d-block" for="chk-ani">
+                                                        <input class="form-control" class="checkbox_animated"
+                                                            id="chk-ani" type="checkbox" formControlName="isRecommended"
+                                                            (click)="filtrarProductos()">
+                                                        {{ 'Recomendado' | translate }}
+                                                    </label>
+                                                    <label class="d-block" for="chk-ani1">
+                                                        <input class="form-control" class="checkbox_animated"
+                                                            id="chk-ani1" type="checkbox" formControlName="isNew"
+                                                            (click)="filtrarProductos()">
+                                                        {{ 'Nuevo' | translate }}
+                                                    </label>
+                                                    <label class="d-block" for="chk-ani2">
+                                                        <input class="form-control" class="checkbox_animated"
+                                                            id="chk-ani2" type="checkbox" formControlName="isBestSeller"
+                                                            (click)="filtrarProductos()">
+                                                        {{ 'Más vendido' | translate }}
+                                                    </label>
+                                                    <label class="d-block" for="chk-ani3">
+                                                        <input class="form-control" class="checkbox_animated"
+                                                            id="chk-ani3" type="checkbox" formControlName="isOnSale"
+                                                            (click)="filtrarProductos()">
+                                                        {{ 'En oferta' | translate }}
+                                                    </label>
+                                                    <label class="d-block" for="chk-ani4">
+                                                        <input class="form-control" class="checkbox_animated"
+                                                            id="chk-ani4" type="checkbox"
+                                                            formControlName="hasFreeShipping"
+                                                            (click)="filtrarProductos()">
+                                                        {{ 'Con envío gratis' | translate }}
+                                                    </label>
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="product-filter slider-product">
+                                                <div class="product-filter slider-product">
+                                                    <h6 class="f-w-600">{{ 'Precio' | translate }}:</h6>
+                                                    <h6>{{filterForm?.get('priceRange')?.value[0] |
+                                                        currency:'USD':'symbol':'1.0-0'}}
+                                                        -
+                                                        {{filterForm?.get('priceRange')?.value[1] |
+                                                        currency:'USD':'symbol':'1.0-0'}}</h6>
+                                                    <p-slider formControlName="priceRange" [min]="minPrice"
+                                                        [max]="maxPrice" [range]="true"
+                                                        (onSlideEnd)="filtrarProductos()"></p-slider>
+                                                </div>
+
+                                                <div class="product-filter">
+                                                    <h6 class="f-w-600">{{ 'Categorías' | translate }}</h6>
+                                                    <p-treeSelect style="width: 50%;" [options]="categorias"
+                                                        formControlName="category"
+                                                        placeholder="{{ 'Seleccione una categoría' | translate }}"
+                                                        (click)="filtrarProductos()"></p-treeSelect>
+                                                </div>
+                                                <!-- <div class="color-selector">
+                                                    <ul>
+                                                        <li class="white"></li>
+                                                        <li class="gray"></li>
+                                                        <li class="black"></li>
+                                                        <li class="orange"></li>
+                                                        <li class="green"></li>
+                                                        <li class="pink"></li>
+                                                        <li class="yellow"></li>
+                                                        <li class="blue"></li>
+                                                        <li class="red"></li>
+                                                    </ul>
+                                                </div> -->
+                                            </div>
+
+                                            <div class="product-filter text-center"><img
+                                                    class="img-fluid banner-product" alt="" data-original-title=""
+                                                    title="">
+                                            </div>
+                                            <div class="product-filter text-center"><img
+                                                    class="img-fluid banner-product" alt="" data-original-title=""
+                                                    title="">
+                                                <button class="btn btn-primary btn-block"
+                                                    (click)="limpiarFiltros()">{{ 'Limpiar filtro' | translate }}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9 col-sm-12">
+                        <form>
+                            <div class="form-group m-0">
+                                <input class="form-control" class="form-control" type="search" placeholder="{{ 'Buscar..' | translate }}"
+                                    (keyup)='updateFilter($event)' data-original-title="" title=""><i
+                                    class="fa fa-search"></i>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="product-wrapper-grid" [class.list-view]="listView">
+            <div class="row">
+                <div [class]="'col-xl-'+col+' col-sm-'+col" [class.col-xl-12]="listView"
+                    *ngFor="let producto of productos">
+                    <div class="card">
+                        <div class="product-box">
+                            <div class="product-img">
+                                <img class="img-fluid fixed-size"
+                                    [src]="producto.crearProducto.imagenesPrincipales[0]?.urls" alt="">
+                                <div class="product-hover">
+                                    <ul>
+                                        <li>
+                                            <button class="btn" type="button" (click)="configurarProducto(producto)">
+                                                <i class="icon-shopping-cart"></i>
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="btn" type="button" (click)="QuickView.openModal(producto)">
+                                                <i class="icon-eye"></i>
+                                            </button>
+                                        </li>
+                                        <!-- <li>
+                                            <button class="btn" type="button"><i class="icofont icofont-law-alt-2"></i></button>
+                                        </li> -->
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="product-details">
+                                <div class="rating">
+                                    <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
+                                        class="fa fa-star"></i><i class="fa fa-star"></i>
+                                </div>
+                                <h4 class="product-title" title="{{producto.crearProducto.titulo}}">
+                                    {{producto.crearProducto.titulo}}</h4>
+                                <p>{{producto.identificacion.referencia}}</p>
+                                <div class="product-price">
+                                    {{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}
+                                    <del>{{producto.precio.precioTotalVolumenConIva |
+                                        currency:'USD':'symbol':'1.0-0'}}</del>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <app-quick-view #quickView></app-quick-view>
+
+    <!-- <app-conf-product-to-cart #confProduct> </app-conf-product-to-cart> -->
+
+    <ng-template #confProductToCartModal let-modal>
+        <div class="modal-header">
+            <h4 class="modal-title" id="modal-basic-title">{{ 'Configurar producto' | translate }}</h4>
+            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <app-conf-product-to-cart #confProduct [producto]="productoSeleccionado"
+                [isRebuy]="isRebuy"></app-conf-product-to-cart>
+        </div>
+    </ng-template>
+</div>

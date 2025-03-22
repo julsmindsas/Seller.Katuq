@@ -1,0 +1,72 @@
+<app-breadcrumb [title]="'Crear Zonas Cobro'" [items]="['Extras/Zonas Cobro']" [active_item]="'Crear Zonas Cobro'">
+</app-breadcrumb>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <form [formGroup]="zonasCorbroForm">
+                        <div class="row">
+                            
+                            <div class="col-sm-4">
+                                <div class="row">
+                                    <label for="ciudad">Ciudad:</label>
+                                </div>
+                                <div class="row">
+                                    <select class="form-control" id="id" formControlName="ciudad">
+                                        <option  value="Seleccione" selected disabled>Seleccione</option>
+                                        <option *ngFor="let item of ciudades" value="{{item.label}}">{{item.label}}</option>
+                                        
+                                    </select>
+                                </div>
+                               
+                               
+                                
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="image">Nombre Zona Cobro</label>
+                                <input class="form-control" type="text" id="image" formControlName="nombreZonaCobro">
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="image">Valor Zona Cobro</label>
+                                <input class="form-control" type="number" id="image" formControlName="valorZonaCobro">
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="image">Porcentaje Impuesto Zona Cobro</label>
+                                <select class="form-control" type="number" id="image" formControlName="impuestoZonaCobro">
+                                    <option value="0">0%</option>
+                                    <option value="5">5%</option>
+                                    <option value="8">8%</option>
+                                    <option value="19">19%</option>
+                                </select>
+
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="">Impuesto</label>
+                                <br>
+                                <span style="font-weight: bolder;">{{ (zonasCorbroForm.value.valorZonaCobro*(zonasCorbroForm.value.impuestoZonaCobro/100)) | currency}}</span>
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="">Total</label>
+                                <br>
+                                <span style="font-weight: bolder;">{{ zonasCorbroForm.value.valorZonaCobro+(zonasCorbroForm.value.valorZonaCobro*(zonasCorbroForm.value.impuestoZonaCobro/100)) | currency}}</span>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row" *ngIf="!editando">
+                            <div class="col-sm-12">
+                                <button  (click)="guardar()" class="btn btn-primary" type="submit">Guardar</button>
+                            </div>
+                        </div>
+                        <div class="row" *ngIf="editando">
+                            <div class="col-sm-12">
+                                <button  (click)="editar()" class="btn btn-primary" type="submit">Guardar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ 

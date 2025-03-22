@@ -1,0 +1,14 @@
+<div class="payment-callback-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;">
+  <!-- Logo centrado -->
+  <div class="logo-container" style="margin-bottom: 20px;">
+    <img src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo" class="katuq-logo" style="max-width: 200px;">
+  </div>
+  <div class="payment-content" style="text-align: center;">
+    <h2>Pago recibido</h2>
+    <p class="reference-label">Referencia del pago:</p>
+    <p class="reference-value">{{ paymentReference }}</p>
+    <p class="info-text">Estamos procesando la información del pago, por favor espere mientras confirmamos la transacción.</p>
+    <!-- Nuevo botón para volver al Katuq -->
+    <button routerLink="/" style="margin-top: 20px; padding: 10px 20px; font-size: 16px;">Volver a Katuq</button>
+  </div>
+</div>

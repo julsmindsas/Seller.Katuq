@@ -1,0 +1,232 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import "./assets/scss/app.scss";
+
+@import "primeng/resources/primeng.min.css";
+@import "primeicons/primeicons.css";
+
+@import '~bootstrap/dist/css/bootstrap.min.css';
+
+@import "./assets/scss/pages/custom.scss";
+@import "~@angular/cdk/overlay-prebuilt.css";
+@import "~@ng-select/ng-select/themes/default.theme.css";
+
+
+body {
+    font-family: $font-roboto, sans-serif !important;
+}
+
+.ks-modal-gallery-backdrop {
+    background: #000 !important;
+    ;
+    opacity: 0.85 !important;
+    ;
+}
+
+.ks-modal-gallery-panel {
+    z-index: 90000 !important;
+}
+
+:root {
+    --primary-color: #990aff;
+    --primary-light-color: #518298;
+    --primary-dark-color: #002c3f;
+
+    --secondary-color: #00fbce;
+    --secondary-light-color: #5dc8d3;
+    --secondary-dark-color: #006973;
+
+    --white-color: #ffffff;
+    --grey-color: #f6f6f6;
+    --black-color: #000000;
+    --orange-color: #eeb500;
+
+    --error-color: #d12b38;
+    --warning-color: #D35400;
+    --success-color: #27AE60;
+
+    --shadow-effect: 0 .125rem .25rem rgba(0, 0, 0, .075);
+    --shadow-effect-hover: 0 .5rem 1rem rgba(0, 0, 0, .15);
+
+    --border-radius: 5px;
+
+    --main-linear-gradient: linear-gradient(45deg, rgba(32, 85, 106, 1) 22%, rgba(81, 130, 152, 1) 68%);
+
+}
+
+
+.router-wrapper {
+    position: relative;
+    overflow: hidden;
+    width: 100vw;
+    height: calc(100% - 47px);
+    perspective: 1200px;
+    transform-style: preserve-3d;
+}
+
+:host {
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #60d7a9;
+}
+
+.text-error-color {
+    color: var(--error-color);
+}
+
+.form-label {
+    font-weight: bold;
+}
+
+.modal-fullscreen {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+}
+
+.modal-fullscreen .modal-content {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+}
+
+::ng-deep ng2-reporting-footer {
+    display: none;
+}
+
+// .floating-button {
+//     position:fixed;
+//     bottom: 80px;
+//     right: 20px;
+//     background-color: #007bff;
+//     color: white;
+//     border: none;
+//     border-radius: 50%;
+//     width: 60px;
+//     height: 60px;
+//     z-index: 0;
+//     font-size: 16px;
+//     cursor: pointer;
+//     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+//   }
+
+//   .floating-button:hover {
+//     background-color: #0056b3;
+//   }
+
+.floating-button-container {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1000;
+    /* Eliminamos fondo opaco y suave */
+    // background: rgba(255, 255, 255, 0.8);
+    padding: 8px;
+    // border-radius: 12px;
+    // box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.floating-button {
+    /* Mantenemos el GIF para representar el botón de IA */
+    background-image: url('assets/images/kai/kai.gif');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.floating-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.floating-button-container:hover .floating-button:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip-text-floating {
+    visibility: hidden;
+    opacity: 0;
+    background-color: white;
+    color: black;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    bottom: 50px;
+    width: 120px;
+    right: 40px;
+    transition: opacity 0.3s;
+    z-index: 1;
+}
+
+.floating-chat-overlay {
+    position: absolute;
+    top: 70px; // Aparece justo debajo del botón flotante
+    right: 0;
+    width: 350px;
+    max-width: 90%;
+    height: calc(100vh - 220px);
+    background-color: white;
+    z-index: 100;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 576px) {
+    .floating-button-container {
+        bottom: 10px;
+        right: 10px;
+
+        &.open {
+            width: 300px;
+            height: calc(100vh - 80px);
+        }
+    }
+
+    .floating-button {
+        width: 50px;
+        height: 50px;
+    }
+
+    .tooltip-text-floating {
+        width: 100px;
+        right: 60px;
+        bottom: 40px;
+    }
+
+    .floating-chat-overlay {
+        top: 60px;
+        right: 10px;
+        width: calc(100% - 20px);
+        height: calc(100% - 70px);
+    }
+}
+

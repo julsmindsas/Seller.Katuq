@@ -1,0 +1,12 @@
+.form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: right;
+  }
+
+input[type="checkbox"] {
+  width: 25%;
+}
+input[type="checkbox"] {
+    transform: scale(2);
+  }

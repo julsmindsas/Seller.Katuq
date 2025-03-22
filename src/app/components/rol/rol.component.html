@@ -1,0 +1,107 @@
+<!-- <app-breadcrumb [title]="'Roles'" [items]="['Maestros']" [active_item]="'Roles'"></app-breadcrumb> -->
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12 mb-5">
+      <br>
+      <div class="card">
+        <!-- <i class="icon-bg" width="80" height="80"
+          style="opacity: 0.4;position: absolute; color: #6ec0d4; top: 10px; left: 10px;" data-feather="users"></i> -->
+        <div class="loader-box" *ngIf="cargando">
+          <div class="loader-8"></div>
+        </div>
+
+        <div class="row col-12 m-2">
+          <div class="col-6">
+              <p class="text-left fc-info fs-24 m-0 p-0">Roles</p>
+              <p class="text-left text-muted fs-18 m-0 p-0">
+                  Listado de roles para definir permisos de los usuarios.
+              </p>
+          </div>
+        </div>
+
+        <div class="card-body custom-datatable" *ngIf="!cargando">
+          <div class="row">
+            <div class="col-sm-6">
+              <input type='text' class="filter-ngx form-control mb-3"
+                placeholder="{{'Escribe lo que quieres filtrar y luego pulsa enter para accionar' | translate}}"
+                (keyup)='updateFilter($event)' />
+            </div>
+            <div class="col-sm-6 mb-3" style="text-align: end;">
+              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearRol()">
+                {{'Crear Rol' | translate}}
+                <i placement="top" ngbTooltip="{{ 'Nuevo' | translate }}"
+                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
+                  class="icofont icofont-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <p-table [value]="roles" [paginator]="true" [rowsPerPageOptions]="[10, 20, 50]" [rows]="10">
+            <!-- ENCABEZADO -->
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="rol">
+                  {{ 'Rol' | translate }}
+                  <p-sortIcon field="rol"></p-sortIcon>
+                </th>
+                <th pSortableColumn="nombre">
+                  {{ 'Nombre' | translate }}
+                  <p-sortIcon field="nombre"></p-sortIcon>
+                </th>
+                <th pSortableColumn="empresa">
+                  {{ 'Empresa' | translate }}
+                  <p-sortIcon field="empresa"></p-sortIcon>
+                </th>
+                <!-- <th pSortableColumn="permissions">
+                  {{ 'Permisos' | translate }}
+                  <p-sortIcon field="permissions"></p-sortIcon>
+                </th> -->
+                <th pSortableColumn="date_edit">
+                  {{ 'Fecha de Edición' | translate }}
+                  <p-sortIcon field="date_edit"></p-sortIcon>
+                </th>
+                <th pSortableColumn="user_edit">
+                  {{ 'Usuario que Editó' | translate }}
+                  <p-sortIcon field="user_edit"></p-sortIcon>
+                </th>
+                <th>
+                  {{ 'Acciones' | translate }}
+                </th>
+              </tr>
+            </ng-template>
+
+            <!-- CUERPO DE LA TABLA -->
+            <ng-template pTemplate="body" let-role>
+              <tr>
+                <td>{{ role.rol }}</td>
+                <td>{{ role.nombre }}</td>
+                <td>{{ role.empresa }}</td>
+                <!-- <td>{{ role.permissions.join(', ') }}</td> -->
+                <td>{{ role?.date_edit | date:'dd/MM/yyyy' }}</td>
+                <td>{{ role?.user_edit }}</td>
+                <td>
+                  <i placement="top" ngbTooltip="{{ 'Edit' | translate }}"
+                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                    class="icofont icofont-pencil-alt-5" (click)="editarRol(role)" title="{{ 'Editar rol' | translate }}"></i>
+                  <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                    class="icofont icofont-trash" (click)="eliminarRol(role)" title="{{ 'Eliminar rol' | translate }}"></i>
+                </td>
+              </tr>
+            </ng-template>
+
+            <!-- MENSAJE CUANDO LA TABLA ESTÁ VACÍA -->
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td [attr.colspan]="6">
+                  {{ 'No hay datos disponibles' | translate }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

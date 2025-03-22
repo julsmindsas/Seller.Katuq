@@ -1,0 +1,128 @@
+<!-- <app-breadcrumb [title]="'Edit profile' | translate" [items]="['Utilities' | translate, 'Settings' | translate]"
+  [active_item]="'Edit profile' | translate">
+</app-breadcrumb> -->
+<div class="container-fluid">
+  <div class="edit-profile">
+    <div class="row">
+      <div class="col-sm-12 xl-100">
+        <br><br>
+        <div class="card">
+
+          <div class="row col-12 m-2">
+            <div class="col-12">
+                <p class="text-left fc-info fs-24 m-0 p-0">Perfil de usuario</p>
+                <p class="text-left text-muted fs-18 m-0 p-0">
+                    Edita la imagen del usuario o la contraseña de ingreso.
+                </p>
+            </div>
+          </div>
+
+
+          <div class="card-body">
+            <div class="row mb-2">
+              <div class="col-auto">
+                <img class="img-90 rounded" [src]="this.img ? this.img : 'assets/images/user/user.png'" alt="profile" style="width: auto;">
+              </div>
+              <div class="col">
+                <h3 class="mb-1">{{name}}</h3>
+                <h5 class="mb-1">{{empre}}</h5>
+                <h4 class="mb-1">{{adm}}</h4>
+              </div>
+              <div class="col-auto">
+                <label for="photoprofile" class="subir mt-3 btn btn-primary">
+                  {{'Cambiar foto del perfil' | translate}}
+                </label>
+                <input type="file" #subirfoto (change)="uploadImage()" id="photoprofile" style='display: none;' />
+              </div>
+            </div>
+<!-- 
+            <h5 style="align-content: center;">{{'Edita tu contraseña' | translate}}</h5>
+
+            <form class="theme-form" (ngSubmit)="onSubmitPass()" [formGroup]="editP" #form="ngForm"
+              style="margin-top: 20px;">
+              <div class="col">
+                <div class="row">
+                  <div class="form-group col-sm-12 col-md-6 col-lg-3" style="margin-bottom: 15px !important;">
+
+                    <label for="passActual">
+                      {{'Actual' | translate}}
+                    </label>
+                    <input class="form-control" formControlName="passActual" type="password" #passActual
+                      id="passActual" />
+                    <div *ngIf="editP.controls.passActual.touched && editP.controls.passActual.errors?.required"
+                      class="text text-danger mt-1">
+                      {{'La contraseña actual es requerida' | translate}}
+                    </div>
+                  </div>
+
+                  <div class="form-group col-sm-12 col-md-6 col-lg-3" style="margin-bottom: 15px !important;">
+                    <label for="newPass">
+                      {{'Nueva contraseña' | translate}}
+                    </label>
+                    <input class="form-control" formControlName="newPass" type="password" #newPass id="newPass" />
+                    <div *ngIf="editP.controls.newPass.touched && editP.controls.newPass.errors?.required"
+                      class="text text-danger mt-1">
+                      {{'La contraseña nueva es requerida' | translate}}
+                    </div>
+                  </div>
+
+                  <div class="form-group col-sm-12 col-md-6 col-lg-3" style="margin-bottom: 15px !important;">
+                    <label for="cNewPass">
+                      {{'Repite contraseña' | translate}}
+                    </label>
+                    <input class="form-control" formControlName="cNewPass" autocomplete="off" type="password" #cNewPass
+                      id="cNewPass" />
+                    <div *ngIf="editP.controls.cNewPass.touched && editP.controls.cNewPass.errors?.required"
+                      class="text text-danger mt-1">
+                      {{'Confirma la contraseña nueva' | translate}}
+                    </div>
+                  </div>
+
+                  <div class="col-sm-12 col-md-6 col-lg-3">
+                    <div class="form-group mt-4 fc-white">
+                      <button class="btn btn-info mr-3 fc-white" type="submit" [disabled]="!editP.valid">{{'Guardar' |
+                        translate}}</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form> -->
+            <hr class="m-t-35">
+            <app-shared-change-password></app-shared-change-password>
+          </div>
+        </div>
+        <!-- <div class="card">
+          <div class="ribbon ribbon-clip ribbon-danger">Nuevo</div>
+          <div class="ribbon-wrapper" style="padding-top: 10px !important;">
+            <div class="card-body">
+              <div class="row mb-2" *ngIf="esCart">
+                <div class="col" style="display: flex; align-items: center;">
+                  <h5 class="mb-1">Edita tu empresa</h5>
+                </div>
+                <div class="col-auto">
+                  <label for="cart" class="subir mt-3" (click)="cart()">
+                    {{'Editar Empresa' | translate}}
+                  </label>
+                </div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-auto">
+                  <img class="img-90 rounded" alt="" [src]="this.logo">
+                </div>
+                <div class="col" style="display: flex; align-items: center;">
+                  <h5 class="mb-1">Edita el logo de tu empresa</h5>
+                </div>
+                <div class="col-auto">
+                  <label for="logo" class="subir mt-3">
+                    {{'Cambiar logo' | translate}}
+                  </label>
+                  <input type="file" #addLogo (change)="uploadLogo()" id="logo" style='display: none;' />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> -->
+      </div>
+    </div>
+  </div>
+</div>

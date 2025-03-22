@@ -1,0 +1,788 @@
+<!-- <app-breadcrumb [title]="'Product Details'" [items]="['Apps', 'Ecommerce']" [active_item]="'Product Details'"></app-breadcrumb> -->
+<div class="modal-header">
+  <h4 class="modal-title">{{'Vista previa' | translate}}</h4>
+  <button type="button" class="close" aria-label="Close" (click)="activeModal.close('Cross click')">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="container-fluid modal-body">
+  <div *ngIf="!fromProductCreate">
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="row">
+          <div class="col-sm12">
+            <div class="card">
+              <div class="card-body">
+                <section>
+                  <ks-carousel [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
+                  </ks-carousel>
+                </section>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="product-page-details">
+              <h3>{{producto.crearProducto.titulo}}</h3>
+            </div>
+            <div class="product-price f-28">{{producto.precio.precioUnitarioConIva | currency:'COP'
+              :'symbol-narrow':'4.2-2'}}
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="col-sm-9">
+        <div class="card">
+          <div class="card-body">
+            <div class="product-page-details">
+              <h3>Descripcion</h3>
+            </div>
+            <hr>
+            <p style="white-space: pre-line;" [innerHtml]="producto.crearProducto.descripcion"></p>
+
+            <hr>
+            <div class="row">
+              <div class="col-sm-6">
+                <table class="product-page-width">
+                  <tbody>
+                    <tr>
+                      <td> <b>Marca &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td>{{producto.identificacion.marca}}</td>
+                    </tr>
+                    <tr>
+                      <td> <b>Referencia &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td>{{producto.identificacion.referencia}}</td>
+                    </tr>
+                    <tr>
+                      <td> <b>Codigo de Barras &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td>{{producto.identificacion.codigoBarras}}</td>
+                    </tr>
+                    <tr>
+                      <td> <b>En Stock &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
+                      <td class="txt-success">{{producto.disponibilidad.cantidadDisponible}}</td>
+                    </tr>
+                    <tr>
+                      <td> <b>Tipo Producto &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
+                      <td>{{producto.identificacion.tipoProducto}}</td>
+                    </tr>
+                    <tr>
+                      <td> <b>Dimensiones &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
+                      <td>{{producto.dimensiones.altoProductoCm}}Cm x {{producto.dimensiones.anchoProductoCm}}Cm x
+                        {{producto.dimensiones.largoProductoCm}}Cm</td>
+                    </tr>
+                    <tr>
+                      <td> <b>Peso &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
+                      <td>
+                        {{producto.dimensiones.pesoUnitarioProductoKg}}Kg</td>
+                    </tr>
+                    <tr>
+                      <td> <b>Tiempo Entrega &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td>{{producto.disponibilidad.tiempoEntrega}} Dias</td>
+                    </tr>
+                    <tr>
+                      <td> <b>Tipo Entrega &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td><span *ngFor="let item of producto.disponibilidad.tipoEntrega" class="mb-0 m-t-20">{{item+','}}</span></td>
+                    </tr>
+                    <tr>
+                      <td> <b>Cantidad Minima de Venta &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td>{{producto.disponibilidad.cantidadMinVenta}}</td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+              <div class="col-sm-6">
+                <table class="product-page-width">
+                  <tbody>
+
+                    <tr>
+                      <td> <b>Ciudades Entrega &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
+                      <td class="txt-success"><span *ngFor="let item of producto.ciudades.ciudadesEntrega"
+                          class="mb-0 m-t-20">{{item.value+', '}}</span></td>
+                    </tr>
+
+                    <tr>
+                      <td> <b>Genero &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td><span *ngFor="let item of generosProducto" class="mb-0 m-t-20">{{item.name+'. '}}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td> <b>Ocasiones &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td><span *ngFor="let item of ocasionesProducto" class="mb-0 m-t-20">{{item.name+'. '}}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td> <b>Preferencias &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td><span *ngFor="let item of variablesProducto"
+                          class="mb-0 m-t-20">{{item.data.titulo+'.'}}</span></td>
+                    </tr>
+                    <tr>
+                      <td> <b>Etiquetas &nbsp;&nbsp;&nbsp;:</b></td>
+                      <td><span *ngFor="let item of producto.exposicion.etiquetas"
+                          class="mb-0 m-t-20">{{item+'.'}}</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <hr>
+            <div class="row">
+              <div class="col-md-6">
+                <h6 class="product-title">Compartelo!</h6>
+              </div>
+              <div class="col-md-6">
+                <div class="product-icon">
+                  <ul class="product-social">
+                    <li class="d-inline-block"><a href="https://www.facebook.com/"><i class="fa fa-facebook"></i></a>
+                    </li>
+                    <li class="d-inline-block"><a href="https://myaccount.google.com/"><i
+                          class="fa fa-google-plus"></i></a></li>
+                    <li class="d-inline-block"><a href="https://twitter.com/"><i class="fa fa-twitter"></i></a></li>
+                    <li class="d-inline-block"><a href="https://www.instagram.com/"><i class="fa fa-instagram"></i></a>
+                    </li>
+                    <li class="d-inline-block"><a href="https://dashboard.rss.com/auth/sign-in/"><i
+                          class="fa fa-rss"></i></a></li>
+                  </ul>
+                  <form class="d-inline-block f-right"></form>
+                </div>
+              </div>
+            </div>
+            <hr>
+            <div class="product-button" *ngIf="!isView">
+              <button class="btn btn-primary m-r-10 m-t-10" type="button" title=""> <i
+                  class="fa fa-shopping-basket me-1"></i>Add To Cart</button>
+              <button class="btn btn-success m-r-10 m-t-10" type="button" title=""> <i
+                  class="fa fa-shopping-cart me-1"></i>Buy Now</button>
+              <a class="btn btn-secondary m-t-10" href="javascript:void(0);"> <i class="fa fa-heart me-1"></i>Add To
+                WishList</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="row" *ngIf="fromProductCreate">
+
+
+    <div class="col-sm-4">
+      <div class="row">
+        <div class="col-sm-12">
+          <ks-carousel [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
+          </ks-carousel>
+        </div>
+        <div class="col-sm-12">
+          <div class="product-page-details">
+            <h3>{{producto.crearProducto.titulo}}</h3>
+
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <span style="font-size: 18px;
+      font-weight: 700;
+      margin-top: 5px;
+      color: var(--theme-deafult);">{{producto.precio.precioUnitarioConIva | currency:'COP'
+            :'symbol-narrow':'4.2-2'}}
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div class="col-sm-8">
+
+      <div class="card">
+        <div class="card-body default-accordion">
+
+
+
+          <ngb-accordion #acc="ngbAccordion" [activeIds]="activeids">
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Datos Basicos</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-4">
+                        <b>Titulo &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.crearProducto.titulo}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Fecha Inicial &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.crearProducto.fechaInicial}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Fecha Final &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.crearProducto.fechaFinal}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Descripcion &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.crearProducto.descripcion}}</span>
+                      </div>
+
+                      <div class="col-sm-4">
+                        <b>Caracteristicas Adicionales &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.crearProducto.caracAdicionales}}</span>
+                      </div>
+
+                      <div class="col-sm-4">
+                        <b>Garantias de Producto &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.crearProducto.garantiasProducto}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Restricciones &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.crearProducto.restriccionesProducto}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Cuidados &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.crearProducto.cuidadoConsumo}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </ng-template>
+            </ngb-panel>
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Precio</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-4">
+                        <b>Precio Por Volumne Con IVA &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.precio.precioIvaPorVolumen}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Precio Por Volumen Sin IVA &nbsp;&nbsp;&nbsp;:</b>
+                        <span>{{producto.precio.precioPorVolumenSinIva}}</span>
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.precio.precioIvaPorVolumen}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Precio Total Volumen Con IVA &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.precio.precioTotalVolumenConIva}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Precio Unitario Sin IVA &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.precio.precioUnitarioSinIva}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Precio IVA Unitario &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.precio.precioIvaPorVolumen}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Precio Unitario Con IVA &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.precio.precioUnitarioConIva}}</span>
+                      </div>
+
+                      <div class="col-sm-4">
+                        <b>Valor De IVA &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.precio.valorIva}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Precios Por Volumen &nbsp;&nbsp;&nbsp;:</b>
+                      </div>
+
+
+
+                      <div class="col-sm-12">
+                        <span>
+                          <table class="table-xs">
+                            <thead>
+                              <tr>
+                                <th>Numero Inicial Unidades</th>
+                                <th>Numero Limite de Unidades</th>
+                                <th>Valor IVA por Volumen</th>
+                                <th>Valor Unitario Por Volumne Con IVA</th>
+                                <th>Valor Unitario Por Volumne sin IVA</th>
+                                <th>Valor IVA Unitario por Volumen</th>
+
+                              </tr>
+                              <tr *ngFor="let item of producto.precio.preciosVolumen">
+                                <td>{{item.numeroUnidadesInicial}}</td>
+                                <td>{{item.numeroUnidadesLimite}}</td>
+                                <td>{{item.valorIVAPorVolumen | currency:'COP'
+                                  :'symbol-narrow':'4.2-2'}}</td>
+                                <td>{{item.valorUnitarioPorVolumenSinIVA| currency:'COP'
+                                  :'symbol-narrow':'4.2-2'}}</td>
+                                <td>{{item.valorUnitarioPorVolumenIva| currency:'COP'
+                                  :'symbol-narrow':'4.2-2'}}</td>
+                                <td>{{item.valorUnitarioPorVolumenConIVA| currency:'COP'
+                                  :'symbol-narrow':'4.2-2'}}</td>
+                              </tr>
+
+                            </thead>
+
+
+                          </table>
+                        </span>
+                      </div>
+                    </div>
+
+
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-panel>
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Dimensiones</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-4">
+                        <b>Alto Producto &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.dimensiones.altoProductoCm}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Ancho Producto &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.dimensiones.anchoProductoCm}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Largo Producto &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.dimensiones.largoProductoCm}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Peso producto &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.dimensiones.pesoUnitarioProductoKg}}</span>
+                      </div>
+
+
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-panel>
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Disponibilidad</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-4">
+                        <b>Cantidad Disponible &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.disponibilidad.cantidadDisponible}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Cantidad Minima de Venta &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.disponibilidad.cantidadMinVenta}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Inventario de Seguridad &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.disponibilidad.inventarioSeguridad}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Tiempo de Entrega &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.disponibilidad.tiempoEntrega}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Tipo de Entrega &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.disponibilidad.tipoEntrega}}</span>
+                      </div>
+
+
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-panel>
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Identificacion</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-4">
+                        <b>Codigo de Barras &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.identificacion.codigoBarras}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Marca &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.identificacion.marca}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Tipo de Producto &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.identificacion.tipoProducto}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Tiempo de Referencia &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.identificacion.tipoReferencia}}</span>
+                      </div>
+
+
+
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-panel>
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Exposicion</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-4">
+                        <b>Codigo de Barras &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.exposicion.activar; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Disponible &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.exposicion.disponible; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Posicion &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span>{{producto.exposicion.posicion}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Etiquetas &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngFor="let item of producto.exposicion.etiquetas">{{item + '. '}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Solo Pos &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.exposicion.soloPos; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Oferta &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.exposicion.oferta; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Recomendado &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.exposicion.recomendado; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Destacado &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.exposicion.destacado; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Mas Vendido &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.exposicion.masvendido; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+
+
+
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-panel>
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Proceso Comercial</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-4">
+                        <b>Acepta Adiciones &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.procesoComercial.aceptaAdiciones; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+
+                      <div class="col-sm-4">
+                        <b>Acepta Color de Decoracion &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.procesoComercial.aceptaColorDecoracion; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Acepta Comentarios &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.procesoComercial.aceptaComentarios; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Acepta Variables &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.procesoComercial.aceptaVariable; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Colores &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngFor="let item of producto.procesoComercial.colorDecoracion">
+                          <span class="color-circle" [style.color]="item"><i class="fa fa-circle"></i></span>
+                        </span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Generos &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngFor="let item of generosProducto">{{item.name+'.'}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Acepta Archivo &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.procesoComercial.llevaArchivo; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Acepta Calendario &nbsp;&nbsp;&nbsp;:</b>
+
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngIf="producto.procesoComercial.llevaCalendario; else noAcepta">SI</span>
+                        <ng-template #noAcepta>NO</ng-template>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Ocasiones &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngFor="let item of ocasionesProducto">{{item.name+'.'}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Variable Producto &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngFor="let item of variablesProducto">{{item.data.titulo+'.'}}</span>
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Formas de Pago &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngFor="let item of formasPagoProducto">{{item+'.'}}</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-panel>
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Marketplace</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-12">
+                        <b *ngFor="let item of producto.marketplace.campos">{{item.nameMP}} &nbsp;&nbsp;&nbsp;
+                          <span *ngIf="item.activo; else noAcepta"> Activo: &nbsp;&nbsp;&nbsp; SI</span>
+                          <ng-template #noAcepta>Activo: &nbsp;&nbsp;&nbsp;NO</ng-template></b>
+
+                      </div>
+
+                    </div>
+
+
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-panel>
+            <ngb-panel>
+              <ng-template ngbPanelTitle>
+                <span>&#9733; <b>Ciudades</b></span>
+              </ng-template>
+              <ng-template ngbPanelContent>
+                <div class="row">
+                  <div class="col-sm-12" style="color: black;">
+
+                    <div class="row">
+                      <div class="col-sm-4">
+                        <b>Ciudades Entrega &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngFor="let item of producto.ciudades.ciudadesEntrega">{{item.value+'.'}}</span>
+
+                      </div>
+                      <div class="col-sm-4">
+                        <b>Ciudades Origen &nbsp;&nbsp;&nbsp;:</b>
+
+                      </div>
+                      <div class="col-sm-8">
+                        <span *ngFor="let item of producto.ciudades.ciudadesOrigen">{{item.value+'.'}}</span>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-panel>
+
+          </ngb-accordion>
+        </div>
+
+
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+<div class="modal-footer" *ngIf="isView">
+  <button type="button" class="btn btn-light" (click)="activeModal.close('Close click')">Cerrar</button>
+</div>

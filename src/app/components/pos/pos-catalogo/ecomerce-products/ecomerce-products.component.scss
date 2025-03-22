@@ -1,0 +1,106 @@
+.modal-fullscreen {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+.modal-fullscreen .modal-content {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.fixed-size {
+  width: 100%;
+  height: 200px;
+  /* Ajusta la altura según sea necesario */
+  object-fit: cover;
+}
+
+.product-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.fixed-product-container {
+  max-height: 500px;
+  /* Ajusta según convenga */
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+/* Nuevo estilo para el botón de acción rápida */
+.quick-add-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #fff;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.quick-add-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+// Ajustes para el card del producto en móvil
+@media (max-width: 767px) {
+  .card.product-card {
+    margin: 0.5rem auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .card.product-card .product-box {
+    text-align: center;
+    padding: 10px;
+  }
+
+  .card.product-card .product-img {
+    margin: 0 auto;
+  }
+
+  .card.product-card .product-img img {
+    border-radius: 8px 8px 0 0;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .card.product-card .product-details {
+    padding: 8px;
+  }
+
+  .card.product-card .product-title {
+    font-size: 1rem;
+    margin-bottom: 5px;
+  }
+
+  .card.product-card .product-price {
+    font-size: 0.9rem;
+  }
+}
+
+.card .card-body {
+  padding: 20px;
+  background-color: transparent;
+}
+
