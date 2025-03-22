@@ -15,6 +15,7 @@ export const environment = {
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app', // API Google Cloud Functions
   urlApi: 'https://api.katuq.com', // API AWS
   wsVoiceServiceUrl: 'wss://api.tuservidor.com/voice-websocket',
+  voiceWsUrl: 'wss://tu-servidor-ejemplo.com',
   wompi: {
     prod_intrity: 'test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD',
     public_key_test: 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy',
