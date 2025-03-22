@@ -144,16 +144,73 @@ export class NavService implements OnDestroy {
 	}
 
 	MENUITEMS: Menu[] = [
+
 		{
-			headTitle1: 'Comercio',
+			headTitle1: 'Ventas'
+		},
+		{
+			title: 'Gestion de clientes', icon: 'user-check', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+				{ path: 'ventas/clientes', title: 'Crear Clientes', type: 'link' },
+				{ path: 'ventas/clienteslista', title: 'Lista de clientes', type: 'link' },
+				{ path: 'proceso/ocasiones', title: 'Ocasiones', type: 'link' },
+				{ path: 'proceso/generos', title: 'Géneros', type: 'link' },
+			]
+		},
+		{
+			title: 'Gestión de Ventas', icon: 'dollar-sign', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+				{ path: 'ventas/crear-ventas', title: 'Crear Venta', type: 'link' },
+				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas', type: 'link' },
+				{ path: 'ventas/pedidos', title: 'Lista de pedidos', type: 'link' },
+				{ path: 'pos/ventas', title: 'Ventas POS', type: 'link' },
+				{ path: 'pos/list-ventas', title: 'Listado Ventas POS', type: 'link' }
+			]
+		},
+
+		{
+			headTitle1: 'Producción'
+		},
+		{
+			title: 'Plan de Produccion', icon: 'archive', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+				{ path: 'produccion/dashboard', title: 'Lista', type: 'link' }
+			],
+		},
+		{
+			title: 'Gestión de inventario', icon: 'package', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+				{ path: 'productos', title: 'Productos', type: 'link' },
+				{ path: 'categorias', title: 'Categorías', type: 'link' },
+				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones', type: 'link' },
+				{ path: '', title: 'Lista Lite*', type: 'link' },
+				{ path: 'inventario/catalogo', title: 'Productos', type: 'link' },
+				{ path: '', title: 'Cambio precios*', type: 'link' }
+			]
+		},
+		{
+			headTitle1: 'Logística'
+		},
+		{
+			title: 'Entregas', icon: 'map-pin', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+				{ path: 'formasEntrega', title: 'Formas Entrega', type: 'link' },
+				{ path: 'formasEntrega/tipoentrega/lista', title: 'Tipo de Entrega', type: 'link' },
+				{ path: 'tiempoentrega', title: 'Tiempos de entrega', type: 'link' },
+				{ path: 'despachos', title: 'Lista despachos', type: 'link' },
+				{ path: 'extras/zonasCobro', title: 'Zonas Cobro', type: 'link' },
+				{ path: '', title: 'Bloqueo fechas y horarios*', type: 'link' },
+			]
+		},
+		{
+			headTitle1: 'Inteligencia de Negocios',
 			isOnlySuperAdministrador: true
 		},
 		{
-			title: 'Graficos', icon: 'home', type: 'sub', badgeType: 'success', badgeValue: '', active: true, children: [
+			title: 'Indicadores KPI', icon: 'home', type: 'sub', badgeType: 'success', badgeValue: '', active: true, children: [
 				{ path: 'dashboards', title: 'Graficos', type: 'link' },
 			]
 		},
 
+		{
+			headTitle1: 'Administración',
+			isOnlySuperAdministrador: true
+		},
 		{
 			title: 'Seguridad', icon: 'shield', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
 				{ path: 'rol/rol', title: 'Roles', type: 'link' },
@@ -180,149 +237,14 @@ export class NavService implements OnDestroy {
 			, isOnlySuperAdministrador: true
 		},
 		{
-			headTitle1: 'Configuración Tienda'
-		},
-		{
-			title: 'Entregas', icon: 'map-pin', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'formasEntrega', title: 'Formas Entrega', type: 'link' },
-				{ path: 'formasEntrega/tipoentrega/lista', title: 'Tipo de Entrega', type: 'link' },
-				{ path: 'tiempoentrega', title: 'Tiempos de entrega', type: 'link' }
-			]
-		},
-		// {
-		// 	title: 'Promociones', icon: 'chevrons-down', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-		// 		{ path: '', title: 'Generales %$*', type: 'link' },
-		// 		{ path: '', title: 'Envios gratis %$*', type: 'link' },
-		// 		{ path: '', title: 'Códigos %$*', type: 'link' },
-		// 		{ path: '', title: 'Bonos de Regalo $*', type: 'link' },
-
-
-		// 	], isOnlySuperAdministrador: true
-		// },
-		{
-			title: 'Funcionalidades*', icon: 'check-square', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-
-				{ path: '', title: 'Bloqueo fechas y horarios*', type: 'link' },
-				{ path: '', title: 'Cambio precios*', type: 'link' }
-			],
-			isOnlySuperAdministrador: true
-		},
-		{
-			title: 'Proceso', icon: 'settings', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-
-				{ path: 'proceso/ocasiones', title: 'Ocasiones', type: 'link' },
-				{ path: 'proceso/generos', title: 'Géneros', type: 'link' },
-
-			]
-		},
-		{
-			title: 'Catalogo', icon: 'book', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-
-				{ path: 'productos', title: 'Productos', type: 'link' },
-				{ path: 'categorias', title: 'Categorías', type: 'link' },
-				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones', type: 'link' },
-				{ path: '', title: 'Lista Lite*', type: 'link' }
-
-			]
-		},
-		{
-			title: 'Extras', icon: 'star', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+			title: 'Pagos', icon: 'star', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
 
 				{ path: 'extras/formasPago', title: 'Formas de pago', type: 'link' },
-				{ path: 'extras/zonasCobro', title: 'Zonas Cobro', type: 'link' },
 				{ path: 'extras/pos/formasPago', title: 'Formas de pagos POS', type: 'link' }
 			]
 		},
 		{
-			headTitle1: 'Inventarios'
-		},
-		{
-			title: 'Inv. Catalogo', icon: 'package', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'inventario/catalogo', title: 'Catalogo', type: 'link' }
-			]
-		},
-		{
-			headTitle1: 'CRM'
-		},
-		{
-			title: 'Gestion de clientes', icon: 'user-check', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'ventas/clientes', title: 'Crear Clientes', type: 'link' },
-				{ path: 'ventas/clienteslista', title: 'Lista de clientes', type: 'link' }
-			]
-		},
-		{
-			headTitle1: 'Gestor de Pedidos'
-		},
-		{
-			title: 'Ventas', icon: 'dollar-sign', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'ventas/crear-ventas', title: 'Crear', type: 'link' },
-				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas', type: 'link' },
-				// { path: '**', title: 'Dashboard', type: 'link' },
-				// { path: 'ventas/pedidos', title: 'Pedidos', type: 'link' },
-
-			]
-		},
-		{
-			title: 'Pedidos', icon: 'tablet', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'ventas/pedidos', title: 'Lista', type: 'link' },
-			]
-		},
-		// {
-		// 	title: 'Tesoreria', icon: 'book', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-		// 		{ path: '', title: 'Tesoreria', type: 'link' },
-		// 	],
-		// 	isOnlySuperAdministrador: true
-		// },
-		{
-			title: 'Produccion', icon: 'archive', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'produccion/dashboard', title: 'Lista', type: 'link' }
-			]
-		},
-		{
-			title: 'Despachos', icon: 'truck', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'despachos', title: 'Lista', type: 'link' },
-			]
-		},
-
-		// {
-		// 	headTitle1: 'Marketing',
-		// 	isOnlySuperAdministrador: true
-		// },
-		// {
-		// 	title: 'Promociones', icon: 'box', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-		// 		{ path: '', title: 'Promociones', type: 'link' },
-		// 	],
-		// 	isOnlySuperAdministrador: true
-		// },
-		// {
-		// 	title: 'Landing Page', icon: 'box', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-		// 		{ path: '', title: 'Landing Page', type: 'link' },
-		// 	],
-		// 	isOnlySuperAdministrador: true
-		// },
-		// {
-		// 	title: 'Email Marketing', icon: 'box', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-		// 		{ path: '', title: 'Email Marketing', type: 'link' },
-		// 	],
-		// 	isOnlySuperAdministrador: true
-		// },
-		// {
-		// 	title: 'SMS Marketing', icon: 'box', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-		// 		{ path: '', title: 'SMS Marketing', type: 'link' },
-		// 	],
-		// 	isOnlySuperAdministrador: true
-		// },
-		{
-			headTitle1: 'Punto de Venta'
-		},
-		{
-			title: 'Ventas', icon: 'shopping-bag', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'pos/ventas', title: 'Ventas POS', type: 'link' },
-				{ path: 'pos/list-ventas', title: 'Listado Ventas POS', type: 'link' }
-			]
-		},
-		{
-			headTitle1: 'Soporte Katuq'
+			headTitle1: 'Katuq'
 		},
 
 		{
@@ -330,12 +252,7 @@ export class NavService implements OnDestroy {
 				{ path: 'soporte', title: 'Crear', type: 'link' },
 				{ path: 'misTickets', title: 'Mis Tickets', type: 'link' },
 				{ path: 'misIdeas', title: 'Mis Ideas', type: 'link' },
-
 			]
-		},
-
-		{
-			headTitle1: 'IA'
 		},
 		{
 			title: 'K.A.I', icon: 'box', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
