@@ -1,65 +1,90 @@
-<app-breadcrumb [title]="'Tiempos de Entrega'" [items]="['Maestros']" [active_item]="'Tiempos Entrega'"></app-breadcrumb>
-<div class="card">
-    <div class="card-body">
-        <form [formGroup]="form">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="input1">Nombre interno</label>
-                        <input type="text" class="form-control" id="input1" formControlName="nombreInterno">
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 p-2">
+            <br>
+            <div class="card">
+                <div class="card-header p-4">
+                    <div class="row col-sm-12">
+                        <div class="col-sm-8">
+                            <p class="text-left fc-info fs-24 m-0 p-0"><i class="icofont icofont-clock-time"></i>&nbsp;Crea
+                                un Tiempo de entrega</p>
+                            <p class="text-left text-muted fs-18 m-0 p-0">
+                                Ingresa todos los datos y define el tiempo de entrega, sino existe, la
+                                puedes crear.
+                            </p>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="btn btn-primary mt-2 pull-right" (click)="regresar()">
+                                <i class="icofont icofont-close"></i> {{ 'Regresar' | translate }}
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="input2">Nombre externo</label>
-                        <input type="text" class="form-control" id="input2" formControlName="nombreExterno">
-                    </div>
+                <div class="card-body">
+                    <form [formGroup]="form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="input1">Nombre interno</label>
+                                    <input type="text" class="form-control" id="input1" formControlName="nombreInterno">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="input2">Nombre externo</label>
+                                    <input type="text" class="form-control" id="input2" formControlName="nombreExterno">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="textarea">Descripción</label>
+                            <textarea class="form-control" id="textarea" rows="3"
+                                formControlName="descripcion"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="number">Días mínimo</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Tipo numérico. Es el número mínimo de días para la entrega.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input type="number" class="form-control" id="number" formControlName="minDias">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="number">Posición</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Tipo numérico. Es la posición que toma el tiempo de entrega en la lista.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input type="number" class="form-control" id="number" formControlName="posicion">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="checkbox" formControlName="activo">
+                            <label class="form-check-label" for="checkbox">Activo/Inactivo</label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="select2">Ciudades</label>
+                            <ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega" bindLabel="label"
+                                bindValue="value" placeholder="Selecciona una o varias ciudades" formControlName="ciudad"
+                                [multiple]="true">
+                            </ng-select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" (click)="onSubmit()"
+                            [disabled]="!form.valid">Guardar</button>
+                    </form>
                 </div>
             </div>
-
-
-            <div class="form-group">
-                <label for="textarea">Descripcion</label>
-                <textarea class="form-control" id="textarea" rows="3" formControlName="descripcion"></textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="number">Dias minimo</label>
-                        <input type="number" class="form-control" id="number" formControlName="minDias">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="number">Posicion</label>
-                        <input type="number" class="form-control" id="number" formControlName="posicion">
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="checkbox" formControlName="activo">
-                <label class="form-check-label" for="checkbox">Activo/IActivo</label>
-            </div>
-            <!-- <div class="form-group">
-                <label for="select1">Formas de entrega</label>
-                <select class="form-control" id="select1" formControlName="formaEntrega">
-                    <option *ngFor="let option of formasEntrega" [value]="option.nombre">{{ option.nombre }}</option>
-                </select>
-            </div> -->
-            <div class="form-group">
-                <label for="select2">Ciudades</label>
-                <ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega"
-                           bindLabel="label"
-                           bindValue="value"
-                           placeholder="Selecciona una o varias ciudades"
-                           formControlName="ciudad"
-                           [multiple]="true">
-                </ng-select>
-            </div>
-            <button type="submit" class="btn btn-primary" (click)="onSubmit()" [disabled]="!form.valid">Guardar</button>
-        </form>
-
+        </div>
     </div>
 </div>

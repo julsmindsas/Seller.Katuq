@@ -36,6 +36,9 @@ export class CrearZonasCobroComponent implements OnInit {
 
     }
   }
+  regresar() {
+    this.router.navigateByUrl("/extras/zonasCobro")
+  }
   guardar(){
     this.zonasCorbroForm.value.impuesto=(this.zonasCorbroForm.value.valorZonaCobro*(this.zonasCorbroForm.value.impuestoZonaCobro/100))
     this.zonasCorbroForm.value.total=(this.zonasCorbroForm.value.valorZonaCobro+(this.zonasCorbroForm.value.valorZonaCobro*(this.zonasCorbroForm.value.impuestoZonaCobro/100)))

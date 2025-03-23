@@ -68,7 +68,9 @@ export class TiempoEntregaComponent implements OnInit {
       cd: [tiempoEntregaEdit ? tiempoEntregaEdit.cd : null]
     });
   }
-
+  regresar() {
+    this.router.navigateByUrl("/tiempoentrega")
+  }
   onSubmit() {
     if (this.form.valid) {
       // form is valid, do something with the form values

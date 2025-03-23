@@ -1,70 +1,81 @@
-<app-breadcrumb [title]="'Tiempos de Entrega'" [items]="['Maestros']" [active_item]="'Tiempos de Entrega'">
-</app-breadcrumb>
+
 <div class="container-fluid">
   <div class="row">
-    <div class="col-sm-12">
+    <div class="col-sm-12 p-2">
+      <br>
       <div class="card">
         <i class="icon-bg" width="80" height="80"
           style="opacity: 0.4; position: absolute; color: #6ec0d4; top: 10px; left: 10px;"></i>
+
         <div class="loader-box" *ngIf="cargando">
           <div class="loader-8"></div>
         </div>
 
-        <div class="card-body custom-datatable" *ngIf="!cargando">
-          <div class="row">
-            <div class="col-sm-6">
-              <input type="text" class="filter-ngx form-control mb-3" style="width: 100% !important;"
-                placeholder="{{'Escribe texto que deseas filtrar' | translate}}" (keyup)="updateFilter($event)" />
-            </div>
-            <div class="col-sm-6 mb-3" style="text-align: end;">
-              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="create()">
-                <span style="color: white;">{{'Crear tiempos de entrega' | translate}}</span>
-                <i placement="top" ngbTooltip="Nuevo"
-                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                  class="icofont icofont-plus"></i>
-              </button>
-            </div>
+        <!-- Header Standar -->
+        <div class="row col-12 m-2">
+          <div class="col-6">
+            <p class="text-left fc-info fs-24 m-0 p-0">Tiempos de entrega</p>
+            <p class="text-left text-muted fs-18 m-0 p-0">
+              Usados en la venta para definir el tiempo en que se programa la entrega.
+            </p>
           </div>
 
+          <div class="col-6 p-3" style="text-align: end">
+            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="create()">
+              <i placement="top" ngbTooltip="Nuevo"
+                style="font-size: 18px; color: white; cursor: pointer;"
+                class="icofont icofont-plus"></i>&nbsp;
+              <span style="color: white;">{{'Crear tiempo de entrega' | translate}}</span>
+            </button>
+            <button class="btn btn-primary ml-3 mb-2 mr-5">
+              <i class="icofont icofont-file-excel"></i>&nbsp;{{ 'Excel' | translate }}
+            </button>
+          </div>
+        </div>
+        <!-- FIN Header Standar -->
+
+        <div class="card-body custom-datatable" *ngIf="!cargando">
           <p-table #dt [value]="items" [paginator]="true" [rows]="10" [resizableColumns]="true" [scrollable]="true"
             scrollHeight="flex" [loading]="cargando" [rowsPerPageOptions]="[10, 20, 50]" [sortField]="'posicion'"
-            [sortOrder]="1">
+            [sortOrder]="1" styleClass="p-datatable-gridlines p-datatable-striped"
+            [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true">
+
             <ng-template pTemplate="header">
               <tr>
-                <th pSortableColumn="posicion">{{ 'Posición' | translate }}
-                  <p-sortIcon field="posicion"></p-sortIcon>
+                <th class="text-center" pSortableColumn="posicion">{{ 'Posición' | translate }}
+                  <!-- <p-sortIcon field="posicion"></p-sortIcon> -->
                 </th>
-                <th pSortableColumn="nombreInterno">{{ 'Nombre interno' | translate }}
-                  <p-sortIcon field="nombreInterno"></p-sortIcon>
+                <th class="text-center" pSortableColumn="nombreInterno">{{ 'Nombre interno' | translate }}
+                  <!-- <p-sortIcon field="nombreInterno"></p-sortIcon> -->
                 </th>
-                <th pSortableColumn="nombreExterno">{{ 'Nombre externo' | translate }}
-                  <p-sortIcon field="nombreExterno"></p-sortIcon>
+                <th class="text-center" pSortableColumn="nombreExterno">{{ 'Nombre externo' | translate }}
+                  <!-- <p-sortIcon field="nombreExterno"></p-sortIcon> -->
                 </th>
-                <th pSortableColumn="minDias">{{ 'Minímo de días' | translate }}
-                  <p-sortIcon field="minDias"></p-sortIcon>
+                <th class="text-center" pSortableColumn="minDias">{{ 'Mínimo de días' | translate }}
+                  <!-- <p-sortIcon field="minDias"></p-sortIcon> -->
                 </th>
-                <th pSortableColumn="activo">{{ 'Está activo' | translate }}
-                  <p-sortIcon field="activo"></p-sortIcon>
+                <th class="text-center" pSortableColumn="activo">{{ 'Activo' | translate }}
+                  <!-- <p-sortIcon field="activo"></p-sortIcon> -->
                 </th>
-                <th>{{ 'Acciones' | translate }}</th>
+                <th class="text-center">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-row>
               <tr>
-                <td>{{ row.posicion }}</td>
+                <td class="text-center">{{ row.posicion }}</td>
                 <td>{{ row.nombreInterno }}</td>
                 <td>{{ row.nombreExterno }}</td>
                 <td>{{ row.minDias }}</td>
-                <td>{{ row.activo ? 'Sí' : 'No' }}</td>
-                <td>
+                <td class="text-center">{{ row.activo ? 'Sí' : 'No' }}</td>
+                <td class="text-center">
                   <i placement="top" ngbTooltip="{{'Edit' | translate}}"
-                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                    class="icofont icofont-pencil-alt-5" (click)="editar(row)">
+                    style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                    class="icofont icofont-pencil-alt-5 fc-primary" (click)="editar(row)">
                   </i>
                   <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
-                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                    class="icofont icofont-trash" (click)="eliminarFila(row)">
+                    style="font-size: 18px; margin-left: 10px; cursor: pointer;" class="icofont icofont-trash fc-danger"
+                    (click)="eliminarFila(row)">
                   </i>
                 </td>
               </tr>
@@ -75,11 +86,14 @@
                 <td colspan="6">{{ 'No hay datos disponibles' | translate }}</td>
               </tr>
             </ng-template>
-          </p-table>
 
-          <button class="btn btn-primary" style="color: white;">
-            <i class="icofont icofont-file-excel"></i> {{ 'Excel' | translate }}
-          </button>
+            <ng-template pTemplate="summary">
+              <div class="flex align-items-center justify-content-between">
+                Total en esta consulta: {{items ? items.length : 0 }} registros.
+              </div>
+            </ng-template>
+
+          </p-table>
         </div>
       </div>
     </div>
