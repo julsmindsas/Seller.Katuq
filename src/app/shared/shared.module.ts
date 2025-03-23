@@ -43,6 +43,7 @@ import { BlankComponent } from './components/layout/blank/blank.component';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 import { SharedChangePasswordComponent } from './components/change-password/change-password.component';
 import { NgpThemeService } from './services/ngtheme.service';
+import { KatuqIntelligenceService } from './katuqintelligence/katuq-intelligence.service';
 // import { FloatingButtonComponent } from './components/floating-button/floating-button.component';
 // import { ChatFormComponent } from './components/chat-form/chat.form.component';
 
@@ -93,7 +94,8 @@ import { NgpThemeService } from './services/ngtheme.service';
     NgpThemeService,
     SecurityService,
     ImagenService,
-    FacturacionIntegracionService
+    FacturacionIntegracionService,
+    KatuqIntelligenceService
   ],
   exports: [
     NgbModule,

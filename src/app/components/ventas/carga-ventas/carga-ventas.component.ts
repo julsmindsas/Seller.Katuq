@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
 import { ToastrService } from 'ngx-toastr';
+import { KatuqIntelligenceService } from '../../../shared/katuqintelligence/katuq-intelligence.service';
 
 @Component({
   selector: 'app-carga-ventas',
@@ -16,11 +17,11 @@ export class CargaVentasComponent implements OnInit {
   dataHeaders: string[] = [];
   processingResult: string = '';
   processingSuccess: boolean = false;
-  isLoading: boolean = false;
 
   constructor(
     private http: HttpClient,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private katuqService: KatuqIntelligenceService
   ) { }
 
   ngOnInit(): void {
@@ -44,7 +45,7 @@ export class CargaVentasComponent implements OnInit {
     if (!this.selectedFile) return;
 
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       try {
         if (this.selectedFileType === 'json') {
@@ -86,13 +87,13 @@ export class CargaVentasComponent implements OnInit {
       const workbook = XLSX.read(new Uint8Array(content), { type: 'array' });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      
+
       this.fileData = XLSX.utils.sheet_to_json(worksheet);
-      
+
       if (this.fileData.length > 0) {
         this.dataHeaders = Object.keys(this.fileData[0]);
       }
-      
+
       this.toastr.success('Archivo Excel cargado correctamente', 'Éxito');
     } catch (error) {
       this.toastr.error('El archivo Excel no tiene el formato correcto', 'Error');
@@ -105,21 +106,13 @@ export class CargaVentasComponent implements OnInit {
       return;
     }
 
-    this.isLoading = true;
-    
-    // Usando la URL correcta de la API desde environment
-    this.http.post(`${environment.urlApi}/api/ventas/cargar`, {
-      data: this.fileData,
-      fileType: this.selectedFileType
-    }).subscribe({
+    this.katuqService.processFile(this.fileData, this.selectedFileType).subscribe({
       next: (response: any) => {
-        this.isLoading = false;
         this.processingSuccess = true;
-        this.processingResult = `Se procesaron ${response.processed} registros correctamente.`;
+        this.processingResult = `Se procesaron ${response.orders.length} registros correctamente.`;
         this.toastr.success('Datos procesados correctamente', 'Éxito');
       },
       error: (error) => {
-        this.isLoading = false;
         this.processingSuccess = false;
         this.processingResult = `Error al procesar los datos: ${error.message}`;
         this.toastr.error('Error al procesar los datos', 'Error');
@@ -133,21 +126,13 @@ export class CargaVentasComponent implements OnInit {
       return;
     }
 
-    this.isLoading = true;
-    
-    // Usando la URL correcta de la API desde environment
-    this.http.post(`${environment.urlApi}/api/ventas/procesar-kai`, {
-      data: this.fileData,
-      fileType: this.selectedFileType
-    }).subscribe({
+    this.katuqService.processWithKAI(this.fileData, this.selectedFileType).subscribe({
       next: (response: any) => {
-        this.isLoading = false;
         this.processingSuccess = true;
         this.processingResult = `KAI ha procesado ${response.processed} registros correctamente.`;
         this.toastr.success('Datos procesados por KAI correctamente', 'Éxito');
       },
       error: (error) => {
-        this.isLoading = false;
         this.processingSuccess = false;
         this.processingResult = `Error al procesar los datos con KAI: ${error.message}`;
         this.toastr.error('Error al procesar con KAI', 'Error');
