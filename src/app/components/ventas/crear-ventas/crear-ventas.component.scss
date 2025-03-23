@@ -132,3 +132,7 @@
     display: none; // se oculta el espaciador para no afectar el layout fijo
   }
 }
+
+.card-body {
+  padding: 1rem !important;
+}
