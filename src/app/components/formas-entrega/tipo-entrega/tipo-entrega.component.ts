@@ -35,7 +35,9 @@ export class TipoEntregaComponent implements OnInit,OnDestroy {
     });
   }
 
-
+  regresar() {
+    this.router.navigateByUrl("/formasEntrega/tipoentrega/lista")
+  }
   onSubmit() {
     if (this.form.valid) {
       // form is valid, do something with the form values
