@@ -104,3 +104,31 @@
 .spacer {
   width: 180px; // Mismo ancho que los botones
 }
+
+@media (max-width: 576px) {
+  .wizard-nav-btn {
+    min-width: 100px; // reduce el ancho mínimo para pantallas pequeñas
+    padding: 8px 15px;
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+
+  .wizard-footer-container {
+    position: fixed; // se fija el footer en la parte inferior
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    padding: 10px 15px;
+    z-index: 1000; // asegurar que quede sobre el contenido
+    flex-direction: row; // mantener los botones alineados horizontalmente
+    align-items: center;
+    justify-content: space-around; // distribuir espacios entre botones
+  }
+
+  .spacer {
+    display: none; // se oculta el espaciador para no afectar el layout fijo
+  }
+}

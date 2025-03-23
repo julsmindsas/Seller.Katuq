@@ -39,7 +39,7 @@
               <app-ecomerce-products #products></app-ecomerce-products>
               
               <!-- Contenedor fijo para botones de navegación -->
-              <div class="wizard-footer-container">
+              <div class="wizard-footer-container d-flex flex-column flex-md-row">
                 <div class="wizard-nav-container">
                   <!-- Este paso solo tiene botón "Siguiente" -->
                   <div class="spacer"></div>
@@ -63,7 +63,7 @@
               <app-carrito #carrito [pedido]="pedidoGral"></app-carrito>
               
               <!-- Contenedor fijo para botones de navegación -->
-              <div class="wizard-footer-container">
+              <div class="wizard-footer-container d-flex flex-column flex-md-row">
                 <div class="wizard-nav-container">
                   <button class="btn btn-secondary wizard-nav-btn" type="button" awPreviousStep
                           ngbTooltip="Volver a Catálogo" placement="top">
@@ -89,7 +89,7 @@
               <br>
               
               <!-- Contenedor fijo para botones de navegación -->
-              <div class="wizard-footer-container">
+              <div class="wizard-footer-container d-flex flex-column flex-md-row">
                 <div class="wizard-nav-container">
                   <button class="btn btn-secondary wizard-nav-btn" type="button" awPreviousStep
                           ngbTooltip="Volver al Carrito" placement="top">
@@ -417,7 +417,7 @@
               </div>
 
               <!-- Contenedor fijo para botones de navegación -->
-              <div class="wizard-footer-container" *ngIf="pedidoGral.cliente != null">
+              <div class="wizard-footer-container d-flex flex-column flex-md-row" *ngIf="pedidoGral.cliente != null">
                 <div class="wizard-nav-container">
                   <button class="btn btn-secondary wizard-nav-btn" type="button" awPreviousStep
                           ngbTooltip="Volver a Notas" placement="top">
@@ -446,7 +446,7 @@
                 (comprarYPagar)="comprarYPagar($event)"></app-checkout>
               
               <!-- Contenedor fijo para botones de navegación -->
-              <div class="wizard-footer-container">
+              <div class="wizard-footer-container d-flex flex-column flex-md-row">
                 <div class="wizard-nav-container">
                   <button class="btn btn-secondary wizard-nav-btn" type="button" awPreviousStep
                           ngbTooltip="Volver a Datos Cliente" placement="top">
