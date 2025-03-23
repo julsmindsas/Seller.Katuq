@@ -46,6 +46,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   rangoPreciosActual: any;
   selectedFiles: any = [];
   adicionesPreferencias: any;
+  public activeAccordionPanel: string = 'datosEntregaPanel';
 
 
   ngOnDestroy(): void {
@@ -229,18 +230,6 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       }
     }
   }
-  menosCantidad1() {
-    if (this.cantidad > this.producto.disponibilidad?.cantidadMinVenta) {
-      this.cantidad--;
-      if (this.cantidadTarjetas > this.cantidad) {
-        this.tarjetaForm.removeControl(`tarjeta${this.cantidad}`);
-        this.cantidadTarjetas = this.cantidad;
-      }
-
-    }
-    document.getElementById("cantidad").setAttribute("value", this.cantidad.toString());
-
-  }
 
   menosCantidad() {
     if (this.cantidad > this.producto.disponibilidad?.cantidadMinVenta) {
@@ -322,9 +311,28 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
 
     this.sumar()
+    this.activeAccordionPanel = this.determineInitialOpenSection();
   }
 
+  // Eliminar el método menosCantidad1 que está duplicado y quedarse solo con menosCantidad
+  // Añadir un método para determinar la sección activa inicialmente basada en campos requeridos
 
+  /**
+   * Determina qué sección del acordeón debe estar abierta inicialmente
+   * basándose en qué campos son requeridos y no tienen valor
+   */
+  determineInitialOpenSection(): string {
+    if (this.datosEntrega.invalid) {
+      return 'datosEntregaPanel';
+    } else if (this.producto?.procesoComercial?.aceptaVariable) {
+      return 'preferenciasPanel';
+    } else if (this.producto?.procesoComercial?.llevaTarjeta && !this.SinTarjeta) {
+      return 'tarjetasPanel';
+    } else if (this.producto?.procesoComercial?.aceptaAdiciones) {
+      return 'adicionesPanel';
+    }
+    return 'cantidadPanel';
+  }
 
   getAdiciones() {
     this.maestroService.getAdiciones().subscribe((r: any) => {
@@ -535,44 +543,50 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   addToCar() {
-    this.producto.rating = this.ratingForm.value.rating;
-    // this.producto.precio.precioUnitarioConIva += this.getTotalPrecioTotalConIva();
-    // this.productoConfiguradoForm.controls.producto.setValue(this.producto);
-    this.productoConfiguradoForm.controls.datosEntrega.setValue(this.datosEntrega.value);
-    this.productoConfiguradoForm.controls.cantidad.setValue(this.cantidad);
-    this.productoConfiguradoForm.controls.preferencias.setValue(this.productPreference.filter(preference => preference.tipo === 'preferencia'));
-    this.productoConfiguradoForm.controls.adiciones.setValue(this.productPreference.filter(preference => preference.tipo === 'adicion'));
-    this.productoConfiguradoForm.controls.tarjetas.setValue(this.tarjetas.value);
-
-    let ProductoCompra: Carrito = {
-      producto: this.producto ,
-      configuracion: this.productoConfiguradoForm.value,
-      cantidad: this.cantidad,
-    };
-    if (!this.isEdit && !this.isRebuy) {
-      this.carsingleton.addToCart(ProductoCompra);
-      this.modalService.dismissAll();
+    console.log('Método addToCar ejecutado'); // Agregar log para verificar la ejecución
+    
+    try {
+      this.producto.rating = this.ratingForm.value.rating;
+      this.productoConfiguradoForm.controls.datosEntrega.setValue(this.datosEntrega.value);
+      this.productoConfiguradoForm.controls.cantidad.setValue(this.cantidad);
+      this.productoConfiguradoForm.controls.preferencias.setValue(this.productPreference.filter(preference => preference.tipo === 'preferencia'));
+      this.productoConfiguradoForm.controls.adiciones.setValue(this.productPreference.filter(preference => preference.tipo === 'adicion'));
+      this.productoConfiguradoForm.controls.tarjetas.setValue(this.tarjetas.value);
+  
+      let ProductoCompra: Carrito = {
+        producto: this.producto,
+        configuracion: this.productoConfiguradoForm.value,
+        cantidad: this.cantidad,
+      };
+      
+      console.log('ProductoCompra creado:', ProductoCompra); // Log del objeto creado
+      
+      if (!this.isEdit && !this.isRebuy) {
+        console.log('Agregar al carrito...');
+        this.carsingleton.addToCart(ProductoCompra);
+        this.modalService.dismissAll();
+      }
+      else if (this.isEdit || this.isRebuy) {
+        console.log('Actualizar carrito...');
+        this.modalService.dismissAll(ProductoCompra);
+      }
+  
+      this.toastrService.success('Producto agregado al carrito', 'Éxito', {
+        timeOut: 5000,
+        progressBar: true,
+        positionClass: 'toast-bottom-right'
+      });
+  
+      this.tarjetasForm.reset();
+      this.productPreference = [];
+      this.cantidadTarjetas = 1;
+      this.cantidad = 1;
+      this.initForm();
+      
+    } catch (error) {
+      console.error('Error al agregar al carrito:', error);
+      this.toastrService.error('Hubo un problema al agregar el producto al carrito', 'Error');
     }
-    else if (this.isEdit || this.isRebuy) {
-      this.modalService.dismissAll(ProductoCompra);
-    }
-
-
-
-    this.toastrService.success('Producto agregado al carrito', 'Éxito', {
-      timeOut: 5000,
-      progressBar: true,
-      positionClass: 'toast-bottom-right'
-    });
-
-
-    // this.datosEntrega.reset();
-    this.tarjetasForm.reset();
-    this.productPreference = [];
-    this.cantidadTarjetas = 1;
-    this.cantidad = 1;
-    this.initForm();
-
   }
 
   mostrarPrecios() {

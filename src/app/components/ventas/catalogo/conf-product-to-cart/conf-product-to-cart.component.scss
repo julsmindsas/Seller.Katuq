@@ -1,4 +1,4 @@
-  .modal-fullscreen {
+.modal-fullscreen {
       display: block !important;
       width: 100% !important;
       max-width: 100% !important;
@@ -63,6 +63,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 2rem;
 }
 
 .product-button {
@@ -117,4 +118,127 @@
   min-width: 20px;
   display: inline-block;
   text-align: center;
+}
+
+// Estilos mejorados para dispositivos móviles
+@media (max-width: 768px) {
+  .modal-body {
+    padding: 0.75rem;
+  }
+  
+  .card-body {
+    padding: 0.75rem;
+  }
+  
+  .product-page-details h3 {
+    font-size: 1.25rem;
+  }
+  
+  .product-price {
+    font-size: 1.25rem !important;
+  }
+  
+  .product-summary {
+    flex-direction: column;
+  }
+}
+
+// Estilos para el acordeón
+.accordion-item {
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.accordion-button {
+  padding: 0.75rem;
+  font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: rgba(var(--bs-primary-rgb), 0.1);
+  color: var(--bs-primary);
+}
+
+.accordion-body {
+  padding: 1rem;
+}
+
+// Botón fijo para agregar al carrito
+.fixed-action-button {
+  position: fixed !important; // Cambiado a fixed para asegurar que siempre esté visible
+  bottom: 15px !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important; // Z-index muy alto para asegurar que esté por encima de todo
+  padding: 1rem !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 -3px 10px rgba(0,0,0,0.2) !important;
+  margin: 0 auto !important;
+  width: calc(100% - 30px) !important;
+  max-width: 500px !important; // Limitar el ancho en pantallas grandes
+  border-radius: 10px !important;
+  
+  button {
+    cursor: pointer !important;
+    font-weight: bold !important;
+  }
+}
+
+// Mejoras en controles de cantidad
+.qty-box {
+  display: flex;
+  align-items: center;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+}
+
+.quantity-controls button {
+  min-width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.5rem;
+}
+
+// Mejoras para ngbAccordion
+::ng-deep .ngb-accordion {
+  .card {
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem !important;
+    overflow: hidden;
+  }
+  
+  .card-header {
+    padding: 0;
+    background-color: #f8f9fa;
+  }
+  
+  .accordion-button {
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    background-color: transparent;
+    border: none;
+    
+    &:focus {
+      box-shadow: none;
+      outline: none;
+    }
+    
+    &:not(.collapsed) {
+      color: var(--bs-primary);
+      background-color: rgba(var(--bs-primary-rgb), 0.1);
+    }
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
 }
