@@ -164,25 +164,60 @@
   padding: 1rem;
 }
 
-// Botón fijo para agregar al carrito
-.fixed-action-button {
-  position: fixed !important; // Cambiado a fixed para asegurar que siempre esté visible
+// Reemplazar los estilos del fixed-action-button con el nuevo contenedor de resumen
+.fixed-summary-container {
+  position: fixed !important;
   bottom: 15px !important;
   left: 0 !important;
   right: 0 !important;
-  z-index: 9999 !important; // Z-index muy alto para asegurar que esté por encima de todo
+  z-index: 9999 !important;
   padding: 1rem !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 -3px 10px rgba(0,0,0,0.2) !important;
+  background-color: rgba(255, 255, 255, 0.97) !important;
+  box-shadow: 0 -5px 15px rgba(0,0,0,0.2) !important;
   margin: 0 auto !important;
   width: calc(100% - 30px) !important;
-  max-width: 500px !important; // Limitar el ancho en pantallas grandes
+  max-width: 500px !important;
   border-radius: 10px !important;
+  backdrop-filter: blur(4px) !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
   
   button {
     cursor: pointer !important;
     font-weight: bold !important;
   }
+  
+  .price-summary {
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding-bottom: 10px;
+  }
+  
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    
+    &.total {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(0,0,0,0.1);
+    }
+  }
+  
+  .price-label {
+    font-weight: 500;
+  }
+  
+  .price-value {
+    text-align: right;
+  }
+}
+
+// Agregar un margen inferior al contenido para dar espacio al contenedor flotante
+.modal-body {
+  padding-bottom: 120px !important;
 }
 
 // Mejoras en controles de cantidad
@@ -240,5 +275,29 @@
   
   .card-body {
     padding: 1rem;
+  }
+}
+
+// Agregar media queries para dispositivos móviles
+@media (max-width: 576px) {
+  .fixed-summary-container {
+    width: 100% !important;
+    border-radius: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 0.75rem !important;
+    
+    .price-row {
+      font-size: 0.9rem;
+      
+      &.total {
+        font-size: 1rem;
+      }
+    }
+  }
+  
+  .modal-body {
+    padding-bottom: 170px !important;
   }
 }
