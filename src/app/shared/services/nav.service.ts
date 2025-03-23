@@ -149,7 +149,7 @@ export class NavService implements OnDestroy {
 			headTitle1: 'Ventas'
 		},
 		{
-			title: 'Gestion de clientes', icon: 'user-check', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+			title: 'Clientes', icon: 'user-check', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
 				{ path: 'ventas/clientes', title: 'Crear Clientes', type: 'link' },
 				{ path: 'ventas/clienteslista', title: 'Lista de clientes', type: 'link' },
 				{ path: 'proceso/ocasiones', title: 'Ocasiones', type: 'link' },
@@ -157,7 +157,7 @@ export class NavService implements OnDestroy {
 			]
 		},
 		{
-			title: 'Gestión de Ventas', icon: 'dollar-sign', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+			title: 'Ventas', icon: 'dollar-sign', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
 				{ path: 'ventas/crear-ventas', title: 'Crear Venta', type: 'link' },
 				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas', type: 'link' },
 				{ path: 'ventas/pedidos', title: 'Lista de pedidos', type: 'link' },
@@ -175,7 +175,7 @@ export class NavService implements OnDestroy {
 			],
 		},
 		{
-			title: 'Gestión de inventario', icon: 'package', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+			title: 'Inventario', icon: 'package', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
 				{ path: 'productos', title: 'Productos', type: 'link' },
 				{ path: 'categorias', title: 'Categorías', type: 'link' },
 				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones', type: 'link' },
