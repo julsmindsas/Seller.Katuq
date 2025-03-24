@@ -1,45 +1,80 @@
-<app-breadcrumb [title]="'Crear Géneros'" [items]="['Proceso/Géneros']" [active_item]="'Crear Géneros'">
-</app-breadcrumb>
+
+
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12">
+        <div class="col-12 p-2">
+            <br>
             <div class="card">
+                <div class="card-header p-4">
+                    <div class="row col-sm-12">
+                        <div class="col-sm-8">
+                            <p class="text-left fc-info fs-24 m-0 p-0"><i class="icofont icofont-users"></i>&nbsp;Crea
+                                un Género</p>
+                            <p class="text-left text-muted fs-18 m-0 p-0">
+                                Ingresa todos los datos y define el género, sino existe, lo
+                                puedes crear.
+                            </p>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="btn btn-primary mt-2 pull-right" (click)="regresar()">
+                                <i class="icofont icofont-close"></i> {{ 'Regresar' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
                     <form [formGroup]="genreForm">
                         <div class="row">
-                            <div class="col-sm-6">
-                                <label class="form-label" for="id">Activo</label>
-                                <br>
-                                <input  type="checkbox" id="id" formControlName="activo">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name">Nombre</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Ingresa el nombre del género.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input class="form-control" type="text" id="name" formControlName="name">
+                                </div>
                             </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="image">Imagen</label>
-                                <input class="form-control" type="file" id="image">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="position">Posición</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Ingresa la posición que ocupará el género en la lista.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input class="form-control" type="number" id="position" formControlName="position">
+                                </div>
                             </div>
-                            
+                        </div>
 
-                        </div>
-                        <br>
                         <div class="row">
-                            <div class="col-sm-6">
-                                <label class="form-label" for="name">Nombre</label>
-                                <input class="form-control" type="text" id="name" formControlName="name">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="activo">Activo</label>&nbsp;
+                                   
+                                    <br>
+                                    <input type="checkbox" id="activo" formControlName="activo">
+                                </div>
                             </div>
-                            <div class="form-group col-sm-6">
-                                <label class="form-label" for="position">Posición</label>
-                                <input class="form-control" type="number" id="position" formControlName="position">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="image">Imagen</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Selecciona la imagen asociada al género.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input class="form-control" type="file" id="image">
+                                </div>
                             </div>
-                            
                         </div>
-                       
 
                         <div class="row">
                             <div class="col-sm-12">
-                                <button *ngIf="mostrarCrear" (click)="guardar()" class="btn btn-primary" type="submit">Crear Género</button>
-                                <button *ngIf="!mostrarCrear" (click)="editar()" class="btn btn-primary" type="submit">Editar Género</button>
+                                <button class="btn btn-primary" type="submit" (click)="mostrarCrear ? guardar() : editar()">
+                                    {{ mostrarCrear ? 'Crear Género' : 'Editar Género' }}
+                                </button>
                             </div>
                         </div>
-
                     </form>
                 </div>
             </div>

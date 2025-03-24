@@ -1,26 +1,49 @@
-<app-breadcrumb [title]="'Crear Formas de Pago'" [items]="['Extras/Formas de Pago']"
-    [active_item]="'Crear Formas de Pago'">
-</app-breadcrumb>
+
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12">
+        <div class="col-12 p-2">
+            <br>
             <div class="card">
+                <div class="card-header p-4">
+                    <div class="row col-sm-12">
+                        <div class="col-sm-8">
+                            <p class="text-left fc-info fs-24 m-0 p-0"><i class="icofont icofont-money"></i>&nbsp;Crea
+                                una Forma de Pago</p>
+                            <p class="text-left text-muted fs-18 m-0 p-0">
+                                Ingresa todos los datos y define la forma de pago, sino existe, la
+                                puedes crear.
+                            </p>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="btn btn-primary mt-2 pull-right" (click)="regresar()">
+                                <i class="icofont icofont-close"></i> {{ 'Regresar' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
                     <form [formGroup]="fomrasPagoForm">
                         <div class="row">
-                            <div class="col-sm-4">
-                                <label for="image">Id</label>
-                                <input class="form-control" type="number" id="image" formControlName="id">
-                            </div>
-                            <div class="col-sm-4">
-                                <div class="row">
-                                    <label for="id">Clasificación forma de pago:</label>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="id">Id</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Ingresa el identificador único de la forma de pago.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input class="form-control" type="number" id="id" formControlName="id">
                                 </div>
-                                <div class="row">
-                                    <select class="form-control" id="id" formControlName="online">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="online">Clasificación forma de pago</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Selecciona la clasificación de la forma de pago.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <select class="form-control" id="online" formControlName="online">
                                         <option value="Online">Online</option>
-                                        <option
-                                            value="Offline (Efectivo, Datafono, consignación, Transferencia, App, QR)">
+                                        <option value="Offline (Efectivo, Datafono, consignación, Transferencia, App, QR)">
                                             Offline (efectivo, datafono, consignación, transferencia, App, QR)</option>
                                         <option value="Billeteras Virtuales">Billeteras virtuales</option>
                                         <option value="Criptomonedas">Criptomonedas</option>
@@ -29,82 +52,110 @@
                                             de dinero a Colombia desde cualquier lugar del mundo</option>
                                     </select>
                                 </div>
-
-
-
                             </div>
-                            <div class="col-sm-4">
-                                <label for="image">Título</label>
-                                <input class="form-control" type="text" id="image" formControlName="nombre">
-                            </div>
-
-
-                        </div>
-                        <br>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <label for="name">Posición</label>
-                                <input class="form-control" type="number" id="name" formControlName="posicion">
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label for="position">Integración</label>
-                                <select class="form-control" formControlName="integracion">
-                                    <option value="Si">Si</option>
-                                    <option value="No" selected>No</option>
-                                </select>
-                            </div>
-
-
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <div class="row">
-                                    <label for="name">Activo</label>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="nombre">Título</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Ingresa el título de la forma de pago.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input class="form-control" type="text" id="nombre" formControlName="nombre">
                                 </div>
-                                <div class="row">
-                                    <input type="checkbox" id="name" formControlName="activo">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="posicion">Posición</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Ingresa la posición que ocupará la forma de pago en la lista.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input class="form-control" type="number" id="posicion" formControlName="posicion">
                                 </div>
-
-
                             </div>
-
-
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="integracion">Integración</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Selecciona si la forma de pago está integrada o no.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <select class="form-control" id="integracion" formControlName="integracion">
+                                        <option value="Si">Si</option>
+                                        <option value="No" selected>No</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+
                         <div class="row">
-                            <div class="col-sm-6">
-                                <label for="name">Descripción Correo Electrónico</label>
-                                <textarea class="form-control" style="width: 100%;"
-                                    formControlName="descripcionCorreoElectronico"></textarea>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="activo">Activo</label>&nbsp;
+                                    
+                                    <input type="checkbox" id="activo" formControlName="activo">
+                                </div>
                             </div>
-                            <div class="form-group col-sm-6">
-                                <label for="position">Recordatorio Cobro</label>
-                                <textarea class="form-control" style="width: 100%;"
-                                    formControlName="recordatorioCobro"></textarea>
-                            </div>
-
                         </div>
+
                         <div class="row">
-                            <div class="col-sm-6">
-                                <label for="name">Imagen Interna:</label>
-                                <input class="form-control" type="file" id="name">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="descripcionCorreoElectronico">Descripción Correo Electrónico</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Ingresa la descripción que aparecerá en el correo electrónico.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <textarea class="form-control" style="width: 100%;"
+                                        formControlName="descripcionCorreoElectronico"></textarea>
+                                </div>
                             </div>
-                            <div class="form-group col-sm-6">
-                                <label for="position">Imagen Carrito:</label>
-                                <input class="form-control" type="file" id="name">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="recordatorioCobro">Recordatorio Cobro</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Ingresa el mensaje de recordatorio de cobro.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <textarea class="form-control" style="width: 100%;"
+                                        formControlName="recordatorioCobro"></textarea>
+                                </div>
                             </div>
-
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="imagenInterna">Imagen Interna</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Selecciona la imagen que se mostrará internamente.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input class="form-control" type="file" id="imagenInterna">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="imagenCarrito">Imagen Carrito</label>&nbsp;
+                                    <span type="button" class="help" placement="top"
+                                        ngbPopover="{{'Selecciona la imagen que se mostrará en el carrito.' | translate}}">
+                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                    </span>
+                                    <input class="form-control" type="file" id="imagenCarrito">
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="row">
                             <div class="col-sm-12">
-                                <button *ngIf="!editando" (click)="guardar()" class="btn btn-primary"
-                                    type="submit">Crear Forma Pago</button>
-                                <button *ngIf="editando" (click)="editar()" class="btn btn-primary"
-                                    type="submit">Guardar</button>
+                                <button class="btn btn-primary" type="submit" (click)="editando ? editar() : guardar()">
+                                    {{ editando ? 'Guardar cambios' : 'Crear Forma de Pago' }}
+                                </button>
                             </div>
                         </div>
-
                     </form>
                 </div>
             </div>

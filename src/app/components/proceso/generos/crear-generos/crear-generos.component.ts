@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder,FormControl, Validators,FormArray } from '@angular/forms';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-crear-generos',
   templateUrl: './crear-generos.component.html',
@@ -12,7 +13,7 @@ export class CrearGenerosComponent implements OnInit {
   mostrarCrear: boolean;
   edit: any;
 
-  constructor(private fb: FormBuilder,private service:MaestroService) {
+  constructor(private router:Router,private fb: FormBuilder,private service:MaestroService) {
     this.genreForm = this.fb.group({
       activo: [false, Validators.required],
       name: ['', Validators.required],
@@ -22,7 +23,9 @@ export class CrearGenerosComponent implements OnInit {
    ngAfterContentInit() {
     
    }
-
+   regresar() {
+    this.router.navigateByUrl("/proceso/generos")
+  }
   ngOnInit(): void {
     this.mostrarCrear = true
     this.edit = JSON.parse(sessionStorage.getItem('infoFormsGender'))

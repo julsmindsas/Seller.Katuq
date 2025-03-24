@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder,FormControl, Validators,FormArray } from '@angular/forms';
 import { Session } from 'inspector';
+import { Router } from '@angular/router';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
 
@@ -12,7 +13,7 @@ import Swal from 'sweetalert2';
 export class CrearFormasPagoComponent implements OnInit {
   fomrasPagoForm: FormGroup;
   editando: boolean =false;
-  constructor(private fb: FormBuilder,private service:MaestroService) {
+  constructor(private fb: FormBuilder,private service:MaestroService,private router:Router) {
     this.fomrasPagoForm = this.fb.group({
       id:['', Validators.required],
       online:['Offline (Efectivo,Datafono, consignación, Transferencia, App, QR)', Validators.required],
@@ -32,6 +33,9 @@ export class CrearFormasPagoComponent implements OnInit {
       this.fomrasPagoForm.patchValue(JSON.parse(sessionStorage.getItem('payEdit')))
 
     }
+  }
+  regresar() {
+    this.router.navigateByUrl("/extras/formasPago")
   }
   guardar(){
     this.service.crearFormaPago(this.fomrasPagoForm.value).subscribe(r=> {console.log(r)
