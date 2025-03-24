@@ -21,141 +21,34 @@
                 <div class="card-body p-4 custom-datatable">
                     <div class="row col-12">
                         <div class="col-6">
-                            <input
-                                type="text"
-                                class="filter-ngx form-control mb-3"
-                                style="width: 100% !important"
+                            <input type="text" class="filter-ngx form-control mb-3" style="width: 100% !important"
                                 placeholder="{{
                                     'Escribe lo que quieres filtrar y luego pulsa enter para accionar'
                                         | translate
-                                }}"
-                                (keyup)="updateFilter($event)"
-                            />
+                                }}" (keyup)="updateFilter($event)" />
                         </div>
                         <div class="col-6" style="text-align: end">
-                            <button
-                                class="btn btn-primary btn-previous mr-1"
-                                type="button"
-                                (click)="crearProducto()"
-                            >
-                                <i
-                                    placement="top"
-                                    ngbTooltip="Crear Nuevo Producto"
-                                    style="
+                            <button class="btn btn-primary btn-previous mr-1" type="button" (click)="crearProducto()">
+                                <i placement="top" ngbTooltip="Crear Nuevo Producto" style="
                                         font-size: 18px;
                                         color: white;
                                         cursor: pointer;
-                                    "
-                                    class="icofont icofont-plus"
-                                ></i
-                                >&nbsp;
+                                    " class="icofont icofont-plus"></i>&nbsp;
                                 <span style="color: white">{{
                                     "Crear Producto" | translate
-                                }}</span>
+                                    }}</span>
                             </button>
-                            <button
-                                class="btn btn-primary mr-1"
-                                style="color: white"
-                                (click)="exportToExcel()"
-                            >
-                                <i class="icofont icofont-file-excel"></i
-                                >&nbsp;Excel
+                            <button class="btn btn-primary mr-1" style="color: white" (click)="exportToExcel()">
+                                <i class="icofont icofont-file-excel"></i>&nbsp;Excel
                             </button>
                         </div>
                     </div>
 
-                    <!-- <p-table [value]="rows" [scrollable]="true" scrollHeight="400px" [value]="rows" [lazy]="true"
-            [paginator]="true" [rows]="pageSize" [totalRecords]="totalItems" (onLazyLoad)="onPageChange($event)"
-            styleClass="p-datatable-customers p-datatable-gridlines" [sortField]="'nombre'" [sortOrder]="1"
-            [responsive]="true" [loading]="cargando">
-            <ng-template pTemplate="header">
-              <tr style="font-size: small !important;">
-                <th rowspan="2">
-                  <span>{{ '' | translate }}</span>
-                </th>
-                <th rowspan="2">
-                  <span>{{ 'Titulo' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'Referencia' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'Cantidad disponible' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'Esta activo' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'Esta disponible' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'Se produce' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'Precio unitario' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'Fecha editado' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'IVA' | translate }}</span>
-                </th>
-                <th *ngIf="!isMobile" rowspan="2">
-                  <span>{{ 'Acciones' | translate }}</span>
-                </th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-row>
-              <tr style="font-size: small !important;">
-                <td>
-                  <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
-                    [src]="row.crearProducto?.imagenesPrincipales[0]?.urls" [alt]="row.titulo" width="50" height="50"
-                    (click)="viewProduct(row)" style="cursor:pointer">
-                  <img *ngIf="row.crearProducto?.imagenesPrincipales?.length == 0" src=""
-                    [alt]="row.crearProducto.titulo" width="100" height="100">
-                </td>
-                <td>{{ row.crearProducto.titulo }}</td>
-                <td *ngIf="!isMobile">{{ row.identificacion.referencia }}</td>
-                <td *ngIf="!isMobile">{{ row.disponibilidad.cantidadDisponible }}</td>
-                <td *ngIf="!isMobile">{{ row.exposicion.activar == true ? 'Si' : 'No' }}</td>
-                <td *ngIf="!isMobile">{{ row.exposicion.disponible == true ? 'Si' : 'No' }}</td>
-                <td *ngIf="!isMobile">{{ row.crearProducto.paraProduccion ? 'Si' : 'No' }}</td>
-                <td *ngIf="!isMobile" style="text-align: right;">
-                  {{ row.precio.precioUnitarioSinIva | currency:'USD':'symbol':'1.0-0' }}
-                </td>
-                <td *ngIf="!isMobile">{{ row.date_edit | date:'dd/MM/yyyy' }}</td>
-                <td *ngIf="!isMobile" style="text-align: right;">
-                  {{ row.precio.precioUnitarioIva | currency:'USD':'symbol':'1.0-0' }}
-                </td>
-                <td *ngIf="!isMobile">
-                  <i placement="top" ngbTooltip="{{'Edit' | translate}}"
-                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                    class="icofont icofont-pencil-alt-5" (click)="editarProducto(row)" title="Editar producto"></i>
-                  <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
-                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                    class="icofont icofont-trash" (click)="eliminarProducto(row)" title="Eliminar producto"></i>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table> -->
                     <!-- La tabla de PrimeNG -->
-                    <p-table
-                        #dt
-                        [value]="rows"
-                        [paginator]="true"
-                        [resizableColumns]="true"
-                        [scrollable]="true"
-                        scrollHeight="400px"
-                        [loading]="cargando"
-                        [rowsPerPageOptions]="[10, 20, 50]"
-                        [paginator]="true"
-                        [rows]="pageSize"
-                        [totalRecords]="totalItems"
-                        [sortField]="'crearProducto.titulo'"
-                        [sortOrder]="1"
-                        (onLazyLoad)="onPageChange($event)"
-                        [lazy]="true"
-                    >
+                    <p-table #dt [value]="rows" [paginator]="true" [resizableColumns]="true" [scrollable]="true"
+                        scrollHeight="400px" [loading]="cargando" [rowsPerPageOptions]="[10, 20, 50]" [paginator]="true"
+                        [rows]="pageSize" [totalRecords]="totalItems" [sortField]="'crearProducto.titulo'"
+                        [sortOrder]="1" (onLazyLoad)="onPageChange($event)" [lazy]="true">
                         <!-- ENCABEZADO -->
                         <ng-template pTemplate="header">
                             <tr>
@@ -167,89 +60,49 @@
 
                                 <th pSortableColumn="crearProducto.titulo">
                                     {{ "Título" | translate }}
-                                    <p-sortIcon
-                                        field="crearProducto.titulo"
-                                    ></p-sortIcon>
+                                    <p-sortIcon field="crearProducto.titulo"></p-sortIcon>
                                 </th>
 
-                                <th
-                                    pSortableColumn="identificacion.referencia"
-                                    *ngIf="!isMobile"
-                                >
+                                <th pSortableColumn="identificacion.referencia" *ngIf="!isMobile">
                                     {{ "Referencia" | translate }}
-                                    <p-sortIcon
-                                        field="identificacion.referencia"
-                                    ></p-sortIcon>
+                                    <p-sortIcon field="identificacion.referencia"></p-sortIcon>
                                 </th>
 
-                                <th
-                                    pSortableColumn="disponibilidad.cantidadDisponible"
-                                    *ngIf="!isMobile"
-                                >
+                                <th pSortableColumn="disponibilidad.cantidadDisponible" *ngIf="!isMobile">
                                     {{ "Cantidad disponible" | translate }}
-                                    <p-sortIcon
-                                        field="disponibilidad.cantidadDisponible"
-                                    ></p-sortIcon>
+                                    <p-sortIcon field="disponibilidad.cantidadDisponible"></p-sortIcon>
                                 </th>
 
-                                <th
-                                    pSortableColumn="exposicion.activar"
-                                    *ngIf="!isMobile"
-                                >
+                                <th pSortableColumn="exposicion.activar" *ngIf="!isMobile">
                                     {{ "Está activo" | translate }}
-                                    <p-sortIcon
-                                        field="exposicion.activar"
-                                    ></p-sortIcon>
+                                    <p-sortIcon field="exposicion.activar"></p-sortIcon>
                                 </th>
 
-                                <th
-                                    pSortableColumn="exposicion.disponible"
-                                    *ngIf="!isMobile"
-                                >
+                                <th pSortableColumn="exposicion.disponible" *ngIf="!isMobile">
                                     {{ "Está disponible" | translate }}
-                                    <p-sortIcon
-                                        field="exposicion.disponible"
-                                    ></p-sortIcon>
+                                    <p-sortIcon field="exposicion.disponible"></p-sortIcon>
                                 </th>
 
-                                <th
-                                    pSortableColumn="crearProducto.paraProduccion"
-                                    *ngIf="!isMobile"
-                                >
+                                <th pSortableColumn="crearProducto.paraProduccion" *ngIf="!isMobile">
                                     {{ "Se produce" | translate }}
-                                    <p-sortIcon
-                                        field="crearProducto.paraProduccion"
-                                    ></p-sortIcon>
+                                    <p-sortIcon field="crearProducto.paraProduccion"></p-sortIcon>
                                 </th>
 
-                                <th
-                                    pSortableColumn="precio.precioUnitarioSinIva"
-                                    style="text-align: right"
-                                    *ngIf="!isMobile"
-                                >
+                                <th pSortableColumn="precio.precioUnitarioSinIva" style="text-align: right"
+                                    *ngIf="!isMobile">
                                     {{ "Precio unitario" | translate }}
-                                    <p-sortIcon
-                                        field="precio.precioUnitarioSinIva"
-                                    ></p-sortIcon>
+                                    <p-sortIcon field="precio.precioUnitarioSinIva"></p-sortIcon>
                                 </th>
 
-                                <th
-                                    pSortableColumn="date_edit"
-                                    *ngIf="!isMobile"
-                                >
+                                <th pSortableColumn="date_edit" *ngIf="!isMobile">
                                     {{ "Fecha editado" | translate }}
                                     <p-sortIcon field="date_edit"></p-sortIcon>
                                 </th>
 
-                                <th
-                                    pSortableColumn="precio.precioUnitarioIva"
-                                    style="text-align: right"
-                                    *ngIf="!isMobile"
-                                >
+                                <th pSortableColumn="precio.precioUnitarioIva" style="text-align: right"
+                                    *ngIf="!isMobile">
                                     {{ "IVA" | translate }}
-                                    <p-sortIcon
-                                        field="precio.precioUnitarioIva"
-                                    ></p-sortIcon>
+                                    <p-sortIcon field="precio.precioUnitarioIva"></p-sortIcon>
                                 </th>
 
                                 <th>
@@ -263,33 +116,21 @@
                             <tr>
                                 <!-- Imagen -->
                                 <td>
-                                    <img
-                                        *ngIf="
+                                    <img *ngIf="
                                             row.crearProducto
                                                 ?.imagenesPrincipales?.length >
                                             0
-                                        "
-                                        [src]="
+                                        " [src]="
                                             row.crearProducto
                                                 ?.imagenesPrincipales[0]?.urls
-                                        "
-                                        [alt]="row.crearProducto?.titulo"
-                                        width="50"
-                                        height="50"
-                                        style="cursor: pointer"
-                                        (click)="viewProduct(row)"
-                                    />
-                                    <img
-                                        *ngIf="
+                                        " [alt]="row.crearProducto?.titulo" width="50" height="50"
+                                        style="cursor: pointer" (click)="viewProduct(row)" />
+                                    <img *ngIf="
                                             row.crearProducto
                                                 ?.imagenesPrincipales?.length ==
                                             0
-                                        "
-                                        src="assets/img/placeholder.png"
-                                        [alt]="row.crearProducto?.titulo"
-                                        width="50"
-                                        height="50"
-                                    />
+                                        " src="assets/img/placeholder.png" [alt]="row.crearProducto?.titulo" width="50"
+                                        height="50" />
                                 </td>
 
                                 <!-- Título -->
@@ -308,38 +149,38 @@
                                 <!-- Está activo (solo en desktop) -->
                                 <td *ngIf="!isMobile">
                                     {{
-                                        row.exposicion?.activar === true
-                                            ? "Si"
-                                            : "No"
+                                    row.exposicion?.activar === true
+                                    ? "Si"
+                                    : "No"
                                     }}
                                 </td>
 
                                 <!-- Está disponible (solo en desktop) -->
                                 <td *ngIf="!isMobile">
                                     {{
-                                        row.exposicion?.disponible === true
-                                            ? "Si"
-                                            : "No"
+                                    row.exposicion?.disponible === true
+                                    ? "Si"
+                                    : "No"
                                     }}
                                 </td>
 
                                 <!-- Se produce (solo en desktop) -->
                                 <td *ngIf="!isMobile">
                                     {{
-                                        row.crearProducto?.paraProduccion
-                                            ? "Si"
-                                            : "No"
+                                    row.crearProducto?.paraProduccion
+                                    ? "Si"
+                                    : "No"
                                     }}
                                 </td>
 
                                 <!-- Precio unitario sin IVA (solo en desktop) -->
                                 <td *ngIf="!isMobile" style="text-align: right">
                                     {{
-                                        row.precio?.precioUnitarioSinIva
-                                            | currency
-                                                : "USD"
-                                                : "symbol"
-                                                : "1.0-0"
+                                    row.precio?.precioUnitarioSinIva
+                                    | currency
+                                    : "USD"
+                                    : "symbol"
+                                    : "1.0-0"
                                     }}
                                 </td>
 
@@ -351,44 +192,32 @@
                                 <!-- IVA (solo en desktop) -->
                                 <td *ngIf="!isMobile" style="text-align: right">
                                     {{
-                                        row.precio?.precioUnitarioIva
-                                            | currency
-                                                : "USD"
-                                                : "symbol"
-                                                : "1.0-0"
+                                    row.precio?.precioUnitarioIva
+                                    | currency
+                                    : "USD"
+                                    : "symbol"
+                                    : "1.0-0"
                                     }}
                                 </td>
 
                                 <!-- Acciones -->
                                 <td>
-                                    <i
-                                        placement="top"
-                                        ngbTooltip="{{ 'Edit' | translate }}"
-                                        style="
+                                    <i placement="top" ngbTooltip="{{ 'Edit' | translate }}" style="
                                             font-size: 18px;
                                             margin-left: 10px;
                                             color: cornflowerblue;
                                             cursor: pointer;
-                                        "
-                                        class="icofont icofont-pencil-alt-5"
-                                        (click)="editarProducto(row)"
-                                        title="Editar producto"
-                                    ></i>
-                                    <i
-                                        placement="top"
-                                        ngbTooltip="{{
+                                        " class="icofont icofont-pencil-alt-5" (click)="editarProducto(row)"
+                                        title="Editar producto"></i>
+                                    <i placement="top" ngbTooltip="{{
                                             'Eliminar' | translate
-                                        }}"
-                                        style="
+                                        }}" style="
                                             font-size: 18px;
                                             margin-left: 10px;
                                             color: cornflowerblue;
                                             cursor: pointer;
-                                        "
-                                        class="icofont icofont-trash"
-                                        (click)="eliminarProducto(row)"
-                                        title="Eliminar producto"
-                                    ></i>
+                                        " class="icofont icofont-trash" (click)="eliminarProducto(row)"
+                                        title="Eliminar producto"></i>
                                 </td>
                             </tr>
                         </ng-template>

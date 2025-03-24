@@ -19,7 +19,7 @@ export class ProductosComponent implements OnInit {
 
   cargando = false;
   rows = [];
-  temp = [];
+  temp: any[] = [];
 
   // Paginación
   pageSize = 10;
@@ -49,7 +49,8 @@ export class ProductosComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+    const currentCompany = sessionStorage.getItem("currentCompany");
+    this.empresaActual = currentCompany ? JSON.parse(currentCompany) : {};
     const texto = this.empresaActual.nomComercial.toString();
     this.ultimasLetras = texto.substring(texto.length - 3);
 
@@ -59,7 +60,7 @@ export class ProductosComponent implements OnInit {
 
   cargarDatos() {
     this.cargando = true;
-    this.service.getAllProductsPagination(this.pageSize, this.currentPage, this.lastDocId).subscribe((response: any) => {
+    this.service.getAllProductsPagination(this.pageSize, this.currentPage, this.lastDocId ?? undefined).subscribe((response: any) => {
       this.temp = [...response.products];
       this.rows = response.products;
       this.totalItems = response.pagination.totalItems;
@@ -104,42 +105,31 @@ export class ProductosComponent implements OnInit {
 
   updateFilter(event: any) {
     const input = (event.target as HTMLInputElement).value.toLowerCase();
-
-    // Solo ejecutar si la tecla presionada es Enter y hay un valor de al menos 3 caracteres.
-    if (event.key !== 'Enter' || input.length < 3) {
-      return;
+    if (input === "") { // Si se borra el contenido del filtro
+        this.currentPage = 1;
+        this.cargarDatos();
+        return;
     }
-
-    let temp: any;
-    this.cargando = true;
-
-    // temp = this.temp.filter((d) => {
-    //   const res = d.crearProducto.titulo.toLowerCase().indexOf(val) !== -1 || !val;
-    //   const res1 = d.crearProducto.descripcion.toLowerCase().indexOf(val) !== -1 || !val;
-    //   const res4 = d.identificacion?.referencia != null ? d.identificacion?.referencia.toString().toLowerCase().indexOf(val) !== -1 : !val || !val;
-    //   const res5 = d.disponibilidad?.cantidadDisponible?.toString().toLowerCase().indexOf(val) !== -1 || !val;
-    //   const res8 = d.precio?.precioUnitarioSinIva?.toString().toLowerCase().indexOf(val) !== -1 || !val;
-    //   const res9 = d.date_edit.toLowerCase().indexOf(val) !== -1 || !val;
-    //   return res || res1 || res4 || res5 || res8 || res9;
-    // });
+    if (event.key !== 'Enter' || input.length < 3) {
+        return;
+    }
+    // ...resto del código para búsqueda con enter y mínimo 3 caracteres...
     const context = this;
-    this.service.getProductsBySearch(input, this.pageSize, this.currentPage, this.lastDocId).subscribe({
+    this.cargando = true;
+    this.service.getProductsBySearch(input, this.pageSize, this.currentPage, this.lastDocId ?? undefined).subscribe({
       next(response: any) {
         context.temp = [...response.products];
         context.rows = response.products;
         context.totalItems = response.pagination.totalItems;
         context.totalPages = response.pagination.totalPages;
         context.cargando = false;
-        context.lastDocId = response.pagination.lastDocId; // para la paginación basada en cursor
-
+        context.lastDocId = response.pagination.lastDocId;
       },
       error(err) {
-        console.error(err)
+        console.error(err);
         context.cargando = false;
-
       },
-    })
-
+    });
   }
 
   viewProduct(row) {
