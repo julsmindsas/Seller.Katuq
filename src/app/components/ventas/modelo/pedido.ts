@@ -14,6 +14,7 @@ export interface Pedido {
     nroPedido?: string,
     empacador?: string,
     referencia: string,
+    nroPedidoReferencia?: string,
     company?: string,
     cliente?: Cliente,
     notasPedido?: NotasPedido,

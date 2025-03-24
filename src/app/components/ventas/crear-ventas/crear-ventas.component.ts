@@ -1214,7 +1214,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
     this.cambiarEstadoSegunLosProductos();
 
-    context.ventasService.validateNroPedido(context.pedidoGral.nroPedido).subscribe({
+    context.ventasService.validateNroPedido(context.pedidoGral.nroPedido as string).subscribe({
       next: (res: any) => {
         this.showPedidoConfirm = true;
         this.showSteper = false;

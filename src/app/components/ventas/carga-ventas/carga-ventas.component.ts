@@ -82,9 +82,15 @@ export class CargaVentasComponent implements OnInit {
     }
   }
 
+
   processExcelFile(content: ArrayBuffer): void {
     try {
-      const workbook = XLSX.read(new Uint8Array(content), { type: 'array' });
+      const workbook = XLSX.read(new Uint8Array(content), {
+        type: 'array',
+        cellDates: true,      // Convierte celdas con formato de fecha a objetos Date
+        raw: false,           // Aplica el formateo de las celdas
+        dateNF: 'dd/mm/yyyy'  // Formato de fecha deseado
+      });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
 
@@ -99,6 +105,7 @@ export class CargaVentasComponent implements OnInit {
       this.toastr.error('El archivo Excel no tiene el formato correcto', 'Error');
     }
   }
+
 
   processFile(): void {
     if (!this.fileData.length) {
