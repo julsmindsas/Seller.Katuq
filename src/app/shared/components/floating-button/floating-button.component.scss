@@ -45,6 +45,22 @@ a {
         transition: all 0.3s ease;
         overflow: hidden;
     }
+    &.options-visible {
+        width: 320px;
+        height: auto;
+        background-color: transparent; /* Fondo transparente para mejor visualización */
+        border-radius: 15px;
+        box-shadow: none; /* Quitamos sombra del contenedor */
+        padding-bottom: 0; /* Sin padding inferior */
+    }
+    &.voice-mode {
+        width: 300px;
+        height: 180px;
+        background-color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        padding: 10px;
+    }
 }
 
 .floating-button {
@@ -74,6 +90,10 @@ a {
         border-radius: 50%;
         border: 2px solid white;
     }
+    &.listening {
+        border: 3px solid #4caf50;
+        animation: pulse 1.5s infinite;
+    }
 }
 
 .floating-button:hover {
@@ -100,6 +120,208 @@ a {
 .floating-button-container:hover .floating-button:hover+.tooltip-text-floating {
     visibility: visible;
     opacity: 1;
+}
+
+/* Wrapper para mejor posicionamiento del panel */
+.options-wrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    z-index: 100;
+}
+
+/* Panel de opciones - posicionándolo ENCIMA del botón */
+.options-panel {
+    position: absolute;
+    bottom: 70px; /* Posicionamos desde el fondo, encima del botón */
+    right: 0;
+    width: 100%;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slide-down 0.3s ease; /* Cambiamos a animación hacia abajo */
+}
+
+.options-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    
+    span {
+        font-weight: 600;
+        font-size: 16px;
+        color: #343a40;
+    }
+    
+    .close-options-btn {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: transparent;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #f44336;
+        }
+    }
+}
+
+.options-list {
+    padding: 10px 0;
+    
+    .option-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        
+        &:hover {
+            background-color: #f5f5f5;
+        }
+        
+        &.selected {
+            background-color: #e8f0fe;
+            border-left: 3px solid #4285f4;
+        }
+        
+        .option-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            
+            i {
+                font-size: 18px;
+                color: #5f6368;
+            }
+        }
+        
+        .option-details {
+            flex: 1;
+            
+            .option-title {
+                font-weight: 500;
+                font-size: 14px;
+                color: #202124;
+                display: block;
+                margin-bottom: 2px;
+            }
+            
+            .option-description {
+                font-size: 12px;
+                color: #5f6368;
+                display: block;
+            }
+        }
+    }
+}
+
+/* Modo de voz - también posicionado encima del botón */
+.voice-mode-container {
+    position: absolute;
+    bottom: 70px; /* Posicionamos desde el fondo */
+    right: 0;
+    width: 100%;
+    height: auto; /* Auto height en lugar de calc */
+    min-height: 160px; /* Altura mínima */
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slide-down 0.3s ease;
+    padding: 15px;
+}
+
+.voice-mode-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    
+    .voice-title {
+        font-weight: 600;
+        font-size: 16px;
+        color: #343a40;
+    }
+    
+    .stop-voice-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #f44336;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: white;
+        
+        &:hover {
+            background-color: #d32f2f;
+        }
+        
+        i {
+            font-size: 18px;
+        }
+    }
+}
+
+.voice-visualizer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    margin-bottom: 15px;
+    
+    .voice-wave {
+        width: 3px;
+        height: 30px;
+        background-color: #4285f4;
+        margin: 0 3px;
+        border-radius: 3px;
+        animation: sound-wave 1.5s infinite ease-in-out;
+        
+        &:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        &:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        &:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+        
+        &:nth-child(5) {
+            animation-delay: 0.8s;
+        }
+    }
+}
+
+.voice-instructions {
+    text-align: center;
+    font-size: 14px;
+    color: #5f6368;
+    line-height: 1.5;
 }
 
 /* Estilos para el chat minimizado */
@@ -255,10 +477,61 @@ a {
     border: 2px solid white;
 }
 
+.listening-indicator {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    background-color: #4caf50;
+    border-radius: 50%;
+    border: 2px solid white;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+}
+
+@keyframes sound-wave {
+    0% {
+        height: 5px;
+    }
+    50% {
+        height: 40px;
+    }
+    100% {
+        height: 5px;
+    }
+}
+
 @keyframes slide-up {
     from {
         opacity: 0;
         transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Añadimos animación para deslizar desde arriba */
+@keyframes slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
     }
     to {
         opacity: 1;
@@ -283,6 +556,15 @@ a {
             width: 180px;
             height: 40px;
         }
+        
+        &.options-visible {
+            width: 280px;
+        }
+        
+        &.voice-mode {
+            width: 280px;
+            height: 160px;
+        }
     }
 
     .floating-button {
@@ -297,8 +579,23 @@ a {
         bottom: 40px;
     }
 
-    .floating-chat-overlay {
+    .floating-chat-overlay,
+    .options-panel,
+    .voice-mode-container {
         width: 100%;
-        height: 100%;
+    }
+    
+    .options-list .option-item {
+        padding: 10px;
+        
+        .option-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+            
+            i {
+                font-size: 16px;
+            }
+        }
     }
 }

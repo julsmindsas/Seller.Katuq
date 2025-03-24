@@ -1,16 +1,102 @@
 <div class="floating-button-container" 
      *ngIf="authService.isLoggedIn"
-     [ngClass]="{'open': chatFormVisible, 'minimized': chatMinimized}">
+     [ngClass]="{
+        'open': chatFormVisible, 
+        'minimized': chatMinimized,
+        'options-visible': optionsPanelVisible,
+        'voice-mode': selectedMode === 'voice' && isListening
+     }">
   
   <!-- Botón flotante principal -->
   <button class="floating-button" 
-          (click)="toggleChatForm($event)" 
-          [ngClass]="{'active': chatFormVisible, 'has-unread': hasUnreadMessages}">
+          (click)="toggleOptionsPanel($event)" 
+          [ngClass]="{
+            'active': chatFormVisible || optionsPanelVisible, 
+            'has-unread': hasUnreadMessages,
+            'listening': isListening
+          }">
     <span class="notification-indicator" *ngIf="hasUnreadMessages"></span>
+    <i *ngIf="isListening" class="listening-indicator"></i>
   </button>
   
+  <!-- Panel de opciones - Envolver en un div posicionado -->
+  <div class="options-wrapper" *ngIf="optionsPanelVisible">
+    <div class="options-panel">
+      <div class="options-header">
+        <span>¿Cómo puedo ayudarte?</span>
+        <button class="close-options-btn" (click)="closeEverything($event)" title="Cerrar">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="options-list">
+        <div class="option-item" (click)="selectMode('chat', $event)" [ngClass]="{'selected': selectedMode === 'chat'}">
+          <div class="option-icon">
+            <i class="fa fa-comments"></i>
+          </div>
+          <div class="option-details">
+            <span class="option-title">Chat</span>
+            <span class="option-description">Conversa con K.A.I. por mensajes</span>
+          </div>
+        </div>
+        
+        <div class="option-item" (click)="selectMode('voice', $event)" [ngClass]="{'selected': selectedMode === 'voice'}">
+          <div class="option-icon">
+            <i class="fa fa-microphone"></i>
+          </div>
+          <div class="option-details">
+            <span class="option-title">Voz</span>
+            <span class="option-description">Habla con K.A.I. usando tu micrófono</span>
+          </div>
+        </div>
+        
+        <div class="option-item" (click)="selectMode('help', $event)" [ngClass]="{'selected': selectedMode === 'help'}">
+          <div class="option-icon">
+            <i class="fa fa-question-circle"></i>
+          </div>
+          <div class="option-details">
+            <span class="option-title">Ayuda</span>
+            <span class="option-description">Guía de uso y preguntas frecuentes</span>
+          </div>
+        </div>
+        
+        <div class="option-item" (click)="selectMode('feedback', $event)" [ngClass]="{'selected': selectedMode === 'feedback'}">
+          <div class="option-icon">
+            <i class="fa fa-star"></i>
+          </div>
+          <div class="option-details">
+            <span class="option-title">Feedback</span>
+            <span class="option-description">Califica y mejora a K.A.I.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <!-- Tooltip que se muestra cuando el botón está en estado normal -->
-  <span class="tooltip-text-floating" *ngIf="!chatFormVisible && !chatMinimized">Pregúntale a K.A.I.</span>
+  <span class="tooltip-text-floating" *ngIf="!chatFormVisible && !chatMinimized && !optionsPanelVisible && !isListening">
+    Pregúntale a K.A.I.
+  </span>
+  
+  <!-- Modo de voz -->
+  <div *ngIf="selectedMode === 'voice' && isListening" class="voice-mode-container">
+    <div class="voice-mode-header">
+      <span class="voice-title">K.A.I. está escuchando...</span>
+      <button class="stop-voice-btn" (click)="stopVoiceMode($event)" title="Detener">
+        <i class="fa fa-stop-circle"></i>
+      </button>
+    </div>
+    <div class="voice-visualizer">
+      <div class="voice-wave"></div>
+      <div class="voice-wave"></div>
+      <div class="voice-wave"></div>
+      <div class="voice-wave"></div>
+      <div class="voice-wave"></div>
+    </div>
+    <div class="voice-instructions">
+      Habla claramente. Puedes decir "Ayuda" para obtener instrucciones.
+    </div>
+  </div>
   
   <!-- Burbuja de chat minimizada -->
   <div *ngIf="chatMinimized" class="minimized-chat-bubble" (click)="maximizeChat($event)">
