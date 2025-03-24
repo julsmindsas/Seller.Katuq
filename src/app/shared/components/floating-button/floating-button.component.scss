@@ -17,10 +17,9 @@ a {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    // cursor: move; // Quitado mientras está deshabilitada la función de mover
     cursor: pointer; // Cursor normal por ahora
     z-index: 1000;
-    transition: width 0.3s, height 0.3s;
+    transition: all 0.3s ease;
     /* En estado cerrado, el contenedor ocupa solo el tamaño mínimo */
     width: 60px;
     height: 60px;
@@ -36,6 +35,15 @@ a {
         transition: all 0.3s ease;
         display: flex;
         flex-direction: column;
+    }
+    &.minimized {
+        width: 220px;
+        height: 48px;
+        background-color: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        overflow: hidden;
     }
 }
 
@@ -55,6 +63,17 @@ a {
     transition: transform 0.2s, box-shadow 0.2s;
     margin-bottom: 8px; // Espacio para el chat al abrirse
     z-index: 2; // Asegura que esté por encima en modo abierto
+    &.has-unread::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 14px;
+        height: 14px;
+        background-color: #ff4757;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
 }
 
 .floating-button:hover {
@@ -83,42 +102,107 @@ a {
     opacity: 1;
 }
 
-.floating-chat-overlay {
-    position: absolute;
-    top: 70px; // Se muestra justo debajo del botón
-    right: 0;
-    width: calc(100% - 20px);
-    height: calc(100% - 90px);
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    padding: 0; // Quitar padding, lo controlaremos desde el componente chat
-    overflow: hidden; // Ocultar overflow para bordes redondeados
+/* Estilos para el chat minimizado */
+.minimized-chat-bubble {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    padding: 0 16px;
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
     
-    // Animación de entrada
-    animation: slide-up 0.3s ease;
+    .minimize-text {
+        flex: 1;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
     
-    // Botón de cierre
-    .close-chat-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
+    .maximize-chat-btn {
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background-color: #f0f0f0;
+        background-color: transparent;
         border: none;
-        font-size: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        z-index: 2;
         
         &:hover {
-            background-color: #e0e0e0;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+    }
+    
+    .notification-indicator {
+        width: 8px;
+        height: 8px;
+        background-color: #ff4757;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+}
+
+.floating-chat-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slide-up 0.3s ease;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    
+    .chat-title {
+        font-weight: 600;
+        font-size: 16px;
+        color: #343a40;
+    }
+    
+    .chat-controls {
+        display: flex;
+        align-items: center;
+        
+        button {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: none;
+            margin-left: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            
+            &:hover {
+                background-color: rgba(0, 0, 0, 0.05);
+            }
+        }
+        
+        .minimize-chat-btn:hover {
+            color: #2196f3;
+        }
+        
+        .close-chat-btn:hover {
+            color: #f44336;
         }
     }
 }
@@ -126,7 +210,7 @@ a {
 ::ng-deep .floating-chat {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: calc(100% - 52px); /* Restamos la altura del header */
     overflow: hidden;
     
     .modern-chat-container {
@@ -137,6 +221,8 @@ a {
             height: 100%;
             display: flex;
             flex-direction: column;
+            border: none !important;
+            box-shadow: none !important;
         }
         
         .messages-container {
@@ -147,13 +233,26 @@ a {
         .chat-input-area {
             position: relative; // Cambiar de sticky a relative para evitar problemas
             flex-shrink: 0; // Evitar que el input se contraiga
-            padding: 8px;
+            padding: 12px;
             bottom: 0;
             left: 0;
             right: 0;
             z-index: 5;
+            background-color: white;
+            border-top: 1px solid #e9ecef;
         }
     }
+}
+
+.notification-indicator {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    background-color: #ff4757;
+    border-radius: 50%;
+    border: 2px solid white;
 }
 
 @keyframes slide-up {
@@ -171,6 +270,19 @@ a {
     .floating-button-container {
         bottom: 20px;
         right: 10px;
+        
+        &.open {
+            width: 90vw;
+            height: 80vh;
+            max-height: none;
+            bottom: 10vh !important;
+            right: 5vw !important;
+        }
+        
+        &.minimized {
+            width: 180px;
+            height: 40px;
+        }
     }
 
     .floating-button {
@@ -185,16 +297,8 @@ a {
         bottom: 40px;
     }
 
-    .floating-button-container.open {
-        width: 90vw;
-        height: 90vh;
-        max-height: none;
-        bottom: 5vh !important; // Forzar posición centrada
-        right: 5vw !important;
-    }
-
     .floating-chat-overlay {
-        width: calc(100% - 20px);
-        height: calc(100% - 80px);
+        width: 100%;
+        height: 100%;
     }
 }

@@ -1,14 +1,47 @@
-<!-- <button class="floating-button"  (click)="openForm()">KAI✨.</button> -->
-
 <div class="floating-button-container" 
      *ngIf="authService.isLoggedIn"
-     [ngClass]="{'open': chatFormVisible}">
-  <!-- Quitado el evento (mousedown) temporalmente -->
+     [ngClass]="{'open': chatFormVisible, 'minimized': chatMinimized}">
+  
+  <!-- Botón flotante principal -->
   <button class="floating-button" 
           (click)="toggleChatForm($event)" 
-          [ngClass]="{'active': chatFormVisible}"></button>
-  <span class="tooltip-text-floating" *ngIf="!chatFormVisible">Pregúntale a K.A.I.</span>
-  <div *ngIf="chatFormVisible" class="floating-chat-overlay">
-    <app-chat [isFloating]="true" class="floating-chat"></app-chat>
+          [ngClass]="{'active': chatFormVisible, 'has-unread': hasUnreadMessages}">
+    <span class="notification-indicator" *ngIf="hasUnreadMessages"></span>
+  </button>
+  
+  <!-- Tooltip que se muestra cuando el botón está en estado normal -->
+  <span class="tooltip-text-floating" *ngIf="!chatFormVisible && !chatMinimized">Pregúntale a K.A.I.</span>
+  
+  <!-- Burbuja de chat minimizada -->
+  <div *ngIf="chatMinimized" class="minimized-chat-bubble" (click)="maximizeChat($event)">
+    <span class="minimize-text">K.A.I. asistente</span>
+    <span class="notification-indicator" *ngIf="hasUnreadMessages"></span>
+    <button class="maximize-chat-btn" (click)="maximizeChat($event)">
+      <i class="fa fa-expand"></i>
+    </button>
+  </div>
+  
+  <!-- Contenedor de chat completo -->
+  <div *ngIf="chatFormVisible && !chatMinimized" class="floating-chat-overlay">
+    <!-- Barra de título del chat -->
+    <div class="chat-header">
+      <span class="chat-title">K.A.I. - Asistente Virtual</span>
+      <div class="chat-controls">
+        <button class="minimize-chat-btn" (click)="minimizeChat($event)" title="Minimizar">
+          <i class="fa fa-minus"></i>
+        </button>
+        <button class="close-chat-btn" (click)="closeChat($event)" title="Cerrar">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Componente de chat -->
+    <app-chat 
+      [isFloating]="true" 
+      class="floating-chat"
+      (newMessage)="onNewMessage($event)"
+      (saveConversation)="saveConversation($event)">
+    </app-chat>
   </div>
 </div>
