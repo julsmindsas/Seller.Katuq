@@ -155,4 +155,45 @@
   <div class="right-arrow" id="right-arrow" [class.d-none]="rightArrowNone" (click)="scrollToRight()">
     <app-feather-icons [icon]="'arrow-right'"></app-feather-icons>
   </div>
+  <!-- ... código existente ... -->
+
+  <!-- Card Balanceada -->
+  <div class="plan-card-container">
+    <div class="plan-card">
+      <div class="card-header">
+        <small>Mi plan</small>
+        <div class="plan-tag">
+          <i class="fas fa-crown"></i>
+          <span>{{currentPlan.type}}</span>
+        </div>
+        <div class="wallet-tag">
+          <i class="fas fa-wallet"></i>
+          <span>${{currentPlan.walletBalance.toFixed(2)}}</span>
+        </div>
+      </div>
+      
+      <div class="card-details">
+        <div class="detail-item">
+          <small>Vence</small>
+          <span>{{currentPlan.renewalDate}}</span>
+        </div>
+        <div class="detail-item">
+          <small>Uso</small>
+          <div class="usage-bar">
+            <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="action-btn" (click)="openPlanModal()">
+        <i class="fas fa-coins"></i>
+        <span>Cambiar plan</span>
+      </button>
+    </div>
+  </div>
 </nav>
+<app-plan-selector 
+  *ngIf="showPlanModal"
+  (closed)="closePlanModal()" 
+  (planSelected)="onPlanSelected($event)">
+</app-plan-selector>

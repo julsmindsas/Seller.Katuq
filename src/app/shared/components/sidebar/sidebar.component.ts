@@ -5,7 +5,7 @@ import { LayoutService } from '../../services/layout.service';
 import { environment } from '../../../../environments/environment';
 import { SecurityService } from '../../services/security/security.service';
 import { CompanyInformation } from '../../models/User/CompanyInformation';
-
+import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
@@ -13,7 +13,13 @@ import { CompanyInformation } from '../../models/User/CompanyInformation';
   encapsulation: ViewEncapsulation.None
 })
 export class SidebarComponent implements OnInit {
-
+  public showPlanModal: boolean = false;
+  public currentPlan: any = {
+    type: 'Completo',
+    progress: 75,
+    renewalDate: '15/08/2025',
+    walletBalance: 0
+  };
   public iconSidebar;
   public menuItems: Menu[];
   public url: any;
@@ -89,6 +95,37 @@ export class SidebarComponent implements OnInit {
   onResize(event: Event): void {
     this.calculateWidth((event.target as Window).innerWidth);
   }
+  openPlanModal() {
+    this.showPlanModal = true;
+    document.body.style.overflow = 'hidden'; // Bloquear scroll del body
+  }
+
+  closePlanModal() {
+    this.showPlanModal = false;
+    document.body.style.overflow = ''; // Restaurar scroll del body
+  }
+  onPlanSelected(planId: string) {
+    // Actualizar el plan actual
+    this.currentPlan.type = this.getPlanName(planId);
+    
+    // Aquí deberías llamar a tu servicio para guardar el cambio
+    // Ejemplo:
+    // this.planService.updateUserPlan(planId).subscribe(() => {
+    //   this.showSuccessNotification('Plan actualizado correctamente');
+    // });
+    
+    this.closePlanModal();
+  }
+  
+  private getPlanName(planId: string): string {
+    const planNames = {
+      'basico': 'Básico',
+      'completo': 'Completo',
+      'empresarial': 'Empresarial'
+    };
+    return planNames[planId] || 'Completo';
+  }
+
 
   sidebarToggle() {
     // this.navServices.collapseSidebar = !this.navServices.collapseSidebar;

@@ -44,6 +44,7 @@ import { PageNotFoundComponent } from './components/page-not-found/page-not-foun
 import { SharedChangePasswordComponent } from './components/change-password/change-password.component';
 import { NgpThemeService } from './services/ngtheme.service';
 import { KatuqIntelligenceService } from './katuqintelligence/katuq-intelligence.service';
+import { PlanSelectorComponent } from './components/plan-selector/plan-selector.component';
 // import { FloatingButtonComponent } from './components/floating-button/floating-button.component';
 // import { ChatFormComponent } from './components/chat-form/chat.form.component';
 
@@ -75,7 +76,8 @@ import { KatuqIntelligenceService } from './katuqintelligence/katuq-intelligence
     KatuqIntelligenceComponent,
     BlankComponent,
     PageNotFoundComponent,
-    SharedChangePasswordComponent
+    SharedChangePasswordComponent,
+    PlanSelectorComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],

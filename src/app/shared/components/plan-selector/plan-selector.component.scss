@@ -1,0 +1,258 @@
+/* Estilos base del modal */
+.plan-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+  }
+  
+  .modal-container {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    animation: modalFadeIn 0.3s ease;
+    padding: 20px;
+  }
+  
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Encabezado del modal */
+  .modal-header {
+    padding: 0 0 20px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h4 {
+    margin: 0;
+    color: #5e5873;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    color: #b9b9c3;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 5px;
+  }
+  
+  .close-btn:hover {
+    color: #7367F0;
+  }
+  
+  /* Contenedor de planes */
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 20px 0;
+  }
+  
+  /* Estilos de cada plan */
+  .plan-option {
+    border: 1px solid #eaeaea;
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .plan-option:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .plan-option.highlight {
+    border: 2px solid #7367F0;
+  }
+  
+  .plan-option.selected {
+    background: rgba(115, 103, 240, 0.05);
+    border-color: #7367F0;
+  }
+  
+  /* Badge del plan */
+  .plan-badge {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 1.2rem;
+    color: white;
+  }
+  
+  .basic-badge {
+    background: linear-gradient(135deg, #28C76F 0%, #5DF0A5 100%);
+  }
+  
+  .complete-badge {
+    background: linear-gradient(135deg, #7367F0 0%, #9E95F5 100%);
+  }
+  
+  .enterprise-badge {
+    background: linear-gradient(135deg, #FF9F43 0%, #FFC085 100%);
+  }
+  
+  /* Contenido del plan */
+  .plan-option h5 {
+    margin: 0 0 15px 0;
+    color: #5e5873;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  
+  .plan-price {
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  .plan-price .amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #5e5873;
+  }
+  
+  .plan-price .period {
+    color: #b9b9c3;
+    font-size: 0.9rem;
+  }
+  
+  .plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    flex-grow: 1;
+  }
+  
+  .plan-features li {
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    color: #5e5873;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.4;
+  }
+  
+  .plan-features i {
+    margin-right: 8px;
+    color: #7367F0;
+    font-size: 0.8rem;
+    margin-top: 3px;
+  }
+  
+  /* Botones */
+  .select-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(115, 103, 240, 0.1);
+    color: #7367F0;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: auto;
+  }
+  
+  .select-btn:hover {
+    background: rgba(115, 103, 240, 0.2);
+  }
+  
+  .plan-option.selected .select-btn {
+    background: #7367F0;
+    color: white;
+  }
+  
+  /* Pie del modal */
+  .modal-footer {
+    padding: 20px 0 0 0;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  .cancel-btn, .confirm-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+  
+  .cancel-btn {
+    background: #f0f0f0;
+    color: #5e5873;
+    border: none;
+  }
+  
+  .cancel-btn:hover {
+    background: #e0e0e0;
+  }
+  
+  .confirm-btn {
+    background: #7367F0;
+    color: white;
+    border: none;
+  }
+  
+  .confirm-btn:hover {
+    background: #5d50d6;
+  }
+  
+  .confirm-btn:disabled {
+    background: #b9b9c3;
+    cursor: not-allowed;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .plans-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .modal-container {
+      width: 95%;
+      max-width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .plan-option {
+      height: auto;
+    }
+  }

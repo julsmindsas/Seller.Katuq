@@ -1,0 +1,50 @@
+<div class="plan-modal">
+    <div class="modal-overlay" (click)="close()"></div>
+    <div class="modal-container no-scroll">
+      <div class="modal-header">
+        <h4>Cambiar tu plan</h4>
+        <button class="close-btn" (click)="close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="plans-grid">
+        <div *ngFor="let plan of plans" 
+             class="plan-option"
+             [class.highlight]="plan.id === 'completo'"
+             [class.selected]="selectedPlan === plan.id">
+          
+          <div class="plan-badge" [ngClass]="{
+            'basic-badge': plan.id === 'basico',
+            'complete-badge': plan.id === 'completo',
+            'enterprise-badge': plan.id === 'empresarial'
+          }">
+            <i class="fas" [ngClass]="plan.icon"></i>
+          </div>
+          
+          <h5>{{plan.name}}</h5>
+          <div class="plan-price">
+            <span class="amount">{{plan.price}}</span>
+            <span class="period">/mes</span>
+          </div>
+          
+          <ul class="plan-features">
+            <li *ngFor="let feature of plan.features">
+              <i class="fas fa-check"></i> {{feature}}
+            </li>
+          </ul>
+          
+          <button class="select-btn" (click)="selectPlan(plan.id)">
+            {{selectedPlan === plan.id ? (plan.id === 'completo' ? 'Plan Actual' : 'Seleccionado') : 'Seleccionar'}}
+          </button>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="cancel-btn" (click)="close()">Cancelar</button>
+        <button class="confirm-btn" (click)="confirmSelection()" [disabled]="!selectedPlan">
+          Confirmar Cambio
+        </button>
+      </div>
+    </div>
+  </div>
