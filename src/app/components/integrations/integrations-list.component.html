@@ -1,0 +1,439 @@
+<div class="container-fluid integrations-list">
+  <!-- Dashboard widgets de integración -->
+  <div class="row integration-dashboard mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-icon bg-primary">
+            <i class="fa fa-plug"></i>
+          </div>
+          <div class="stat-content">
+            <h4>{{getTotalIntegrationsCount()}}</h4>
+            <p>Total Integraciones</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-icon bg-success">
+            <i class="fa fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h4>{{getActiveIntegrationsCount()}}</h4>
+            <p>Integraciones Activas</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-icon bg-warning">
+            <i class="fa fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-content">
+            <h4>{{getErroredIntegrationsCount()}}</h4>
+            <p>Con Errores</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-icon bg-info">
+            <i class="fa fa-bolt"></i>
+          </div>
+          <div class="stat-content">
+            <h4>{{getRecentTransactionsCount()}}</h4>
+            <p>Trans. Recientes (24h)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+              <i class="fa fa-puzzle-piece"></i> Integraciones
+            </h5>
+            <div class="header-actions">
+              <div class="btn-group mr-2">
+                <button class="btn btn-outline-primary" [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')">
+                  <i class="fa fa-th-large"></i>
+                </button>
+                <button class="btn btn-outline-primary" [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')">
+                  <i class="fa fa-list"></i>
+                </button>
+              </div>
+              <div ngbDropdown class="d-inline-block mr-2">
+                <button class="btn btn-primary" id="addIntegrationDropdown" ngbDropdownToggle>
+                  <i class="fa fa-plus"></i> Nueva integración
+                </button>
+                <div ngbDropdownMenu aria-labelledby="addIntegrationDropdown">
+                  <h6 class="dropdown-header">Selecciona una categoría</h6>
+                  <div class="dropdown-divider"></div>
+                  <button ngbDropdownItem *ngFor="let category of categories" (click)="openIntegrationConfigByCategory(category)">
+                    <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+                    {{ categoryLabels[category] }}
+                  </button>
+                </div>
+              </div>
+              <button class="btn btn-light" (click)="openTutorial()">
+                <i class="fa fa-question-circle"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <!-- Filtros avanzados -->
+          <div class="advanced-filters mb-4">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="fa fa-search"></i>
+                    </span>
+                  </div>
+                  <input type="text" class="form-control" placeholder="Buscar integración..." 
+                    [(ngModel)]="searchTerm" />
+                  <div class="input-group-append" *ngIf="searchTerm">
+                    <button class="btn btn-outline-secondary" type="button" (click)="searchTerm = ''">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <select class="form-control" [(ngModel)]="filterCategory">
+                  <option value="">Todas las categorías</option>
+                  <option *ngFor="let category of categories" [value]="category">
+                    {{ categoryLabels[category] }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <select class="form-control" [(ngModel)]="filterStatus">
+                  <option value="">Todos los estados</option>
+                  <option value="active">Activas</option>
+                  <option value="inactive">Inactivas</option>
+                  <option value="error">Con errores</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <button class="btn btn-outline-primary btn-block" (click)="resetFilters()">
+                  <i class="fa fa-refresh"></i> Limpiar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div *ngIf="loading" class="text-center py-4">
+            <div class="spinner-container">
+              <div class="spinner"></div>
+              <p class="mt-3">Cargando integraciones...</p>
+            </div>
+          </div>
+          
+          <!-- Error -->
+          <div *ngIf="errorMessage && !loading" class="alert alert-danger">
+            <i class="fa fa-exclamation-circle mr-2"></i> {{ errorMessage }}
+            <button type="button" class="btn btn-sm btn-danger float-right" (click)="loadIntegrations()">Reintentar</button>
+          </div>
+          
+          <!-- Empty State -->
+          <div *ngIf="!loading && !errorMessage && integrations.length === 0" class="text-center py-5">
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <i class="fa fa-plug"></i>
+              </div>
+              <h4>Sin integraciones configuradas</h4>
+              <p class="text-muted">Conecta tu negocio con diferentes servicios y plataformas</p>
+              
+              <div class="integration-categories-grid mt-4">
+                <div *ngFor="let category of categories" class="category-card" (click)="openIntegrationConfigByCategory(category)">
+                  <div class="category-icon">
+                    <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+                  </div>
+                  <h6>{{ categoryLabels[category] }}</h6>
+                  <span class="badge badge-light">{{availableIntegrations[category]?.length || 0}} opciones</span>
+                  <small>Click para explorar</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Grid View -->
+          <div *ngIf="!loading && integrations.length > 0 && viewMode === 'grid'" class="integration-grid">
+            <div *ngFor="let category of categories" class="integration-category" [hidden]="!shouldShowCategory(category)">
+              <div class="category-header">
+                <h5>
+                  <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+                  {{ categoryLabels[category] }}
+                  <span class="badge badge-pill badge-light">{{ countIntegrationsInCategory(category) }}</span>
+                </h5>
+                <button class="btn btn-sm btn-primary" (click)="openIntegrationConfigByCategory(category)">
+                  <i class="fa fa-plus"></i> Añadir
+                </button>
+              </div>
+              
+              <div class="row">
+                <div *ngFor="let integration of getFilteredIntegrationsByCategory(category)" class="col-md-6 col-xl-4 mb-4">
+                  <div class="integration-card" [ngClass]="{'inactive': !integration.enabled, 'has-error': hasError(integration), 'featured': isFeatured(integration)}" (click)="openIntegrationConfig(integration)">
+                    <div class="integration-card-header">
+                      <div class="integration-logo-container">
+                        <img *ngIf="getIntegrationLogo(integration.type)" [src]="getIntegrationLogo(integration.type)" [alt]="integration.name" class="integration-logo">
+                        <div *ngIf="!getIntegrationLogo(integration.type)" class="integration-icon" [ngClass]="integration.type">
+                          <i class="fa" [ngClass]="getIntegrationIcon(integration.type)"></i>
+                        </div>
+                      </div>
+                      <div class="integration-status-container">
+                        <div class="status-indicator" [ngClass]="integration.enabled ? 'online' : 'offline'"></div>
+                        <span class="status-badge" [ngClass]="integration.enabled ? 'active' : 'inactive'">
+                          {{ integration.enabled ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div class="integration-card-body">
+                      <h5 class="integration-name">{{ integration.name }}</h5>
+                      <span class="integration-type">{{ getIntegrationTypeName(integration.type) }}</span>
+                      
+                      <div class="integration-details">
+                        <div class="details-row">
+                          <span class="detail-label">API Key:</span>
+                          <span class="detail-value masked-value">{{getMaskedCredential(integration)}}</span>
+                        </div>
+                        <div class="details-row">
+                          <span class="detail-label">Ambiente:</span>
+                          <span class="environment-tag" [ngClass]="getEnvironmentClass(integration)">
+                            {{ getEnvironmentName(integration) }}
+                          </span>
+                        </div>
+                        <div class="details-row">
+                          <span class="detail-label">Última actividad:</span>
+                          <span class="detail-value">{{ integration.updatedAt | date:'dd MMM, HH:mm' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="integration-card-footer">
+                      <div class="status-summary" *ngIf="hasStats(integration)">
+                        <div class="status-item">
+                          <span class="status-value">{{ getSuccessfulTransactions(integration) }}</span>
+                          <span class="status-label">Exitosas</span>
+                        </div>
+                        <div class="status-item">
+                          <span class="status-value">{{ getFailedTransactions(integration) }}</span>
+                          <span class="status-label">Fallidas</span>
+                        </div>
+                        <div class="status-item">
+                          <span class="status-value">{{ getTotalAmount(integration) | currency }}</span>
+                          <span class="status-label">Total</span>
+                        </div>
+                      </div>
+                      
+                      <div class="integration-actions">
+                        <button class="btn btn-icon" [ngClass]="integration.enabled ? 'btn-success' : 'btn-light'" (click)="toggleIntegrationStatus(integration, $event)" title="{{ integration.enabled ? 'Desactivar' : 'Activar' }}">
+                          <i class="fa" [ngClass]="integration.enabled ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+                        </button>
+                        <button class="btn btn-icon btn-info" (click)="testIntegration(integration, $event)" title="Probar conexión">
+                          <i class="fa fa-plug"></i>
+                        </button>
+                        <button class="btn btn-icon btn-danger" (click)="deleteIntegration(integration, $event)" title="Eliminar">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- List View -->
+          <div *ngIf="!loading && integrations.length > 0 && viewMode === 'list'" class="integration-list-view">
+            <div class="table-responsive">
+              <table class="table table-hover integration-table">
+                <thead>
+                  <tr>
+                    <th class="sortable" (click)="sortBy('name')">
+                      <i class="fa fa-tag"></i> Nombre
+                      <i *ngIf="sortField === 'name'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                    </th>
+                    <th class="sortable" (click)="sortBy('type')">
+                      <i class="fa fa-plug"></i> Tipo
+                      <i *ngIf="sortField === 'type'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                    </th>
+                    <th class="sortable" (click)="sortBy('category')">
+                      <i class="fa fa-folder-open"></i> Categoría
+                      <i *ngIf="sortField === 'category'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                    </th>
+                    <th class="sortable" (click)="sortBy('enabled')">
+                      <i class="fa fa-toggle-on"></i> Estado
+                      <i *ngIf="sortField === 'enabled'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                    </th>
+                    <th class="sortable" (click)="sortBy('updatedAt')">
+                      <i class="fa fa-calendar"></i> Actualizado
+                      <i *ngIf="sortField === 'updatedAt'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
+                    </th>
+                    <th><i class="fa fa-cog"></i> Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let integration of getSortedAndFilteredIntegrations()" (click)="openIntegrationConfig(integration)" class="integration-row">
+                    <td>
+                      <div class="integration-name-cell">
+                        <img *ngIf="getIntegrationLogo(integration.type)" [src]="getIntegrationLogo(integration.type)" alt="" class="integration-logo-sm">
+                        <i *ngIf="!getIntegrationLogo(integration.type)" class="fa" [ngClass]="getIntegrationIcon(integration.type)"></i>
+                        <span>{{integration.name}}</span>
+                      </div>
+                    </td>
+                    <td>{{getIntegrationTypeName(integration.type)}}</td>
+                    <td>
+                      <span class="category-pill" [ngClass]="'category-' + integration.category">
+                        {{ categoryLabels[integration.category] }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="status-badge" [ngClass]="integration.enabled ? 'active' : 'inactive'">
+                        <i class="fa" [ngClass]="integration.enabled ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                        {{integration.enabled ? 'Activo' : 'Inactivo'}}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="date-cell">{{integration.updatedAt | date:'dd/MM/yyyy HH:mm'}}</span>
+                    </td>
+                    <td>
+                      <div class="action-buttons">
+                        <button class="btn btn-sm btn-info" (click)="editIntegration(integration, $event)" title="Editar">
+                          <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success" (click)="testIntegration(integration, $event)" title="Probar conexión">
+                          <i class="fa fa-plug"></i>
+                        </button>
+                        <button class="btn btn-sm" [ngClass]="integration.enabled ? 'btn-warning' : 'btn-success'" (click)="toggleIntegrationStatus(integration, $event)" title="{{ integration.enabled ? 'Desactivar' : 'Activar' }}">
+                          <i class="fa" [ngClass]="integration.enabled ? 'fa-toggle-off' : 'fa-toggle-on'"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" (click)="deleteIntegration(integration, $event)" title="Eliminar">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Empty Search Results -->
+          <div *ngIf="!loading && searchTerm && getSortedAndFilteredIntegrations().length === 0" class="text-center py-4">
+            <div class="empty-search">
+              <i class="fa fa-search fa-2x text-muted mb-3"></i>
+              <h4>No se encontraron integraciones</h4>
+              <p class="text-muted">No hay resultados para "{{ searchTerm }}"</p>
+              <button class="btn btn-outline-primary mt-2" (click)="resetFilters()">
+                <i class="fa fa-times"></i> Limpiar filtros
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sección de sugerencias mejorada -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fa fa-lightbulb-o"></i> Recomendaciones personalizadas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div *ngFor="let category of getTopCategories(3)" class="col-md-4">
+              <div class="suggested-category">
+                <h6>
+                  <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+                  {{ categoryLabels[category] }}
+                </h6>
+                <div class="suggested-items">
+                  <div *ngFor="let integration of getTopSuggestionsForCategory(category, 3)" class="suggested-item" (click)="configureIntegration(integration, category, $event)">
+                    <img *ngIf="integration.logo" [src]="integration.logo" [alt]="integration.name" class="suggested-logo">
+                    <div *ngIf="!integration.logo" class="integration-icon-sm">
+                      <i class="fa" [ngClass]="getIntegrationIcon(integration.id)"></i>
+                    </div>
+                    <div class="suggested-info">
+                      <strong>{{ integration.name }}</strong>
+                      <small>{{ integration.description }}</small>
+                    </div>
+                    <span class="badge badge-primary" *ngIf="integration.popular">Popular</span>
+                    <span class="badge badge-warning" *ngIf="integration.new">¡Nuevo!</span>
+                    <button class="btn btn-sm btn-primary add-btn">
+                      <i class="fa fa-plus"></i> Configurar
+                    </button>
+                  </div>
+                </div>
+                <a href="javascript:void(0)" (click)="openIntegrationConfigByCategory(category)" class="see-all">
+                  Ver todas <i class="fa fa-angle-right"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tutorial/Tooltip -->
+<div class="tutorial-overlay" *ngIf="showTutorial">
+  <div class="tutorial-content">
+    <h4>Guía rápida de integraciones</h4>
+    <p>Conecta tu tienda con diversas plataformas y servicios para potenciar tu negocio.</p>
+    <div class="tutorial-steps">
+      <div class="tutorial-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h5>Selecciona una categoría</h5>
+          <p>Elige entre pasarelas de pago, plataformas e-commerce y más.</p>
+        </div>
+      </div>
+      <div class="tutorial-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h5>Configura la integración</h5>
+          <p>Ingresa las credenciales API necesarias de tu proveedor.</p>
+        </div>
+      </div>
+      <div class="tutorial-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h5>Prueba la conexión</h5>
+          <p>Verifica que todo funcione correctamente antes de activar.</p>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" (click)="closeTutorial()">Entendido</button>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container" *ngIf="toast">
+  <div class="toast-notification" [ngClass]="toast.type">
+    <div class="toast-icon">
+      <i class="fa" [ngClass]="getToastIcon()"></i>
+    </div>
+    <div class="toast-content">
+      <p class="toast-message">{{toast.message}}</p>
+    </div>
+    <button class="toast-close" (click)="clearToast()">×</button>
+  </div>
+</div>

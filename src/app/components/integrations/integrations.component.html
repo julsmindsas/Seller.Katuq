@@ -1,0 +1,554 @@
+<div [ngClass]="{'modal-content': isModalMode}">
+  <div *ngIf="isModalMode" class="modal-header">
+    <h4 class="modal-title">
+      <i class="fa" [ngClass]="{
+        'fa-shopping-bag': selectedIntegrationType === 'shopify',
+        'fa-credit-card': selectedIntegrationType === 'wompi' || selectedIntegrationType === 'epayco',
+        'fa-paypal': selectedIntegrationType === 'paypal',
+        'fa-plug': !selectedIntegrationType
+      }"></i>
+      {{editingIntegrationId ? 'Editar' : 'Configurar nueva'}} integración
+    </h4>
+    <button type="button" class="close" aria-label="Close" (click)="cancel()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  
+  <div [ngClass]="{'modal-body': isModalMode, 'integration-container': !isModalMode}">
+    <!-- El resto del contenido del formulario permanece igual -->
+    <div class="page-header" *ngIf="!isModalMode">
+      <div>
+        <h2>Configuración de Integraciones</h2>
+        <p class="subtitle">Conecta tu tienda con múltiples plataformas y pasarelas de pago</p>
+      </div>
+      <button class="btn btn-sm btn-primary" *ngIf="savedIntegrations.length > 0" (click)="resetForm()">
+        <i class="fa fa-plus"></i> Nueva integración
+      </button>
+    </div>
+    
+    <!-- Status Messages -->
+    <div *ngIf="statusMessage" class="status" [ngClass]="'status-' + statusMessage.type">
+      <i class="fa" [ngClass]="statusMessage.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+      {{statusMessage.message}}
+      <button class="close-btn" (click)="clearStatus()">×</button>
+    </div>
+    
+    <!-- Integration Type Selection -->
+    <div class="card platform-selection">
+      <h3><i class="fa fa-plug"></i> Seleccione plataforma a integrar</h3>
+      <div class="integration-list">
+        <div *ngFor="let type of integrationTypes" 
+           class="integration-card" 
+           [ngClass]="{'active': selectedIntegrationType === type.id}"
+           (click)="onSelectIntegrationType(type.id)">
+        <div class="integration-icon">
+          <i class="fa" [ngClass]="{
+            'fa-shopping-bag': type.id === 'shopify',
+            'fa-credit-card': type.id === 'wompi' || type.id === 'epayco',
+            'fa-paypal': type.id === 'paypal'
+          }"></i>
+        </div>
+        <div class="integration-name">{{type.name}}</div>
+        <div class="integration-type">
+          {{type.id === 'shopify' ? 'Tienda online' : 'Pasarela de pago'}}
+        </div>
+      </div>
+      </div>
+    </div>
+    
+    <!-- Vista mejorada de selección de integraciones por categoría -->
+    <div class="category-tabs">
+      <ul class="nav nav-tabs">
+        <li class="nav-item" *ngFor="let category of categories">
+          <a class="nav-link" [class.active]="selectedCategory === category" href="javascript:void(0)" (click)="selectCategory(category)">
+            <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+            {{ categoryLabels[category] }}
+          </a>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="card integration-grid mt-3">
+      <div class="card-body">
+        <div class="row">
+          <div *ngFor="let integration of availableIntegrations[selectedCategory]" 
+               class="col-md-4 col-lg-3 mb-4">
+            <div class="integration-option" 
+                 [class.active]="selectedIntegrationType === integration.id"
+                 (click)="onSelectIntegrationType(integration.id)">
+              <div class="integration-option-icon">
+                <img *ngIf="integration.logo" [src]="integration.logo" [alt]="integration.name">
+                <i *ngIf="!integration.logo" class="fa" [ngClass]="getIntegrationIcon(integration.id)"></i>
+              </div>
+              <div class="integration-option-info">
+                <h6>{{ integration.name }}</h6>
+                <p>{{ integration.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Integration Form -->
+    <div class="card">
+      <div class="card-header">
+      <h3>
+        <i class="fa" [ngClass]="{
+          'fa-shopping-bag': selectedIntegrationType === 'shopify',
+          'fa-credit-card': selectedIntegrationType === 'wompi' || selectedIntegrationType === 'epayco',
+          'fa-paypal': selectedIntegrationType === 'paypal'
+        }"></i>
+        {{editingIntegrationId ? 'Editar' : 'Configurar'}} 
+        {{getIntegrationTypeName()}}
+      </h3>
+      <div class="integration-badges">
+        <span class="badge" *ngIf="editingIntegrationId">ID: {{editingIntegrationId}}</span>
+      </div>
+    </div>
+    
+    <!-- Environment Toggle for Payment Integrations -->
+    <div *ngIf="['wompi', 'epayco', 'paypal'].includes(selectedIntegrationType)" class="environment-toggle">
+      <span [ngClass]="{'text-muted': !isTestMode}">Producción</span>
+      <label class="switch">
+        <input type="checkbox" [checked]="isTestMode" (change)="toggleEnvironment()">
+        <span class="slider"></span>
+      </label>
+      <span [ngClass]="{'text-muted': isTestMode}">Pruebas</span>
+      <div class="environment-info">
+        <i class="fa fa-info-circle"></i>
+        <span *ngIf="isTestMode">Modo de pruebas: Las transacciones no serán reales</span>
+        <span *ngIf="!isTestMode">Modo de producción: Las transacciones serán procesadas</span>
+      </div>
+    </div>
+    
+    <form [formGroup]="integrationForm" (ngSubmit)="onSubmit()">
+      <!-- Common Fields -->
+      <div class="field-row">
+        <div class="field-col form-group">
+          <label for="name">
+            <i class="fa fa-tag"></i> Nombre de la integración:
+            <span class="field-required">*</span>
+          </label>
+          <input type="text" id="name" formControlName="name" placeholder="Ej: Mi tienda Shopify">
+          <div *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched" class="text-danger">
+            <i class="fa fa-exclamation-triangle"></i> El nombre es requerido
+          </div>
+          <small class="form-text text-muted">Nombre descriptivo para identificar esta integración</small>
+        </div>
+        
+        <div class="field-col form-group">
+          <label>
+            <i class="fa fa-toggle-on"></i> Estado:
+          </label>
+          <div class="toggle-container">
+            <label class="switch">
+              <input type="checkbox" formControlName="enabled">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label" [ngClass]="{'active': integrationForm.get('enabled')?.value, 'inactive': !integrationForm.get('enabled')?.value}">
+              {{integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo'}}
+            </span>
+          </div>
+          <small class="form-text text-muted">Habilitar o deshabilitar esta integración</small>
+        </div>
+      </div>
+      
+      <!-- Shopify Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'shopify'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para configurar esta integración, necesitarás crear una app en tu tienda Shopify y obtener las credenciales de API.</span>
+          <a href="https://shopify.dev/docs/admin-api/getting-started" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="form-group">
+          <label for="shopUrl">
+            <i class="fa fa-link"></i> URL de la tienda:
+            <span class="field-required">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="fa fa-globe prefix-icon"></i>
+            <input type="text" id="shopUrl" formControlName="shopUrl" placeholder="mitienda.myshopify.com">
+          </div>
+          <div *ngIf="integrationForm.get('shopUrl')?.invalid && integrationForm.get('shopUrl')?.touched" class="text-danger">
+            <i class="fa fa-exclamation-triangle"></i> Ingrese una URL de tienda Shopify válida
+          </div>
+          <small class="form-text text-muted">Ejemplo: mitienda.myshopify.com</small>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="apiKey">
+              <i class="fa fa-key"></i> API Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-lock prefix-icon"></i>
+              <input type="text" id="apiKey" formControlName="apiKey">
+            </div>
+            <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> API Key es requerida
+            </div>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="apiSecret">
+              <i class="fa fa-lock"></i> API Secret:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="apiSecret" formControlName="apiSecret">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <div *ngIf="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> API Secret es requerido
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="apiVersion">
+            <i class="fa fa-code-branch"></i> Versión de API:
+          </label>
+          <select id="apiVersion" formControlName="apiVersion" class="custom-select">
+            <option value="2023-10">2023-10 (Recomendada)</option>
+            <option value="2023-07">2023-07</option>
+            <option value="2023-04">2023-04</option>
+            <option value="2023-01">2023-01</option>
+          </select>
+          <small class="form-text text-muted">Seleccione la versión de la API de Shopify a utilizar</small>
+        </div>
+      </ng-container>
+      
+      <!-- Wompi Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'wompi'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para configurar Wompi, necesitas las claves de API de tu cuenta Wompi. Recuerda usar las claves correctas según el entorno.</span>
+          <a href="https://docs.wompi.co/docs" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="environment-badge">
+          <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
+            <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
+            {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+          </span>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="publicKey">
+              <i class="fa fa-key"></i> Public Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-globe prefix-icon"></i>
+              <input type="text" id="publicKey" formControlName="publicKey" placeholder="pub_test_abcdef...">
+            </div>
+            <div *ngIf="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Public Key es requerida
+            </div>
+            <small class="form-text text-muted">{{isTestMode ? 'Comienza con pub_test_' : 'Comienza con pub_prod_'}}</small>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="privateKey">
+              <i class="fa fa-lock"></i> Private Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="privateKey" formControlName="privateKey" placeholder="prv_test_abcdef...">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <div *ngIf="integrationForm.get('privateKey')?.invalid && integrationForm.get('privateKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Private Key es requerida
+            </div>
+            <small class="form-text text-muted">{{isTestMode ? 'Comienza con prv_test_' : 'Comienza con prv_prod_'}}</small>
+          </div>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="eventKey">
+              <i class="fa fa-bell"></i> Event Key:
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="text" id="eventKey" formControlName="eventKey" placeholder="evt_test_abcdef...">
+            </div>
+            <small class="form-text text-muted">Clave para validar webhooks (opcional)</small>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="integrityKey">
+              <i class="fa fa-shield-alt"></i> Integrity Key:
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="integrityKey" formControlName="integrityKey">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <small class="form-text text-muted">Clave para validar la integridad (opcional)</small>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="redirectUrl">
+            <i class="fa fa-reply"></i> URL de redirección:
+          </label>
+          <div class="input-with-icon">
+            <i class="fa fa-globe prefix-icon"></i>
+            <input type="text" id="redirectUrl" formControlName="redirectUrl" placeholder="https://mitienda.com/payment-callback">
+            <button type="button" class="btn-copy suffix-icon" title="Copiar URL">
+              <i class="fa fa-copy"></i>
+            </button>
+          </div>
+          <small class="form-text text-muted">URL a la que Wompi redirigirá después del pago</small>
+        </div>
+      </ng-container>
+      
+      <!-- ePayco Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'epayco'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para configurar ePayco, necesitas las credenciales de tu cuenta. Puedes encontrarlas en tu dashboard de ePayco.</span>
+          <a href="https://docs.epayco.co/" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="environment-badge">
+          <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
+            <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
+            {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+          </span>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="clientId">
+              <i class="fa fa-id-card"></i> Client ID:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-user prefix-icon"></i>
+              <input type="text" id="clientId" formControlName="clientId">
+            </div>
+            <div *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Client ID es requerido
+            </div>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="publicKey">
+              <i class="fa fa-key"></i> Public Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="text" id="publicKey" formControlName="publicKey">
+            </div>
+            <div *ngIf="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Public Key es requerida
+            </div>
+          </div>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="privateKey">
+              <i class="fa fa-lock"></i> Private Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="privateKey" formControlName="privateKey">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <div *ngIf="integrationForm.get('privateKey')?.invalid && integrationForm.get('privateKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Private Key es requerida
+            </div>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="p_key">
+              <i class="fa fa-key"></i> P_Key:
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="text" id="p_key" formControlName="p_key">
+            </div>
+            <small class="form-text text-muted">Clave adicional (opcional)</small>
+          </div>
+        </div>
+      </ng-container>
+      
+      <!-- PayPal Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'paypal'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para integrar PayPal, necesitas crear una aplicación en el Portal de Desarrolladores de PayPal.</span>
+          <a href="https://developer.paypal.com/docs/api/overview/" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="environment-badge">
+          <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
+            <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
+            {{isTestMode ? 'Ambiente Sandbox' : 'Ambiente de Producción'}}
+          </span>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="clientId">
+              <i class="fa fa-id-card"></i> Client ID:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-user prefix-icon"></i>
+              <input type="text" id="clientId" formControlName="clientId">
+            </div>
+            <div *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Client ID es requerido
+            </div>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="clientSecret">
+              <i class="fa fa-lock"></i> Client Secret:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="clientSecret" formControlName="clientSecret">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <div *ngIf="integrationForm.get('clientSecret')?.invalid && integrationForm.get('clientSecret')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Client Secret es requerido
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="merchantId">
+            <i class="fa fa-store"></i> Merchant ID:
+          </label>
+          <div class="input-with-icon">
+            <i class="fa fa-id-badge prefix-icon"></i>
+            <input type="text" id="merchantId" formControlName="merchantId">
+          </div>
+          <small class="form-text text-muted">ID de comercio (opcional para algunos casos)</small>
+        </div>
+      </ng-container>
+      
+      <!-- Form Actions -->
+      <div class="button-group">
+        <button type="button" class="btn btn-secondary" (click)="resetForm()">
+          <i class="fa fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-test" (click)="testConnection()" [disabled]="integrationForm.invalid || isTesting">
+          <i class="fa" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
+          {{isTesting ? 'Probando conexión...' : 'Probar conexión'}}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="integrationForm.invalid || isSaving">
+          <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{isSaving ? 'Guardando...' : (editingIntegrationId ? 'Actualizar' : 'Guardar')}}
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <!-- Solo mostrar la lista de integraciones cuando NO está en modo modal -->
+  <div *ngIf="savedIntegrations.length > 0 && !isModalMode" class="card">
+    <div class="card-header">
+      <h3><i class="fa fa-list"></i> Integraciones configuradas</h3>
+      <div class="header-actions">
+        <div class="search-box">
+          <i class="fa fa-search"></i>
+          <input type="text" placeholder="Buscar integración...">
+        </div>
+      </div>
+    </div>
+    
+    <table class="integration-table">
+      <thead>
+        <tr>
+          <th><i class="fa fa-tag"></i> Nombre</th>
+          <th><i class="fa fa-plug"></i> Tipo</th>
+          <th><i class="fa fa-toggle-on"></i> Estado</th>
+          <th><i class="fa fa-calendar"></i> Actualizado</th>
+          <th><i class="fa fa-cog"></i> Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let integration of savedIntegrations">
+          <td>
+            <div class="integration-name-cell">
+              <i class="fa" [ngClass]="{
+                'fa-shopping-bag': integration.type === 'shopify',
+                'fa-credit-card': integration.type === 'wompi' || integration.type === 'epayco',
+                'fa-paypal': integration.type === 'paypal'
+              }"></i>
+              <span>{{integration.name}}</span>
+            </div>
+          </td>
+          <td>{{getIntegrationName(integration.type)}}</td>
+          <td>
+            <span class="badge" [ngClass]="integration.enabled ? 'badge-success' : 'badge-danger'">
+              <i class="fa" [ngClass]="integration.enabled ? 'fa-check-circle' : 'fa-times-circle'"></i>
+              {{integration.enabled ? 'Activo' : 'Inactivo'}}
+            </span>
+          </td>
+          <td>
+            <span class="date-cell">{{integration.updatedAt | date:'dd/MM/yyyy HH:mm'}}</span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-sm btn-info" (click)="editIntegration(integration)" title="Editar">
+                <i class="fa fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-test" (click)="testExistingIntegration(integration)" title="Probar conexión">
+                <i class="fa fa-plug"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" (click)="deleteIntegration(integration)" title="Eliminar">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="savedIntegrations.length === 0" class="empty-state">
+      <i class="fa fa-plug"></i>
+      <p>No hay integraciones configuradas</p>
+      <button class="btn btn-primary" (click)="onSelectIntegrationType('shopify')">
+        <i class="fa fa-plus"></i> Configurar primera integración
+      </button>
+    </div>
+  </div>
+</div>
+  
+  <div *ngIf="isModalMode" class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cancel()">
+      <i class="fa fa-times"></i> Cancelar
+    </button>
+    <button type="button" class="btn btn-test" (click)="testConnection()" [disabled]="integrationForm.invalid || isTesting">
+      <i class="fa" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
+      {{isTesting ? 'Probando conexión...' : 'Probar conexión'}}
+    </button>
+    <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="integrationForm.invalid || isSaving">
+      <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+      {{isSaving ? 'Guardando...' : (editingIntegrationId ? 'Actualizar' : 'Guardar')}}
+    </button>
+  </div>
+</div>

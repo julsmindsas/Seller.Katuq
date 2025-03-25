@@ -261,6 +261,14 @@ export class NavService implements OnDestroy {
 			isOnlySuperAdministrador: false
 		},
 		{
+			headTitle1: 'Integraciones'
+		},
+		{
+			title: 'Integraciones', icon: 'link', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+				{ path: 'integrations', title: 'Configurar', type: 'link' }
+			]
+		},
+		{
 			headTitle1: 'Katuq',
 			headTitle2: '' + new Date().getFullYear() + ' © Julsmind S.A.S',
 		},

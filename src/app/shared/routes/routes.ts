@@ -147,4 +147,11 @@ export const content: Routes = [
     loadChildren: () => import('../../components/dashboard/dashboard.module').then(m => m.DashboardModule),
     canActivate: [AuthGuard] // Agregar el guard
   },
+  {
+    path: 'integrations',
+    loadChildren: () =>
+      import('../../components/integrations/integrations.module')
+        .then(m => m.IntegrationsModule),
+    canActivate: [AuthGuard]
+  },
 ];

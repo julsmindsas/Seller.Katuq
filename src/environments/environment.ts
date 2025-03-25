@@ -31,7 +31,25 @@ export const environment = {
   },
   // Agregar la URL del servicio WebSocket de voz
   wsVoiceServiceUrl: 'ws://localhost:3300/voice-websocket',
-  voiceWsUrl: 'wss://tu-servidor-ejemplo.com' // Ajustar según corresponda
+  voiceWsUrl: 'wss://tu-servidor-ejemplo.com', // Ajustar según corresponda
+  integrations: {
+    shopify: {
+      apiKey: '',
+      secret: ''
+    },
+    wompi: {
+      publicKey: '',
+      privateKey: ''
+    },
+    epayco: {
+      apiKey: '',
+      privateKey: ''
+    },
+    paypal: {
+      clientId: '',
+      clientSecret: ''
+    }
+  }
 };
 /*
  * For easier debugging in development mode, you can import the following file

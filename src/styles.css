@@ -1,0 +1,39 @@
+/* Agregar estos estilos al final del archivo */
+
+/* Estilos para el modal de integraciones */
+.integration-modal .modal-dialog {
+  max-width: 900px;
+}
+
+.integration-modal .modal-content {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.integration-modal .modal-header {
+  border-bottom: 1px solid #eaeaea;
+  padding: 15px 20px;
+}
+
+.integration-modal .modal-header .modal-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.integration-modal .modal-header .modal-title i {
+  margin-right: 10px;
+  color: #7366ff;
+}
+
+.integration-modal .modal-body {
+  padding: 20px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.integration-modal .modal-footer {
+  border-top: 1px solid #eaeaea;
+  padding: 15px 20px;
+}
