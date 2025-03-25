@@ -1,14 +1,65 @@
-<div class="payment-callback-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;">
-  <!-- Logo centrado -->
-  <div class="logo-container" style="margin-bottom: 20px;">
-    <img src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo" class="katuq-logo" style="max-width: 200px;">
+<!-- Page Header Start -->
+<section class="section hero has-bg-image" id="home" aria-label="home" style="background-image: url('./assets/images/banner6.jpg'); background-repeat: no-repeat;
+  background-size: 100% 100%;background-position: top;">
+
+<br><br><br>
+  <!-- Page Header Start -->
+  <div class="container-fluid mb-5 position-relative overlay-bottom">
+    <div class="d-flex flex-column align-items-center justify-content-center pt-0 pt-lg-5" style="min-height: 200px">
+      <div class="logo-container" style="margin-bottom: 20px;">
+        <img src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo" class="katuq-logo" style="max-width: 200px;">
+      </div>
+      <h3 class="display-4 mb-3 mt-0 mt-lg-5 text-white title-form text-uppercase">Resultado de transacción</h3>
+      <div class="d-inline-flex mb-lg-5">
+        <!-- Enlaces de navegación si son necesarios -->
+      </div>
+    </div>
   </div>
-  <div class="payment-content" style="text-align: center;">
-    <h2>Pago recibido</h2>
-    <p class="reference-label">Referencia del pago:</p>
-    <p class="reference-value">{{ paymentReference }}</p>
-    <p class="info-text">Estamos procesando la información del pago, por favor espere mientras confirmamos la transacción.</p>
-    <!-- Nuevo botón para volver al Katuq -->
-    <button routerLink="/" style="margin-top: 20px; padding: 10px 20px; font-size: 16px;">Volver a Katuq</button>
+</section>
+<!-- Page Header End -->
+
+<div class="container-fluid pt-5" style="font-family: Mulish;">
+  <div class="container">
+    <div>
+      <section>
+        <div *ngIf="!aprobada">
+          <h4 class="text-center tituloCarro" style="color: white">OCURRIO UN ERROR</h4>
+          <br>
+          <div style="margin:20px;">
+            <h2 class="text-center textoCarro">Lamentamos el inconveniente. Por favor comunicate con nosotros</h2>
+          </div>
+          <div style="margin:20px;">
+            <h2 class="text-center textoCarro fc-primary">Referencia: {{ paymentReference }}</h2>
+          </div>
+        </div>
+
+        <div *ngIf="aprobada">
+          <h4 class="text-center tituloCarro" style="color: white">GRACIAS POR TU COMPRA</h4>
+          <br>
+          <div style="margin:20px;">
+            <h2 class="text-center textoCarro">Estamos preparando tu pedido.</h2>
+          </div>
+          <div style="margin:20px;">
+            <h2 class="text-center textoCarro">Guarda éste número para el seguimiento de tu orden.</h2>
+          </div>
+          <div style="margin:20px;">
+            <h2 class="text-center textoCarro"><strong>{{ paymentReference }}</strong></h2>
+          </div>
+          <div style="margin:20px;">
+            <h3 class="text-center textoCarro">orden: {{ idOrden }}</h3>
+          </div>
+        </div>
+
+        <div style="margin:20px;">
+          <p class="text-center textoCarro">Si tienes alguna inquietud, no dudes en comunicarte con nosotros a nuestro whatsapp!</p>
+        </div>
+        <br>
+        <div class="text-center">
+          <button class="btn btn-dark w-50" type="submit" (click)="returnToHome()">
+            REGRESAR
+          </button>
+        </div>
+      </section>
+    </div>
   </div>
 </div>
