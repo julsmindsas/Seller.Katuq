@@ -39,31 +39,38 @@ export const CATEGORY_LABELS = {
   providedIn: 'root'
 })
 export class IntegrationsService {
-  private apiUrl = `${environment.urlApi}/integrations`;
+  // Actualizar la URL base para coincidir con las rutas de la API
+  private apiUrl = `${environment.urlApi}/v1/integration/configurations`;
 
   constructor(private http: HttpClient) { }
 
   getIntegrations(): Observable<Integration[]> {
+    // GET /configurations
     return this.http.get<Integration[]>(this.apiUrl);
   }
 
   getIntegration(id: string): Observable<Integration> {
+    // GET /configurations/:id
     return this.http.get<Integration>(`${this.apiUrl}/${id}`);
   }
 
   createIntegration(integration: Integration): Observable<Integration> {
+    // POST /configurations
     return this.http.post<Integration>(this.apiUrl, integration);
   }
 
   updateIntegration(id: string, integration: Integration): Observable<Integration> {
+    // PUT /configurations/:id
     return this.http.put<Integration>(`${this.apiUrl}/${id}`, integration);
   }
 
   deleteIntegration(id: string): Observable<any> {
+    // DELETE /configurations/:id
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
   testIntegration(integration: Integration): Observable<{success: boolean, message: string}> {
+    // POST /configurations/test (ruta para probar la integración)
     return this.http.post<{success: boolean, message: string}>(`${this.apiUrl}/test`, integration);
   }
 

@@ -1120,8 +1120,8 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     }
     console.log(`Ciudad seleccionada: ${this.pedidoGral.envio.ciudad}`);
     
-    this.datosEntregas = this.originalDataEntregas.filter(x => x.ciudad === this.pedidoGral.envio.ciudad);
-    if (this.datosEntregas.length === 0) {
+    this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.pedidoGral.envio.ciudad);
+    if (this.datosEntregas?.length === 0) {
       Swal.fire({
         title: "No encontrado!",
         text: "No se ha encontrado la ciudad en los datos de entrega, recuerda registrarla",

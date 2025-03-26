@@ -237,6 +237,14 @@ export class NavService implements OnDestroy {
 			, isOnlySuperAdministrador: true
 		},
 		{
+			headTitle1: 'Integraciones'
+		},
+		{
+			title: 'Integraciones', icon: 'link', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+				{ path: 'integrations', title: 'Configurar', type: 'link' }
+			]
+		},
+		{
 			title: 'Pagos', icon: 'star', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
 
 				{ path: 'extras/formasPago', title: 'Formas de pago', type: 'link' },
@@ -260,14 +268,7 @@ export class NavService implements OnDestroy {
 			],
 			isOnlySuperAdministrador: false
 		},
-		{
-			headTitle1: 'Integraciones'
-		},
-		{
-			title: 'Integraciones', icon: 'link', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'integrations', title: 'Configurar', type: 'link' }
-			]
-		},
+
 		{
 			headTitle1: 'Katuq',
 			headTitle2: '' + new Date().getFullYear() + ' © Julsmind S.A.S',

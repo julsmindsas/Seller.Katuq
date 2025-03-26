@@ -20,14 +20,14 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   loading = true;
   errorMessage: string | null = null;
   searchTerm = '';
-  
+
   // Nueva propiedad para las integraciones agrupadas por categoría
   groupedIntegrations: { [category: string]: Integration[] } = {};
-  
+
   // Categorías disponibles
   categories = Object.values(IntegrationCategory);
   categoryLabels = CATEGORY_LABELS;
-  
+
   // Integraciones disponibles para añadir
   availableIntegrations: { [category: string]: any[] } = {};
 
@@ -38,7 +38,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   sortDirection: 'asc' | 'desc' = 'desc'; // Dirección de ordenación
   showTutorial: boolean = false; // Mostrar tutorial
   toast: Toast | null = null; // Notificación toast
-  
+
   private destroy$ = new Subject<void>();
   private toastTimer: Subscription | null = null;
 
@@ -51,13 +51,13 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     this.loadIntegrations();
     // Cargar las integraciones disponibles
     this.availableIntegrations = this.integrationsService.getAvailableIntegrations();
-    
+
     // Si es primera visita, mostrar tutorial
     if (!localStorage.getItem('integration_tutorial_seen')) {
       this.openTutorial();
     }
   }
-  
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -69,8 +69,8 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   loadIntegrations(): void {
     this.loading = true;
     this.integrationsService.getIntegrations().subscribe({
-      next: (data) => {
-        this.integrations = data;
+      next: (data: any) => {
+        this.integrations = data.result as Integration[];
         this.groupIntegrationsByCategory();
         this.loading = false;
       },
@@ -82,18 +82,18 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   }
 
   openIntegrationConfig(integration?: Integration): void {
-    const modalRef = this.modalService.open(IntegrationsComponent, { 
+    const modalRef = this.modalService.open(IntegrationsComponent, {
       size: 'lg',
       backdrop: 'static',
       keyboard: false,
       centered: true,
       windowClass: 'integration-modal'
     });
-    
+
     if (integration) {
       modalRef.componentInstance.integrationToEdit = integration;
     }
-    
+
     modalRef.result.then((result) => {
       if (result === 'success') {
         this.loadIntegrations();
@@ -106,12 +106,12 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   // Método para agrupar integraciones por categoría
   private groupIntegrationsByCategory(): void {
     this.groupedIntegrations = {};
-    
+
     // Inicializar categorías vacías
     Object.values(IntegrationCategory).forEach(category => {
       this.groupedIntegrations[category] = [];
     });
-    
+
     // Agrupar integraciones por categoría
     this.integrations.forEach(integration => {
       const category = integration.category || IntegrationCategory.OTHER;
@@ -124,16 +124,16 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   // Método para abrir el modal con una categoría preseleccionada
   openIntegrationConfigByCategory(category: IntegrationCategory): void {
-    const modalRef = this.modalService.open(IntegrationsComponent, { 
+    const modalRef = this.modalService.open(IntegrationsComponent, {
       size: 'lg',
       backdrop: 'static',
       keyboard: false,
       centered: true,
       windowClass: 'integration-modal'
     });
-    
+
     modalRef.componentInstance.preselectedCategory = category;
-    
+
     modalRef.result.then((result) => {
       if (result === 'success') {
         this.loadIntegrations();
@@ -165,7 +165,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   deleteIntegration(integration: Integration, event: Event): void {
     event.stopPropagation();
-    
+
     if (confirm(`¿Está seguro que desea eliminar la integración "${integration.name}"?`)) {
       this.integrationsService.deleteIntegration(integration.id!).subscribe({
         next: () => {
@@ -181,12 +181,12 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   toggleIntegrationStatus(integration: Integration, event: Event): void {
     event.stopPropagation();
-    
+
     const updatedIntegration = {
       ...integration,
       enabled: !integration.enabled
     };
-    
+
     this.integrationsService.updateIntegration(integration.id!, updatedIntegration).subscribe({
       next: (result) => {
         const index = this.integrations.findIndex(i => i.id === result.id);
@@ -200,10 +200,10 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
+
   testIntegration(integration: Integration, event: Event): void {
     event.stopPropagation();
-    
+
     this.integrationsService.testIntegration(integration).subscribe({
       next: (result) => {
         if (result.success) {
@@ -217,32 +217,32 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
+
   private showNotification(type: 'success' | 'error', message: string): void {
     // Aquí puedes implementar notificaciones toast o similar
     console.log(`[${type}] ${message}`);
     // Para implementaciones reales, podrías usar un servicio de notificaciones
   }
-  
+
   // Sobrescribir el método get para filtrar también por categoría
   get filteredIntegrations(): Integration[] {
     if (!this.searchTerm) {
       return this.integrations;
     }
-    
+
     const term = this.searchTerm.toLowerCase();
-    return this.integrations.filter(integration => 
-      integration.name.toLowerCase().includes(term) || 
+    return this.integrations.filter(integration =>
+      integration.name.toLowerCase().includes(term) ||
       this.getIntegrationTypeName(integration.type).toLowerCase().includes(term) ||
       CATEGORY_LABELS[integration.category]?.toLowerCase().includes(term)
     );
   }
-  
+
   // Método para contar integraciones por categoría
   countIntegrationsInCategory(category: string): number {
     return this.groupedIntegrations[category]?.length || 0;
   }
-  
+
   // Método para verificar si una categoría tiene integraciones
   hasCategoryIntegrations(category: string): boolean {
     return this.countIntegrationsInCategory(category) > 0;
@@ -259,18 +259,18 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     this.showTutorial = false;
     localStorage.setItem('integration_tutorial_seen', 'true');
   }
-  
+
   /**
    * Mostrar notificación toast
    */
   showToast(type: 'success' | 'error' | 'warning' | 'info', message: string): void {
     this.toast = { type, message };
-    
+
     // Limpiar cualquier timer existente
     if (this.toastTimer) {
       this.toastTimer.unsubscribe();
     }
-    
+
     // Auto cerrar después de 5 segundos
     this.toastTimer = timer(5000)
       .pipe(takeUntil(this.destroy$))
@@ -284,11 +284,11 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       this.toastTimer = null;
     }
   }
-  
+
   getToastIcon(): string {
     if (!this.toast) return '';
-    
-    switch(this.toast.type) {
+
+    switch (this.toast.type) {
       case 'success': return 'fa-check-circle';
       case 'error': return 'fa-exclamation-circle';
       case 'warning': return 'fa-exclamation-triangle';
@@ -299,7 +299,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   /**
    * Cambiar modo de visualización
-   */  
+   */
   setViewMode(mode: 'grid' | 'list'): void {
     this.viewMode = mode;
     localStorage.setItem('integration_view_mode', mode);
@@ -311,45 +311,45 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   getTotalIntegrationsCount(): number {
     return this.integrations.length;
   }
-  
+
   getActiveIntegrationsCount(): number {
     return this.integrations.filter(i => i.enabled).length;
   }
-  
+
   getErroredIntegrationsCount(): number {
     return this.integrations.filter(i => this.hasError(i)).length;
   }
-  
+
   getRecentTransactionsCount(): number {
     // Implementación simulada
     return Math.floor(Math.random() * 100);
   }
-  
+
   hasError(integration: Integration): boolean {
     // Implementación simulada - podría implementarse realmente revisando el estado de integración
     return Math.random() > 0.8;
   }
-  
+
   isFeatured(integration: Integration): boolean {
     // Implementación simulada - podría implementarse basado en la configuración
     return integration.type === 'wompi' || integration.type === 'shopify';
   }
-  
+
   hasStats(integration: Integration): boolean {
     // Simulado - debería verificar si hay estadísticas reales disponibles
     return ['wompi', 'epayco', 'paypal'].includes(integration.type);
   }
-  
+
   getSuccessfulTransactions(integration: Integration): number {
     // Simulado
     return Math.floor(Math.random() * 100);
   }
-  
+
   getFailedTransactions(integration: Integration): number {
     // Simulado
     return Math.floor(Math.random() * 10);
   }
-  
+
   getTotalAmount(integration: Integration): number {
     // Simulado
     return Math.floor(Math.random() * 10000);
@@ -363,7 +363,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     this.filterCategory = '';
     this.filterStatus = '';
   }
-  
+
   sortBy(field: string): void {
     if (this.sortField === field) {
       // Toggle direction
@@ -373,29 +373,29 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       this.sortDirection = 'asc';
     }
   }
-  
+
   getSortedAndFilteredIntegrations(): Integration[] {
     let result = [...this.integrations];
-    
+
     // Apply filters
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      result = result.filter(i => 
+      result = result.filter(i =>
         i.name.toLowerCase().includes(term) ||
         this.getIntegrationTypeName(i.type).toLowerCase().includes(term)
       );
     }
-    
+
     if (this.filterCategory) {
       result = result.filter(i => i.category === this.filterCategory);
     }
-    
+
     if (this.filterStatus) {
-      switch(this.filterStatus) {
-        case 'active': 
+      switch (this.filterStatus) {
+        case 'active':
           result = result.filter(i => i.enabled);
           break;
-        case 'inactive': 
+        case 'inactive':
           result = result.filter(i => !i.enabled);
           break;
         case 'error':
@@ -403,11 +403,11 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
           break;
       }
     }
-    
+
     // Apply sorting
     result.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (this.sortField) {
         case 'name':
           comparison = a.name.localeCompare(b.name);
@@ -425,23 +425,23 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
           comparison = new Date(a.updatedAt || '').getTime() - new Date(b.updatedAt || '').getTime();
           break;
       }
-      
+
       return this.sortDirection === 'asc' ? comparison : -comparison;
     });
-    
+
     return result;
   }
 
   getFilteredIntegrationsByCategory(category: string): Integration[] {
     return this.integrations.filter(i => i.category === category);
   }
-  
+
   shouldShowCategory(category: string): boolean {
     if (this.filterCategory && this.filterCategory !== category) return false;
     if (this.searchTerm) return false;
     return this.countIntegrationsInCategory(category) > 0;
   }
-  
+
   /**
    * Métodos para UI y helpers visuales
    */
@@ -455,11 +455,11 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     }
     return null;
   }
-  
+
   getMaskedCredential(integration: Integration): string {
     // Muestra una versión enmascarada de la credencial principal
     let credential = '';
-    
+
     if (integration.type === 'shopify') {
       credential = integration.credentials?.apiKey || '';
     } else if (['wompi', 'epayco'].includes(integration.type)) {
@@ -467,35 +467,35 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     } else {
       credential = integration.credentials?.clientId || '';
     }
-    
+
     // Enmascarar todo excepto los primeros 4 y últimos 4 caracteres
     if (credential.length > 8) {
       const firstChars = credential.substring(0, 4);
       const lastChars = credential.substring(credential.length - 4);
       credential = firstChars + '••••••' + lastChars;
     }
-    
+
     return credential;
   }
-  
+
   getEnvironmentName(integration: Integration): string {
     if (integration.type === 'shopify') return 'N/A';
-    
+
     const env = integration.credentials?.environment || '';
     if (env === 'test' || env === 'sandbox') return 'Pruebas';
     if (env === 'production') return 'Producción';
     return env || 'Desconocido';
   }
-  
+
   getEnvironmentClass(integration: Integration): string {
     if (integration.type === 'shopify') return '';
-    
+
     const env = integration.credentials?.environment || '';
     if (env === 'test' || env === 'sandbox') return 'test';
     if (env === 'production') return 'production';
     return '';
   }
-  
+
   /**
    * Métodos para recomendaciones
    */
@@ -507,16 +507,16 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       IntegrationCategory.LOGISTICS
     ].slice(0, count);
   }
-  
+
   getTopSuggestionsForCategory(category: string, count: number = 3): any[] {
     // Obtener las integraciones más populares para la categoría
     const suggestions = [...(this.availableIntegrations[category] || [])];
-    
+
     // Filtrar las que ya están configuradas
     const configuredTypes = this.integrations
       .filter(i => i.category === category)
       .map(i => i.type);
-    
+
     // Añadir flags de popularidad para UI
     const result = suggestions
       .filter(s => !configuredTypes.includes(s.id))
@@ -526,32 +526,32 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
         new: ['stripe', 'servientrega', 'siigo'].includes(s.id)
       }))
       .slice(0, count);
-    
+
     return result;
   }
-  
+
   configureIntegration(integration: any, category: string, event: Event): void {
     event.stopPropagation();
-    
-    const modalRef = this.modalService.open(IntegrationsComponent, { 
+
+    const modalRef = this.modalService.open(IntegrationsComponent, {
       size: 'lg',
       backdrop: 'static',
       keyboard: false,
       centered: true,
       windowClass: 'integration-modal'
     });
-    
+
     modalRef.componentInstance.preselectedCategory = category;
     modalRef.componentInstance.preselectedType = integration.id;
-    
+
     modalRef.result.then((result) => {
       if (result === 'success') {
         this.showToast('success', `Integración con ${integration.name} configurada correctamente`);
         this.loadIntegrations();
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }
-  
+
   /**
    * Handler para editar integración con prevención de propagación
    */
@@ -559,7 +559,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     this.openIntegrationConfig(integration);
   }
-  
+
   /**
    * Método para obtener el ícono de una categoría
    */
