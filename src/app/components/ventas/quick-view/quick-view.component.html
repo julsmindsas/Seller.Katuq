@@ -8,15 +8,15 @@
           <div class="product-page-details">
             <h3>{{producto?.crearProducto?.titulo}}</h3>
             <h4>{{producto?.identificacion?.referencia}}</h4>
-            <h6>Cantidad minima de venta: {{producto?.disponibilidad?.cantidadMinVenta}}</h6>
+            <h6>{{ 'MINIMUM_SALE_QUANTITY' | translate }} {{producto?.disponibilidad?.cantidadMinVenta}}</h6>
             
            
             
             <h6>
-                Unidades disponibles {{producto?.disponibilidad?.cantidadDisponible}}
+              {{ 'UNITS_AVAILABLE' | translate }} {{producto?.disponibilidad?.cantidadDisponible}}
             </h6>
-            <h6>NO se incluye valor del domicilio</h6>
-            <h6>Incluye impuestos </h6>
+            <h6>{{ 'SHIPPING_COST_NOT_INCLUDED' | translate }}</h6>
+            <h6>{{ 'INCLUDES_TAXES' | translate }}</h6>
         </div>
 
           <div class="product-price">{{producto.precio.precioUnitarioConIva
@@ -24,13 +24,13 @@
             <del>{{producto.precio.precioTotalVolumenConIva | currency:'USD':'symbol':'1.0-0'}} </del>
           </div>
           <div class="product-view">
-            <h6 class="f-w-600">Detalles del producto</h6>
+            <h6 class="f-w-600">{{ 'PRODUCT_DETAILS' | translate }}</h6>
             <!-- <p class="mb-0">{{producto.crearProducto.descripcion}}</p> -->
             <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
           </div>
 
           <div class="product-qnty">
-            <h6 class="f-w-600">Cantidad</h6>
+            <h6 class="f-w-600">{{ 'QUANTITY' | translate }}</h6>
             <div class="qty-box">
               <div class="input-group">
                 <span class="input-group-prepend">
@@ -50,11 +50,11 @@
               </div>
             </div>
             <div class="addcart-btn">
-              <button class="btn btn-primary me-1" type="button" (click)="addToCar()">Agregar al carrito</button>
+              <button class="btn btn-primary me-1" type="button" (click)="addToCar()">{{ 'ADD_TO_CART' | translate }}</button>
             </div>
           </div>
           <div class="rating">
-            <label for="rating"> <h6>Calificacion:</h6> </label>
+            <label for="rating"> <h6>{{ 'RATING' | translate }}</h6> </label>
             <ngx-star-rating [id]="'rating'"></ngx-star-rating>
           </div>
 
@@ -67,16 +67,14 @@
           <div class="col-sm-12">
               <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
                   <li [ngbNavItem]="1">
-                      <a ngbNavLink>Características Adicionales *
-                      </a>
+                      <a ngbNavLink>{{ 'ADDITIONAL_FEATURES' | translate }}</a>
                       <ng-template ngbNavContent>
                           <!-- <p class="mb-0 m-t-20"> {{producto?.crearProducto?.descripcion}}</p> -->
                           <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
                       </ng-template>
                   </li>
                   <li [ngbNavItem]="2">
-                      <a ngbNavLink>Garantías propias del producto*
-                      </a>
+                      <a ngbNavLink>{{ 'PRODUCT_GUARANTEES' | translate }}</a>
                       <ng-template ngbNavContent>
                           <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
                               industry. Lorem
@@ -97,8 +95,7 @@
                       </ng-template>
                   </li>
                   <li [ngbNavItem]="3">
-                      <a ngbNavLink>Condiciones/Restricciones*
-                      </a>
+                      <a ngbNavLink>{{ 'CONDITIONS_RESTRICTIONS' | translate }}</a>
                       <ng-template ngbNavContent>
                           <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
                               industry. Lorem
@@ -119,8 +116,7 @@
                       </ng-template>
                   </li>
                   <li [ngbNavItem]="4">
-                      <a ngbNavLink>Cómo debe cuidarse / consumirse*
-                      </a>
+                      <a ngbNavLink>{{ 'CARE_CONSUMPTION' | translate }}</a>
                       <ng-template ngbNavContent>
                           <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
                               industry. Lorem
@@ -141,8 +137,7 @@
                       </ng-template>
                   </li>
                   <li [ngbNavItem]="4">
-                      <a ngbNavLink>Reseñas*
-                      </a>
+                      <a ngbNavLink>{{ 'REVIEWS' | translate }}</a>
                       <ng-template ngbNavContent>
                           <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
                               industry. Lorem
@@ -163,8 +158,7 @@
                       </ng-template>
                   </li>
                   <li [ngbNavItem]="5">
-                      <a ngbNavLink>Preguntas y Respuestas*
-                      </a>
+                      <a ngbNavLink>{{ 'Q_AND_A' | translate }}</a>
                       <ng-template ngbNavContent>
                           <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
                               industry. Lorem
