@@ -18,10 +18,8 @@
 
                 <div class="row col-12 m-2">
                     <div class="col-6">
-                        <p class="text-left fc-info fs-24 m-0 p-0">Clientes</p>
-                        <p class="text-left text-muted fs-18 m-0 p-0">
-                            Listado de clientes.
-                        </p>
+                        <p class="text-left fc-info fs-24 m-0 p-0">{{ "Clientes" | translate }}</p>
+                        <p class="text-left text-muted fs-18 m-0 p-0">{{ "Listado de clientes" | translate }}</p>
                     </div>
 
                     <div class="col-6 p-3" style="text-align: end">
@@ -32,9 +30,7 @@
                                     color: white;
                                     cursor: pointer;
                                 " class="icofont icofont-plus"></i>&nbsp;
-                            <span style="color: white">{{
-                                "Crear cliente" | translate
-                                }}</span>
+                            <span style="color: white">{{ "Crear cliente" | translate }}</span>
                         </button>
 
                         <button class="btn btn-primary ml-2" style="color: white" (click)="exportarExcel()">
@@ -71,24 +67,17 @@
                                                 $event.target.value,
                                                 'contains'
                                             )
-                                        " placeholder="{{
-                                            'Escribe el texto que deseas filtrar'
-                                                | translate
-                                        }}" />
+                                        " placeholder="{{ 'Escribe el texto que deseas filtrar' | translate }}" />
                                 </p-iconField>
                             </div>
                         </ng-template>
                         <ng-template pTemplate="header" let-columns let-cliente>
                             <tr>
-                                <th style="width: 22%">
-                                    {{ "Cliente" | translate }}
-                                </th>
+                                <th style="width: 22%">{{ "Cliente" | translate }}</th>
                                 <th *ngFor="let col of columns">
                                     {{ col.header }}
                                 </th>
-                                <th style="width: 22%">
-                                    {{ "Opciones" | translate }}
-                                </th>
+                                <th style="width: 22%">{{ "Opciones" | translate }}</th>
                             </tr>
                             <tr>
                                 <th>
@@ -97,8 +86,7 @@
                                 </th>
                                 <th *ngFor="let col of columns">
                                     <p-columnFilter type="text" field="{{ cliente[col.field] }}" placeholder=""
-                                        ariaLabel="Filter ">
-                                    </p-columnFilter>
+                                        ariaLabel="Filter "></p-columnFilter>
                                 </th>
                                 <th></th>
                             </tr>
@@ -191,15 +179,13 @@
 
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td colspan="5">
-                                    {{ "No hay datos disponibles" | translate }}
-                                </td>
+                                <td colspan="5">{{ "No hay datos disponibles" | translate }}</td>
                             </tr>
                         </ng-template>
 
                         <ng-template pTemplate="summary">
                             <div class="flex align-items-center justify-content-between">
-                                Total en esta consulta: {{clientes ? clientes.length : 0 }} clientes.
+                                {{ "Total en esta consulta" | translate }}: {{clientes ? clientes.length : 0 }} {{ "clientes" | translate }}.
                             </div>
                         </ng-template>
                     </p-table>

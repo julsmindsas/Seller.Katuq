@@ -1,10 +1,10 @@
-<app-breadcrumb [title]="'Carga de Ventas'" [items]="['Ventas']" [active_item]="'Carga de Ventas'"></app-breadcrumb>
+<app-breadcrumb [title]="'Carga de Ventas' | translate" [items]="['Ventas']" [active_item]="'Carga de Ventas' | translate"></app-breadcrumb>
 <div class="card">
   <div class="card-header">
     <div class="row">
       <div class="col-sm-6">
-        <h5>Carga masiva de ventas</h5>
-        <p>Utilice esta herramienta para cargar ventas desde un archivo JSON o Excel.</p>
+        <h5>{{ 'Carga masiva de ventas' | translate }}</h5>
+        <p>{{ 'Utilice esta herramienta para cargar ventas desde un archivo JSON o Excel.' | translate }}</p>
       </div>
     </div>
   </div>
@@ -12,10 +12,10 @@
     <div class="row mb-4">
       <div class="col-md-6">
         <div class="form-group">
-          <label class="form-label">Seleccione el tipo de archivo:</label>
+          <label class="form-label">{{ 'Seleccione el tipo de archivo:' | translate }}</label>
           <div class="btn-group" role="group">
-            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'json', 'btn-outline-primary': selectedFileType !== 'json'}" (click)="selectedFileType = 'json'">JSON</button>
-            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'excel', 'btn-outline-primary': selectedFileType !== 'excel'}" (click)="selectedFileType = 'excel'">Excel</button>
+            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'json', 'btn-outline-primary': selectedFileType !== 'json'}" (click)="selectedFileType = 'json'">{{ 'JSON' | translate }}</button>
+            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'excel', 'btn-outline-primary': selectedFileType !== 'excel'}" (click)="selectedFileType = 'excel'">{{ 'Excel' | translate }}</button>
           </div>
         </div>
       </div>
@@ -24,33 +24,29 @@
     <div class="row mb-4">
       <div class="col-md-6">
         <div class="form-group">
-          <label class="form-label" for="file">Seleccione el archivo:</label>
+          <label class="form-label" for="file">{{ 'Seleccione el archivo:' | translate }}</label>
           <input type="file" class="form-control" id="file" (change)="onFileSelected($event)" 
                  [accept]="selectedFileType === 'json' ? '.json' : '.xlsx,.xls'">
         </div>
       </div>
       <div class="col-md-6">
         <div *ngIf="selectedFile" class="alert alert-info">
-          <strong>Archivo seleccionado:</strong> {{selectedFile.name}}
+          <strong>{{ 'Archivo seleccionado:' | translate }}</strong> {{selectedFile.name}}
         </div>
       </div>
     </div>
 
     <div class="row mb-4" *ngIf="selectedFile">
       <div class="col-md-12">
-        <!-- <button class="btn btn-primary me-2" (click)="processFile()">
-          <i class="fa fa-upload me-1"></i> Procesar Archivo
-        </button> -->
         <button class="btn btn-success" (click)="processWithKAI()">
-          <i class="fa fa-robot me-1"></i> Procesar con KAI
+          <i class="fa fa-robot me-1"></i> {{ 'Procesar con KAI' | translate }}
         </button>
       </div>
     </div>
 
-    <!-- Vista previa de datos -->
     <div class="row mt-4" *ngIf="fileData && fileData.length > 0">
       <div class="col-md-12">
-        <h5>Vista previa de datos</h5>
+        <h5>{{ 'Vista previa de datos' | translate }}</h5>
         <div class="table-responsive">
           <table class="table table-bordered table-striped">
             <thead>
@@ -66,34 +62,32 @@
           </table>
         </div>
         <div *ngIf="fileData.length > 10" class="text-muted">
-          Mostrando 10 de {{fileData.length}} registros.
+          {{ 'Mostrando 10 de' | translate }} {{fileData.length}} {{ 'registros.' | translate }}
         </div>
       </div>
     </div>
 
-    <!-- Resultados del procesamiento -->
     <div class="row mt-4" *ngIf="processingResult">
       <div class="col-md-12">
         <div [ngClass]="{'alert alert-success': processingSuccess, 'alert alert-danger': !processingSuccess}">
-          <h5>Resultado del procesamiento:</h5>
+          <h5>{{ 'Resultado del procesamiento:' | translate }}</h5>
           <p>{{processingResult}}</p>
         </div>
       </div>
     </div>
 
-    <!-- Ayuda sobre formatos -->
     <div class="row mt-5">
       <div class="col-md-12">
         <div class="card">
           <div class="card-header">
-            <h5>Información sobre formatos</h5>
+            <h5>{{ 'Información sobre formatos' | translate }}</h5>
           </div>
           <div class="card-body">
             <div class="row">
               <div class="col-md-6">
-                <h6>Formato JSON</h6>
+                <h6>{{ 'Formato JSON' | translate }}</h6>
                 <pre>
-[
+[ 
   {{'{{'}}
     "id": "1",
     "cliente": "Nombre Cliente",
@@ -107,14 +101,14 @@
                 </pre>
               </div>
               <div class="col-md-6">
-                <h6>Formato Excel</h6>
-                <p>El archivo Excel debe contener las siguientes columnas:</p>
+                <h6>{{ 'Formato Excel' | translate }}</h6>
+                <p>{{ 'El archivo Excel debe contener las siguientes columnas:' | translate }}</p>
                 <ul>
-                  <li>ID</li>
-                  <li>Cliente</li>
-                  <li>Fecha</li>
-                  <li>Monto</li>
-                  <li>Productos (formato: "nombre:cantidad:precio")</li>
+                  <li>{{ 'ID' | translate }}</li>
+                  <li>{{ 'Cliente' | translate }}</li>
+                  <li>{{ 'Fecha' | translate }}</li>
+                  <li>{{ 'Monto' | translate }}</li>
+                  <li>{{ 'Productos (formato: "nombre:cantidad:precio")' | translate }}</li>
                 </ul>
               </div>
             </div>

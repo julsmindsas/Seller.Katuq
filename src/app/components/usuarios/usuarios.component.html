@@ -13,11 +13,11 @@
           <div class="row">
             <div class="col-sm-6">
               <input type='text' class="filter-ngx form-control mb-3"
-                placeholder="{{'Escribe el texto que desees filtrar' | translate}}" (keyup)='updateFilter($event)' />
+                placeholder="{{ 'Escribe texto que deseas filtrar' | translate }}" (keyup)='updateFilter($event)' />
             </div>
             <div class="col-sm-6 mb-3" style="text-align: end;">
               <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearUsuario()">
-                <span style="color: white;">{{'Crear Usuario' | translate}}</span>
+                <span style="color: white;">{{ 'Crear Usuario' | translate }}</span>
                 <i placement="top" ngbTooltip="{{ 'Nuevo' | translate }}"
                   style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
                   class="icofont icofont-plus"></i>
@@ -66,12 +66,12 @@
                   <input class="toggle" type="checkbox" [checked]="usuario.activo" disabled />
                 </td>
                 <td>
-                  <i placement="top" ngbTooltip="{{ 'Edit' | translate }}"
+                  <i placement="top" ngbTooltip="{{ 'Editar usuario' | translate }}"
                     style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                    class="icofont icofont-pencil-alt-5" (click)="editarUsuario(usuario)" title="{{ 'Editar usuario' | translate }}"></i>
-                  <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+                    class="icofont icofont-pencil-alt-5" (click)="editarUsuario(usuario)"></i>
+                  <i placement="top" ngbTooltip="{{ 'Eliminar usuario' | translate }}"
                     style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                    class="icofont icofont-trash" (click)="eliminarUsuario(usuario)" title="{{ 'Eliminar usuario' | translate }}"></i>
+                    class="icofont icofont-trash" (click)="eliminarUsuario(usuario)"></i>
                 </td>
               </tr>
             </ng-template>

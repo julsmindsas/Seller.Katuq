@@ -1,4 +1,4 @@
-<app-breadcrumb [title]="'Lista pedidos'" [items]="['Gestor de Pedidos']" [active_item]="'Pedidos'"></app-breadcrumb>
+<app-breadcrumb [title]="'Lista pedidos' | translate" [items]="['Gestor de Pedidos' | translate]" [active_item]="'Pedidos' | translate"></app-breadcrumb>
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
@@ -10,7 +10,7 @@
                         <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50" [showCurrentPageReport]="true"
                             [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [reorderableColumns]="true"
                             [scrollable]="true" [paginator]="true"
-                            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
+                            currentPageReportTemplate="{{'Mostrando {first} a {last} de {totalRecords} pedidos' | translate}}"
                             [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
                             styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
                             [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }" style="font-size: 0.7em; table-layout: auto;">
@@ -21,51 +21,50 @@
                                     <div class="row mb-4">
 
                                         <div class="col-md-2 col-sm-3">
-                                            <label for="fechaInicial">Fecha Inicial</label>
+                                            <label for="fechaInicial">{{'Fecha Inicial' | translate}}</label>
                                             <p-calendar id="fechaInicial" dateFormat="dd/mm/yy"
                                                 [(ngModel)]="fechaInicial" inputId="fechaInicial" [showIcon]="true">
                                             </p-calendar>
                                         </div>
 
                                         <div class="col-md-2 col-sm-3">
-                                            <label for="fechaFinal">Fecha Final</label>
+                                            <label for="fechaFinal">{{'Fecha Final' | translate}}</label>
                                             <p-calendar id="fechaFinal" dateFormat="dd/mm/yy" [(ngModel)]="fechaFinal"
                                                 inputId="fechaFinal" [showIcon]="true">
                                             </p-calendar>
                                         </div>
 
                                         <div class="col-md-2 col-sm-3">
-                                            <label for="busqueda">Buscar pedido</label>
+                                            <label for="busqueda">{{'Buscar pedido' | translate}}</label>
                                             <br />
                                             <p-autoComplete id="busqueda" [(ngModel)]="nroPedido"
                                                 [suggestions]="filteredOrderNumbers"
                                                 (completeMethod)="filtroGlobal($event)" field="nroPedido"
-                                                placeholder="Número pedido" (onSelect)="onOrderSelect($event)">
+                                                placeholder="{{'Número pedido' | translate}}" (onSelect)="onOrderSelect($event)">
                                             </p-autoComplete>
                                         </div>
 
                                         <div class="col-md-6 col-sm-12 mt-4" style="align-items: end;">
                                             <button pButton class="btn btn-primary m-1 pull-left"
                                                 (click)="refrescar(dt1)">
-                                                Buscar
+                                                {{'Buscar' | translate}}
                                             </button>
 
                                             <button pButton class="btn btn-primary m-1 pull-left"
-                                                (click)="clear(dt1)">Reset</button>
+                                                (click)="clear(dt1)">{{'Reset' | translate}}</button>
 
                                             <button pButton (click)="filtrarParaHoy()"
-                                                class="btn btn-primary m-1 pull-right">Para
-                                                Hoy
+                                                class="btn btn-primary m-1 pull-right">{{'Para Hoy' | translate}}
                                             </button>
 
                                             <button pButton (click)="filtrarParaManana()"
                                                 class="btn btn-primary m-1 pull-right">
-                                                Para Mañana
+                                                {{'Para Mañana' | translate}}
                                             </button>
 
                                             <button pButton icon="pi pi-excel" (click)="exportarExcel()"
                                                 [disabled]="orders.length == 0" class="btn btn-primary m-1 pull-right">
-                                                Excel
+                                                {{'Excel' | translate}}
                                             </button>
                                         </div>
                                     </div>
@@ -82,21 +81,21 @@
                                 <tr style="font-size: 0.8em;">
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex text-center">
-                                            Detalles
+                                            {{'Detalles' | translate}}
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex text-center align-items-center">
-                                            # Pedido
+                                            {{'# Pedido' | translate}}
                                             <p-columnFilter type="text" field="nroPedido" display="menu"
-                                                placeholder="Buscar número de pedido" matchMode="contains"
+                                                placeholder="{{'Buscar número de pedido' | translate}}" matchMode="contains"
                                                 [showMenu]="true">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
-                                            Fecha entrega
+                                            {{'Fecha entrega' | translate}}
                                             <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega" type="date"
                                                 display="menu" [showMatchModes]="false" [showOperator]="false"
                                                 [showAddButton]="false">
@@ -118,17 +117,17 @@
                                     <th
                                         style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;min-width:140px">
                                         <div class="flex text-center">
-                                            Opciones
+                                            {{'Opciones' | translate}}
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex text-center align-items-center">
-                                            Estado de Pago
+                                            {{'Estado de Pago' | translate}}
                                             <p-columnFilter field="estadoPago" matchMode="equals" [showMenu]="true"
                                                 display="menu">
                                                 <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                                                     <p-multiSelect [ngModel]="value" [options]="estadosPago"
-                                                        placeholder="Seleccione" (onChange)="filter($event.value)"
+                                                        placeholder="{{'Seleccione' | translate}}" (onChange)="filter($event.value)"
                                                         style="width: 100%; font-size: 0.8em;">
                                                     </p-multiSelect>
                                                 </ng-template>
@@ -137,12 +136,12 @@
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
-                                            Estado de Proceso
+                                            {{'Estado de Proceso' | translate}}
                                             <p-columnFilter field="estadoProceso" matchMode="equals" [showMenu]="true"
                                                 display="menu">
                                                 <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                                                     <p-multiSelect [ngModel]="value" [options]="estadosProcesos"
-                                                        placeholder="Seleccione" (onChange)="filter($event.value)"
+                                                        placeholder="{{'Seleccione' | translate}}" (onChange)="filter($event.value)"
                                                         style="width: 100%; font-size: 0.8em;">
                                                     </p-multiSelect>
                                                 </ng-template>
@@ -152,13 +151,13 @@
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Validación
+                                            {{'Validación' | translate}}
                                             <p-columnFilter field="validacion" matchMode="equals" [showMenu]="true"
                                                 display="menu">
                                                 <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                                                     <p-multiSelect [ngModel]="value" [options]="validaciones"
                                                         optionLabel="nombre" optionValue="value"
-                                                        placeholder="Seleccione" (onChange)="filter($event.value)"
+                                                        placeholder="{{'Seleccione' | translate}}" (onChange)="filter($event.value)"
                                                         style="width: 100%; font-size: 0.8em;">
                                                     </p-multiSelect>
                                                 </ng-template>
@@ -168,9 +167,9 @@
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Cliente
+                                            {{'Cliente' | translate}}
                                             <p-columnFilter type="text" field="cliente.nombres_completos"
-                                                matchMode="contains" placeholder="Cliente" [showMenu]="true"
+                                                matchMode="contains" placeholder="{{'Cliente' | translate}}" [showMenu]="true"
                                                 display="menu">
                                             </p-columnFilter>
                                         </div>
@@ -178,9 +177,9 @@
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Valor Bruto
+                                            {{'Valor Bruto' | translate}}
                                             <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
-                                                matchMode="contains" placeholder="V. Bruto" [showMenu]="true"
+                                                matchMode="contains" placeholder="{{'V. Bruto' | translate}}" [showMenu]="true"
                                                 display="menu">
                                             </p-columnFilter>
                                         </div>
@@ -188,45 +187,45 @@
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Descuento
+                                            {{'Descuento' | translate}}
                                             <p-columnFilter type="numeric" field="totalDescuento" matchMode="contains"
-                                                placeholder="Desc." [showMenu]="true" display="menu">
+                                                placeholder="{{'Desc.' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Domicilio
+                                            {{'Domicilio' | translate}}
                                             <p-columnFilter type="numeric" field="totalEnvio" matchMode="contains"
-                                                placeholder="Domicilio" [showMenu]="true" display="menu">
+                                                placeholder="{{'Domicilio' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Subtotal
+                                            {{'Subtotal' | translate}}
                                             <p-columnFilter type="numeric" field="subtotal" matchMode="contains"
-                                                placeholder="Subt." [showMenu]="true" display="menu">
+                                                placeholder="{{'Subt.' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            IVA
+                                            {{'IVA' | translate}}
                                             <p-columnFilter type="numeric" field="totalImpuesto" matchMode="contains"
-                                                placeholder="IVA" [showMenu]="true" display="menu">
+                                                placeholder="{{'IVA' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Total
+                                            {{'Total' | translate}}
                                             <p-columnFilter type="numeric" field="totalPedididoConDescuento"
-                                                matchMode="contains" placeholder="Total" [showMenu]="true"
+                                                matchMode="contains" placeholder="{{'Total' | translate}}" [showMenu]="true"
                                                 display="menu">
                                             </p-columnFilter>
                                         </div>
@@ -234,24 +233,24 @@
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Anticipo
+                                            {{'Anticipo' | translate}}
                                             <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
-                                                placeholder="Anticipo" [showMenu]="true" display="menu">
+                                                placeholder="{{'Anticipo' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Falta por Pagar
+                                            {{'Falta por Pagar' | translate}}
                                             <p-columnFilter type="numeric" field="faltaPorPagar" matchMode="contains"
-                                                placeholder="Falta" [showMenu]="true" display="menu">
+                                                placeholder="{{'Falta' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
-                                            Fecha de compra
+                                            {{'Fecha de compra' | translate}}
                                             <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion" type="date"
                                                 display="menu" [showMatchModes]="false" [showOperator]="false"
                                                 [showAddButton]="false">
@@ -265,43 +264,43 @@
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Ciudad
+                                            {{'Ciudad' | translate}}
                                             <p-columnFilter type="text" field="envio.ciudad" matchMode="contains"
-                                                placeholder="Ciudad" [showMenu]="true" display="menu">
+                                                placeholder="{{'Ciudad' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Zona de Entrega
+                                            {{'Zona de Entrega' | translate}}
                                             <p-columnFilter type="text" field="envio.zonaCobro" matchMode="contains"
-                                                placeholder="Zona" [showMenu]="true" display="menu">
+                                                placeholder="{{'Zona' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
-                                            Forma de Entrega
+                                            {{'Forma de Entrega' | translate}}
                                             <p-columnFilter type="text" field="formaEntrega" matchMode="contains"
-                                                placeholder="Entrega" [showMenu]="true" display="menu">
+                                                placeholder="{{'Entrega' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
-                                            Horario de Entrega
+                                            {{'Horario de Entrega' | translate}}
                                             <p-columnFilter type="text" field="horarioEntrega" matchMode="contains"
-                                                placeholder="Horario" [showMenu]="true" display="menu">
+                                                placeholder="{{'Horario' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
                                     <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
                                         *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Vendedor
+                                            {{'Vendedor' | translate}}
                                             <p-columnFilter type="text" field="asesorAsignado.name" matchMode="contains"
-                                                placeholder="Vendedor" [showMenu]="true" display="menu">
+                                                placeholder="{{'Vendedor' | translate}}" [showMenu]="true" display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
@@ -518,10 +517,10 @@
                                                 <ng-template pTemplate="header">
                                 <tr>
                                     <th style="width: 2rem;"></th>
-                                    <th>Imagen</th>
-                                    <th>Producto</th>
-                                    <th>Cantidad</th>
-                                    <th *ngIf="!isFromProduction">Configuración</th>
+                                    <th>{{'Imagen' | translate}}</th>
+                                    <th>{{'Producto' | translate}}</th>
+                                    <th>{{'Cantidad' | translate}}</th>
+                                    <th *ngIf="!isFromProduction">{{'Configuración' | translate}}</th>
                                 </tr>
                             </ng-template>
 
@@ -555,19 +554,19 @@
                                 <tr>
                                     <td colspan="7">
                                         <div style="padding: 10px;">
-                                            <h5>Preferencias</h5>
+                                            <h5>{{'Preferencias' | translate}}</h5>
                                             <p-table [value]="configuracion?.configuracion?.preferencias"
                                                 dataKey="configuracion.id" style="font-size: 0.8em;">
                                                 <ng-template pTemplate="header">
                                 <tr>
-                                    <th>Imagen</th>
-                                    <th>Título</th>
-                                    <th>SubTítulo</th>
-                                    <th>Iva</th>
-                                    <th>Total Iva</th>
-                                    <th>Total sin Iva</th>
-                                    <th>Cantidad</th>
-                                    <th>Total con Iva</th>
+                                    <th>{{'Imagen' | translate}}</th>
+                                    <th>{{'Título' | translate}}</th>
+                                    <th>{{'SubTítulo' | translate}}</th>
+                                    <th>{{'Iva' | translate}}</th>
+                                    <th>{{'Total Iva' | translate}}</th>
+                                    <th>{{'Total sin Iva' | translate}}</th>
+                                    <th>{{'Cantidad' | translate}}</th>
+                                    <th>{{'Total con Iva' | translate}}</th>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-itemconf>
@@ -587,20 +586,20 @@
                             </ng-template>
                         </p-table>
 
-                        <h5 *ngIf="configuracion?.configuracion?.adiciones.length > 0">Adiciones</h5>
+                        <h5 *ngIf="configuracion?.configuracion?.adiciones.length > 0">{{'Adiciones' | translate}}</h5>
                         <p-table *ngIf="configuracion?.configuracion?.adiciones.length > 0"
                             [value]="configuracion?.configuracion?.adiciones" dataKey="configuracion.id"
                             style="font-size: 0.8em;">
                             <ng-template pTemplate="header">
                                 <tr>
-                                    <th>Imagen</th>
-                                    <th>Título</th>
-                                    <th>SubTítulo</th>
-                                    <th>Iva</th>
-                                    <th>Total Iva</th>
-                                    <th>Total sin Iva</th>
-                                    <th>Cantidad</th>
-                                    <th>Total con Iva</th>
+                                    <th>{{'Imagen' | translate}}</th>
+                                    <th>{{'Título' | translate}}</th>
+                                    <th>{{'SubTítulo' | translate}}</th>
+                                    <th>{{'Iva' | translate}}</th>
+                                    <th>{{'Total Iva' | translate}}</th>
+                                    <th>{{'Total sin Iva' | translate}}</th>
+                                    <th>{{'Cantidad' | translate}}</th>
+                                    <th>{{'Total con Iva' | translate}}</th>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-itemconf>
@@ -626,7 +625,7 @@
 
                     <ng-template pTemplate="emptymessage">
                         <tr>
-                            <td colspan="4">No hay productos en el carrito para este pedido.</td>
+                            <td colspan="4">{{'No hay productos en el carrito para este pedido.' | translate}}</td>
                         </tr>
                     </ng-template>
                     </p-table>
@@ -639,7 +638,7 @@
                 <ng-template pTemplate="emptymessage">
                     <tr>
                         <td colspan="19" style="font-size: 0.85em;">
-                            Productos no encontrados.
+                            {{'Productos no encontrados.' | translate}}
                         </td>
                     </tr>
                 </ng-template>
@@ -648,7 +647,7 @@
                 <ng-template pTemplate="footer" *ngIf="!isFromProduction">
                     <tr style="font-size: 0.85em;">
                         <!-- Ajusta este colspan si mueves columnas -->
-                        <td colspan="8" style="text-align: right;">Total</td>
+                        <td colspan="8" style="text-align: right;">{{'Total' | translate}}</td>
                         <td class="td-money">{{ calculateValorBruto() | currency }}</td>
                         <td class="td-money">{{ calculateDescuento() | currency }}</td>
                         <td class="td-money">{{ calculateEnvio() | currency }}</td>
@@ -671,7 +670,7 @@
 <!--Modales-->
 <ng-template #modalContent let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Vista pedido para imprimir</h4>
+        <h4 class="modal-title" id="modal-basic-title">{{'Vista pedido para imprimir' | translate}}</h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -680,8 +679,8 @@
         <div [innerHtml]="htmlModal" #htmlPdf id="htmlPdf"></div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Cerrar</button>
-        <button type="button" class="btn btn-outline-dark" (click)="imprimirToPdf()">Imprimir</button>
+        <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">{{'Cerrar' | translate}}</button>
+        <button type="button" class="btn btn-outline-dark" (click)="imprimirToPdf()">{{'Imprimir' | translate}}</button>
     </div>
 </ng-template>
 
@@ -740,27 +739,27 @@
 
 <ng-template #cambioEstadoPagoModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Cambiar estado de pago</h4>
+        <h4 class="modal-title" id="modal-basic-title">{{'Cambiar estado de pago' | translate}}</h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
     <div class="modal-body">
-        <p>Estás a punto de cambiar el estado de pago. Por favor, selecciona el nuevo estado de pago:</p>
+        <p>{{'Estás a punto de cambiar el estado de pago. Por favor, selecciona el nuevo estado de pago:' | translate}}</p>
         <select class="form-control" [(ngModel)]="pedidoSeleccionado.estadoPago">
             <option *ngFor="let estado of estadosPago" [value]="estado">{{estado}}</option>
         </select>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">Cancelar</button>
-        <button type="button" class="btn btn-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)">Confirmar</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">{{'Cancelar' | translate}}</button>
+        <button type="button" class="btn btn-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)">{{'Confirmar' | translate}}</button>
     </div>
 </ng-template>
 
 <!--modal pára app-conf-product-to-cart-->
 <ng-template #confProductToCartModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Configurar producto</h4>
+        <h4 class="modal-title" id="modal-basic-title">{{'Configurar producto' | translate}}</h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -774,7 +773,7 @@
 
 <ng-template #recompraModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Recompra</h4>
+        <h4 class="modal-title" id="modal-basic-title">{{'Recompra' | translate}}</h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -787,7 +786,7 @@
 
 <ng-template #pagosModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Historial pagos</h4>
+        <h4 class="modal-title" id="modal-basic-title">{{'Historial pagos' | translate}}</h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
