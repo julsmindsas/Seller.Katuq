@@ -26,4 +26,8 @@ export class KatuqintelligenceService extends BaseService {
     getKatuqPrompt() {
         return this.get<any>('/v1/katuqintelligence/ia/product/getprompt');
     }
+
+    getAnalitycsGraphs(body: any){
+        return this.post<any>('/v1/katuqintelligence/kai/analitycs', body);
+    }
 }

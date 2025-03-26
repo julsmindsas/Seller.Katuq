@@ -68,16 +68,21 @@ export class ListOrdersComponent implements OnInit {
 
 
   constructor(
+
     private renderer: Renderer2,
     private service: ServiciosService, private route: ActivatedRoute, private filterService: FilterService, private ventasService: VentasService, private paymentService: PaymentService, private modalService: NgbModal, private formBuilder: FormBuilder,
     private pedidoUtilService: PedidosUtilService,
     private maestroService: MaestroService) {
+
     this.registerCustomFilters();
+
     const unaSemana = 7 * 24 * 60 * 60 * 1000;
-    this.fechaInicial = new Date();
-    this.fechaFinal = new Date(this.fechaInicial.getTime() + unaSemana);
+    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
+    this.fechaFinal = new Date(new Date().getTime() + unaSemana);
     this.fechaFinal.setHours(23, 59, 59, 999);
-    this.numberProduct = this.route.snapshot.queryParamMap.get('nroPedido');
+
+    this.numberProduct = this.route.snapshot.queryParamMap?.get('nroPedido') || '';
+
     if (this.numberProduct) {
       this.ventasService.getOrdersByNroPedido(this.numberProduct).subscribe((x: any) => {
         this.orders = x
@@ -85,7 +90,7 @@ export class ListOrdersComponent implements OnInit {
       })
     }
 
-    this.UserLogged = JSON.parse(localStorage.getItem('user')) as UserLogged;
+    this.UserLogged = JSON.parse(localStorage.getItem('user')!) as UserLogged;
   }
 
 
@@ -113,21 +118,22 @@ export class ListOrdersComponent implements OnInit {
     })
 
   }
+
   filtroGlobal(event: any) {
     const query = event.query;
     this.service.getOrderByName(query).then(res => {
 
       this.filteredOrderNumbers = res;
       this.ordersByName = res;
-
-
     })
   }
+
   onOrderSelect(event) {
     console.log(event);
     this.orders = [event];
     // this.orders= this.ordersByName.filter(P=>)
   }
+
   checkPriceScale(pedido) {
     let totalPrecioSinIVA = 0;
     let totalPrecioSinIVADef = 0;
@@ -144,12 +150,24 @@ export class ListOrdersComponent implements OnInit {
       } else {
         totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
       }
+
+
+
+
       // Sumar precios de adiciones
       if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
         itemCarrito.configuracion.adiciones.forEach(adicion => {
-          totalPrecioSinIVA += (adicion['cantidad'] * adicion['referencia']['precioUnitario']) * itemCarrito.cantidad;
+          try {
+            if (adicion['referencia']['precioUnitario']) {
+              totalPrecioSinIVA += (adicion['cantidad'] * (adicion['referencia']['precioUnitario'] ?? 1)) * itemCarrito.cantidad;
+            }
+          } catch (error) {
+            console.log("Pedido: ", adicion)
+          }
         });
       }
+
+
 
       // Sumar precios de preferencias
       if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
@@ -162,6 +180,7 @@ export class ListOrdersComponent implements OnInit {
 
     return totalPrecioSinIVADef;
   }
+
   checkIVAPrice(pedido) {
     let totalPrecioIVA = 0;
     let totalPrecioIVADef = 0;
@@ -180,7 +199,13 @@ export class ListOrdersComponent implements OnInit {
       // Sumar precios de adiciones
       if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
         itemCarrito.configuracion.adiciones.forEach(adicion => {
-          totalPrecioIVA += (adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad;
+          try {
+
+            if (adicion['referencia']['precioIva'])
+              totalPrecioIVA += (adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad;
+          } catch (error) {
+
+          }
         });
       }
 
@@ -244,13 +269,13 @@ export class ListOrdersComponent implements OnInit {
 
   refrescarDatos() {
 
-    this.fechaInicial.setHours(0, 0, 0, 0);
-    this.fechaFinal.setHours(23, 59, 59, 999);
+    // this.fechaInicial.setHours(0, 0, 0, 0);
+    // this.fechaFinal.setHours(23, 59, 59, 999);
 
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
-      company: JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial,
+      company: JSON.parse(sessionStorage.getItem("currentCompany")!).nomComercial,
       tipoFecha: 'fechaEntrega',
       estadoProceso: this.isFromProduction ? [EstadoProceso.SinProducir] : ['Todos']
     }
@@ -343,18 +368,19 @@ export class ListOrdersComponent implements OnInit {
   }
 
   clear(table: Table) {
-    const unaSemana = 7 * 24 * 60 * 60 * 1000;
-    this.fechaInicial = new Date();
-    this.fechaFinal = new Date(this.fechaInicial.getTime() + unaSemana);
-    this.fechaFinal.setHours(23, 59, 59, 999);
-    this.refrescar(table);
 
+    const unaSemana = 7 * 24 * 60 * 60 * 1000;
+    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
+    this.fechaFinal = new Date(new Date().getTime() + unaSemana);
+    this.fechaFinal.setHours(23, 59, 59, 999);
+
+    this.refrescar(table);
 
   }
 
   refrescar(table: Table) {
     this.refrescarDatos();
-    table.clear();
+    // table.clear();
   }
 
   initForms(cliente: Cliente) {

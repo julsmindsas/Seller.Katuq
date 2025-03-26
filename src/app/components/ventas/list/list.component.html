@@ -8,67 +8,65 @@
 
 
                         <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50" [showCurrentPageReport]="true"
-                            [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [resizableColumns]="true"
-                            [reorderableColumns]="true" [autoLayout]="true" [scrollable]="true"
-                            [scrollHeight]="'calc(100vh - 450px)'" [paginator]="true"
+                            [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [reorderableColumns]="true"
+                            [scrollable]="true" [paginator]="true"
                             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
                             [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
-                            styleClass="p-datatable-sm p-datatable-customers p-datatable-gridlines"
-                            style="font-size: 0.9em;">
+                            styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
+                            [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }" style="font-size: 0.7em; table-layout: auto;">
                             <!-- CAPTION: Filtros y botones arriba de la tabla -->
                             <ng-template pTemplate="caption">
                                 <div style="margin-bottom: 5px;">
 
                                     <div class="row mb-4">
-                                        <div class="col-md-2 col-sm-2">
+
+                                        <div class="col-md-2 col-sm-3">
                                             <label for="fechaInicial">Fecha Inicial</label>
                                             <p-calendar id="fechaInicial" dateFormat="dd/mm/yy"
                                                 [(ngModel)]="fechaInicial" inputId="fechaInicial" [showIcon]="true">
                                             </p-calendar>
                                         </div>
 
-                                        <div class="col-md-2 col-sm-2">
+                                        <div class="col-md-2 col-sm-3">
                                             <label for="fechaFinal">Fecha Final</label>
                                             <p-calendar id="fechaFinal" dateFormat="dd/mm/yy" [(ngModel)]="fechaFinal"
                                                 inputId="fechaFinal" [showIcon]="true">
                                             </p-calendar>
                                         </div>
 
-                                        <div class="col-md-8 col-sm-8">
+                                        <div class="col-md-2 col-sm-3">
                                             <label for="busqueda">Buscar pedido</label>
                                             <br />
                                             <p-autoComplete id="busqueda" [(ngModel)]="nroPedido"
                                                 [suggestions]="filteredOrderNumbers"
                                                 (completeMethod)="filtroGlobal($event)" field="nroPedido"
-                                                placeholder="Busca pedido" (onSelect)="onOrderSelect($event)">
+                                                placeholder="Número pedido" (onSelect)="onOrderSelect($event)">
                                             </p-autoComplete>
                                         </div>
-                                    </div>
 
-                                    <div class="row">
-                                        <div class="col-md-12 d-flex align-items-end justify-content-start"
-                                            style="gap: 5px;">
-                                            <button pButton label="Buscar" class="p-button-outlined"
-                                                icon="pi pi-refresh" (click)="refrescar(dt1)"
-                                                style="font-size: 0.8em;"></button>
+                                        <div class="col-md-6 col-sm-12 mt-4" style="align-items: end;">
+                                            <button pButton class="btn btn-primary m-1 pull-left"
+                                                (click)="refrescar(dt1)">
+                                                Buscar
+                                            </button>
 
-                                            <button pButton label="Limpiar" class="p-button-outlined"
-                                                icon="pi pi-filter-slash" (click)="clear(dt1)"
-                                                style="font-size: 0.8em;"></button>
+                                            <button pButton class="btn btn-primary m-1 pull-left"
+                                                (click)="clear(dt1)">Reset</button>
 
-                                            <button pButton label="Para hoy" icon="pi pi-calendar"
-                                                (click)="filtrarParaHoy()" class="p-button-outlined"
-                                                style="font-size: 0.8em;"></button>
-                                            <button pButton label="Para mañana" icon="pi pi-calendar-plus"
-                                                (click)="filtrarParaManana()" class="p-button-outlined"
-                                                style="font-size: 0.8em;"></button>
-                                            <button pButton label="Para pasado mañana" icon="pi pi-calendar-times"
-                                                (click)="filtrarParaPasadoManana()" class="p-button-outlined"
-                                                style="font-size: 0.8em;"></button>
+                                            <button pButton (click)="filtrarParaHoy()"
+                                                class="btn btn-primary m-1 pull-right">Para
+                                                Hoy
+                                            </button>
 
-                                            <button pButton label="Exportar a Excel" icon="pi pi-excel"
-                                                (click)="exportarExcel()" class="p-button-outlined"
-                                                style="font-size: 0.8em;"></button>
+                                            <button pButton (click)="filtrarParaManana()"
+                                                class="btn btn-primary m-1 pull-right">
+                                                Para Mañana
+                                            </button>
+
+                                            <button pButton icon="pi pi-excel" (click)="exportarExcel()"
+                                                [disabled]="orders.length == 0" class="btn btn-primary m-1 pull-right">
+                                                Excel
+                                            </button>
                                         </div>
                                     </div>
 
@@ -77,37 +75,54 @@
 
                             <!-- HEADER: Dos filas (títulos y filtros) -->
                             <ng-template pTemplate="header">
+                                <!-- <tr>
+                                    <th colspan="8" style="text-align: center;">Título de la Tabla</th>
+                                </tr> -->
                                 <!-- Fila de encabezados y filtros por columna -->
-                                <tr class="p-table-tr-th" style="font-size: 0.8em;">
-                                    <th style="min-width: 6rem;">
-                                        <div class="flex align-items-center">
+                                <tr style="font-size: 0.8em;">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                        <div class="flex text-center">
                                             Detalles
                                         </div>
                                     </th>
-                                    <th>
-                                        <div class="flex align-items-center">
-                                            Número de Pedido
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                        <div class="flex text-center align-items-center">
+                                            # Pedido
                                             <p-columnFilter type="text" field="nroPedido" display="menu"
                                                 placeholder="Buscar número de pedido" matchMode="contains"
                                                 [showMenu]="true">
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
+                                            Fecha entrega
+                                            <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega" type="date"
+                                                display="menu" [showMatchModes]="false" [showOperator]="false"
+                                                [showAddButton]="false">
+                                                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                                    <p-calendar (onSelect)="filter($event)" dateFormat="yy-mm-dd">
+                                                    </p-calendar>
+                                                </ng-template>
+                                            </p-columnFilter>
+                                        </div>
+                                    </th>
+                                    <!-- <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;" *ngIf="!isFromProduction">
+                                        <div class="flex  text-center align-items-center">
                                             Número de Factura
                                             <p-columnFilter type="text" field="facturacion?.nrofactura" display="menu"
                                                 [showMenu]="true" placeholder="N° factura" matchMode="contains">
                                             </p-columnFilter>
                                         </div>
-                                    </th>
-                                    <th>
-                                        <div class="flex align-items-center">
+                                    </th> -->
+                                    <th
+                                        style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;min-width:140px">
+                                        <div class="flex text-center">
                                             Opciones
                                         </div>
                                     </th>
-                                    <th>
-                                        <div class="flex align-items-center">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                        <div class="flex text-center align-items-center">
                                             Estado de Pago
                                             <p-columnFilter field="estadoPago" matchMode="equals" [showMenu]="true"
                                                 display="menu">
@@ -120,7 +135,7 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th>
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
                                             Estado de Proceso
                                             <p-columnFilter field="estadoProceso" matchMode="equals" [showMenu]="true"
@@ -134,7 +149,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Validación
                                             <p-columnFilter field="validacion" matchMode="equals" [showMenu]="true"
@@ -149,7 +165,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Cliente
                                             <p-columnFilter type="text" field="cliente.nombres_completos"
@@ -158,16 +175,18 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
-                                            Valor Producto Bruto
+                                            Valor Bruto
                                             <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
                                                 matchMode="contains" placeholder="V. Bruto" [showMenu]="true"
                                                 display="menu">
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Descuento
                                             <p-columnFilter type="numeric" field="totalDescuento" matchMode="contains"
@@ -175,7 +194,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Domicilio
                                             <p-columnFilter type="numeric" field="totalEnvio" matchMode="contains"
@@ -183,7 +203,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Subtotal
                                             <p-columnFilter type="numeric" field="subtotal" matchMode="contains"
@@ -191,7 +212,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             IVA
                                             <p-columnFilter type="numeric" field="totalImpuesto" matchMode="contains"
@@ -199,7 +221,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Total
                                             <p-columnFilter type="numeric" field="totalPedididoConDescuento"
@@ -208,7 +231,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Anticipo
                                             <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
@@ -216,7 +240,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Falta por Pagar
                                             <p-columnFilter type="numeric" field="faltaPorPagar" matchMode="contains"
@@ -224,7 +249,7 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th>
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
                                             Fecha de compra
                                             <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion" type="date"
@@ -237,7 +262,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Ciudad
                                             <p-columnFilter type="text" field="envio.ciudad" matchMode="contains"
@@ -245,7 +271,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Zona de Entrega
                                             <p-columnFilter type="text" field="envio.zonaCobro" matchMode="contains"
@@ -253,20 +280,7 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th>
-                                        <div class="flex align-items-center">
-                                            Fecha de entrega
-                                            <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega" type="date"
-                                                display="menu" [showMatchModes]="false" [showOperator]="false"
-                                                [showAddButton]="false">
-                                                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                                    <p-calendar (onSelect)="filter($event)" dateFormat="yy-mm-dd">
-                                                    </p-calendar>
-                                                </ng-template>
-                                            </p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <th>
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
                                             Forma de Entrega
                                             <p-columnFilter type="text" field="formaEntrega" matchMode="contains"
@@ -274,7 +288,7 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th>
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                         <div class="flex align-items-center">
                                             Horario de Entrega
                                             <p-columnFilter type="text" field="horarioEntrega" matchMode="contains"
@@ -282,7 +296,8 @@
                                             </p-columnFilter>
                                         </div>
                                     </th>
-                                    <th *ngIf="!isFromProduction">
+                                    <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        *ngIf="!isFromProduction">
                                         <div class="flex align-items-center">
                                             Vendedor
                                             <p-columnFilter type="text" field="asesorAsignado.name" matchMode="contains"
@@ -302,9 +317,120 @@
                                             [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
                                     </td>
                                     <td>{{ pedido.nroPedido }}</td>
-                                    <td *ngIf="!isFromProduction">{{ pedido?.nroFactura }}</td>
                                     <td>
-                                        <i title="Imprimir Pdf" class="fa fa-file-pdf-o"
+                                        {{
+                                        convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega)
+                                        }}
+                                    </td>
+                                    <!-- <td *ngIf="!isFromProduction">{{ pedido?.nroFactura }}</td> -->
+                                    <td class="text-center">
+                                        <div class="btn-actions hover-container">
+                                            <button class="btn btn-hover" type="button">
+                                                <i class="icon-more-alt"></i>
+                                            </button>
+
+                                            <ul class="list-actions popup">
+                                                <li (click)="pdfOrder(modalContent,pedido)">
+                                                    <i class="fa fa-file-pdf-o"></i>
+                                                    <span>
+                                                        {{'Imprimir Pdf' | translate}}
+                                                    </span>
+                                                </li>
+
+                                                <li *ngIf="isFromProduction" (click)="produceOrder(pedido)">
+                                                    <i class="fa fa-sitemap"></i>
+                                                    <span>
+                                                        {{'Producción' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="!isFromProduction"
+                                                    (click)="editDatosClientes(clientesModal,pedido)">
+                                                    <i class="fa fa-child"></i>
+                                                    <span>
+                                                        {{'Editar cliente' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="!isFromProduction"
+                                                    (click)="editDatosEntrega(datosEnregaModal,pedido)">
+                                                    <i class="fa fa-book"></i>
+                                                    <span>
+                                                        {{'Editar Dirección' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="!isFromProduction"
+                                                    (click)="editDatosFacturacion(datosFacturacionModal,pedido)">
+                                                    <i class="fa fa-money"></i>
+                                                    <span>
+                                                        {{'Editar facturación' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="!isFromProduction" (click)="editNotas(notasModal,pedido)">
+                                                    <i class="fa fa-file-word-o"></i>
+                                                    <span>
+                                                        {{'Editar notas' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="!isFromProduction"
+                                                    (click)="editarEstadoPago(cambioEstadoPagoModal,pedido)">
+                                                    <i class="fa fa-gears"></i>
+                                                    <span>
+                                                        {{'Editar estado Pago' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="!isFromProduction"
+                                                    (click)="addProductToCart(recompraModal,pedido)">
+                                                    <i class="fa fa-shopping-basket"></i>
+                                                    <span>
+                                                        {{'Agregar productos' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="!isFromProduction" (click)="editSeller(pedido)">
+                                                    <i class="fa fa-users"></i>
+                                                    <span>
+                                                        {{'Asignar asesor' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="!isFromProduction" (click)="AsentarPago(pagosModal,pedido)">
+                                                    <i class="fa fa-bank"></i>
+                                                    <span>
+                                                        {{'Historial pagos' | translate}}
+                                                    </span>
+                                                </li>
+                                                <li *ngIf="UserLogged?.email=='jarango@almara.com' || 'danielmauriciogarcia@hotmail.com' || 'dgarciar@gmail.com' " (click)="deleteOrder(pedido)">
+                                                    <i class="fa fa-trash"></i>
+                                                        <span>
+                                                            {{'Eliminar Pedido' | translate}}
+                                                        </span>
+                                                </li>
+
+
+                                                <!-- <li
+                                                *ngIf="row.envio !=='' && !(row.estado === 'Cancelada' || row.estado === 'Borrador'  || row.estado === 'Pendiente')">
+                                                <i class="fa fa-eye"></i>
+                                                <a (click)="verGuia(row)">{{'Ver guía' | translate}}</a>
+                                              </li>
+                                              <li *ngIf="row.coords?.latitud !== undefined && row.envio==='SWAYP'">
+                                                <i class="fa fa-map"></i>
+                                                <a (click)="openMap(row)">{{'Ver mapa' | translate}}</a>
+                                              </li>
+                                              <li *ngIf="row.estado === 'Entregada'">
+                                                <i class="fa fa-strikethrough"></i>
+                                                <a (click)="openSign(row.guide)">{{'Ver firma' |
+                                                  translate}}</a>
+                                              </li>
+                                              <li>
+                                                <i class="fa fa-shopping-cart"></i>
+                                                <a (click)="productos(row)">{{'Productos' | translate}}</a>
+                                              <li *ngIf="row.tipoContrato!=='DropShipping'">
+                                                <i class="fa fa-copy"></i>
+                                                <a (click)="duplicar(row)">{{'Guide duplicate' | translate}}</a>
+                                              </li> -->
+                                            </ul>
+                                        </div>
+
+
+
+                                        <!-- <i title="Imprimir Pdf" class="fa fa-file-pdf-o"
                                             (click)="pdfOrder(modalContent,pedido)" style="cursor: pointer;"></i>
                                         <i *ngIf="isFromProduction" title="Producir Pedido" class="fa fa-sitemap"
                                             (click)="produceOrder(pedido)"
@@ -335,7 +461,7 @@
                                             (click)="AsentarPago(pagosModal,pedido)"></i>
                                         <i *ngIf="UserLogged?.email=='jarango@almara.com'" class="fa fa-trash"
                                             title="Eliminar Pedido" style="cursor: pointer; margin-left: 4px;"
-                                            (click)="deleteOrder(pedido)"></i>
+                                            (click)="deleteOrder(pedido)"></i> -->
                                     </td>
                                     <td>{{ pedido?.estadoPago }}</td>
                                     <td>{{ pedido?.estadoProceso }}</td>
@@ -375,11 +501,6 @@
                                     <td>{{ pedido.fechaCreacion | date: 'dd/MM/yyyy' }}</td>
                                     <td *ngIf="!isFromProduction">{{ pedido.envio?.ciudad }}</td>
                                     <td *ngIf="!isFromProduction">{{ pedido.envio?.zonaCobro }}</td>
-                                    <td>
-                                        {{
-                                        convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega)
-                                        }}
-                                    </td>
                                     <td>{{ pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
                                     <td>{{ pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
                                     <td *ngIf="!isFromProduction">

@@ -139,19 +139,19 @@
 
 // DMG Marzo 2025
 .fc-white {
-    color: white;
+    color: white !important;
 }
 
 .fc-black {
-    color: black;
+    color: black !important;
 }
 
 .fc-primary {
-    color: $primary-color;
+    color: $primary-color !important;
 }
 
 .fc-secondary {
-    color: $secondary-color;
+    color: $secondary-color !important;
 }
 
 .fc-danger {
@@ -169,6 +169,39 @@
 .fc-info {
     color: #a927f9 !important
 }
+
+.bc-white {
+    background-color: white !important;
+}
+
+.bc-black {
+    background-color: black !important;
+}
+
+.bc-primary {
+    background-color: $primary-color !important;
+}
+
+.bc-secondary {
+    background-color: $secondary-color !important;
+}
+
+.bc-danger {
+    background-color: #dc3545 !important;
+}
+
+.bc-warning {
+    background-color: #f8d62b !important;
+}
+
+.bc-success {
+    background-color: #51bb25 !important;
+}
+
+.bc-info {
+    background-color: #a927f9 !important
+}
+
 
 .fs-10 {
     font-size: 10px !important;

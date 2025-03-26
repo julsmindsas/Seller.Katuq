@@ -383,3 +383,166 @@
 .text-small {
   font-size: small !important;
 }
+
+
+// ACTIONS
+
+.actions-mb {
+  display: none;
+}
+
+.btn-actions {
+  display: block;
+}
+
+.pb-70 {
+  padding-bottom: 70px;
+}
+
+.ngx-datatable {
+  overflow: inherit !important;
+}
+
+@media(max-width: 480px) {
+  .actions-mb {
+    display: block;
+  }
+
+  .btn-actions {
+    display: none;
+  }
+}
+
+
+/* Estilo general del contenedor */
+.hover-container {
+  position: relative;
+  display: inline-block;
+  padding: 5px;
+  // background-color: lightgray;
+  // border: 1px solid #ccc;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Estilo de la ventana emergente */
+.popup {
+  display: none; /* Oculta la ventana inicialmente */
+  position: absolute;
+  top: 30%; /* Justo debajo del contenedor */
+  left: 80%;
+  background-color: rgb(239, 239, 239);; /* Fondo blanco */
+  color: var(--primary-color);
+  border: 1px solid #ccc;
+  padding: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000; /* Asegura que esté sobre otros elementos */
+  min-width: 200px;
+}
+
+/* Botones internos en la ventana emergente */
+.popup button {
+  display: block;
+  margin: 5px 0;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+/* Mostrar la ventana emergente al hacer hover */
+.hover-container:hover .popup {
+  display: block;
+}
+
+// // BUTTON ACTIONS
+
+// .btn-actions {
+//   text-align: center;
+// }
+
+// ul.list-actions {
+//   top: 27px !important;
+//   // right: 30px !important;
+//   display: none;
+//   list-style: none;
+//   padding: 0;
+//   margin: 8px 0 0 0;
+//   position: absolute;
+//   background-color: white;
+//   border-radius: 4px;
+//   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+//   overflow: hidden;
+//   z-index: 1;
+//   min-width: 150px;
+//   max-width: 15px;
+// }
+
+ul.list-actions li {
+  display: flex;
+  align-items: center;
+  padding: 5px 3px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  padding: 0px 5px !important;
+}
+
+// ul.list-actions li i {
+//   color: #333;
+// }
+
+// ul.list-actions li a {
+//   width: 100%;
+//   font-size: 11px;
+//   text-align: left;
+//   text-transform: uppercase;
+//   margin-left: 3px;
+//   cursor: pointer;
+//   color: #444 !important;
+// }
+
+// ul.list-actions li:hover {
+//   background-color: #f8f8f8;
+// }
+
+// .btn-hover {
+//   cursor: pointer;
+// }
+
+// .btn-hover .icon-more-alt {
+//   font-size: 16px;
+// }
+
+// .btn-actions:hover .list-actions {
+//   display: inline-block;
+//   z-index: 99;
+// }
+
+// .btn-actions .dropdown-toggle {
+//   background: transparent;
+//   color: #52526c;
+//   padding: 0;
+//   width: auto;
+// }
+
+// :not(.dark-only) :host .btn-actions .dropdown-toggle {
+//   background: transparent;
+//   color: #52526c;
+//   padding: 0;
+//   width: auto;
+// }
+
+// .dark-only :host .btn-actions .dropdown-toggle .icon-more-alt {
+//   color: #fff;
+// }
+
+// .dropdown-toggle::after {
+//   display: none;
+// }
+
+// .dark-only .btn-actions .dropdown-toggle .icon-more-alt {
+//   color: #fff;
+// }
+
+// // FIN ACTIONS

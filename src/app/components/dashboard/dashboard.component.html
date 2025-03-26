@@ -8,15 +8,15 @@
         </p>
     </div>
     <div class="col-6">
-        <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 py-3 rounded">
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 rounded">
             <div class="date-control">
-                <label for="fechaInicial" class="fw-bold text-muted fs-18">{{ 'Fecha Inicial' | translate }}</label>
-                <input type="date" id="fechaInicial" class="form-control fs-18" [(ngModel)]="fechaInicial"
+                <label for="fechaInicial" class="fw-bold text-muted fs-16">{{ 'Fecha Inicial' | translate }}</label>
+                <input type="date" id="fechaInicial" class="form-control fs-16" [(ngModel)]="fechaInicial"
                     (change)="onFechaChange()" />
             </div>
             <div class="date-control">
-                <label for="fechaFinal" class="fw-bold text-muted fs-18">{{ 'Fecha Final' | translate }}</label>
-                <input type="date" id="fechaFinal" class="form-control fs-18" [(ngModel)]="fechaFinal"
+                <label for="fechaFinal" class="fw-bold text-muted fs-16">{{ 'Fecha Final' | translate }}</label>
+                <input type="date" id="fechaFinal" class="form-control fs-16" [(ngModel)]="fechaFinal"
                     (change)="onFechaChange()" />
             </div>
             <button class="btn btn-primary fs-18" (click)="cargarDatos()">
@@ -31,7 +31,7 @@
 
         <div class="col-sm-6">
             <div class="card shadow-sm h-100">
-                <div class="card-header gradient-primary text-white py-3">
+                <div class="card-header bc-secondary text-white py-3">
                     <h6 class="mb-0 text-center">{{ 'Ventas del Mes' | translate }}</h6>
                 </div>
                 <div class="card-body p-3">
@@ -42,8 +42,16 @@
 
         <div class="col-sm-6">
             <div class="card shadow-sm h-100">
-                <div class="fc-primary py-3">
+                <div class="card-header bc-primary">
                     <h6 class="mb-0 text-center">{{ 'Análisis de K.A.I.' | translate }}</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="">
+                        <button class="btn fc-white bc-secondary" (click)="analizar('VentasMes')">Analizar</button>
+                    </div>
+                    <div *ngIf="ventasMesCheck">
+                        <div class="p-3 fc-primary fs-16 cajaResultado" [innerHtml]="ventasRes"></div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,7 +1,8 @@
-import { Component, OnInit,AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import * as ApexCharts from 'apexcharts';
 import { forkJoin } from 'rxjs';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
+import { KatuqintelligenceService } from '../../shared/services/katuqintelligence/katuqintelligence.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -9,7 +10,7 @@ import { VentasService } from '../../shared/services/ventas/ventas.service';
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
-  
+
   topProductsMasVendidos: any;
   topProductosMenosVendidos: any;
   topVentasPorDia: any;
@@ -18,9 +19,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   fechaFinal: string;
   chartVentasMes: any;
 
-  constructor(private ventasService: VentasService) {
+  ventasMesCheck = false;
+  ventasRes: string = '';
+
+  constructor(
+    private ventasService: VentasService,
+    private katuqintelligenceService: KatuqintelligenceService) {
     const fechaHoy = new Date();
-    this.fechaInicial = fechaHoy.toISOString().split('T')[0];
+    // this.fechaInicial = fechaHoy.toISOString().split('T')[0];
+    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear()).toISOString().split('T')[0];
     this.fechaFinal = fechaHoy.toISOString().split('T')[0];
   }
   ngAfterViewInit(): void {
@@ -29,12 +36,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     const today = new Date();
-    this.fechaInicial = today.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear()).toISOString().split('T')[0];
     this.fechaFinal = today.toISOString().split('T')[0];
 
     // Cargar datos con las fechas iniciales
     this.cargarDatos();
-    
+
   }
 
   cargarDatos(): void {
@@ -61,7 +68,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   onFechaChange(): void {
     this.cargarDatos(); // Actualiza los datos al cambiar las fechas
   }
-  
+
   renderCharts() {
     // Validar datos antes de usarlos
     if (!this.topProductosMenosVendidos || !this.topProductsMasVendidos || !this.topVentasPorDia) {
@@ -179,7 +186,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       ganancias: [2000, 3000, 2500, 4000, 3500],
       meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo']
     };
-  
+
     new ApexCharts(document.querySelector('#chart-costos-ganancias'), {
       chart: { type: 'bar', height: 200 },
       series: [
@@ -189,13 +196,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       xaxis: { categories: mockCostosGanancias.meses },
       colors: ['#ff4560', '#00e396']
     }).render();
-  
+
     // Gráfico de Tasa de Conversión
     const mockConversion = {
       conversionRate: [10, 12, 15, 13, 14],
       meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo']
     };
-  
+
     new ApexCharts(document.querySelector('#chart-conversion-clientes'), {
       chart: { type: 'line', height: 200 },
       series: [
@@ -204,25 +211,25 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       xaxis: { categories: mockConversion.meses },
       colors: ['#775dd0']
     }).render();
-  
+
     // Gráfico de Uso de Materiales
     const mockUsoMateriales = {
       materiales: ['Masapan', 'Azucar', 'Vino', 'Arequipe', 'Bicarbonato'],
       uso: [120, 80, 150, 100, 90]
     };
-  
+
     new ApexCharts(document.querySelector('#chart-uso-materiales'), {
       chart: { type: 'pie', height: 200 },
       series: mockUsoMateriales.uso,
       labels: mockUsoMateriales.materiales
     }).render();
-  
+
     // Gráfico de Eficiencia de Producción
     const mockEficienciaProduccion = {
       lineas: ['Línea 1', 'Línea 2', 'Línea 3', 'Línea 4'],
       eficiencia: [85, 90, 80, 95]
     };
-  
+
     new ApexCharts(document.querySelector('#chart-eficiencia-produccion'), {
       chart: { type: 'radar', height: 200 },
       series: [
@@ -230,13 +237,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       ],
       xaxis: { categories: mockEficienciaProduccion.lineas }
     }).render();
-  
+
     // Gráfico de Tiempo Promedio de Despacho
     const mockTiempoDespacho = {
       semanas: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
       tiempoPromedio: [30, 25, 20, 35]
     };
-  
+
     new ApexCharts(document.querySelector('#chart-tiempo-despacho'), {
       chart: { type: 'bar', height: 200 },
       series: [
@@ -245,13 +252,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       xaxis: { categories: mockTiempoDespacho.semanas },
       colors: ['#008ffb']
     }).render();
-  
+
     // Gráfico de Entregas Fallidas
     const mockEntregasFallidas = {
       semanas: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
       entregasFallidas: [2, 5, 3, 4]
     };
-  
+
     new ApexCharts(document.querySelector('#chart-entregas-fallidas'), {
       chart: { type: 'bar', height: 200 },
       series: [
@@ -260,13 +267,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       xaxis: { categories: mockEntregasFallidas.semanas },
       colors: ['#feb019']
     }).render();
-  
+
     // Gráfico de Ranking de Mensajeros
     const mockRankingMensajeros = {
       mensajeros: ['Juan', 'María', 'Pedro', 'Ana'],
       entregas: [50, 45, 40, 60]
     };
-  
+
     new ApexCharts(document.querySelector('#chart-ranking-mensajeros'), {
       chart: { type: 'bar', height: 200 },
       series: [
@@ -275,18 +282,59 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       xaxis: { categories: mockRankingMensajeros.mensajeros },
       colors: ['#00e396']
     }).render();
-  
+
     // Gráfico de Rutas Frecuentes
     const mockRutasFrecuentes = {
       rutas: ['Ruta 1', 'Ruta 2', 'Ruta 3', 'Ruta 4'],
       frecuencia: [20, 15, 25, 10]
     };
-  
+
     new ApexCharts(document.querySelector('#chart-rutas-frecuentes'), {
       chart: { type: 'donut', height: 200 },
       series: mockRutasFrecuentes.frecuencia,
       labels: mockRutasFrecuentes.rutas
     }).render();
   }
-  
+
+  // DMG
+  analizar(tipo: string) {
+    switch (tipo) {
+      case 'VentasMes':
+
+        console.log('Analizando ventas');
+
+        const item = {
+          "startDate": this.fechaInicial + 'T00:00:00.000Z',
+          "endDate": this.fechaFinal + 'T23:59:59.000Z',
+          "tipo": "ventas"
+        }
+
+        const valor = this.katuqintelligenceService.getAnalitycsGraphs(item).subscribe(
+          (data: any) => {
+            console.log(data);
+            this.ventasMesCheck = true;
+            let valor = data.result.replace('```json', '').replace('```', '').trim();
+
+            //estructura de la respuesta
+            // valor = '<p>' + valor + '</p>';
+            // valor.replace(' **', '</p><br><h4>').replace('** ', '</h4><p>');
+            // valor.replace('*', '<br>');
+
+            valor = JSON.parse(valor).respuesta || '';
+
+            // valor = '<p>' + valor + '</p>';
+            // valor.replace(' **', '</p><br><h4>').replace('** ', '</h4><p>');
+            // valor.replace('*', '<br>');
+
+            valor.replace('h4>', 'h5>').replace('h3>', 'h5>').replace('h2>', 'h4>').replace('h1>', 'h4>');
+
+
+            this.ventasRes = valor;
+
+          }
+        );
+
+        break;
+    }
+  }
 }

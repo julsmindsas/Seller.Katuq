@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { BaseService } from '../base.service';
 import { HttpClient } from '@angular/common/http';
 import { Producto } from '../../models/productos/Producto';
-import { Pedido } from 'src/app/components/ventas/modelo/pedido';
-import { POSPedido } from 'src/app/components/pos/pos-modelo/pedido';
+import { Pedido } from '../../../components/ventas/modelo/pedido';
+import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
 @Injectable({
   providedIn: 'root'
 })

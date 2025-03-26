@@ -19,6 +19,7 @@ export class HttpInterceptor2 implements HttpInterceptor {
     private router: Router) { }
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    
     // const urlPermitidas =  environment.urlPermitidas;
     if (request.url.includes('katuq') || request.url.includes('localhost') ||
       request.url.includes('api-shwp4sc4vq-uc.a.run.app') || request.url.includes('https://api.katuq.com')) {
