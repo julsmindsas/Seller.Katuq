@@ -83,7 +83,7 @@
         <a href="{{ !menuItem.type ? null : menuItem.path }}" target="_blank" class="sidebar-link sidebar-title"
           [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
           *ngIf="menuItem.type === 'extTabLink'">
-          <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title }}</span>
+          <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
           <div class="according-menu">
             <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
           </div>
