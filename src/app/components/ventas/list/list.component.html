@@ -5,34 +5,46 @@
             <div class="">
                 <div class="">
                     <div class="">
-
-
                         <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50" [showCurrentPageReport]="true"
                             [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [reorderableColumns]="true"
                             [scrollable]="true" [paginator]="true"
                             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
                             [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
                             styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
-                            [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }" style="font-size: 0.7em; table-layout: auto;">
+                            [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }"
+                            style="font-size: 0.7em; table-layout: auto;">
                             <!-- CAPTION: Filtros y botones arriba de la tabla -->
                             <ng-template pTemplate="caption">
                                 <div style="margin-bottom: 5px;">
 
                                     <div class="row mb-4">
 
-                                        <div class="col-md-2 col-sm-3">
+                                        <div class="date-control col-md-2 col-sm-3">
+                                            <label for="fechaInicial" class="fw-bold text-muted fs-16">{{ 'Fecha Inicial' | translate }}</label>
+                                            <input type="date" #fechaInicialCtrl class="form-control fs-16" [(ngModel)]="fechaInicial"
+                                            (change)="firstEvent($event.target.value)" />
+                                        </div>
+                                        <div class="date-control col-md-2 col-sm-3">
+                                            <label for="fechaFinal" class="fw-bold text-muted fs-16">{{ 'Fecha Final' | translate }}</label>
+                                            <input type="date" #fechaFinalCtrl class="form-control fs-16" [(ngModel)]="fechaFinal"
+                                            (change)="secondEvent($event.target.value)" />
+                                        </div>
+
+                                        <!-- <div class="col-md-2 col-sm-3">
                                             <label for="fechaInicial">Fecha Inicial</label>
                                             <p-calendar id="fechaInicial" dateFormat="dd/mm/yy"
-                                                [(ngModel)]="fechaInicial" inputId="fechaInicial" [showIcon]="true">
+                                                (change)="firstEvent($event.target.value)" [(ngModel)]="fechaInicial"
+                                                inputId="fechaInicial" [showIcon]="true">
                                             </p-calendar>
                                         </div>
 
                                         <div class="col-md-2 col-sm-3">
                                             <label for="fechaFinal">Fecha Final</label>
-                                            <p-calendar id="fechaFinal" dateFormat="dd/mm/yy" [(ngModel)]="fechaFinal"
+                                            <p-calendar id="fechaFinal" dateFormat="dd/mm/yy"
+                                                (change)="secondEvent($event.target.value)" [(ngModel)]="fechaFinal"
                                                 inputId="fechaFinal" [showIcon]="true">
                                             </p-calendar>
-                                        </div>
+                                        </div> -->
 
                                         <div class="col-md-2 col-sm-3">
                                             <label for="busqueda">Buscar pedido</label>
@@ -396,11 +408,12 @@
                                                         {{'Historial pagos' | translate}}
                                                     </span>
                                                 </li>
-                                                <li *ngIf="UserLogged?.email=='jarango@almara.com' || 'danielmauriciogarcia@hotmail.com' || 'dgarciar@gmail.com' " (click)="deleteOrder(pedido)">
+                                                <li *ngIf="UserLogged?.email=='jarango@almara.com' || 'danielmauriciogarcia@hotmail.com' || 'dgarciar@gmail.com' "
+                                                    (click)="deleteOrder(pedido)">
                                                     <i class="fa fa-trash"></i>
-                                                        <span>
-                                                            {{'Eliminar Pedido' | translate}}
-                                                        </span>
+                                                    <span>
+                                                        {{'Eliminar Pedido' | translate}}
+                                                    </span>
                                                 </li>
 
 

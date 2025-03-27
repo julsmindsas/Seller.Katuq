@@ -31,6 +31,9 @@ export class ListOrdersComponent implements OnInit {
   @ViewChild('entrega', { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild('htmlPdf', { static: true }) htmlPdf: ElementRef;
 
+  @ViewChild('fechaInicialCtrl', { static: false }) fechaInicialCtrl: ElementRef;
+  @ViewChild('fechaFinalCtrl', { static: false }) fechaFinalCtrl: ElementRef;
+
   @Output() producirPedido = new EventEmitter<Pedido>();
   @ViewChild('dt1') table: Table;
   @Input() isFromProduction: boolean = false;
@@ -43,7 +46,7 @@ export class ListOrdersComponent implements OnInit {
   formulario: any;
   pedidoSeleccionado: Pedido;
   estadosPago = Object.values(EstadoPago);
-  ciudadSeleccionada: string;
+  ciudadSeleccionada: any;
   ESTADOPAGO: any[]
 
   ESTADOPEDIDO = [
@@ -288,7 +291,7 @@ export class ListOrdersComponent implements OnInit {
       console.log(data);
       this.orders = data;
 
-      this.orders.forEach(order => {
+      this.orders.forEach((order: any) => {
         order.totalPedidoSinDescuento = this.checkPriceScale(order)
         order.totalImpuesto = this.checkIVAPrice(order)
         order.subtotal = order.totalPedidoSinDescuento + order.totalEnvio - order.totalDescuento
@@ -407,39 +410,39 @@ export class ListOrdersComponent implements OnInit {
 
 
   calculateValorBruto() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalPedidoSinDescuento, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.totalPedidoSinDescuento, 0);
   }
 
   calculateDescuento() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalDescuento, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.totalDescuento, 0);
   }
 
   calculateEnvio() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalEnvio, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.totalEnvio, 0);
   }
 
   calculateTotal() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalPedididoConDescuento, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.totalPedididoConDescuento, 0);
   }
 
   calculateFaltaPorPagar() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.faltaPorPagar, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.faltaPorPagar, 0);
   }
 
   calculateTotalEnvio() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalEnvio, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.totalEnvio, 0);
   }
 
   calculateAnticipo() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.anticipo, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.anticipo, 0);
   }
 
   calculateSubtotal() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.subtotal, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.subtotal, 0);
   }
 
   calculateTotalImpuestos() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalImpuesto, 0);
+    return this.orders.reduce((acc, pedido: any) => acc + pedido.totalImpuesto, 0);
   }
 
   pdfOrder(content, order: Pedido) {
@@ -552,7 +555,7 @@ export class ListOrdersComponent implements OnInit {
     const idsToRemove = ['Encabezado', 'piepagina', 'publicidad'];
 
     idsToRemove.forEach(id => {
-      const element = tempDiv.querySelector(`#${id}`);
+      const element: any = tempDiv.querySelector(`#${id}`);
       if (element) {
         element.parentNode.removeChild(element);
       }
@@ -782,7 +785,7 @@ export class ListOrdersComponent implements OnInit {
     });
   }
 
-  addProductToCart(content, order: Pedido) {
+  addProductToCart(content: any, order: Pedido) {
     this.ciudadSeleccionada = order.envio?.ciudad;
     this.modalService.open(content, {
       size: 'xl',
@@ -798,7 +801,7 @@ export class ListOrdersComponent implements OnInit {
       if (configuracionResult == 'Cross click') {
         return;
       }
-      order.carrito.push(configuracionResult);
+      order.carrito?.push(configuracionResult);
       // actualizar valores del pedido
       order = this.actualizarValoresPedido(order);
 
@@ -816,9 +819,9 @@ export class ListOrdersComponent implements OnInit {
   }
 
   deleteProductToCart(order: Pedido, carrito: Carrito) {
-    const index = order.carrito.findIndex((carrito) => carrito.producto.identificacion.referencia === carrito.producto.identificacion.referencia);
+    const index: any = order.carrito?.findIndex((carrito: any) => carrito.producto.identificacion.referencia === carrito.producto.identificacion.referencia);
     if (index !== -1) {
-      order.carrito.splice(index, 1);
+      order.carrito?.splice(index, 1);
     }
     this.editOrder(order);
   }
@@ -894,7 +897,7 @@ export class ListOrdersComponent implements OnInit {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
-      company: JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial,
+      company: JSON.parse(sessionStorage.getItem("currentCompany")!).nomComercial,
       estadoProceso: this.isFromProduction ? [EstadoProceso.SinProducir] : ['Todos']
     }
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
@@ -976,4 +979,28 @@ export class ListOrdersComponent implements OnInit {
     const workbook: XLSX.WorkBook = { Sheets: { 'Pedidos': worksheet }, SheetNames: ['Pedidos'] };
     XLSX.writeFile(workbook, 'Pedidos.xlsx');
   }
+
+
+  firstEvent(ev): void {
+    // console.debug(ev);
+    debugger
+    if (ev > this.fechaFinal) {
+      this.fechaFinal = ev;
+      this.clearFilter();
+    }
+  }
+
+  secondEvent(ev): void {
+    // console.debug(ev);
+    debugger
+    if (ev < this.fechaInicial) {
+      this.fechaInicial = ev;
+      this.clearFilter();
+    }
+  }
+
+  clearFilter(): void {
+    this.orders = [];
+  }
+
 }
