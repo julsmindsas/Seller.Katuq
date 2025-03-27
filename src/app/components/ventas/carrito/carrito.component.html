@@ -3,7 +3,7 @@
     <div class="col-sm-12">
       <div class="card">
         <div class="card-header">
-          <h5>Carrito</h5>
+          <h5 translate="Carrito">Carrito</h5>
         </div>
         <div class="card-body">
           <div class="row">
@@ -12,20 +12,19 @@
                 
                 <tbody>
                   <tr *ngIf="productos.length === 0">
-                    <td colspan="6" class="text-center">No hay productos en el carrito</td>
+                    <td colspan="6" class="text-center" translate="No hay productos en el carrito">No hay productos en el carrito</td>
                   </tr>
                   <ng-container *ngFor="let itemCarrito of productos">
                     <tr>
-                      <th>Producto</th>
-                      <th>Nombre Producto</th>
-                      <th>Precio</th>
-                      <th>Cantidad</th>
-                      <th>Accion</th>
-                      <th>Total</th>
+                      <th translate="Producto">Producto</th>
+                      <th translate="Nombre Producto">Nombre Producto</th>
+                      <th translate="Precio">Precio</th>
+                      <th translate="Cantidad">Cantidad</th>
+                      <th translate="Accion">Acción</th>
+                      <th translate="Total">Total</th>
                     </tr>
                     <tr>
                       <td>
-                        <!-- <img class="img-fluid img-40" src="assets/images/product/1.png" alt="#"> -->
                         <img class="img-fluid img-40"
                           *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
                           src="{{itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls}}"
@@ -64,20 +63,15 @@
                         </div>
                       </td>
                       <td>
-                        <!-- <i data-feather="x-circle" class="" ngbTooltip="Eliminar"></i> -->
-                        <!-- </div> -->
-
                         <i class="fa fa-trash-o" style="cursor: pointer;" title="Eliminar" (click)="removeThisProduct(itemCarrito)"></i>
                       </td>
-                      <!-- <div (click)="removeThisProduct(itemCarrito)" style="cursor: pointer;"> -->
-
                       <td>{{ checkPriceScale(itemCarrito) *
                         (itemCarrito?.cantidad) | currency:'USD':'symbol':'1.0-0' }}</td>
                     </tr>
 
                     <ng-container *ngIf="itemCarrito.configuracion.adiciones.length > 0">
                       <tr *ngIf="checkAditionPrice(itemCarrito)">
-                        <span style="color:black;">Adiciones</span>
+                        <span translate="Adiciones" style="color:black;">Adiciones</span>
                       </tr>
                       <tr *ngFor="let item of itemCarrito?.configuracion?.adiciones">
                         <td></td>
@@ -89,7 +83,7 @@
                       </tr>
                     </ng-container>
                     <ng-container *ngIf="itemCarrito.configuracion.preferencias.length > 0">
-                      <tr *ngIf="checkPreferencePrice(itemCarrito)"><span style="color:black;">Preferencias</span></tr>
+                      <tr *ngIf="checkPreferencePrice(itemCarrito)"><span translate="Preferencias" style="color:black;">Preferencias</span></tr>
                       <tr *ngFor="let itempref of itemCarrito?.configuracion?.preferencias">
                         <ng-container *ngIf="itempref.precioTotalConIva !== 0">
                           <td></td>
@@ -108,16 +102,16 @@
                     <td colspan="2">
                       <div class="input-group">
                         <input class="form-control mr-2" maxlength="10" [(ngModel)]="cupon" type="text"
-                          placeholder="Ingresa codigo de cupón"><a class="btn btn-primary"
-                          (click)="validarCuponYAplica()">Aplicar</a>
+                          placeholder="{{ 'Ingresa codigo de cupón' | translate }}"><a class="btn btn-primary"
+                          (click)="validarCuponYAplica()" translate="Aplicar">Aplicar</a>
                       </div>
                     </td>
                     <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600">Porcentaje descuento aplicable :</span></h6>
+                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Porcentaje descuento aplicable :">Porcentaje descuento aplicable :</span></h6>
                     </td>
                     <td>{{porcentajeDescuento}}%</td>
                     <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600">Total sin descuento :</span></h6>
+                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Total sin descuento :">Total sin descuento :</span></h6>
                     </td>
                     <td><span>{{getTotalProductPriceInCart() |currency:'USD':'symbol':'1.0-0'}} </span></td>
                   </tr>
@@ -125,7 +119,7 @@
                     <td colspan="4">
                     </td>
                     <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600">Descuento :</span></h6>
+                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Descuento :">Descuento :</span></h6>
                     </td>
                     <td><span>{{ valorDescuento |currency:'USD':'symbol':'1.0-0'}} </span></td>
                   </tr>
@@ -133,7 +127,7 @@
                     <td colspan="4">
                     </td>
                     <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600">Total con descuento :</span></h6>
+                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Total con descuento :">Total con descuento :</span></h6>
                     </td>
                     <td><span>{{ getTotalProductPriceWithDescountInCart() |currency:'USD':'symbol':'1.0-0'}} </span>
                     </td>
@@ -143,15 +137,8 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td><span><label>Estos valores incluyen impuestos, no incluye envío.</label></span></td>
+                    <td><span><label translate="Estos valores incluyen impuestos, no incluye envío.">Estos valores incluyen impuestos, no incluye envío.</label></span></td>
                   </tr>
-                  <!-- <tr>
-                    <td colspan="4">
-                    </td>
-                    <td class="text-right"><a class="btn btn-secondary cart-btn-transform"
-                        href="javascript:void(0);">continuar comprarndo</a></td>
-                    <td><a class="btn btn-success cart-btn-transform" href="">check out</a></td>
-                  </tr> -->
                 </tbody>
               </table>
             </div>

@@ -15,18 +15,18 @@
         <!-- Header Standar -->
         <div class="row col-12 m-2">
           <div class="col-6">
-            <p class="text-left fc-info fs-24 m-0 p-0">Roles</p>
+            <p class="text-left fc-info fs-24 m-0 p-0">{{ 'Roles' | translate }}</p>
             <p class="text-left text-muted fs-18 m-0 p-0">
-              Listado de roles para definir permisos de los usuarios.
+              {{ 'Listado de roles para definir permisos de los usuarios.' | translate }}
             </p>
           </div>
 
           <div class="col-6 p-3" style="text-align: end">
             <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearRol()">
-              <i placement="top" ngbTooltip="Nuevo"
+              <i placement="top" ngbTooltip="{{ 'Nuevo' | translate }}"
                 style="font-size: 18px; color: white; cursor: pointer;"
                 class="icofont icofont-plus"></i>&nbsp;
-              <span style="color: white;">{{'Crear Rol' | translate}}</span>
+              <span style="color: white;">{{ 'Crear Rol' | translate }}</span>
             </button>
             <button class="btn btn-primary ml-3 mb-2 mr-5">
               <i class="icofont icofont-file-excel"></i>&nbsp;{{ 'Excel' | translate }}
@@ -36,8 +36,6 @@
         <!-- FIN Header Standar -->
 
         <div class="card-body custom-datatable" *ngIf="!cargando">
-          
-
           <p-table #dt [value]="roles" [paginator]="true" [rows]="10" [resizableColumns]="true" [scrollable]="true"
             scrollHeight="flex" [loading]="cargando" [rowsPerPageOptions]="[10, 20, 50]" [sortField]="'rol'"
             [sortOrder]="1" styleClass="p-datatable-gridlines p-datatable-striped"
@@ -45,21 +43,11 @@
 
             <ng-template pTemplate="header">
               <tr>
-                <th class="text-center" pSortableColumn="rol">{{ 'Rol' | translate }}
-                  <!-- <p-sortIcon field="rol"></p-sortIcon> -->
-                </th>
-                <th class="text-center" pSortableColumn="nombre">{{ 'Nombre' | translate }}
-                  <!-- <p-sortIcon field="nombre"></p-sortIcon> -->
-                </th>
-                <th class="text-center" pSortableColumn="empresa">{{ 'Empresa' | translate }}
-                  <!-- <p-sortIcon field="empresa"></p-sortIcon> -->
-                </th>
-                <th class="text-center" pSortableColumn="date_edit">{{ 'Fecha de Edición' | translate }}
-                  <!-- <p-sortIcon field="date_edit"></p-sortIcon> -->
-                </th>
-                <th class="text-center" pSortableColumn="user_edit">{{ 'Usuario que Editó' | translate }}
-                  <!-- <p-sortIcon field="user_edit"></p-sortIcon> -->
-                </th>
+                <th class="text-center" pSortableColumn="rol">{{ 'Rol' | translate }}</th>
+                <th class="text-center" pSortableColumn="nombre">{{ 'Nombre' | translate }}</th>
+                <th class="text-center" pSortableColumn="empresa">{{ 'Empresa' | translate }}</th>
+                <th class="text-center" pSortableColumn="date_edit">{{ 'Fecha de Edición' | translate }}</th>
+                <th class="text-center" pSortableColumn="user_edit">{{ 'Usuario que Editó' | translate }}</th>
                 <th class="text-center">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
@@ -72,11 +60,11 @@
                 <td class="text-center">{{ role?.date_edit | date:'dd/MM/yyyy' }}</td>
                 <td class="text-center">{{ role?.user_edit }}</td>
                 <td class="text-center">
-                  <i placement="top" ngbTooltip="{{'Edit' | translate}}"
+                  <i placement="top" ngbTooltip="{{ 'Edit' | translate }}"
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                     class="icofont icofont-pencil-alt-5 fc-primary" (click)="editarRol(role)">
                   </i>
-                  <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
+                  <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;" class="icofont icofont-trash fc-danger"
                     (click)="eliminarRol(role)">
                   </i>
@@ -92,7 +80,7 @@
 
             <ng-template pTemplate="summary">
               <div class="flex align-items-center justify-content-between">
-                Total en esta consulta: {{roles ? roles.length : 0 }} registros.
+                {{ 'Total en esta consulta' | translate }}: {{roles ? roles.length : 0 }} {{ 'registros' | translate }}.
               </div>
             </ng-template>
           </p-table>

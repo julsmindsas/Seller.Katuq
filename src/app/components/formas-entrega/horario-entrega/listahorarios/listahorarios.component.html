@@ -1,4 +1,4 @@
-<app-breadcrumb [title]="'Horario Entrega'" [items]="['Maestros']" [active_item]="'Horario Entrega'"></app-breadcrumb>
+<app-breadcrumb [title]="'Horario Entrega' | translate" [items]="['Maestros' | translate]" [active_item]="'Horario Entrega' | translate"></app-breadcrumb>
 <div class="container-fluid">
   <div class="row">
     <div class="col-sm-12">
@@ -19,7 +19,7 @@
 
               <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="create()">
                 <span style="color: white;">{{'Crear horario de entrega' | translate}}</span>
-                <i placement="top" ngbTooltip="Nuevo"
+                <i placement="top" ngbTooltip="{{'Nuevo' | translate}}"
                   style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
                   class="icofont icofont-plus"></i>
               </button>
@@ -29,37 +29,37 @@
           <div class="col-12">
             <ngx-datatable #table class='bootstrap' [rows]="items" [columns]="columns" [columnMode]="'force'"
               [headerHeight]="50" [footerHeight]="50" [rowHeight]="'auto'">
-              <ngx-datatable-column name="Posicion">
+              <ngx-datatable-column name="{{'Posicion' | translate}}">
                 <ng-template ngx-datatable-cell-template let-value="value">
                   {{value}}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Nombre">
+              <ngx-datatable-column name="{{'Nombre' | translate}}">
                 <ng-template ngx-datatable-cell-template let-value="value">
                   {{value}}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="HoraInicio">
+              <ngx-datatable-column name="{{'HoraInicio' | translate}}">
                 <ng-template ngx-datatable-cell-template let-value="value">
                   {{value}}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="HoraFin">
+              <ngx-datatable-column name="{{'HoraFin' | translate}}">
                 <ng-template ngx-datatable-cell-template let-value="value">
                   {{value}}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="colorHorario">
+              <ngx-datatable-column name="{{'colorHorario' | translate}}">
                 <ng-template ngx-datatable-cell-template let-value="value">
                   <div [style.background]="value" style="max-width: 50%;">{{value}}</div>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Activo">
+              <ngx-datatable-column name="{{'Activo' | translate}}">
                 <ng-template ngx-datatable-cell-template let-value="value">
-                  {{value == true ? 'Si': 'No'}}
+                  {{value == true ? ('Si' | translate) : ('No' | translate)}}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Acciones">
+              <ngx-datatable-column name="{{'Acciones' | translate}}">
                 <ng-template ngx-datatable-cell-template let-value="value" let-row="row">
                   <i placement="top" ngbTooltip="{{'Edit' | translate}}"
                   style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"

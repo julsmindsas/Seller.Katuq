@@ -1,4 +1,4 @@
-<app-breadcrumb [title]="'Inventario Catalogo'" [items]="['Inventarios']" [active_item]="'Catalogo'"></app-breadcrumb>
+<app-breadcrumb [title]="'Inventario Catalogo' | translate" [items]="['Inventarios' | translate]" [active_item]="'Catalogo' | translate"></app-breadcrumb>
 
 <div class="container-fluid">
     <div class="row">
@@ -89,7 +89,7 @@
                         [showJumpToPageDropdown]="true" [showPageLinks]="false"></p-paginator>
                     <br />
                     <button class="btn btn-primary" style="color: white;" (click)="exportToExcel()">
-                        <i class="icofont icofont-file-excel"></i> Excel
+                        <i class="icofont icofont-file-excel"></i> {{ 'Excel' | translate }}
                     </button>
                 </div>
             </div>
@@ -102,7 +102,7 @@
 <ng-template #inventoryModal let-modal>
     <!-- Modal header -->
     <div class="modal-header">
-        <h5 class="modal-title text-center mb-4">Gestionar Inventario por bodegas
+        <h5 class="modal-title text-center mb-4">{{ 'Gestionar Inventario por bodegas' | translate }}
             ({{selectedRow.identificacion?.referencia}})</h5>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
             <span aria-hidden="true">&times;</span>
@@ -114,40 +114,40 @@
         <!-- Sección de otros Bodegas Principales -->
         <div class="other-channels-section">
             <h4 class="section-title">
-                {{ 'Inventario global' }}
+                {{ 'Inventario global' | translate }}
                 <span style="text-align: center;"
                     [ngClass]="{'outofstock': selectedRow.disponibilidad.cantidadDisponible === 0, 'lowstock': (selectedRow.disponibilidad.cantidadDisponible > 0 && selectedRow.disponibilidad.cantidadDisponible < 10),'instock': selectedRow.disponibilidad.cantidadDisponible > 10}">
                     {{ selectedRow.disponibilidad.cantidadDisponible }}
                 </span>
             </h4>
             <hr class="divider my-3">
-            <h5 class="section-title">Bodegas Principales</h5>
+            <h5 class="section-title">{{ 'Bodegas Principales' | translate }}</h5>
             <div class="other-channels-grid">
                 <div class="other-channel-item">
                     <div class="channel-label">
                         <i class="fas fa-store-alt me-2"></i>
-                        <label class="mb-0">Punto de Venta</label>
+                        <label class="mb-0">{{ 'Punto de Venta' | translate }}</label>
                     </div>
                     <input type="number" class="form-control input-inventario"
-                        [(ngModel)]="inventarioPorMarketplace.puntoDeVenta" placeholder="Cantidad"
+                        [(ngModel)]="inventarioPorMarketplace.puntoDeVenta" placeholder="{{ 'Cantidad' | translate }}"
                         (input)="actualizarInventarioTemp('puntoDeVenta', inventarioPorMarketplace.puntoDeVenta)" />
                 </div>
                 <div class="other-channel-item">
                     <div class="channel-label">
                         <i class="fas fa-warehouse me-2"></i>
-                        <label class="mb-0">Seller Center</label>
+                        <label class="mb-0">{{ 'Seller Center' | translate }}</label>
                     </div>
                     <input type="number" class="form-control input-inventario"
-                        [(ngModel)]="inventarioPorMarketplace.sellerCenter" placeholder="Cantidad"
+                        [(ngModel)]="inventarioPorMarketplace.sellerCenter" placeholder="{{ 'Cantidad' | translate }}"
                         (input)="actualizarInventarioTemp('sellerCenter', inventarioPorMarketplace.sellerCenter)" />
                 </div>
                 <div class="other-channel-item">
                     <div class="channel-label">
                         <i class="fas fa-globe me-2"></i>
-                        <label class="mb-0">Página Web</label>
+                        <label class="mb-0">{{ 'Página Web' | translate }}</label>
                     </div>
                     <input type="number" class="form-control input-inventario"
-                        [(ngModel)]="inventarioPorMarketplace.paginaWeb" placeholder="Cantidad"
+                        [(ngModel)]="inventarioPorMarketplace.paginaWeb" placeholder="{{ 'Cantidad' | translate }}"
                         (input)="actualizarInventarioTemp('paginaWeb', inventarioPorMarketplace.paginaWeb)" />
                 </div>
             </div>
@@ -158,14 +158,14 @@
 
         <!-- Sección de marketplaces -->
         <div class="marketplaces-section" *ngIf="bodegasActivasMarketPlaces.length > 0">
-            <h6 class="section-title">Marketplaces</h6>
+            <h6 class="section-title">{{ 'Marketplaces' | translate }}</h6>
             <div class="marketplace-grid">
                 <div *ngFor="let campo of bodegasActivasMarketPlaces; let i = index" class="marketplace-item">
                     <div class="marketplace-label">
                         <label class="mb-0">{{ campo.nameMP }}</label>
                     </div>
                     <input type="number" class="form-control input-inventario" [(ngModel)]="inventarioPorMarketplace[i]"
-                        placeholder="Cantidad" (input)="actualizarInventarioTemp(i, inventarioPorMarketplace[i])" />
+                        placeholder="{{ 'Cantidad' | translate }}" (input)="actualizarInventarioTemp(i, inventarioPorMarketplace[i])" />
                 </div>
             </div>
         </div>
@@ -173,7 +173,7 @@
 
     <!-- Modal footer -->
     <div class="modal-footer text-center mt-4">
-        <button class="btn btn-primary w-100" (click)="guardarInventario()">Guardar Cambios</button>
+        <button class="btn btn-primary w-100" (click)="guardarInventario()">{{ 'Guardar Cambios' | translate }}</button>
     </div>
 
 </ng-template>
@@ -181,8 +181,8 @@
 
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title" id="movimientosModalLabel">Movimientos de Inventario</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <h5 class="modal-title" id="movimientosModalLabel">{{ 'Movimientos de Inventario' | translate }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'Cerrar' | translate }}"></button>
         </div>
 
         <div class="modal-body">
@@ -191,13 +191,13 @@
                 <table class="table table-hover align-middle text-center">
                     <thead class="table-light">
                         <tr>
-                            <th>Tipo</th>
-                            <th>Cantidad</th>
-                            <th>Fecha</th>
-                            <th>Usuario</th>
-                            <th>Origen</th>
-                            <th>Documento Cliente</th>
-                            <th>Orden ID</th>
+                            <th>{{ 'Tipo' | translate }}</th>
+                            <th>{{ 'Cantidad' | translate }}</th>
+                            <th>{{ 'Fecha' | translate }}</th>
+                            <th>{{ 'Usuario' | translate }}</th>
+                            <th>{{ 'Origen' | translate }}</th>
+                            <th>{{ 'Documento Cliente' | translate }}</th>
+                            <th>{{ 'Orden ID' | translate }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -223,7 +223,7 @@
         </div>
 
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cerrar' | translate }}</button>
         </div>
     </div>
 

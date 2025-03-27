@@ -11,10 +11,8 @@
 
                 <div class="row mt-2" style="margin-left: 20px">
                     <div class="col-12">
-                        <p class="text-left fw-bold fs-24 m-0 p-0">Productos</p>
-                        <p class="text-left text-muted fs-18 m-0 p-0">
-                            Listado de productos creados.
-                        </p>
+                        <p class="text-left fw-bold fs-24 m-0 p-0">{{ "Productos" | translate }}</p>
+                        <p class="text-left text-muted fs-18 m-0 p-0">{{ "Listado de productos creados." | translate }}</p>
                     </div>
                 </div>
 
@@ -22,24 +20,20 @@
                     <div class="row col-12">
                         <div class="col-6">
                             <input type="text" class="filter-ngx form-control mb-3" style="width: 100% !important"
-                                placeholder="{{
-                                    'Escribe lo que quieres filtrar y luego pulsa enter para accionar'
-                                        | translate
-                                }}" (keyup)="updateFilter($event)" />
+                                placeholder="{{ 'Escribe lo que quieres filtrar y luego pulsa enter para accionar' | translate }}" (keyup)="updateFilter($event)" />
                         </div>
                         <div class="col-6" style="text-align: end">
-                            <button class="btn btn-primary btn-previous mr-1" type="button" (click)="crearProducto()">
+                            <button class="btn btn-primary btn-previous mr-1" type="button" (click)="crearProducto()"
+                                ngbTooltip="{{ 'Crear Nuevo Producto' | translate }}">
                                 <i placement="top" ngbTooltip="Crear Nuevo Producto" style="
                                         font-size: 18px;
                                         color: white;
                                         cursor: pointer;
                                     " class="icofont icofont-plus"></i>&nbsp;
-                                <span style="color: white">{{
-                                    "Crear Producto" | translate
-                                    }}</span>
+                                <span style="color: white">{{ "Crear Producto" | translate }}</span>
                             </button>
                             <button class="btn btn-primary mr-1" style="color: white" (click)="exportToExcel()">
-                                <i class="icofont icofont-file-excel"></i>&nbsp;Excel
+                                <i class="icofont icofont-file-excel"></i>&nbsp;{{ "Excel" | translate }}
                             </button>
                         </div>
                     </div>
