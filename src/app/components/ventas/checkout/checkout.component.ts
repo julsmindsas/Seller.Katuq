@@ -72,9 +72,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
     this.singleton.refreshCart().subscribe((data: any) => {
       this.pedido.carrito = data;
       this.pedido.carrito = [...this.pedido.carrito];
-      this.payment.pauymentWompi(this.pedido).then((data: any) => {
-        this.signature = data;
-      });
+      // this.payment.pauymentWompi(this.pedido).then((data: any) => {
+      //   this.signature = data;
+      // });
     });
   }
 

@@ -22,6 +22,7 @@ import { ToastrService } from "ngx-toastr";
 import { UtilsService } from "../../../shared/services/utils.service";
 import { FacturacionIntegracionService } from "../../../shared/services/integraciones/facturas/facturacion.service";
 import { VoiceInteractionComponent } from 'src/app/shared/components/voice-interaction/voice-interaction.component';
+import { environment } from "../../../../environments/environment";
 
 @Component({
   selector: "app-pedido",
@@ -1119,7 +1120,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.productos.cargarTodo();
     }
     console.log(`Ciudad seleccionada: ${this.pedidoGral.envio.ciudad}`);
-    
+
     this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.pedidoGral.envio.ciudad);
     if (this.datosEntregas?.length === 0) {
       Swal.fire({
@@ -1214,87 +1215,133 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
     this.cambiarEstadoSegunLosProductos();
 
+    // Verificar la forma de pago
+    const formaPago = this.pedidoGral.formaDePago?.toLowerCase();
+    if (formaPago === 'wompi') {
+      // Configurar el widget de Wompi
+      this.iniciarPagoConWompi().then(pagoExitoso => {
+        if (pagoExitoso) {
+          // El pago fue exitoso, continuar con la creación del pedido
+          this.continuarCreacionPedido();
+        } else {
+          // El pago fue rechazado o cancelado
+          Swal.fire({
+            title: "Pago no completado",
+            text: "No se pudo completar el pago con Wompi. El pedido no ha sido creado.",
+            icon: "error",
+            confirmButtonText: "Ok",
+          });
+        }
+      }).catch(error => {
+        console.error("Error en el proceso de pago con Wompi:", error);
+        Swal.fire({
+          title: "Error en el pago",
+          text: "Ocurrió un error durante el proceso de pago. Por favor intente nuevamente.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      });
+    } else {
+      // Si no es Wompi, continuar con el proceso normal de creación de pedido
+      this.continuarCreacionPedido();
+    }
+  }
+
+  // Nuevo método para iniciar el pago con Wompi
+  private iniciarPagoConWompi(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      try {
+        // Configuración del widget de Wompi
+        const amountInCents = Math.round(this.pedidoGral?.totalPedididoConDescuento ?? 0 * 100); // Convertir a centavos
+
+        // Asegúrate de tener estos datos disponibles en tu pedido o configuración
+        // const wompiPublicKey = environment.wompi.public_key || 'pub_test_YOUR_PUBLIC_KEY';
+        const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';  //|| 'pub_test_YOUR_PUBLIC_KEY';
+
+        // Crear referencia única para el pago
+        const reference = `${this.pedidoGral.nroPedido}-${new Date().getTime()}`;
+
+        // Configurar datos del cliente para el formulario de pago
+        const customerData = {
+          fullName: this.pedidoGral.cliente?.nombres_completos || '',
+          phoneNumber: this.pedidoGral.cliente?.numero_celular_comprador || '',
+          phoneNumberPrefix: this.pedidoGral.cliente?.indicativo_celular_comprador || '57',
+          email: this.pedidoGral.cliente?.correo_electronico_comprador || ''
+        };
+
+        // Inicializar el widget de Wompi
+        const checkout = new window['WidgetCheckout']({
+          currency: 'COP',
+          amountInCents: amountInCents,
+          reference: reference,
+          publicKey: wompiPublicKey,
+          redirectUrl: 'http://localhost:4200/payment-callback',//environment.wompi.redirectURL, // URL a la que Wompi redirigirá después del pago
+          taxInCents: {
+            vat: Math.round((this.pedidoGral?.totalImpuesto ?? 0) * 100), // IVA, ajustar según necesidades
+            consumption: 0 // Impuesto al consumo, ajustar según necesidades
+          },
+          customerData: customerData,
+          // Puedes agregar más configuraciones según la documentación de Wompi
+        });
+
+        // Abrir el widget y manejar la respuesta
+        checkout.open((result) => {
+          const { transaction } = result;
+
+          if (transaction.status === 'APPROVED') {
+            // Almacenar los datos de la transacción en el pedido
+            this.pedidoGral.transaccionId = transaction.id;
+            this.pedidoGral.estadoPago = EstadoPago.Aprobado;
+            this.pedidoGral.PagosAsentados = [{
+              fechaHoraAprobacionRechazo: new Date().toISOString(),
+              numeroPedido: reference,
+              numeroComprobante: transaction.id,
+              estadoVerificacion: 'Aprobado',
+              formaPago: 'Wompi',
+              valorRegistrado: this.pedidoGral.totalPedididoConDescuento || 0
+            }];
+
+            resolve(true); // Pago exitoso
+          } else {
+            this.pedidoGral.estadoPago = EstadoPago.Rechazado;
+            // Puedes guardar más detalles sobre el rechazo si lo necesitas
+            resolve(false); // Pago rechazado
+          }
+        }, (error) => {
+          console.error('Error en el widget de Wompi:', error);
+          reject(error);
+        });
+
+      } catch (error) {
+        console.error('Error al inicializar el widget de Wompi:', error);
+        reject(error);
+      }
+    });
+  }
+
+  // Método para continuar con la creación del pedido después de verificar el pago
+  private continuarCreacionPedido() {
+    const context = this;
     context.ventasService.validateNroPedido(context.pedidoGral.nroPedido as string).subscribe({
       next: (res: any) => {
         this.showPedidoConfirm = true;
         this.showSteper = false;
-        if (res.nextConsecutive !== -1) {
-          const texto = this.empresaActual.nomComercial.toString();
-          const ultimasLetras = texto.substring(texto.length - 3);
-          context.pedidoGral.nroPedido = ultimasLetras + '-' + res.nextConsecutive;
-        }
+        // ...existing code...
         const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
-        //cambiar el estado de los productos que no se producen
-        context.pedidoGral.carrito.forEach((x) => {
-          if (!x.producto.crearProducto.paraProduccion) {
-            x.estadoProcesoProducto = EstadoProceso.ParaDespachar;
-          }
-        });
+
+        // ...existing code...
         context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
+          // ...existing code...
           next: (res: any) => {
-
+            // ...existing code...
             const orderSiigo = context.facturacionElectronicaService.transformarPedidoLite(context.pedidoGral);
-            console.log('oderSiigo', orderSiigo);
             context.cartService.clearCart();
-            context.pedidoSinGuardar = false;
-            // context.ventasService.removePreOrder(context.pedidoGral.referencia);
-            Swal.fire({
-              title: "Pedido creado!",
-              text: "Pedido creado con exito",
-              icon: "success",
-              confirmButtonText: "Ok",
-            });
-            // if (context.generarFacturaElectronica) {
-            if (false) { // mientras organizo el tema de facturacion electronica 
+            context.pedidoSinGuardar = false
 
-              context.facturacionElectronicaService.createFacturaSiigo(orderSiigo).subscribe({
-                next: (value: any) => {
-                  if (value.isSuccess) {
-                    Swal.fire({
-                      title: "Pedido creado!",
-                      text: `Pedido creado con exito y factura ${value.result.name} creada`,
-                      icon: "success",
-                      confirmButtonText: "Ok",
-                    });
-                  }
-                  else {
-                    Swal.fire({
-                      title: "Error al crear el pedido y generar el pedido",
-                      text: value.result.error[0].message,
-                      icon: "error",
-                      confirmButtonText: "Ok",
-                    });
-                  }
-                },
-                error: (err: any) => {
-                  console.error(err);
-                  Swal.fire({
-                    title: "Error!",
-                    text: "Error al crear el pedido y generar el pedido",
-                    icon: "error",
-                    confirmButtonText: "Ok",
-                  });
-                }
-              })
-            }
-            else {
-              Swal.fire({
-                title: "Pedido creado!",
-                text: "Pedido creado con exito",
-                icon: "success",
-                confirmButtonText: "Ok",
-              });
-            }
-
+            // ...existing code...
           },
           error: (err: any) => {
-            console.error(err);
-            Swal.fire({
-              title: "Error!",
-              text: "Error al crear el pedido",
-              icon: "error",
-              confirmButtonText: "Ok",
-            });
+            // ...existing code...
           }
         });
 
@@ -1305,11 +1352,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         console.log(err);
       },
     });
-
-
   }
+
   cambiarEstadoSegunLosProductos() {
-    const siTodosSonParaProducir = this.pedidoGral.carrito.some(x =>
+    const siTodosSonParaProducir = this.pedidoGral?.carrito.some(x =>
       x.producto.crearProducto.paraProduccion
     );
 

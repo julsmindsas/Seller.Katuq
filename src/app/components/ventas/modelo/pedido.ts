@@ -3,6 +3,7 @@ import { UserLite } from "../../../shared/models/User/UserLite";
 import { PagoInformation } from "../../pos/pos-modelo/pedido";
 
 export interface Pedido {
+    transaccionId?: any;
     entregado?: UserLite;
     transportador?: any;
     nroShippingOrder?: string;
@@ -46,23 +47,23 @@ export interface Pedido {
     pagoInformation?: PagoInformation,
 }
 export interface Pago {
-    fecha: string;
-    formaPago: string;
-    valor: number;
-    numeroComprobante: string;
-    archivo: string;
-    notas: string;
-    numeroPedido: string;
-    fechaTransaccion: string;
-    valorTotalVenta: number;
-    valorRegistrado: number;
-    valorRestante: number;
-    archivoEvidencia: string;
-    usuarioRegistro: string;
-    estadoVerificacion: string;
-    fechaHoraSistema: string;
-    fechaHoraCarga: string;
-    fechaHoraAprobacionRechazo: string;
+    fecha?: string;
+    formaPago?: string;
+    valor?: number;
+    numeroComprobante?: string;
+    archivo?: string;
+    notas?: string;
+    numeroPedido?: string;
+    fechaTransaccion?: string;
+    valorTotalVenta?: number;
+    valorRegistrado?: number;
+    valorRestante?: number;
+    archivoEvidencia?: string;
+    usuarioRegistro?: string;
+    estadoVerificacion?: string;
+    fechaHoraSistema?: string;
+    fechaHoraCarga?: string;
+    fechaHoraAprobacionRechazo?: string;
 }
 
 export enum EstadoPago {
