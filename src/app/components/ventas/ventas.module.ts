@@ -35,6 +35,11 @@ import { ClientesListaComponent } from './clientes/lista/clientes-lista.componen
 import { CargaVentasComponent } from './carga-ventas/carga-ventas.component';
 import { HttpClientModule } from '@angular/common/http';
 import { VoiceInteractionModule } from '../../shared/components/voice-interaction/voice-interaction.module';
+import { PosComponent } from './pos2/pos.component';
+import { ProductCategoryComponent } from './pos2/widgets/product-category/product-category.component';
+import { ProductComponent } from './pos2/widgets/product/product.component';
+import { CreateCustomerModalComponent } from './pos2/widgets/create-customer-modal/create-customer-modal.component';
+import { PosCheckoutComponent } from './pos2/widgets/pos-checkout/pos-checkout.component';
 
 @NgModule({
   imports: [
@@ -76,7 +81,12 @@ import { VoiceInteractionModule } from '../../shared/components/voice-interactio
     NotasComponent, 
     ConfirmComponent, 
     AsentarpagomanualComponent,
-    CargaVentasComponent
+    CargaVentasComponent,
+    PosComponent,
+    ProductCategoryComponent,
+    ProductComponent,
+    CreateCustomerModalComponent,
+    PosCheckoutComponent
   ],
   exports: [
     CrearVentasComponent,

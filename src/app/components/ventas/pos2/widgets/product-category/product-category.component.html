@@ -1,0 +1,23 @@
+<div class="card">
+
+
+    <!-- <app-card [headerTitle]="'Product Categories'" [padding]="false" [rightSideDetails]="true" [cardBodyClass]="'pt-0'"> -->
+    <a class="c-o-light" [routerLink]="['/product/list']" header3>View All </a>
+
+    <div class="slider-wrapper arrow-round">
+        <ks-carousel [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
+        </ks-carousel>
+        <!-- <owl-carousel-o class="shop-category-slider">
+            <div *ngFor="category of productCategory; track category">
+                <ng-template carouselSlide>
+                    <a class="shop-box" href="javascript:void(0)">
+                        <img [src]="category.category_image" [alt]="category.category_name">
+                    </a>
+                    <span class="m-t-10 category-title f-w-500 text-gray">category.category_name</span>
+                </ng-template>
+            </div>
+        </owl-carousel-o> -->
+    </div>
+    <!-- </app-card> -->
+
+</div>
