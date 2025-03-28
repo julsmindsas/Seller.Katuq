@@ -21,12 +21,12 @@
 
                                         <div class="date-control col-md-2 col-sm-3">
                                             <label for="fechaInicial" class="fw-bold text-muted fs-16">{{ 'Fecha Inicial' | translate }}</label>
-                                            <input type="date" #fechaInicialCtrl class="form-control fs-16" [(ngModel)]="fechaInicial"
+                                            <input type="date" class="form-control fs-16" [(ngModel)]="fechaInicial"
                                             (change)="firstEvent($event.target.value)" />
                                         </div>
                                         <div class="date-control col-md-2 col-sm-3">
                                             <label for="fechaFinal" class="fw-bold text-muted fs-16">{{ 'Fecha Final' | translate }}</label>
-                                            <input type="date" #fechaFinalCtrl class="form-control fs-16" [(ngModel)]="fechaFinal"
+                                            <input type="date" class="form-control fs-16" [(ngModel)]="fechaFinal"
                                             (change)="secondEvent($event.target.value)" />
                                         </div>
 

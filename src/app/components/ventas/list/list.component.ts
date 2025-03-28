@@ -57,8 +57,8 @@ export class ListOrdersComponent implements OnInit {
   ];
   representatives: { name: string; image: string; }[];
   configuracionCarritoSeleccionado: Carrito;
-  fechaInicial: Date;
-  fechaFinal: Date;
+  fechaInicial: string;
+  fechaFinal: string;
   estadosProcesos: EstadoProcesoFiltros[];
   validaciones: { value: boolean; nombre: string; }[];
   numberProduct: string;
@@ -80,9 +80,9 @@ export class ListOrdersComponent implements OnInit {
     this.registerCustomFilters();
 
     const unaSemana = 7 * 24 * 60 * 60 * 1000;
-    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
-    this.fechaFinal = new Date(new Date().getTime() + unaSemana);
-    this.fechaFinal.setHours(23, 59, 59, 999);
+    // this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
+    // this.fechaFinal = new Date(); //new Date().getTime() + unaSemana);
+    // this.fechaFinal.setHours(23, 59, 59, 999);
 
     this.numberProduct = this.route.snapshot.queryParamMap?.get('nroPedido') || '';
 
@@ -92,6 +92,13 @@ export class ListOrdersComponent implements OnInit {
         console.log(this.orders);
       })
     }
+
+    // this.fechaInicialCtrl.nativeElement.value = new Date().toISOString().split('T')[0] + '00:00:00.0000Z'; //new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
+    // this.fechaFinalCtrl.nativeElement.value = new Date().toISOString().split('T')[0] + '23:59:59.0000Z'; //new Date(new Date().getTime() + unaSemana);
+
+    this.fechaInicial = new Date().toISOString().split('T')[0];
+    //    new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear()).toISOString().split('T')[0];
+    this.fechaFinal = new Date().toISOString().split('T')[0];
 
     this.UserLogged = JSON.parse(localStorage.getItem('user')!) as UserLogged;
   }
@@ -276,8 +283,8 @@ export class ListOrdersComponent implements OnInit {
     // this.fechaFinal.setHours(23, 59, 59, 999);
 
     const filter = {
-      fechaInicial: this.fechaInicial,
-      fechaFinal: this.fechaFinal,
+      fechaInicial: this.fechaInicial + 'T00:00:00.0000Z',
+      fechaFinal: this.fechaFinal + 'T23:59:59.9999Z',
       company: JSON.parse(sessionStorage.getItem("currentCompany")!).nomComercial,
       tipoFecha: 'fechaEntrega',
       estadoProceso: this.isFromProduction ? [EstadoProceso.SinProducir] : ['Todos']
@@ -373,9 +380,12 @@ export class ListOrdersComponent implements OnInit {
   clear(table: Table) {
 
     const unaSemana = 7 * 24 * 60 * 60 * 1000;
-    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
-    this.fechaFinal = new Date(new Date().getTime() + unaSemana);
-    this.fechaFinal.setHours(23, 59, 59, 999);
+    // this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
+    // this.fechaFinal = new Date(new Date().getTime() + unaSemana);
+    // this.fechaFinal.setHours(23, 59, 59, 999);
+
+    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear()).toISOString().split('T')[0];
+    this.fechaFinal = new Date().toISOString().split('T')[0];
 
     this.refrescar(table);
 
@@ -914,8 +924,8 @@ export class ListOrdersComponent implements OnInit {
   filtrarParaHoy(): void {
     // Implementar lógica para ajustar fechaInicial y fechaFinal al día actual y luego filtrar
     const fechaActual = new Date();
-    this.fechaInicial = new Date(fechaActual.setHours(0, 0, 0, 0));
-    this.fechaFinal = new Date(fechaActual.setHours(23, 59, 59, 999));
+    // this.fechaInicial = new Date(fechaActual.setHours(0, 0, 0, 0));
+    // this.fechaFinal = new Date(fechaActual.setHours(23, 59, 59, 999));
     this.refrescarDatos();
   }
   filter(event) {
@@ -926,8 +936,8 @@ export class ListOrdersComponent implements OnInit {
     // Similar a filtrarParaHoy pero ajustando las fechas para mañana
     const fechaManana = new Date();
     fechaManana.setDate(fechaManana.getDate() + 1);
-    this.fechaInicial = new Date(fechaManana.setHours(0, 0, 0, 0));
-    this.fechaFinal = new Date(fechaManana.setHours(23, 59, 59, 999));
+    // this.fechaInicial = new Date(fechaManana.setHours(0, 0, 0, 0));
+    // this.fechaFinal = new Date(fechaManana.setHours(23, 59, 59, 999));
     this.refrescarDatos();
   }
 
@@ -935,8 +945,8 @@ export class ListOrdersComponent implements OnInit {
     // Similar a filtrarParaHoy pero ajustando las fechas para pasado mañana
     const fechaPasadoManana = new Date();
     fechaPasadoManana.setDate(fechaPasadoManana.getDate() + 2);
-    this.fechaInicial = new Date(fechaPasadoManana.setHours(0, 0, 0, 0));
-    this.fechaFinal = new Date(fechaPasadoManana.setHours(23, 59, 59, 999));
+    // this.fechaInicial = new Date(fechaPasadoManana.setHours(0, 0, 0, 0));
+    // this.fechaFinal = new Date(fechaPasadoManana.setHours(23, 59, 59, 999));
     this.refrescarDatos();
   }
 
