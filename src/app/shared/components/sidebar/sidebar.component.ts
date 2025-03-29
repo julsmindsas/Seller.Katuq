@@ -73,6 +73,7 @@ export class SidebarComponent implements OnInit {
 
 
   async ngOnInit(): Promise<void> {
+    this.loadPlanFromLocalStorage();
     // const res: any = await JSON.parse(localStorage.getItem(environment.user));
     // this.idUsuario = res.email;
 
@@ -104,6 +105,107 @@ export class SidebarComponent implements OnInit {
     this.showPlanModal = false;
     document.body.style.overflow = ''; // Restaurar scroll del body
   }
+  // sidebar.component.ts
+private loadPlanFromLocalStorage(): void {
+  const defaultPlan = {
+    type: 'Plan Básico',
+    progress: 0,
+    renewalDate: 'No definida',
+    walletBalance: 0
+  };
+
+  try {
+    // 1. Obtener el objeto del localStorage
+    const currentCompanyStr = sessionStorage.getItem('currentCompany');
+    if (!currentCompanyStr) {
+      this.currentPlan = defaultPlan;
+      return;
+    }
+
+    // 2. Parsear y verificar la estructura
+    const currentCompany = JSON.parse(currentCompanyStr);
+    if (!currentCompany || typeof currentCompany !== 'object') {
+      this.currentPlan = defaultPlan;
+      return;
+    }
+
+    // 3. Extraer específicamente la propiedad plan
+    const plan = currentCompany.plan;
+    if (!plan || typeof plan !== 'object') {
+      this.currentPlan = defaultPlan;
+      return;
+    }
+
+    // 4. Asignar valores con protecciones
+    this.currentPlan = {
+      type: this.getPlanName(plan.nombre),
+      progress: this.calculatePlanProgress(plan.fechaInicio, plan.fechaFin),
+      renewalDate: this.formatRenewalDate(plan.fechaFin, plan.fechaUltimoPago),
+      walletBalance: this.calculateWalletBalance(plan.precio)
+    };
+
+  } catch (error) {
+    console.error('Error loading plan:', error);
+    this.currentPlan = defaultPlan;
+  }
+}
+
+// Helper para nombres de planes
+private getPlanName(planName: any): string {
+  const validNames = ['Early Adopters', 'Plan Básico', 'Plan Avanzado', 'Plan Empresarial'];
+  return typeof planName === 'string' && validNames.includes(planName) 
+    ? planName 
+    : 'Plan Básico';
+}
+
+// Helper para cálculo de progreso
+private calculatePlanProgress(startDate: string, endDate: string): number {
+  if (!startDate || !endDate) return 0;
+  
+  try {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    
+    if (today >= end) return 100;
+    if (today <= start) return 0;
+    
+    const totalDuration = end.getTime() - start.getTime();
+    const elapsedDuration = today.getTime() - start.getTime();
+    
+    return Math.round((elapsedDuration / totalDuration) * 100);
+  } catch (e) {
+    return 0;
+  }
+}
+
+// Helper para formatear fecha de renovación
+private formatRenewalDate(endDate: any, lastPaymentDate: any): string {
+  try {
+    const dateToUse = endDate || lastPaymentDate;
+    if (!dateToUse) return 'No definida';
+
+    const date = new Date(dateToUse);
+    return date.toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch {
+    return 'No definida';
+  }
+}
+
+// Helper para calcular el saldo
+private calculateWalletBalance(price: any): number {
+  try {
+    if (price === '0' || price === 0) return 0;
+    const balance = parseFloat(price);
+    return isNaN(balance) ? 0 : balance;
+  } catch {
+    return 0;
+  }
+}
   onPlanSelected(planId: string) {
     // Actualizar el plan actual
     this.currentPlan.type = this.getPlanName(planId);
@@ -117,14 +219,14 @@ export class SidebarComponent implements OnInit {
     this.closePlanModal();
   }
   
-  private getPlanName(planId: string): string {
-    const planNames = {
-      'basico': 'Básico',
-      'completo': 'Completo',
-      'empresarial': 'Empresarial'
-    };
-    return planNames[planId] || 'Completo';
-  }
+  // private getPlanName(planId: string): string {
+  //   const planNames = {
+  //     'basico': 'Básico',
+  //     'completo': 'Completo',
+  //     'empresarial': 'Empresarial'
+  //   };
+  //   return planNames[planId] || 'Completo';
+  // }
 
 
   sidebarToggle() {

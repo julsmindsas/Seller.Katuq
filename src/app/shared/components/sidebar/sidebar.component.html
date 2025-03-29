@@ -173,9 +173,12 @@
           <span>{{currentPlan.renewalDate}}</span>
         </div>
         <div class="detail-item">
-          <small class="fs-14">Uso</small>
-          <div class="usage-bar">
-            <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
+          <small>Uso</small>
+          <div class="usage-display">
+            <div class="usage-bar">
+              <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
+            </div>
+            <span class="usage-percentage">{{currentPlan.progress}}%</span>
           </div>
         </div>
       </div>
