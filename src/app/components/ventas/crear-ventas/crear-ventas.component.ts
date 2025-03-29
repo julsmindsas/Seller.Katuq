@@ -1218,28 +1218,46 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     // Verificar la forma de pago
     const formaPago = this.pedidoGral.formaDePago?.toLowerCase();
     if (formaPago === 'wompi') {
-      // Configurar el widget de Wompi
-      this.iniciarPagoConWompi().then(pagoExitoso => {
-        if (pagoExitoso) {
-          // El pago fue exitoso, continuar con la creación del pedido
-          this.continuarCreacionPedido();
+      // Para Wompi, primero guardar el pedido y después mostrar el widget de pago
+      this.pedidoGral.estadoPago = EstadoPago.Pendiente; // Asegurar que el estado comienza como pendiente
+      this.guardarPedidoParaWompi().then(pedidoGuardado => {
+        if (pedidoGuardado) {
+          // Si el pedido se guardó correctamente, mostrar el widget de pago
+          this.iniciarPagoConWompi().then(pagoExitoso => {
+            if (pagoExitoso) {
+              // El pago fue exitoso, actualizar estado del pedido
+              this.actualizarEstadoPedido(this.pedidoGral.nroPedido as string, EstadoPago.Aprobado);
+              this.showPedidoConfirm = true;
+              this.showSteper = false;
+              this.mywizard.goToNextStep();
+            } else {
+              // El pago fue rechazado o cancelado
+              this.actualizarEstadoPedido(this.pedidoGral.nroPedido as string, EstadoPago.Rechazado);
+              Swal.fire({
+                title: "Pago no completado",
+                text: "No se pudo completar el pago con Wompi. El pedido ha sido guardado con estado pendiente.",
+                icon: "warning",
+                confirmButtonText: "Ok",
+              });
+            }
+          }).catch(error => {
+            console.error("Error en el proceso de pago con Wompi:", error);
+            Swal.fire({
+              title: "Error en el pago",
+              text: "Ocurrió un error durante el proceso de pago. El pedido ha sido guardado con estado pendiente.",
+              icon: "warning",
+              confirmButtonText: "Ok",
+            });
+          });
         } else {
-          // El pago fue rechazado o cancelado
+          // Si hubo un error al guardar el pedido
           Swal.fire({
-            title: "Pago no completado",
-            text: "No se pudo completar el pago con Wompi. El pedido no ha sido creado.",
+            title: "Error",
+            text: "No se pudo guardar el pedido. Por favor intente nuevamente.",
             icon: "error",
             confirmButtonText: "Ok",
           });
         }
-      }).catch(error => {
-        console.error("Error en el proceso de pago con Wompi:", error);
-        Swal.fire({
-          title: "Error en el pago",
-          text: "Ocurrió un error durante el proceso de pago. Por favor intente nuevamente.",
-          icon: "error",
-          confirmButtonText: "Ok",
-        });
       });
     } else {
       // Si no es Wompi, continuar con el proceso normal de creación de pedido
@@ -1247,19 +1265,105 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     }
   }
 
-  // Nuevo método para iniciar el pago con Wompi
+  // Nuevo método para guardar el pedido antes de iniciar el pago con Wompi
+  private guardarPedidoParaWompi(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const context = this;
+      context.ventasService.validateNroPedido(context.pedidoGral.nroPedido as string).subscribe({
+        next: (res: any) => {
+          const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
+
+          // Guardar pedido con estado de pago pendiente
+          context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
+            next: (res: any) => {
+              const orderSiigo = context.facturacionElectronicaService.transformarPedidoLite(context.pedidoGral);
+              if (res.order.pagoInformation) {
+                context.pedidoGral = res.order;
+                context.pedidoGral = { ...context.pedidoGral };
+
+                console.log("Información de pago:", res.order.pagoInformation);
+              }
+              context.pedidoSinGuardar = false;
+              resolve(true); // Pedido guardado exitosamente
+            },
+            error: (err: any) => {
+              console.error("Error al crear el pedido:", err);
+              resolve(false); // Error al guardar el pedido
+            }
+          });
+        },
+        error: (err) => {
+          console.error("Error al validar número de pedido:", err);
+          resolve(false); // Error al validar el número de pedido
+        },
+      });
+    });
+  }
+
+  // Método modificado para actualizar el estado del pedido después del pago
+  private actualizarEstadoPedido(numeroPedido: string, estadoPago: EstadoPago): void {
+    // Verificamos si el método existe en el servicio
+    // if (typeof this.ventasService.updateOrderPaymentStatus === 'function') {
+    //   this.actualizarPedidoCompleto(numeroPedido, estadoPago);
+    //   this.ventasService.updateOrderPaymentStatus(numeroPedido, estadoPago).subscribe({
+    //     next: (res: any) => {
+    //       console.log("Estado del pedido actualizado:", estadoPago);
+    //     },
+    //     error: (err: any) => {
+    //       console.error("Error al actualizar el estado del pedido:", err);
+    //       // Plan B: Si hay error, intentamos actualizar todo el pedido
+    //       this.actualizarPedidoCompleto(numeroPedido, estadoPago);
+    //     }
+    //   });
+    // } else {
+    // Si el método no existe, usamos un enfoque alternativo
+    this.actualizarPedidoCompleto(numeroPedido, estadoPago);
+    // }
+  }
+
+  // Método alternativo para actualizar el pedido completo si el método específico no está disponible
+  private actualizarPedidoCompleto(numeroPedido: string, estadoPago: EstadoPago): void {
+    // Actualizamos el estado en el objeto pedido
+    this.pedidoGral.estadoPago = estadoPago;
+
+    // Usamos el método editOrder en lugar de updateOrder
+    this.ventasService.editOrder(this.pedidoGral).subscribe({
+      next: (res: any) => {
+        console.log("Pedido actualizado completamente con nuevo estado:", estadoPago);
+
+        // Opcionalmente, también podemos enviar el correo de confirmación si es necesario
+        const htmlSanizado = this.pyamentService.getHtmlContent(this.pedidoGral);
+        this.ventasService.enviarCorreoConfirmacionPedido({
+          order: this.pedidoGral,
+          emailHtml: htmlSanizado
+        }).subscribe({
+          next: (emailRes: any) => {
+            console.log("Correo de confirmación enviado con el nuevo estado de pago");
+          },
+          error: (emailErr: any) => {
+            console.error("Error al enviar correo de confirmación:", emailErr);
+          }
+        });
+      },
+      error: (err: any) => {
+        console.error("Error al actualizar el pedido completo:", err);
+      }
+    });
+  }
+
+  // Método modificado para iniciar el pago con Wompi (ahora solo inicia el widget, no guarda el pedido)
   private iniciarPagoConWompi(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         // Configuración del widget de Wompi
-        const amountInCents = Math.round(this.pedidoGral?.totalPedididoConDescuento ?? 0 * 100); // Convertir a centavos
+        const amountInCents = Math.round((this.pedidoGral?.totalPedididoConDescuento ?? 0) * 100); // Convertir a centavos
 
         // Asegúrate de tener estos datos disponibles en tu pedido o configuración
         // const wompiPublicKey = environment.wompi.public_key || 'pub_test_YOUR_PUBLIC_KEY';
         const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';  //|| 'pub_test_YOUR_PUBLIC_KEY';
 
-        // Crear referencia única para el pago
-        const reference = `${this.pedidoGral.nroPedido}-${new Date().getTime()}`;
+        // Usar el número de pedido ya asignado como referencia
+        const reference = this.pedidoGral.nroPedido || `order-${new Date().getTime()}`;
 
         // Configurar datos del cliente para el formulario de pago
         const customerData = {
@@ -1280,6 +1384,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             vat: Math.round((this.pedidoGral?.totalImpuesto ?? 0) * 100), // IVA, ajustar según necesidades
             consumption: 0 // Impuesto al consumo, ajustar según necesidades
           },
+          signature: {
+            integrity: this.pedidoGral?.pagoInformation?.integridad || '', // Firma de seguridad, ajustar según necesidades 
+          },
+
           customerData: customerData,
           // Puedes agregar más configuraciones según la documentación de Wompi
         });
@@ -1301,6 +1409,8 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
               valorRegistrado: this.pedidoGral.totalPedididoConDescuento || 0
             }];
 
+
+
             resolve(true); // Pago exitoso
           } else {
             this.pedidoGral.estadoPago = EstadoPago.Rechazado;
@@ -1319,29 +1429,24 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     });
   }
 
-  // Método para continuar con la creación del pedido después de verificar el pago
+  // Método para continuar con la creación del pedido normal (no Wompi)
   private continuarCreacionPedido() {
     const context = this;
     context.ventasService.validateNroPedido(context.pedidoGral.nroPedido as string).subscribe({
       next: (res: any) => {
         this.showPedidoConfirm = true;
         this.showSteper = false;
-        // ...existing code...
+
         const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
 
-        // ...existing code...
         context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
-          // ...existing code...
           next: (res: any) => {
-            // ...existing code...
             const orderSiigo = context.facturacionElectronicaService.transformarPedidoLite(context.pedidoGral);
             context.cartService.clearCart();
-            context.pedidoSinGuardar = false
-
-            // ...existing code...
+            context.pedidoSinGuardar = false;
           },
           error: (err: any) => {
-            // ...existing code...
+            console.error("Error al crear el pedido:", err);
           }
         });
 

@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Producto } from '../../models/productos/Producto';
 import { Pedido } from '../../../components/ventas/modelo/pedido';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
+import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
@@ -70,7 +71,7 @@ export class VentasService extends BaseService {
   }
 
   getOrders() {
-    const empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+    const empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
     const id = empresaActual.nomComercial;
     return this.get<Pedido[]>('/v1/orders/all/' + id);
 
@@ -92,7 +93,7 @@ export class VentasService extends BaseService {
 
   //preorders
   savePreOrders(pedido: Pedido) {
-    let preorders: Pedido[] = JSON.parse(localStorage.getItem('preorder')) || [];
+    let preorders: Pedido[] = JSON.parse(localStorage.getItem('preorder') ?? '[]') || [];
     const index = preorders.findIndex(pre => pre.referencia === pedido.referencia);
     if (index !== -1) {
       preorders[index] = pedido;
@@ -103,10 +104,11 @@ export class VentasService extends BaseService {
   }
 
   getPreOrders() {
-    return JSON.parse(localStorage.getItem('preorder'));
+    return JSON.parse(localStorage.getItem('preorder') ?? '[]') || [];
   }
   getPreOrdersByRef(ref: string) {
-    const preorder = JSON.parse(localStorage.getItem('preorder')).filter((pre: any) => pre.referencia === ref)[0];
+    const preorder = JSON.parse(localStorage.getItem('preorder') ?? '[]').filter((pre: any) => pre.referencia === ref)[0];
+    return preorder;
   }
 
   removePreOrder(referencia: string) {
@@ -116,6 +118,21 @@ export class VentasService extends BaseService {
     console.log('se intenteo remover ')
   }
   // fin preorders
+
+  /**
+   * Actualiza el estado de pago de un pedido específico
+   * @param numeroPedido Número de pedido a actualizar
+   * @param estadoPago Nuevo estado de pago (Pendiente, Aprobado, Rechazado)
+   */
+  updateOrderPaymentStatus(numeroPedido: string, estadoPago: any): Observable<any> {
+    return this.post<any>('/v1/orders/updateOrder', { numeroPedido, estadoPago });
+  }
+
+
+  getOrderStatus(numeroPedido: string): Observable<any> {
+    return this.get<any>(`/v1/orders/status/${numeroPedido}`);
+  }
+
 
 
 }

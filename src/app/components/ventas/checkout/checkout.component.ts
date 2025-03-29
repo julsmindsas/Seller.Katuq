@@ -83,7 +83,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    
+
     if (this.pedido) {
       this.pedidoUtilService.pedido = this.pedido;
     }
@@ -159,55 +159,55 @@ export class CheckOutComponent implements OnInit, OnChanges {
   checkIVAPrice() {
     let totalPrecioIVA = 0;
     let totalPrecioIVADef = 0;
-    let totalExcluidosDef=0
-    let totalIva5Def=0
-    let totalImpoDef=0
-    let totalIva19Def=0
-    let totalExcluidos=0
-    let totalIva5=0
-    let totalImpo=0
-    let totalIva19=0
+    let totalExcluidosDef = 0
+    let totalIva5Def = 0
+    let totalImpoDef = 0
+    let totalIva19Def = 0
+    let totalExcluidos = 0
+    let totalIva5 = 0
+    let totalImpo = 0
+    let totalIva19 = 0
     this.pedido.carrito.forEach(itemCarrito => {
       //sumar precios productos
       if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
         itemCarrito.producto.precio.preciosVolumen.forEach(x => {
-          totalExcluidos=0
-          totalIva5=0
-          totalImpo=0
-          totalIva19=0
-          
+          totalExcluidos = 0
+          totalIva5 = 0
+          totalImpo = 0
+          totalIva19 = 0
+
           if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-            totalPrecioIVA = x.valorUnitarioPorVolumenIva * itemCarrito.cantidad-((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-            switch (x.valorIVAPorVolumen.toString()){
+            totalPrecioIVA = x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+            switch (x.valorIVAPorVolumen.toString()) {
               case "0":
-                totalExcluidos=(x.valorUnitarioPorVolumenIva * itemCarrito.cantidad-((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100)));
+                totalExcluidos = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
                 break
               case "5":
-                totalIva5=(x.valorUnitarioPorVolumenIva * itemCarrito.cantidad-((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100)));
+                totalIva5 = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
                 break
               case "8":
-                totalImpo=(x.valorUnitarioPorVolumenIva * itemCarrito.cantidad-((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100)));
+                totalImpo = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
                 break
               case "19":
-                totalIva19=(x.valorUnitarioPorVolumenIva * itemCarrito.cantidad-((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100)));
+                totalIva19 = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
                 break
               default:
                 break
             }
           } else {
-            totalPrecioIVA = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-            switch (x.valorIVAPorVolumen.toString()){
+            totalPrecioIVA = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+            switch (x.valorIVAPorVolumen.toString()) {
               case "0":
-                totalExcluidos=((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
+                totalExcluidos = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
                 break
               case "5":
-                totalIva5=((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
+                totalIva5 = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
                 break
               case "8":
-                totalImpo=((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
+                totalImpo = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
                 break
               case "19":
-                totalIva19=((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
+                totalIva19 = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
                 break
               default:
                 break
@@ -215,19 +215,19 @@ export class CheckOutComponent implements OnInit, OnChanges {
           }
         });
       } else {
-        totalPrecioIVA = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-        switch (itemCarrito.producto?.precio?.precioUnitarioIva){
+        totalPrecioIVA = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+        switch (itemCarrito.producto?.precio?.precioUnitarioIva) {
           case "0":
-            totalExcluidos=(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100)));
+            totalExcluidos = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
             break
           case "5":
-            totalIva5=(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100)));
+            totalIva5 = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
             break
           case "8":
-            totalImpo=(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100)));
+            totalImpo = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
             break
           case "19":
-            totalIva19=(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)-(((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100)));
+            totalIva19 = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
             break
           default:
             break
@@ -236,19 +236,19 @@ export class CheckOutComponent implements OnInit, OnChanges {
       // Sumar precios de adiciones
       if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
         itemCarrito.configuracion.adiciones.forEach(adicion => {
-          totalPrecioIVA +=((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)- (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-          switch (adicion.porcentajeIva.toString()){
+          totalPrecioIVA += ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+          switch (adicion.porcentajeIva.toString()) {
             case "0":
-              totalExcluidos=totalExcluidos+((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)- (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
+              totalExcluidos = totalExcluidos + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
               break
             case "5":
-              totalIva5=totalIva5+((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)- (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
+              totalIva5 = totalIva5 + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
               break
             case "8":
-              totalImpo=totalImpo+((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)- (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
+              totalImpo = totalImpo + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
               break
             case "19":
-              totalIva19=totalIva19+((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)- (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
+              totalIva19 = totalIva19 + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
               break
             default:
               break
@@ -259,56 +259,56 @@ export class CheckOutComponent implements OnInit, OnChanges {
       // Sumar precios de preferencias
       if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
         itemCarrito.configuracion.preferencias.forEach(preferencia => {
-          totalPrecioIVA += (preferencia['valorIva'] * itemCarrito.cantidad)-((preferencia['valorIva'] * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-          switch (preferencia.porcentajeIva){
-          case "0":
-            totalExcluidos=totalExcluidos+(preferencia['valorIva'] * itemCarrito.cantidad)-((preferencia['valorIva'] * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-            break
-          case "5":
-            totalIva5=totalIva5+(preferencia['valorIva'] * itemCarrito.cantidad)-((preferencia['valorIva'] * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-            break
-          case "8":
-            totalImpo=totalImpo+(preferencia['valorIva'] * itemCarrito.cantidad)-((preferencia['valorIva'] * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-            break
-          case "19":
-            totalIva19=totalIva19+(preferencia['valorIva'] * itemCarrito.cantidad)-((preferencia['valorIva'] * itemCarrito.cantidad)*(this.pedido.porceDescuento ?? 0/100));
-            break
-          default:
-            break
-        }
+          totalPrecioIVA += (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+          switch (preferencia.porcentajeIva) {
+            case "0":
+              totalExcluidos = totalExcluidos + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+              break
+            case "5":
+              totalIva5 = totalIva5 + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+              break
+            case "8":
+              totalImpo = totalImpo + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+              break
+            case "19":
+              totalIva19 = totalIva19 + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
+              break
+            default:
+              break
+          }
         });
       }
       // sumarprecio impuesto domicilio
-      
-     
+
+
       totalPrecioIVADef += totalPrecioIVA
       totalExcluidosDef += totalExcluidos
       totalIva5Def += totalIva5
       totalImpoDef += totalImpo
       totalIva19Def += totalIva19
     });
-    switch (this.pedidoUtilService.getShippingTaxValue(this.allBillingZone)){
+    switch (this.pedidoUtilService.getShippingTaxValue(this.allBillingZone)) {
       case "0":
-        totalExcluidosDef=totalExcluidosDef+this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
+        totalExcluidosDef = totalExcluidosDef + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
         break
       case "5":
-        totalIva5Def=totalIva5Def+this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
+        totalIva5Def = totalIva5Def + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
         break
       case "8":
-        totalImpoDef=totalImpoDef+this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
+        totalImpoDef = totalImpoDef + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
         break
       case "19":
-        totalIva19Def=totalIva19Def+this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
+        totalIva19Def = totalIva19Def + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
         break
       default:
         break
     }
     return {
-      totalPrecioIVADef:totalPrecioIVADef,
-      totalExcluidos:totalExcluidosDef,
-      totalIva5:totalIva5Def,
-      totalImpo:totalImpoDef,
-      totalIva19:totalIva19Def
+      totalPrecioIVADef: totalPrecioIVADef,
+      totalExcluidos: totalExcluidosDef,
+      totalIva5: totalIva5Def,
+      totalImpo: totalImpoDef,
+      totalIva19: totalIva19Def
     };
   }
 
@@ -317,7 +317,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
     this.pedidoUtilService.pedido = this.pedido;
     this.pedido.totalDescuento = this.pedidoUtilService.getDiscount();
     this.pedido.totalEnvio = this.pedidoUtilService.getShippingCost(this.allBillingZone);
-    this.pedido.totalImpuesto = this.pedidoUtilService.checkIVAPrice()+this.pedidoUtilService.getShippingTaxCost(this.allBillingZone)
+    this.pedido.totalImpuesto = this.pedidoUtilService.checkIVAPrice() + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone)
     this.pedido.totalPedidoSinDescuento = this.pedidoUtilService.getSubtotal();
     this.pedido.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(this.pedido.totalEnvio) + this.pedidoUtilService.checkIVAPrice();
     let opcionSeleccionadaId = this.form.value.opcionSeleccionada;
@@ -338,53 +338,10 @@ export class CheckOutComponent implements OnInit, OnChanges {
     this.pedido.fechaCreacion = new Date().toISOString();
     this.pedido.fechaEntrega = new Date(this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.year, this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.month == 0 ? 0 : this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.month - 1, this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.day).toISOString();
     this.pedido.horarioEntrega = this.pedido.carrito[0].configuracion.datosEntrega.horarioEntrega;
-    this.pedido.formaEntrega=this.pedido.carrito[0].configuracion.datosEntrega.formaEntrega;
+    this.pedido.formaEntrega = this.pedido.carrito[0].configuracion.datosEntrega.formaEntrega;
 
     this.comprarYPagar.emit(this.pedido);
 
-    // this.router.navigate(['/payment-order']);
-    // const widget = new WidgetCheckout({
-    //   currency: 'COP',
-    //   publicKey: this.publicKey,
-    //   reference: 'mi-referencia', // Aquí puedes poner un número de referencia para la transacción.
-    //   amountInCents: 10000, // Aquí puedes poner la cantidad a cobrar en centavos.
-    // });
-
-
-    // var checkout = new WidgetCheckout({
-    //   currency: 'COP',
-    //   // amountInCents: this.getSubtotal() * 100,
-    //   amountInCents: 2490000,
-    //   reference: 'AD002901221',
-    //   publicKey: 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy',
-    //   redirectUrl: 'https://sellercenter.katuq.com/#/ventas/crear-ventas', // Opcional
-    //   expirationTime: '2023-10-5T20:28:50.000Z', // Opcional
-    //   taxInCents: { // Opcional
-    //     vat: 1900,
-    //     consumption: 800
-    //   },
-    //   customerData: { // Opcional
-    //     email: this.pedido.cliente?.correo_electronico_comprador,
-    //     fullName: this.pedido.cliente?.nombres_completos,
-    //     phoneNumber: this.pedido.cliente?.numero_celular_comprador,
-    //     phoneNumberPrefix: '+57',
-    //     legalId: this.pedido.cliente?.documento,
-    //     legalIdType: 'CC',
-    //   },
-    //   shippingAddress: { // Opcional
-    //     addressLine1: "Calle 123 # 4-5",
-    //     city: "Bogota",
-    //     phoneNumber: '3019444444',
-    //     region: "Cundinamarca",
-    //     country: "CO"
-    //   }
-    // });
-
-    // checkout.open(function (result) {
-    //   var transaction = result.transaction
-    //   console.log('Transaction ID: ', transaction.id)
-    //   console.log('Transaction object: ', transaction)
-    // })
   }
 
 
