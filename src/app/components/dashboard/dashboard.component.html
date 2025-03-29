@@ -12,15 +12,21 @@
             <div class="date-control">
                 <label for="fechaInicial" class="fw-bold text-muted fs-16">{{ 'Fecha Inicial' | translate }}</label>
                 <input type="date" id="fechaInicial" class="form-control fs-16" [(ngModel)]="fechaInicial"
-                    (change)="onFechaChange()" />
+                (change)="firstEvent($event.target.value)" />
             </div>
             <div class="date-control">
                 <label for="fechaFinal" class="fw-bold text-muted fs-16">{{ 'Fecha Final' | translate }}</label>
                 <input type="date" id="fechaFinal" class="form-control fs-16" [(ngModel)]="fechaFinal"
-                    (change)="onFechaChange()" />
+                (change)="secondEvent($event.target.value)" />
             </div>
-            <button class="btn btn-primary fs-18" (click)="cargarDatos()">
-                {{ 'Actualizar' | translate }}
+            <button class="btn btn-primary fs-18 mt-3 mr-1" (click)="cargarDatos()">
+                {{ 'Filtrar' | translate }}
+            </button>
+            <button class="btn btn-primary fs-18 mt-3 mr-1" (click)="cargarDatosMesActual()">
+                {{ 'Mes actual' | translate }}
+            </button>
+            <button class="btn btn-primary fs-18 mt-3 mr-1" (click)="cargarDatosMesAnterior()">
+                {{ 'Mes anterior' | translate }}
             </button>
         </div>
     </div>

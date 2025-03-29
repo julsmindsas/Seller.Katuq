@@ -53,9 +53,7 @@ export class AuthService implements OnInit {
 
       this.SetUserData(result.token);
       this.setMenu(result.menu);
-
-      debugger;
-
+      
       if (result.lang)
         this.setLanguage(result.lang);
 

@@ -20,6 +20,8 @@ export const environment = {
   // urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
   // urlApi: "http://localhost:3300", // API Local,
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app',
+  //urlApi: "http://localhost:3300", // API Local,
+  //   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app',
   urlApi: "https://api.katuq.com", // API AWS
   wompi: {
     prod_intrity: "test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD",

@@ -161,6 +161,7 @@ export class NavService implements OnDestroy {
 				{ path: 'ventas/crear-ventas', title: 'Crear Venta', type: 'link' },
 				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas', type: 'link' },
 				{ path: 'ventas/pedidos', title: 'Lista de pedidos', type: 'link' },
+				{ path: 'ventas/pos2', title: 'Ventas POS2', type: 'link' },
 				{ path: 'pos/ventas', title: 'Ventas POS', type: 'link' },
 				{ path: 'pos/list-ventas', title: 'Listado Ventas POS', type: 'link' }
 			]

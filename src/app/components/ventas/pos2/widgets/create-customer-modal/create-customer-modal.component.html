@@ -1,0 +1,36 @@
+<div class="modal-header">
+    <h5 class="modal-title" id="modaldashboard">Create Customer</h5>
+    <button class="btn-close" type="button" (click)="closeModal()"></button>
+  </div>
+  <div class="modal-body p-0">
+    <div class="text-start dark-sign-up">
+      <div class="modal-body">
+        <form class="row g-3 needs-validation" novalidate="">
+          <div class="col-md-6">
+            <label class="form-label" for="validationCustom-8">First Name<span class="txt-danger">*</span></label>
+            <input class="form-control" id="validationCustom-8" type="text" placeholder="Enter your first-name" required="">
+            <div class="valid-feedback">Looks good!</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="validationCustom09">Last Name<span class="txt-danger">*</span></label>
+            <input class="form-control" id="validationCustom09" type="text" placeholder="Enter your last-name" required="">
+            <div class="valid-feedback">Looks good!</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="validationCustom08">Mobile Number<span class="txt-danger">*</span></label>
+            <input class="form-control" id="validationCustom08" type="number" placeholder="Mobile number" required="">
+            <div class="valid-feedback">Looks good!</div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label" for="exampleFormControlInput8">Email<span class="txt-danger">*</span></label>
+              <input class="form-control" id="exampleFormControlInput8" type="email" placeholder="customername@gmail.com">
+            </div>
+          </div>
+          <div class="col-md-12 d-flex justify-content-end">
+            <button class="btn btn-primary" type="button" (click)="closeModal()">Create +</button>
+          </div>
+        </form>
+      </div>
+    </div>
+</div>

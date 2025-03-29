@@ -25,23 +25,37 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   constructor(
     private ventasService: VentasService,
     private katuqintelligenceService: KatuqintelligenceService) {
-    const fechaHoy = new Date();
+
     // this.fechaInicial = fechaHoy.toISOString().split('T')[0];
-    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear()).toISOString().split('T')[0];
-    this.fechaFinal = fechaHoy.toISOString().split('T')[0];
+    this.fechaInicial = new Date(new Date().getFullYear() + '-' + (new Date().getMonth() + 1) + '-01').toISOString().split('T')[0];
+    this.fechaFinal = new Date().toISOString().split('T')[0];
   }
   ngAfterViewInit(): void {
     this.renderAdditionalCharts();
   }
 
   ngOnInit(): void {
-    const today = new Date();
-    this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear()).toISOString().split('T')[0];
-    this.fechaFinal = today.toISOString().split('T')[0];
 
     // Cargar datos con las fechas iniciales
     this.cargarDatos();
 
+  }
+
+  cargarDatosMesActual() {
+    this.fechaInicial = new Date(new Date().getFullYear() + '-' + (new Date().getMonth() + 1) + '-01').toISOString().split('T')[0];
+    this.fechaFinal = new Date().toISOString().split('T')[0];
+    this.cargarDatos();
+  }
+
+  cargarDatosMesAnterior() {
+
+    const mesAnterior = new Date().getMonth();
+
+    debugger;
+
+    this.fechaInicial = new Date(new Date().getFullYear() + '-' + mesAnterior + '-01').toISOString().split('T')[0];
+    this.fechaFinal = new Date(new Date().getFullYear() + '-' + mesAnterior + '-' + new Date().getDate()).toISOString().split('T')[0];
+    this.cargarDatos();
   }
 
   cargarDatos(): void {
@@ -67,6 +81,25 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   onFechaChange(): void {
     this.cargarDatos(); // Actualiza los datos al cambiar las fechas
+  }
+
+
+  firstEvent(ev: any): void {
+    if (ev > this.fechaFinal) {
+      this.fechaFinal = ev;
+      this.clearFilter();
+    }
+  }
+
+  secondEvent(ev: any): void {
+    if (ev < this.fechaInicial) {
+      this.fechaInicial = ev;
+      this.clearFilter();
+    }
+  }
+
+  clearFilter(): void {
+    this.cargarDatos();
   }
 
   renderCharts() {

@@ -1,0 +1,13 @@
+.header-top {
+    display: inline-flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    gap: 4px;
+
+    @media screen and (max-width: 768px) {
+        // para dispositivos móviles
+        flex-direction: column; // cambia la dirección a columna
+        align-items: stretch; // hace que los elementos ocupen todo el ancho
+    }
+}
