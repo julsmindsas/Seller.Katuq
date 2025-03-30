@@ -26,8 +26,6 @@ export class ClientesListaComponent implements OnInit {
 
     ngOnInit(): void {
 
-debugger;
-
         this.cargarClientes();
 
         this.cols = [

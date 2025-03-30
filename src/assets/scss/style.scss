@@ -15,6 +15,7 @@
 @import "~bootstrap/scss/bootstrap";
 
 @import "utils/variables";
+@import "utils/mixin";
 
 :root {
     --theme-deafult: #7366ff;
@@ -87,6 +88,7 @@
 @import "pages/comingsoon.scss";
 @import "pages/contacts.scss";
 @import "pages/dashboard_2.scss";
+@import "pages/dashboard_8.scss";
 @import "pages/dashboard_default.scss";
 @import "pages/ecommerce.scss";
 @import "pages/email-application.scss";
@@ -138,6 +140,13 @@
 
 
 // DMG Marzo 2025
+
+.common-f-start {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
 .fc-white {
     color: white !important;
 }

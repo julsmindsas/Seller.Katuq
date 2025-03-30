@@ -49,18 +49,18 @@
                   <div class="last-order-detail">
                     <h6 class="txt-primary">${{ item.price | number:'1.2-2' }}</h6>
                     <a href="javascript:void(0)">
-                      <i class="fa-solid fa-trash trash-remove" (click)="cartService.posRemoveCartItem(item)"></i>
+                      <i class="fa fa-trash trash-remove" (click)="cartService.posRemoveCartItem(item)"></i>
                     </a>
                   </div>
                 </div>
                 <div class="right-details">
                   <div class="touchspin-wrapper">
                     <button class="decrement-touchspin btn-touchspin">
-                      <i class="fa-solid fa-minus text-gray" (click)="cartService.updatePOSQuantity(-1, item)"></i>
+                      <i class="fa fa-minus text-gray" (click)="cartService.updatePOSQuantity(-1, item)"></i>
                     </button>
                     <input class="input-touchspin" [id]="'inputData' + item.id" type="number" [value]="item.quantity">
                     <button class="increment-touchspin btn-touchspin">
-                      <i class="fa-solid fa-plus text-gray" (click)="cartService.updatePOSQuantity(1, item)"></i>
+                      <i class="fa fa-plus text-gray" (click)="cartService.updatePOSQuantity(1, item)"></i>
                     </button>
                   </div>
                 </div>
@@ -73,7 +73,7 @@
           <div class="card-body p-0 empty-card trash-items show">
             <div class="empty-cart-wrapper">
               <div class="empty-cart-content">
-                <img src="assets/images/dashboard-8/order-trash.gif" alt="order-trash">
+                <img src="assets/images/order-trash.gif" alt="order-trash">
               </div>
               <h6 class="text-gray">Your cart is empty!!!</h6>
               <a href="javascript:void(0)" [routerLink]="['/category']"> </a>

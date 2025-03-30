@@ -205,7 +205,7 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
   }
   masCantidad() {
     this.cantidad++;
-    document.getElementById("cantidad").setAttribute("value", this.cantidad.toString());
+    document.getElementById("cantidad")?.setAttribute("value", this.cantidad.toString());
     if (this.producto.precio.preciosVolumen.length > 0) {
       let rangoActual = this.producto.precio.preciosVolumen.find(x =>
         this.cantidad >= x.numeroUnidadesInicial && this.cantidad <= x.numeroUnidadesLimite
@@ -241,7 +241,7 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
       }
 
     }
-    document.getElementById("cantidad").setAttribute("value", this.cantidad.toString());
+    document.getElementById("cantidad")?.setAttribute("value", this.cantidad.toString());
 
   }
 

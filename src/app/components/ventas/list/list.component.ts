@@ -907,6 +907,7 @@ export class ListOrdersComponent implements OnInit {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
+      tipoFecha: 'fechaCreacion',
       company: JSON.parse(sessionStorage.getItem("currentCompany")!).nomComercial,
       estadoProceso: this.isFromProduction ? [EstadoProceso.SinProducir] : ['Todos']
     }
@@ -991,18 +992,15 @@ export class ListOrdersComponent implements OnInit {
   }
 
 
-  firstEvent(ev): void {
-    // console.debug(ev);
-    debugger
-    if (ev > this.fechaFinal) {
+  firstEvent(ev: string): void {
+    if (new Date(ev) > new Date(this.fechaFinal)) {
       this.fechaFinal = ev;
       this.clearFilter();
+      this.refrescarDatos();
     }
   }
 
   secondEvent(ev): void {
-    // console.debug(ev);
-    debugger
     if (ev < this.fechaInicial) {
       this.fechaInicial = ev;
       this.clearFilter();

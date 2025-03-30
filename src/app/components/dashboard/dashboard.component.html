@@ -1,14 +1,14 @@
 <!-- <app-breadcrumb [title]="'Dashboard'" [items]="['Inicio']" [active_item]="'Dashboard'"></app-breadcrumb> -->
 <br />
 <div class="row mt-1 mb-3 p-3">
-    <div class="col-6 p-l-5">
+    <div class="col-4 p-l-5">
         <p class="text-left fw-bold fs-24 m-0 p-0">{{ 'Panel de Control' | translate }}</p>
         <p class="text-left text-muted fs-18 m-0 p-0">
             {{ 'Visualiza las métricas clave de ventas y rendimiento.' | translate }}
         </p>
     </div>
-    <div class="col-6">
-        <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 rounded">
+    <div class="col-8">
+        <div class="d-flex justify-content-end align-items-right flex-wrap gap-3 rounded w-100">
             <div class="date-control">
                 <label for="fechaInicial" class="fw-bold text-muted fs-16">{{ 'Fecha Inicial' | translate }}</label>
                 <input type="date" id="fechaInicial" class="form-control fs-16" [(ngModel)]="fechaInicial"
@@ -19,13 +19,13 @@
                 <input type="date" id="fechaFinal" class="form-control fs-16" [(ngModel)]="fechaFinal"
                 (change)="secondEvent($event.target.value)" />
             </div>
-            <button class="btn btn-primary fs-18 mt-3 mr-1" (click)="cargarDatos()">
+            <button class="btn btn-primary fs-18 mt-3 mr-1 pull-right" (click)="cargarDatos()">
                 {{ 'Filtrar' | translate }}
             </button>
-            <button class="btn btn-primary fs-18 mt-3 mr-1" (click)="cargarDatosMesActual()">
+            <button class="btn btn-primary fs-18 mt-3 mr-1 pull-right" (click)="cargarDatosMesActual()">
                 {{ 'Mes actual' | translate }}
             </button>
-            <button class="btn btn-primary fs-18 mt-3 mr-1" (click)="cargarDatosMesAnterior()">
+            <button class="btn btn-primary fs-18 mt-3 mr-1 pull-right" (click)="cargarDatosMesAnterior()">
                 {{ 'Mes anterior' | translate }}
             </button>
         </div>
@@ -33,7 +33,7 @@
 </div>
 <div class="container-fluid">
     <!-- Ventas del Mes, Top Productos -->
-    <div class="row col-12 p-3">
+    <div class="row col-12 pb-3">
 
         <div class="col-sm-6">
             <div class="card shadow-sm h-100">

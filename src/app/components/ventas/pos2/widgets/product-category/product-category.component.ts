@@ -13,7 +13,7 @@ import { CarouselLibConfig, Image } from '@ks89/angular-modal-gallery';
 })
 export class ProductCategoryComponent {
 
-  public imagesRect: Image[];
+  public imagesRect: Image[] = [];
   public productCategory = productCategory;
   public options: any = {
   }
@@ -24,23 +24,32 @@ export class ProductCategoryComponent {
     this.libConfigCarouselFixed = {
       carouselPreviewsConfig: {
         visible: true,
-        number: 6,
+        number: 5,
         width: 'auto',
-        maxHeight: '100px'
+        maxHeight: '200px'
       },
       carouselConfig: {
         maxWidth: '70%',
         maxHeight: '70%',
         showArrows: true,
-        objectFit: 'cover',
         keyboardEnable: true,
-        modalGalleryEnable: true
+        modalGalleryEnable: true,
+        objectFit: 'none'
       }
     };
 
-    this.imagesRect = [
-      new Image(1, { img: 'assets/images/ecommerce/02.jpg' }, { img: 'assets/images/ecommerce/02.jpg' })];
-      
+    for (let index = 0; index < productCategory.length; index++) {
+      const element = productCategory[index];
+
+      const item: Image = {
+        id: index + 1,
+        modal: { img: element.category_image },
+        plain: { img: element.category_image }
+      }
+
+      this.imagesRect.push(item);
+    }
+
   }
 
   // public options: OwlOptions = {

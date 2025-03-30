@@ -51,8 +51,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     const mesAnterior = new Date().getMonth();
 
-    debugger;
-
     this.fechaInicial = new Date(new Date().getFullYear() + '-' + mesAnterior + '-01').toISOString().split('T')[0];
     this.fechaFinal = new Date(new Date().getFullYear() + '-' + mesAnterior + '-' + new Date().getDate()).toISOString().split('T')[0];
     this.cargarDatos();

@@ -12,6 +12,13 @@
     font-style: normal;
 }
 
+.montserrat {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 100;
+    font-style: normal;
+}
+
 
 // General variables
 $theme-font-color: #242934;
@@ -36,7 +43,7 @@ $dark-color : #2c323f;
 $gray-60 :#cccccc;
 $card-body-color : #f9f9fa;
 $transparent-color: transparent;
-$auth-bg-color:#fafafa;
+$auth-bg-color: #fafafa;
 $light : #fdfeff;
 $semi-dark :#59667a;
 $light-text: #999999;
@@ -48,10 +55,11 @@ $pitch-color: #fe8a7d;
 $color-scarpa: #4c5667;
 $color-fiord: #455a64;
 $black : #000;
-$white:#fff;
+$white: #fff;
 
 // gradient colors
 $gradient-primary: linear-gradient(26deg, var(--theme-deafult) 0%, #a26cf8 100%);
+$gradient-bg-primary: linear-gradient(26deg, var(--theme-deafult) 0%, #a26cf8 100%);
 
 //social colors
 $fb: #50598e;
@@ -60,7 +68,7 @@ $google-plus: #c64e40;
 $linkedin: #0077B5;
 
 //error input color start
-$light-body-bg-color:#fafdff;
+$light-body-bg-color: #fafdff;
 
 //fonts
 $font-rubik: Rubik;
@@ -69,6 +77,7 @@ $font-serif: sans-serif;
 $font-themify: themify;
 $font-awesome: FontAwesome;
 $font-ICO: IcoFont;
+$font-gray-color: #828282;
 
 // dark layout variables
 $dark-body-background: #1d1e26;
@@ -77,7 +86,7 @@ $dark-card-inbox: #323846;
 $dark-small-font-color: #98a6ad;
 $dark-all-font-color: rgba(255, 255, 255, 0.7);
 $light-all-font-color: rgba(255, 255, 255, 0.2);
-$sidebar-submenu-font-color:rgba(255, 255, 255, 0.7);
+$sidebar-submenu-font-color: rgba(255, 255, 255, 0.7);
 $dark-border-color: $dark-body-background;
 $dark-card-border: #374558;
 $dark-editor-document: #2b2b2b;
@@ -160,6 +169,8 @@ $alert-msg-icon-size :16px;
 //badge settings
 $badge-padding :0.44em 0.7em;
 $badge-svg-size :14px;
+$badge-light-color: #eaeaea;
+//$badge-light-name: 
 
 //form input settings
 $form-group-margin-bottom : 1.25em;
@@ -256,7 +267,7 @@ $sidebar-arrow-margin-top: 2px;
 $sidebar-arrow-size: 15px;
 $sidebar-arrow-color: $theme-body-font-color;
 $sidebar-open-icon: "\f107";
-$sidebar-close-icon:"\f105";
+$sidebar-close-icon: "\f105";
 $sidebar-icon-font-family: $font-awesome;
 $sidebar-height: calc(100vh - 115px);
 
@@ -295,3 +306,6 @@ $header-wrapper-nav-icon-color : $theme-font-color;
 $header-wrapper-nav-icon-align : middle;
 $header-size: 136px;
 $box-layout-space : 40px;
+
+// widgets variables
+$widget-shadow: 1px 2px 21px -2px rgba(214, 214, 227, 0.83);

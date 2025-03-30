@@ -91,8 +91,6 @@ export class EditProfileComponent implements OnInit, OnDestroy {
     this.file = this.subirfoto.nativeElement.files[0];
     var referencia = this.storage.storage.ref('Perfil/' + `${this.namestorage}` + '/' + `${this.file.name}`);
 
-    debugger;
-
     var uploadImg = referencia.put(this.file).then((res: any) => {
       referencia.getDownloadURL().then((data: any) => {
 

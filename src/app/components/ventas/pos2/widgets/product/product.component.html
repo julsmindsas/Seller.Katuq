@@ -23,8 +23,8 @@
         </div>
     </div>
     <div class="card-body main-our-product">
-        <div class="row g-3" *ngFor="let product of filteredProduct; track product;let i = index">
-            <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4">
+        <div class="row g-3" >
+            <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4" *ngFor="let product of filteredProduct; track product;let i = index">
                 <div class="our-product-wrapper h-100 widget-hover">
                     <div class="our-product-img">
                         <img [src]="product.product_image" [alt]="product.product_name">
@@ -35,10 +35,10 @@
                             <h6 class="txt-primary">${{ product.price | number: '1.2-2' }}</h6>
                             <div class="common-f-start">
                                 <div class="add-quantity btn border text-gray f-w-500">
-                                    <i class="fa-solid fa-minus decrement-btn"
+                                    <i class="fa fa-minus decrement-btn"
                                         (click)="updateQuantity(-1, product)"></i>
                                     <input class="countdown-remove" type="text" [value]="product.quantity">
-                                    <i class="fa-solid fa-plus increment-btn" (click)="updateQuantity(1, product)"></i>
+                                    <i class="fa fa-plus increment-btn" (click)="updateQuantity(1, product)"></i>
                                 </div>
                                 <div class="btn border f-w-500">
                                     <span class="text-gray" (click)="addToCart(product)">Add</span>
