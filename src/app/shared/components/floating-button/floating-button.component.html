@@ -5,7 +5,7 @@
         'minimized': chatMinimized,
         'options-visible': optionsPanelVisible,
         'voice-mode': selectedMode === 'voice' && isListening,
-        'voice-call-mode': selectedMode === 'voice' && isListening && isMobile
+        'voice-call-mode': selectedMode === 'voice' && isListening
      }">
   
   <!-- Botón flotante principal -->
@@ -79,25 +79,37 @@
     Pregúntale a K.A.I.
   </span>
   
-  <!-- Modo de voz - versión normal y móvil -->
-  <div *ngIf="selectedMode === 'voice' && isListening" class="voice-mode-container" [ngClass]="{'voice-call-mode': isMobile}">
-    <!-- Vista tipo llamada para móvil -->
-    <div *ngIf="isMobile" class="voice-call-ui">
-      <div class="call-header">
-        <span class="call-status">Llamada en curso con K.A.I.</span>
-        <span class="call-timer">{{callDuration}}</span>
+  <!-- Modo de voz unificado para móvil y escritorio -->
+  <div *ngIf="selectedMode === 'voice' && isListening" class="voice-mode-container" [ngClass]="{'voice-call-mode': true}"
+       [style.transform]="!isMobile ? 'translate3d(' + voiceWindowPosition.x + 'px, ' + voiceWindowPosition.y + 'px, 0)' : ''"
+       [style.position]="!isMobile ? 'absolute' : ''">
+    <div class="voice-call-ui">
+      <!-- Barra de título arrastrable en escritorio con botón para colgar -->
+      <div class="call-header" (mousedown)="startDrag($event)" [ngClass]="{'draggable': !isMobile}">
+        <span class="call-status">Asistente K.A.I. activo</span>
+        <div class="header-controls">
+          <span class="call-timer">{{callDuration}}</span>
+          <!-- Botón adicional para colgar en el encabezado (siempre visible) -->
+          <button *ngIf="!isMobile" class="header-end-call-btn" (click)="stopVoiceMode($event)" title="Finalizar llamada">
+            <i class="fa fa-phone"></i>
+          </button>
+        </div>
       </div>
       
       <div class="call-avatar-container">
         <div class="call-avatar"></div>
         <div class="call-name">K.A.I.</div>
-        <div class="call-status-text">{{currentStepText || 'Escuchando...'}}</div>
+        <div class="call-status-text">{{currentStepText || 'Escuchando...'}}
+          <span *ngIf="audioError" class="badge bg-danger ms-2">
+            <i class="fa fa-exclamation-circle"></i>
+          </span>
+        </div>
       </div>
       
-      <!-- Nueva área para mostrar imágenes por pasos -->
+      <!-- Área para mostrar imágenes por pasos -->
       <div class="call-visual-content" [ngClass]="{'has-content': hasVisualContent}">
         <div class="content-steps" *ngIf="hasVisualContent">
-          <!-- Indicador de pasos mejorado -->
+          <!-- Indicador de pasos -->
           <div class="steps-indicator">
             <div class="step-dot" *ngFor="let step of visualSteps; let i = index" 
                  [ngClass]="{'active': currentStepIndex === i}"
@@ -132,7 +144,7 @@
         <!-- Mensaje cuando no hay contenido visual -->
         <div class="no-content-message" *ngIf="!hasVisualContent">
           <i class="fa fa-image"></i>
-          <span>Te mostraré los pasos para crear una venta</span>
+          <span>El contenido visual aparecerá aquí</span>
         </div>
       </div>
       
@@ -144,7 +156,8 @@
         <div class="call-wave"></div>
       </div>
       
-      <div class="call-controls">
+      <!-- Mejora de visibilidad para los controles de llamada (con clase extra para fijarlos) -->
+      <div class="call-controls" [ngClass]="{'fixed-controls': !isMobile && hasVisualContent}">
         <button class="call-control-btn mute-btn" (click)="toggleMute($event)" [ngClass]="{'muted': isMuted}">
           <i class="fa" [ngClass]="isMuted ? 'fa-microphone-slash' : 'fa-microphone'"></i>
         </button>
@@ -156,26 +169,9 @@
         </button>
       </div>
       
-      <div *ngIf="audioError" class="call-error">{{audioError}}</div>
-    </div>
-    
-    <!-- Vista estándar para escritorio (mantener la existente) -->
-    <div *ngIf="!isMobile" class="voice-mode-standard">
-      <div class="voice-mode-header">
-        <span class="voice-title">K.A.I. está escuchando...</span>
-        <button class="stop-voice-btn" (click)="stopVoiceMode($event)" title="Detener">
-          <i class="fa fa-stop-circle"></i>
-        </button>
-      </div>
-      <div class="voice-visualizer">
-        <div class="voice-wave"></div>
-        <div class="voice-wave"></div>
-        <div class="voice-wave"></div>
-        <div class="voice-wave"></div>
-        <div class="voice-wave"></div>
-      </div>
-      <div class="voice-instructions">
-        Habla claramente. Puedes decir "Ayuda" para obtener instrucciones.
+      <!-- Mensaje de error con mejor visibilidad -->
+      <div *ngIf="audioError" class="call-error">
+        <i class="fa fa-warning me-2"></i>{{audioError}}
       </div>
     </div>
   </div>

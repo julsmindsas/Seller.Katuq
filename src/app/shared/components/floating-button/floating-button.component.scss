@@ -1176,3 +1176,223 @@ a {
         }
     }
 }
+
+/* Estilos para la interfaz de llamada en modo voz - Ahora universales */
+.voice-call-mode {
+    position: fixed !important;
+    z-index: 99999 !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: slide-up-fullscreen 0.3s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    
+    /* Estilo para móvil (pantalla completa) */
+    @media (max-width: 768px) {
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: none !important;
+        max-width: 100vw !important;
+        background-color: rgba(0, 0, 0, 0.9) !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 20px !important;
+        box-shadow: none !important;
+    }
+    
+    /* Estilo para escritorio (panel flotante con más tamaño) */
+    @media (min-width: 769px) {
+        /* En escritorio no usamos posición fija para permitir que se mueva */
+        /* position ya no es fixed para permitir transform */
+        width: 450px !important; /* Aumentamos el ancho de 400px a 450px */
+        min-height: 600px !important; /* Aumentamos la altura mínima de 500px a 600px */
+        max-height: 90vh !important; /* Aumentamos la altura máxima de 80vh a 90vh */
+        background-color: rgba(0, 0, 0, 0.85) !important;
+        border-radius: 16px !important;
+        padding: 20px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+        overflow: hidden !important;
+    }
+}
+
+/* Estilos para el encabezado cuando es arrastrable */
+.call-header.draggable {
+    cursor: grab;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    &:active {
+        cursor: grabbing;
+    }
+    
+    /* Estilos para los controles en el encabezado */
+    .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        
+        .header-end-call-btn {
+            width: 28px;
+            height: 28px;
+            background-color: #f44336;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transform: rotate(135deg);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            
+            &:hover {
+                background-color: darken(#f44336, 10%);
+                transform: rotate(135deg) scale(1.1);
+            }
+        }
+    }
+}
+
+.voice-call-ui {
+    // ...existing code...
+    
+    /* Mejoras para botones especialmente en escritorio */
+    .call-controls {
+        /* Asegurar que los controles son siempre visibles */
+        padding: 15px 0 25px;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        margin-top: 10px;
+        position: relative; /* Cambio a relative por defecto */
+        z-index: 10;
+        
+        /* Cuando los controles están fijos (en escritorio con contenido visual) */
+        &.fixed-controls {
+            position: sticky !important; /* Usar sticky para mantenerlo visible */
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            margin-top: 20px;
+            padding-bottom: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+        }
+        
+        .call-control-btn {
+            /* Mejora de visibilidad */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            
+            &.end-call-btn {
+                /* Asegurar que el botón de colgar sea más destacado */
+                background-color: #f44336;
+                color: white;
+                transform: rotate(135deg);
+                font-size: 24px;
+                
+                @media (min-width: 769px) {
+                    width: 60px !important;
+                    height: 60px !important;
+                    font-size: 22px !important;
+                }
+            }
+        }
+    }
+    
+    /* Ajustes adicionales para cuando hay contenido visual en escritorio */
+    @media (min-width: 769px) {
+        .call-visual-content.has-content {
+            /* Reducimos un poco la altura máxima para dejar espacio a los controles */
+            max-height: 340px;
+            margin-bottom: 60px;
+        }
+    }
+    
+    .call-avatar-container {
+        // ...existing code...
+        
+        /* Reducimos el margen en escritorio para dar más espacio a los pasos */
+        @media (min-width: 769px) {
+            margin: 20px 0 !important;
+            
+            .call-avatar {
+                width: 100px !important;
+                height: 100px !important;
+            }
+        }
+    }
+    
+    /* Mejoras para el área visual en escritorio */
+    .call-visual-content {
+        // ...existing code...
+        
+        /* En escritorio, aumentamos el espacio para el contenido visual */
+        @media (min-width: 769px) {
+            &.has-content {
+                min-height: 280px !important; /* Aumentamos la altura mínima */
+                max-height: 400px !important; /* Aumentamos la altura máxima */
+                margin: 15px 0 !important;
+            }
+        }
+    }
+    
+    .call-visualizer {
+        // ...existing code...
+        
+        /* Reducimos la altura del visualizador en escritorio */
+        @media (min-width: 769px) {
+            height: 40px !important;
+            margin: 10px 0 !important;
+        }
+    }
+    
+    /* Mejoras para botones especialmente en escritorio */
+    .call-controls {
+        // ...existing code...
+        
+        /* Ajustamos el padding en escritorio */
+        @media (min-width: 769px) {
+            padding: 10px 0 15px !important;
+            margin-top: 5px !important;
+        }
+        
+        // ...existing code...
+    }
+    
+    /* Ajustes adicionales para cuando hay contenido visual en escritorio */
+    @media (min-width: 769px) {
+        .call-visual-content.has-content {
+            /* Reducimos un poco el margen inferior */
+            margin-bottom: 20px !important;
+        }
+        
+        /* Mejora para el carrusel de pasos */
+        .content-steps .steps-carousel .step-item .step-image {
+            min-height: 180px !important; /* Aumentamos la altura mínima de las imágenes */
+        }
+        
+        /* Hacemos más visible el título del paso */
+        .content-steps .steps-carousel .step-item .step-title {
+            font-size: 18px !important;
+            margin-bottom: 12px !important;
+        }
+    }
+}
+
+// ...existing code...
+
+/* Vista estándar para escritorio - Ya no se usa, pero mantenemos por compatibilidad */
+.voice-mode-standard {
+    display: none; /* Ocultamos la vista antigua */
+}
+
+// ...existing code...
