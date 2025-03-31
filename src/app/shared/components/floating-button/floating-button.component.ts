@@ -3,6 +3,12 @@ import { AuthService } from '../../services/firebase/auth.service';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 
+// Interfaz para los pasos visuales
+interface VisualStep {
+  imageUrl: string;
+  caption?: string;
+}
+
 @Component({
   selector: 'app-floating-button',
   templateUrl: './floating-button.component.html',
@@ -36,6 +42,12 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   private callTimer: any = null;
   private callStartTime: number = 0;
   private callSeconds: number = 0;
+
+  // Propiedades para los pasos visuales
+  public hasVisualContent: boolean = false;
+  public visualSteps: VisualStep[] = [];
+  public currentStepIndex: number = 0;
+  public currentStepText: string = '';
 
   constructor(
     public authService: AuthService,
@@ -136,9 +148,17 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     // Iniciar el cronómetro para la duración de la llamada
     this.startCallTimer();
     
+    // Limpiar cualquier contenido visual previo
+    this.clearVisualContent();
+    
     try {
       // Iniciar la sesión WebRTC
       await this.startSession();
+      
+      // Solo para demostración, cargar algunos pasos de ejemplo
+      // En producción, estos vendrían del modelo o API
+      setTimeout(() => this.loadDemoContent(), 3000);
+      
     } catch (error) {
       console.error('Error al iniciar la sesión de voz:', error);
       this.isListening = false;
@@ -184,6 +204,9 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     // Detener la sesión WebRTC
     this.stopSession();
     this.stopCallTimer();
+    
+    // Limpiar contenido visual
+    this.clearVisualContent();
     
     if (this.voiceSocket) {
       this.voiceSocket.close();
@@ -532,6 +555,112 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
     this.sendClientEvent(event);
     this.sendClientEvent({ type: "response.create" });
+  }
+
+  // Método para cargar contenido visual de demostración
+  loadDemoContent() {
+    this.ngZone.run(() => {
+      this.visualSteps = [
+        { 
+          imageUrl: 'assets/images/ventas/paso-catalogo.jpg', // Usar imágenes propias si están disponibles o crear nuevas
+          caption: '1. Catálogo: Selecciona una ubicación de destino y elige los productos del catálogo' 
+        },
+        { 
+          imageUrl: 'assets/images/ventas/paso-carrito.jpg', 
+          caption: '2. Carrito y Notas: Revisa tus productos seleccionados y agrega notas al pedido' 
+        },
+        { 
+          imageUrl: 'assets/images/ventas/paso-cliente.jpg', 
+          caption: '3. Datos Cliente: Busca un cliente existente o crea uno nuevo con sus datos completos' 
+        },
+        { 
+          imageUrl: 'assets/images/ventas/paso-facturacion.jpg', 
+          caption: '4. Datos de Facturación: Completa la información para la facturación electrónica' 
+        },
+        { 
+          imageUrl: 'assets/images/ventas/paso-entrega.jpg', 
+          caption: '5. Datos de Entrega: Define la dirección y detalles para la entrega del pedido' 
+        },
+        { 
+          imageUrl: 'assets/images/ventas/paso-pago.jpg', 
+          caption: '6. Resumen y Pago: Revisa el pedido completo y procede al pago' 
+        },
+        { 
+          imageUrl: 'assets/images/ventas/paso-confirmacion.jpg', 
+          caption: '7. Confirmación: ¡Venta completada exitosamente!' 
+        }
+      ];
+      
+      this.hasVisualContent = this.visualSteps.length > 0;
+      this.currentStepIndex = 0;
+      this.updateCurrentStepText();
+    });
+  }
+
+  // Actualizar el texto que se muestra bajo el avatar para ser más específico
+  updateCurrentStepText() {
+    if (this.hasVisualContent && this.visualSteps[this.currentStepIndex]) {
+      const stepNumber = this.currentStepIndex + 1;
+      const stepPrefix = stepNumber === 1 ? 'Comienza por ' : 
+                        stepNumber === this.visualSteps.length ? 'Finalmente, ' : 
+                        'Ahora ';
+      
+      this.currentStepText = `${stepPrefix}${this.visualSteps[this.currentStepIndex].caption.split(':')[0]}`;
+    } else {
+      this.currentStepText = 'Escuchando...';
+    }
+  }
+
+  // Agregar un método para ir a un paso específico (útil para navegar directamente)
+  goToStep(stepIndex: number, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    if (stepIndex >= 0 && stepIndex < this.visualSteps.length) {
+      this.currentStepIndex = stepIndex;
+      this.updateCurrentStepText();
+      
+      // Opcional: Anunciar el cambio de paso mediante voz
+      this.sendTextMessage(`Mostrando paso ${stepIndex + 1}: ${this.visualSteps[stepIndex].caption.split(':')[1].trim()}`);
+    }
+  }
+
+  // Navegar al paso anterior
+  previousStep(event: MouseEvent) {
+    event.stopPropagation();
+    if (this.currentStepIndex > 0) {
+      this.currentStepIndex--;
+      this.updateCurrentStepText();
+    }
+  }
+  
+  // Navegar al siguiente paso
+  nextStep(event: MouseEvent) {
+    event.stopPropagation();
+    if (this.currentStepIndex < this.visualSteps.length - 1) {
+      this.currentStepIndex++;
+      this.updateCurrentStepText();
+    }
+  }
+  
+  // Borrar todo el contenido visual
+  clearVisualContent() {
+    this.visualSteps = [];
+    this.hasVisualContent = false;
+    this.currentStepIndex = 0;
+    this.currentStepText = '';
+  }
+  
+  // Método para agregar un nuevo paso desde datos externos (API, modelo, etc.)
+  addVisualStep(step: VisualStep) {
+    this.ngZone.run(() => {
+      this.visualSteps.push(step);
+      this.hasVisualContent = true;
+      
+      // Si es el primer paso, actualizamos el texto
+      if (this.visualSteps.length === 1) {
+        this.currentStepIndex = 0;
+        this.updateCurrentStepText();
+      }
+    });
   }
 
   ngOnDestroy(): void {

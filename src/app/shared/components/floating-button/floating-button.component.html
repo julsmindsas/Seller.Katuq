@@ -91,7 +91,49 @@
       <div class="call-avatar-container">
         <div class="call-avatar"></div>
         <div class="call-name">K.A.I.</div>
-        <div class="call-status-text">Escuchando...</div>
+        <div class="call-status-text">{{currentStepText || 'Escuchando...'}}</div>
+      </div>
+      
+      <!-- Nueva área para mostrar imágenes por pasos -->
+      <div class="call-visual-content" [ngClass]="{'has-content': hasVisualContent}">
+        <div class="content-steps" *ngIf="hasVisualContent">
+          <!-- Indicador de pasos mejorado -->
+          <div class="steps-indicator">
+            <div class="step-dot" *ngFor="let step of visualSteps; let i = index" 
+                 [ngClass]="{'active': currentStepIndex === i}"
+                 (click)="goToStep(i, $event)"
+                 [title]="'Paso ' + (i+1)"></div>
+          </div>
+          
+          <!-- Contenedor de imágenes con animación de carrusel -->
+          <div class="steps-carousel">
+            <div class="step-item" *ngFor="let step of visualSteps; let i = index"
+                 [ngClass]="{'active': currentStepIndex === i}">
+              <h5 class="step-title">Paso {{i+1}} de {{visualSteps.length}}</h5>
+              <div class="step-image" [style.background-image]="'url(' + step.imageUrl + ')'"></div>
+              <div class="step-caption" *ngIf="step.caption">
+                {{step.caption.includes(':') ? step.caption.split(':')[1] : step.caption}}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Controles de navegación de pasos -->
+          <div class="steps-controls" *ngIf="visualSteps.length > 1">
+            <button class="step-control prev" (click)="previousStep($event)" [disabled]="currentStepIndex === 0">
+              <i class="fa fa-chevron-left"></i>
+            </button>
+            <span class="step-counter">{{currentStepIndex + 1}} / {{visualSteps.length}}</span>
+            <button class="step-control next" (click)="nextStep($event)" [disabled]="currentStepIndex >= visualSteps.length - 1">
+              <i class="fa fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Mensaje cuando no hay contenido visual -->
+        <div class="no-content-message" *ngIf="!hasVisualContent">
+          <i class="fa fa-image"></i>
+          <span>Te mostraré los pasos para crear una venta</span>
+        </div>
       </div>
       
       <div class="call-visualizer">
