@@ -1024,17 +1024,31 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
       setClientInfo: async (args: {
         name: string,
-        email?: string,
+        email: string,
         phone?: string,
+        address: string, // Se agrega este campo para la dirección
         isNewClient?: boolean
       }) => {
         console.log('👤 PASO 3: Guardando información del cliente', args);
+
+        // Validar formato de correo electrónico
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(args.email)) {
+          return { success: false, error: "El correo electrónico proporcionado no es válido." };
+        }
+
+        // Validar que la dirección no esté vacía
+        if (!args.address || args.address.trim().length === 0) {
+          return { success: false, error: "La dirección es obligatoria y no puede estar vacía." };
+        }
+
         try {
           // Almacenamos la información del cliente en nuestro estado
           this.currentSaleProcess.client = {
             name: args.name,
-            email: args.email || 'cliente@ejemplo.com',
+            email: args.email,
             phone: args.phone || 'No especificado',
+            address: args.address, // Guardamos la dirección
             isNewClient: args.isNewClient || false,
             id: args.isNewClient ? 'NUEVO' : 'CL' + Math.floor(Math.random() * 10000)
           };
