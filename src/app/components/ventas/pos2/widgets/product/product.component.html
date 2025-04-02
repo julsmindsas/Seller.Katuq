@@ -10,7 +10,7 @@
                     <span class="input-group-text">
                         <i data-feather="search" height="16" width="16" class="fc-gray"></i>
                     </span>
-                    <input class="form-control" type="text" placeholder="Search Product..." list="datalistOptionsSearch"
+                    <input class="form-control" type="text" placeholder="{{'Buscar producto...' | translate}}" list="datalistOptionsSearch"
                         id="exampleDataList1" [(ngModel)]="searchQuery" (input)="searchStores()">
                     <datalist id="datalistOptionsSearch">
                         <option value="Bluetooth Calling Smartwatch"></option>
@@ -27,21 +27,21 @@
             <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4" *ngFor="let product of filteredProduct; track product;let i = index">
                 <div class="our-product-wrapper h-100 widget-hover">
                     <div class="our-product-img">
-                        <img [src]="product.product_image" [alt]="product.product_name">
+                        <img [src]="product.crearProducto.imagenesPrincipales[0].urls" [alt]="product.product_name">
                     </div>
                     <div class="our-product-content">
-                        <h6 class="f-14 f-w-500 pt-2 pb-1">{{ product.product_name }}</h6>
+                        <h6 class="f-14 f-w-500 pt-2 pb-1">{{ product.crearProducto.titulo }}</h6>
                         <div>
-                            <h6 class="txt-primary">${{ product.price | number: '1.2-2' }}</h6>
+                            <h6 class="txt-primary">${{ product.precio.precioUnitarioConIva | number: '1.2-2' }}</h6>
                             <div class="common-f-start">
                                 <div class="add-quantity btn border text-gray f-w-500">
-                                    <i class="fa fa-minus decrement-btn"
+                                    <i class="fa fa-minus decrement-btn icono-pos"
                                         (click)="updateQuantity(-1, product)"></i>
-                                    <input class="countdown-remove" type="text" [value]="product.quantity">
-                                    <i class="fa fa-plus increment-btn" (click)="updateQuantity(1, product)"></i>
+                                    <input class="countdown-remove fs-14" type="text" [value]="product.cantidad">
+                                    <i class="fa fa-plus increment-btn icono-pos" (click)="updateQuantity(1, product)"></i>
                                 </div>
                                 <div class="btn border f-w-500">
-                                    <span class="text-gray" (click)="addToCart(product)">Add</span>
+                                    <span class="text-black fs-14" (click)="addToCart(product)">{{'Adicionar' | translate}}</span>
                                 </div>
                             </div>
                         </div>

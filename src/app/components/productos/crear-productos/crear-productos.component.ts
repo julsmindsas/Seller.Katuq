@@ -735,7 +735,7 @@ export class CrearProductosComponent implements OnInit, OnChanges {
   };
 
   ngOnInit(): void {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
     const texto = this.empresaActual.nomComercial.toString().replace(" ", "");
     this.ultimasLetras = texto.substring(0, 3);
     this.procesoComercial.valueChanges.subscribe((valor: any) => {});

@@ -5,52 +5,52 @@ export const productCategory: ProductCategory[] = [
     {
         id: 1,
         category_name: 'Phone',
-        category_image: 'assets/images/shop-categories/phone.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/phone.png'
     },
     {
         id: 2,
         category_name: 'Camera',
-        category_image: 'assets/images/shop-categories/camera.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/camera.png'
     },
     {
         id: 3,
         category_name: 'Laptop',
-        category_image: 'assets/images/shop-categories/laptop.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/laptop.png'
     },
     {
         id: 4,
         category_name: 'Mouse',
-        category_image: 'assets/images/shop-categories/mouse.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/mouse.png'
     },
     {
         id: 5,
         category_name: 'TV',
-        category_image: 'assets/images/shop-categories/tv.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/tv.png'
     },
     {
         id: 6,
         category_name: 'Drone',
-        category_image: 'assets/images/shop-categories/drone.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/drone.png'
     },
     {
         id: 7,
         category_name: 'Watch',
-        category_image: 'assets/images/shop-categories/watch.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/watch.png'
     },
     {
         id: 8,
         category_name: 'Headphone',
-        category_image: 'assets/images/shop-categories/headphone.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/headphone.png'
     },
     {
         id: 9,
         category_name: 'Speaker',
-        category_image: 'assets/images/shop-categories/speaker.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/speaker.png'
     },
     {
         id: 10,
         category_name: 'Games',
-        category_image: 'assets/images/shop-categories/controller.png'
+        category_image: 'assets/images/dashboard-8/shop-categories/controller.png'
     }
 ]
 
@@ -217,12 +217,12 @@ export const posOrder: OrderDetailsProduct[] = [
 export const checkoutMethod = [
   {
     id: 1,
-    title: 'Cash',
+    title: 'Efectivo',
     image: 'assets/images/dashboard-8/payment-option/cash.svg'
   },
   {
     id: 2,
-    title: 'Card',
+    title: 'Tarjetas',
     image: 'assets/images/dashboard-8/payment-option/card.svg'
   },
   {

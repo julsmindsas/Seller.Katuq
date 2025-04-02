@@ -3,6 +3,7 @@ import { RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { CarouselModule } from 'primeng/carousel';
 
 import { DragulaModule } from 'ng2-dragula';
 import { TranslateModule } from '@ngx-translate/core';
@@ -88,7 +89,8 @@ import { PlanSelectorComponent } from './components/plan-selector/plan-selector.
     ReactiveFormsModule,
     NgbModule,
     DragulaModule.forRoot(),
-    TranslateModule
+    TranslateModule,
+    CarouselModule
   ],
   providers: [
     NavService,
@@ -113,7 +115,8 @@ import { PlanSelectorComponent } from './components/plan-selector/plan-selector.
     OnlyNumbersDirective,
     ImagesManagerComponent,
     KatuqIntelligenceComponent,
-    SharedChangePasswordComponent
+    SharedChangePasswordComponent,
+    CarouselModule
     // FloatingButtonComponent,
     // ChatFormComponent
   ],

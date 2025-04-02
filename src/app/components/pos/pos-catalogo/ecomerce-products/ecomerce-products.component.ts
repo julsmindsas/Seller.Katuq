@@ -330,7 +330,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnDestr
 
 
   getAllFilters() {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
 
     forkJoin([
       this.maestroService.getFormaEntrega(),

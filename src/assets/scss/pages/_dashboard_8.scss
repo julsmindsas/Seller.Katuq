@@ -494,6 +494,21 @@
     }
 }
 
+.order-details .order-quantity .order-details-wrapper .category-details .right-details {
+    padding: 4px;
+    background-color: var(--light-slate);
+    border-radius: 50px;
+    text-align: center;
+    margin: 0;
+}
+
+.icono-pos{
+    color: #8e8e8e;
+    font-size: 10px;
+    font-weight: 100;
+}
+
+
 // Payment Methods
 .payment-methods {
     display: flex;

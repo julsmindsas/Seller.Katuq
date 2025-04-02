@@ -1,11 +1,8 @@
-// import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-// import { FormsModule } from '@angular/forms';
-
-// import { FeatherIconComponent } from "../../../../../shared/components/ui/feather-icon/feather-icon.component";
-import { products } from '../../../../../../assets/data/pos';
-import { OrderDetailsProduct } from '../../../../../shared/models/pos/order';
+// import { products } from '../../../../../../assets/data/pos';
+// import { OrderDetailsProduct } from '../../../../../shared/models/pos/order';
 import { CartService } from '../../../../../shared/services/cart.service';
+import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
 
 @Component({
   selector: 'app-product',
@@ -15,31 +12,54 @@ import { CartService } from '../../../../../shared/services/cart.service';
 
 export class ProductComponent implements OnInit {
 
-  public products = products;
-  public filteredProduct: OrderDetailsProduct[] = products;
+  public products: any[] = [];
+  public filteredProduct: any[] = [];
   public searchQuery: string = '';
   public filter = {
     search: '',
   };
 
-  constructor(public cartService: CartService) { }
+  constructor(
+    public cartService: CartService,
+    private maestroService: MaestroService
+  ) {
+
+    this.obtenerProductos();
+
+  }
 
   ngOnInit(): void {
 
   }
 
-  updateQuantity(value: number, product: OrderDetailsProduct) {
-    if (value === 1 && product.quantity < product.total_quantity) {
-      product.quantity += 1;
-    } else if (value === -1 && product.quantity > 1) {
-      product.quantity -= 1;
+  obtenerProductos() {
+
+    this.maestroService.getAllProductsPagination(100, 1).subscribe((r: any) => {
+      if ((r.products as any[]).length > 0) {
+        const productosPorEmpresa = r.products;
+        let data = productosPorEmpresa;
+        this.products = data.map(product => ({
+          ...product,
+          cantidad: 1
+        }));
+        
+        this.filteredProduct = this.products;
+      }
+      console.log("🚀 ~ file: list.component.ts:140 ~ ListComponent ~ this.nodeService.obtenerProductos ~ r", r)
+    });
+  }
+  updateQuantity(value: number, product: any) {
+    if (value === 1 && product.cantidad < product.disponibilidad.cantidadDisponible) {
+      product.cantidad += 1;
+    } else if (value === -1 && product.cantidad > 1) {
+      product.cantidad -= 1;
     }
   }
 
-  addToCart(product: OrderDetailsProduct) {
-    const updatedProduct: OrderDetailsProduct = {
+  addToCart(product: any) {
+    const updatedProduct: any = {
       ...product,
-      quantity: product.quantity
+      cantidad: product.cantidad
     };
     this.cartService.posAddToCart(updatedProduct);
   }
