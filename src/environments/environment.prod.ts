@@ -23,5 +23,6 @@ export const environment = {
     event: 'test_events_AaaZdg5VB8tngBhZkogbXmDpbT9nWMH5',
     redirectURL: 'https://sellercenter.katuq.com/payment-callback',
     redirectURLTest: 'http://localhost:4200/payment-callback',
-  }
+  },
+  useModelBig: false,
 };

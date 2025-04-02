@@ -148,6 +148,10 @@
         </div>
       </div>
       
+      <div class="step-info" *ngIf="hasVisualContent">
+        {{ currentStepText }}
+      </div>
+      
       <div class="call-visualizer">
         <div class="call-wave"></div>
         <div class="call-wave"></div>

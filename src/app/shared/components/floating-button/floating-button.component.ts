@@ -79,6 +79,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     completed: false
   };
   empresaActual: any;
+  useModelBig: any;
 
   constructor(
     public authService: AuthService,
@@ -95,7 +96,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   ) {
     // Detectar si es un dispositivo móvil
     this.detectMobileDevice();
-
+    this.useModelBig = environment.useModelBig;
     // Escuchar cambios de orientación y tamaño de ventana
     window.addEventListener('resize', () => {
       this.detectMobileDevice();
@@ -389,8 +390,9 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
   // Iniciar sesión WebRTC
   async startSession(): Promise<void> {
+    const urlApi = environment.urlApi;
     // Obtener token para API de OpenAI Realtime
-    const tokenResponse = await this.httpClient.get("https://api.katuq.com/v1/katuqintelligence/token").toPromise();
+    const tokenResponse = await this.httpClient.get(`${urlApi}/v1/katuqintelligence/token`).toPromise();
     const data = tokenResponse as any;
     const EPHEMERAL_KEY = data.client_secret.value;
 
@@ -481,7 +483,9 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     await this.peerConnection.setLocalDescription(offer);
 
     const baseUrl = "https://api.openai.com/v1/realtime";
-    const model = "gpt-4o-mini-realtime-preview-2024-12-17";
+    const modelBig = "gpt-4o-realtime-preview-2024-12-17";
+    const modelMini = "gpt-4o-mini-realtime-preview-2024-12-17";
+    const model = this.useModelBig ? modelBig : modelMini;
 
     // Realizar la petición a la API de OpenAI
     const response = await fetch(`${baseUrl}?model=${model}`, {
@@ -1633,9 +1637,11 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
           properties: {
             name: { type: 'string', description: 'Nombre del cliente' },
             email: { type: 'string', description: 'Email (opcional)' },
-            phone: { type: 'string', description: 'Teléfono (opcional)' }
+            phone: { type: 'string', description: 'Teléfono (opcional)' },
+            address: { type: 'string', description: 'Dirección del cliente' },
+            isNewClient: { type: 'boolean', description: 'Indica si es un cliente nuevo' }
           },
-          required: ['name']
+          required: ['name', 'address']
         }
       },
       {
