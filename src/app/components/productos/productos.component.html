@@ -17,7 +17,7 @@
                 </div>
 
                 <div class="card-body p-4 custom-datatable">
-                    <div class="row col-12">
+                    <div class="row col-12 mb-4">
                         <div class="col-6">
                             <input type="text" class="filter-ngx form-control mb-3" style="width: 100% !important"
                                 placeholder="{{ 'Escribe lo que quieres filtrar y luego pulsa enter para accionar' | translate }}" (keyup)="updateFilter($event)" />
@@ -40,66 +40,67 @@
 
                     <!-- La tabla de PrimeNG -->
                     <p-table #dt [value]="rows" [paginator]="true" [resizableColumns]="true" [scrollable]="true"
-                        scrollHeight="400px" [loading]="cargando" [rowsPerPageOptions]="[10, 20, 50]" [paginator]="true"
+                        [loading]="cargando" [rowsPerPageOptions]="[10, 20, 50]" [paginator]="true"
                         [rows]="pageSize" [totalRecords]="totalItems" [sortField]="'crearProducto.titulo'"
-                        [sortOrder]="1" (onLazyLoad)="onPageChange($event)" [lazy]="true">
+                        [sortOrder]="1" styleClass="p-datatable-gridlines"  (onLazyLoad)="onPageChange($event)" [lazy]="true"
+                        [tableStyle]="{ 'min-width': '10rem' }" [rowHover]="true" [showCurrentPageReport]="true">
                         <!-- ENCABEZADO -->
                         <ng-template pTemplate="header">
                             <tr>
                                 <!-- Imagen (no solemos darle sort, pero puedes quitar pSortableColumn si lo prefieres) -->
-                                <th pSortableColumn="imagen">
+                                <th class="text-center" pSortableColumn="imagen">
                                     {{ "Imagen" | translate }}
-                                    <p-sortIcon field="imagen"></p-sortIcon>
+                                    <!-- <p-sortIcon field="imagen"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="crearProducto.titulo">
+                                <th class="text-center" pSortableColumn="crearProducto.titulo">
                                     {{ "Título" | translate }}
-                                    <p-sortIcon field="crearProducto.titulo"></p-sortIcon>
+                                    <!-- <p-sortIcon field="crearProducto.titulo"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="identificacion.referencia" *ngIf="!isMobile">
+                                <th class="text-center" pSortableColumn="identificacion.referencia" *ngIf="!isMobile">
                                     {{ "Referencia" | translate }}
-                                    <p-sortIcon field="identificacion.referencia"></p-sortIcon>
+                                    <!-- <p-sortIcon field="identificacion.referencia"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="disponibilidad.cantidadDisponible" *ngIf="!isMobile">
+                                <th class="text-center" pSortableColumn="disponibilidad.cantidadDisponible" *ngIf="!isMobile">
                                     {{ "Cantidad disponible" | translate }}
-                                    <p-sortIcon field="disponibilidad.cantidadDisponible"></p-sortIcon>
+                                    <!-- <p-sortIcon field="disponibilidad.cantidadDisponible"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="exposicion.activar" *ngIf="!isMobile">
+                                <th class="text-center" pSortableColumn="exposicion.activar" *ngIf="!isMobile">
                                     {{ "Está activo" | translate }}
-                                    <p-sortIcon field="exposicion.activar"></p-sortIcon>
+                                    <!-- <p-sortIcon field="exposicion.activar"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="exposicion.disponible" *ngIf="!isMobile">
+                                <th class="text-center" pSortableColumn="exposicion.disponible" *ngIf="!isMobile">
                                     {{ "Está disponible" | translate }}
-                                    <p-sortIcon field="exposicion.disponible"></p-sortIcon>
+                                    <!-- <p-sortIcon field="exposicion.disponible"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="crearProducto.paraProduccion" *ngIf="!isMobile">
+                                <th class="text-center" pSortableColumn="crearProducto.paraProduccion" *ngIf="!isMobile">
                                     {{ "Se produce" | translate }}
-                                    <p-sortIcon field="crearProducto.paraProduccion"></p-sortIcon>
+                                    <!-- <p-sortIcon field="crearProducto.paraProduccion"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="precio.precioUnitarioSinIva" style="text-align: right"
+                                <th class="text-center" pSortableColumn="precio.precioUnitarioSinIva" style="text-align: right"
                                     *ngIf="!isMobile">
                                     {{ "Precio unitario" | translate }}
-                                    <p-sortIcon field="precio.precioUnitarioSinIva"></p-sortIcon>
+                                    <!-- <p-sortIcon field="precio.precioUnitarioSinIva"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="date_edit" *ngIf="!isMobile">
+                                <th class="text-center" pSortableColumn="date_edit" *ngIf="!isMobile">
                                     {{ "Fecha editado" | translate }}
-                                    <p-sortIcon field="date_edit"></p-sortIcon>
+                                    <!-- <p-sortIcon field="date_edit"></p-sortIcon> -->
                                 </th>
 
-                                <th pSortableColumn="precio.precioUnitarioIva" style="text-align: right"
+                                <th class="text-center" pSortableColumn="precio.precioUnitarioIva"
                                     *ngIf="!isMobile">
                                     {{ "IVA" | translate }}
-                                    <p-sortIcon field="precio.precioUnitarioIva"></p-sortIcon>
+                                    <!-- <p-sortIcon field="precio.precioUnitarioIva"></p-sortIcon> -->
                                 </th>
 
-                                <th>
+                                <th  class="text-center">
                                     {{ "Acciones" | translate }}
                                 </th>
                             </tr>
@@ -223,6 +224,11 @@
                                     {{ "No hay datos disponibles" | translate }}
                                 </td>
                             </tr>
+                        </ng-template>
+                        <ng-template pTemplate="summary">
+                            <div class="flex align-items-center justify-content-between">
+                                {{ "Total en esta consulta" | translate }}: {{rows ? rows.length : 0 }} {{ "items" | translate }}.
+                            </div>
                         </ng-template>
                     </p-table>
                 </div>

@@ -38,7 +38,7 @@ export class CartService {
         item.cantidad += 1;
       } else {
         this.toast.error(`Cannot add more than ${item.disponibilidad.cantidadDisponible} items`, '', {
-          timeOut: 80000000
+          timeOut: 800000
         });
       }
     }
@@ -72,8 +72,8 @@ export class CartService {
     // if (cartItem === undefined)
     //   this.posCartItems.push(item);
 
-    this.toast.success(`Product has been Add To Card Succesfully !`, '', {
-      timeOut: 700000
+    this.toast.success(`Producto adicionado !`, '', {
+      timeOut: 70000
     });
 
     debugger;
@@ -94,14 +94,14 @@ export class CartService {
           cartItem.cantidad += item.cantidad;
 
         } else {
-          this.toast.error(`Cannot add more than ${item.disponibilidad.cantidadDisponible} items.`, '', {
-            timeOut: 80000000
+          this.toast.error(`Solo hay ${item.disponibilidad.cantidadDisponible} unidades.`, '', {
+            timeOut: 800000
           });
         }
       }
     } else {
-      this.toast.error(`Cannot add more than ${item.disponibilidad.cantidadDisponible} items in total.`, '', {
-        timeOut: 80000000
+      this.toast.error(`Solo hay ${item.disponibilidad.cantidadDisponible} unidades en total.`, '', {
+        timeOut: 800000
       });
     }
   }
@@ -123,7 +123,7 @@ export class CartService {
         this.getPOSSubTotal(); 
       } else {
         this.toast.error(`Cannot add more than ${item.disponibilidad.cantidadDisponible} items`, '', {
-          timeOut: 80000000
+          timeOut: 800000
         })
       }
     }
