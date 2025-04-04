@@ -137,3 +137,43 @@
     min-width: 35px;
     text-align: right;
   }
+  .plan-card-collapsed {
+    /* ... estilos existentes ... */
+    
+    &:hover {
+      .compact-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+      }
+    }
+  }
+  
+  .compact-tooltip {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%) translateX(-10px);
+    background: #7367F0;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    z-index: 100;
+    
+    &:before {
+      content: '';
+      position: absolute;
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border-width: 6px;
+      border-style: solid;
+      border-color: transparent #7367F0 transparent transparent;
+    }
+  }
