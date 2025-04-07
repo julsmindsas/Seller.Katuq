@@ -57,6 +57,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   public visualSteps: VisualStep[] = [];
   public currentStepIndex: number = 0;
   public currentStepText: string = '';
+  public debugLogs: string[] = []; // nueva propiedad para almacenar logs de debug
 
   // Propiedades para herramientas disponibles
   private tools: any[] = [];
@@ -1749,9 +1750,10 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
           'Ahora ';
 
       this.currentStepText = `${stepPrefix}${this.visualSteps[this.currentStepIndex].caption.split(':')[0]}`;
-      console.log(`📝 Texto de paso actualizado: "${this.currentStepText}"`);
+      this.logDebug(`📝 Texto de paso actualizado: "${this.currentStepText}"`);
     } else {
       this.currentStepText = 'Escuchando...';
+      this.logDebug(`📝 Texto de paso actualizado: "${this.currentStepText}"`);
     }
   }
 
@@ -1919,6 +1921,16 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     window.removeEventListener('resize', () => {
       this.detectMobileDevice();
     });
+  }
+
+  // Nuevo método para registrar mensajes de debug y almacenarlos
+  private logDebug(message: string): void {
+    console.log(message);
+    this.debugLogs.push(message);
+    // Limitar cantidad de mensajes guardados
+    if (this.debugLogs.length > 10) {
+      this.debugLogs.shift();
+    }
   }
 
 }

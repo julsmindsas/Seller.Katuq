@@ -252,7 +252,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
    * Mostrar/ocultar tutorial
    */
   openTutorial(): void {
-    this.showTutorial = true;
+    this.showTutorial = false;
   }
 
   closeTutorial(): void {
