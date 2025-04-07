@@ -2,16 +2,16 @@
 <div class="card">
     <div class="card-header">
         <div class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-12">
                 <div class="row">
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <label class="form-label" for="tipo_documento">Buscar por:</label>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-sm-4">
                         <select #buscarPor class="form-control" id="tipo_documento">
-                            <option value="CC-NIT" selected>Cedula de Ciudadania</option>
+                            <option value="CC-NIT" selected>CC-NIT</option>
                             <option value="PA">Email</option>
                             <option value="TI">Nombre Apellido</option>
                         </select>
@@ -33,114 +33,137 @@
 
 
         <form [formGroup]="formulario">
-
             <h2>Cliente</h2>
             <div class="row">
-                <div class="col-sm-2">
-                    <label class="form-label" for="tipo_documento">Tipo de Documento:</label>
-                    <select class="form-control select-default" id="tipo_documento" [disabled]="isEdit"
-                        formControlName="tipo_documento_comprador">
-                        <option value="" disabled selected>Selecciona una opción</option>
-                        <option value="CC-NIT">Cedula de Ciudadania</option>
-                        <option value="PA">PA</option>
-                        <option value="TI">TI</option>
-                    </select>
-
+              <!-- Tipo de Documento -->
+              <div class="col-sm-2">
+                <label class="form-label" for="tipo_documento">Tipo de Documento:</label>
+                <select class="form-control select-default" id="tipo_documento" [disabled]="isEdit" formControlName="tipo_documento_comprador">
+                  <option value="" disabled selected>Selecciona una opción</option>
+                  <option value="CC-NIT">Cedula de Ciudadania</option>
+                  <option value="PA">PA</option>
+                  <option value="TI">TI</option>
+                </select>
+                <div *ngIf="formulario.get('tipo_documento_comprador')?.hasError('required') && formulario.get('tipo_documento_comprador')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
                 </div>
+              </div>
+          
+              <!-- Documento -->
+              <div class="col-sm-4">
+                <label class="form-label" for="numero_documento">Documento:</label>
+                <input placeholder="Documento" class="form-control" type="text" id="numero_documento" formControlName="documento" [disabled]="isEdit"/>
+                <div *ngIf="formulario.get('documento')?.hasError('required') && formulario.get('documento')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
+                </div>
+              </div>
+          
+              <!-- Nombres Completos -->
+              <div class="col-sm-3">
+                <label class="form-label" for="nombres">Nombres Completos:</label>
+                <input placeholder="Nombres" class="form-control" type="text" id="nombres" formControlName="nombres_completos" />
+                <div *ngIf="formulario.get('nombres_completos')?.hasError('required') && formulario.get('nombres_completos')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
+                </div>
+              </div>
+          
+              <!-- Apellidos Completos -->
+              <div class="col-sm-3">
+                <label class="form-label" for="apellidos">Apellidos Completos:</label>
+                <input placeholder="Apellidos" class="form-control" type="text" id="apellidos" formControlName="apellidos_completos" />
+                <div *ngIf="formulario.get('apellidos_completos')?.hasError('required') && formulario.get('apellidos_completos')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
+                </div>
+              </div>
+            </div>
+          
+            <div class="row">
+              <div class="col-sm-6">
+                <label class="form-label" for="indicativo">Número de Celular:</label>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="correo_electronico">Correo Electrónico:</label>
+              </div>
+            </div>
+          
+            <div class="row">
+              <!-- Indicativo Celular -->
+              <div class="col-sm-2 mb-3">
+                <select autocomplete="on" formControlName="indicativo_celular_comprador" class="form-control select-default" id="validationCustom01" type="number" placeholder="Indicativo Celular" required>
+                  <option value="" disabled selected>Código País</option>
+                  <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}} (+{{item.phone_code}})</option>
+                </select>
+                <div *ngIf="formulario.get('indicativo_celular_comprador')?.hasError('required') && formulario.get('indicativo_celular_comprador')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
+                </div>
+              </div>
+          
+              <!-- Número de Celular -->
+              <div class="col-sm-4">
+                <input class="form-control" type="number" id="numero_celular" (input)="validarSoloNumeros($event)" formControlName="numero_celular_comprador" placeholder="Número Celular" />
+                <div *ngIf="formulario.get('numero_celular_comprador')?.hasError('required') && formulario.get('numero_celular_comprador')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
+                </div>
+                <div *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern') && formulario.get('numero_celular_comprador')?.touched">
+                  <small class="text-danger">Solo se permiten números.</small>
+                </div>
+              </div>
+          
+              <!-- Correo Electrónico -->
+              <div class="col-sm-6">
+                <input class="form-control" type="email" id="correo_electronico" placeholder="Correo Electronico" formControlName="correo_electronico_comprador" />
+                <div *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required') && formulario.get('correo_electronico_comprador')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
+                </div>
+              </div>
+            </div>
+          
+            <!-- Checkbox Whatsapp -->
+            <div class="row">
+              <div class="col-sm-10">
+                <input #whatsapp type="checkbox" (change)="replicarWhatsApp($event)" class="checkbox-large">
+                <label class="form-label" for="razon_social">&nbsp; El número de celular es el mismo de Whatsapp</label>
+              </div>
+            </div>
+          
+            <div class="row">
+              <div class="col-sm-6">
+                <label class="form-label" for="indicativo">Número de Whatsapp:</label>
+              </div>
+            </div>
+          
+            <div class="row">
+              <div class="col-sm-2 mb-3">
+                <select autocomplete="on" formControlName="indicativo_celular_whatsapp" class="form-control select-default" id="validationCustom01" type="number" placeholder="Indicativo Celular" required>
+                  <option value="" disabled selected>Código País</option>
+                  <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}} (+{{item.phone_code}})</option>
+                </select>
+                <div *ngIf="formulario.get('indicativo_celular_whatsapp')?.hasError('required') && formulario.get('indicativo_celular_whatsapp')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
+                </div>
+              </div>
+          
+              <!-- Número de Whatsapp -->
+              <div class="col-sm-4">
+                <input class="form-control" type="number" id="numero_celular_whatsapp" formControlName="numero_celular_whatsapp" placeholder="Número Celular" />
+                <div *ngIf="formulario.get('numero_celular_whatsapp')?.hasError('required') && formulario.get('numero_celular_whatsapp')?.touched">
+                  <small class="text-danger">Este campo es obligatorio.</small>
+                </div>
+              </div>
+            </div>
+          
+            <!-- Botón Enviar -->
+            <div class="row">
+              <div class="col-sm-12">
                 <div class="col-sm-4">
-                    <label class="form-label" for="tipo_documento">Documento:</label>
-                    <input placeholder="Documento" class="form-control" type="text" id="numero_documento"
-                        formControlName="documento" [disabled]="isEdit"/>
+                  <br>
+                  <button *ngIf="!encontrado" class="btn btn-primary" (click)="crearCliente()">Crear Cliente</button>
+                  <button *ngIf="encontrado" class="btn btn-primary" (click)="editarCliente()">Guardar Cambios</button>
                 </div>
-                <div class="col-sm-3">
-                    <label class="form-label" for="nombres">Nombres Completos:</label>
-                    <input placeholder="Nombres " class="form-control" type="text" id="nombres"
-                        formControlName="nombres_completos" />
-                </div>
-                <div class="col-sm-3">
-                    <label class="form-label" for="nombres">Apellidos Completos:</label>
-                    <input placeholder="Apellidos" class="form-control" type="text" id="nombres"
-                        formControlName="apellidos_completos" />
-                </div>
+              </div>
             </div>
-            <div class="row">
-                <div class="col-sm-6">
-                    <label class="form-label" for="indicativo">Número de Celular:</label>
-                </div>
-
-                <div class="col-sm-6">
-                    <label class="form-label" for="correo_electronico">Correo Electrónico:</label>
-                </div>
-
-
-            </div>
-
-
-            <div class="row">
-
-                <div class="col-sm-2 mb-3">
-
-                    <select autocomplete="on" formControlName="indicativo_celular_comprador"
-                        class="form-control select-default" id="validationCustom01" type="number"
-                        placeholder="Indicativo Celular" required="">
-
-                        <option value="" disabled selected>Código País</option>
-                        <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
-                            (+{{item.phone_code}})</option>
-                    </select>
-
-                </div>
-                <div class="col-sm-4">
-                    <input class="form-control" type="text" id="numero_celular"
-                        formControlName="numero_celular_comprador" placeholder="Número Celular" />
-                </div>
-                <div class="col-sm-6">
-                    <input class="form-control" type="email" id="correo_electronico" placeholder="Correo Electronico"
-                        formControlName="correo_electronico_comprador" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-6">
-                    <input #whatsapp type="checkbox" (change)="replicarWhatsApp($event)">
-                    <label class="form-label" for="razon_social">El numero de celular es el mismo de Whatsapp </label>
-                </div>
-
-            </div>
-            <div class="row">
-                <div class="col-sm-6">
-                    <label class="form-label" for="indicativo">Número de Whatsapp:</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-2 mb-3">
-
-                    <select autocomplete="on" formControlName="indicativo_celular_whatsapp"
-                        class="form-control select-default" id="validationCustom01" type="number"
-                        placeholder="Indicativo Celular" required="">
-
-                        <option value="" disabled selected>Código País</option>
-                        <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
-                            (+{{item.phone_code}})</option>
-                    </select>
-
-                </div>
-                <div class="col-sm-4">
-                    <input class="form-control" type="text" id="numero_celular_whatsapp"
-                        formControlName="numero_celular_whatsapp" placeholder="Número Celular" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="col-sm-4">
-                        <br>
-                        <button *ngIf="!encontrado" class="btn btn-primary" (click)="crearCliente()">Crear
-                            Cliente</button>
-                        <button *ngIf="encontrado" class="btn btn-primary" (click)="editarCliente()">Guardar
-                            Cambios</button>
-                    </div>
-                </div>
-            </div>
-        </form>
+          </form>
+          
 
         <form [formGroup]="formularioEntrega">
 

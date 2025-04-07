@@ -341,15 +341,15 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     })
     this.IndicativoPlaceholder = 'indicativo'
     this.indicativos = this.infoIndicativo.datos
+
     this.formulario = this.formBuilder.group({
-      // Datos del comprador
       cd: [''],
       nombres_completos: ['', Validators.required],
       apellidos_completos: ['', Validators.required],
       tipo_documento_comprador: ['', Validators.required],
       documento: ['', Validators.required],
       indicativo_celular_comprador: ['', Validators.required],
-      numero_celular_comprador: ['', Validators.required],
+      numero_celular_comprador: ['', Validators.required, Validators.pattern('^[0-9]*$') ],
       indicativo_celular_whatsapp: ['', Validators.required],
       numero_celular_whatsapp: ['', Validators.required],
       correo_electronico_comprador: ['', [Validators.required, Validators.email]],
@@ -389,7 +389,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       codigo_postal_entrega: ['', Validators.required]
     });
   }
-
+  validarSoloNumeros(event: KeyboardEvent) {
+    const input = event.target as HTMLInputElement;
+    // Reemplaza cualquier cosa que no sea un número (0-9) con una cadena vacía
+    input.value = input.value.replace(/[^0-9]/g, '');
+  }
+  
 
   crearCliente() {
     this.formulario.controls['datosFacturacionElectronica'].setValue([]);
