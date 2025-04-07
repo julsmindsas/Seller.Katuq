@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { Router } from '@angular/router';
 import { Table } from 'primeng/table';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-usuarios',
@@ -83,7 +84,36 @@ export class UsuariosComponent implements OnInit {
   }
   
   eliminarUsuario(usuario: any) {
-    // Implementar la lógica para eliminar usuario
-    console.log('Eliminar usuario:', usuario);
+    Swal.fire({
+      title: `¿Está seguro de eliminar el usuario ${usuario.nombre}?`,
+      text: "Esta acción no se puede deshacer.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Llamar al servicio para eliminar el usuario.
+        this.service.eliminarUsuario(usuario.id).subscribe(response => {
+          Swal.fire(
+            'Eliminado',
+            'El usuario ha sido eliminado exitosamente.',
+            'success'
+          );
+          // Actualizar los arreglos de usuarios
+          this.temp = this.temp.filter(u => u.id !== usuario.id);
+          this.usuarios = this.usuarios.filter(u => u.id !== usuario.id);
+        }, error => {
+          Swal.fire(
+            'Error',
+            'Hubo un problema al eliminar el usuario.',
+            'error'
+          );
+          console.error('Error eliminando el usuario', error);
+        });
+      }
+    });
   }
 }

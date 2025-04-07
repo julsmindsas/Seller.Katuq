@@ -128,4 +128,8 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
       });
     }
   }
+
+  public irAlListado() {
+    this.route.navigateByUrl('/usuarios');
+  }
 }
