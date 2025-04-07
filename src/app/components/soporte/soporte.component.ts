@@ -26,6 +26,7 @@ export class SoporteComponent implements OnInit {
   isDragging: boolean = false;
   selectedPriority: string = 'media'; // Default priority
   currentUser: any;
+  selectedPreviewImage: string = ''; // Added for image preview modal
 
   constructor(
     private fb: FormBuilder, 
@@ -116,6 +117,31 @@ export class SoporteComponent implements OnInit {
     });
   }
 
+  // Calculate form completion percentage
+  getFormProgress(): number {
+    if (!this.ticketForm) return 0;
+    
+    const controls = this.ticketForm.controls;
+    const totalControls = Object.keys(controls).length;
+    let filledControls = 0;
+    
+    // Count filled controls
+    Object.keys(controls).forEach(key => {
+      const control = this.ticketForm.get(key);
+      if (control && control.value !== null && control.value !== '') {
+        filledControls++;
+      }
+    });
+    
+    return Math.round((filledControls / totalControls) * 100);
+  }
+
+  // Check if a field is invalid and touched
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.ticketForm.get(fieldName);
+    return field ? (field.invalid && field.touched) : false;
+  }
+
   // Set priority and update form value
   setPriority(priority: string): void {
     this.selectedPriority = priority;
@@ -144,6 +170,17 @@ export class SoporteComponent implements OnInit {
     event.stopPropagation();
     this.isDragging = false;
 
+    if (event.dataTransfer?.files) {
+      this.handleFiles(event.dataTransfer.files);
+    }
+  }
+
+  // File drop handler method
+  onFileDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    
     if (event.dataTransfer?.files) {
       this.handleFiles(event.dataTransfer.files);
     }
@@ -191,6 +228,49 @@ export class SoporteComponent implements OnInit {
         this.selectedFiles.splice(index, 1);
       }
     }
+  }
+
+  // Open image preview modal
+  openImagePreview(imageUrl: string): void {
+    this.selectedPreviewImage = imageUrl;
+    // If using jQuery with Bootstrap modal:
+    // $('#imagePreviewModal').modal('show');
+  }
+
+  // Reset form to initial state
+  resetForm(): void {
+    Swal.fire({
+      title: '¿Reiniciar el formulario?',
+      text: 'Se perderán todos los datos ingresados.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, reiniciar',
+      cancelButtonText: 'No, continuar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Reset form state
+        this.ticketForm.reset();
+        this.selectedFiles = [];
+        this.imagePreviews = [];
+        
+        // Reset to defaults
+        const today = new Date().toISOString().split('T')[0];
+        this.ticketForm.patchValue({
+          canal: 'web',
+          tienda: 'tienda web',
+          categoria: 'funcionalidad katuq',
+          subcategoria: 'general',
+          motivo: 'soporte',
+          nombreUsuarioReporta: this.currentUser?.name || '',
+          fechaRegistro: today,
+          fechaEvento: today,
+          status: 'Pendiente',
+          prioridad: 'media'
+        });
+      }
+    });
   }
 
   // Cancel button functionality

@@ -1,95 +1,195 @@
 <app-breadcrumb [title]="'Tickets'" [items]="['Crear Tickets']" [active_item]="'Crear Tickets'"></app-breadcrumb>
+
 <div class="create-ticket-container">
-    <h2 class="title">Crear Nuevo Ticket de Soporte</h2>
-    <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="ticket-form">
-      <!-- Categoría -->
-      <div class="form-group">
-        <label for="categoria">Categoría</label>
-        <select id="categoria" formControlName="categoria" class="form-control" disabled>
-          <option value="funcionalidad katuq" selected>Funcionalidad Katuq</option>
-        </select>
-      </div>
-  
-      <!-- Subcategoría -->
-      <div class="form-group">
-        <label for="subcategoria">Subcategoría</label>
-        <select id="subcategoria" formControlName="subcategoria" class="form-control" disabled>
-          <option value="general" selected>General</option>
-        </select>
-      </div>
-      
-      <!-- Motivo -->
-      <div class="form-group">
-        <label for="motivo">Motivo</label>
-        <select id="motivo" formControlName="motivo" class="form-control">
-          <option value="soporte">Soporte</option>
-          <option value="idea">Idea</option>
-        </select>
-      </div>
-  
-      <!-- Nombre del Usuario que Reporta -->
-      <div class="form-group">
-        <label for="nombreUsuarioReporta">Nombre del Usuario que Reporta <span class="required-asterisk">*</span></label>
-        <input id="nombreUsuarioReporta" formControlName="nombreUsuarioReporta" type="text" class="form-control" required />
-        <div *ngIf="ticketForm.get('nombreUsuarioReporta')?.invalid && ticketForm.get('nombreUsuarioReporta')?.touched" class="error">
-          El nombre es obligatorio.
+    <div class="card">
+        <div class="card-header">
+            <h2 class="title">Crear Nuevo Ticket de Soporte</h2>
+            <p class="subtitle">Complete el formulario para enviar su solicitud de soporte</p>
         </div>
-      </div>
-  
-      <!-- Fecha del Evento -->
-      <div class="form-group">
-        <label for="fechaEvento">Fecha del Evento <span class="required-asterisk">*</span></label>
-        <input id="fechaEvento" formControlName="fechaEvento" type="date" class="form-control" required />
-        <div *ngIf="ticketForm.get('fechaEvento')?.invalid && ticketForm.get('fechaEvento')?.touched" class="error">
-          Fecha del evento es obligatoria.
+        <div class="card-body">
+            <!-- Progress indicator for form completion -->
+            <div class="progress-container mb-4">
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" [style.width]="getFormProgress() + '%'" 
+                         [attr.aria-valuenow]="getFormProgress()" aria-valuemin="0" aria-valuemax="100">
+                        {{getFormProgress()}}%
+                    </div>
+                </div>
+                <small class="form-text text-muted">Completando información: {{getFormProgress()}}%</small>
+            </div>
+
+            <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="ticket-form">
+                <!-- Form sections for better organization -->
+                <div class="form-section">
+                    <h4 class="section-title">Información de Clasificación</h4>
+
+                    <div class="row">
+                        <!-- Categoría -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="categoria">Categoría</label>
+                                <div class="input-group">
+                                    <select id="categoria" formControlName="categoria" class="form-control" disabled>
+                                        <option value="funcionalidad katuq" selected>Funcionalidad Katuq</option>
+                                    </select>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text d-flex align-items-center justify-content-center" 
+                                              title="Categoría establecida por defecto">
+                                            <i class="fa fa-info-circle"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Subcategoría -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="subcategoria">Subcategoría</label>
+                                <div class="input-group">
+                                    <select id="subcategoria" formControlName="subcategoria" class="form-control" disabled>
+                                        <option value="general" selected>General</option>
+                                    </select>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text d-flex align-items-center justify-content-center" 
+                                              title="Subcategoría establecida por defecto">
+                                            <i class="fa fa-info-circle"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Motivo -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="motivo">Motivo</label>
+                                <select id="motivo" formControlName="motivo" class="form-control">
+                                    <option value="">Seleccione un motivo</option>
+                                    <option value="soporte">Soporte</option>
+                                    <option value="idea">Idea</option>
+                                </select>
+                                <small class="form-text text-muted">Seleccione si necesita ayuda o quiere proponer una idea</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4 class="section-title">Información del Reporte</h4>
+                    <div class="row">
+                        <!-- Nombre del Usuario que Reporta -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombreUsuarioReporta">Nombre del Usuario que Reporta <span class="required-asterisk">*</span></label>
+                                <input id="nombreUsuarioReporta" formControlName="nombreUsuarioReporta" type="text" 
+                                      class="form-control" [ngClass]="{'is-invalid': isFieldInvalid('nombreUsuarioReporta')}" required 
+                                      placeholder="Ej: Juan Pérez" />
+                                <div *ngIf="isFieldInvalid('nombreUsuarioReporta')" class="invalid-feedback">
+                                    El nombre es obligatorio.
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Fecha del Evento -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fechaEvento">Fecha del Evento <span class="required-asterisk">*</span></label>
+                                <input id="fechaEvento" formControlName="fechaEvento" type="date" 
+                                      class="form-control" [ngClass]="{'is-invalid': isFieldInvalid('fechaEvento')}" required />
+                                <div *ngIf="isFieldInvalid('fechaEvento')" class="invalid-feedback">
+                                    Fecha del evento es obligatoria.
+                                </div>
+                                <small class="form-text text-muted">Indique cuándo ocurrió el problema</small>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Descripción Detallada -->
+                    <div class="form-group">
+                        <label for="asunto">Descripción Detallada <span class="required-asterisk">*</span></label>
+                        <textarea id="asunto" formControlName="asunto" rows="4" 
+                                 [ngClass]="{'is-invalid': isFieldInvalid('asunto')}" 
+                                 class="form-control" required 
+                                 placeholder="Describa en detalle el problema que experimenta o la idea que quiere compartir..."></textarea>
+                        <div *ngIf="isFieldInvalid('asunto')" class="invalid-feedback">
+                            La descripción es obligatoria.
+                        </div>
+                        <small class="form-text text-muted">
+                            Proporcione la mayor cantidad de detalles posible para ayudarnos a entender su solicitud
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4 class="section-title">Archivos Adjuntos</h4>
+                    <!-- Adjuntar Imágenes -->
+                    <div class="form-group file-upload-area">
+                        <label for="adjuntos" class="file-upload-label" 
+                              (dragover)="$event.preventDefault()" 
+                              (drop)="onFileDrop($event)">
+                            <div class="upload-zone">
+                                <i class="fas fa-cloud-upload-alt fa-3x"></i>
+                                <span class="label-text">Arrastre imágenes aquí o haga clic para seleccionar</span>
+                                <div class="upload-button">
+                                    <i class="fas fa-upload"></i> Seleccionar Archivos
+                                </div>
+                                <small>Formatos aceptados: JPG, PNG, GIF - Máximo 5MB por archivo</small>
+                            </div>
+                        </label>
+                        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*" />
+                    </div>
+                
+                    <!-- Vista Previa de Imágenes -->
+                    <div class="image-previews" *ngIf="imagePreviews.length > 0">
+                        <h5>Vista previa de las imágenes ({{imagePreviews.length}})</h5>
+                        <div class="preview-container">
+                            <div class="preview" *ngFor="let preview of imagePreviews; let i = index">
+                                <img [src]="preview" alt="Vista previa" class="preview-image" 
+                                     (click)="openImagePreview(preview)" />
+                                <button type="button" class="remove-image-btn" (click)="removeImage(preview)" title="Eliminar imagen">
+                                    &times;
+                                </button>
+                                <span class="image-number">{{i+1}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="form-help-text">
+                    <span class="required-note"><span class="required-asterisk">*</span> indica campos obligatorios</span>
+                </div>
+            
+                <div class="form-actions mt-4">
+                    <button type="button" class="btn btn-outline-secondary mr-2" (click)="resetForm()">
+                        <i class="fas fa-undo"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" [disabled]="ticketForm.invalid || isSubmitting">
+                        <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
+                        <span *ngIf="!isSubmitting">Crear Ticket</span>
+                        <span *ngIf="isSubmitting">
+                            <i class="fas fa-spinner fa-spin"></i> Procesando...
+                        </span>
+                    </button>
+                </div>
+            </form>
         </div>
-      </div>
-  
-      <!-- Descripción Detallada -->
-      <div class="form-group">
-        <label for="asunto">Descripción Detallada <span class="required-asterisk">*</span></label>
-        <textarea id="asunto" formControlName="asunto" rows="4" class="form-control" required 
-                 placeholder="Describa en detalle el problema que experimenta o la idea que quiere compartir..."></textarea>
-        <div *ngIf="ticketForm.get('asunto')?.invalid && ticketForm.get('asunto')?.touched" class="error">
-          La descripción es obligatoria.
+    </div>
+</div>
+
+<!-- Modal para preview de imágenes -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewModalLabel">Vista ampliada</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <img [src]="selectedPreviewImage" class="img-fluid" alt="Vista ampliada">
+            </div>
         </div>
-      </div>
-  
-      <!-- Adjuntar Imágenes -->
-      <div class="form-group">
-        <label for="adjuntos" class="file-upload-label">
-          <span class="label-text">Adjuntar Imágenes (Opcional)</span>
-          <div class="upload-button">
-            <i class="fas fa-upload"></i> Seleccionar Archivos
-          </div>
-        </label>
-        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*" />
-        <small class="form-text text-muted">Puede adjuntar múltiples imágenes para ilustrar mejor su solicitud.</small>
-      </div>
-  
-      <!-- Vista Previa de Imágenes -->
-      <div class="image-previews" *ngIf="imagePreviews.length > 0">
-        <h5>Vista previa de las imágenes ({{imagePreviews.length}})</h5>
-        <div class="preview-container">
-          <div class="preview" *ngFor="let preview of imagePreviews">
-            <img [src]="preview" alt="Vista previa" class="preview-image" />
-            <button type="button" class="remove-image-btn" (click)="removeImage(preview)" title="Eliminar imagen">
-              &times;
-            </button>
-          </div>
-        </div>
-      </div>
-      <br>
-  
-      <div class="form-help-text">
-        <span class="required-note"><span class="required-asterisk">*</span> indica campos obligatorios</span>
-      </div>
-      <br>
-  
-      <!-- Botón de Crear Ticket -->
-      <button type="submit" class="btn btn-primary btn-block" [disabled]="ticketForm.invalid || isSubmitting">
-        <span *ngIf="!isSubmitting">Crear Ticket</span>
-        <span *ngIf="isSubmitting">Procesando...</span>
-      </button>
-    </form>
-  </div>
+    </div>
+</div>
