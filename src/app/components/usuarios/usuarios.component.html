@@ -45,6 +45,10 @@
                   {{ 'Email' | translate }}
                   <p-sortIcon field="email"></p-sortIcon>
                 </th>
+                <th pSortableColumn="empresa">
+                  {{ 'Empresa' | translate }}
+                  <p-sortIcon field="empresa"></p-sortIcon>
+                </th>
                 <th pSortableColumn="activo">
                   {{ 'Activo' | translate }}
                   <p-sortIcon field="activo"></p-sortIcon>
@@ -62,6 +66,7 @@
                 <td>{{ usuario.nombre }}</td>
                 <td>{{ usuario.apellido }}</td>
                 <td>{{ usuario.email }}</td>
+                <td>{{ usuario.empresa }}</td>
                 <td>
                   <input class="toggle" type="checkbox" [checked]="usuario.activo" disabled />
                 </td>
@@ -79,7 +84,7 @@
             <!-- MENSAJE CUANDO LA TABLA ESTÁ VACÍA -->
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td [attr.colspan]="6">
+                <td [attr.colspan]="7">
                   {{ 'No hay datos disponibles' | translate }}
                 </td>
               </tr>
