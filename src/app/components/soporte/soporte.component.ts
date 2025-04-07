@@ -206,7 +206,7 @@ export class SoporteComponent implements OnInit {
       cancelButtonText: 'No, continuar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.router.navigate(['/tickets/backlog-tickets']);
+        this.router.navigate(['/misTickets']);
       }
     });
   }
@@ -321,7 +321,7 @@ export class SoporteComponent implements OnInit {
           
           formData.cd = response.result.cd;
           this.ticketService.addNotification('Nuevo ticket creado', formData);
-          this.router.navigate(['/tickets/misTickets']);
+          this.router.navigate(['/misTickets']);
         },
         error: (error) => {
           this.isSubmitting = false;
