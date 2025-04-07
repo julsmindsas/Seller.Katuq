@@ -1,4 +1,12 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router'; // new import
+
+interface User {
+  name: string;
+  image?: string;
+  company?: string;
+  rol?: string;
+}
 
 @Component({
   selector: 'app-my-account',
@@ -8,11 +16,16 @@ import { Component, OnInit } from '@angular/core';
 export class MyAccountComponent implements OnInit {
 
   public openAccount: boolean = false;
-  user: any;
-  userActive: any;
-  constructor() {
+  user?: User;
 
-    this.user = JSON.parse(localStorage.getItem('user') ?? '{}');
+  constructor(private router: Router) {
+    try {
+      const userData = localStorage.getItem('user');
+      this.user = userData ? JSON.parse(userData) : undefined;
+    } catch (error) {
+      console.error('Error parsing user from localStorage', error);
+      this.user = undefined;
+    }
   }
 
   ngOnInit() {
@@ -21,7 +34,7 @@ export class MyAccountComponent implements OnInit {
   logOut() {
     localStorage.removeItem('user');
     sessionStorage.removeItem('currentCompany');
-    location.href = '/login';
+    this.router.navigateByUrl('/login');
   };
 
   // For Mobile Device
