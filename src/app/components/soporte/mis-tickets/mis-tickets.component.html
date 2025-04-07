@@ -1,83 +1,224 @@
 <app-breadcrumb [title]="'Tickets'" [items]="['Mis Tickets']" [active_item]="'Mis tickets'"></app-breadcrumb>
-<div class="tickets-container">
-  <h1 class="text-center mb-4"><strong>Mis Tickets</strong></h1>
-  <div class="filter-container mb-3">
-    <label for="statusFilter" class="me-2">Filtrar por Estado:</label>
-    <select id="statusFilter" class="form-select w-auto" [(ngModel)]="selectedStatus" (change)="filterTickets()">
-      <option value="">Todos</option>
-      <option value="pendiente">Pendiente</option>
-      <option value="haciendo">Haciendo</option>
-      <option value="resuelto">Resuelto</option>
-    </select>
+
+<div class="tickets-dashboard">
+  <!-- Header Stats Section -->
+  <div class="dashboard-header">
+    <div class="dashboard-title">
+      <h1><i class="fa fa-ticket-alt"></i> Mis Tickets</h1>
+      <p class="text-muted">Gestiona tus solicitudes de soporte y sugerencias</p>
+    </div>
+    <div class="dashboard-actions">
+      <button class="btn-create" routerLink="/soporte">
+        <i class="fa fa-plus"></i> Crear Nuevo Ticket
+      </button>
+    </div>
   </div>
-  
-  <div *ngFor="let ticket of filteredTasks; let i = index" class="ticket-card">
-    <div class="card compact-card" (click)="toggleTicket(i)">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="ticket-title mb-0 text-truncate" style="max-width: 70%;">
-          {{ ticket.asunto }}
-        </h5>
-        <span class="badge ticket-status" [ngStyle]="{ 'background-color': getStatusColor(ticket.status) }">
-          {{ ticket.status }}
-        </span>
-        <span class="toggle-icon">{{ expandedTickets[i] ? '▲' : '▼' }}</span>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-header">
+      <h5><i class="fa fa-filter"></i> Filtros</h5>
+    </div>
+    <div class="filters-body">
+      <div class="filter-group">
+        <label for="statusFilter">Estado:</label>
+        <div class="select-wrapper">
+          <select id="statusFilter" class="form-control" [(ngModel)]="selectedStatus" (change)="filterTickets()">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="haciendo">En Progreso</option>
+            <option value="resuelto">Resuelto</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="filter-group">
+        <label for="dateFilter">Fecha:</label>
+        <div class="select-wrapper">
+          <select id="dateFilter" class="form-control">
+            <option value="all">Todos los tiempos</option>
+            <option value="today">Hoy</option>
+            <option value="week">Esta semana</option>
+            <option value="month">Este mes</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="filter-group search-group">
+        <label for="searchFilter">Buscar:</label>
+        <div class="search-wrapper">
+          <input type="text" id="searchFilter" class="form-control" placeholder="Buscar por asunto o contenido...">
+          <i class="fa fa-search search-icon"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticket Statistics -->
+  <div class="ticket-stats">
+    <div class="stat-box pending">
+      <div class="stat-icon"><i class="fa fa-clock"></i></div>
+      <div class="stat-info">
+        <span class="stat-count">{{getTicketCountByStatus('pendiente')}}</span>
+        <span class="stat-label">Pendientes</span>
+      </div>
+    </div>
+    <div class="stat-box progress">
+      <div class="stat-icon"><i class="fa fa-spinner"></i></div>
+      <div class="stat-info">
+        <span class="stat-count">{{getTicketCountByStatus('haciendo')}}</span>
+        <span class="stat-label">En Progreso</span>
+      </div>
+    </div>
+    <div class="stat-box resolved">
+      <div class="stat-icon"><i class="fa fa-check-circle"></i></div>
+      <div class="stat-info">
+        <span class="stat-count">{{getTicketCountByStatus('resuelto')}}</span>
+        <span class="stat-label">Resueltos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- No tickets message -->
+  <div class="empty-state" *ngIf="filteredTasks?.length === 0">
+    <div class="empty-icon">
+      <i class="fa fa-ticket-alt"></i>
+    </div>
+    <h3>No hay tickets que mostrar</h3>
+    <p>No se encontraron tickets con los filtros actuales</p>
+    <button class="btn-primary" routerLink="/soporte">Crear un ticket</button>
+  </div>
+
+  <!-- Tickets List -->
+  <div class="tickets-list" *ngIf="filteredTasks?.length > 0">
+    <div class="ticket-card" *ngFor="let ticket of filteredTasks; let i = index">
+      <div class="ticket-header" (click)="toggleTicket(i)" [class.expanded]="expandedTickets[i]">
+        <div class="ticket-info">
+          <div class="ticket-id">#{{ticket.cd || 'Sin ID'}}</div>
+          <h3 class="ticket-title">{{ticket.asunto}}</h3>
+          <div class="ticket-meta">
+            <span class="ticket-date"><i class="fa fa-calendar"></i> {{ticket.fechaRegistro | date:'dd/MM/yyyy'}}</span>
+            <span class="ticket-reporter"><i class="fa fa-user"></i> {{ticket.nombreUsuarioReporta}}</span>
+          </div>
+        </div>
+        <div class="ticket-status-wrapper">
+          <span class="ticket-status" [ngClass]="ticket.status.toLowerCase()">
+            <i class="fa" 
+               [ngClass]="{
+                 'fa-clock': ticket.status.toLowerCase() === 'pendiente',
+                 'fa-spinner fa-spin': ticket.status.toLowerCase() === 'haciendo',
+                 'fa-check-circle': ticket.status.toLowerCase() === 'resuelto',
+                 'fa-archive': ticket.status.toLowerCase() === 'archivado'
+               }"></i>
+            {{ticket.status}}
+          </span>
+          <div class="expand-icon">
+            <i class="fa" [ngClass]="expandedTickets[i] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+          </div>
+        </div>
       </div>
 
-      <!-- Detalles colapsables -->
-      <div class="card-body details" [class.show]="expandedTickets[i]" *ngIf="expandedTickets[i]">
-        <p><strong>Fecha de Registro:</strong> {{ ticket.fechaRegistro }}</p>
-        <p><strong>Usuario Reporta:</strong> {{ ticket.nombreUsuarioReporta }}</p>
-
-        <!-- Adjuntos -->
-        <div *ngIf="ticket.adjuntos && ticket.adjuntos.length > 0">
-          <p><strong>Adjuntos:</strong></p>
-          <div class="attachments d-flex flex-wrap">
-            <img
-              *ngFor="let adjunto of ticket.adjuntos"
-              [src]="adjunto"
-              alt="Adjunto"
-              class="attachment-img"
-              (click)="openInNewTab(adjunto)"
-            />
-          </div>
+      <!-- Ticket Details Section (Expanded) -->
+      <div class="ticket-details" *ngIf="expandedTickets[i]">
+        <div class="ticket-section description-section">
+          <h4><i class="fa fa-align-left"></i> Descripción</h4>
+          <p class="ticket-description">{{ticket.asunto}}</p>
         </div>
 
-        <!-- Comentarios -->
-        <div *ngIf="ticket.ticketComments?.length">
-          <h6>Comentarios:</h6>
-          <div *ngFor="let comment of ticket.ticketComments" class="comment">
-            <div class="comment-header d-flex align-items-center">
-              <div class="comment-author" [ngStyle]="{ 'background-color': comment.autor.color }">
-                {{ comment.autor.iniciales }}
+        <!-- Attachments Section -->
+        <div class="ticket-section attachments-section" *ngIf="ticket.adjuntos?.length > 0">
+          <h4><i class="fa fa-paperclip"></i> Adjuntos ({{ticket.adjuntos.length}})</h4>
+          <div class="attachments-gallery">
+            <div class="attachment-item" *ngFor="let adjunto of ticket.adjuntos">
+              <div class="attachment-preview" (click)="openInNewTab(adjunto)">
+                <img [src]="adjunto" alt="Adjunto" class="attachment-img" (error)="handleImageError($event)">
               </div>
-              <p class="mb-0 ms-2">
-                {{ comment.autor.nombreCompleto }} - {{ comment.fechaCreacion | date: 'medium' }}
-              </p>
-            </div>
-            <p class="comment-content">{{ comment.contenido }}</p>
-          </div>
-        </div>
-
-        <!-- Añadir Nuevo Comentario -->
-        <div class="new-comment mt-3">
-          <textarea
-            [(ngModel)]="newComment"
-            class="form-control mb-2"
-            rows="2"
-            placeholder="Escribe tu comentario..."
-          ></textarea>
-          <input type="file" multiple (change)="onFileSelected($event)" class="form-control mb-2" />
-
-          <!-- Vista previa de imágenes -->
-          <div class="image-previews" *ngIf="imagePreviews.length > 0">
-            <div class="preview-container d-flex flex-wrap">
-              <div class="preview position-relative me-2" *ngFor="let preview of imagePreviews; let i = index">
-                <img [src]="preview" alt="Vista previa" class="thumbnail" />
-                <button class="btn btn-danger btn-sm delete-button" (click)="removeImage(i)">✖</button>
+              <div class="attachment-actions">
+                <button class="attachment-btn view" (click)="openInNewTab(adjunto)" title="Ver completo">
+                  <i class="fa fa-eye"></i>
+                </button>
+                <button class="attachment-btn download" (click)="openInNewTab(adjunto)" title="Descargar">
+                  <i class="fa fa-download"></i>
+                </button>
               </div>
             </div>
           </div>
-          <button class="btn btn-primary btn-sm mt-2" (click)="addNewComment(ticket)">Añadir Comentario</button>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="ticket-section comments-section">
+          <h4><i class="fa fa-comments"></i> Comentarios ({{ticket.ticketComments?.length || 0}})</h4>
+          
+          <div class="comments-timeline" *ngIf="ticket.ticketComments?.length">
+            <div class="comment-item" *ngFor="let comment of ticket.ticketComments">
+              <div class="comment-avatar" [ngStyle]="{'background-color': comment.autor.color}">
+                {{comment.autor.iniciales}}
+              </div>
+              <div class="comment-content">
+                <div class="comment-header">
+                  <span class="comment-author">{{comment.autor.nombreCompleto}}</span>
+                  <span class="comment-date">{{comment.fechaCreacion | date:'dd MMM yyyy, HH:mm'}}</span>
+                </div>
+                <div class="comment-body">
+                  <p>{{comment.contenido}}</p>
+                  
+                  <!-- Comment Attachments -->
+                  <div class="comment-attachments" *ngIf="comment.adjuntos?.length">
+                    <div class="attachment-thumbnails">
+                      <div class="thumbnail-item" *ngFor="let adjunto of comment.adjuntos">
+                        <img [src]="adjunto" alt="Adjunto" (click)="openInNewTab(adjunto)">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- No Comments Message -->
+          <div class="no-comments-message" *ngIf="!ticket.ticketComments?.length">
+            <p>No hay comentarios para este ticket. Sé el primero en comentar.</p>
+          </div>
+          
+          <!-- Add Comment Form -->
+          <div class="add-comment-form">
+            <h5><i class="fa fa-reply"></i> Añadir comentario</h5>
+            <div class="form-group">
+              <textarea 
+                [(ngModel)]="newComment" 
+                class="form-control" 
+                rows="3" 
+                placeholder="Escribe tu comentario aquí..."></textarea>
+            </div>
+            
+            <!-- File Upload -->
+            <div class="file-upload-section">
+              <div class="upload-button-wrap">
+                <button class="upload-button" (click)="fileInput.click()">
+                  <i class="fa fa-paperclip"></i> Adjuntar archivos
+                </button>
+                <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="hidden-file-input" />
+              </div>
+              
+              <!-- Upload Preview -->
+              <div class="upload-preview" *ngIf="imagePreviews.length > 0">
+                <div class="preview-item" *ngFor="let preview of imagePreviews; let i = index">
+                  <div class="preview-image">
+                    <img [src]="preview" alt="Vista previa">
+                    <button class="remove-preview" (click)="removeImage(i)">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button class="btn-submit" [disabled]="!newComment.trim() && imagePreviews.length === 0" (click)="addNewComment(ticket)">
+                <i class="fa fa-paper-plane"></i> Enviar comentario
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-  import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
   import { AngularFireStorage } from '@angular/fire/compat/storage';
   import { ServiciosService } from '../../../shared/services/servicios.service';
   import { finalize } from 'rxjs/operators';
@@ -203,6 +203,21 @@
           error: (err) => {
             console.error('Error actualizando el ticket:', err);
           }});
+      }
+
+      // Filter methods to replace pipe usage
+      getTicketsByStatus(status: string): any[] {
+        if (!this.filteredTasks) {
+          return [];
+        }
+        return this.filteredTasks.filter(task => 
+          task.status && task.status.toLowerCase() === status.toLowerCase()
+        );
+      }
+    
+      // Method to count tickets by status
+      getTicketCountByStatus(status: string): number {
+        return this.getTicketsByStatus(status).length;
       }
       
   }
