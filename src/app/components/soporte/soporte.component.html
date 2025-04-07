@@ -1,167 +1,95 @@
 <app-breadcrumb [title]="'Tickets'" [items]="['Crear Tickets']" [active_item]="'Crear Tickets'"></app-breadcrumb>
-
-<div class="ticket-container">
-  <div class="ticket-header">
-    <div class="ticket-header-left">
-      <h2><i class="fa fa-ticket-alt"></i> Nuevo Ticket</h2>
-      <span class="ticket-subtitle">Crear una solicitud de soporte o sugerencia</span>
-    </div>
-    <div class="ticket-header-right">
-      <button class="btn-cancel" (click)="cancelForm()">Cancelar</button>
-    </div>
-  </div>
-
-  <div class="ticket-content">
+<div class="create-ticket-container">
+    <h2 class="title">Crear Nuevo Ticket de Soporte</h2>
     <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="ticket-form">
-      <!-- Main Info Card -->
-      <div class="ticket-card">
-        <div class="card-header">
-          <i class="fa fa-info-circle"></i> Información General
+      <!-- Categoría -->
+      <div class="form-group">
+        <label for="categoria">Categoría</label>
+        <select id="categoria" formControlName="categoria" class="form-control" disabled>
+          <option value="funcionalidad katuq" selected>Funcionalidad Katuq</option>
+        </select>
+      </div>
+  
+      <!-- Subcategoría -->
+      <div class="form-group">
+        <label for="subcategoria">Subcategoría</label>
+        <select id="subcategoria" formControlName="subcategoria" class="form-control" disabled>
+          <option value="general" selected>General</option>
+        </select>
+      </div>
+      
+      <!-- Motivo -->
+      <div class="form-group">
+        <label for="motivo">Motivo</label>
+        <select id="motivo" formControlName="motivo" class="form-control">
+          <option value="soporte">Soporte</option>
+          <option value="idea">Idea</option>
+        </select>
+      </div>
+  
+      <!-- Nombre del Usuario que Reporta -->
+      <div class="form-group">
+        <label for="nombreUsuarioReporta">Nombre del Usuario que Reporta <span class="required-asterisk">*</span></label>
+        <input id="nombreUsuarioReporta" formControlName="nombreUsuarioReporta" type="text" class="form-control" required />
+        <div *ngIf="ticketForm.get('nombreUsuarioReporta')?.invalid && ticketForm.get('nombreUsuarioReporta')?.touched" class="error">
+          El nombre es obligatorio.
         </div>
-        <div class="card-body">
-          <!-- Two columns layout -->
-          <div class="form-row">
-            <div class="form-column">
-              <!-- Motivo -->
-              <div class="form-group">
-                <label for="motivo">
-                  <i class="fa fa-tag"></i> Motivo <span class="required-asterisk">*</span>
-                </label>
-                <div class="select-wrapper">
-                  <select id="motivo" formControlName="motivo" class="form-control">
-                    <option value="soporte">📋 Soporte</option>
-                    <option value="idea">💡 Idea / Sugerencia</option>
-                  </select>
-                </div>
-              </div>
-              
-              <!-- Prioridad (New field) -->
-              <div class="form-group">
-                <label for="prioridad">
-                  <i class="fa fa-exclamation-circle"></i> Prioridad
-                </label>
-                <div class="priority-selector">
-                  <div class="priority-option" [class.active]="selectedPriority === 'baja'" (click)="setPriority('baja')">
-                    <div class="priority-dot low"></div>
-                    <span>Baja</span>
-                  </div>
-                  <div class="priority-option" [class.active]="selectedPriority === 'media'" (click)="setPriority('media')">
-                    <div class="priority-dot medium"></div>
-                    <span>Media</span>
-                  </div>
-                  <div class="priority-option" [class.active]="selectedPriority === 'alta'" (click)="setPriority('alta')">
-                    <div class="priority-dot high"></div>
-                    <span>Alta</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-column">
-              <!-- Nombre del Usuario que Reporta -->
-              <div class="form-group">
-                <label for="nombreUsuarioReporta">
-                  <i class="fa fa-user"></i> Reportado por <span class="required-asterisk">*</span>
-                </label>
-                <input id="nombreUsuarioReporta" formControlName="nombreUsuarioReporta" type="text" 
-                       class="form-control" placeholder="Su nombre completo" required />
-                <div *ngIf="ticketForm.get('nombreUsuarioReporta')?.invalid && ticketForm.get('nombreUsuarioReporta')?.touched" class="error">
-                  El nombre es obligatorio.
-                </div>
-              </div>
-              
-              <!-- Fecha del Evento -->
-              <div class="form-group">
-                <label for="fechaEvento">
-                  <i class="fa fa-calendar"></i> Fecha del evento <span class="required-asterisk">*</span>
-                </label>
-                <input id="fechaEvento" formControlName="fechaEvento" type="date" class="form-control" required />
-                <div *ngIf="ticketForm.get('fechaEvento')?.invalid && ticketForm.get('fechaEvento')?.touched" class="error">
-                  Fecha del evento es obligatoria.
-                </div>
-              </div>
-            </div>
+      </div>
+  
+      <!-- Fecha del Evento -->
+      <div class="form-group">
+        <label for="fechaEvento">Fecha del Evento <span class="required-asterisk">*</span></label>
+        <input id="fechaEvento" formControlName="fechaEvento" type="date" class="form-control" required />
+        <div *ngIf="ticketForm.get('fechaEvento')?.invalid && ticketForm.get('fechaEvento')?.touched" class="error">
+          Fecha del evento es obligatoria.
+        </div>
+      </div>
+  
+      <!-- Descripción Detallada -->
+      <div class="form-group">
+        <label for="asunto">Descripción Detallada <span class="required-asterisk">*</span></label>
+        <textarea id="asunto" formControlName="asunto" rows="4" class="form-control" required 
+                 placeholder="Describa en detalle el problema que experimenta o la idea que quiere compartir..."></textarea>
+        <div *ngIf="ticketForm.get('asunto')?.invalid && ticketForm.get('asunto')?.touched" class="error">
+          La descripción es obligatoria.
+        </div>
+      </div>
+  
+      <!-- Adjuntar Imágenes -->
+      <div class="form-group">
+        <label for="adjuntos" class="file-upload-label">
+          <span class="label-text">Adjuntar Imágenes (Opcional)</span>
+          <div class="upload-button">
+            <i class="fas fa-upload"></i> Seleccionar Archivos
           </div>
-
-          <!-- Hidden fields -->
-          <div style="display: none;">
-            <select id="categoria" formControlName="categoria"></select>
-            <select id="subcategoria" formControlName="subcategoria"></select>
+        </label>
+        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*" />
+        <small class="form-text text-muted">Puede adjuntar múltiples imágenes para ilustrar mejor su solicitud.</small>
+      </div>
+  
+      <!-- Vista Previa de Imágenes -->
+      <div class="image-previews" *ngIf="imagePreviews.length > 0">
+        <h5>Vista previa de las imágenes ({{imagePreviews.length}})</h5>
+        <div class="preview-container">
+          <div class="preview" *ngFor="let preview of imagePreviews">
+            <img [src]="preview" alt="Vista previa" class="preview-image" />
+            <button type="button" class="remove-image-btn" (click)="removeImage(preview)" title="Eliminar imagen">
+              &times;
+            </button>
           </div>
         </div>
       </div>
-
-      <!-- Description Card -->
-      <div class="ticket-card">
-        <div class="card-header">
-          <i class="fa fa-align-left"></i> Descripción
-        </div>
-        <div class="card-body">
-          <!-- Descripción Detallada -->
-          <div class="form-group">
-            <label for="asunto">
-              Detalle su solicitud <span class="required-asterisk">*</span>
-            </label>
-            <textarea id="asunto" formControlName="asunto" rows="6" class="form-control" required 
-                     placeholder="Describa en detalle el problema que experimenta o la idea que quiere compartir..."></textarea>
-            <div *ngIf="ticketForm.get('asunto')?.invalid && ticketForm.get('asunto')?.touched" class="error">
-              La descripción es obligatoria.
-            </div>
-          </div>
-        </div>
+      <br>
+  
+      <div class="form-help-text">
+        <span class="required-note"><span class="required-asterisk">*</span> indica campos obligatorios</span>
       </div>
-
-      <!-- Attachments Card -->
-      <div class="ticket-card">
-        <div class="card-header">
-          <i class="fa fa-paperclip"></i> Adjuntos
-        </div>
-        <div class="card-body">
-          <!-- File Upload Area -->
-          <div class="file-upload-area" 
-               (dragover)="onDragOver($event)" 
-               (dragleave)="onDragLeave($event)" 
-               (drop)="onDrop($event)"
-               [class.active]="isDragging">
-            <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple accept="image/*" class="file-input" #fileInput />
-            <div class="upload-content">
-              <i class="fa fa-cloud-upload-alt"></i>
-              <h4>Arrastre archivos aquí</h4>
-              <p>o</p>
-              <button type="button" class="btn-upload" (click)="fileInput.click()">Seleccionar archivos</button>
-              <p class="upload-hint">Archivos de imagen (.jpg, .png, .gif)</p>
-            </div>
-          </div>
-
-          <!-- Image Previews -->
-          <div class="image-previews" *ngIf="imagePreviews.length > 0">
-            <h5>Archivos adjuntos ({{imagePreviews.length}})</h5>
-            <div class="preview-container">
-              <div class="preview" *ngFor="let preview of imagePreviews; let i = index">
-                <div class="preview-info">
-                  <span class="preview-name">Imagen {{i + 1}}</span>
-                </div>
-                <img [src]="preview" alt="Vista previa" class="preview-image" />
-                <button type="button" class="remove-image-btn" (click)="removeImage(preview)" title="Eliminar imagen">
-                  <i class="fa fa-times"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Submit Section -->
-      <div class="submit-section">
-        <div class="form-help-text">
-          <span class="required-note"><span class="required-asterisk">*</span> indica campos obligatorios</span>
-        </div>
-        <button type="submit" class="btn-submit" [disabled]="ticketForm.invalid || isSubmitting">
-          <i class="fa fa-paper-plane"></i>
-          <span *ngIf="!isSubmitting">Crear ticket</span>
-          <span *ngIf="isSubmitting">Procesando...</span>
-        </button>
-      </div>
+      <br>
+  
+      <!-- Botón de Crear Ticket -->
+      <button type="submit" class="btn btn-primary btn-block" [disabled]="ticketForm.invalid || isSubmitting">
+        <span *ngIf="!isSubmitting">Crear Ticket</span>
+        <span *ngIf="isSubmitting">Procesando...</span>
+      </button>
     </form>
   </div>
-</div>

@@ -1,6 +1,11 @@
 <app-breadcrumb [title]="'Tickets'" [items]="['Mis Tickets']" [active_item]="'Mis tickets'"></app-breadcrumb>
 
-<div class="tickets-dashboard">
+<div class="tickets-dashboard" [class.loading]="isLoading">
+  <!-- Loading overlay when fetching data -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+  </div>
+
   <!-- Header Stats Section -->
   <div class="dashboard-header">
     <div class="dashboard-title">
@@ -21,9 +26,12 @@
     </div>
     <div class="filters-body">
       <div class="filter-group">
-        <label for="statusFilter">Estado:</label>
+        <label for="statusFilter" [class.has-active-filter]="selectedStatus">Estado:</label>
         <div class="select-wrapper">
-          <select id="statusFilter" class="form-control" [(ngModel)]="selectedStatus" (change)="filterTickets()">
+          <select id="statusFilter" class="form-control" 
+                  [class.active-filter]="selectedStatus"
+                  [(ngModel)]="selectedStatus" 
+                  (change)="filterTickets()">
             <option value="">Todos los estados</option>
             <option value="pendiente">Pendiente</option>
             <option value="haciendo">En Progreso</option>
@@ -33,9 +41,12 @@
       </div>
       
       <div class="filter-group">
-        <label for="dateFilter">Fecha:</label>
+        <label for="dateFilter" [class.has-active-filter]="dateFilter !== 'all'">Fecha:</label>
         <div class="select-wrapper">
-          <select id="dateFilter" class="form-control">
+          <select id="dateFilter" class="form-control"
+                  [class.active-filter]="dateFilter !== 'all'"
+                  [(ngModel)]="dateFilter" 
+                  (change)="filterTickets()">
             <option value="all">Todos los tiempos</option>
             <option value="today">Hoy</option>
             <option value="week">Esta semana</option>
@@ -45,10 +56,17 @@
       </div>
       
       <div class="filter-group search-group">
-        <label for="searchFilter">Buscar:</label>
+        <label for="searchFilter" [class.has-active-filter]="searchText.trim()">Buscar:</label>
         <div class="search-wrapper">
-          <input type="text" id="searchFilter" class="form-control" placeholder="Buscar por asunto o contenido...">
+          <input type="text" id="searchFilter" class="form-control" 
+                 [class.active-filter]="searchText.trim()"
+                 placeholder="Buscar por asunto o contenido..." 
+                 [(ngModel)]="searchText" 
+                 (input)="onSearchChange($event)" />
           <i class="fa fa-search search-icon"></i>
+          <i *ngIf="searchText.trim()" 
+             class="fa fa-times clear-search" 
+             (click)="clearSearch()"></i>
         </div>
       </div>
     </div>
@@ -57,21 +75,29 @@
   <!-- Ticket Statistics -->
   <div class="ticket-stats">
     <div class="stat-box pending">
-      <div class="stat-icon"><i class="fa fa-clock"></i></div>
+      <div class="stat-icon">
+        <i class="fa fa-clock"></i>
+      </div>
       <div class="stat-info">
         <span class="stat-count">{{getTicketCountByStatus('pendiente')}}</span>
         <span class="stat-label">Pendientes</span>
       </div>
     </div>
+    
     <div class="stat-box progress">
-      <div class="stat-icon"><i class="fa fa-spinner"></i></div>
+      <div class="stat-icon">
+        <i class="fa fa-spinner fa-pulse"></i>
+      </div>
       <div class="stat-info">
         <span class="stat-count">{{getTicketCountByStatus('haciendo')}}</span>
         <span class="stat-label">En Progreso</span>
       </div>
     </div>
+    
     <div class="stat-box resolved">
-      <div class="stat-icon"><i class="fa fa-check-circle"></i></div>
+      <div class="stat-icon">
+        <i class="fa fa-check-circle"></i>
+      </div>
       <div class="stat-info">
         <span class="stat-count">{{getTicketCountByStatus('resuelto')}}</span>
         <span class="stat-label">Resueltos</span>
@@ -92,7 +118,13 @@
   <!-- Tickets List -->
   <div class="tickets-list" *ngIf="filteredTasks?.length > 0">
     <div class="ticket-card" *ngFor="let ticket of filteredTasks; let i = index">
-      <div class="ticket-header" (click)="toggleTicket(i)" [class.expanded]="expandedTickets[i]">
+      <div class="ticket-header" 
+           (click)="toggleTicket(i)" 
+           [class.expanded]="expandedTickets[i]"
+           role="button"
+           aria-expanded="{{expandedTickets[i]}}"
+           tabindex="0"
+           [attr.aria-controls]="'ticket-details-' + i">
         <div class="ticket-info">
           <div class="ticket-id">#{{ticket.cd || 'Sin ID'}}</div>
           <h3 class="ticket-title">{{ticket.asunto}}</h3>
@@ -118,8 +150,8 @@
         </div>
       </div>
 
-      <!-- Ticket Details Section (Expanded) -->
-      <div class="ticket-details" *ngIf="expandedTickets[i]">
+      <!-- Ticket Details Section (Expanded) with animation -->
+      <div id="ticket-details-{{i}}" class="ticket-details" *ngIf="expandedTickets[i]" [class.expanded]="expandedTickets[i]">
         <div class="ticket-section description-section">
           <h4><i class="fa fa-align-left"></i> Descripción</h4>
           <p class="ticket-description">{{ticket.asunto}}</p>
@@ -221,6 +253,14 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Comment success notification -->
+  <div class="comment-notification" [class.show]="showCommentSuccess">
+    <div class="notification-content">
+      <i class="fa fa-check-circle"></i>
+      <span>Comentario añadido correctamente</span>
     </div>
   </div>
 </div>
