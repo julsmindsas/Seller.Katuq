@@ -4,6 +4,7 @@ import { ToastrService } from "ngx-toastr";
 import { ServiciosService } from "../servicios.service";
 import { TranslateService } from "@ngx-translate/core";
 import Swal from "sweetalert2";
+import { NavService } from "../nav.service";
 
 export interface User {
   uid: string;
@@ -26,6 +27,7 @@ export class AuthService implements OnInit {
     public ngZone: NgZone,
     public toster: ToastrService,
     private translate: TranslateService,
+    private navServices: NavService
   ) { }
 
   ngOnInit(): void { }
@@ -81,6 +83,7 @@ export class AuthService implements OnInit {
 
   setMenu(menu: any) {
     localStorage.setItem("authorizedMenuItems", JSON.stringify(menu));
+    this.navServices.filterMenuItemsByAuthorization();
   }
 
   private handleSignInError(err: any): void {
@@ -116,8 +119,10 @@ export class AuthService implements OnInit {
 
   SignOut(): void {
     this.showLoader = false;
-    localStorage.clear();
-    this.router.navigate(["/login"]);
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('currentCompany');
+    localStorage.removeItem('authorizedMenuItems')
+    this.router.navigateByUrl('/login');
   }
 
   get isLoggedIn(): boolean {

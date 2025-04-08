@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router'; // new import
+import { AuthService } from '../../../../services/firebase/auth.service';
 
 interface User {
   name: string;
@@ -18,7 +19,7 @@ export class MyAccountComponent implements OnInit {
   public openAccount: boolean = false;
   user?: User;
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private authService: AuthService) {
     try {
       const userData = localStorage.getItem('user');
       this.user = userData ? JSON.parse(userData) : undefined;
@@ -32,9 +33,7 @@ export class MyAccountComponent implements OnInit {
   }
 
   logOut() {
-    localStorage.removeItem('user');
-    sessionStorage.removeItem('currentCompany');
-    this.router.navigateByUrl('/login');
+    this.authService.SignOut()
   };
 
   // For Mobile Device
