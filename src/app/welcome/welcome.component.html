@@ -395,7 +395,7 @@
     </div>
 </div>
 
-<div class="container-fluid m-t-35">
+<div class="container-fluid m-t-35" *ngIf="currentCompany.nomComercial === 'ALMARA FELICIDAD'">
     <div class="row">
         <div class="col-sm-12">
             <div class="card shadow-2 backColorSwitch">
@@ -407,7 +407,6 @@
                             <div class="search-container">
                                 <input type="text" class="form-control" placeholder="Buscar cliente..." style="max-width: 300px;">
                             </div>
-                           
                         </div>
                         
                         <table class="table table-hover">
@@ -415,137 +414,37 @@
                                 <tr>
                                     <th scope="col">#</th>
                                     <th scope="col">Nombre</th>
-                                    <th scope="col">Empresa</th>
+                                    <th scope="col">Cedula</th>
                                     <th scope="col">Teléfono</th>
-                                    <th scope="col">Email</th>
-                                    <th scope="col">Interés</th>
-                                    <th scope="col">Fecha Contacto</th>
-                                    <th scope="col">Estado</th>
-                                    <th scope="col">Acciones</th>
+                                    <th scope="col">Direccion</th>
+                                    <th scope="col">Mensaje Completo</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td>Juan Pérez</td>
-                                    <td>TechSolutions SA</td>
-                                    <td>+57 310 1234567</td>
-                                    <td>juan.perez@techsolutions.com</td>
-                                    <td>Software ERP</td>
-                                    <td>15/05/2023</td>
-                                    <td><span class="badge badge-warning">Por contactar</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary mr-2">
-                                            <i class="fa fa-phone"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success mr-2">
-                                            <i class="fa fa-envelope"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">2</th>
-                                    <td>María Gómez</td>
-                                    <td>Distribuciones Gómez</td>
-                                    <td>+57 320 9876543</td>
-                                    <td>mgomez@distribuciones.com</td>
-                                    <td>Sistema de Inventarios</td>
-                                    <td>22/05/2023</td>
-                                    <td><span class="badge badge-primary">En conversación</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary mr-2">
-                                            <i class="fa fa-phone"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success mr-2">
-                                            <i class="fa fa-envelope"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">3</th>
-                                    <td>Carlos Rodríguez</td>
-                                    <td>Tiendas El Ahorro</td>
-                                    <td>+57 315 4567890</td>
-                                    <td>c.rodriguez@elahorro.com</td>
-                                    <td>Punto de Venta</td>
-                                    <td>10/06/2023</td>
-                                    <td><span class="badge badge-success">Cotización enviada</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary mr-2">
-                                            <i class="fa fa-phone"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success mr-2">
-                                            <i class="fa fa-envelope"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">4</th>
-                                    <td>Ana Martínez</td>
-                                    <td>Farmacias La Salud</td>
-                                    <td>+57 318 7654321</td>
-                                    <td>a.martinez@farmaciasalud.com</td>
-                                    <td>Sistema de Farmacia</td>
-                                    <td>05/07/2023</td>
-                                    <td><span class="badge badge-danger">No interesado</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary mr-2">
-                                            <i class="fa fa-phone"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success mr-2">
-                                            <i class="fa fa-envelope"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">5</th>
-                                    <td>Luis Ramírez</td>
-                                    <td>Restaurante La Casona</td>
-                                    <td>+57 300 1122334</td>
-                                    <td>luis.ramirez@lacasona.com</td>
-                                    <td>Sistema para Restaurantes</td>
-                                    <td>18/07/2023</td>
-                                    <td><span class="badge badge-info">Reunión agendada</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary mr-2">
-                                            <i class="fa fa-phone"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success mr-2">
-                                            <i class="fa fa-envelope"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                    </td>
+                                <tr *ngFor="let cliente of pagedClientes; let i = index">
+                                    <th scope="row">{{ (currentPage - 1) * pageSize + i + 1 }}</th>
+                                    <td>{{cliente.nombre}}</td>
+                                    <td>{{cliente.cedula}}</td>
+                                    <td>{{cliente.telefono}}</td>
+                                    <td>{{cliente.direccion}}</td>
+                                    <td>{{cliente.observaciones}}</td>
                                 </tr>
                             </tbody>
                         </table>
                         
-                        <!-- <nav aria-label="Page navigation" class="mt-4">
+                        <nav aria-label="Page navigation" class="mt-4">
                             <ul class="pagination justify-content-center">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                                <li class="page-item" [class.disabled]="currentPage === 1">
+                                    <a class="page-link" href="javascript:void(0)" (click)="previousPage()">Anterior</a>
                                 </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">Siguiente</a>
+                                <li class="page-item" *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage">
+                                    <a class="page-link" href="javascript:void(0)" (click)="goToPage(page)">{{page}}</a>
+                                </li>
+                                <li class="page-item" [class.disabled]="currentPage === totalPages">
+                                    <a class="page-link" href="javascript:void(0)" (click)="nextPage()">Siguiente</a>
                                 </li>
                             </ul>
-                        </nav> -->
+                        </nav>
                     </div>
                 </div>
             </div>
