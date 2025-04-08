@@ -159,6 +159,37 @@
               <h4>Sin integraciones configuradas</h4>
               <p class="text-muted">Conecta tu negocio con diferentes servicios y plataformas</p>
               
+              <!-- Logos de servicios populares -->
+              <div class="popular-integrations">
+                <h6><i class="fa fa-star"></i> Servicios populares</h6>
+                <div class="logo-slider">
+                  <div class="logo-slider-item" (click)="openIntegrationConfigByType('payment', 'stripe')">
+                    <img src="assets/images/logos/stripe.png" alt="Stripe" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                  </div>
+                  <div class="logo-slider-item" (click)="openIntegrationConfigByType('payment', 'paypal')">
+                    <img src="assets/images/logos/paypal.png" alt="PayPal" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                  </div>
+                  <div class="logo-slider-item" (click)="openIntegrationConfigByType('ecommerce', 'shopify')">
+                    <img src="assets/images/logos/shopify.png" alt="Shopify" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                  </div>
+                  <div class="logo-slider-item" (click)="openIntegrationConfigByType('ecommerce', 'woocommerce')">
+                    <img src="assets/images/logos/woocommerce.png" alt="WooCommerce" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                  </div>
+                  <div class="logo-slider-item" (click)="openIntegrationConfigByType('marketing', 'mailchimp')">
+                    <img src="assets/images/logos/mailchimp.png" alt="Mailchimp" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                  </div>
+                  <div class="logo-slider-item" (click)="openIntegrationConfigByType('payment', 'mercadopago')">
+                    <img src="assets/images/logos/mercadopago.png" alt="MercadoPago" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                  </div>
+                  <div class="logo-slider-item" (click)="openIntegrationConfigByType('logistics', 'dhl')">
+                    <img src="assets/images/logos/dhl.png" alt="DHL" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                  </div>
+                  <div class="logo-slider-item" (click)="openIntegrationConfigByType('crm', 'salesforce')">
+                    <img src="assets/images/logos/salesforce.png" alt="Salesforce" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                  </div>
+                </div>
+              </div>
+              
               <div class="integration-categories-grid mt-4">
                 <div *ngFor="let category of categories" class="category-card" (click)="openIntegrationConfigByCategory(category)">
                   <div class="category-icon">
@@ -191,8 +222,12 @@
                   <div class="integration-card" [ngClass]="{'inactive': !integration.enabled, 'has-error': hasError(integration), 'featured': isFeatured(integration)}" (click)="openIntegrationConfig(integration)">
                     <div class="integration-card-header">
                       <div class="integration-logo-container">
-                        <img *ngIf="getIntegrationLogo(integration.type)" [src]="getIntegrationLogo(integration.type)" [alt]="integration.name" class="integration-logo">
-                        <div *ngIf="!getIntegrationLogo(integration.type)" class="integration-icon" [ngClass]="integration.type">
+                        <img *ngIf="getIntegrationLogo(integration.type)" 
+                             [src]="getIntegrationLogo(integration.type)" 
+                             [alt]="integration.name" 
+                             class="integration-logo" 
+                             (error)="handleImageError($event)">
+                        <div *ngIf="!getIntegrationLogo(integration.type) || hasLogoError(integration)" class="integration-icon" [ngClass]="integration.type">
                           <i class="fa" [ngClass]="getIntegrationIcon(integration.type)"></i>
                         </div>
                       </div>
@@ -293,8 +328,12 @@
                   <tr *ngFor="let integration of getSortedAndFilteredIntegrations()" (click)="openIntegrationConfig(integration)" class="integration-row">
                     <td>
                       <div class="integration-name-cell">
-                        <img *ngIf="getIntegrationLogo(integration.type)" [src]="getIntegrationLogo(integration.type)" alt="" class="integration-logo-sm">
-                        <i *ngIf="!getIntegrationLogo(integration.type)" class="fa" [ngClass]="getIntegrationIcon(integration.type)"></i>
+                        <img *ngIf="getIntegrationLogo(integration.type)" 
+                             [src]="getIntegrationLogo(integration.type)" 
+                             [alt]="integration.name" 
+                             class="integration-logo-sm" 
+                             (error)="handleImageError($event)">
+                        <i *ngIf="!getIntegrationLogo(integration.type) || hasLogoError(integration)" class="fa" [ngClass]="getIntegrationIcon(integration.type)"></i>
                         <span>{{integration.name}}</span>
                       </div>
                     </td>
@@ -366,8 +405,12 @@
                 </h6>
                 <div class="suggested-items">
                   <div *ngFor="let integration of getTopSuggestionsForCategory(category, 3)" class="suggested-item" (click)="configureIntegration(integration, category, $event)">
-                    <img *ngIf="integration.logo" [src]="integration.logo" [alt]="integration.name" class="suggested-logo">
-                    <div *ngIf="!integration.logo" class="integration-icon-sm">
+                    <img *ngIf="integration.logo" 
+                         [src]="integration.logo" 
+                         [alt]="integration.name" 
+                         class="suggested-logo"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="integration-icon-sm" [style.display]="integration.logo ? 'none' : 'flex'">
                       <i class="fa" [ngClass]="getIntegrationIcon(integration.id)"></i>
                     </div>
                     <div class="suggested-info">
