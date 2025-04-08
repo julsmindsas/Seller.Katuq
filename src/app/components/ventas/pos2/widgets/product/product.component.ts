@@ -16,8 +16,6 @@ export class ProductComponent implements OnInit {
 
   public products: any[] = [];
   public filteredProduct: any[] = [];
-  public products: any[] = [];
-  public filteredProduct: any[] = [];
   public searchQuery: string = '';
   public filter = {
     search: '',

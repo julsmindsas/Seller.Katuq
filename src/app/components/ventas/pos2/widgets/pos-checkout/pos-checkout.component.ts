@@ -16,12 +16,7 @@ import { CartService } from '../../../../../shared/services/cart.service';
 export class PosCheckoutComponent {
 
   public checkoutMethod1 = checkoutMethod;
-  public checkoutMethod1 = checkoutMethod;
-  
-  constructor(public cartService: CartService, private modal: NgbModal) {
 
-    const nombre: string = this.checkoutMethod1[0].title;
-  }
   constructor(public cartService: CartService, private modal: NgbModal) {
 
     const nombre: string = this.checkoutMethod1[0].title;
