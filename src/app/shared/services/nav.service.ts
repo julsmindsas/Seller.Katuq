@@ -114,7 +114,7 @@ export class NavService implements OnDestroy {
 
 	filterMenuItemsByAuthorization() {
 		const authorizedPaths = JSON.parse(localStorage.getItem('authorizedMenuItems') || '[]').map((item: any) => item.path);
-		const filteredMenu = this.MENUITEMS.map(item => {
+		const filteredMenu = this.ALLMENUITEMS.map(item => {
 			if (item.headTitle1) {
 				// Si es un encabezado, eliminar cualquier propiedad children
 				const header = { ...item };
