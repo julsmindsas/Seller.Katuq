@@ -2,21 +2,27 @@
 
 
     <!-- <app-card [headerTitle]="'Product Categories'" [padding]="false" [rightSideDetails]="true" [cardBodyClass]="'pt-0'"> -->
-    <a class="c-o-light" [routerLink]="['/product/list']" header3>View All </a>
+    
+        <div class="card-header card-no-border header-top p-2 m-0"><!----><!---->
+            <h5 class="fc-primary">{{'Categorías' | translate }}</h5>
+            <a class="c-o-light" [routerLink]="['/categorias']" header3>{{ 'Ver todas' | translate }}</a>
+        </div>
+    
+  
+    <div class="slider-wrapper arrow-round" style="padding: 0px 10px; margin: 0px;">
 
-    <div class="slider-wrapper arrow-round">
-        <ks-plain-gallery [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
-        </ks-plain-gallery>
-        <!-- <owl-carousel-o class="shop-category-slider">
-            <div *ngFor="category of productCategory; track category">
-                <ng-template carouselSlide>
-                    <a class="shop-box" href="javascript:void(0)">
-                        <img [src]="category.category_image" [alt]="category.category_name">
+        <p-carousel [value]="imagesRect" [numVisible]="7" [numScroll]="1" [circular]="true" [showIndicators]="false"
+            [showNavigators]="false" [responsiveOptions]="responsiveOptions" [autoplayInterval]="3000">
+            <ng-template let-item pTemplate="item">
+                <div class="prueba">
+                    <a class="shop-box">
+                        <img [src]="item.image" class="card-img-top category-img" alt="Categoría">
                     </a>
-                    <span class="m-t-10 category-title f-w-500 text-gray">category.category_name</span>
-                </ng-template>
-            </div>
-        </owl-carousel-o> -->
+                    <span class="m-t-5 category-title f-w-300 text-gray fs-12">{{item.title}}</span>
+                </div>
+            </ng-template>
+        </p-carousel>
+
     </div>
     <!-- </app-card> -->
 

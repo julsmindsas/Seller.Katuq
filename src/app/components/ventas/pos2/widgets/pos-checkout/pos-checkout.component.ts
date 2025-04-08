@@ -3,7 +3,6 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
-// import { FeatherIconComponent } from "../../../../../shared/components/ui/feather-icon/feather-icon.component";
 import { CreateCustomerModalComponent } from '../create-customer-modal/create-customer-modal.component';
 import { checkoutMethod } from '../../../../../../assets/data/pos';
 import { CartService } from '../../../../../shared/services/cart.service';
@@ -16,9 +15,12 @@ import { CartService } from '../../../../../shared/services/cart.service';
 
 export class PosCheckoutComponent {
 
-  public checkoutMethod = checkoutMethod;
+  public checkoutMethod1 = checkoutMethod;
   
-  constructor(public cartService: CartService, private modal: NgbModal) {}
+  constructor(public cartService: CartService, private modal: NgbModal) {
+
+    const nombre: string = this.checkoutMethod1[0].title;
+  }
 
   openModal() {
     this.modal.open(CreateCustomerModalComponent, { centered: true, size: 'lg', modalDialogClass: 'create-customers custom-input' })
