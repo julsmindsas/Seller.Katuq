@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
 import * as XLSX from 'xlsx';
-import { MultiSelectModule } from 'primeng/multiselect';
+// import { MultiSelectModule } from 'primeng/multiselect';
 
 interface Column {
     field: string;
@@ -29,7 +29,7 @@ export class ClientesListaComponent implements OnInit {
         this.cargarClientes();
 
         this.cols = [
-            { field: 'tipo_documento_comprador', header: 'CC-Nit' },
+            // { field: 'tipo_documento_comprador', header: 'CC-Nit' },
             { field: 'documento', header: '# Documento' },
             { field: 'correo_electronico_comprador', header: 'Email' },
             { field: 'numero_celular_comprador', header: 'Celular' },

@@ -52,7 +52,7 @@
                         ]" [tableStyle]="{ 'min-width': '10rem' }" [rowHover]="true" [showCurrentPageReport]="true"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
 
-                        <ng-template pTemplate="caption">
+                        <!-- <ng-template pTemplate="caption">
                             <p-multiSelect style="margin: 10px" display="chip" [options]="cols"
                                 [(ngModel)]="selectedColumns" optionLabel="header"
                                 selectedItemsLabel="{0} columns selected" [style]="{ 'min-width': '200px' }"
@@ -70,24 +70,44 @@
                                         " placeholder="{{ 'Escribe el texto que deseas filtrar' | translate }}" />
                                 </p-iconField>
                             </div>
-                        </ng-template>
+                        </ng-template> -->
                         <ng-template pTemplate="header" let-columns let-cliente>
                             <tr>
-                                <th style="width: 22%">{{ "Cliente" | translate }}</th>
-                                <th *ngFor="let col of columns">
+                                <th class="columna-header text-center">{{ "Cliente" | translate }}</th>
+                                <th class="columna-header text-center">{{ "Documento" | translate }}</th>
+                                <th class="columna-header text-center">{{ "Email" | translate }}</th>
+                                <th class="columna-header text-center">{{ "Celular" | translate }}</th>
+                                <th class="columna-header text-center">{{ "Estado" | translate }}</th>
+                                <!-- <th *ngFor="let col of columns">
                                     {{ col.header }}
-                                </th>
-                                <th style="width: 22%">{{ "Opciones" | translate }}</th>
+                                </th> -->
+                                <th class="columna-header">{{ "Opciones" | translate }}</th>
                             </tr>
                             <tr>
-                                <th>
+                                <th class="text-center">
                                     <p-columnFilter type="text" field="nombres_completos" placeholder=""
                                         ariaLabel="Filter Name"></p-columnFilter>
                                 </th>
-                                <th *ngFor="let col of columns">
+                                <th>
+                                    <p-columnFilter type="text" field="documento" placeholder=""
+                                        ariaLabel="Filter ID"></p-columnFilter>
+                                </th>
+                                <th>
+                                    <p-columnFilter type="text" field="correo_electronico_comprador" placeholder=""
+                                        ariaLabel="Filter Email"></p-columnFilter>
+                                </th>
+                                <th>
+                                    <p-columnFilter type="text" field="numero_celular_comprador" placeholder=""
+                                        ariaLabel="Filter Movil"></p-columnFilter>
+                                </th>
+                                <th>
+                                    <p-columnFilter type="text" field="estado" placeholder=""
+                                    ariaLabel="Filter State"></p-columnFilter>
+                                </th>
+                                <!-- <th *ngFor="let col of columns">
                                     <p-columnFilter type="text" field="{{ cliente[col.field] }}" placeholder=""
                                         ariaLabel="Filter "></p-columnFilter>
-                                </th>
+                                </th> -->
                                 <th></th>
                             </tr>
                             <!-- <tr>
