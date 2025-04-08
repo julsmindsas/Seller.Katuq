@@ -25,7 +25,7 @@ export class WelcomeComponent implements OnInit {
   currentPage: number = 1;
   pageSize: number = 10; // Número de items por página
   totalPages: number = 1;
-  currentCompany: any;
+  public currentCompany: any;
 
   constructor(private service: ServiciosService) { }
 
