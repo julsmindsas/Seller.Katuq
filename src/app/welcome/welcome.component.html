@@ -188,7 +188,7 @@
                                     Punto de venta flexible y rápido.
                                 </p>
                                 <div>
-                                    <a class="btn btn-outline-white" routerLink="/pos/ventas">Ver más</a>
+                                    <a class="btn btn-outline-white" routerLink="/ventas/pos2">Ver más</a>
                                 </div>
                             </div>
                         </div>
@@ -387,3 +387,67 @@
     </li>
   </ul>
 </div> -->
+<div class="container-fluid mt-50">
+    <div class="row">
+        <div class="col-sm-12">
+            <p class="firma">CRM</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid m-t-35" *ngIf="currentCompany.nomComercial === 'ALMARA FELICIDAD'">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card shadow-2 backColorSwitch">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <h4 class="mb-3 mt-1 f-w-800 mb-4 f-22">Clientes Potenciales</h4>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="search-container">
+                                <input type="text" class="form-control" placeholder="Buscar cliente..." style="max-width: 300px;">
+                            </div>
+                        </div>
+                        
+                        <table class="table table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Nombre</th>
+                                    <th scope="col">Cedula</th>
+                                    <th scope="col">Teléfono</th>
+                                    <th scope="col">Direccion</th>
+                                    <th scope="col">Mensaje Completo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let cliente of pagedClientes; let i = index">
+                                    <th scope="row">{{ (currentPage - 1) * pageSize + i + 1 }}</th>
+                                    <td>{{cliente.nombre}}</td>
+                                    <td>{{cliente.cedula}}</td>
+                                    <td>{{cliente.telefono}}</td>
+                                    <td>{{cliente.direccion}}</td>
+                                    <td>{{cliente.observaciones}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" [class.disabled]="currentPage === 1">
+                                    <a class="page-link" href="javascript:void(0)" (click)="previousPage()">Anterior</a>
+                                </li>
+                                <li class="page-item" *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage">
+                                    <a class="page-link" href="javascript:void(0)" (click)="goToPage(page)">{{page}}</a>
+                                </li>
+                                <li class="page-item" [class.disabled]="currentPage === totalPages">
+                                    <a class="page-link" href="javascript:void(0)" (click)="nextPage()">Siguiente</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -332,9 +332,11 @@ export class PaymentService extends BaseService {
   getHtmlContent(pedido: Pedido, isComanda: boolean = false): any {
     pedido.carrito.forEach(x => {
       this.pedidoUtilService.getAllMaestro$().subscribe((r: any) => {
-        this.generos = r.generos?.find((p) => x.configuracion.datosEntrega.genero == p.id);
-        console.log(this.generos)
-        this.ocasiones = r.ocasiones?.find((p) => x.configuracion.datosEntrega.ocasion == p.id);
+        if (x.configuracion?.datosEntrega) {
+          this.generos = r.generos?.find((p) => x.configuracion?.datosEntrega.genero == p.id);
+          console.log(this.generos)
+          this.ocasiones = r.ocasiones?.find((p) => x.configuracion?.datosEntrega.ocasion == p.id);
+        }
       })
 
     })
@@ -818,14 +820,14 @@ export class PaymentService extends BaseService {
     <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de Entrega</h2>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fecha de Entrega: ${this.customFormatDate(pedido.fechaEntrega)}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Forma de Entrega: ${pedido.carrito[0]?.configuracion?.datosEntrega.formaEntrega}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Horario de Entrega: ${pedido.carrito[0]?.configuracion?.datosEntrega.horarioEntrega}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Forma de Entrega: ${pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Horario de Entrega: ${pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega}</p>
     </div>
 
     <!-- Sección de Datos Extras de la Orden de Pedido -->
     <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de la Orden de Pedido</h2>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Asesor Asignado: ${pedido?.asesorAsignado.name}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Asesor Asignado: ${pedido?.asesorAsignado?.name}</p>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fecha y Hora de Compra: ${this.customFormatDateHour(pedido?.fechaCreacion)}</p>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fuente: <strong>SELLERCENTER</strong></p>
     </div>

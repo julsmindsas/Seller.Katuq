@@ -42,6 +42,9 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private toastTimer: Subscription | null = null;
 
+  // Add this property to track logo errors
+  private logoErrors: Set<string> = new Set<string>();
+
   constructor(
     private integrationsService: IntegrationsService,
     private modalService: NgbModal
@@ -252,7 +255,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
    * Mostrar/ocultar tutorial
    */
   openTutorial(): void {
-    this.showTutorial = true;
+    this.showTutorial = false;
   }
 
   closeTutorial(): void {
@@ -574,5 +577,25 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       [IntegrationCategory.OTHER]: 'fa-puzzle-piece'
     };
     return icons[category] || 'fa-plug';
+  }
+
+  // Nuevo método para manejar errores de carga de imágenes
+  handleImageError(event: any) {
+    const target = event.target;
+    const integration = this.integrations.find(i => this.getIntegrationLogo(i.type) === target.src);
+    
+    if (integration) {
+      // Add the integration ID to our set of logo errors
+      this.logoErrors.add(integration.id);
+    }
+    
+    // Reemplazar con ícono
+    target.style.display = 'none';
+    target.parentElement.classList.add('logo-error');
+  }
+
+  // Add a helper method to check if an integration has a logo error
+  hasLogoError(integration: any): boolean {
+    return this.logoErrors.has(integration.id);
   }
 }

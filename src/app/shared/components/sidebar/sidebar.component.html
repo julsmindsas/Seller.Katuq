@@ -153,42 +153,48 @@
     </ul>
 
       <!-- Card Balanceada -->
-  <div class="plan-card-container">
-    <div class="plan-card">
-      <div class="card-header">
-        <small class="fs-16 fc-primary">Mi plan</small>
-        <div class="plan-tag">
-          <!-- <i class="fas fa-crown"></i> -->
-          <span class="fc-primary fs-16">{{currentPlan.type}}</span>
-        </div>
-        <div class="wallet-tag">
-          <i class="fa fa-wallet"></i>
-          <span>${{currentPlan.walletBalance.toFixed(2)}}</span>
-        </div>
+  <!-- Card Balanceada -->
+<div class="plan-card-container" [class.collapsed]="collapseMenu">
+  <!-- Versión normal -->
+  <div class="plan-card" *ngIf="!collapseMenu">
+    <div class="card-header">
+      <small class="fs-16 fc-primary">Mi plan</small>
+      <div class="plan-tag">
+        <span class="fc-primary fs-16">{{currentPlan.type}}</span>
       </div>
-      
-      <div class="card-details">
-        <div class="detail-item">
-          <small class="fs-14">Vence</small>
-          <span>{{currentPlan.renewalDate}}</span>
-        </div>
-        <div class="detail-item">
-          <small>Uso</small>
-          <div class="usage-display">
-            <div class="usage-bar">
-              <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
-            </div>
-            <span class="usage-percentage">{{currentPlan.progress}}%</span>
-          </div>
-        </div>
+      <div class="wallet-tag">
+        <i class="fa fa-wallet"></i>
+        <span>${{currentPlan.walletBalance.toFixed(2)}}</span>
       </div>
-      
-      <button class="action-btn bc-primary fc-white fs-16" (click)="openPlanModal()">
-        <i class="fas fa-coins"></i>
-        <span>Cambiar plan</span>
-      </button>
     </div>
+    
+    <div class="card-details">
+      <div class="detail-item">
+        <small class="fs-14">Vence</small>
+        <span>{{currentPlan.renewalDate}}</span>
+      </div>
+      <div class="detail-item">
+        <small>Uso</small>
+        <div class="usage-display">
+          <div class="usage-bar">
+            <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
+          </div>
+          <span class="usage-percentage">{{currentPlan.progress}}%</span>
+        </div>
+      </div>
+    </div>
+    
+    <button class="action-btn bc-primary fc-white fs-16" (click)="openPlanModal()">
+      <i class="fas fa-coins"></i>
+      <span>Cambiar plan</span>
+    </button>
   </div>
+  
+  <!-- Versión colapsada (solo icono) -->
+  <div class="plan-card-collapsed" *ngIf="collapseMenu" (click)="sidebarToggle()" title="Mi plan">
+    <i class="fas fa-crown"></i>
+  </div>
+</div>
 
 
   </div>

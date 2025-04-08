@@ -1,6 +1,6 @@
-import { CommonModule } from '@angular/common';
+// import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+// import { RouterModule } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { CreateCustomerModalComponent } from '../create-customer-modal/create-customer-modal.component';
@@ -16,7 +16,12 @@ import { CartService } from '../../../../../shared/services/cart.service';
 export class PosCheckoutComponent {
 
   public checkoutMethod1 = checkoutMethod;
+  public checkoutMethod1 = checkoutMethod;
   
+  constructor(public cartService: CartService, private modal: NgbModal) {
+
+    const nombre: string = this.checkoutMethod1[0].title;
+  }
   constructor(public cartService: CartService, private modal: NgbModal) {
 
     const nombre: string = this.checkoutMethod1[0].title;

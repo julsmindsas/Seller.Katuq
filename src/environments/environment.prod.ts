@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "8.4.7 - 23 de Marzo 2025 (Beta)",
+  version: "8.4.8 - 02 de Abril 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -23,5 +23,6 @@ export const environment = {
     event: 'test_events_AaaZdg5VB8tngBhZkogbXmDpbT9nWMH5',
     redirectURL: 'https://sellercenter.katuq.com/payment-callback',
     redirectURLTest: 'http://localhost:4200/payment-callback',
-  }
+  },
+  useModelBig: false,
 };

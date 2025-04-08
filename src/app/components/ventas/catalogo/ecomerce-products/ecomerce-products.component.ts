@@ -228,6 +228,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
     this.ventasService.getProducts().subscribe({
       next: (data) => {
         console.log(data);
+        console.log("productos", JSON.stringify(data));
         this.productos = data;
 
         const precios = this.productos.map((producto) => producto.precio.precioUnitarioConIva);
@@ -277,6 +278,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
     this.ventasService.getProductsByFilter(filter).subscribe({
       next: (data) => {
         console.log(data);
+        console.log("productos", JSON.stringify([data[0], data[1], data[2]]));
         this.productos = data;
         this.temp = [...data];
       },

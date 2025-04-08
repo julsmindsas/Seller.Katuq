@@ -997,4 +997,12 @@ addNotification(message: string, ticketId: string) {
     read: false
   });
 }
+getContacts(): Observable<any[]> {
+  const headers = new HttpHeaders({
+    'keyApp': 'e56dadf569d54b13809e94e95c97b31c',
+    'Authorization': sessionStorage.getItem('tk') || ''
+  });
+
+  return this.httpClient.get<any[]>('https://api.katuq.com/v1/contacts');
+}
 }

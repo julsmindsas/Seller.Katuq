@@ -25,11 +25,13 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
 .integration-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(115,102,255,0.15);
+  border-color: rgba(115,102,255,0.2);
 }
 
 .integration-card.inactive {
@@ -58,6 +60,7 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #f0f0f0;
+  background-color: #fcfcfc;
 }
 
 .integration-logo-container {
@@ -69,6 +72,10 @@
   width: 40px;
   height: 40px;
   object-fit: contain;
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 3px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .integration-status-container {
@@ -302,6 +309,21 @@
   font-size: 14px;
 }
 
+/* Mejorar manejo de imágenes fallidas en las recomendaciones */
+.suggested-item .integration-icon-sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  color: white;
+  background: linear-gradient(135deg, #7366ff, #a992ff);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
 .suggested-info {
   flex-grow: 1;
 }
@@ -448,6 +470,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 600;
+  animation: countUp 0.5s ease-out forwards;
 }
 
 .stat-content p {
@@ -752,4 +775,406 @@
 .category-icon i {
   font-size: 24px;
   color: #7366ff;
+}
+
+/* Modal de creación de integración */
+.integration-modal .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.integration-modal .modal-header {
+  background: linear-gradient(135deg, #7366ff, #a992ff);
+  color: white;
+  border-bottom: none;
+  padding: 20px 25px;
+}
+
+.integration-modal .modal-title {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.integration-modal .modal-title i {
+  margin-right: 10px;
+}
+
+.integration-modal .modal-body {
+  padding: 25px;
+}
+
+.integration-modal .modal-footer {
+  border-top: 1px solid #f0f0f0;
+  padding: 15px 25px;
+}
+
+/* Sección de logos reales */
+.integration-logos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin: 25px 0;
+}
+
+.logo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px 10px;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.logo-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  border-color: rgba(115,102,255,0.3);
+}
+
+.logo-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.logo-item span {
+  font-size: 12px;
+  color: #333;
+  text-align: center;
+}
+
+/* Mejoras en tabs de categorías para el modal */
+.integration-categories-tabs {
+  display: flex;
+  overflow-x: auto;
+  margin-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: #7366ff #f0f0f0;
+}
+
+.integration-categories-tabs::-webkit-scrollbar {
+  height: 5px;
+}
+
+.integration-categories-tabs::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.integration-categories-tabs::-webkit-scrollbar-thumb {
+  background-color: #7366ff;
+  border-radius: 10px;
+}
+
+.category-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 90px;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  margin-right: 5px;
+}
+
+.category-tab.active {
+  border-bottom: 2px solid #7366ff;
+}
+
+.category-tab.active .category-tab-icon {
+  background-color: #7366ff;
+  color: white;
+}
+
+.category-tab:hover {
+  background-color: rgba(115,102,255,0.05);
+}
+
+.category-tab-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  transition: all 0.3s;
+}
+
+.category-tab-label {
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Alerta de credenciales */
+.credentials-alert {
+  background-color: #fffbf2;
+  border-left: 4px solid #ffc107;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.credentials-alert i {
+  color: #ffc107;
+  margin-right: 8px;
+}
+
+/* Input de credenciales mejorado */
+.credential-input-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.credential-input-group label {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.credential-input-group label i {
+  margin-right: 6px;
+  color: #7366ff;
+}
+
+.credential-input-group .form-control {
+  border-radius: 8px;
+  padding: 10px 12px;
+  border-color: #e0e0e0;
+  transition: all 0.3s;
+}
+
+.credential-input-group .form-control:focus {
+  box-shadow: 0 0 0 3px rgba(115,102,255,0.15);
+  border-color: #7366ff;
+}
+
+.credential-tooltip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: #6c757d;
+  font-size: 13px;
+  cursor: help;
+}
+
+/* Mejoras en los indicadores de estado */
+.status-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.status-badge.active {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.status-badge.inactive {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
+
+.status-badge i {
+  margin-right: 4px;
+  font-size: 10px;
+}
+
+/* Mejoras para la visualización de logos populares */
+.popular-integrations {
+  margin: 30px 0;
+}
+
+.popular-integrations h6 {
+  margin-bottom: 15px;
+  font-weight: 600;
+  color: #495057;
+  display: flex;
+  align-items: center;
+}
+
+.popular-integrations h6 i {
+  margin-right: 8px;
+  color: #7366ff;
+}
+
+.logo-slider {
+  display: flex;
+  overflow-x: auto;
+  padding: 10px 0;
+  scrollbar-width: none;
+}
+
+.logo-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.logo-slider-item {
+  min-width: 100px;
+  height: 70px;
+  margin-right: 15px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+  background-color: white;
+  transition: all 0.3s;
+}
+
+.logo-slider-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.logo-slider-item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Indicador de estado para transacciones */
+.status-summary {
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 15px;
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.status-value {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.status-label {
+  font-size: 11px;
+  color: #6c757d;
+}
+
+/* Mejoras en tooltips y elementos interactivos */
+.has-tooltip {
+  position: relative;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+}
+
+.has-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 0.9;
+}
+
+/* Contadores animados */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Valor enmascarado para credenciales */
+.masked-value {
+  font-family: monospace;
+  letter-spacing: 1px;
+}
+
+/* Clases de ambiente */
+.environment-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.environment-production {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.environment-development {
+  background-color: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
+}
+
+.environment-sandbox {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+/* Clases para manejar los logos fallidos */
+.fallback-logo {
+  opacity: 0.6;
+  filter: grayscale(100%);
+}
+
+.logo-error .integration-icon {
+  display: flex !important; /* Mostrar el ícono cuando la imagen falla */
+}
+
+.integration-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: linear-gradient(135deg, #7366ff, #a992ff);
+  font-size: 18px;
+}
+
+/* Mejorar estilos para ítems de logos en el modal */
+.logo-item .integration-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  color: white;
+  background: linear-gradient(135deg, #7366ff, #a992ff);
+  font-size: 24px;
 }

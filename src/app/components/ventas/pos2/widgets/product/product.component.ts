@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 // import { products } from '../../../../../../assets/data/pos';
 // import { OrderDetailsProduct } from '../../../../../shared/models/pos/order';
+// import { products } from '../../../../../../assets/data/pos';
+// import { OrderDetailsProduct } from '../../../../../shared/models/pos/order';
 import { CartService } from '../../../../../shared/services/cart.service';
 import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
 
@@ -12,6 +14,8 @@ import { MaestroService } from '../../../../../shared/services/maestros/maestro.
 
 export class ProductComponent implements OnInit {
 
+  public products: any[] = [];
+  public filteredProduct: any[] = [];
   public products: any[] = [];
   public filteredProduct: any[] = [];
   public searchQuery: string = '';

@@ -19,7 +19,7 @@ export interface Producto {
   identificacion?: Identificacion;
   procesoComercial?: ProcesoComercial;
   ciudades?: Ciudades;
-  cd: string;
+  cd?: string;
   crearProducto?: CrearProducto;
   precio?: Precio;
   date_edit?: string;

@@ -1,0 +1,221 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    <i class="fa" [ngClass]="isEdit ? 'fa-edit' : 'fa-plus-circle'"></i>
+    {{ isEdit ? 'Editar integración: ' + integrationData.name : 'Nueva integración' }}
+    <span *ngIf="selectedCategory && !isEdit">: {{ categoryLabels[selectedCategory] }}</span>
+  </h5>
+  <button type="button" class="close" (click)="closeModal()" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<div class="modal-body">
+  <!-- Selector de categoría (solo si es nueva integración) -->
+  <div *ngIf="!isEdit && !selectedCategory" class="mb-4">
+    <h6 class="mb-3">Selecciona una categoría de integración</h6>
+    
+    <div class="integration-categories-tabs">
+      <div *ngFor="let category of categories" 
+           class="category-tab" 
+           [ngClass]="{'active': selectedCategory === category}"
+           (click)="selectCategory(category)">
+        <div class="category-tab-icon">
+          <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+        </div>
+        <span class="category-tab-label">{{ categoryLabels[category] }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Selector de tipo de integración -->
+  <div *ngIf="selectedCategory || isEdit" class="mb-4">
+    <h6 class="mb-3">{{ isEdit ? 'Tipo de integración' : 'Selecciona el servicio' }}</h6>
+    
+    <!-- Logos de integraciones populares con manejo de errores -->
+    <div class="integration-logos-grid">
+      <div *ngFor="let integration of getIntegrationsForCategory(selectedCategory || integrationData.category)" 
+           class="logo-item"
+           [ngClass]="{'selected': selectedIntegrationType === integration.id}"
+           (click)="selectIntegrationType(integration.id)">
+        <img [src]="integration.logo" 
+             [alt]="integration.name" 
+             *ngIf="integration.logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="integration-icon" *ngIf="!integration.logo" [style.display]="integration.logo ? 'none' : 'flex'">
+          <i class="fa" [ngClass]="getIntegrationIcon(integration.id)"></i>
+        </div>
+        <span>{{ integration.name }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Formulario de configuración -->
+  <div *ngIf="selectedIntegrationType || isEdit" class="integration-config-form">
+    <div class="credentials-alert" *ngIf="!isEdit">
+      <i class="fa fa-info-circle"></i>
+      Las credenciales de API son necesarias para conectar con el servicio externo. Puedes encontrarlas en tu panel de administración de {{ getSelectedIntegrationName() }}.
+    </div>
+    
+    <form [formGroup]="integrationForm" (ngSubmit)="saveIntegration()">
+      <!-- Nombre -->
+      <div class="credential-input-group">
+        <label for="integration-name">
+          <i class="fa fa-tag"></i> Nombre
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="integration-name" 
+               placeholder="Ej: Mi tienda en Shopify" 
+               formControlName="name">
+        <div class="invalid-feedback" *ngIf="integrationForm.get('name').invalid && integrationForm.get('name').touched">
+          El nombre es obligatorio
+        </div>
+      </div>
+      
+      <!-- Ambiente -->
+      <div class="credential-input-group">
+        <label for="integration-environment">
+          <i class="fa fa-server"></i> Ambiente
+        </label>
+        <select class="form-control" id="integration-environment" formControlName="environment">
+          <option value="production">Producción</option>
+          <option value="development">Desarrollo</option>
+          <option value="sandbox">Sandbox</option>
+        </select>
+        <span class="credential-tooltip" ngbTooltip="El ambiente determina si se realizarán transacciones reales o de prueba">
+          <i class="fa fa-question-circle"></i>
+        </span>
+      </div>
+      
+      <!-- Credenciales (dinámicas según el tipo) -->
+      <div class="credential-fields">
+        <!-- API Key -->
+        <div class="credential-input-group">
+          <label for="integration-apikey">
+            <i class="fa fa-key"></i> API Key
+          </label>
+          <div class="input-group">
+            <input [type]="showApiKey ? 'text' : 'password'" 
+                  class="form-control" 
+                  id="integration-apikey" 
+                  placeholder="Ingresa tu API Key" 
+                  formControlName="apiKey">
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" (click)="toggleApiKeyVisibility()">
+                <i class="fa" [ngClass]="showApiKey ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+          <div class="invalid-feedback" *ngIf="integrationForm.get('apiKey').invalid && integrationForm.get('apiKey').touched">
+            La API Key es obligatoria
+          </div>
+        </div>
+        
+        <!-- API Secret -->
+        <div class="credential-input-group">
+          <label for="integration-apisecret">
+            <i class="fa fa-lock"></i> API Secret
+          </label>
+          <div class="input-group">
+            <input [type]="showApiSecret ? 'text' : 'password'" 
+                  class="form-control" 
+                  id="integration-apisecret" 
+                  placeholder="Ingresa tu API Secret" 
+                  formControlName="apiSecret">
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" (click)="toggleApiSecretVisibility()">
+                <i class="fa" [ngClass]="showApiSecret ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- URL -->
+        <div class="credential-input-group" *ngIf="needsUrl()">
+          <label for="integration-url">
+            <i class="fa fa-globe"></i> URL de la API
+          </label>
+          <input type="text" 
+                class="form-control" 
+                id="integration-url" 
+                placeholder="https://api.example.com/v2/" 
+                formControlName="apiUrl">
+          <span class="credential-tooltip" ngbTooltip="La URL base de la API del servicio">
+            <i class="fa fa-question-circle"></i>
+          </span>
+        </div>
+        
+        <!-- Campos adicionales específicos -->
+        <div *ngFor="let field of getAdditionalFields()" class="credential-input-group">
+          <label [for]="'integration-' + field.id">
+            <i class="fa" [ngClass]="field.icon"></i> {{ field.label }}
+          </label>
+          <input [type]="field.type" 
+                class="form-control" 
+                [id]="'integration-' + field.id" 
+                [placeholder]="field.placeholder" 
+                [formControlName]="field.id">
+          <span class="credential-tooltip" *ngIf="field.tooltip" [ngbTooltip]="field.tooltip">
+            <i class="fa fa-question-circle"></i>
+          </span>
+        </div>
+      </div>
+      
+      <!-- Opciones avanzadas -->
+      <div class="mt-4">
+        <a href="javascript:void(0)" (click)="toggleAdvancedOptions()" class="text-primary">
+          <i class="fa" [ngClass]="showAdvancedOptions ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+          Opciones avanzadas
+        </a>
+        
+        <div *ngIf="showAdvancedOptions" class="mt-3">
+          <!-- Webhooks -->
+          <div class="credential-input-group">
+            <label for="integration-webhook">
+              <i class="fa fa-link"></i> URL de Webhook
+            </label>
+            <input type="text" 
+                  class="form-control" 
+                  id="integration-webhook" 
+                  placeholder="https://tutienda.com/api/webhooks/provider" 
+                  formControlName="webhookUrl">
+            <small class="form-text text-muted">
+              URL donde recibirás notificaciones de eventos desde {{ getSelectedIntegrationName() }}
+            </small>
+          </div>
+          
+          <!-- Límite de uso -->
+          <div class="credential-input-group">
+            <label for="integration-limit">
+              <i class="fa fa-tachometer"></i> Límite de peticiones (por minuto)
+            </label>
+            <input type="number" 
+                  class="form-control" 
+                  id="integration-limit" 
+                  placeholder="60" 
+                  formControlName="rateLimit">
+          </div>
+          
+          <!-- Opciones de notificación -->
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="notify-errors" formControlName="notifyErrors">
+            <label class="form-check-label" for="notify-errors">
+              Notificar errores por correo electrónico
+            </label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-light" (click)="closeModal()">Cancelar</button>
+  <button type="button" class="btn btn-primary" (click)="testConnection()" *ngIf="selectedIntegrationType || isEdit">
+    <i class="fa fa-plug"></i> Probar conexión
+  </button>
+  <button type="button" class="btn btn-success" (click)="saveIntegration()" [disabled]="integrationForm.invalid">
+    <i class="fa" [ngClass]="isEdit ? 'fa-save' : 'fa-plus-circle'"></i>
+    {{ isEdit ? 'Guardar cambios' : 'Crear integración' }}
+  </button>
+</div>

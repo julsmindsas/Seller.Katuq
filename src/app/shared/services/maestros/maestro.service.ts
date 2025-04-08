@@ -8,6 +8,11 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class MaestroService {
+  
+  eliminarUsuario(id: any) {
+    return this.http.post(this.urlBase + '/v1/users/delete', { cd: id }, this.httpOptions);
+  }
+
   changePassword(user: any) {
     return this.http.post(this.urlBase + '/v1/users/updateDefaultPassword', user, this.httpOptions);
   }

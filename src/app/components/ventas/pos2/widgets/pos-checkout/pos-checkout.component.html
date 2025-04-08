@@ -4,6 +4,7 @@
       <h5 class="m-0">{{'Cliente' | translate}} </h5>
       <div class="card-header-right-icon create-right-btn m-l-5">
         <a class="btn btn-primary f-w-500" href="javascript:void(0)" (click)="openModal()">{{'Crear +' | translate}}</a>
+        <a class="btn btn-primary f-w-500" href="javascript:void(0)" (click)="openModal()">{{'Crear +' | translate}}</a>
       </div>
     </div>
   </div>
@@ -15,18 +16,23 @@
           <!-- <app-feather-icon [icon]="'search'" [class]="'search-icon text-gray'"></app-feather-icon> -->
         </span>
         <input class="form-control" type="text" placeholder="{{'Buscar cliente...' | translate }}">
+        <input class="form-control" type="text" placeholder="{{'Buscar cliente...' | translate }}">
       </div>
       <div class="common-flex">
         <a class="btn bc-primary ml-3 fc-white" [routerLink]="['/cart']">{{ 'Adicionar' | translate }}</a>
         <a class="btn bc-secondary ml-3 fc-white" href="javascript:void(0)">{{'Limpiar carrito' | translate }}</a>
+        <a class="btn bc-primary ml-3 fc-white" [routerLink]="['/cart']">{{ 'Adicionar' | translate }}</a>
+        <a class="btn bc-secondary ml-3 fc-white" href="javascript:void(0)">{{'Limpiar carrito' | translate }}</a>
       </div>
     </div>
+    <h5 class="m-0">{{ 'Facturación' | translate }}</h5>
     <h5 class="m-0">{{ 'Facturación' | translate }}</h5>
     <div class="input-group common-search p-b-15">
       <span class="input-group-text">
         <i data-feather="search" height="16" width="16" class="fc-gray"></i>
         <!-- <app-feather-icon [icon]="'search'" [class]="'search-icon text-gray'"></app-feather-icon> -->
       </span>
+      <input class="form-control" type="text" placeholder="{{ 'Buscar producto...' | translate }}">
       <input class="form-control" type="text" placeholder="{{ 'Buscar producto...' | translate }}">
     </div>
     <div class="order-quantity p-b-20 border-bottom">
@@ -36,18 +42,18 @@
             <div class="order-details-wrapper">
               <div class="left-details">
                 <div class="order-img widget-hover">
-                  <img [src]="item.product_image" [alt]="item.product_name">
+                  <img [src]="item.crearProducto.imagenesPrincipales[0].urls" [alt]="item.product_name">
                 </div>
               </div>
               <div class="category-details">
                 <div class="order-details-right">
                   <div *ngIf="item.product_code">
-                    <span class="text-gray mb-1">Category : <span class="font-dark">{{ item.category }}</span>
-                    </span>
+                    <!-- <span class="text-gray mb-1">Category : <span class="font-dark">{{ item.category }}</span>
+                    </span> -->
                   </div>
-                  <h6 class="f-14 f-w-500 mb-3">{{ item.product_name }}</h6>
+                  <h6 class="f-14 f-w-500 mb-3">{{ item.crearProducto.titulo }}</h6>
                   <div class="last-order-detail">
-                    <h6 class="txt-primary">${{ item.price | number:'1.2-2' }}</h6>
+                    <h6 class="txt-primary">${{ item.precio.precioUnitarioConIva | number:'1.2-2' }}</h6>
                     <a href="javascript:void(0)">
                       <i class="fa fa-trash trash-remove" (click)="cartService.posRemoveCartItem(item)"></i>
                     </a>
@@ -57,9 +63,11 @@
                   <div class="touchspin-wrapper">
                     <button class="decrement-touchspin btn-touchspin">
                       <i class="fa fa-minus icono-pos" (click)="cartService.updatePOSQuantity(-1, item)"></i>
+                      <i class="fa fa-minus icono-pos" (click)="cartService.updatePOSQuantity(-1, item)"></i>
                     </button>
                     <span class="input-touchspin fs-14 fc-gray" [id]="'inputData' + item.id" type="text">{{item.quantity}}</span>
                     <button class="increment-touchspin btn-touchspin">
+                      <i class="fa fa-plus icono-pos" (click)="cartService.updatePOSQuantity(1, item)"></i>
                       <i class="fa fa-plus icono-pos" (click)="cartService.updatePOSQuantity(1, item)"></i>
                     </button>
                   </div>
@@ -76,6 +84,7 @@
                 <img src="assets/images/order-trash.gif" alt="order-trash">
               </div>
               <h6 class="text-gray">{{ 'Tu carrito está vacío' | translate }}</h6>
+              <h6 class="text-gray">{{ 'Tu carrito está vacío' | translate }}</h6>
               <a href="javascript:void(0)" [routerLink]="['/category']"> </a>
             </div>
           </div>
@@ -83,6 +92,9 @@
       </div>
       <div class="coupon-code">
         <div class="input-group">
+          <input class="form-control" type="text" placeholder="{{'Código del cupón...' | translate }}"
+            aria-label="Enter Code" aria-describedby="button-addon2">
+          <button class="btn bg-light-secondary" id="button-addon2" type="button">{{'Aplicar' | translate }}</button>
           <input class="form-control" type="text" placeholder="{{'Código del cupón...' | translate }}"
             aria-label="Enter Code" aria-describedby="button-addon2">
           <button class="btn bg-light-secondary" id="button-addon2" type="button">{{'Aplicar' | translate }}</button>
@@ -103,15 +115,22 @@
       </div>
     </div>
     <h5 class="m-0 p-t-40">{{ 'Método de pago' | translate }}</h5>
+    <h5 class="m-0 p-t-40">{{ 'Método de pago' | translate }}</h5>
     <div class="payment-methods">
+      <div *ngFor="let method of checkoutMethod1">
+        <div class="bg-payment widget-hover">
+          <img [src]="method.image" alt="cash">
       <div *ngFor="let method of checkoutMethod1">
         <div class="bg-payment widget-hover">
           <img [src]="method.image" alt="cash">
         </div>
         <span class="f-w-500 text-gray fs-14">{{method.title}}</span>
+        <span class="f-w-500 text-gray fs-14">{{method.title}}</span>
       </div>
     </div>
     <div class="place-order">
+      <button class="btn bc-primary fc-white btn-hover-effect w-100 f-w-500" type="button">{{ 'Pagar' | translate
+        }}</button>
       <button class="btn bc-primary fc-white btn-hover-effect w-100 f-w-500" type="button">{{ 'Pagar' | translate
         }}</button>
     </div>

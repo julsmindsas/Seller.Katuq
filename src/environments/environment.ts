@@ -5,7 +5,7 @@
 
 export const environment = {
   production: true,
-  version: "8.4.7 - 23 de Marzo 2025 (Beta)",
+  version: "8.4.8 - 02 de Abril 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -20,7 +20,7 @@ export const environment = {
   // urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
   // urlApi: "http://localhost:3300", // API Local,
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app',
-  //urlApi: "http://localhost:3300", // API Local,
+  // urlApi: "http://localhost:3300", // API Local,
   //   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app',
   urlApi: "https://api.katuq.com", // API AWS
   wompi: {
@@ -51,7 +51,8 @@ export const environment = {
       clientId: '',
       clientSecret: ''
     }
-  }
+  },
+  useModelBig: false
 };
 /*
  * For easier debugging in development mode, you can import the following file

@@ -15,3 +15,8 @@ input[type="file"]::-webkit-file-upload-button {
   .select-default option:first-child {
     color: gray; /* Cambia "gray" por el color que desees */
   }
+
+  .checkbox-large {
+    transform: scale(1.5); /* Cambia el valor según el tamaño que prefieras */
+  }
+  

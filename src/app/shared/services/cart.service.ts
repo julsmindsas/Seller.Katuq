@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 
 import { cartItems } from '../../../assets/data/cart';
-import { posOrder } from '../../../assets/data/pos';
-import { OrderDetailsProduct } from '../../shared/models/pos/order';
+// import { posOrder } from '../../../assets/data/pos';
+// import { OrderDetailsProduct } from '../../shared/models/pos/order';
 //interface/order';
 
 
@@ -13,8 +13,8 @@ import { OrderDetailsProduct } from '../../shared/models/pos/order';
 
 export class CartService {
 
-  public cartItems: OrderDetailsProduct[];
-  public posCartItems: OrderDetailsProduct[] = posOrder;
+  public cartItems: any[] = [];
+  public posCartItems: any[] = [];
 
   constructor(private toast: ToastrService) {
 
@@ -27,25 +27,25 @@ export class CartService {
     }
   }
 
-  updateQuantity(value: number, item: OrderDetailsProduct) {
-    if(value == -1) {
-      item.quantity -= 1;
-      if(item.quantity < 1) {
+  updateQuantity(value: number, item: any) {
+    if (value == -1) {
+      item.cantidad -= 1;
+      if (item.cantidad < 1) {
         this.deleteCartItem(item)
       }
-    } else if(value == 1) {
-      if(item.quantity < item.total_quantity) {
-        item.quantity += 1;
+    } else if (value == 1) {
+      if (item.cantidad < item.disponibilidad.cantidadDisponible) {
+        item.cantidad += 1;
       } else {
-        this.toast.error(`Cannot add more than ${item.total_quantity} items`,'',{
-          timeOut: 80000000
+        this.toast.error(`Cannot add more than ${item.disponibilidad.cantidadDisponible} items`, '', {
+          timeOut: 800000
         });
       }
     }
   }
 
-  deleteCartItem(item: OrderDetailsProduct) {
-    this.cartItems = this.cartItems.filter((product) => product.id !== item.id);
+  deleteCartItem(item: any) {
+    this.cartItems = this.cartItems.filter((product) => product.crearProducto.titulo !== item.crearProducto.titulo);
     localStorage.setItem('cart', JSON.stringify(this.cartItems))
   }
 
@@ -55,10 +55,10 @@ export class CartService {
   }
 
   getSubTotal() {
-    if(this.cartItems) {
+    if (this.cartItems) {
       const subTotal = this.cartItems.reduce((acc, item) => {
-        const price = item.discount_price ? item.discount_price : item.price || 0;
-        const quantity = item.quantity || 0;
+        const price = item.discount_price ? item.discount_price : item.precio.precioUnitarioConIva || 0;
+        const quantity = item.cantidad || 0;
         return acc + (price * quantity);
       }, 0)
 
@@ -66,77 +66,95 @@ export class CartService {
     }
   }
 
-  posAddToCart(item: OrderDetailsProduct) {
-    const cartItem = this.posCartItems.find(cartItem => cartItem.id === item.id);
+  posAddToCart(item: any) {
 
-    this.toast.success(`Product has been Add To Card Succesfully !`, '',{
-    timeOut: 700000
+    const cartItem = this.posCartItems.find((cartItem: any) => cartItem.crearProducto.titulo === item.crearProducto.titulo);
+    // if (cartItem === undefined)
+    //   this.posCartItems.push(item);
+
+    this.toast.success(`Producto adicionado !`, '', {
+      timeOut: 70000
     });
-   
-    const totalQuantityInCart = this.posCartItems.reduce((total, cartItem) => {
-      if (cartItem.id === item.id) {
-        return total + cartItem.quantity;
-      }
+
+    debugger;
     
+    const totalQuantityInCart = this.posCartItems.reduce((total, cartItem) => {
+      if (cartItem.crearProducto.titulo === item.crearProducto.titulo) {
+        return total + cartItem.cantidad;
+      }
+
       return total;
     }, 0);
 
-    if (totalQuantityInCart + item.quantity <= item.total_quantity) {
+    if (totalQuantityInCart + item.cantidad <= item.disponibilidad.cantidadDisponible) {
       if (!cartItem) {
         this.posCartItems.push({ ...item });
       } else {
-        if (totalQuantityInCart + item.quantity <= item.total_quantity) {
-          cartItem.quantity += item.quantity;
+        if (totalQuantityInCart + item.cantidad <= item.disponibilidad.cantidadDisponible) {
+          cartItem.cantidad += item.cantidad;
 
         } else {
-          this.toast.error(`Cannot add more than ${item.total_quantity} items.`,'',{
-            timeOut: 80000000
+          this.toast.error(`Solo hay ${item.disponibilidad.cantidadDisponible} unidades.`, '', {
+            timeOut: 800000
           });
         }
       }
     } else {
-      this.toast.error(`Cannot add more than ${item.total_quantity} items in total.`,'',{
-        timeOut: 80000000
+      this.toast.error(`Solo hay ${item.disponibilidad.cantidadDisponible} unidades en total.`, '', {
+        timeOut: 800000
       });
     }
   }
 
-  updatePOSQuantity(value: number, item: OrderDetailsProduct) {
-    const cartItem = this.posCartItems.find(cartItem => cartItem.id === item.id);
+  updatePOSQuantity(value: number, item: any) {
+    const cartItem = this.posCartItems.find((cartItem: any) => cartItem.crearProducto.titulo === item.crearProducto.titulo);
 
     if (!cartItem) return;
 
     if (value === -1) {
-      cartItem.quantity -= 1;
-      if(cartItem.quantity < 1) {
+      cartItem.cantidad -= 1;
+      if (cartItem.cantidad < 1) {
         this.posRemoveCartItem(item)
+        this.getPOSSubTotal(); 
       }
     } else if (value == 1) {
-      if(cartItem.quantity < item.total_quantity) {
-        cartItem.quantity += 1;
+      if (cartItem.cantidad < item.disponibilidad.cantidadDisponible) {
+        cartItem.cantidad += 1;
+        this.getPOSSubTotal(); 
       } else {
-        this.toast.error(`Cannot add more than ${item.total_quantity} items`,'',{
-          timeOut: 80000000
+        this.toast.error(`Cannot add more than ${item.disponibilidad.cantidadDisponible} items`, '', {
+          timeOut: 800000
         })
       }
-    } 
-    
+    }
+
   }
 
-  posRemoveCartItem(item: OrderDetailsProduct) {
-    this.posCartItems = this.posCartItems.filter((product) => product.id !== item.id);
+  posRemoveCartItem(item: any) {
+    this.posCartItems = this.posCartItems.filter((product) => product.crearProducto.titulo !== item.crearProducto.titulo);
   }
 
   getPOSSubTotal() {
-    if(this.posCartItems) {
+    if (this.posCartItems) {
       const subTotal = this.posCartItems.reduce((acc, item) => {
-        const price = item.discount_price ? item.discount_price : item.price || 0;
-        const quantity = item.quantity || 0;
+        const price = item.discount_price ? item.discount_price : item.precio.precioUnitarioConIva || 0;
+        const quantity = item.cantidad || 0;
         return acc + (price * quantity);
       }, 0)
 
       return `$${subTotal.toFixed(2)}`
     }
   }
-  
+
+  getPOSCantidad() {
+    if (this.posCartItems) {
+      const subTotal = this.posCartItems.reduce((acc, item) => {
+        const quantity = item.cantidad || 0;
+        return acc + (quantity);
+      }, 0)
+
+      return `${subTotal.toFixed(0)}`
+    }
+  }
+
 }
