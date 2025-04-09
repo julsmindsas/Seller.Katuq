@@ -738,14 +738,19 @@
 								<h5>Proceso Comercial</h5>
 								<div class="row m-b-10">
 
-									<!-- <div class="row"> -->
 									<button *ngIf="!activar" class="btn btn-lg btn-primary"
 										(click)="activarProcesoComercial()">Activar Configuración Proceso
 										Comercial</button>
 									<button *ngIf="activar" class="btn btn-lg btn-primary"
 										(click)="activarProcesoComercial()">Desactivar Configuración Proceso
 										Comercial</button>
-									<!-- </div> -->
+										<!-- Añadir indicador visual del estado de la configuración -->
+										<small class="text-info mt-2" *ngIf="activar">
+											Estado de configuración: <strong class="text-success">Activo</strong> (Este estado se guardará al guardar el producto)
+										</small>
+										<small class="text-info mt-2" *ngIf="!activar">
+											Estado de configuración: <strong class="text-danger">Inactivo</strong> (Este estado se guardará al guardar el producto)
+										</small>
 								</div>
 								<div class="grid-container-exposicion" *ngIf="activar">
 									<div class="grid-item">

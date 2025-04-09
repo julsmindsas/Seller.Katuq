@@ -39,24 +39,25 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="row align-items-center">
-                                    <div class="col-sm-3">
-                                        <p class="product-price f-28" title="{{'precio' | translate}}">
-                                            {{producto?.precio?.precioUnitarioConIva |
-                                            currency:'USD':'symbol':'1.0-0'}}*</p>
+                                <!-- Precio y botón de tabla de cantidades optimizado para evitar saltos de línea -->
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div>
+                                        <p class="product-price f-28 mb-0" title="{{'precio' | translate}}">
+                                            {{producto?.precio?.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}*
+                                        </p>
                                     </div>
-                                    <div class="col-sm-6">
+                                    <div>
                                         <button type="button" class="btn btn-secondary btn-sm" 
                                             data-toggle="tooltip" data-placement="top" 
-                                            title="{{'Tooltip on top' | translate}}"
-                                            (click)="mostrarTabla">
+                                            title="{{'Ver tabla de precios por volumen' | translate}}"
+                                            (click)="mostrarTabla = !mostrarTabla">
                                             <i class="fa fa-table me-1"></i>
                                             {{'Tabla de Cantidades' | translate}}
                                         </button>
                                     </div>
                                 </div>
 
-                                <div *ngIf="mostrarTabla" class="mt-3">
+                                <div *ngIf="mostrarTabla" class="mt-2 mb-3">
                                     <div class="table-responsive">
                                         <table class="table table-sm table-compact">
                                             <thead>
@@ -78,18 +79,24 @@
                                 </div>
                                 <hr>
 
-                                <!-- Descripción colapsable -->
-                                <div class="collapsible-text" [ngClass]="{'collapsed': !mostrarDescripcionCompleta}">
+                                <!-- Solo mostrar resumen inicial sin scroll -->
+                                <div class="product-description-summary mb-2">
+                                    <div [innerHTML]="getDescriptionSummary(producto?.crearProducto?.descripcion)"></div>
+                                    <button class="toggle-text-btn" 
+                                        (click)="mostrarDescripcionCompleta = !mostrarDescripcionCompleta">
+                                        {{mostrarDescripcionCompleta ? 'Ver menos' : 'Ver más' | translate}}
+                                        <i class="fa" [ngClass]="mostrarDescripcionCompleta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Descripción completa solo cuando se solicita -->
+                                <div *ngIf="mostrarDescripcionCompleta" class="product-description-full">
                                     <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
                                 </div>
-                                <button class="toggle-text-btn" [ngClass]="{'expanded': mostrarDescripcionCompleta}" 
-                                      (click)="mostrarDescripcionCompleta = !mostrarDescripcionCompleta">
-                                    {{mostrarDescripcionCompleta ? 'Ver menos' : 'Ver más' | translate}}
-                                    <i class="fa" [ngClass]="mostrarDescripcionCompleta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                                </button>
 
                                 <hr>
-                                <div>
+                                <!-- Resto del contenido solo si se selecciona ver más detalles -->
+                                <div *ngIf="mostrarDetallesCompletos">
                                     <ngb-accordion [closeOthers]="true" class="details-accordion">
                                         <ngb-panel id="detallesPanel" title="{{ 'Detalles del producto' | translate }}">
                                             <ng-template ngbPanelContent>
@@ -121,175 +128,182 @@
                                     </ngb-accordion>
                                 </div>
 
-                                <hr>
+                                <!-- Botón para ver más detalles del producto -->
+                                <button class="btn btn-link btn-sm text-decoration-none ps-0" 
+                                        (click)="mostrarDetallesCompletos = !mostrarDetallesCompletos">
+                                    <i class="fa" [ngClass]="mostrarDetallesCompletos ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                    {{mostrarDetallesCompletos ? 'Ocultar detalles' : 'Ver más detalles' | translate}}
+                                </button>
                                 
                                 <!-- Panel colapsable de preferencias seleccionadas -->
-                                <ngb-accordion *ngIf="productPreference?.length > 0" #prefAcc="ngbAccordion">
-                                    <ngb-panel id="seleccionesPanel">
-                                        <ng-template ngbPanelHeader>
-                                            <div class="d-flex align-items-center">
-                                                <button ngbPanelToggle class="accordion-button">
-                                                    <i class="fa fa-check-circle me-2"></i> 
-                                                    {{'Preferencias seleccionadas' | translate}}
-                                                </button>
-                                            </div>
-                                        </ng-template>
-                                        <ng-template ngbPanelContent>
-                                            <div class="table-responsive">
-                                                <table class="table table-dashed table-compact">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Imagen</th>
-                                                            <th>Título</th>
-                                                            <th>Subtitulo</th>
-                                                            <th>Valor Unitario sin IVA</th>
-                                                            <th>% IVA</th>
-                                                            <th>Valor IVA</th>
-                                                            <th>Precio Total con IVA</th>
-                                                            <th>Cantidad</th>
-                                                            <th></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <!-- Sección de Preferencia -->
-                                                        <tr *ngIf="hasPreferencia()">
-                                                            <td colspan="8"><strong>Sección de Preferencias</strong></td>
-                                                        </tr>
-                                                        <ng-container *ngFor="let preference of productPreference">
-                                                            <tr *ngIf="preference.tipo === 'preferencia'">
-                                                                <td>
-                                                                    <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="40"
-                                                                        height="40" class="rounded">
-                                                                </td>
-                                                                <td>{{ preference.titulo }}</td>
-                                                                <td>{{ preference.subtitulo }}</td>
-                                                                <td>{{ preference.valorUnitarioSinIva |
-                                                                    currency:'USD':'symbol':'1.2-2'}}</td>
-                                                                <td>{{ preference.porcentajeIva + '%' }}</td>
-                                                                <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
-                                                                <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
-                                                                </td>
-                                                                <td>
-                                                                    <!-- <div class="quantity-controls" style="white-space: nowrap;">
-                                                                        <button
-                                                                            (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
-                                                                        <span>{{preference.cantidad}}</span>
-                                                                        <button
-                                                                            (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
-                                                                    </div> -->
-                                                                </td>
+                                <div *ngIf="productPreference?.length > 0" class="mt-3">
+                                    <ngb-accordion #prefAcc="ngbAccordion">
+                                        <ngb-panel id="seleccionesPanel">
+                                            <ng-template ngbPanelHeader>
+                                                <div class="d-flex align-items-center">
+                                                    <button ngbPanelToggle class="accordion-button">
+                                                        <i class="fa fa-check-circle me-2"></i> 
+                                                        {{'Preferencias seleccionadas' | translate}}
+                                                    </button>
+                                                </div>
+                                            </ng-template>
+                                            <ng-template ngbPanelContent>
+                                                <div class="table-responsive">
+                                                    <table class="table table-dashed table-compact">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Imagen</th>
+                                                                <th>Título</th>
+                                                                <th>Subtitulo</th>
+                                                                <th>Valor Unitario sin IVA</th>
+                                                                <th>% IVA</th>
+                                                                <th>Valor IVA</th>
+                                                                <th>Precio Total con IVA</th>
+                                                                <th>Cantidad</th>
+                                                                <th></th>
                                                             </tr>
-                                                        </ng-container>
-                                                        
-                                                        <!-- Sección de Adición -->
-                                                        <tr *ngIf="hasAdicion()">
-                                                            <td colspan="8"><strong>Sección de adiciones</strong></td>
-                                                        </tr>
-                                                        <ng-container *ngFor="let preference of productPreference">
-                                                            <tr *ngIf="preference.tipo === 'adicion'">
-                                                                <td>
-                                                                    <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="40"
-                                                                        height="40" class="rounded">
-                                                                </td>
-                                                                <td>{{ preference.titulo }}</td>
-                                                                <td>{{ preference.subtitulo }}</td>
-                                                                <td>{{ preference.valorUnitarioSinIva |
-                                                                    currency:'USD':'symbol':'1.2-2'}}</td>
-                                                                <td>{{ preference.porcentajeIva + '%' }}</td>
-                                                                <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
-                                                                <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
-                                                                </td>
-                                                                <td>
-                                                                    <div class="quantity-controls" style="white-space: nowrap;">
-                                                                        <button
-                                                                            (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
-                                                                        <span>{{preference.cantidad}}</span>
-                                                                        <button
-                                                                            (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
-                                                                    </div>
-                                                                </td>
+                                                        </thead>
+                                                        <tbody>
+                                                            <!-- Sección de Preferencia -->
+                                                            <tr *ngIf="hasPreferencia()">
+                                                                <td colspan="8"><strong>Sección de Preferencias</strong></td>
                                                             </tr>
-                                                        </ng-container>
-                                                        
-                                                        <!-- Opciones de personalización -->
-                                                        <tr *ngIf="hasOpcionesPersonalizacion()">
-                                                            <td colspan="8"><strong>Sección de opciones de personalización</strong></td>
-                                                        </tr>
-                                                        <ng-container *ngFor="let preference of productPreference">
-                                                            <tr *ngIf="preference.tipo === 'opcionPersonalizacion'">
-                                                                <td colspan="12">
-                                                                    <div style="display: inline-block; white-space: nowrap;">
-                                                                        <div class="row"
-                                                                            *ngIf="datosEntrega?.controls?.colores?.value?.length > 0">
-                                                                            <div class="col-sm-6">
-                                                                                <strong>Color:</strong>
-                                                                            </div>
-                                                                            <div class="col-sm-6" style="margin-top: -1rem;">
-                                                                                <ul class="product-color m-t-15">
-                                                                                    <li *ngFor="let item of datosEntrega?.controls?.colores?.value"
-                                                                                        [style.backgroundColor]="item">
-                                                                                    </li>
-                                                                                </ul>
+                                                            <ng-container *ngFor="let preference of productPreference">
+                                                                <tr *ngIf="preference.tipo === 'preferencia'">
+                                                                    <td>
+                                                                        <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="40"
+                                                                            height="40" class="rounded">
+                                                                    </td>
+                                                                    <td>{{ preference.titulo }}</td>
+                                                                    <td>{{ preference.subtitulo }}</td>
+                                                                    <td>{{ preference.valorUnitarioSinIva |
+                                                                        currency:'USD':'symbol':'1.2-2'}}</td>
+                                                                    <td>{{ preference.porcentajeIva + '%' }}</td>
+                                                                    <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
+                                                                    <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        <!-- <div class="quantity-controls" style="white-space: nowrap;">
+                                                                            <button
+                                                                                (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
+                                                                            <span>{{preference.cantidad}}</span>
+                                                                            <button
+                                                                                (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
+                                                                        </div> -->
+                                                                    </td>
+                                                                </tr>
+                                                            </ng-container>
+                                                            
+                                                            <!-- Sección de Adición -->
+                                                            <tr *ngIf="hasAdicion()">
+                                                                <td colspan="8"><strong>Sección de adiciones</strong></td>
+                                                            </tr>
+                                                            <ng-container *ngFor="let preference of productPreference">
+                                                                <tr *ngIf="preference.tipo === 'adicion'">
+                                                                    <td>
+                                                                        <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="40"
+                                                                            height="40" class="rounded">
+                                                                    </td>
+                                                                    <td>{{ preference.titulo }}</td>
+                                                                    <td>{{ preference.subtitulo }}</td>
+                                                                    <td>{{ preference.valorUnitarioSinIva |
+                                                                        currency:'USD':'symbol':'1.2-2'}}</td>
+                                                                    <td>{{ preference.porcentajeIva + '%' }}</td>
+                                                                    <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
+                                                                    <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="quantity-controls" style="white-space: nowrap;">
+                                                                            <button
+                                                                                (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
+                                                                            <span>{{preference.cantidad}}</span>
+                                                                            <button
+                                                                                (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </ng-container>
+                                                            
+                                                            <!-- Opciones de personalización -->
+                                                            <tr *ngIf="hasOpcionesPersonalizacion()">
+                                                                <td colspan="8"><strong>Sección de opciones de personalización</strong></td>
+                                                            </tr>
+                                                            <ng-container *ngFor="let preference of productPreference">
+                                                                <tr *ngIf="preference.tipo === 'opcionPersonalizacion'">
+                                                                    <td colspan="12">
+                                                                        <div style="display: inline-block; white-space: nowrap;">
+                                                                            <div class="row"
+                                                                                *ngIf="datosEntrega?.controls?.colores?.value?.length > 0">
+                                                                                <div class="col-sm-6">
+                                                                                    <strong>Color:</strong>
+                                                                                </div>
+                                                                                <div class="col-sm-6" style="margin-top: -1rem;">
+                                                                                    <ul class="product-color m-t-15">
+                                                                                        <li *ngFor="let item of datosEntrega?.controls?.colores?.value"
+                                                                                            [style.backgroundColor]="item">
+                                                                                        </li>
+                                                                                    </ul>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="collapsible-text" [ngClass]="{'collapsed': !mostrarPersonalizacionCompleta}" 
-                                                                         [innerHtml]="preference.subtitulo"></div>
-                                                                    <button *ngIf="preference.subtitulo && preference.subtitulo.length > 100" 
-                                                                          class="toggle-text-btn" 
-                                                                          [ngClass]="{'expanded': mostrarPersonalizacionCompleta}" 
-                                                                          (click)="mostrarPersonalizacionCompleta = !mostrarPersonalizacionCompleta">
-                                                                        {{mostrarPersonalizacionCompleta ? 'Ver menos' : 'Ver más' | translate}}
-                                                                        <i class="fa" [ngClass]="mostrarPersonalizacionCompleta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                                                                    </button>
-                                                                </td>
+                                                                        <div class="collapsible-text" [ngClass]="{'collapsed': !mostrarPersonalizacionCompleta}" 
+                                                                             [innerHtml]="preference.subtitulo"></div>
+                                                                        <button *ngIf="preference.subtitulo && preference.subtitulo.length > 100" 
+                                                                              class="toggle-text-btn" 
+                                                                              [ngClass]="{'expanded': mostrarPersonalizacionCompleta}" 
+                                                                              (click)="mostrarPersonalizacionCompleta = !mostrarPersonalizacionCompleta">
+                                                                            {{mostrarPersonalizacionCompleta ? 'Ver menos' : 'Ver más' | translate}}
+                                                                            <i class="fa" [ngClass]="mostrarPersonalizacionCompleta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            </ng-container>
+                                                            
+                                                            <!-- Sección Tarjetas -->
+                                                            <tr *ngIf="!SinTarjeta">
+                                                                <td colspan="8"><strong>Sección Tarjetas</strong></td>
                                                             </tr>
-                                                        </ng-container>
-                                                        
-                                                        <!-- Sección Tarjetas -->
-                                                        <tr *ngIf="!SinTarjeta">
-                                                            <td colspan="8"><strong>Sección Tarjetas</strong></td>
-                                                        </tr>
-                                                        <ng-container *ngIf="!SinTarjeta">
-                                                            <tr *ngFor="let tarjeta of this.tarjetas.value; let i = index">
-                                                                <td colspan="8">
-                                                                    <div class="card p-2 mb-2">
-                                                                        <div><strong>{{'Para:' | translate}}</strong> {{ tarjeta.para }}</div>
-                                                                        <div class="mt-1">
-                                                                            <strong>{{'Mensaje:' | translate}}</strong>
-                                                                            <div class="collapsible-text" [ngClass]="{'collapsed': !tarjetaMostrada[i]}" style="white-space: normal;">
-                                                                                {{ tarjeta.mensaje }}
+                                                            <ng-container *ngIf="!SinTarjeta">
+                                                                <tr *ngFor="let tarjeta of this.tarjetas.value; let i = index">
+                                                                    <td colspan="8">
+                                                                        <div class="card p-2 mb-2">
+                                                                            <div><strong>{{'Para:' | translate}}</strong> {{ tarjeta.para }}</div>
+                                                                            <div class="mt-1">
+                                                                                <strong>{{'Mensaje:' | translate}}</strong>
+                                                                                <div class="collapsible-text" [ngClass]="{'collapsed': !tarjetaMostrada[i]}" style="white-space: normal;">
+                                                                                    {{ tarjeta.mensaje }}
+                                                                                </div>
+                                                                                <button *ngIf="tarjeta.mensaje && tarjeta.mensaje.length > 100" 
+                                                                                      class="toggle-text-btn" 
+                                                                                      [ngClass]="{'expanded': tarjetaMostrada[i]}" 
+                                                                                      (click)="toggleTarjeta(i)">
+                                                                                    {{tarjetaMostrada[i] ? 'Ver menos' : 'Ver más' | translate}}
+                                                                                    <i class="fa" [ngClass]="tarjetaMostrada[i] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                                                </button>
                                                                             </div>
-                                                                            <button *ngIf="tarjeta.mensaje && tarjeta.mensaje.length > 100" 
-                                                                                  class="toggle-text-btn" 
-                                                                                  [ngClass]="{'expanded': tarjetaMostrada[i]}" 
-                                                                                  (click)="toggleTarjeta(i)">
-                                                                                {{tarjetaMostrada[i] ? 'Ver menos' : 'Ver más' | translate}}
-                                                                                <i class="fa" [ngClass]="tarjetaMostrada[i] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                                                                            </button>
+                                                                            <div class="mt-1"><strong>{{'De:' | translate}}</strong> {{ tarjeta.de }}</div>
                                                                         </div>
-                                                                        <div class="mt-1"><strong>{{'De:' | translate}}</strong> {{ tarjeta.de }}</div>
-                                                                    </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </ng-container>
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr>
+                                                                <td colspan="2"></td>
+                                                                <td><strong>Resumen:</strong></td>
+                                                                <td>{{ getTotalValorUnitarioSinIva() | currency:'USD':'symbol':'1.2-2' }}
                                                                 </td>
+                                                                <td> </td>
+                                                                <td>{{ getTotalValorIva() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                                                <td>{{ getTotalPrecioTotalConIva() | currency:'USD':'symbol':'1.2-2' }}</td>
                                                             </tr>
-                                                        </ng-container>
-                                                    </tbody>
-                                                    <tfoot>
-                                                        <tr>
-                                                            <td colspan="2"></td>
-                                                            <td><strong>Resumen:</strong></td>
-                                                            <td>{{ getTotalValorUnitarioSinIva() | currency:'USD':'symbol':'1.2-2' }}
-                                                            </td>
-                                                            <td> </td>
-                                                            <td>{{ getTotalValorIva() | currency:'USD':'symbol':'1.2-2' }}</td>
-                                                            <td>{{ getTotalPrecioTotalConIva() | currency:'USD':'symbol':'1.2-2' }}</td>
-                                                        </tr>
-                                                    </tfoot>
-                                                </table>
-                                            </div>
-                                        </ng-template>
-                                    </ngb-panel>
-                                </ngb-accordion>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                            </ng-template>
+                                        </ngb-panel>
+                                    </ngb-accordion>
+                                </div>
                             </div>
                         </section>
                     </div>
@@ -299,15 +313,15 @@
             <!-- Columna derecha: Configuración del producto (SIMPLIFICADO) -->
             <div class="col-xl-6 xl-cs-35 box-col-6">
                 <!-- TODAS LAS SECCIONES EN UNA VISTA ÚNICA -->
-                <ngb-accordion #acc="ngbAccordion" [activeIds]="activeAccordionPanel">
+                <ngb-accordion #acc="ngbAccordion" [activeIds]="activeAccordionPanel" class="custom-accordion">
                     <!-- Sección 1: Datos entrega -->
-                    <ngb-panel id="datosEntregaPanel" title="{{'DATOS PARA LA ENTREGA' | translate}}">
+                    <ngb-panel id="datosEntregaPanel">
                         <ng-template ngbPanelHeader>
                             <div class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-calendar me-2"></i> {{'DATOS PARA LA ENTREGA' | translate}}
                                 </button>
-                                <span *ngIf="datosEntrega.valid" class="badge bg-success me-2 d-flex align-items-center">
+                                <span *ngIf="datosEntrega.valid" class="badge bg-success me-4 d-flex align-items-center">
                                     <i class="fa fa-check me-1"></i> {{'Completado' | translate}}
                                 </span>
                             </div>
@@ -427,7 +441,7 @@
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-list-alt me-2"></i> {{'PREFERENCIAS DEL PRODUCTO' | translate}}
                                 </button>
-                                <span *ngIf="getVariablesControls().length > 0 && hasPreferencia()" class="badge bg-success me-2 d-flex align-items-center">
+                                <span *ngIf="getVariablesControls().length > 0 && hasPreferencia()" class="badge bg-success me-4 d-flex align-items-center">
                                     <i class="fa fa-check me-1"></i>
                                 </span>
                             </div>
@@ -520,7 +534,7 @@
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-gift me-2"></i> {{'TARJETAS' | translate}} <span *ngIf="!SinTarjeta">({{tarjetas.length}})</span>
                                 </button>
-                                <span *ngIf="SinTarjeta || tarjetas.length > 0" class="badge bg-success me-2 d-flex align-items-center">
+                                <span *ngIf="SinTarjeta || tarjetas.length > 0" class="badge bg-success me-4 d-flex align-items-center">
                                     <i class="fa fa-check me-1"></i>
                                 </span>
                             </div>
@@ -601,7 +615,7 @@
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-plus-circle me-2"></i> {{'ADICIONES' | translate}}
                                 </button>
-                                <span *ngIf="hasAdicion()" class="badge bg-success me-2 d-flex align-items-center">
+                                <span *ngIf="hasAdicion()" class="badge bg-success me-4 d-flex align-items-center">
                                     <i class="fa fa-check me-1"></i> {{getAdicionesCount()}}
                                 </span>
                             </div>
@@ -657,7 +671,7 @@
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-shopping-basket me-2"></i> {{'CANTIDAD' | translate}}
                                 </button>
-                                <span *ngIf="cantidad > 0" class="badge bg-primary me-2 d-flex align-items-center">
+                                <span *ngIf="cantidad > 0" class="badge bg-primary me-4 d-flex align-items-center">
                                     {{cantidad}}
                                 </span>
                             </div>

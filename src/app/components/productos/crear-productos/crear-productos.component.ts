@@ -370,6 +370,7 @@ export class CrearProductosComponent implements OnInit, OnChanges {
       pago: [[], [Validators.required]],
       variablesForm: [""],
       llevaCalendario: [false, [Validators.required]],
+      configProcesoComercialActivo: [false, [Validators.required]] // Nuevo campo para guardar el estado de activación
     });
 
     this.precio
@@ -879,6 +880,8 @@ export class CrearProductosComponent implements OnInit, OnChanges {
       this.etiquetas = this.edit.exposicion.etiquetas;
       this.categoriasForm.patchValue({ categorias: this.edit.categorias });
       this.procesoComercial.patchValue(this.edit.procesoComercial);
+      // Configurar el estado de activación desde los datos editados
+      this.activar = this.edit.procesoComercial.configProcesoComercialActivo || false;
       this.productosArticulos =
         this.edit?.otrosProcesos?.modulosVariables?.produccion;
 
@@ -1652,6 +1655,8 @@ export class CrearProductosComponent implements OnInit, OnChanges {
     } else {
       this.activar = false;
     }
+    // Actualizar el valor en el formulario para guardarlo en la BD
+    this.procesoComercial.get('configProcesoComercialActivo').setValue(this.activar);
   }
 
   guardar() {

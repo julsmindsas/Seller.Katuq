@@ -287,8 +287,8 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   ngOnInit(): void {
-    this.refreshCartWithProducts()
-    console.log(this.productos)
+    this.refreshCartWithProducts();
+    console.log(this.productos);
 
     // this.initForm();
     // this.getAdiciones();
@@ -340,6 +340,18 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     this.garantiasRevisadas = localStorage.getItem('garantiasRevisadas') === 'true';
     this.condicionesRevisadas = localStorage.getItem('condicionesRevisadas') === 'true';
     this.mostrarCaracteristicas = localStorage.getItem('mostrarCaracteristicas') === 'true';
+
+    this.sumar();
+  
+    // Asegúrate de que activeAccordionPanel tiene un valor válido
+    setTimeout(() => {
+      this.activeAccordionPanel = this.determineInitialOpenSection();
+    });
+
+    // Inicializar arreglo para controlar visibilidad de tarjetas
+    if (this.tarjetas && this.tarjetas.value) {
+      this.tarjetaMostrada = new Array(this.tarjetas.value.length).fill(false);
+    }
   }
 
   // Eliminar el método menosCantidad1 que está duplicado y quedarse solo con menosCantidad
@@ -1168,6 +1180,51 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   getAdicionesCount(): number {
     if (!this.productPreference) return 0;
     return this.productPreference.filter(p => p.tipo === 'adicion').length;
+  }
+
+  /**
+   * Obtiene un resumen corto de la descripción del producto
+   * @param descripcion Descripción completa del producto en HTML
+   * @returns Resumen de la descripción limitado a los primeros párrafos
+   */
+  getDescriptionSummary(descripcion: string): string {
+    if (!descripcion) return '';
+    
+    // Si la descripción es HTML, extraer solo el texto
+    let plainText = '';
+    
+    try {
+      // Crear un elemento temporal
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = descripcion;
+      
+      // Obtener todos los párrafos
+      const paragraphs = tempDiv.querySelectorAll('p');
+      
+      // Tomar solo el primer párrafo o los primeros 150 caracteres
+      if (paragraphs.length > 0) {
+        plainText = paragraphs[0].textContent || '';
+        
+        // Si es muy corto, añadir algo más del segundo párrafo
+        if (plainText.length < 100 && paragraphs.length > 1) {
+          plainText += ' ' + (paragraphs[1].textContent || '');
+        }
+      } else {
+        // Si no hay párrafos, usar el texto completo
+        plainText = tempDiv.textContent || '';
+      }
+      
+      // Limitar a ~150 caracteres y añadir puntos suspensivos
+      if (plainText.length > 150) {
+        plainText = plainText.substring(0, 150) + '...';
+      }
+      
+      return plainText;
+      
+    } catch(e) {
+      // Si hay algún error procesando el HTML, devolver fragmento limitado
+      return descripcion.substring(0, 150) + '...';
+    }
   }
 
 }

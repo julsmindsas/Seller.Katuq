@@ -243,7 +243,8 @@
                                 <div class="product-hover">
                                     <ul>
                                         <li>
-                                            <button class="btn" type="button" (click)="configurarProducto(producto)">
+                                            <!-- Cambiar el evento click para usar la nueva función comprarProducto -->
+                                            <button class="btn" type="button" (click)="comprarProducto(producto)">
                                                 <i class="icon-shopping-cart"></i>
                                             </button>
                                         </li>
@@ -252,9 +253,6 @@
                                                 <i class="icon-eye"></i>
                                             </button>
                                         </li>
-                                        <!-- <li>
-                                            <button class="btn" type="button"><i class="icofont icofont-law-alt-2"></i></button>
-                                        </li> -->
                                     </ul>
                                 </div>
                             </div>
@@ -270,6 +268,12 @@
                                     {{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}
                                     <del>{{producto.precio.precioTotalVolumenConIva |
                                         currency:'USD':'symbol':'1.0-0'}}</del>
+                                </div>
+                                <!-- Añadir indicador visual de si el producto requiere configuración -->
+                                <div class="product-config-indicator" *ngIf="producto.procesoComercial?.configProcesoComercialActivo">
+                                    <small class="text-info">
+                                        <i class="fa fa-cog"></i> Requiere configuración
+                                    </small>
                                 </div>
                             </div>
                         </div>

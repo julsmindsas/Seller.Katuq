@@ -2,8 +2,8 @@ import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, Template
 import { QuickViewComponent } from '../../quick-view/quick-view.component';
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import Swal from 'sweetalert2';
-import { Producto } from 'src/app/shared/models/productos/Producto';
-import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import { Producto } from '../../../../shared/models/productos/Producto';
+import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { parse, stringify } from 'flatted';
 import { FormGroup, FormControl, FormArray, FormBuilder } from '@angular/forms';
 import { ConfProductToCartComponent } from '../conf-product-to-cart/conf-product-to-cart.component';
@@ -11,6 +11,8 @@ import { After } from 'v8';
 import { forkJoin } from 'rxjs';
 import { PedidosUtilService } from '../../service/pedidos.util.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { CartSingletonService } from '../../../../shared/services/ventas/cart.singleton.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-ecomerce-products',
@@ -43,9 +45,16 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
   productoSeleccionado: Producto;
   @Input() isRebuy: boolean = false;
   temp: Producto[];
-  constructor(private ventasService: VentasService, private modalService: NgbModal, private maestroService: MaestroService, private fb: FormBuilder, private pedidoUtilService: PedidosUtilService) {
+  constructor(
+    private ventasService: VentasService, 
+    private modalService: NgbModal, 
+    private maestroService: MaestroService, 
+    private fb: FormBuilder, 
+    private pedidoUtilService: PedidosUtilService,
+    private cartService: CartSingletonService,
+    private toastrService: ToastrService
+  ) {
     this.initForm();
-
   }
 
   ngAfterViewInit(): void {
@@ -313,41 +322,63 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
   @ViewChild("confProduct") confProduct: ConfProductToCartComponent;
   @ViewChild("confProductToCartModal", { static: false }) confProductToCartModal: TemplateRef<any>;
 
+  /**
+   * Maneja la acción de comprar un producto
+   * Si el proceso comercial está activo, muestra el modal de configuración
+   * Si no, añade directamente al carrito
+   * @param producto Producto a comprar
+   */
+  comprarProducto(producto: Producto) {
+    if (producto.procesoComercial?.configProcesoComercialActivo) {
+      // Abrir modal de configuración
+      this.configurarProducto(producto);
+    } else {
+      // Añadir directamente al carrito
+      const cantidadMinima = producto.disponibilidad?.cantidadMinVenta || 1;
+      
+      // Crear un objeto básico para añadir al carrito
+      const productoCompra = {
+        producto: producto,
+        configuracion: {
+          producto: producto,
+          datosEntrega: null,
+          cantidad: cantidadMinima,
+          preferencias: [],
+          adiciones: [],
+          tarjetas: []
+        },
+        cantidad: cantidadMinima,
+      };
+      
+      this.cartService.addToCart(productoCompra);
+      
+      this.toastrService.success('Producto agregado al carrito', 'Éxito', {
+        timeOut: 5000,
+        progressBar: true,
+        positionClass: 'toast-bottom-right'
+      });
+    }
+  }
+
+  // Mantener el método configurarProducto ya que se sigue utilizando cuando se requiere configuración
   configurarProducto(producto: Producto) {
-
-    // if (this.generos == undefined || this.ocasiones == undefined || this.tipoEntrega == undefined) {
-    //   this.obtenerFiltros();
-    // }
-
-    // this.confProduct.tipoEntrega = this.tipoEntrega;
-    // this.confProduct.generos = this.generos.filter((p: { id: number }) => producto.procesoComercial.genero.find((g: number) => g == p.id));
-    // this.confProduct.ocasiones = this.ocasiones.filter((p: { id: string }) => producto.procesoComercial.ocasion.find((g: string) => g == p.id));
-
-    // this.confProduct.variables = parse(producto.procesoComercial.variablesForm);
-    // this.confProduct.configurarProducto(producto);
     this.productoSeleccionado = producto;
 
     this.modalService.open(this.confProductToCartModal, {
-      // ariaLabelledBy: 'modal-basic-title',
       centered: true,
-      // windowClass: 'Quickview',
       size: 'xl',
       keyboard: true,
       animation: true,
       scrollable: true,
       fullscreen: false,
       windowClass: 'modal-fullscreen',
-
     }).result.then((result) => {
       `Result ${result}`
-
     }, (reason) => {
       if (this.isRebuy) {
         this.modalService.dismissAll(reason);
       }
-      // this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     });
-
   }
 
   updateFilter(event: any) {

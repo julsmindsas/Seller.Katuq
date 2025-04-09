@@ -1,47 +1,55 @@
 .modal-fullscreen {
-      display: block !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      top: 0 !important;
-      left: 0 !important;
-  }
-  .ng-select .ng-select-container .ng-value-container .ng-input > input {
-    height: auto !important
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
 }
-  .modal-fullscreen .modal-content {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      max-height: none;
-      border: 0;
-      border-radius: 0;
-  }
+
+.ng-select .ng-select-container .ng-value-container .ng-input>input {
+  height: auto !important
+}
+
+.modal-fullscreen .modal-content {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
 
 
 .navigation {
-    position: relative;
+  position: relative;
 }
+
 .navigation2 {
   position: absolute;
 }
-.prev, .next {
-    cursor: pointer;
-    font-size: 28px; /* Ajusta el tamaño según tus necesidades */
+
+.prev,
+.next {
+  cursor: pointer;
+  font-size: 28px;
+  /* Ajusta el tamaño según tus necesidades */
 }
 
 .prev {
-    position: absolute;
-    left: 0; /* Ubica la flecha en el extremo izquierdo */
+  position: absolute;
+  left: 0;
+  /* Ubica la flecha en el extremo izquierdo */
 }
 
 .next {
-    position: absolute;
-    right: 0; /* Ubica la flecha en el extremo derecho */
+  position: absolute;
+  right: 0;
+  /* Ubica la flecha en el extremo derecho */
 }
 
 
@@ -50,10 +58,10 @@
     color: #000;
   }
 }
+
 .ngb-dp-content {
   .ngb-dp-month {
-    ngb-datepicker-month {
-    }
+    ngb-datepicker-month {}
   }
 }
 
@@ -98,16 +106,18 @@
 }
 
 
-.table-dashed{
+.table-dashed {
   border: 2px dashed #000;
   border-style: dashed dashed dashed dashed;
   border-radius: 2px;
 }
 
 .scrollable-div {
-  max-height: 500px; /* Ajusta esto a la altura que prefieras */
+  max-height: 500px;
+  /* Ajusta esto a la altura que prefieras */
   overflow-y: auto;
 }
+
 .quantity-controls button {
   padding: 5px;
   margin: 0 10px;
@@ -125,19 +135,19 @@
   .modal-body {
     padding: 0.75rem;
   }
-  
+
   .card-body {
     padding: 0.75rem;
   }
-  
+
   .product-page-details h3 {
     font-size: 1.25rem;
   }
-  
+
   .product-price {
     font-size: 1.25rem !important;
   }
-  
+
   .product-summary {
     flex-direction: column;
   }
@@ -173,43 +183,43 @@
   z-index: 9999 !important;
   padding: 1rem !important;
   background-color: rgba(255, 255, 255, 0.97) !important;
-  box-shadow: 0 -5px 15px rgba(0,0,0,0.2) !important;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2) !important;
   margin: 0 auto !important;
   width: calc(100% - 30px) !important;
   max-width: 500px !important;
   border-radius: 10px !important;
   backdrop-filter: blur(4px) !important;
-  border: 1px solid rgba(0,0,0,0.1) !important;
-  
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+
   button {
     cursor: pointer !important;
     font-weight: bold !important;
   }
-  
+
   .price-summary {
     margin-bottom: 10px;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     padding-bottom: 10px;
   }
-  
+
   .price-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 5px;
-    
+
     &.total {
       font-weight: bold;
       font-size: 1.1rem;
       margin-top: 8px;
       padding-top: 8px;
-      border-top: 1px dashed rgba(0,0,0,0.1);
+      border-top: 1px dashed rgba(0, 0, 0, 0.1);
     }
   }
-  
+
   .price-label {
     font-weight: 500;
   }
-  
+
   .price-value {
     text-align: right;
   }
@@ -251,17 +261,17 @@
   display: inline-flex;
   align-items: center;
   font-weight: 500;
-  
+
   &:hover {
     text-decoration: underline;
   }
-  
+
   .icon {
     margin-left: 0.25rem;
     font-size: 0.75rem;
     transition: transform 0.2s;
   }
-  
+
   &.expanded .icon {
     transform: rotate(180deg);
   }
@@ -271,38 +281,162 @@
 ::ng-deep .ngb-accordion {
   .card {
     margin-bottom: 0.5rem !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
   }
-  
+
   .accordion-button {
     padding: 0.625rem 1rem !important;
     font-size: 0.95rem !important;
-    
+
     &::after {
       transition: transform 0.2s !important;
     }
-    
+
     &:not(.collapsed) {
       background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
     }
   }
-  
+
   .accordion-body {
     padding: 0.875rem !important;
+  }
+}
+
+// Mejoras para asegurar que las flechas de los acordeones se muestren correctamente
+::ng-deep .accordion-button::after {
+  display: block !important;
+  content: "";
+  width: 0.8rem !important;
+  height: 0.8rem !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 0.8rem;
+  transition: transform 0.2s ease-in-out;
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+::ng-deep .accordion-button:not(.collapsed)::after {
+  transform: translateY(-50%) rotate(-180deg);
+}
+
+// Asegúrate de que los estilos de bootstrap para acordeones sean respetados
+::ng-deep .accordion-item {
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, .125);
+}
+
+::ng-deep .accordion-header {
+  margin-bottom: 0;
+}
+
+::ng-deep .accordion-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  color: #212529;
+  text-align: left;
+  background-color: #fff;
+  border: 0;
+  border-radius: 0;
+  overflow-anchor: none;
+  transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out, border-radius .15s ease;
+}
+
+::ng-deep .accordion-button:not(.collapsed) {
+  color: var(--bs-primary);
+  background-color: rgba(var(--bs-primary-rgb), 0.05);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .125);
+}
+
+// Optimización para ngb-accordion
+::ng-deep ngb-accordion {
+  .card {
+    overflow: hidden !important;
+  }
+  
+  .card-header {
+    padding: 0 !important;
+    border-bottom: none !important;
+  }
+  
+  .card-body {
+    padding: 1rem !important;
   }
 }
 
 // Estilos para tablas compactas
 .table-compact {
   font-size: 0.9rem;
-  
-  th, td {
+
+  th,
+  td {
     padding: 0.5rem 0.75rem;
   }
-  
+
   thead th {
     font-weight: 600;
     background-color: #f8f9fa;
+  }
+}
+
+// Optimización del precio para evitar salto de línea
+.product-price {
+  font-weight: bold;
+  margin-bottom: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+// Asegurar que la tabla de cantidades no produce scroll innecesario
+.table-compact {
+  font-size: 0.85rem;
+  th, td {
+    padding: 0.4rem 0.5rem;
+    vertical-align: middle;
+  }
+}
+
+// Mejoras para el resumen de descripción
+.product-description-summary {
+  max-height: 80px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.product-description-full {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  padding-right: 5px;
+}
+
+// Botón para mostrar más texto mejorado
+.toggle-text-btn {
+  background: none;
+  border: none;
+  color: var(--bs-primary);
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.25rem;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  .fa {
+    margin-left: 0.25rem;
+    transition: transform 0.2s;
   }
 }
 
@@ -312,16 +446,16 @@
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .product-meta {
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
-    
+
     .meta-item {
       margin-bottom: 0.25rem;
       display: flex;
       align-items: baseline;
-      
+
       .meta-label {
         font-weight: 500;
         margin-right: 0.5rem;
@@ -337,8 +471,8 @@
   border-radius: 0.5rem;
   padding: 0.75rem;
   margin-bottom: 0.75rem;
-  border: 1px solid rgba(0,0,0,0.08);
-  
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
   .section-heading {
     font-weight: 500;
     margin-bottom: 0.75rem;
@@ -380,12 +514,12 @@
     border-radius: 0.25rem !important;
     overflow: hidden;
   }
-  
+
   .card-header {
     padding: 0;
     background-color: #f8f9fa;
   }
-  
+
   .accordion-button {
     width: 100%;
     text-align: left;
@@ -393,18 +527,18 @@
     font-weight: 500;
     background-color: transparent;
     border: none;
-    
+
     &:focus {
       box-shadow: none;
       outline: none;
     }
-    
+
     &:not(.collapsed) {
       color: var(--bs-primary);
       background-color: rgba(var(--bs-primary-rgb), 0.1);
     }
   }
-  
+
   .card-body {
     padding: 1rem;
   }
@@ -419,16 +553,16 @@
     left: 0 !important;
     right: 0 !important;
     padding: 0.75rem !important;
-    
+
     .price-row {
       font-size: 0.9rem;
-      
+
       &.total {
         font-size: 1rem;
       }
     }
   }
-  
+
   .modal-body {
     padding-bottom: 170px !important;
   }
@@ -437,7 +571,7 @@
 // Mejorar estilos para entrada de datos (secciones de formulario)
 .input-group {
   margin-bottom: 0.75rem;
-  
+
   h5.m-15 {
     margin: 0.5rem 0;
     font-size: 1rem;
@@ -450,23 +584,23 @@
 ::ng-deep .ngb-accordion {
   .card {
     margin-bottom: 0.5rem !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
   }
-  
+
   .accordion-button {
     padding: 0.625rem 1rem !important;
     font-size: 0.95rem !important;
-    
+
     &::after {
       transition: transform 0.2s !important;
     }
-    
+
     &:not(.collapsed) {
       background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
       color: var(--bs-primary) !important;
     }
   }
-  
+
   .accordion-body {
     padding: 0.875rem !important;
   }
@@ -475,8 +609,8 @@
 // Nuevo estilo para pestañas de características
 .features-tabs {
   .nav-tabs {
-    border-bottom: 1px solid rgba(0,0,0,.125);
-    
+    border-bottom: 1px solid rgba(0, 0, 0, .125);
+
     .nav-link {
       position: relative;
       margin-bottom: -1px;
@@ -485,20 +619,20 @@
       border-top-left-radius: 0.25rem;
       border-top-right-radius: 0.25rem;
       font-size: 0.9rem;
-      
+
       &:hover {
         border-color: transparent;
-        background-color: rgba(0,0,0,0.03);
+        background-color: rgba(0, 0, 0, 0.03);
       }
-      
+
       &.active {
         background-color: #fff;
-        border-color: rgba(0,0,0,.125);
+        border-color: rgba(0, 0, 0, .125);
         border-bottom-color: transparent;
         color: var(--bs-primary);
         font-weight: 500;
       }
-      
+
       .feature-check {
         position: absolute;
         top: 0.2rem;
@@ -514,8 +648,8 @@
 .fixed-summary-container {
   // ...existing code...
   z-index: 9999 !important;
-  box-shadow: 0 -5px 15px rgba(0,0,0,0.15) !important;
-  
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.15) !important;
+
   // ...existing code...
 }
 
@@ -529,7 +663,7 @@
 .feature-content {
   padding: 1rem;
   background-color: #fff;
-  border: 1px solid rgba(0,0,0,.125);
+  border: 1px solid rgba(0, 0, 0, .125);
   border-top: none;
   border-bottom-left-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
@@ -539,20 +673,20 @@
 .datos-entrega-form {
   .form-group {
     margin-bottom: 1rem;
-    
+
     label {
       font-weight: 500;
       margin-bottom: 0.25rem;
       font-size: 0.9rem;
     }
   }
-  
+
   .section-title {
     font-weight: 500;
     color: var(--bs-primary);
     margin-bottom: 0.75rem;
     font-size: 1rem;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     padding-bottom: 0.5rem;
   }
 }
