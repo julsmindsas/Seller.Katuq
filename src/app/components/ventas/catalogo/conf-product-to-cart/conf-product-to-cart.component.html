@@ -12,239 +12,285 @@
                             <ks-carousel [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
                             </ks-carousel>
                         </section>
-                        <section>
-
+                        <section class="product-compact-info">
                             <div class="product-page-details">
-                                <h3>{{producto?.crearProducto?.titulo}}</h3>
-                                <h4>{{producto?.identificacion?.referencia}}</h4>
-                                <h6>{{'Cantidad minima de venta:' | translate}} {{producto?.disponibilidad?.cantidadMinVenta}}</h6>
-
-                                <h6>{{getTituloTiempoEntrega()}}</h6>
-
-                                <h6>
-                                    {{'Unidades disponibles' | translate}} {{producto?.disponibilidad?.cantidadDisponible}}
-                                </h6>
-                                <h6>{{'NO se incluye valor del domicilio' | translate}}</h6>
-                                <h6>{{'Incluye impuestos' | translate}}</h6>
+                                <h3 class="product-title">{{producto?.crearProducto?.titulo}}</h3>
+                                <div class="product-meta">
+                                    <div class="meta-item">
+                                        <span class="meta-label">{{'Referencia:' | translate}}</span>
+                                        <span>{{producto?.identificacion?.referencia}}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">{{'Cantidad mínima:' | translate}}</span>
+                                        <span>{{producto?.disponibilidad?.cantidadMinVenta}}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">{{'Tiempo de entrega:' | translate}}</span>
+                                        <span>{{getTituloTiempoEntrega()}}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">{{'Disponibilidad:' | translate}}</span>
+                                        <span>{{producto?.disponibilidad?.cantidadDisponible}} {{'unidades' | translate}}</span>
+                                    </div>
+                                </div>
+                                <div class="alert alert-light p-2 small">
+                                    <i class="fa fa-info-circle me-1"></i>
+                                    {{'NO se incluye valor del domicilio. Incluye impuestos.' | translate}}
+                                </div>
                             </div>
                             <div>
-                                <div class="row">
+                                <div class="row align-items-center">
                                     <div class="col-sm-3">
                                         <p class="product-price f-28" title="{{'precio' | translate}}">
                                             {{producto?.precio?.precioUnitarioConIva |
                                             currency:'USD':'symbol':'1.0-0'}}*</p>
                                     </div>
                                     <div class="col-sm-6">
-                                        <button type="button" class="btn btn-secondary" data-toggle="tooltip"
-                                            data-placement="top" title="{{'Tooltip on top' | translate}}" (click)="mostrarPrecios()">
+                                        <button type="button" class="btn btn-secondary btn-sm" 
+                                            data-toggle="tooltip" data-placement="top" 
+                                            title="{{'Tooltip on top' | translate}}"
+                                            (click)="mostrarTabla">
+                                            <i class="fa fa-table me-1"></i>
                                             {{'Tabla de Cantidades' | translate}}
                                         </button>
                                     </div>
-
-
                                 </div>
 
+                                <div *ngIf="mostrarTabla" class="mt-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-compact">
+                                            <thead>
+                                                <tr>
+                                                    <th>{{'Desde' | translate}}</th>
+                                                    <th>{{'Hasta' | translate}}</th>
+                                                    <th>{{'Valor Unitario Con IVA' | translate}}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let item of producto.precio.preciosVolumen">
+                                                    <td>{{item.numeroUnidadesInicial}} UND</td>
+                                                    <td>{{item.numeroUnidadesLimite}} UND</td>
+                                                    <td>{{item.valorUnitarioPorVolumenConIVA | currency}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <hr>
 
-                                <!-- <del>$350.00 </del> -->
-                            </div>
-                            <div *ngIf="mostrarTabla">
-                                <table class="table">
-                                    <tr>
-                                        <th>
-                                            {{'Desde' | translate}}
-                                        </th>
-                                        <th>
-                                            {{'Hasta' | translate}}
-                                        </th>
-                                        <th>
-                                            {{'Valor Unitario Con IVA' | translate}}
-                                        </th>
-                                    </tr>
-                                    <tr *ngFor="let item of producto.precio.preciosVolumen">
-                                        <td>{{item.numeroUnidadesInicial}} UND </td>
-                                        <td>{{item.numeroUnidadesLimite}} UND </td>
-                                        <td>{{item.valorUnitarioPorVolumenConIVA | currency}}
-                                        </td>
+                                <!-- Descripción colapsable -->
+                                <div class="collapsible-text" [ngClass]="{'collapsed': !mostrarDescripcionCompleta}">
+                                    <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
+                                </div>
+                                <button class="toggle-text-btn" [ngClass]="{'expanded': mostrarDescripcionCompleta}" 
+                                      (click)="mostrarDescripcionCompleta = !mostrarDescripcionCompleta">
+                                    {{mostrarDescripcionCompleta ? 'Ver menos' : 'Ver más' | translate}}
+                                    <i class="fa" [ngClass]="mostrarDescripcionCompleta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                </button>
 
-                                    </tr>
-
-                                </table>
-                            </div>
-                            <hr>
-                            <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
-                            <hr>
-                            <div>
-                                <table class="product-page-width">
-                                    <tbody>
-                                        <tr>
-                                            <td> <b>{{'Marca :' | translate}}</b></td>
-                                            <td>{{producto?.identificacion?.marca}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td> <b>{{'Habilitado :' | translate}} &nbsp;&nbsp;&nbsp;</b></td>
-                                            <td class="txt-success">{{'In stock' | translate}}</td>
-                                        </tr>
-
-
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <hr>
-
-                            <hr>
-                            <div class="rating">
-                                <form [formGroup]="ratingForm" class="rating">
-                                    <ngx-star-rating formControlName="rating" [id]="'rating'"></ngx-star-rating>
-                                    <div>Rating: {{ratingForm.value.rating}}</div>
-                                </form>
-                            </div>
-                            <hr>
-                            <h3 *ngIf="productPreference?.length > 0">{{'Preferencias seleccionadas' | translate}}</h3>
-                            <table class="table table-dashed" *ngIf="productPreference?.length > 0">
-                                <thead>
-                                    <tr>
-                                        <th>Imagen</th>
-                                        <th>Título</th>
-                                        <th>Subtitulo</th>
-                                        <th>Valor Unitario sin IVA</th>
-                                        <th>% IVA</th>
-                                        <th>Valor IVA</th>
-                                        <th>Precio Total con IVA</th>
-                                        <th>Cantidad</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Sección de Preferencia -->
-                                    <tr *ngIf="hasPreferencia()">
-                                        <td colspan="8"><strong>Sección de Preferencias</strong></td>
-                                    </tr>
-                                    <ng-container *ngFor="let preference of productPreference">
-                                        <tr *ngIf="preference.tipo === 'preferencia'">
-                                            <td>
-                                                <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="50"
-                                                    height="50">
-                                            </td>
-                                            <td>{{ preference.titulo }}</td>
-                                            <td>{{ preference.subtitulo }}</td>
-                                            <td>{{ preference.valorUnitarioSinIva |
-                                                currency:'USD':'symbol':'1.2-2'}}</td>
-                                            <td>{{ preference.porcentajeIva + '%' }}</td>
-                                            <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
-                                            <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
-                                            </td>
-                                            <td>
-                                                <!-- <div class="quantity-controls" style="white-space: nowrap;">
-                                                    <button
-                                                        (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
-                                                    <span>{{preference.cantidad}}</span>
-                                                    <button
-                                                        (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
-                                                </div> -->
-                                            </td>
-
-                                        </tr>
-                                    </ng-container>
-                                    <!-- Sección de Adición -->
-                                    <tr *ngIf="hasAdicion()">
-                                        <td colspan="8"><strong>Sección de adiciones</strong></td>
-                                    </tr>
-                                    <ng-container *ngFor="let preference of productPreference">
-                                        <tr *ngIf="preference.tipo === 'adicion'">
-                                            <td>
-                                                <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="50"
-                                                    height="50">
-                                            </td>
-                                            <td>{{ preference.titulo }}</td>
-                                            <td>{{ preference.subtitulo }}</td>
-                                            <td>{{ preference.valorUnitarioSinIva |
-                                                currency:'USD':'symbol':'1.2-2'}}</td>
-                                            <td>{{ preference.porcentajeIva + '%' }}</td>
-                                            <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
-                                            <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
-                                            </td>
-                                            <td>
-                                                <div class="quantity-controls" style="white-space: nowrap;">
-                                                    <button
-                                                        (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
-                                                    <span>{{preference.cantidad}}</span>
-                                                    <button
-                                                        (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
+                                <hr>
+                                <div>
+                                    <ngb-accordion [closeOthers]="true" class="details-accordion">
+                                        <ngb-panel id="detallesPanel" title="{{ 'Detalles del producto' | translate }}">
+                                            <ng-template ngbPanelContent>
+                                                <table class="product-page-width">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><b>{{'Marca :' | translate}}</b></td>
+                                                            <td>{{producto?.identificacion?.marca}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><b>{{'Habilitado :' | translate}} &nbsp;&nbsp;&nbsp;</b></td>
+                                                            <td class="txt-success">{{'In stock' | translate}}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </ng-template>
+                                        </ngb-panel>
+                                        
+                                        <ngb-panel id="calificacionPanel" title="{{ 'Calificación' | translate }}">
+                                            <ng-template ngbPanelContent>
+                                                <div class="rating">
+                                                    <form [formGroup]="ratingForm" class="rating">
+                                                        <ngx-star-rating formControlName="rating" [id]="'rating'"></ngx-star-rating>
+                                                        <div>Rating: {{ratingForm.value.rating}}</div>
+                                                    </form>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    </ng-container>
-                                    <tr *ngIf="hasOpcionesPersonalizacion()">
-                                        <td colspan="8"><strong>Sección de opciones de personalización</strong></td>
-                                    </tr>
-                                    <ng-container *ngFor="let preference of productPreference">
-                                        <tr *ngIf="preference.tipo === 'opcionPersonalizacion'">
+                                            </ng-template>
+                                        </ngb-panel>
+                                    </ngb-accordion>
+                                </div>
 
-                                            <td colspan="12">
-                                                <div style="display: inline-block; white-space: nowrap;">
-                                                    <div class="row"
-                                                        *ngIf="datosEntrega?.controls?.colores?.value?.length > 0">
-                                                        <div class="col-sm-6">
-                                                            <strong>Color:</strong>
-                                                        </div>
-
-                                                        <div class="col-sm-6" style="margin-top: -1rem;">
-                                                            <ul class="product-color m-t-15">
-                                                                <li *ngFor="let item of datosEntrega?.controls?.colores?.value"
-                                                                    [style.backgroundColor]="item">
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-                                                <div [innerHtml]="preference.subtitulo"></div>
-                                            </td>
-                                            <!-- <td>{{ preference.valorUnitarioSinIva}}</td>
-                                                <td>{{ preference.porcentajeIva}}</td>
-                                                <td>{{ preference.valorIva }}</td> -->
-
-                                        </tr>
-                                    </ng-container>
-                                    <tr *ngIf="!SinTarjeta">
-                                        <td colspan="8"><strong>Sección Tarjetas</strong></td>
-                                    </tr>
-                                    <span *ngIf="!SinTarjeta">
-                                        <ng-container *ngFor="let tarjeta of this.tarjetas.value">
-                                            <table style="width: 250%;">
-                                                <tbody>
-                                                    <tr>
-                                                        <td colspan="5"><strong>Para:</strong> {{ tarjeta.para }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td colspan="5"><strong>Mensaje de la tarjeta:</strong> {{
-                                                            tarjeta.mensaje}}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td colspan="5"><strong>De:</strong> {{ tarjeta.de }}</td>
-                                                    </tr>
-
-
-                                                </tbody>
-                                            </table>
-
-                                        </ng-container>
-                                    </span>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="2"></td>
-                                        <td><strong>Resumen:</strong></td>
-                                        <td>{{ getTotalValorUnitarioSinIva() | currency:'USD':'symbol':'1.2-2' }}
-                                        </td>
-                                        <td> </td>
-                                        <td>{{ getTotalValorIva() | currency:'USD':'symbol':'1.2-2' }}</td>
-                                        <td>{{ getTotalPrecioTotalConIva() | currency:'USD':'symbol':'1.2-2' }}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-
+                                <hr>
+                                
+                                <!-- Panel colapsable de preferencias seleccionadas -->
+                                <ngb-accordion *ngIf="productPreference?.length > 0" #prefAcc="ngbAccordion">
+                                    <ngb-panel id="seleccionesPanel">
+                                        <ng-template ngbPanelHeader>
+                                            <div class="d-flex align-items-center">
+                                                <button ngbPanelToggle class="accordion-button">
+                                                    <i class="fa fa-check-circle me-2"></i> 
+                                                    {{'Preferencias seleccionadas' | translate}}
+                                                </button>
+                                            </div>
+                                        </ng-template>
+                                        <ng-template ngbPanelContent>
+                                            <div class="table-responsive">
+                                                <table class="table table-dashed table-compact">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Imagen</th>
+                                                            <th>Título</th>
+                                                            <th>Subtitulo</th>
+                                                            <th>Valor Unitario sin IVA</th>
+                                                            <th>% IVA</th>
+                                                            <th>Valor IVA</th>
+                                                            <th>Precio Total con IVA</th>
+                                                            <th>Cantidad</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <!-- Sección de Preferencia -->
+                                                        <tr *ngIf="hasPreferencia()">
+                                                            <td colspan="8"><strong>Sección de Preferencias</strong></td>
+                                                        </tr>
+                                                        <ng-container *ngFor="let preference of productPreference">
+                                                            <tr *ngIf="preference.tipo === 'preferencia'">
+                                                                <td>
+                                                                    <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="40"
+                                                                        height="40" class="rounded">
+                                                                </td>
+                                                                <td>{{ preference.titulo }}</td>
+                                                                <td>{{ preference.subtitulo }}</td>
+                                                                <td>{{ preference.valorUnitarioSinIva |
+                                                                    currency:'USD':'symbol':'1.2-2'}}</td>
+                                                                <td>{{ preference.porcentajeIva + '%' }}</td>
+                                                                <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
+                                                                <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
+                                                                </td>
+                                                                <td>
+                                                                    <!-- <div class="quantity-controls" style="white-space: nowrap;">
+                                                                        <button
+                                                                            (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
+                                                                        <span>{{preference.cantidad}}</span>
+                                                                        <button
+                                                                            (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
+                                                                    </div> -->
+                                                                </td>
+                                                            </tr>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Sección de Adición -->
+                                                        <tr *ngIf="hasAdicion()">
+                                                            <td colspan="8"><strong>Sección de adiciones</strong></td>
+                                                        </tr>
+                                                        <ng-container *ngFor="let preference of productPreference">
+                                                            <tr *ngIf="preference.tipo === 'adicion'">
+                                                                <td>
+                                                                    <img [src]="preference?.imagen" alt="{{preference.titulo}}" width="40"
+                                                                        height="40" class="rounded">
+                                                                </td>
+                                                                <td>{{ preference.titulo }}</td>
+                                                                <td>{{ preference.subtitulo }}</td>
+                                                                <td>{{ preference.valorUnitarioSinIva |
+                                                                    currency:'USD':'symbol':'1.2-2'}}</td>
+                                                                <td>{{ preference.porcentajeIva + '%' }}</td>
+                                                                <td>{{ preference.valorIva | currency:'USD':'symbol':'1.2-2'}}</td>
+                                                                <td>{{ preference.precioTotalConIva | currency:'USD':'symbol':'1.2-2' }}
+                                                                </td>
+                                                                <td>
+                                                                    <div class="quantity-controls" style="white-space: nowrap;">
+                                                                        <button
+                                                                            (click)="decrementarCantidad(preference); $event.stopPropagation()">-</button>
+                                                                        <span>{{preference.cantidad}}</span>
+                                                                        <button
+                                                                            (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Opciones de personalización -->
+                                                        <tr *ngIf="hasOpcionesPersonalizacion()">
+                                                            <td colspan="8"><strong>Sección de opciones de personalización</strong></td>
+                                                        </tr>
+                                                        <ng-container *ngFor="let preference of productPreference">
+                                                            <tr *ngIf="preference.tipo === 'opcionPersonalizacion'">
+                                                                <td colspan="12">
+                                                                    <div style="display: inline-block; white-space: nowrap;">
+                                                                        <div class="row"
+                                                                            *ngIf="datosEntrega?.controls?.colores?.value?.length > 0">
+                                                                            <div class="col-sm-6">
+                                                                                <strong>Color:</strong>
+                                                                            </div>
+                                                                            <div class="col-sm-6" style="margin-top: -1rem;">
+                                                                                <ul class="product-color m-t-15">
+                                                                                    <li *ngFor="let item of datosEntrega?.controls?.colores?.value"
+                                                                                        [style.backgroundColor]="item">
+                                                                                    </li>
+                                                                                </ul>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="collapsible-text" [ngClass]="{'collapsed': !mostrarPersonalizacionCompleta}" 
+                                                                         [innerHtml]="preference.subtitulo"></div>
+                                                                    <button *ngIf="preference.subtitulo && preference.subtitulo.length > 100" 
+                                                                          class="toggle-text-btn" 
+                                                                          [ngClass]="{'expanded': mostrarPersonalizacionCompleta}" 
+                                                                          (click)="mostrarPersonalizacionCompleta = !mostrarPersonalizacionCompleta">
+                                                                        {{mostrarPersonalizacionCompleta ? 'Ver menos' : 'Ver más' | translate}}
+                                                                        <i class="fa" [ngClass]="mostrarPersonalizacionCompleta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Sección Tarjetas -->
+                                                        <tr *ngIf="!SinTarjeta">
+                                                            <td colspan="8"><strong>Sección Tarjetas</strong></td>
+                                                        </tr>
+                                                        <ng-container *ngIf="!SinTarjeta">
+                                                            <tr *ngFor="let tarjeta of this.tarjetas.value; let i = index">
+                                                                <td colspan="8">
+                                                                    <div class="card p-2 mb-2">
+                                                                        <div><strong>{{'Para:' | translate}}</strong> {{ tarjeta.para }}</div>
+                                                                        <div class="mt-1">
+                                                                            <strong>{{'Mensaje:' | translate}}</strong>
+                                                                            <div class="collapsible-text" [ngClass]="{'collapsed': !tarjetaMostrada[i]}" style="white-space: normal;">
+                                                                                {{ tarjeta.mensaje }}
+                                                                            </div>
+                                                                            <button *ngIf="tarjeta.mensaje && tarjeta.mensaje.length > 100" 
+                                                                                  class="toggle-text-btn" 
+                                                                                  [ngClass]="{'expanded': tarjetaMostrada[i]}" 
+                                                                                  (click)="toggleTarjeta(i)">
+                                                                                {{tarjetaMostrada[i] ? 'Ver menos' : 'Ver más' | translate}}
+                                                                                <i class="fa" [ngClass]="tarjetaMostrada[i] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="mt-1"><strong>{{'De:' | translate}}</strong> {{ tarjeta.de }}</div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </ng-container>
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr>
+                                                            <td colspan="2"></td>
+                                                            <td><strong>Resumen:</strong></td>
+                                                            <td>{{ getTotalValorUnitarioSinIva() | currency:'USD':'symbol':'1.2-2' }}
+                                                            </td>
+                                                            <td> </td>
+                                                            <td>{{ getTotalValorIva() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                                            <td>{{ getTotalPrecioTotalConIva() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        </ng-template>
+                                    </ngb-panel>
+                                </ngb-accordion>
+                            </div>
                         </section>
                     </div>
                 </div>
@@ -257,29 +303,22 @@
                     <!-- Sección 1: Datos entrega -->
                     <ngb-panel id="datosEntregaPanel" title="{{'DATOS PARA LA ENTREGA' | translate}}">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-calendar me-2"></i> {{'DATOS PARA LA ENTREGA' | translate}}
                                 </button>
+                                <span *ngIf="datosEntrega.valid" class="badge bg-success me-2 d-flex align-items-center">
+                                    <i class="fa fa-check me-1"></i> {{'Completado' | translate}}
+                                </span>
                             </div>
                         </ng-template>
                         <ng-template ngbPanelContent>
-                            <form [formGroup]="datosEntrega">
-                                <div class="row">
-                                    <!-- TITULO-->
-                                    <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'DATOS PARA LA ENTREGA' | translate}}</h5>
-                                    </div>
-                                </div>
-                                <div *ngIf="producto?.procesoComercial?.llevaCalendario">
-                                    <!-- CALENDARIO FORMA ENTREGA-->
-
-                                    <div class="row">
-                                        <div class="col-sm-12 col-sm-12 input-group">
-                                            <h5 class="m-15">{{'1. Fecha de entrega' | translate}}</h5>
-                                        </div>
-                                        <div class="col-sm-12 col-sm-12 input-group">
-
+                            <form [formGroup]="datosEntrega" class="datos-entrega-form">
+                                <!-- Sección de fecha de entrega -->
+                                <div *ngIf="producto?.procesoComercial?.llevaCalendario" class="mb-3">
+                                    <h5 class="section-title">{{'1. Fecha de entrega' | translate}}</h5>
+                                    <div class="form-group">
+                                        <div class="input-group">
                                             <input class="form-control" placeholder="{{'Fecha de entrega' | translate}}"
                                                 name="dp" formControlName="fechaEntrega" ngbDatepicker
                                                 #d3="ngbDatepicker" [minDate]="minDate"
@@ -287,129 +326,96 @@
                                                 readonly />
                                             <button #buttonEl class="btn btn-primary calendar"
                                                 (click)="d3.toggle()" type="button">
-                                                <app-feather-icons [icon]="'calendar'">
-                                                </app-feather-icons>
+                                                <app-feather-icons [icon]="'calendar'"></app-feather-icons>
                                             </button>
                                         </div>
                                     </div>
-                                    <br>
-                                    <div class="row" *ngIf="hasFechaEntrega()">
-                                        <div class="col-sm-12 col-sm-12 input-group">
-                                            <h5 class="m-15">{{'2. Forma de entrega' | translate}}</h5>
-                                        </div>
-                                        <div class="col-sm-12 col-sm-12 input-group">
-
-                                            <!-- <h6 class="m-t-20">TIPO DE ENTREGA: </h6>  -->
+                                    
+                                    <!-- Forma de entrega -->
+                                    <div *ngIf="hasFechaEntrega()" class="mt-3">
+                                        <h5 class="section-title">{{'2. Forma de entrega' | translate}}</h5>
+                                        <div class="form-group">
                                             <ng-select [items]="formasEntregaProducto" bindLabel="nombre"
                                                 bindValue="nombre" placeholder="{{'Forma de entrega' | translate}}"
                                                 class="form-control"
-                                                style="font-family: roboto;color: #ffffff !important;"
+                                                style="font-family: roboto;"
                                                 [closeOnSelect]="true" formControlName="formaEntrega"
                                                 (change)="changeTipoEntrega($event)">
                                             </ng-select>
                                         </div>
                                     </div>
-                                    <br>
-                                    <div class="row" *ngIf="hasFechaEntrega()">
-                                        <div class="col-sm-12 col-sm-12 input-group">
-                                            <h5 class="m-15">{{'3. Horarios' | translate}}</h5>
-                                        </div>
-                                        <div class="col-sm-12 col-sm-12 input-group">
-
+                                    
+                                    <!-- Horarios -->
+                                    <div *ngIf="hasFechaEntrega()" class="mt-3">
+                                        <h5 class="section-title">{{'3. Horarios' | translate}}</h5>
+                                        <div class="form-group">
                                             <ng-select [items]="horarios" class="form-control"
                                                 placeholder="{{'Horarios' | translate}}" class="form-control"
                                                 formControlName="horarioEntrega"
-                                                style="font-family: roboto;color: #ffffff !important;"
+                                                style="font-family: roboto;"
                                                 [closeOnSelect]="true">
                                             </ng-select>
                                         </div>
                                     </div>
                                 </div>
-                                <br>
-                                <div *ngIf="!producto?.procesoComercial?.llevaCalendario">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <p>{{'Entregamos este producto en un plazo que varía desde el mismo día de la compra hasta un máximo de 2 días hábiles. Recibirás una notificación tan pronto como comencemos el proceso de envío, para que estés preparado/a para recibirlo.' | translate}}
-                                            </p>
-                                        </div>
-                                    </div>
+                                
+                                <!-- Texto informativo para entregas estándar -->
+                                <div *ngIf="!producto?.procesoComercial?.llevaCalendario" class="alert alert-light p-3 mb-3">
+                                    <i class="fa fa-info-circle me-2"></i>
+                                    <p class="mb-0">{{'Entregamos este producto en un plazo que varía desde el mismo día de la compra hasta un máximo de 2 días hábiles. Recibirás una notificación tan pronto como comencemos el proceso de envío, para que estés preparado/a para recibirlo.' | translate}}</p>
                                 </div>
-                                <div class="row"
-                                    *ngIf="producto?.procesoComercial?.aceptaOcasion || producto?.procesoComercial?.aceptaGenero || producto?.procesoComercial?.aceptaComentarios || producto?.procesoComercial.aceptaColorDecoracion">
-                                    <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'OBSERVACIONES DE PERSONALIZACIÓN' | translate}}</h5>
-                                    </div>
-                                </div>
-
-                                <!-- SEGUNDA PARTE -->
-
-                                <div class="row" *ngIf="producto?.procesoComercial?.aceptaOcasion">
-                                    <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'Ocasión' | translate}}</h5>
-                                    </div>
-                                    <div class="col-sm-12 col-sm-12 input-group">
-
-                                        <br>
+                                
+                                <!-- Sección de personalización -->
+                                <div *ngIf="producto?.procesoComercial?.aceptaOcasion || producto?.procesoComercial?.aceptaGenero || producto?.procesoComercial?.aceptaComentarios || producto?.procesoComercial.aceptaColorDecoracion" class="mt-4">
+                                    <h5 class="section-title">{{'OBSERVACIONES DE PERSONALIZACIÓN' | translate}}</h5>
+                                    
+                                    <!-- Ocasión -->
+                                    <div *ngIf="producto?.procesoComercial?.aceptaOcasion" class="form-group">
+                                        <label>{{'Ocasión' | translate}}</label>
                                         <ng-select [items]="ocasiones" formControlName="ocasion"
                                             class="form-control" placeholder="{{'Ocasión' | translate}}"
                                             (change)="addOpcionesPersonalizacion()"
-                                            style="font-family: roboto;color: #ffffff !important;"
+                                            style="font-family: roboto;"
                                             bindLabel="name" bindValue="id" [closeOnSelect]="true">
                                         </ng-select>
                                     </div>
-                                </div>
-                                <br>
-                                <div class="row" *ngIf="producto?.procesoComercial?.aceptaGenero">
-                                    <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'Género' | translate}}</h5>
-                                    </div>
-                                    <div class="col-sm-12 col-sm-12 input-group">
-
-                                        <br>
+                                    
+                                    <!-- Género -->
+                                    <div *ngIf="producto?.procesoComercial?.aceptaGenero" class="form-group">
+                                        <label>{{'Género' | translate}}</label>
                                         <ng-select style="height:auto !important" [items]="generos"
                                             formControlName="genero" bindLabel="name" bindValue="id"
                                             (change)="addOpcionesPersonalizacion()" class="form-control"
                                             placeholder="{{'Genero' | translate}}"
-                                            style="font-family: roboto;color: #ffffff !important;"
+                                            style="font-family: roboto;"
                                             [multiple]="false" [closeOnSelect]="true">
                                         </ng-select>
                                     </div>
-                                </div>
-                                <br>
-                                <div class="row" *ngIf="producto?.procesoComercial?.aceptaComentarios">
-                                    <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'Observaciones' | translate}}</h5>
-                                    </div>
-                                    <div class="col-sm-12 col-sm-12 input-group">
-
-                                        <br>
+                                    
+                                    <!-- Observaciones -->
+                                    <div *ngIf="producto?.procesoComercial?.aceptaComentarios" class="form-group">
+                                        <label>{{'Observaciones' | translate}}</label>
                                         <textarea class="form-control" formControlName="observaciones"
                                             id="exampleFormControlTextarea1" rows="3"
                                             (keyup)="addOpcionesPersonalizacion()"
                                             placeholder="{{'Observaciones' | translate}}"></textarea>
                                     </div>
-                                </div>
-                                <br>
-                                <div class="row" *ngIf="producto?.procesoComercial.aceptaColorDecoracion">
-                                    <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'Seleccione el color' | translate}}</h5>
-                                    </div>
-                                    <div class="col-sm-12 col-sm-12 input-group">
-
-                                        <br>
-                                        <ul class="product-color m-t-15">
-                                            <li *ngFor="let item of producto.procesoComercial?.colorDecoracion"
-                                                [style.backgroundColor]="item"
-                                                (click)="selectedColor($event,item)"
-                                                title="{{'Dale click para seleccionar' | translate}}"
-                                                style="cursor: pointer;">
-                                            </li>
-                                        </ul>
+                                    
+                                    <!-- Colores -->
+                                    <div *ngIf="producto?.procesoComercial.aceptaColorDecoracion" class="form-group">
+                                        <label>{{'Seleccione el color' | translate}}</label>
+                                        <div>
+                                            <ul class="product-color m-t-15">
+                                                <li *ngFor="let item of producto.procesoComercial?.colorDecoracion"
+                                                    [style.backgroundColor]="item"
+                                                    (click)="selectedColor($event,item)"
+                                                    title="{{'Dale click para seleccionar' | translate}}"
+                                                    style="cursor: pointer;">
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <br>
-
                             </form>
                         </ng-template>
                     </ngb-panel>
@@ -417,10 +423,13 @@
                     <!-- Sección 2: Preferencias -->
                     <ngb-panel id="preferenciasPanel" *ngIf="producto?.procesoComercial?.aceptaVariable">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-list-alt me-2"></i> {{'PREFERENCIAS DEL PRODUCTO' | translate}}
                                 </button>
+                                <span *ngIf="getVariablesControls().length > 0 && hasPreferencia()" class="badge bg-success me-2 d-flex align-items-center">
+                                    <i class="fa fa-check me-1"></i>
+                                </span>
                             </div>
                         </ng-template>
                         <ng-template ngbPanelContent>
@@ -428,11 +437,11 @@
                                 <div formArrayName="variables">
                                     <div *ngFor="let item of getVariablesControls(); let i = index"
                                         class="row">
-                                        <div [formGroupName]="i" class="col-sm-12">
+                                        <div [formGroupName]="i" class="col-sm-12 preference-section">
 
                                             <!-- Manejo de la propiedad data -->
                                             <div class="form-group">
-                                                <h5>{{(i+1).toString()}}. {{
+                                                <h5 class="section-heading">{{(i+1).toString()}}. {{
                                                     item.get('data')?.get('titulo').value
                                                     }}</h5>
                                                 <span>{{
@@ -441,7 +450,7 @@
 
                                                 <!-- Condiciones para el campo tipoImagen -->
                                                 <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'texto'"
-                                                    class="form-group">
+                                                    class="form-group mt-2">
                                                     <textarea
                                                         formControlName="textoIngresado"
                                                         placeholder="{{'Texto' | translate}}"
@@ -450,7 +459,7 @@
                                                         rows="3"></textarea>
                                                 </div>
                                                 <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'imagen'"
-                                                    class="form-group">
+                                                    class="form-group mt-2">
                                                     <input formControlName="imagenIngresado"
                                                         type="file" accept="image/*"
                                                         class="form-control"
@@ -458,7 +467,7 @@
                                                         placeholder="{{'Subir imagen' | translate}}">
                                                 </div>
                                                 <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'archivo'"
-                                                    class="form-group">
+                                                    class="form-group mt-2">
                                                     <input
                                                         formControlName="archivoIngresado"
                                                         type="file"
@@ -468,29 +477,8 @@
                                                 </div>
                                             </div>
 
-                                            <div *ngIf="tieneHijos(item) "
-                                                class="form-group">
-                                                <!-- <select id="childrenSelect-{{i}}"
-                                                    formControlName="childrenSelected"
-                                                    class="form-control"
-                                                    (change)="selectedProductPreference($event, item)">
-                                                    <option value="-1">Selecciona una
-                                                        opción</option>
-                                                    <option
-                                                        *ngFor="let child of item.get('children').controls; let j = index"
-                                                        [value]="j">
-                                                        {{
-                                                        child.get('data').get('titulo')?.value
-                                                        }}
-                                                        +
-                                                        {{
-                                                        child.get('data').get('precioTotalConIva')?.value
-                                                        | currency}}
-                                                    </option>
-                                                </select> -->
-
-
-
+                                            <div *ngIf="tieneHijos(item)"
+                                                class="form-group mt-3">
                                                 <ng-select
                                                     [items]="item.get('children').controls"
                                                     bindLabel="value.data.titulo"
@@ -517,9 +505,6 @@
                                                         | currency}}
                                                     </ng-template>
                                                 </ng-select>
-
-
-
                                             </div>
                                         </div>
                                     </div>
@@ -531,10 +516,13 @@
                     <!-- Sección 3: Tarjetas -->
                     <ngb-panel id="tarjetasPanel" *ngIf="producto?.procesoComercial?.llevaTarjeta">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-gift me-2"></i> {{'TARJETAS' | translate}} <span *ngIf="!SinTarjeta">({{tarjetas.length}})</span>
                                 </button>
+                                <span *ngIf="SinTarjeta || tarjetas.length > 0" class="badge bg-success me-2 d-flex align-items-center">
+                                    <i class="fa fa-check me-1"></i>
+                                </span>
                             </div>
                         </ng-template>
                         <ng-template ngbPanelContent>
@@ -544,12 +532,12 @@
                                         <h5 class="m-15" *ngIf="!SinTarjeta">{{'TARJETAS' | translate}}
                                             ({{tarjetas.length}})</h5>
                                         <h5 class="m-15" *ngIf="SinTarjeta">{{'SIN TARJETAS' | translate}} </h5>
-                                        <button class="btn btn-link ml-2" *ngIf="!SinTarjeta"
+                                        <button class="btn btn-sm btn-primary ms-2" *ngIf="!SinTarjeta"
                                             title="{{'Agregar otra tarjeta' | translate}}" (click)="agregarTarjeta()">
-                                            <app-feather-icons [icon]="'plus'"></app-feather-icons>
+                                            <i class="fa fa-plus me-1"></i> {{'Agregar' | translate}}
                                         </button>
                                     </div>
-                                    <div class="form-check" *ngIf="!SinTarjeta">
+                                    <div class="form-check mt-2">
                                         <input type="checkbox" class="form-check-input" id="tarjetas"
                                             name="tarjetas" value="tarjetas"
                                             (change)="onChangeTarjetas($event)">
@@ -557,67 +545,51 @@
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="tarjetas"
-                                            name="tarjetas" value="tarjetas"
+                                        <input type="checkbox" class="form-check-input" id="notarjetas"
+                                            name="notarjetas" value="notarjetas"
                                             (change)="onChangeNoTarjetas($event)">
-                                        <label class="form-check-label" for="tarjetas">{{'No quiero tarjeta para este producto' | translate}}
+                                        <label class="form-check-label" for="notarjetas">{{'No quiero tarjeta para este producto' | translate}}
                                         </label>
                                     </div>
                                 </div>
-
                             </div>
-                            <div *ngIf="!SinTarjeta">
+                            <div *ngIf="!SinTarjeta" class="mt-3">
                                 <form [formGroup]="tarjetasForm">
                                     <div formArrayName="tarjetas">
                                         <div *ngFor="let tarjeta of tarjetas.controls; let i = index">
-                                            <div [formGroupName]="i">
-                                                <div class="row">
-                                                    <div class="col-sm-5"></div>
-                                                    <div class="col-sm-6">
-                                                        <h5 class="m-15">{{'Tarjeta #' | translate}}{{ i + 1 }}
-                                                            <app-katuqintelligence
-                                                                [titleInput]="'Generate text with IA for tarjeta' + (i + 1)"
-                                                                [katuqIntelligencePrompt]="getKatuqPrompt()"
-                                                                [textToSwalHeader]="'Por favor espera mientras generamos el mensaje para la tarjeta ' + (i + 1) + '...'"
-                                                                [textToQuiestionSwal]="'¿Desea generar texto para la tarjeta # ' + (i + 1) + '?'"
-                                                                [objectToText]="tarjeta"
-                                                                (katuqIntelligenceResponse)="katuqIntelligeceResponse($event)"></app-katuqintelligence>
-                                                        </h5>
-
+                                            <div [formGroupName]="i" class="card p-3 mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h5 class="mb-0">{{'Tarjeta #' | translate}}{{ i + 1 }}</h5>
+                                                    <div>
+                                                        <app-katuqintelligence class="me-2"
+                                                            [titleInput]="'Generate text with IA for tarjeta' + (i + 1)"
+                                                            [katuqIntelligencePrompt]="getKatuqPrompt()"
+                                                            [textToSwalHeader]="'Por favor espera mientras generamos el mensaje para la tarjeta ' + (i + 1) + '...'"
+                                                            [textToQuiestionSwal]="'¿Desea generar texto para la tarjeta # ' + (i + 1) + '?'"
+                                                            [objectToText]="tarjeta"
+                                                            (katuqIntelligenceResponse)="katuqIntelligeceResponse($event)"></app-katuqintelligence>
+                                                        <button type="button" class="btn btn-sm btn-danger"
+                                                            (click)="removeTarjetaForm(i)">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                <div class="row">
-                                                    <div class="col-sm-12">
-                                                        <input class="form-control" placeholder="{{'Para:' | translate}}"
-                                                            formControlName="para" />
-                                                    </div>
+                                                <div class="form-group mb-2">
+                                                    <label class="form-label">{{'Para:' | translate}}</label>
+                                                    <input class="form-control" formControlName="para" />
                                                 </div>
-                                                <br>
-                                                <div class="row">
-                                                    <div class="col-sm-12">
-                                                        <textarea class="form-control"
-                                                            placeholder="{{'Mensaje Para La Tarjeta:' | translate}}"
-                                                            formControlName="mensaje"></textarea>
-                                                    </div>
+                                                <div class="form-group mb-2">
+                                                    <label class="form-label">{{'Mensaje Para La Tarjeta:' | translate}}</label>
+                                                    <textarea class="form-control" formControlName="mensaje" rows="3"></textarea>
                                                 </div>
-                                                <br>
-                                                <div class="row">
-                                                    <div class="col-sm-12">
-                                                        <input class="form-control" placeholder="{{'De:' | translate}}"
-                                                            formControlName="de" />
-                                                    </div>
+                                                <div class="form-group">
+                                                    <label class="form-label">{{'De:' | translate}}</label>
+                                                    <input class="form-control" formControlName="de" />
                                                 </div>
-                                                <br>
-                                                <button type="button" class="btn btn-danger"
-                                                    (click)="removeTarjetaForm(i)">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
                                             </div>
-                                            <hr>
                                         </div>
                                     </div>
                                 </form>
-
                             </div>
                         </ng-template>
                     </ngb-panel>
@@ -625,62 +597,53 @@
                     <!-- Sección 4: Adiciones -->
                     <ngb-panel id="adicionesPanel" *ngIf="producto?.procesoComercial?.aceptaAdiciones">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-plus-circle me-2"></i> {{'ADICIONES' | translate}}
                                 </button>
+                                <span *ngIf="hasAdicion()" class="badge bg-success me-2 d-flex align-items-center">
+                                    <i class="fa fa-check me-1"></i> {{getAdicionesCount()}}
+                                </span>
                             </div>
                         </ng-template>
                         <ng-template ngbPanelContent>
-                            <div class="container-fluid">
+                            <div class="container-fluid px-0">
                                 <div class="row">
                                     <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'ADICIONES' | translate}}</h5>
+                                        <h5 class="m-15">{{'Selecciona uno o varios' | translate}}</h5>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="card">
-                                            <div class="card-header col-sm-12 col-sm-12 input-group">
-                                                <h5>{{'Selecciona uno o varios' | translate}}</h5>
+                                            <div class="card-header col-sm-12 col-sm-12 input-group py-2">
+                                                <h5 class="mb-0">{{'Adiciones disponibles' | translate}}</h5>
                                             </div>
-                                            <div class="card-body scrollable-div">
-                                                <div class="row g-sm-4 g-3" *ngFor="let item of adicionesrows">
+                                            <div class="card-body scrollable-div p-2">
+                                                <div class="row g-sm-4 g-2" *ngFor="let item of adicionesrows">
                                                     <div class="col-xl-12 col-md-6">
-                                                        <div class="prooduct-details-box" style="cursor: pointer;"
+                                                        <div class="prooduct-details-box p-2" style="cursor: pointer;"
                                                             (click)="addAdicionToProduct(item)"
                                                             [ngClass]="{ 'active': item?.seleccionado }">
-                                                            <div class="media"><img
-                                                                    class="align-self-center img-fluid img-60"
-                                                                    src="{{item.imagenPrincipal[0]?.urls}}" alt="#"
-                                                                    alt="#">
-                                                                <div class="media-body ms-3">
-                                                                    <div class="product-name">
-                                                                        <h6><a
-                                                                                href="javascript:void(0);">{{item.titulo}}</a>
-                                                                        </h6>
+                                                            <div class="media d-flex align-items-center">
+                                                                <img class="img-fluid img-60 me-3"
+                                                                    src="{{item.imagenPrincipal[0]?.urls}}" alt="#">
+                                                                <div class="media-body">
+                                                                    <h6 class="mb-1">{{item.titulo}}</h6>
+                                                                    <div class="price">
+                                                                        <span class="text-muted me-1">{{'Precio:' | translate}}</span>
+                                                                        {{item.precioTotal | currency:'USD':'symbol':'1.2-2'}}
                                                                     </div>
-                                                                    <div class="price d-flex">
-                                                                        <div class="text-muted me-2">{{'Price' | translate}}</div>
-                                                                        :
-                                                                        {{item.precioTotal |
-                                                                        currency:'USD':'symbol':'1.2-2'}}
-                                                                    </div>
-
-
-
+                                                                </div>
+                                                                <div class="ms-auto">
+                                                                    <i class="fa" [ngClass]="item?.seleccionado ? 'fa-check-circle text-success' : 'fa-plus-circle'"></i>
                                                                 </div>
                                                             </div>
-
                                                         </div>
-
-
                                                     </div>
-
                                                 </div>
                                             </div>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
@@ -690,64 +653,52 @@
                     <!-- Sección 5: Cantidad -->
                     <ngb-panel id="cantidadPanel">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
                                     <i class="fa fa-shopping-basket me-2"></i> {{'CANTIDAD' | translate}}
                                 </button>
+                                <span *ngIf="cantidad > 0" class="badge bg-primary me-2 d-flex align-items-center">
+                                    {{cantidad}}
+                                </span>
                             </div>
                         </ng-template>
                         <ng-template ngbPanelContent>
-                            <div class="col-6 col-sm-12 col-xl-12">
-                                <div class="row">
-                                    <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'CANTIDAD' | translate}}</h5>
+                            <div class="col-12 p-3">
+                                <div class="alert alert-light small mb-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fa fa-info-circle me-2 text-primary"></i>
+                                        <strong>{{'Información importante' | translate}}:</strong>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <h5 class="m-15">{{'Cantidad mínima de venta:' | translate}}
-                                        {{producto?.disponibilidad?.cantidadMinVenta}}</h5>
-                                </div>
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <h5 class="m-15">
-                                            {{'Unidades disponibles:' | translate}} {{producto?.disponibilidad?.cantidadDisponible}}
-                                        </h5>
-                                    </div>
+                                    <ul class="mb-0 ps-4">
+                                        <li>{{'Cantidad mínima de venta:' | translate}} {{producto?.disponibilidad?.cantidadMinVenta}}</li>
+                                        <li>{{'Unidades disponibles:' | translate}} {{producto?.disponibilidad?.cantidadDisponible}}</li>
+                                    </ul>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-sm-4">
-                                        <h5 class="m-15">{{'Cantidad a Comprar' | translate}}</h5>
-                                    </div>
-                                    <div class="col-sm-6">
-
-                                        <div class="qty-box">
-                                            <div class="input-group">
-                                                <span class="input-group-prepend">
-                                                    <button class="btn quantity-left-minus" type="button"
-                                                        data-type="minus" data-field="" (click)="menosCantidad()">
-                                                        <app-feather-icons [icon]="'minus'"></app-feather-icons>
-                                                    </button>
-                                                </span>
-                                                <input #cantidad class="form-control input-number" type="text"
-                                                    name="cantidad" id="cantidad" readonly
-                                                    min="{{producto?.disponibilidad?.cantidadMinVenta}}" max="100">
-                                                <span class="input-group-prepend">
-                                                    <button class="btn quantity-right-plus" type="button"
-                                                        data-type="plus" data-field="" (click)="masCantidad()">
-                                                        <app-feather-icons [icon]="'plus'"></app-feather-icons>
-                                                    </button>
-                                                </span>
-                                            </div>
+                                <div class="d-flex align-items-center justify-content-center my-3">
+                                    <label class="me-3 fw-bold">{{'Cantidad a Comprar' | translate}}</label>
+                                    <div class="qty-box">
+                                        <div class="input-group">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                (click)="menosCantidad()">
+                                                <i class="fa fa-minus"></i>
+                                            </button>
+                                            <input #cantidad class="form-control input-number text-center" type="text"
+                                                name="cantidad" id="cantidad" readonly
+                                                style="width: 60px;"
+                                                min="{{producto?.disponibilidad?.cantidadMinVenta}}" max="100">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                (click)="masCantidad()">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <p>
-                                        {{'Las elecciones en este producto aplican a todos los productos idénticos en tu compra. Si deseas productos iguales con elecciones diferentes completa la configuración para cada uno agrégales al carrito y luego dale en continuar comprando.' | translate}}
-                                    </p>
+                                
+                                <div class="alert alert-info small mt-3">
+                                    <i class="fa fa-lightbulb-o me-2"></i>
+                                    {{'Las elecciones en este producto aplican a todos los productos idénticos en tu compra. Si deseas productos iguales con elecciones diferentes completa la configuración para cada uno agrégales al carrito y luego dale en continuar comprando.' | translate}}
                                 </div>
-                                <br>
                             </div>
                         </ng-template>
                     </ngb-panel>
@@ -784,89 +735,94 @@
         </div>
     </div>
 </div>
-<div class="card">
+<div class="card mt-3">
     <div class="row product-page-main">
         <div class="col-sm-12">
-            <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
-                <li [ngbNavItem]="1">
-                    <a ngbNavLink>{{'Características Adicionales *' | translate}}
-                    </a>
-                    <ng-template ngbNavContent>
-                        <!-- <p class="mb-0 m-t-20"> {{producto?.crearProducto?.descripcion}}</p> -->
-                        <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
-                    </ng-template>
-                </li>
-                <li [ngbNavItem]="2">
-                    <a ngbNavLink>{{'Garantías propias del producto*' | translate}}
-                    </a>
-                    <ng-template ngbNavContent>
-                        <p class="mb-0 m-t-20">{{'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum' | translate}}
-                        </p>
-                    </ng-template>
-                </li>
-                <li [ngbNavItem]="3">
-                    <a ngbNavLink>{{'Condiciones/Restricciones*' | translate}}
-                    </a>
-                    <ng-template ngbNavContent>
-                        <p class="mb-0 m-t-20">{{'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum' | translate}}
-                        </p>
-                    </ng-template>
-                </li>
-                <li [ngbNavItem]="4">
-                    <a ngbNavLink>{{'Cómo debe cuidarse / consumirse*' | translate}}
-                    </a>
-                    <ng-template ngbNavContent>
-                        <p class="mb-0 m-t-20">{{'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum' | translate}}
-                        </p>
-                    </ng-template>
-                </li>
-                <li [ngbNavItem]="4">
-                    <a ngbNavLink>{{'Reseñas*' | translate}}
-                    </a>
-                    <ng-template ngbNavContent>
-                        <p class="mb-0 m-t-20">{{'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum' | translate}}
-                        </p>
-                    </ng-template>
-                </li>
-                <li [ngbNavItem]="5">
-                    <a ngbNavLink>{{'Preguntas y Respuestas*' | translate}}
-                    </a>
-                    <ng-template ngbNavContent>
-                        <p class="mb-0 m-t-20">{{'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum' | translate}}
-                        </p>
-                    </ng-template>
-                </li>
-
-
-
-
-            </ul>
-            <div [ngbNavOutlet]="nav" class="mt-2"></div>
-        </div>
-    </div>
-</div>
-<!-- <div class="modal-footer">
-    <div class="product-summary">
-        <div class="row">
-            <div class="col-sm-8 footerprice">
-                <div class="row" style="--bs-gutter-x:10rem">
-                    <div class="col-sm-4"><strong>
-                            <h5>Producto:</h5>
-                        </strong>{{ precioproducto * (sumar1() || 1) |
-                        currency:'USD':'symbol':'1.0-0' }} </div>
-                    <div class="col-sm-4"> <strong>
-                            <h5>Adiciones:</h5>
-                        </strong> {{
-                        (getBigTotalProductWithPreferenceAndAdictions() - precioproducto) * (sumar1() || 1) |
-                        currency:'USD':'symbol':'1.0-0' }}</div>
-                    <div class="col-sm-4"> <strong>
-                            <h5>Total:</h5>
-                        </strong> {{
-                        (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) |
-                        currency:'USD':'symbol':'1.0-0' }}</div>
-
+            <div class="features-tabs">
+                <!-- Añadir una casilla de verificación para mostrar características -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="mostrarCaracteristicas" id="showFeaturesCheck">
+                    <label class="form-check-label" for="showFeaturesCheck">
+                        {{'Mostrar características del producto' | translate}}
+                    </label>
+                </div>
+                
+                <!-- Pestañas de características -->
+                <div *ngIf="mostrarCaracteristicas">
+                    <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
+                        <li [ngbNavItem]="1">
+                            <a ngbNavLink>
+                                {{'Características Adicionales *' | translate}}
+                                <i *ngIf="caracteristicasRevisadas" class="fa fa-check feature-check"></i>
+                            </a>
+                            <ng-template ngbNavContent>
+                                <div class="feature-content">
+                                    <div class="collapsible-text" [ngClass]="{'collapsed': !mostrarDetallesCompletos}">
+                                        <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
+                                    </div>
+                                    <button *ngIf="producto?.crearProducto?.descripcion?.length > 150" 
+                                        class="toggle-text-btn my-2" 
+                                        [ngClass]="{'expanded': mostrarDetallesCompletos}" 
+                                        (click)="mostrarDetallesCompletos = !mostrarDetallesCompletos">
+                                        {{mostrarDetallesCompletos ? 'Ver menos' : 'Ver más' | translate}}
+                                        <i class="fa" [ngClass]="mostrarDetallesCompletos ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                    </button>
+                                    
+                                    <div class="d-flex justify-content-end mt-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" [(ngModel)]="caracteristicasRevisadas" id="featureCheck1">
+                                            <label class="form-check-label" for="featureCheck1">
+                                                {{'Marcar como revisado' | translate}}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-template>
+                        </li>
+                        <li [ngbNavItem]="2">
+                            <a ngbNavLink>
+                                {{'Garantías propias del producto*' | translate}}
+                                <i *ngIf="garantiasRevisadas" class="fa fa-check feature-check"></i>
+                            </a>
+                            <ng-template ngbNavContent>
+                                <div class="feature-content">
+                                    <p class="mb-0">{{'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.' | translate}}</p>
+                                    
+                                    <div class="d-flex justify-content-end mt-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" [(ngModel)]="garantiasRevisadas" id="featureCheck2">
+                                            <label class="form-check-label" for="featureCheck2">
+                                                {{'Marcar como revisado' | translate}}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-template>
+                        </li>
+                        <li [ngbNavItem]="3">
+                            <a ngbNavLink>
+                                {{'Condiciones/Restricciones*' | translate}}
+                                <i *ngIf="condicionesRevisadas" class="fa fa-check feature-check"></i>
+                            </a>
+                            <ng-template ngbNavContent>
+                                <div class="feature-content">
+                                    <p class="mb-0">{{'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.' | translate}}</p>
+                                    
+                                    <div class="d-flex justify-content-end mt-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" [(ngModel)]="condicionesRevisadas" id="featureCheck3">
+                                            <label class="form-check-label" for="featureCheck3">
+                                                {{'Marcar como revisado' | translate}}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-template>
+                        </li>
+                    </ul>
+                    <div [ngbNavOutlet]="nav" class="mb-3"></div>
                 </div>
             </div>
         </div>
     </div>
-</div> -->
+</div>

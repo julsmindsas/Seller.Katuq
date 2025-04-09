@@ -48,8 +48,25 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   adicionesPreferencias: any;
   public activeAccordionPanel: string = 'datosEntregaPanel';
 
+  // Propiedades para controlar el colapso de textos
+  public mostrarDescripcionCompleta: boolean = false;
+  public mostrarDetallesCompletos: boolean = false;
+  public mostrarPersonalizacionCompleta: boolean = false;
+  public tarjetaMostrada: boolean[] = [];
+
+  // Propiedades para controlar el estado de características del producto
+  public mostrarCaracteristicas: boolean = false;
+  public caracteristicasRevisadas: boolean = false;
+  public garantiasRevisadas: boolean = false;
+  public condicionesRevisadas: boolean = false;
 
   ngOnDestroy(): void {
+    // Guardar estados en localStorage
+    localStorage.setItem('caracteristicasRevisadas', this.caracteristicasRevisadas.toString());
+    localStorage.setItem('garantiasRevisadas', this.garantiasRevisadas.toString());
+    localStorage.setItem('condicionesRevisadas', this.condicionesRevisadas.toString());
+    localStorage.setItem('mostrarCaracteristicas', this.mostrarCaracteristicas.toString());
+    
     this.subs.forEach((sub) => sub.unsubscribe());
   }
 
@@ -312,6 +329,17 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
     this.sumar()
     this.activeAccordionPanel = this.determineInitialOpenSection();
+
+    // Inicializar arreglo para controlar visibilidad de tarjetas
+    if (this.tarjetas && this.tarjetas.value) {
+      this.tarjetaMostrada = new Array(this.tarjetas.value.length).fill(false);
+    }
+
+    // Inicializar valores de revisión de características desde localStorage si existen
+    this.caracteristicasRevisadas = localStorage.getItem('caracteristicasRevisadas') === 'true';
+    this.garantiasRevisadas = localStorage.getItem('garantiasRevisadas') === 'true';
+    this.condicionesRevisadas = localStorage.getItem('condicionesRevisadas') === 'true';
+    this.mostrarCaracteristicas = localStorage.getItem('mostrarCaracteristicas') === 'true';
   }
 
   // Eliminar el método menosCantidad1 que está duplicado y quedarse solo con menosCantidad
@@ -997,11 +1025,13 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     }
     this.sumar()
   }
+  
+  // Mantener solo esta implementación del método
   hasAdicion(): boolean {
     return this.productPreference.some(preference => preference.tipo === 'adicion');
   }
+  
   hasOpcionesPersonalizacion(): boolean {
-
     return this.productPreference.some(preference => preference.tipo === 'opcionPersonalizacion');
   }
 
@@ -1042,12 +1072,18 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     });
 
     this.tarjetas.push(tarjeta);
+
+    // Añadir un nuevo elemento al array de control de tarjetas mostradas
+    this.tarjetaMostrada.push(false);
   }
 
   removeTarjetaForm(index: number) {
     if (this.cantidadTarjetas > 1) {
       this.tarjetas.removeAt(index);
       this.cantidadTarjetas--;
+      
+      // También eliminar el control de visibilidad correspondiente
+      this.tarjetaMostrada.splice(index, 1);
     }
   }
 
@@ -1116,5 +1152,22 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     return `haz un mesaje bonito para una tarjeta referente a la descripcion de este producto ${descripcion}`;
   }
 
+  // Método para alternar la visibilidad del mensaje de la tarjeta
+  toggleTarjeta(index: number): void {
+    if (!this.tarjetaMostrada[index]) {
+      this.tarjetaMostrada[index] = true;
+    } else {
+      this.tarjetaMostrada[index] = false;
+    }
+  }
+
+  /**
+   * Cuenta el número de adiciones en las preferencias del producto
+   * @returns Cantidad de adiciones
+   */
+  getAdicionesCount(): number {
+    if (!this.productPreference) return 0;
+    return this.productPreference.filter(p => p.tipo === 'adicion').length;
+  }
 
 }

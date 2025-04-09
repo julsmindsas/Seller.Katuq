@@ -215,6 +215,138 @@
   }
 }
 
+// Clases para texto colapsable con ellipsis
+.collapsible-text {
+  position: relative;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.collapsed {
+  max-height: 80px; // Altura para 3-4 líneas aproximadamente
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(transparent, rgba(255, 255, 255, 0.9));
+    pointer-events: none;
+  }
+}
+
+.toggle-text-btn {
+  color: var(--bs-primary);
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+  
+  .icon {
+    margin-left: 0.25rem;
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+  }
+  
+  &.expanded .icon {
+    transform: rotate(180deg);
+  }
+}
+
+// Optimizaciones para acordeones
+::ng-deep .ngb-accordion {
+  .card {
+    margin-bottom: 0.5rem !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+  }
+  
+  .accordion-button {
+    padding: 0.625rem 1rem !important;
+    font-size: 0.95rem !important;
+    
+    &::after {
+      transition: transform 0.2s !important;
+    }
+    
+    &:not(.collapsed) {
+      background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
+    }
+  }
+  
+  .accordion-body {
+    padding: 0.875rem !important;
+  }
+}
+
+// Estilos para tablas compactas
+.table-compact {
+  font-size: 0.9rem;
+  
+  th, td {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  thead th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+  }
+}
+
+// Optimización de sección de producto
+.product-compact-info {
+  .product-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .product-meta {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    
+    .meta-item {
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: baseline;
+      
+      .meta-label {
+        font-weight: 500;
+        margin-right: 0.5rem;
+        min-width: 120px;
+      }
+    }
+  }
+}
+
+// Mejoras en las secciones de preferencia
+.preference-section {
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(0,0,0,0.08);
+  
+  .section-heading {
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    color: var(--bs-primary);
+  }
+}
+
 // Agregar un margen inferior al contenido para dar espacio al contenedor flotante
 .modal-body {
   padding-bottom: 120px !important;
@@ -299,5 +431,128 @@
   
   .modal-body {
     padding-bottom: 170px !important;
+  }
+}
+
+// Mejorar estilos para entrada de datos (secciones de formulario)
+.input-group {
+  margin-bottom: 0.75rem;
+  
+  h5.m-15 {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--bs-dark);
+  }
+}
+
+// Mejorar los estilos de los acordeones
+::ng-deep .ngb-accordion {
+  .card {
+    margin-bottom: 0.5rem !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+  }
+  
+  .accordion-button {
+    padding: 0.625rem 1rem !important;
+    font-size: 0.95rem !important;
+    
+    &::after {
+      transition: transform 0.2s !important;
+    }
+    
+    &:not(.collapsed) {
+      background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
+      color: var(--bs-primary) !important;
+    }
+  }
+  
+  .accordion-body {
+    padding: 0.875rem !important;
+  }
+}
+
+// Nuevo estilo para pestañas de características
+.features-tabs {
+  .nav-tabs {
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    
+    .nav-link {
+      position: relative;
+      margin-bottom: -1px;
+      padding: 0.5rem 1rem;
+      border: 1px solid transparent;
+      border-top-left-radius: 0.25rem;
+      border-top-right-radius: 0.25rem;
+      font-size: 0.9rem;
+      
+      &:hover {
+        border-color: transparent;
+        background-color: rgba(0,0,0,0.03);
+      }
+      
+      &.active {
+        background-color: #fff;
+        border-color: rgba(0,0,0,.125);
+        border-bottom-color: transparent;
+        color: var(--bs-primary);
+        font-weight: 500;
+      }
+      
+      .feature-check {
+        position: absolute;
+        top: 0.2rem;
+        right: 0.2rem;
+        font-size: 0.7rem;
+        color: #28a745;
+      }
+    }
+  }
+}
+
+// Mejorar estilos para el panel flotante de resumen
+.fixed-summary-container {
+  // ...existing code...
+  z-index: 9999 !important;
+  box-shadow: 0 -5px 15px rgba(0,0,0,0.15) !important;
+  
+  // ...existing code...
+}
+
+// Estilo para indicadores de sección completada
+.section-completed {
+  color: #28a745;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.feature-content {
+  padding: 1rem;
+  background-color: #fff;
+  border: 1px solid rgba(0,0,0,.125);
+  border-top: none;
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+// Mejorar estilo para los datos de entrega
+.datos-entrega-form {
+  .form-group {
+    margin-bottom: 1rem;
+    
+    label {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+  }
+  
+  .section-title {
+    font-weight: 500;
+    color: var(--bs-primary);
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding-bottom: 0.5rem;
   }
 }

@@ -335,7 +335,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
       keyboard: true,
       animation: true,
       scrollable: true,
-      fullscreen: true,
+      fullscreen: false,
       windowClass: 'modal-fullscreen',
 
     }).result.then((result) => {
