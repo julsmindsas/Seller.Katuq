@@ -152,57 +152,80 @@
       <br><br><br><br><br>
     </ul>
 
-      <!-- Card Balanceada -->
-  <!-- Card Balanceada -->
-<div class="plan-card-container" [class.collapsed]="collapseMenu">
-  <!-- Versión normal -->
-  <div class="plan-card" *ngIf="!collapseMenu">
-    <div class="card-header">
-      <small class="fs-16 fc-primary">Mi plan</small>
-      <div class="plan-tag">
-        <span class="fc-primary fs-16">{{currentPlan.type}}</span>
-      </div>
-      <div class="wallet-tag">
-        <i class="fa fa-wallet"></i>
-        <span>${{currentPlan.walletBalance.toFixed(2)}}</span>
-      </div>
-    </div>
-    
-    <div class="card-details">
-      <div class="detail-item">
-        <small class="fs-14">Vence</small>
-        <span>{{currentPlan.renewalDate}}</span>
-      </div>
-      <div class="detail-item">
-        <small>Uso</small>
-        <div class="usage-display">
-          <div class="usage-bar">
-            <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
+    <!-- Card Balanceada -->
+    <div class="plan-card-container" id="plan-card-container" 
+         style="border-radius: 4px; border: 0.5px solid #e0e0e0; margin: 5px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" 
+         [class.collapsed]="collapseMenu">
+      <!-- Cabecera siempre visible con botón de toggle -->
+      <div style="padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; background-color: #f9f9f9; border-bottom: 0.5px solid #e0e0e0;">
+        <div style="display: flex; align-items: center; flex-grow: 1; justify-content: space-between;">
+          <div style="display: flex; align-items: center;">
+            <small style="font-weight: 500; font-size: 12px;">Mi plan</small>
+            <div class="plan-tag" style="margin-left: 6px;">
+              <span style="font-size: 12px;">{{currentPlan.type}}</span>
+            </div>
           </div>
-          <span class="usage-percentage">{{currentPlan.progress}}%</span>
+          
+          <!-- Saldo visible cuando está colapsado -->
+          <div *ngIf="isPlanCardCollapsed" style="display: flex; align-items: center; margin-right: 8px;">
+            <i class="fa fa-wallet" style="margin-right: 4px; font-size: 11px;"></i>
+            <span style="font-size: 12px;">${{currentPlan.walletBalance.toFixed(2)}}</span>
+          </div>
         </div>
+        
+        <!-- Botón con mejor visibilidad, más pequeño y alineado -->
+        <button (click)="togglePlanCard()" style="width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #eaeaea; border: none; cursor: pointer; transition: all 0.2s; padding: 0; flex-shrink: 0;">
+          <i class="fa" [ngClass]="isPlanCardCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'" style="font-size: 10px;"></i>
+        </button>
+      </div>
+      
+      <!-- Contenido colapsable -->
+      <div class="plan-card-content" 
+           [style.max-height]="isPlanCardCollapsed ? '0' : '210px'"
+           [style.opacity]="isPlanCardCollapsed ? '0' : '1'"
+           [style.padding]="isPlanCardCollapsed ? '0 8px' : '8px'" 
+           style="transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease; overflow: hidden;">
+        
+        <div class="card-details" style="margin-bottom: 6px;">
+          <div class="detail-item" style="margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <small style="margin-bottom: 0; font-size: 11px;">Vence</small>
+            <span style="font-size: 11px;">{{currentPlan.renewalDate}}</span>
+          </div>
+          
+          <div class="detail-item" style="margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+              <small style="font-size: 11px;">Uso</small>
+              <span class="usage-percentage" style="font-size: 11px;">{{currentPlan.progress}}%</span>
+            </div>
+            <div class="usage-display">
+              <div class="usage-bar" style="height: 5px; background-color: #e6e6e6; border-radius: 2px; width: 100%;">
+                <div class="usage-progress" [style.width.%]="currentPlan.progress" style="height: 100%; background-color: #7366ff; border-radius: 2px;"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="wallet-tag" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+            <small style="font-size: 11px;">Saldo</small>
+            <div style="display: flex; align-items: center;">
+              <i class="fa fa-wallet" style="margin-right: 3px; font-size: 11px;"></i>
+              <span style="font-size: 11px;">${{currentPlan.walletBalance.toFixed(2)}}</span>
+            </div>
+          </div>
+        </div>
+        
+        <button class="action-btn bc-primary fc-white" (click)="openPlanModal(); $event.stopPropagation();" 
+                style="width: 100%; padding: 5px; border: none; border-radius: 3px; background-color: #7366ff; color: white; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fas fa-coins" style="margin-right: 4px; font-size: 10px;"></i>
+          <span>Cambiar plan</span>
+        </button>
       </div>
     </div>
-    
-    <button class="action-btn bc-primary fc-white fs-16" (click)="openPlanModal()">
-      <i class="fas fa-coins"></i>
-      <span>Cambiar plan</span>
-    </button>
-  </div>
-  
-  <!-- Versión colapsada (solo icono) -->
-  <!-- <div class="plan-card-collapsed" *ngIf="collapseMenu" (click)="sidebarToggle()" title="Mi plan">
-    <i class="fas fa-crown"></i>
-  </div> -->
-</div>
-
 
   </div>
   <div class="right-arrow" id="right-arrow" [class.d-none]="rightArrowNone" (click)="scrollToRight()">
     <app-feather-icons [icon]="'arrow-right'"></app-feather-icons>
   </div>
   <!-- ... código existente ... -->
-
 
 </nav>
 <app-plan-selector 

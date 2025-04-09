@@ -35,6 +35,7 @@ export class SidebarComponent implements OnInit {
 
   public isCollapsed: boolean = false;
   public collapseMenu: boolean = false
+  public isPlanCardCollapsed: boolean = false;
 
   constructor(private router: Router, public navServices: NavService,
     public layout: LayoutService,
@@ -86,6 +87,12 @@ export class SidebarComponent implements OnInit {
       }
       this.companyInformation = companyInformation;
     });
+
+    // Recuperar estado del acordeón
+    const savedState = localStorage.getItem('planCardCollapsed');
+    if (savedState) {
+      this.isPlanCardCollapsed = savedState === 'true';
+    }
   }
 
   private calculateWidth(windowWidth: number): void {
@@ -319,5 +326,9 @@ private calculateWalletBalance(price: any): number {
     }
   }
 
-
+  togglePlanCard() {
+    this.isPlanCardCollapsed = !this.isPlanCardCollapsed;
+    // Guardar preferencia en localStorage para mantener el estado entre sesiones
+    localStorage.setItem('planCardCollapsed', this.isPlanCardCollapsed ? 'true' : 'false');
+  }
 }
