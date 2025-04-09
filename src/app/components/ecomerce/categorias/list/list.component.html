@@ -1,5 +1,5 @@
 <app-breadcrumb [title]="'Categorias'" [items]="['Maestros']" [active_item]="'Categorias'"></app-breadcrumb>
-<div class="container-fluid">
+<div class="container-fluid category-management">
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
@@ -10,85 +10,124 @@
                 </div>
 
                 <div class="card-body custom-datatable" *ngIf="!cargando">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <!-- <input type='text' class="filter-ngx form-control mb-3" style="width: 100% !important;"
-                                placeholder="{{'Escribe texto que deseas filtrar' | translate}}"
-                                (keyup)='updateFilter($event)' /> -->
-
-                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="create()">
-                                <span style="color:white ;">{{'Agregar categoría' | translate}}</span>
-                                <i placement="top" ngbTooltip="{{'Nuevo' | translate}}"
-                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                                    class="icofont icofont-plus"></i>
-                            </button>
-
-                        </div>
-                        <div class="col-sm-6 mb-3" style="text-align: end;">
-
-
-                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="guardar()">
-                                <span style="color:white ;">{{'Guardar categorías' | translate}}</span>
-                                <i placement="top" ngbTooltip="{{'Nuevo' | translate}}"
-                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                                    class="icofont icofont-plus"></i>
-                            </button>
-                        </div>
-
+                    <!-- Instructions section -->
+                    <div class="alert alert-info">
+                        <h5><i class="fa fa-info-circle mr-2"></i>Instrucciones:</h5>
+                        <p>Aquí puede gestionar las categorías de sus productos. Puede:</p>
+                        <ul>
+                            <li>Crear nuevas categorías con el botón "Agregar categoría"</li>
+                            <li>Agregar subcategorías usando el botón <i class="pi pi-plus"></i> en cada fila</li>
+                            <li>Eliminar categorías usando el botón <i class="pi pi-trash"></i></li>
+                            <li>Editar el nombre y otros datos haciendo doble clic en el campo</li>
+                            <li>Finalmente, no olvide guardar sus cambios con el botón "Guardar categorías"</li>
+                        </ul>
                     </div>
-                    <div class="col-12">
 
-                        <p-treeTable [value]="data" [style]="{'margin-top':'20px'}">
+                    <div class="row form-section">
+                        <div class="col-sm-6">
+                            <button class="btn btn-primary btn-lg action-button" type="button" (click)="create()"
+                                aria-label="Agregar categoría principal"
+                                ngbTooltip="Haga clic aquí para crear una nueva categoría principal">
+                                <span>{{'Agregar categoría' | translate}}</span>
+                                <i class="icofont icofont-plus"></i>
+                            </button>
+                        </div>
+                        <div class="col-sm-6 text-right">
+                            <button class="btn btn-success btn-lg action-button" type="button" (click)="confirmSave()"
+                                aria-label="Guardar todas las categorías"
+                                ngbTooltip="Haga clic aquí para guardar todas las categorías">
+                                <span>{{'Guardar categorías' | translate}}</span>
+                                <i class="icofont icofont-save"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row" *ngIf="data.length === 0">
+                        <div class="col-12 text-center py-5">
+                            <div class="alert alert-warning">
+                                <h4>Aún no hay categorías</h4>
+                                <p>Para comenzar, haga clic en el botón "Agregar categoría"</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 mt-3" *ngIf="data.length > 0">
+                        <div class="category-header">
+                            <i class="pi pi-list mr-2"></i> Lista de categorías
+                        </div>
+
+                        <p-treeTable [value]="data" [style]="{'width':'100%'}">
                             <ng-template pTemplate="header">
                                 <tr>
-                                    <th>{{'Nombre' | translate}}</th>
-                                    <th>{{'Posición' | translate}}</th>
-                                    <th>{{'Activo' | translate}}</th>
-                                    <th>{{'Imagen' | translate}}</th>
-                                    <th>{{'Acciones' | translate}}</th>
+                                    <th style="width: 30%">{{'Nombre' | translate}}</th>
+                                    <th style="width: 15%">{{'Posición' | translate}}</th>
+                                    <th style="width: 15%">{{'Activo' | translate}}</th>
+                                    <th style="width: 20%">{{'Imagen' | translate}}</th>
+                                    <th style="width: 20%">{{'Acciones' | translate}}</th>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-rowNode let-node="node">
                                 <tr>
-                                    <!-- <td><p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>{{node.data.name}}
-                                    </td> -->
-
                                     <td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
                                         <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
                                         <p-treeTableCellEditor>
-
                                             <ng-template pTemplate="input">
-
                                                 <input pInputText type="text" [(ngModel)]="node.data.nombre"
-                                                    [ngStyle]="{'width': '100%'}" style="border-color: black;">
+                                                    [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}" 
+                                                    style="border-color: black;"
+                                                    placeholder="Ingrese el nombre de la categoría">
                                             </ng-template>
-                                            <ng-template pTemplate="output">{{node.data.nombre}}</ng-template>
+                                            <ng-template pTemplate="output">
+                                                <span ngbTooltip="Doble clic para editar el nombre">{{node.data.nombre}}</span>
+                                            </ng-template>
                                         </p-treeTableCellEditor>
                                     </td>
                                     <td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
                                         <p-treeTableCellEditor>
                                             <ng-template pTemplate="input">
-                                                <input pInputText type="text" [(ngModel)]="node.data.posicion"
-                                                    [ngStyle]="{'width': '100%'}" style="border-color: black;">
+                                                <input pInputText type="number" [(ngModel)]="node.data.posicion"
+                                                    [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}" 
+                                                    style="border-color: black;"
+                                                    placeholder="Ingrese la posición">
                                             </ng-template>
-                                            <ng-template pTemplate="output">{{node.data.posicion}}</ng-template>
-                                        </p-treeTableCellEditor>
-                                    </td>
-                                    <td ttEditableColumn [ngClass]="{'p-toggler-column': true}">
-                                        <p-treeTableCellEditor>
-                                            <ng-template pTemplate="input">
-                                                <input pInputText type="text" [(ngModel)]="node.data.activo"
-                                                    [ngStyle]="{'width': '100%'}" style="border-color: black;">
+                                            <ng-template pTemplate="output">
+                                                <span ngbTooltip="Doble clic para cambiar la posición">{{node.data.posicion}}</span>
                                             </ng-template>
-                                            <ng-template pTemplate="output">{{node.data.activo}}</ng-template>
                                         </p-treeTableCellEditor>
-                                    </td>
-                                    <td [ngClass]="{'p-toggler-column': true}">
-                                        {{node.data.imagen}}
                                     </td>
                                     <td>
-                                        <button (click)="addChild(node)"> <i class="pi pi-plus"></i></button>
-                                        <button (click)="deleteChild(node)"> <i class="pi pi-trash"></i></button>
+                                        <p-inputSwitch [(ngModel)]="node.data.activo" 
+                                            ariaLabel="¿Categoría activa?"
+                                            ngbTooltip="Activa o desactiva esta categoría">
+                                        </p-inputSwitch>
+                                        <small *ngIf="node.data.activo" class="text-success ml-2">Activo</small>
+                                        <small *ngIf="!node.data.activo" class="text-muted ml-2">Inactivo</small>
+                                    </td>
+                                    <td>
+                                        <div class="image-upload-container">
+                                            <button class="btn btn-sm btn-outline-info" (click)="selectImage(node)" 
+                                                ngbTooltip="Haga clic para seleccionar una imagen">
+                                                <i class="pi pi-image mr-1"></i> Seleccionar imagen
+                                            </button>
+                                            <div *ngIf="node.data.imagen" class="mt-2">
+                                                <img [src]="node.data.imagen" alt="Vista previa" class="image-preview">
+                                            </div>
+                                            <div *ngIf="!node.data.imagen" class="text-muted small mt-1">
+                                                Sin imagen
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="action-icon-button add-button" (click)="addChild(node)"
+                                            aria-label="Agregar subcategoría" 
+                                            ngbTooltip="Agregar una subcategoría">
+                                            <i class="pi pi-plus"></i>
+                                        </button>
+                                        <button class="action-icon-button delete-button" (click)="confirmDelete(node)"
+                                            aria-label="Eliminar esta categoría" 
+                                            ngbTooltip="Eliminar esta categoría">
+                                            <i class="pi pi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -100,3 +139,20 @@
         </div>
     </div>
 </div>
+
+<!-- Confirmation Dialog Template -->
+<ng-template #confirmationDialog let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">Confirmar acción</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <p>{{ confirmationMessage }}</p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-lg mr-2" (click)="modal.dismiss()">Cancelar</button>
+        <button type="button" class="btn btn-danger btn-lg" (click)="modal.close('confirm')">Confirmar</button>
+    </div>
+</ng-template>

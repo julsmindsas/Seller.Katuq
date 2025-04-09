@@ -1,0 +1,164 @@
+.category-management {
+  .action-button {
+    min-width: 120px;
+    font-size: 1.1rem;
+    margin: 5px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    
+    i {
+      margin-left: 8px;
+    }
+  }
+
+  .action-icon-button {
+    width: 40px;
+    height: 40px;
+    margin: 0 5px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    
+    &.add-button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      
+      &:hover {
+        background-color: #388e3c;
+      }
+    }
+    
+    &.delete-button {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      
+      &:hover {
+        background-color: #d32f2f;
+      }
+    }
+  }
+
+  .help-text {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 10px 0;
+    font-style: italic;
+  }
+
+  .image-preview {
+    max-width: 100px;
+    max-height: 100px;
+    margin-top: 5px;
+    border: 2px solid #dee2e6;
+    padding: 3px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .p-inputswitch {
+    transform: scale(1.2);
+  }
+  
+  .form-section {
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 2px solid #d1d8e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .category-header {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    border: 1px solid #e9ecef;
+    padding: 10px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+  }
+  
+  /* Adding clear border delimiters */
+  .card {
+    border: 3px solid #dee2e6;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .alert {
+    border: 2px solid #a8c9e8;
+    border-radius: 8px;
+  }
+  
+  .image-upload-container {
+    border: 1px dashed #adb5bd;
+    padding: 10px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+  }
+  
+  /* Improvement for the tree table */
+  ::ng-deep {
+    .p-treetable {
+      font-size: 1.1rem;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+      
+      .p-treetable-header {
+        background-color: #f0f8ff;
+        padding: 15px;
+      }
+      
+      .p-treetable-thead > tr > th {
+        padding: 15px 10px;
+        background-color: #f0f8ff;
+        font-weight: bold;
+        border: 1px solid #cfd8dc;
+      }
+      
+      .p-treetable-tbody > tr > td {
+        padding: 15px 10px;
+        border: 1px solid #e9ecef;
+      }
+      
+      .p-treetable-toggler {
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+      
+      .p-treetable-tbody > tr {
+        border-bottom: 2px solid #dee2e6;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
+        &:hover {
+          background-color: #f0f8ff;
+        }
+      }
+    }
+  }
+  
+  /* Dialog border improvements */
+  ::ng-deep {
+    .modal-content {
+      border: 3px solid #6c757d;
+      border-radius: 10px;
+      
+      .modal-header {
+        border-bottom: 2px solid #dee2e6;
+      }
+      
+      .modal-footer {
+        border-top: 2px solid #dee2e6;
+      }
+    }
+  }
+}
