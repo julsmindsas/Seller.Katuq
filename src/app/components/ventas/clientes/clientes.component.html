@@ -195,7 +195,7 @@
 
                 <!-- Botón de acción -->
                 <div class="row mt-4">
-                    <div class="col-12 text-end">
+                    <div class="col-12 text-start">
                         <button *ngIf="!encontrado" [disabled]="!formulario.valid" class="btn bc-black fc-white" (click)="crearCliente()">Crear
                             Cliente</button>
                             <button *ngIf="encontrado"  [disabled]="!formulario.valid" class="btn btn-primary" (click)="editarCliente()">Guardar

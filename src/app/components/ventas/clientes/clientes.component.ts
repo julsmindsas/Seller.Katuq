@@ -221,7 +221,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           sessionStorage.setItem('cliente', JSON.stringify(res))
 
           try {
-            // this.formulario.patchValue(res)
+            this.formulario.patchValue(res)
 
             this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
 
