@@ -1,377 +1,398 @@
 <!-- <app-breadcrumb [title]="'Clientes'" [items]="['Ventas/Clientes']" [active_item]="'Clientes'"></app-breadcrumb> -->
-<div class="card">
-
-    <div class="card-header col-12 m-0 p-4">
-        <div class="col-sm-12">
-            <div class="row mb-3">
-                <div class="col-sm-6">
-                    <p class="text-left fc-info fs-24 m-0 p-0">{{ "Clientes" | translate }}</p>
-                    <p class="text-left text-muted fs-18 m-0 p-0">{{ "Ingresa todos los datos para crear un cliente
-                        nuevo" |
-                        translate }}</p>
+<div class="container-fluid px-0">
+    <div class="card customer-card">
+        <!-- Cabecera -->
+        <div class="card-header bg-light">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h2 class="text-left fc-info fs-24 m-0 p-0">{{ "Clientes" | translate }}</h2>
+                    <p class="text-muted mb-0">{{ "Ingresa todos los datos para crear un cliente nuevo" | translate }}
+                    </p>
                 </div>
-
-
-                <div class="col-sm-6">
-                    <div class="row">
-                        <div class="col-sm-2">
-                            <label class="form-label" for="tipo_documento">Buscar:</label>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <select #buscarPor class="form-control" id="tipo_documento">
+                <div class="col-md-6">
+                    <div class="search-box">
+                        <div class="input-group">
+                            <select #buscarPor class="form-select" id="tipo_documento">
                                 <option value="CC-NIT" selected>CC-NIT</option>
                                 <option value="PA">Email</option>
                                 <option value="TI">Nombre Apellido</option>
                             </select>
-                        </div>
-                        <div class="col-sm-6">
-                            <input #documentoBusqueda class="form-control" type="text" id="numero_documento" />
-                        </div>
-                        <div class="col-sm-2">
-                            <button class="btn btn-primary" (click)="buscar()"><i class="fa fa-search"></i></button>
+                            <input #documentoBusqueda class="form-control" type="text" id="numero_documento"
+                                placeholder="Buscar cliente...">
+                            <button class="btn btn-primary" (click)="buscar()">
+                                <i class="fa fa-search"></i>
+                            </button>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="card-body m-0 p-4">
-        <form [formGroup]="formulario">
-            <div class="row">
-                <!-- Tipo de Documento -->
-                <div class="col-sm-2 col-md-2 mb-4">
-                    <label class="form-label" for="tipo_documento">Tipo</label>
-                    <select class="form-control select-default" id="tipo_documento" [disabled]="isEdit"
-                        formControlName="tipo_documento_comprador">
-                        <option value="" disabled selected>Tipo DOC</option>
-                        <option value="CC-NIT">CC-NIT</option>
-                        <option value="PA">PA</option>
-                        <option value="TI">TI</option>
-                    </select>
-                    <div
-                        *ngIf="formulario.get('tipo_documento_comprador')?.hasError('required') && formulario.get('tipo_documento_comprador')?.touched">
-                        <small class="text-danger">Este campo es obligatorio.</small>
-                    </div>
-                </div>
-
-                <!-- Documento -->
-                <div class="col-sm-4 col-md-3 mb-4">
-                    <label class="form-label" for="numero_documento">Documento</label>
-                    <input placeholder="Documento" class="form-control" type="text" id="numero_documento"
-                        formControlName="documento" [disabled]="isEdit" />
-                    <div
-                        *ngIf="formulario.get('documento')?.hasError('required') && formulario.get('documento')?.touched">
-                        <small class="text-danger">Este campo es obligatorio.</small>
-                    </div>
-                </div>
-
-                <!-- Nombres Completos -->
-                <div class="col-sm-4 col-md-3 mb-4">
-                    <label class="form-label" for="nombres">Nombre</label>
-                    <input placeholder="Nombres" class="form-control" type="text" id="nombres"
-                        formControlName="nombres_completos" />
-                    <div
-                        *ngIf="formulario.get('nombres_completos')?.hasError('required') && formulario.get('nombres_completos')?.touched">
-                        <small class="text-danger">Este campo es obligatorio.</small>
-                    </div>
-                </div>
-
-                <!-- Apellidos Completos -->
-                <div class="col-sm-4 col-md-3 mb-4">
-                    <label class="form-label" for="apellidos">Apellido</label>
-                    <input placeholder="Apellidos" class="form-control" type="text" id="apellidos"
-                        formControlName="apellidos_completos" />
-                    <div
-                        *ngIf="formulario.get('apellidos_completos')?.hasError('required') && formulario.get('apellidos_completos')?.touched">
-                        <small class="text-danger">Este campo es obligatorio.</small>
-                    </div>
-                </div>
-
-                <div class="col-sm-4 col-md-4 mb-4">
-                    <label class="form-label" for="indicativo">Número de Celular</label>
-
-                    <div class="col-sm-12">
-                        <!-- Indicativo Celular -->
-                        <div class="row">
-                            <div class="col-sm-4">
-                                <select autocomplete="on" formControlName="indicativo_celular_comprador"
-                                    class="form-control select-default" id="validationCustom01" type="number"
-                                    placeholder="Indicativo Celular" required>
-                                    <option value="" disabled selected>Cod País</option>
-                                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
-                                        (+{{item.phone_code}})</option>
-                                </select>
-
-                                <div
-                                    *ngIf="formulario.get('indicativo_celular_comprador')?.hasError('required') && formulario.get('indicativo_celular_comprador')?.touched">
-                                    <small class="text-danger">Este campo es obligatorio.</small>
+        <!-- Formulario principal -->
+        <div class="card-body">
+            <form [formGroup]="formulario">
+                <div class="row g-3">
+                    <!-- Sección de información básica -->
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <h5 class="section-title">Información Básica</h5>
+                            <div class="row g-3">
+                                <!-- Tipo de Documento -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Tipo Documento</label>
+                                    <select style="width: 100%;" class="form-select" [disabled]="isEdit"
+                                        formControlName="tipo_documento_comprador">
+                                        <option value="" disabled selected>Seleccionar</option>
+                                        <option value="CC-NIT">CC-NIT</option>
+                                        <option value="PA">PA</option>
+                                        <option value="TI">TI</option>
+                                    </select>
+                                    <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched"
+                                        class="invalid-feedback d-block">
+                                        Este campo es obligatorio
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Número de Celular -->
-                            <div class="col-sm-8">
-                                <input class="form-control" type="number" id="numero_celular"
-                                    (input)="validarSoloNumeros($event)" formControlName="numero_celular_comprador"
-                                    placeholder="Número Celular" />
-                                <div
-                                    *ngIf="formulario.get('numero_celular_comprador')?.hasError('required') && formulario.get('numero_celular_comprador')?.touched">
-                                    <small class="text-danger">Este campo es obligatorio.</small>
+                                <!-- Documento -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Documento</label>
+                                    <input placeholder="Número de documento" class="form-control" type="text"
+                                        formControlName="documento" [disabled]="isEdit">
+                                    <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched"
+                                        class="invalid-feedback d-block">
+                                        Este campo es obligatorio
+                                    </div>
                                 </div>
-                                <div
-                                    *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern') && formulario.get('numero_celular_comprador')?.touched">
-                                    <small class="text-danger">Solo se permiten números.</small>
+
+                                <!-- Nombres Completos -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Nombres</label>
+                                    <input placeholder="Nombres completos" class="form-control" type="text"
+                                        formControlName="nombres_completos">
+                                    <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched"
+                                        class="invalid-feedback d-block">
+                                        Este campo es obligatorio
+                                    </div>
+                                </div>
+
+                                <!-- Apellidos Completos -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Apellidos</label>
+                                    <input placeholder="Apellidos completos" class="form-control" type="text"
+                                        formControlName="apellidos_completos">
+                                    <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched"
+                                        class="invalid-feedback d-block">
+                                        Este campo es obligatorio
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-sm-6 col-md-6">
-                    <label class="form-label" for="correo_electronico">Correo Electrónico:</label>
-                    <!-- Correo Electrónico -->
-                    <div>
-                        <input class="form-control" type="email" id="correo_electronico"
-                            placeholder="Correo Electronico" formControlName="correo_electronico_comprador" />
-                        <div
-                            *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required') && formulario.get('correo_electronico_comprador')?.touched">
-                            <small class="text-danger">Este campo es obligatorio.</small>
+                    <!-- Sección de contacto -->
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <h5 class="section-title">Información de Contacto</h5>
+                            <div class="row g-3">
+
+                                <!-- Teléfono -->
+                                <div class="col-md-12">
+                                    <label class="form-label">Número de Celular</label>
+                                    <div class="row gx-2 align-items-start">
+                                        <!-- Indicativo -->
+                                        <div class="col-md-4 col-5">
+                                            <select formControlName="indicativo_celular_comprador"
+                                                class="form-select w-100">
+                                                <option value="" disabled selected>Cod. País</option>
+                                                <option *ngFor="let item of indicativos" [value]="item.phone_code">
+                                                    {{item.nombre}} (+{{item.phone_code}})
+                                                </option>
+                                            </select>
+                                            <div *ngIf="formulario.get('indicativo_celular_comprador')?.invalid && formulario.get('indicativo_celular_comprador')?.touched"
+                                                class="invalid-feedback d-block">
+                                                Este campo es obligatorio
+                                            </div>
+                                        </div>
+
+                                        <!-- Número -->
+                                        <div class="col-md-8 col-7">
+                                            <input class="form-control w-100" type="number"
+                                                (input)="validarSoloNumeros($event)"
+                                                formControlName="numero_celular_comprador" placeholder="Número Celular">
+                                            <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched"
+                                                class="invalid-feedback d-block">
+                                                <span
+                                                    *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">Este
+                                                    campo es obligatorio</span>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Correo -->
+                                <div class="col-md-12">
+                                    <label class="form-label">Correo Electrónico</label>
+                                    <input class="form-control" type="email" placeholder="Correo electrónico"
+                                        formControlName="correo_electronico_comprador">
+                                    <div *ngIf="formulario.get('correo_electronico_comprador')?.invalid && formulario.get('correo_electronico_comprador')?.touched"
+                                        class="invalid-feedback d-block">
+                                        Este campo es obligatorio
+                                    </div>
+                                </div>
+
+                                <!-- WhatsApp -->
+                                <div class="col-md-12">
+                                    <div class="form-check mb-2">
+                                        <input #whatsapp type="checkbox" (change)="replicarWhatsApp($event)"
+                                            class="form-check-input" id="sameWhatsapp">
+                                        <label class="form-check-label" for="sameWhatsapp">Usar mismo número para
+                                            WhatsApp</label>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        
+
+                                        <!-- Campos: Indicativo + Número WhatsApp -->
+                                        <div class="row gx-2 align-items-start">
+                                            <!-- Indicativo -->
+                                            <div class="col-md-4 col-5">
+                                                <select formControlName="indicativo_celular_whatsapp"
+                                                    class="form-select w-100">
+                                                    <option value="" disabled selected>Cod. País</option>
+                                                    <option *ngFor="let item of indicativos" [value]="item.phone_code">
+                                                        {{item.nombre}} (+{{item.phone_code}})
+                                                    </option>
+                                                </select>
+                                                <div *ngIf="formulario.get('indicativo_celular_whatsapp')?.invalid && formulario.get('indicativo_celular_whatsapp')?.touched"
+                                                    class="invalid-feedback d-block">
+                                                    Este campo es obligatorio
+                                                </div>
+                                            </div>
+
+                                            <!-- Número -->
+                                            <div class="col-md-8 col-7">
+                                                <input class="form-control w-100" type="number"
+                                                    formControlName="numero_celular_whatsapp"
+                                                    placeholder="Número WhatsApp">
+                                                <div *ngIf="formulario.get('numero_celular_whatsapp')?.invalid && formulario.get('numero_celular_whatsapp')?.touched"
+                                                    class="invalid-feedback d-block">
+                                                    Este campo es obligatorio
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <hr>
 
-            <!-- Checkbox Whatsapp -->
-            <div class="row">
-                <div class="col-sm-10">
-                    <input #whatsapp type="checkbox" (change)="replicarWhatsApp($event)" class="checkbox-large">
-                    <label class="form-label" for="razon_social">&nbsp; El número de celular es el mismo de
-                        Whatsapp</label>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-sm-6">
-                    <label class="form-label" for="indicativo">Número de Whatsapp:</label>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-sm-2 mb-3">
-                    <select autocomplete="on" formControlName="indicativo_celular_whatsapp"
-                        class="form-control select-default" id="validationCustom01" type="number"
-                        placeholder="Indicativo Celular" required>
-                        <option value="" disabled selected>Código País</option>
-                        <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
-                            (+{{item.phone_code}})</option>
-                    </select>
-                    <div
-                        *ngIf="formulario.get('indicativo_celular_whatsapp')?.hasError('required') && formulario.get('indicativo_celular_whatsapp')?.touched">
-                        <small class="text-danger">Este campo es obligatorio.</small>
-                    </div>
                 </div>
 
-                <!-- Número de Whatsapp -->
-                <div class="col-sm-4">
-                    <input class="form-control" type="number" id="numero_celular_whatsapp"
-                        formControlName="numero_celular_whatsapp" placeholder="Número Celular" />
-                    <div
-                        *ngIf="formulario.get('numero_celular_whatsapp')?.hasError('required') && formulario.get('numero_celular_whatsapp')?.touched">
-                        <small class="text-danger">Este campo es obligatorio.</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Botón Enviar -->
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="col-sm-4">
-                        <br>
+                <!-- Botón de acción -->
+                <div class="row mt-4">
+                    <div class="col-12 text-end">
                         <button *ngIf="!encontrado" [disabled]="!formulario.valid" class="btn bc-black fc-white" (click)="crearCliente()">Crear
                             Cliente</button>
-                        <button *ngIf="encontrado"  [disabled]="!formulario.valid" class="btn btn-primary" (click)="editarCliente()">Guardar
-                            Cambios</button>
+                            <button *ngIf="encontrado"  [disabled]="!formulario.valid" class="btn btn-primary" (click)="editarCliente()">Guardar
+                                Cambios</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sección de resultados (cuando se encuentra un cliente) -->
+    <div class="card mt-4" *ngIf="encontrado">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Información del Cliente</h5>
+            <label *ngIf="bloqueado" class="badge bg-danger mt-2">Este usuario se encuentra bloqueado</label>
+        </div>
+        <div class="card-body">
+            <div class="customer-info">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>Cliente</h6>
+                        <p>{{datos.nombres_completos}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h6>Tipo Documento</h6>
+                        <p>{{datos.tipo_documento_comprador}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h6>Documento</h6>
+                        <p>{{datos.documento}}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Correo Electrónico</h6>
+                        <p>{{datos.correo_electronico_comprador}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h6>Acciones</h6>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" ngbTooltip="Pedidos Relacionados">
+                                <i class="fa fa-list-alt"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" ngbTooltip="Nuevo Pedido">
+                                <i class="fa fa-plus-square"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" ngbTooltip="Notas" (click)="openLg(nota)">
+                                <i class="fa fa-sticky-note"></i>
+                            </button>
+                            <button *ngIf="!bloqueado" class="btn btn-sm btn-outline-danger" ngbTooltip="Bloquear"
+                                (click)="bloquear()">
+                                <i class="fa fa-lock"></i>
+                            </button>
+                            <button *ngIf="bloqueado" class="btn btn-sm btn-outline-success" ngbTooltip="Desbloquear"
+                                (click)="desbloquear()">
+                                <i class="fa fa-unlock"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </form>
 
+            <!-- Pestañas para información adicional -->
+            <div class="mt-4">
+                <ul class="nav nav-tabs" id="customerTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" [class.active]="activarNotas" (click)="verNotas()">Notas</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" [class.active]="activarDatosFact"
+                            (click)="verDatosFacturacion()">Facturación</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" [class.active]="activarDatosEntrega"
+                            (click)="verDatosEntrega()">Entrega</button>
+                    </li>
+                </ul>
 
-        <form [formGroup]="formularioEntrega">
+                <div class="tab-content p-3 border border-top-0 rounded-bottom">
+                    <!-- Notas -->
+                    <div *ngIf="activarNotas">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Notas del Cliente</h5>
+                            <button class="btn btn-sm btn-primary" (click)="openLg(nota)">
+                                <i class="fa fa-plus me-1"></i>Agregar Nota
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Nota</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let item of notas">
+                                        <td style="width: 150px;">{{item.fecha}}</td>
+                                        <td>{{item.nota}}</td>
+                                    </tr>
+                                    <tr *ngIf="!notas || notas.length === 0">
+                                        <td colspan="2" class="text-center text-muted">No hay notas registradas</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-        </form>
-    </div>
-</div>
-<div class="card" *ngIf="encontrado">
+                    <!-- Facturación -->
+                    <div *ngIf="activarDatosFact">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Datos de Facturación</h5>
+                            <button class="btn btn-sm btn-primary" (click)="openLg(facturacion)">
+                                <i class="fa fa-plus me-1"></i>Agregar Datos
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Referencia</th>
+                                        <th>Nombre/Razón Social</th>
+                                        <th>Tipo Documento</th>
+                                        <th>Documento</th>
+                                        <th>Dirección</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let item of datosFacturacionElectronica; let i = index">
+                                        <td>{{item.alias}}</td>
+                                        <td>{{item.nombres}}</td>
+                                        <td>{{item.tipoDocumento}}</td>
+                                        <td>{{item.documento}}</td>
+                                        <td>{{item.direccion}}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1"
+                                                (click)="editarDatos1(facturacion,i)">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" (click)="eliminarDato(i)">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr
+                                        *ngIf="!datosFacturacionElectronica || datosFacturacionElectronica.length === 0">
+                                        <td colspan="6" class="text-center text-muted">No hay datos de facturación
+                                            registrados</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-    <div class="card-body table-responsive" style="margin:1rem ;">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Cliente</th>
-                    <th>Tipo Documento</th>
-                    <th>Documento</th>
-                    <th>Correo Electronico</th>
-                    <th>Opciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{datos.nombres_completos}}</td>
-                    <td>{{datos.tipo_documento_comprador}}</td>
-                    <td>{{datos.documento}}</td>
-                    <td>{{datos.correo_electronico_comprador}}</td>
-                    <td><button class="btn btn-primary" ngbTooltip="Pedidos Relacionados"><i
-                                class="fa fa-list-alt"></i></button></td>
-                    <td><button class="btn btn-primary" ngbTooltip="Nuevo Pedido"><i
-                                class="icofont icofont-plus-square"></i></button></td>
-                    <td><button class="btn btn-primary" ngbTooltip="Notas" (click)="openLg(nota)"><i
-                                class="icofont icofont-ui-note"></i></button></td>
-                    <td><button class="btn btn-primary" ngbTooltip="Ver Notas" (click)="verNotas()"><i
-                                class="icofont icofont-ui-note"></i></button></td>
-                    <td><button *ngIf="!bloqueado" class="btn btn-danger" ngbTooltip="Bloquear" (click)="bloquear()"><i
-                                class="icofont icofont-ui-block"></i></button>
-                        <button *ngIf="bloqueado" class="btn btn-primary" ngbTooltip="Desbloquear"
-                            (click)="desbloquear()"><i class="fa fa-check"></i></button>
-                    </td>
-                    <td><button class="btn btn-primary" ngbTooltip="Datos Facturacion" (click)="openLg(facturacion)"> <i
-                                class="icofont icofont-bill"></i></button></td>
-                    <td><button class="btn btn-primary" ngbTooltip="Ver Datos de Facturacion"
-                            (click)="verDatosFacturacion()"><i class="icofont icofont-ui-note"></i></button></td>
-                    <td><button class="btn btn-primary" ngbTooltip="Datos Entrega" (click)="openLg(entrega)"><i
-                                class="icofont icofont-social-dropbox"></i></button></td>
-                    <td><button class="btn btn-primary" ngbTooltip="Ver Datos de Entrega" (click)="verDatosEntrega()"><i
-                                class="icofont icofont-ui-note"></i></button></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <label *ngIf="bloqueado" class="form-label" for="" style="color: red;">Este usuario se encuentra
-        bloqueado</label>
-</div>
-<div class="card" *ngIf="activarNotas">
-    <div class="card-header">
-        <h2><label for="">Notas</label></h2>
-    </div>
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Notas</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let item of notas">
-                    <td>{{item.fecha}}</td>
-                    <td>{{item.nota}}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-<div class="card" *ngIf="activarDatosFact">
-    <div class="card-header">
-        <h2><label for="">Datos Facturacion</label></h2>
-    </div>
-
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Referencia</th>
-                    <th>Nombres/Razon Social</th>
-                    <th>Tipo Documento</th>
-                    <th>Documento</th>
-                    <!-- <th>Celular</th>
-                    <th>Correo ELectronico</th> -->
-                    <th>Direccion</th>
-                    <!-- <th>Pais</th>
-                    <th>Departamento</th>
-                    <th>Ciudad</th>
-                    <th>Codigo Postal</th> -->
-                    <th>Opciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let item of datosFacturacionElectronica; let i = index">
-                    <td>{{item.alias}}</td>
-                    <td>{{item.nombres}}</td>
-                    <td>{{item.tipoDocumento}}</td>
-                    <td>{{item.documento}}</td>
-                    <!-- <td>{{item.indicativoCel}}{{item.celular}}</td>
-                <td>{{item.correoElectronico}}</td> -->
-                    <td style="white-space: nowrap;">{{item.direccion}}</td>
-                    <!-- <td>{{item.pais}}</td>
-                <td>{{item.departamento}}</td>
-                <td>{{item.ciudad}}</td>
-                <td>{{item.codigoPostal}}</td> -->
-                    <td><i placement="top" ngbTooltip="{{'Editar' | translate}}"
-                            style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                            class="icofont icofont-pencil-alt-5" (click)="editarDatos1(facturacion,i)"></i>
-                        <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
-                            style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                            (click)="eliminarDato(i)" class="icofont icofont icofont-trash"></i>
-                    </td>
-
-
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-<div class="card" *ngIf="activarDatosEntrega">
-    <div class="card-header">
-        <h2><label for="">Datos Entrega</label></h2>
-    </div>
-
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Referencia</th>
-                    <th>Nombres/Razon Social</th>
-                    <!-- <th>Tipo Documento</th>
-                    <th>Documento</th>
-                    <th>Celular</th>
-                    <th>Correo ELectronico</th> -->
-                    <th style="width: 45%;">Direccion</th>
-                    <th>Opciones</th>
-                    <!-- <th>Pais</th>
-                    <th>Departamento</th>
-                    <th>Ciudad</th>
-                    <th>Codigo Postal</th> -->
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let item of datosEntregas;let i=index">
-                    <td>{{item.alias}}</td>
-                    <td>{{item.nombres}} {{item.apellidos}}</td>
-                    <!-- <td>{{item.indicativoCel}}</td>
-                <td>{{item.celular}}</td>
-                <td>{{item.otroNumero}}{{item.celular}}</td> -->
-                    <td style="white-space: nowrap;">{{item.direccionEntrega}}</td>
-                    <!-- <td>{{item.observaciones}}</td> -->
-                    <!-- <td>{{item.pais}}</td>
-                <td>{{item.departamento}}</td>
-                <td>{{item.ciudad}}</td>
-                <td>{{item.codigoPV}}</td> -->
-                    <td><i placement="top" ngbTooltip="{{'Editar' | translate}}"
-                            style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                            class="icofont icofont-pencil-alt-5" (click)="editarDatos(entrega,i)"></i>
-                        <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
-                            style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                            class="icofont icofont icofont-trash" (click)="eliminarDato1(i)"></i>
-                    </td>
-
-                </tr>
-            </tbody>
-        </table>
+                    <!-- Entrega -->
+                    <div *ngIf="activarDatosEntrega">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Datos de Entrega</h5>
+                            <button class="btn btn-sm btn-primary" (click)="openLg(entrega)">
+                                <i class="fa fa-plus me-1"></i>Agregar Datos
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Referencia</th>
+                                        <th>Nombre</th>
+                                        <th>Dirección</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let item of datosEntregas;let i=index">
+                                        <td>{{item.alias}}</td>
+                                        <td>{{item.nombres}} {{item.apellidos}}</td>
+                                        <td>{{item.direccionEntrega}}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1"
+                                                (click)="editarDatos(entrega,i)">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" (click)="eliminarDato1(i)">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr *ngIf="!datosEntregas || datosEntregas.length === 0">
+                                        <td colspan="4" class="text-center text-muted">No hay datos de entrega
+                                            registrados</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <ng-template #entrega let-modal>

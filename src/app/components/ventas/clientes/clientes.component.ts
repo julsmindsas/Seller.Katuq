@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input } from '
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2'
-
+import { DataStoreService } from '../../../shared/services/dataStoreService';
 import { InfoPaises } from '../../../../Mock/pais-estado-ciudad'
 import { InfoIndicativos } from '../../../../Mock/indicativosPais'
 import { NgbActiveModal, NgbModal, ModalDismissReasons, NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
@@ -86,19 +86,38 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   allBillingZone: any;
   zona_cobro: any;
   valor_zona_cobro: any;
-  constructor(private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
+  constructor(private dataStore:DataStoreService,private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
 
   }
   ngAfterViewInit(): void {
-    if (this.isEdit) {
-      if (this.clienteEdit) {
-        this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
-        // this.formulario.controls['documento'].disable();
-        this.buscar();
+    if (this.isEdit === null || this.isEdit === undefined || this.isEdit === false) {
+      const isEditFromStore = this.dataStore.get<boolean>('isEdit');
+      if (isEditFromStore !== null && isEditFromStore !== undefined) {
+        this.isEdit = isEditFromStore;
+        this.dataStore.remove('isEdit');
       }
     }
+    
+    if (!this.clienteEdit) {
+      const clienteFromStore = this.dataStore.get<any>('cliente');
+      if (clienteFromStore !== null && clienteFromStore !== undefined) {
+        this.clienteEdit = clienteFromStore;
+        this.dataStore.remove('cliente');
+      }
+    }
+    
+    
+  
+      if (this.isEdit) {
+        if (this.clienteEdit) {
+          this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
+          // this.formulario.controls['documento'].disable();
+          this.buscar();
+        }
+      }
 
   }
+
   identificarDepto() {
     this.inforPaises.paises.map(x => {
       if (x.Pais == this.pais) {
@@ -202,7 +221,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           sessionStorage.setItem('cliente', JSON.stringify(res))
 
           try {
-            // await this.formulario.patchValue(res)
+            // this.formulario.patchValue(res)
 
             this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
 

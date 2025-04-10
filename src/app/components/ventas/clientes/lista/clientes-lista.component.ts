@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
 import * as XLSX from 'xlsx';
+import { Router } from '@angular/router';
+import { DataStoreService } from '../../../../shared/services/dataStoreService';
 // import { MultiSelectModule } from 'primeng/multiselect';
 
 interface Column {
@@ -22,8 +24,10 @@ export class ClientesListaComponent implements OnInit {
     cols: Column[];
     _selectedColumns: Column[];
 
-    constructor(private clienteService: MaestroService) { }
-
+    constructor(private router: Router,private clienteService: MaestroService,private storeService:DataStoreService) { }
+    redirigir() {
+        this.router.navigate(['/ventas/clientes']);
+      }
     ngOnInit(): void {
 
         this.cargarClientes();
@@ -97,8 +101,11 @@ export class ClientesListaComponent implements OnInit {
     }
 
     editarCliente(cliente: any): void {
-        // Implementa la lógica para editar el cliente aquí
         console.log('Editar cliente', cliente);
+        
+        this.storeService.set('cliente', cliente);
+        this.storeService.set('isEdit', true);
+        this.router.navigate(['/ventas/clientes']);
     }
 
     eliminarCliente(cliente: any): void {
