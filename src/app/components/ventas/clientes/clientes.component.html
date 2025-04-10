@@ -44,7 +44,7 @@
             <div class="row">
                 <!-- Tipo de Documento -->
                 <div class="col-sm-2 col-md-2 mb-4">
-                    <label class="form-label" for="tipo_documento">Tipo:</label>
+                    <label class="form-label" for="tipo_documento">Tipo</label>
                     <select class="form-control select-default" id="tipo_documento" [disabled]="isEdit"
                         formControlName="tipo_documento_comprador">
                         <option value="" disabled selected>Tipo DOC</option>
@@ -60,7 +60,7 @@
 
                 <!-- Documento -->
                 <div class="col-sm-4 col-md-3 mb-4">
-                    <label class="form-label" for="numero_documento">Documento:</label>
+                    <label class="form-label" for="numero_documento">Documento</label>
                     <input placeholder="Documento" class="form-control" type="text" id="numero_documento"
                         formControlName="documento" [disabled]="isEdit" />
                     <div
@@ -71,7 +71,7 @@
 
                 <!-- Nombres Completos -->
                 <div class="col-sm-4 col-md-3 mb-4">
-                    <label class="form-label" for="nombres">Nombres Completos:</label>
+                    <label class="form-label" for="nombres">Nombre</label>
                     <input placeholder="Nombres" class="form-control" type="text" id="nombres"
                         formControlName="nombres_completos" />
                     <div
@@ -82,7 +82,7 @@
 
                 <!-- Apellidos Completos -->
                 <div class="col-sm-4 col-md-3 mb-4">
-                    <label class="form-label" for="apellidos">Apellidos Completos:</label>
+                    <label class="form-label" for="apellidos">Apellido</label>
                     <input placeholder="Apellidos" class="form-control" type="text" id="apellidos"
                         formControlName="apellidos_completos" />
                     <div
@@ -92,7 +92,7 @@
                 </div>
 
                 <div class="col-sm-4 col-md-4 mb-4">
-                    <label class="form-label" for="indicativo">Número de Celular:</label>
+                    <label class="form-label" for="indicativo">Número de Celular</label>
 
                     <div class="col-sm-12">
                         <!-- Indicativo Celular -->
@@ -192,9 +192,9 @@
                 <div class="col-sm-12">
                     <div class="col-sm-4">
                         <br>
-                        <button *ngIf="!encontrado" class="btn btn-primary" (click)="crearCliente()">Crear
+                        <button *ngIf="!encontrado" [disabled]="!formulario.valid" class="btn bc-black fc-white" (click)="crearCliente()">Crear
                             Cliente</button>
-                        <button *ngIf="encontrado" class="btn btn-primary" (click)="editarCliente()">Guardar
+                        <button *ngIf="encontrado"  [disabled]="!formulario.valid" class="btn btn-primary" (click)="editarCliente()">Guardar
                             Cambios</button>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2'
 
 import { InfoPaises } from '../../../../Mock/pais-estado-ciudad'
@@ -173,6 +173,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.correo_electronico_facturacion = ""
     }
   }
+
   buscar() {
 
     this.bloqueado = false
@@ -180,11 +181,13 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.formularioEntrega.reset()
     this.formularioFacturacion.reset()
     if (this.buscarPor.nativeElement.value == "CC-NIT") {
+
       const data = {
         documento: this.documentoBusqueda.nativeElement.value
       }
+
       this.service.getClientByDocument(data).subscribe((res: any) => {
-        if (res.length == 0) {
+        if (!res.company) {
           this.formulario.controls['documento'].setValue(this.documentoBusqueda.nativeElement.value)
           this.encontrado = false
           this.bloqueado = false
@@ -197,7 +200,35 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         } else {
 
           sessionStorage.setItem('cliente', JSON.stringify(res))
-          this.formulario.patchValue(res)
+
+          try {
+            // await this.formulario.patchValue(res)
+
+            this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
+
+
+            this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
+            this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
+            this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
+            this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
+
+            this.formulario.controls['apellidos_completos'].setValue(res.datosEntrega[0].apellidos);
+
+            this.formulario.controls['nombres_completos'].setValue(res.datosEntrega[0].nombres);
+
+
+            this.formulario.controls['documento'].setValue(res.documento);
+            this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
+            // this.formulario.controls[''].setValue(res.)
+            // this.formulario.controls[''].setValue(res.)
+            // this.formulario.controls[''].setValue(res.)
+            // this.formulario.controls[''].setValue(res.)
+
+
+          } catch (error) {
+            console.log(error);
+          }
+
           this.datos = res
           this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
           this.formularioEntrega.patchValue(res.datosEntrega)
@@ -349,7 +380,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       tipo_documento_comprador: ['', Validators.required],
       documento: ['', Validators.required],
       indicativo_celular_comprador: ['', Validators.required],
-      numero_celular_comprador: ['', Validators.required, Validators.pattern('^[0-9]*$') ],
+      numero_celular_comprador: ['', Validators.required],
       indicativo_celular_whatsapp: ['', Validators.required],
       numero_celular_whatsapp: ['', Validators.required],
       correo_electronico_comprador: ['', [Validators.required, Validators.email]],
@@ -373,7 +404,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       ciudad_municipio: ['', Validators.required],
       codigo_postal: ['', Validators.required]
     })
-    
+
     this.formularioEntrega = this.formBuilder.group({
       // Datos de Entrega
       nombres_entrega: ['', Validators.required],
@@ -394,7 +425,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     // Reemplaza cualquier cosa que no sea un número (0-9) con una cadena vacía
     input.value = input.value.replace(/[^0-9]/g, '');
   }
-  
+
 
   crearCliente() {
     this.formulario.controls['datosFacturacionElectronica'].setValue([]);
@@ -456,7 +487,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           this.bloqueado = true
         } else {
           this.bloqueado = false;
-          
+
         }
       })
     });
