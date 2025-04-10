@@ -21,7 +21,6 @@ import { NgxHotkeysService } from "@balticcode/ngx-hotkeys";
 import { ToastrService } from "ngx-toastr";
 import { UtilsService } from "../../../shared/services/utils.service";
 import { FacturacionIntegracionService } from "../../../shared/services/integraciones/facturas/facturacion.service";
-import { VoiceInteractionComponent } from 'src/app/shared/components/voice-interaction/voice-interaction.component';
 import { environment } from "../../../../environments/environment";
 
 @Component({
