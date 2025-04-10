@@ -12,127 +12,95 @@
     font-size: 12px;
 }
 
-.wizard-nav-btn {
-  border-radius: 50px;
-  padding: 10px 20px;
-  font-weight: 600;
-  min-width: 180px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-size: 0.9rem;
-  margin: 0 5px;
-}
-
-.wizard-nav-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.wizard-nav-btn:active {
-  transform: translateY(1px);
-}
-
-.btn-success.wizard-nav-btn {
-  background: linear-gradient(45deg, #2ecc71, #27ae60);
-  border: none;
-}
-
-.btn-success.wizard-nav-btn:hover {
-  background: linear-gradient(45deg, #27ae60, #2ecc71);
-}
-
-.btn-secondary.wizard-nav-btn {
-  background: linear-gradient(45deg, #95a5a6, #7f8c8d);
-  border: none;
-  color: white;
-}
-
-.btn-secondary.wizard-nav-btn:hover {
-  background: linear-gradient(45deg, #7f8c8d, #95a5a6);
-}
-
-.wizard-nav-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.wizard-nav-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.text-warning {
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-  padding: 8px 15px;
-  background-color: rgba(255, 193, 7, 0.15);
-  border-radius: 4px;
-  border-left: 3px solid #ffc107;
-  margin-top: 10px;
-  justify-content: center;
-  font-weight: 500;
-}
-
-// Contenedor fijo para los botones de navegación
-.wizard-footer-container {
+// Nuevos estilos para la interfaz unificada (similar a POS)
+.position-sticky {
   position: sticky;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: #fff;
-  padding: 15px 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  margin-top: 30px;
-  z-index: 100;
+  top: 1rem; // Ajusta según la altura de tu barra de navegación si tienes una
+  z-index: 1020; // Asegura que esté por encima del contenido al hacer scroll
 }
 
-// Espaciador para mantener alineación cuando falta un botón
-.spacer {
-  width: 180px; // Mismo ancho que los botones
+.card {
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  border-radius: 0.5rem;
+  border: none;
 }
 
-@media (max-width: 576px) {
-  .wizard-nav-btn {
-    min-width: 100px; // reduce el ancho mínimo para pantallas pequeñas
-    padding: 8px 15px;
-    font-size: 0.8rem;
-    gap: 4px;
-  }
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
 
-  .wizard-footer-container {
-    position: fixed; // se fija el footer en la parte inferior
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: #fff;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-    padding: 10px 15px;
-    z-index: 1000; // asegurar que quede sobre el contenido
-    flex-direction: row; // mantener los botones alineados horizontalmente
-    align-items: center;
-    justify-content: space-around; // distribuir espacios entre botones
-  }
-
-  .spacer {
-    display: none; // se oculta el espaciador para no afectar el layout fijo
-  }
+.card-header.bg-primary {
+  background: linear-gradient(135deg, #4e73df, #224abe) !important; // Ajusta los colores a tu tema
 }
 
 .card-body {
-  padding: 1rem !important;
+  padding: 1.25rem;
+}
+
+.card-footer {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+// Estilos para formularios dentro de cards
+.card-body .form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.card-body .form-select,
+.card-body .form-control {
+  font-size: 0.9rem;
+}
+
+// Estilos para las pestañas de Facturación/Entrega
+.p-tabview .p-tabview-nav {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  border: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-nav-link:not(.p-disabled):focus {
+  box-shadow: none;
+}
+
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  color: var(--primary-color, #4e73df); // Usa tu color primario
+  border-bottom-color: var(--primary-color, #4e73df);
+}
+
+.p-tabview .p-tabview-panels {
+  padding: 1rem 0 0 0; // Ajusta el padding de los paneles
+}
+
+// Ajustes generales
+.text-steper { // Mantener si se usa en algún otro lugar, sino eliminar
+    font-size: 12px;
+}
+
+.modal-fullscreen { // Mantener si se usa en los modales
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000;
+    opacity: 0.85;
+    z-index: 90000;
+}
+
+// Asegurar que el padding del card-body no sea sobreescrito por estilos globales si es necesario
+.card-body {
+  padding: 1.25rem !important; // Ajusta si es necesario
 }
