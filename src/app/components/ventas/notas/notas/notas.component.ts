@@ -207,4 +207,17 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         break;
     }
   }
+
+  // Método ayudante para obtener el FormArray de notas de un producto específico de forma segura
+  getProductNotesArray(index: number): FormArray {
+    return this.notasFormArray.at(index).get('notas') as FormArray;
+  }
+  
+  // Método auxiliar para eliminar una nota específica
+  removeNote(productIndex: number, noteIndex: number): void {
+    const notasArray = this.getProductNotesArray(productIndex);
+    if (notasArray) {
+      notasArray.removeAt(noteIndex);
+    }
+  }
 }

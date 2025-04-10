@@ -17,6 +17,8 @@
   position: sticky;
   top: 1rem; // Ajusta según la altura de tu barra de navegación si tienes una
   z-index: 1020; // Asegura que esté por encima del contenido al hacer scroll
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
 }
 
 .card {
@@ -24,6 +26,9 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.08);
   border-radius: 0.5rem;
   border: none;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 1rem;
 }
 
 .card-header {
@@ -31,14 +36,17 @@
   border-bottom: 1px solid rgba(0,0,0,0.1);
   padding: 0.75rem 1.25rem;
   border-radius: 0.5rem 0.5rem 0 0;
+  padding: 0.75rem 1rem;
 }
 
 .card-header.bg-primary {
   background: linear-gradient(135deg, #4e73df, #224abe) !important; // Ajusta los colores a tu tema
+  background: linear-gradient(45deg, #007bff, #0056b3) !important;
 }
 
 .card-body {
   padding: 1.25rem;
+  padding: 1rem;
 }
 
 .card-footer {
@@ -103,4 +111,131 @@
 // Asegurar que el padding del card-body no sea sobreescrito por estilos globales si es necesario
 .card-body {
   padding: 1.25rem !important; // Ajusta si es necesario
+}
+
+// Estilos para la vista unificada de crear ventas
+
+// Mejoras para la estructura general
+.container-fluid {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+// Panel lateral fijo
+.position-sticky {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+// Estilos para tarjetas
+.card {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 1rem;
+  
+  .card-header {
+    padding: 0.75rem 1rem;
+    
+    h5 {
+      margin-bottom: 0;
+      font-weight: 500;
+    }
+    
+    &.bg-primary {
+      background: linear-gradient(45deg, #007bff, #0056b3) !important;
+    }
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+// Mejoras para los formularios
+.form-control, .form-select {
+  border-radius: 0.375rem;
+  
+  &:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+}
+
+// Mejoras para el acordeón de notas
+.accordion {
+  .accordion-item {
+    border-radius: 0.375rem;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    
+    .accordion-button {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      
+      &:not(.collapsed) {
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+      }
+      
+      &:focus {
+        box-shadow: none;
+      }
+      
+      &::after {
+        width: 0.8rem;
+        height: 0.8rem;
+        background-size: 0.8rem;
+      }
+    }
+    
+    .accordion-body {
+      padding: 0.75rem;
+    }
+  }
+}
+
+// Estilo para las pestañas
+.nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+  
+  .nav-link {
+    margin-bottom: -1px;
+    border: 1px solid transparent;
+    border-top-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    
+    &.active {
+      border-color: #dee2e6 #dee2e6 #fff;
+      color: #0d6efd;
+    }
+  }
+}
+
+// Mejoras para el carrito
+.cart-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+// Animaciones para mejorar experiencia
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s;
+}
+
+// Ajustes específicos para dispositivos pequeños
+@media (max-width: 991.98px) {
+  .position-sticky {
+    position: static;
+    max-height: none;
+  }
 }

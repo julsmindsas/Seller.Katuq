@@ -1,191 +1,89 @@
 <ng-template #quickView let-modal>
-  <div class="modal-content">
+  <div class="modal-content border-0">
     <div class="modal-header product-modal">
-      <div class="product-box row">
-        <div class="product-img col-md-6"><img class="img-fluid"
-            [src]="producto.crearProducto.imagenesPrincipales[0]?.urls" alt=""></div>
-        <div class="product-details col-md-6 text-start">
-          <div class="product-page-details">
-            <h3>{{producto?.crearProducto?.titulo}}</h3>
-            <h4>{{producto?.identificacion?.referencia}}</h4>
-            <h6>{{ 'MINIMUM_SALE_QUANTITY' | translate }} {{producto?.disponibilidad?.cantidadMinVenta}}</h6>
-            
-           
-            
-            <h6>
-              {{ 'UNITS_AVAILABLE' | translate }} {{producto?.disponibilidad?.cantidadDisponible}}
-            </h6>
-            <h6>{{ 'SHIPPING_COST_NOT_INCLUDED' | translate }}</h6>
-            <h6>{{ 'INCLUDES_TAXES' | translate }}</h6>
+      <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body p-0">
+      <div class="row g-0">
+        <!-- Imagen del producto -->
+        <div class="col-lg-6">
+          <div class="product-img d-flex align-items-center justify-content-center bg-light" style="height: 400px;">
+            <img [src]="selectedProduct?.imagenes[0]" class="img-fluid" alt="{{ selectedProduct?.titulo }}" 
+                 style="max-height: 100%; max-width: 100%; object-fit: contain;">
+          </div>
+          <div class="d-flex mt-2 px-2 overflow-auto" *ngIf="selectedProduct?.imagenes?.length > 1">
+            <div *ngFor="let img of selectedProduct?.imagenes; let i = index" class="thumbnail-img me-2" 
+                 style="width: 60px; height: 60px; cursor: pointer;"
+                 (click)="changeMainImage(i)">
+              <img [src]="img" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          </div>
         </div>
-
-          <div class="product-price">{{producto.precio.precioUnitarioConIva
-            |currency:'USD':'symbol':'1.0-0'}}
-            <del>{{producto.precio.precioTotalVolumenConIva | currency:'USD':'symbol':'1.0-0'}} </del>
-          </div>
-          <div class="product-view">
-            <h6 class="f-w-600">{{ 'PRODUCT_DETAILS' | translate }}</h6>
-            <!-- <p class="mb-0">{{producto.crearProducto.descripcion}}</p> -->
-            <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
-          </div>
-
-          <div class="product-qnty">
-            <h6 class="f-w-600">{{ 'QUANTITY' | translate }}</h6>
-            <div class="qty-box">
-              <div class="input-group">
-                <span class="input-group-prepend">
-                  <button class="btn quantity-left-minus" type="button" data-type="minus" data-field=""
-                    (click)="menosCantidad()">
-                    <app-feather-icons [icon]="'minus'"></app-feather-icons>
-                  </button>
-                </span>
-                <input #cantidad (input)="handleInput($event)" class="form-control input-number" type="number"
-                  name="cantidad" id="cantidad" min="1" max="100" readonly value="1">
-                <span class="input-group-prepend">
-                  <button class="btn quantity-right-plus" type="button" data-type="plus" data-field=""
-                    (click)="masCantidad()">
-                    <app-feather-icons [icon]="'plus'"></app-feather-icons>
-                  </button>
-                </span>
+        
+        <!-- Detalles del producto -->
+        <div class="col-lg-6">
+          <div class="product-details p-4">
+            <h4 class="mb-3">{{selectedProduct?.titulo}}</h4>
+            
+            <div class="product-price mb-3">
+              <span class="badge bg-success px-3 py-2 fs-6">{{selectedProduct?.precioTotalConIva | currency}}</span>
+              <span class="ms-2 text-muted" *ngIf="selectedProduct?.precioAntes > selectedProduct?.precioTotalConIva">
+                <del>{{selectedProduct?.precioAntes | currency}}</del>
+                <span class="badge bg-danger ms-2">-{{calcularDescuento(selectedProduct?.precioAntes, selectedProduct?.precioTotalConIva)}}%</span>
+              </span>
+            </div>
+            
+            <div class="product-description mb-3">
+              <h6 class="fw-bold mb-2">Descripción</h6>
+              <p>{{selectedProduct?.descripcion}}</p>
+            </div>
+            
+            <div class="product-details mb-3" *ngIf="selectedProduct?.categoria?.nombre">
+              <h6 class="fw-bold mb-2">Detalles</h6>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item px-0">
+                  <span class="fw-medium">Categoría:</span>
+                  <span class="ms-2">{{selectedProduct?.categoria?.nombre}}</span>
+                </li>
+                <li class="list-group-item px-0">
+                  <span class="fw-medium">Disponibilidad:</span>
+                  <span class="ms-2 badge" [ngClass]="selectedProduct?.stock > 0 ? 'bg-success' : 'bg-danger'">
+                    {{selectedProduct?.stock > 0 ? 'En Stock' : 'Agotado'}}
+                  </span>
+                </li>
+                <li class="list-group-item px-0">
+                  <span class="fw-medium">Stock:</span>
+                  <span class="ms-2">{{selectedProduct?.stock}} unidades</span>
+                </li>
+                <li class="list-group-item px-0" *ngFor="let especificacion of selectedProduct?.especificaciones">
+                  <span class="fw-medium">{{especificacion.nombre}}:</span>
+                  <span class="ms-2">{{especificacion.valor}}</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div class="product-actions">
+              <div class="d-flex align-items-center mb-3">
+                <label for="cantidad" class="form-label mb-0 me-3">Cantidad:</label>
+                <div class="input-group" style="width: 120px;">
+                  <button class="btn btn-outline-secondary" type="button" (click)="decreaseQuantity()">-</button>
+                  <input type="number" class="form-control text-center" id="cantidad" [(ngModel)]="quantity" min="1">
+                  <button class="btn btn-outline-secondary" type="button" (click)="increaseQuantity()">+</button>
+                </div>
+              </div>
+              
+              <div class="d-grid gap-2">
+                <button class="btn btn-primary" (click)="addToCart()" [disabled]="selectedProduct?.stock <= 0">
+                  <i class="fa fa-shopping-cart me-2"></i>Añadir al Carrito
+                </button>
+                <button class="btn btn-outline-secondary" (click)="modal.close('Close click')">
+                  <i class="fa fa-arrow-left me-2"></i>Seguir comprando
+                </button>
               </div>
             </div>
-            <div class="addcart-btn">
-              <button class="btn btn-primary me-1" type="button" (click)="addToCar()">{{ 'ADD_TO_CART' | translate }}</button>
-            </div>
           </div>
-          <div class="rating">
-            <label for="rating"> <h6>{{ 'RATING' | translate }}</h6> </label>
-            <ngx-star-rating [id]="'rating'"></ngx-star-rating>
-          </div>
-
         </div>
       </div>
-      <button class="btn-close" (click)="modal.dismiss('Cross click')"></button>
     </div>
-    <div class="card">
-      <div class="row product-page-main">
-          <div class="col-sm-12">
-              <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
-                  <li [ngbNavItem]="1">
-                      <a ngbNavLink>{{ 'ADDITIONAL_FEATURES' | translate }}</a>
-                      <ng-template ngbNavContent>
-                          <!-- <p class="mb-0 m-t-20"> {{producto?.crearProducto?.descripcion}}</p> -->
-                          <div [innerHTML]="producto?.crearProducto?.descripcion"></div>
-                      </ng-template>
-                  </li>
-                  <li [ngbNavItem]="2">
-                      <a ngbNavLink>{{ 'PRODUCT_GUARANTEES' | translate }}</a>
-                      <ng-template ngbNavContent>
-                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
-                              industry. Lorem
-                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
-                              unknown
-                              printer took a
-                              galley of type and scrambled it to make a type specimen book. It has survived not
-                              only
-                              five centuries,
-                              but also the leap into electronic typesetting, remaining essentially unchanged. It
-                              was
-                              popularised in
-                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
-                              more
-                              recently with
-                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
-                          </p>
-                      </ng-template>
-                  </li>
-                  <li [ngbNavItem]="3">
-                      <a ngbNavLink>{{ 'CONDITIONS_RESTRICTIONS' | translate }}</a>
-                      <ng-template ngbNavContent>
-                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
-                              industry. Lorem
-                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
-                              unknown
-                              printer took a
-                              galley of type and scrambled it to make a type specimen book. It has survived not
-                              only
-                              five centuries,
-                              but also the leap into electronic typesetting, remaining essentially unchanged. It
-                              was
-                              popularised in
-                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
-                              more
-                              recently with
-                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
-                          </p>
-                      </ng-template>
-                  </li>
-                  <li [ngbNavItem]="4">
-                      <a ngbNavLink>{{ 'CARE_CONSUMPTION' | translate }}</a>
-                      <ng-template ngbNavContent>
-                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
-                              industry. Lorem
-                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
-                              unknown
-                              printer took a
-                              galley of type and scrambled it to make a type specimen book. It has survived not
-                              only
-                              five centuries,
-                              but also the leap into electronic typesetting, remaining essentially unchanged. It
-                              was
-                              popularised in
-                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
-                              more
-                              recently with
-                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
-                          </p>
-                      </ng-template>
-                  </li>
-                  <li [ngbNavItem]="4">
-                      <a ngbNavLink>{{ 'REVIEWS' | translate }}</a>
-                      <ng-template ngbNavContent>
-                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
-                              industry. Lorem
-                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
-                              unknown
-                              printer took a
-                              galley of type and scrambled it to make a type specimen book. It has survived not
-                              only
-                              five centuries,
-                              but also the leap into electronic typesetting, remaining essentially unchanged. It
-                              was
-                              popularised in
-                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
-                              more
-                              recently with
-                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
-                          </p>
-                      </ng-template>
-                  </li>
-                  <li [ngbNavItem]="5">
-                      <a ngbNavLink>{{ 'Q_AND_A' | translate }}</a>
-                      <ng-template ngbNavContent>
-                          <p class="mb-0 m-t-20">Lorem Ipsum is simply dummy text of the printing and typesetting
-                              industry. Lorem
-                              Ipsum has been the industry's standard dummy text ever since the 1500s, when an
-                              unknown
-                              printer took a
-                              galley of type and scrambled it to make a type specimen book. It has survived not
-                              only
-                              five centuries,
-                              but also the leap into electronic typesetting, remaining essentially unchanged. It
-                              was
-                              popularised in
-                              the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and
-                              more
-                              recently with
-                              desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
-                          </p>
-                      </ng-template>
-                  </li>
-
-
-
-
-              </ul>
-              <div [ngbNavOutlet]="nav" class="mt-2"></div>
-          </div>
-      </div>
-  </div>
   </div>
 </ng-template>
