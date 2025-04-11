@@ -1,5 +1,3 @@
-<!-- <app-breadcrumb [title]="'Clientes'" [items]="['Ventas']" [active_item]="'Clientes'"></app-breadcrumb> -->
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12 p-2">
@@ -16,6 +14,7 @@
                     <div class="loader-8"></div>
                 </div>
 
+                <!-- Header Standar -->
                 <div class="row col-12 m-2">
                     <div class="col-6">
                         <p class="text-left fc-info fs-24 m-0 p-0">{{ "Clientes" | translate }}</p>
@@ -23,106 +22,62 @@
                     </div>
 
                     <div class="col-6 p-3" style="text-align: end">
-                        <button class="btn btn-primary ml-2" type="button" (click)="redirigir()">
+                        <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="redirigir()">
                             <i placement="top" ngbTooltip="Nuevo" style="
                                     font-size: 18px;
-                                    margin-left: 10px;
                                     color: white;
                                     cursor: pointer;
                                 " class="icofont icofont-plus"></i>&nbsp;
                             <span style="color: white">{{ "Crear cliente" | translate }}</span>
                         </button>
-
-                        <button class="btn btn-primary ml-2" style="color: white" (click)="exportarExcel()">
-                            <i class="icofont icofont-file-excel"></i>
+                        <button class="btn btn-primary ml-3 mb-2" style="color: white" (click)="exportarExcel()">
+                            <i class="icofont icofont-file-excel"></i>&nbsp;
                             {{ "Excel" | translate }}
                         </button>
                     </div>
                 </div>
+                <!-- FIN Header Standar -->
 
-                <div class="card-body custom-datatable p-4" *ngIf="!cargando">
+                <div class="card-body custom-datatable" *ngIf="!cargando">
                     <p-table #dt [columns]="selectedColumns" [value]="clientes" [paginator]="true" [rows]="10"
                         [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
-                        styleClass="p-datatable-gridlines" [rowsPerPageOptions]="[10, 20, 50]"
+                        styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
                         [sortField]="'nombres_completos'" [sortOrder]="1" [globalFilterFields]="[
                             'nombres_completos',
                             'tipo_documento_comprador',
                             'documento',
                             'correo_electronico_comprador',
-                        ]" [tableStyle]="{ 'min-width': '10rem' }" [rowHover]="true" [showCurrentPageReport]="true"
+                        ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
 
-                        
-                        <ng-template pTemplate="header" let-columns let-cliente>
+                        <ng-template pTemplate="header" let-columns>
                             <tr>
-                                <th class="columna-header text-center">{{ "Cliente" | translate }}</th>
-                                <th class="columna-header text-center">{{ "Documento" | translate }}</th>
-                                <th class="columna-header text-center">{{ "Email" | translate }}</th>
-                                <th class="columna-header text-center">{{ "Celular" | translate }}</th>
-                                <th class="columna-header text-center">{{ "Estado" | translate }}</th>
-                               
-                                <th class="columna-header">{{ "Opciones" | translate }}</th>
+                                <th class="text-center" pSortableColumn="nombres_completos">{{ "Cliente" | translate }}</th>
+                                <th class="text-center" pSortableColumn="documento">{{ "Documento" | translate }}</th>
+                                <th class="text-center" pSortableColumn="correo_electronico_comprador">{{ "Email" | translate }}</th>
+                                <th class="text-center" pSortableColumn="numero_celular_comprador">{{ "Celular" | translate }}</th>
+                                <th class="text-center" pSortableColumn="estado">{{ "Estado" | translate }}</th>
+                                <th class="text-center">{{ "Acciones" | translate }}</th>
                             </tr>
-                            <tr>
-                                <th class="text-center">
-                                    <p-columnFilter type="text" field="nombres_completos" placeholder=""
-                                        ariaLabel="Filter Name"></p-columnFilter>
-                                </th>
-                                <th>
-                                    <p-columnFilter type="text" field="documento" placeholder=""
-                                        ariaLabel="Filter ID"></p-columnFilter>
-                                </th>
-                                <th>
-                                    <p-columnFilter type="text" field="correo_electronico_comprador" placeholder=""
-                                        ariaLabel="Filter Email"></p-columnFilter>
-                                </th>
-                                <th>
-                                    <p-columnFilter type="text" field="numero_celular_comprador" placeholder=""
-                                        ariaLabel="Filter Movil"></p-columnFilter>
-                                </th>
-                                <th>
-                                    <p-columnFilter type="text" field="estado" placeholder=""
-                                    ariaLabel="Filter State"></p-columnFilter>
-                                </th>
-                                
-                                <th></th>
-                            </tr>
-                            
                         </ng-template>
 
-                        <ng-template pTemplate="body" let-columns="columns" let-cliente>
+                        <ng-template pTemplate="body" let-cliente>
                             <tr>
-                                <td>
-                                    {{ cliente.nombres_completos }}
-                                    {{ cliente.apellidos_completos }}
+                                <td>{{ cliente.nombres_completos }} {{ cliente.apellidos_completos }}</td>
+                                <td>{{ cliente.tipo_documento_comprador }}: {{ cliente.documento }}</td>
+                                <td>{{ cliente.correo_electronico_comprador }}</td>
+                                <td>{{ cliente.numero_celular_comprador }}</td>
+                                <td class="text-center">
+                                    {{cliente.estado}}
                                 </td>
-                                <!-- <td *ngFor="let col of columns">
-                                    {{ cliente[col.field] }}
-                                </td> -->
-                                <td *ngFor="let col of columns">
-                                    <div class="fc-black" *ngIf="cliente[col.field] !== 'estado'">{{cliente[col.field]}}
-                                    </div>
-                                    <div *ngIf="cliente[col.field] === 'estado'">
-                                        <p-tag [value]="cliente[col.field]" [severity]="danger">
-                                        </p-tag>
-                                    </div>
-                                </td>
-                                <td>
-                                    <i placement="top" ngbTooltip="{{ 'Editar' | translate }}" style="
-                                            font-size: 18px;
-                                            margin-left: 10px;
-                                            color: cornflowerblue;
-                                            cursor: pointer;
-                                        " class="icofont icofont-pencil-alt-5" (click)="editarCliente(cliente)">
+                                <td class="text-center">
+                                    <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
+                                        style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                                        class="icofont icofont-pencil-alt-5 fc-primary" (click)="editarCliente(cliente)">
                                     </i>
-                                    <i placement="top" ngbTooltip="{{
-                                            'Eliminar' | translate
-                                        }}" style="
-                                            font-size: 18px;
-                                            margin-left: 10px;
-                                            color: cornflowerblue;
-                                            cursor: pointer;
-                                        " class="icofont icofont-trash" (click)="eliminarCliente(cliente)">
+                                    <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+                                        style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                                        class="icofont icofont-trash fc-danger" (click)="eliminarCliente(cliente)">
                                     </i>
                                 </td>
                             </tr>
@@ -130,7 +85,7 @@
 
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td colspan="5">{{ "No hay datos disponibles" | translate }}</td>
+                                <td colspan="6">{{ "No hay datos disponibles" | translate }}</td>
                             </tr>
                         </ng-template>
 
