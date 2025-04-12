@@ -12,12 +12,13 @@ import { CrearOcasionesComponent } from './ocasiones/crear-ocasiones/crear-ocasi
 import { VariablesComponent } from './variables/variables.component';
 import { CrearVariablesComponent } from './variables/crear-variables/crear-variables.component';
 import { TableModule } from 'primeng/table';
-
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   imports: [
     NgSelectModule,
     CommonModule,
+    NgbModule,
     SharedModule,
     ProcesoRoutingModule,
     NgxDatatableModule,

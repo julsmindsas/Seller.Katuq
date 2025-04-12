@@ -6,6 +6,8 @@ import { DataStoreService } from '../../../shared/services/dataStoreService';
 import { InfoPaises } from '../../../../Mock/pais-estado-ciudad'
 import { InfoIndicativos } from '../../../../Mock/indicativosPais'
 import { NgbActiveModal, NgbModal, ModalDismissReasons, NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
+import { Router } from '@angular/router';
+import { CrearClienteModalComponent } from './crear-cliente-modal/crear-cliente-modal.component';
 @Component({
   selector: 'app-clientes',
   templateUrl: './clientes.component.html',
@@ -86,8 +88,11 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   allBillingZone: any;
   zona_cobro: any;
   valor_zona_cobro: any;
-  constructor(private dataStore:DataStoreService,private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
+  constructor(private router:Router,private dataStore:DataStoreService,private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
 
+  }
+  public irAlListado() {
+    this.router.navigateByUrl('/ventas/clienteslista');
   }
   ngAfterViewInit(): void {
     if (this.isEdit === null || this.isEdit === undefined || this.isEdit === false) {
@@ -280,6 +285,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   redirectToPostalCode() {
     window.open('https://visor.codigopostal.gov.co/472/visor', '_blank');
   }
+  
   replicarWhatsApp(event) {
     console.log(event)
     if (this.whatsapp.nativeElement.checked === true) {

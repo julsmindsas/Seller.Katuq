@@ -40,6 +40,7 @@ import { ProductCategoryComponent } from './pos2/widgets/product-category/produc
 import { ProductComponent } from './pos2/widgets/product/product.component';
 import { CreateCustomerModalComponent } from './pos2/widgets/create-customer-modal/create-customer-modal.component';
 import { PosCheckoutComponent } from './pos2/widgets/pos-checkout/pos-checkout.component';
+import { CrearClienteModalComponent } from './clientes/crear-cliente-modal/crear-cliente-modal.component';
 
 @NgModule({
   imports: [
@@ -86,7 +87,8 @@ import { PosCheckoutComponent } from './pos2/widgets/pos-checkout/pos-checkout.c
     ProductCategoryComponent,
     ProductComponent,
     CreateCustomerModalComponent,
-    PosCheckoutComponent
+    PosCheckoutComponent,
+    CrearClienteModalComponent
   ],
   exports: [
     CrearVentasComponent,
