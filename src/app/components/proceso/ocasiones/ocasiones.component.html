@@ -21,12 +21,11 @@
           </div>
 
           <div class="col-6 p-3" style="text-align: end">
-            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearOcasiones()">
-              <i placement="top" ngbTooltip="Nuevo"
-                style="font-size: 18px; color: white; cursor: pointer;"
-                class="icofont icofont-plus"></i>&nbsp;
-              <span style="color: white;">{{'Crear Ocasión' | translate}}</span>
+            <button class="btn btn-primary mb-3" (click)="openCrearModal()">
+              <i class="icofont icofont-plus me-1"></i> Crear Ocasión
             </button>
+            
+        
             <button class="btn btn-primary ml-3 mb-2 mr-5">
               <i class="icofont icofont-file-excel"></i>&nbsp;{{ 'Excel' | translate }}
             </button>
@@ -69,7 +68,7 @@
                 <td class="text-center">
                   <i placement="top" ngbTooltip="{{'Edit' | translate}}"
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                    class="icofont icofont-pencil-alt-5 fc-primary" (click)="editarOcasiones(row)">
+                    class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
                   </i>
                   <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;" class="icofont icofont-trash fc-danger"

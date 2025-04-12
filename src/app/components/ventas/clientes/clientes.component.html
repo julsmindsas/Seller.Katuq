@@ -1,8 +1,15 @@
 <!-- <app-breadcrumb [title]="'Clientes'" [items]="['Ventas/Clientes']" [active_item]="'Clientes'"></app-breadcrumb> -->
 <div class="container-fluid px-0">
     <div class="card customer-card">
+        
         <!-- Cabecera -->
+        <div class="bg-light" style="text-align: left; margin: 10px 0 0 15px;">
+            <i placement="top" ngbTooltip="{{ 'Regresar al listado' | translate }}"
+                style="font-size: 24px; color: #007bff; cursor: pointer;" 
+                class="icofont icofont-arrow-left" (click)="irAlListado()"></i>
+        </div>
         <div class="card-header bg-light">
+            
             <div class="row align-items-center">
                 <div class="col-md-6">
                     <h2 class="text-left fc-info fs-24 m-0 p-0">{{ "Clientes" | translate }}</h2>

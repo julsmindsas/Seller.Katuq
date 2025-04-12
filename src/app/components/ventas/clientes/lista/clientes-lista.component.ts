@@ -3,7 +3,10 @@ import { MaestroService } from "../../../../shared/services/maestros/maestro.ser
 import * as XLSX from 'xlsx';
 import { Router } from '@angular/router';
 import { DataStoreService } from '../../../../shared/services/dataStoreService';
-// import { MultiSelectModule } from 'primeng/multiselect';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente-modal.component';
+
+
 
 interface Column {
     field: string;
@@ -24,7 +27,7 @@ export class ClientesListaComponent implements OnInit {
     cols: Column[];
     _selectedColumns: Column[];
 
-    constructor(private router: Router,private clienteService: MaestroService,private storeService:DataStoreService) { }
+    constructor(private modalService: NgbModal,private router: Router,private clienteService: MaestroService,private storeService:DataStoreService) { }
     redirigir() {
         this.router.navigate(['/ventas/clientes']);
       }
@@ -75,6 +78,34 @@ export class ClientesListaComponent implements OnInit {
             }
         });
     }
+    openCrearModal() {
+        const modalRef = this.modalService.open(CrearClienteModalComponent, { 
+          size: 'lg',
+          centered: true
+        });
+        modalRef.componentInstance.isEdit = false;
+    
+        modalRef.result.then((result) => {
+          if (result === 'success') {
+            this.cargarClientes();
+          }
+        });
+      }
+    
+      openEditarModal(cliente: any) {
+        const modalRef = this.modalService.open(CrearClienteModalComponent, { 
+          size: 'lg',
+          centered: true
+        });
+        modalRef.componentInstance.isEdit = true;
+        modalRef.componentInstance.clienteData = cliente;
+    
+        modalRef.result.then((result) => {
+          if (result === 'success') {
+            this.cargarClientes();
+          }
+        });
+      }
 
     updateFilter(event: any): void {
         const val = event.target.value.toLowerCase();

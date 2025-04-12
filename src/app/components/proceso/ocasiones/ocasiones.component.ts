@@ -3,7 +3,8 @@ import { Router } from '@angular/router';
 import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
-
+import { CrearOcasionesComponent } from './crear-ocasiones/crear-ocasiones.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   selector: 'app-generos',
   templateUrl: './ocasiones.component.html',
@@ -17,7 +18,7 @@ export class OcasionesComponent implements OnInit {
   temp = [];
   ColumnMode = ColumnMode;
   isMobile = false;
-  constructor(private service:MaestroService,private router:Router) {this.cargarDatos() }
+  constructor(private service:MaestroService,private modalService: NgbModal) {this.cargarDatos() }
   cargarDatos(){
     this.cargando=true
     this.service.consultarOcasion().subscribe((x: any) => {
@@ -32,13 +33,43 @@ export class OcasionesComponent implements OnInit {
   }
   ngOnInit(): void {
   }
-  crearOcasiones() {
-    this.router.navigateByUrl('proceso/ocasiones/crear-ocasiones');
-  };
-  editarOcasiones(row){
-    console.log(row)
-    sessionStorage.setItem('infoFormsOcasion',JSON.stringify(row))
-    this.router.navigateByUrl('proceso/ocasiones/crear-ocasiones')
+  // crearOcasiones() {
+  //   this.router.navigateByUrl('proceso/ocasiones/crear-ocasiones');
+  // };
+  // editarOcasiones(row){
+  //   console.log(row)
+  //   sessionStorage.setItem('infoFormsOcasion',JSON.stringify(row))
+  //   this.router.navigateByUrl('proceso/ocasiones/crear-ocasiones')
+  // }
+  openCrearModal() {
+    const modalRef = this.modalService.open(CrearOcasionesComponent, { 
+      size: 'lg',
+      centered: true
+    });
+    modalRef.componentInstance.mostrarCrear = true;
+
+    modalRef.result.then((result) => {
+      if (result === 'success') {
+        this.cargarDatos();
+      }
+    });
+  }
+
+  openEditarModal(row: any) {
+    const modalRef = this.modalService.open(CrearOcasionesComponent, { 
+      size: 'lg',
+      centered: true
+    });
+    
+    // Proporciona los datos usando la propiedad componentInstance
+    modalRef.componentInstance.mostrarCrear = false;
+    modalRef.componentInstance.ocasionData = row; // Cambia el nombre de la propiedad
+  
+    modalRef.result.then((result) => {
+      if (result === 'success') {
+        this.cargarDatos();
+      }
+    });
   }
   deleteOcasiones(row){
 

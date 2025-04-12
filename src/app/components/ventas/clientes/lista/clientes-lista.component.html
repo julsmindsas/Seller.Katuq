@@ -22,14 +22,11 @@
                     </div>
 
                     <div class="col-6 p-3" style="text-align: end">
-                        <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="redirigir()">
-                            <i placement="top" ngbTooltip="Nuevo" style="
-                                    font-size: 18px;
-                                    color: white;
-                                    cursor: pointer;
-                                " class="icofont icofont-plus"></i>&nbsp;
+                        <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="openCrearModal()">
+                            <i placement="top" ngbTooltip="Nuevo" style="font-size: 18px; color: white; cursor: pointer;" 
+                               class="icofont icofont-plus"></i>&nbsp;
                             <span style="color: white">{{ "Crear cliente" | translate }}</span>
-                        </button>
+                          </button>
                         <button class="btn btn-primary ml-3 mb-2" style="color: white" (click)="exportarExcel()">
                             <i class="icofont icofont-file-excel"></i>&nbsp;
                             {{ "Excel" | translate }}
