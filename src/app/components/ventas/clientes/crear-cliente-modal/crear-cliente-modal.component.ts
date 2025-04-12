@@ -46,10 +46,10 @@ export class CrearClienteModalComponent implements OnInit {
       documento: ['', Validators.required],
       nombres_completos: ['', Validators.required],
       apellidos_completos: ['', Validators.required],
-      indicativo_celular_comprador: ['', Validators.required],
+      indicativo_celular_comprador: ['57', Validators.required],
       numero_celular_comprador: ['', [Validators.required, Validators.pattern(/^[0-9]*$/)]],
       correo_electronico_comprador: ['', [Validators.required, Validators.email]],
-      indicativo_celular_whatsapp: [''],
+      indicativo_celular_whatsapp: ['57'],
       numero_celular_whatsapp: [''],
       estado: ['activo']
     });

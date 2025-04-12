@@ -14,10 +14,9 @@
           <!-- Información Básica -->
           <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
-              <div class="card-header bg-light border-0">
-                <h6 class="mb-0 fw-semibold" style="color: #9b00ff;">
-                  <span class="me-2">👤</span>Información Básica
-                </h6>
+              <div class="card-header bg-light border-0 d-flex align-items-center gap-2">
+                <i class="fa fa-user text-primary"></i>
+                <h6 class="mb-0 fw-semibold" style="color: #9b00ff;">Información Básica</h6>
               </div>
               <div class="card-body">
                 <div class="row g-3">
@@ -33,7 +32,7 @@
                       </select>
                     </div>
                     <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched" class="text-danger small mt-1">
-                      <span class="me-1">⚠️</span>Campo obligatorio
+                      <i class="fa fa-exclamation-circle me-1"></i>Campo obligatorio
                     </div>
                   </div>
   
@@ -42,7 +41,7 @@
                     <label class="form-label fw-semibold">Número ID <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" style="height: 38px;" placeholder="Número de documento" formControlName="documento" [disabled]="isEdit">
                     <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="text-danger small mt-1">
-                      <span class="me-1">⚠️</span>Campo obligatorio
+                      <i class="fa fa-exclamation-circle me-1"></i>Campo obligatorio
                     </div>
                   </div>
   
@@ -51,7 +50,7 @@
                     <label class="form-label fw-semibold">Nombres <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" style="height: 38px;" placeholder="Nombres completos" formControlName="nombres_completos">
                     <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched" class="text-danger small mt-1">
-                      <span class="me-1">⚠️</span>Campo obligatorio
+                      <i class="fa fa-exclamation-circle me-1"></i>Campo obligatorio
                     </div>
                   </div>
   
@@ -60,7 +59,7 @@
                     <label class="form-label fw-semibold">Apellidos <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" style="height: 38px;" placeholder="Apellidos completos" formControlName="apellidos_completos">
                     <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched" class="text-danger small mt-1">
-                      <span class="me-1">⚠️</span>Campo obligatorio
+                      <i class="fa fa-exclamation-circle me-1"></i>Campo obligatorio
                     </div>
                   </div>
                 </div>
@@ -71,10 +70,9 @@
           <!-- Información de Contacto -->
           <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
-              <div class="card-header bg-light border-0">
-                <h6 class="mb-0 fw-semibold" style="color: #9b00ff;">
-                  <span class="me-2">📱</span>Información de Contacto
-                </h6>
+              <div class="card-header bg-light border-0 d-flex align-items-center gap-2">
+                <i class="fa fa-phone text-primary"></i>
+                <h6 class="mb-0 fw-semibold" style="color: #9b00ff;">Información de Contacto</h6>
               </div>
               <div class="card-body">
                 <div class="row g-3">
@@ -82,17 +80,17 @@
                   <div class="col-12">
                     <label class="form-label fw-semibold">Teléfono Celular <span class="text-danger">*</span></label>
                     <div class="input-group" style="height: 38px;">
-                      <select class="form-select" style="max-width: 120px; height: 38px; border-top-right-radius: 0; border-bottom-right-radius: 0;" formControlName="indicativo_celular_comprador">
+                      <select disabled class="form-select" style="max-width: 120px; height: 38px; border-top-right-radius: 0; border-bottom-right-radius: 0;" formControlName="indicativo_celular_comprador">
                         <option value="" disabled selected>Cod. País</option>
-                        <option *ngFor="let item of indicativos" [value]="item.phone_code">+{{ item.phone_code }} {{item.name}}</option>
+                        <option *ngFor="let item of indicativos" [value]="item.phone_code">+{{ item.phone_code }}</option>
                       </select>
                       <input type="text" class="form-control" style="height: 38px;" placeholder="Número celular" formControlName="numero_celular_comprador" (input)="validarSoloNumeros($event)">
                     </div>
                     <div *ngIf="formulario.get('indicativo_celular_comprador')?.invalid && formulario.get('indicativo_celular_comprador')?.touched" class="text-danger small mt-1">
-                      <span class="me-1">⚠️</span>Seleccione código de país
+                      <i class="fa fa-exclamation-circle me-1"></i>Seleccione código de país
                     </div>
                     <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched" class="text-danger small mt-1">
-                      <span class="me-1">⚠️</span>Número de celular requerido
+                      <i class="fa fa-exclamation-circle me-1"></i>Número de celular requerido
                     </div>
                   </div>
   
@@ -101,12 +99,12 @@
                     <label class="form-label fw-semibold">Correo Electrónico <span class="text-danger">*</span></label>
                     <div class="input-group" style="height: 38px;">
                       <span class="input-group-text" style="background-color: #f8f9fa; height: 38px; display: flex; align-items: center;">
-                        <span style="color: #9b00ff;">✉️</span>
+                        <i class="fa fa-envelope text-primary"></i>
                       </span>
                       <input type="email" class="form-control" style="height: 38px;" placeholder="correo@ejemplo.com" formControlName="correo_electronico_comprador">
                     </div>
                     <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid" class="text-danger small mt-1">
-                      <span class="me-1">⚠️</span>
+                      <i class="fa fa-exclamation-circle me-1"></i>
                       <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">Campo obligatorio</span>
                       <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">Ingrese un correo válido</span>
                     </div>
@@ -121,7 +119,7 @@
   
                     <label class="form-label fw-semibold">WhatsApp</label>
                     <div class="input-group" style="height: 38px;">
-                      <select class="form-select" style="max-width: 120px; height: 38px; border-top-right-radius: 0; border-bottom-right-radius: 0;" formControlName="indicativo_celular_whatsapp" [disabled]="formulario.get('indicativo_celular_whatsapp')?.disabled">
+                      <select disabled class="form-select" style="max-width: 120px; height: 38px; border-top-right-radius: 0; border-bottom-right-radius: 0;" formControlName="indicativo_celular_whatsapp" [disabled]="formulario.get('indicativo_celular_whatsapp')?.disabled">
                         <option value="" disabled selected>Cod. País</option>
                         <option *ngFor="let item of indicativos" [value]="item.phone_code">+{{ item.phone_code }}</option>
                       </select>
@@ -139,10 +137,11 @@
     <!-- Footer -->
     <div class="modal-footer bg-light rounded-bottom">
       <button type="button" class="btn btn-outline-secondary rounded-pill px-4" style="height: 38px;" (click)="activeModal.dismiss()">
-        <span class="me-2">❌</span>Cancelar
+        <i class="fa fa-times me-2"></i>Cancelar
       </button>
       <button type="button" class="btn rounded-pill px-4 text-white" style="background-color: #9b00ff; height: 38px;" (click)="guardarCliente()" [disabled]="formulario.invalid">
-        <span class="me-2">💾</span>{{ isEdit ? 'Actualizar' : 'Guardar' }}
+        <i class="fa fa-save me-2"></i>{{ isEdit ? 'Actualizar' : 'Guardar' }}
       </button>
     </div>
   </div>
+  
