@@ -69,6 +69,7 @@ export class ProductComponent implements OnInit {
   }
 
   searchStores() {
+    debugger;
     this.filter['search'] = this.searchQuery.toLowerCase();
     this.filterDetails();
   }
@@ -76,7 +77,7 @@ export class ProductComponent implements OnInit {
   filterDetails() {
     this.filteredProduct = this.products.filter(product => {
       const matchesSearch = this.filter.search
-        ? product.product_name.toLowerCase().includes(this.filter.search)
+        ? product.crearProducto.titulo.toLowerCase().includes(this.filter.search)
         : true;
 
       return matchesSearch;

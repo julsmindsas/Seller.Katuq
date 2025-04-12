@@ -1,0 +1,21 @@
+<div class="modal">
+    <div class="modal-content">
+      <h2>{{ title }}</h2>
+      <ng-container *ngIf="paymentType === 'Efectivo'">
+        <p>Ingrese la cantidad recibida:</p>
+        <input type="number" [(ngModel)]="amountReceived" placeholder="Monto recibido" />
+        <p>Cambio: {{ calculateChange() }}</p>
+      </ng-container>
+      <ng-container *ngIf="paymentType === 'Tarjeta'">
+        <p>Ingrese el número de autorización:</p>
+        <input type="text" [(ngModel)]="authorizationCode" placeholder="Código de autorización" />
+      </ng-container>
+      <ng-container *ngIf="paymentType === 'E-Wallet'">
+        <p>Escanee o ingrese el ID de la billetera electrónica:</p>
+        <input type="text" [(ngModel)]="walletId" placeholder="ID de la billetera" />
+      </ng-container>
+      <button (click)="onPay()">Pagar</button>
+      <button (click)="closeModal()">Cancelar</button>
+    </div>
+  </div>
+  

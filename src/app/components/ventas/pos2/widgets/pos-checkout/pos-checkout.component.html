@@ -1,9 +1,8 @@
 <div class="card customer-sticky">
   <div class="card-header card-no-border p-3">
-    <div class="header-top border-bottom pb-3">
+    <div class="header-top">
       <h5 class="m-0">{{'Cliente' | translate}} </h5>
       <div class="card-header-right-icon create-right-btn m-l-5">
-        <a class="btn btn-primary f-w-500" href="javascript:void(0)" (click)="openModal()">{{'Crear +' | translate}}</a>
         <a class="btn btn-primary f-w-500" href="javascript:void(0)" (click)="openModal()">{{'Crear +' | translate}}</a>
       </div>
     </div>
@@ -13,28 +12,31 @@
       <div class="input-group common-search">
         <span class="input-group-text">
           <i data-feather="search" height="16" width="16" class="fc-gray"></i>
-          <!-- <app-feather-icon [icon]="'search'" [class]="'search-icon text-gray'"></app-feather-icon> -->
         </span>
-        <input class="form-control" type="text" placeholder="{{'Buscar cliente...' | translate }}">
-        <input class="form-control" type="text" placeholder="{{'Buscar cliente...' | translate }}">
+        <input #clienteBuscar class="form-control" type="text"
+          placeholder="{{'Buscar documento cliente...' | translate }}">
       </div>
       <div class="common-flex">
-        <a class="btn bc-primary ml-3 fc-white" [routerLink]="['/cart']">{{ 'Adicionar' | translate }}</a>
-        <a class="btn bc-secondary ml-3 fc-white" href="javascript:void(0)">{{'Limpiar carrito' | translate }}</a>
-        <a class="btn bc-primary ml-3 fc-white" [routerLink]="['/cart']">{{ 'Adicionar' | translate }}</a>
-        <a class="btn bc-secondary ml-3 fc-white" href="javascript:void(0)">{{'Limpiar carrito' | translate }}</a>
+        <a class="btn bc-primary ml-3 fc-white" (click)="buscar()">{{ 'Buscar' | translate }}</a>
+        <a class="btn bc-secondary ml-3 fc-white" (click)="limpiar()">{{'Limpiar' | translate }}</a>
       </div>
+
+      <div class="p-2" *ngIf="datos">
+        <p class="mb-1"><strong>Documento: </strong>&nbsp;{{datos?.documento}}</p>
+        <p class="mb-1"><strong>Nombre: </strong>&nbsp;{{datos?.nombres_completos}} {{datos?.apellidos_completos}}</p>
+        <p class="mb-1"><strong>Celular: </strong>&nbsp;{{datos?.numero_celular_comprador}}</p>
+        <p class="mb-1"><strong>Correo: </strong>&nbsp;{{datos?.correo_electronico_comprador}}</p>
+      </div>
+
+
     </div>
     <h5 class="m-0">{{ 'Facturación' | translate }}</h5>
-    <h5 class="m-0">{{ 'Facturación' | translate }}</h5>
-    <div class="input-group common-search p-b-15">
+    <!-- <div class="input-group common-search p-b-15">
       <span class="input-group-text">
         <i data-feather="search" height="16" width="16" class="fc-gray"></i>
-        <!-- <app-feather-icon [icon]="'search'" [class]="'search-icon text-gray'"></app-feather-icon> -->
       </span>
       <input class="form-control" type="text" placeholder="{{ 'Buscar producto...' | translate }}">
-      <input class="form-control" type="text" placeholder="{{ 'Buscar producto...' | translate }}">
-    </div>
+    </div> -->
     <div class="order-quantity p-b-20 border-bottom">
       <div class="custom-scrollbar">
         <div *ngIf="cartService.posCartItems && cartService.posCartItems.length">
@@ -63,11 +65,10 @@
                   <div class="touchspin-wrapper">
                     <button class="decrement-touchspin btn-touchspin">
                       <i class="fa fa-minus icono-pos" (click)="cartService.updatePOSQuantity(-1, item)"></i>
-                      <i class="fa fa-minus icono-pos" (click)="cartService.updatePOSQuantity(-1, item)"></i>
                     </button>
-                    <span class="input-touchspin fs-14 fc-gray" [id]="'inputData' + item.id" type="text">{{item.quantity}}</span>
+                    <span class="input-touchspin fs-14 fc-gray" [id]="'inputData' + item.id"
+                      type="text">{{item.cantidad}}</span>
                     <button class="increment-touchspin btn-touchspin">
-                      <i class="fa fa-plus icono-pos" (click)="cartService.updatePOSQuantity(1, item)"></i>
                       <i class="fa fa-plus icono-pos" (click)="cartService.updatePOSQuantity(1, item)"></i>
                     </button>
                   </div>
@@ -84,7 +85,6 @@
                 <img src="assets/images/order-trash.gif" alt="order-trash">
               </div>
               <h6 class="text-gray">{{ 'Tu carrito está vacío' | translate }}</h6>
-              <h6 class="text-gray">{{ 'Tu carrito está vacío' | translate }}</h6>
               <a href="javascript:void(0)" [routerLink]="['/category']"> </a>
             </div>
           </div>
@@ -92,9 +92,6 @@
       </div>
       <div class="coupon-code">
         <div class="input-group">
-          <input class="form-control" type="text" placeholder="{{'Código del cupón...' | translate }}"
-            aria-label="Enter Code" aria-describedby="button-addon2">
-          <button class="btn bg-light-secondary" id="button-addon2" type="button">{{'Aplicar' | translate }}</button>
           <input class="form-control" type="text" placeholder="{{'Código del cupón...' | translate }}"
             aria-label="Enter Code" aria-describedby="button-addon2">
           <button class="btn bg-light-secondary" id="button-addon2" type="button">{{'Aplicar' | translate }}</button>
@@ -115,24 +112,32 @@
       </div>
     </div>
     <h5 class="m-0 p-t-40">{{ 'Método de pago' | translate }}</h5>
-    <h5 class="m-0 p-t-40">{{ 'Método de pago' | translate }}</h5>
     <div class="payment-methods">
       <div *ngFor="let method of checkoutMethod1">
         <div class="bg-payment widget-hover">
-          <img [src]="method.image" alt="cash">
-      <div *ngFor="let method of checkoutMethod1">
-        <div class="bg-payment widget-hover">
-          <img [src]="method.image" alt="cash">
+          <img [src]="method.image" alt="cash" (click)="selectMethod(method.title)">
         </div>
-        <span class="f-w-500 text-gray fs-14">{{method.title}}</span>
-        <span class="f-w-500 text-gray fs-14">{{method.title}}</span>
+        <!-- <span class="f-w-500 text-gray fs-14">{{method.title}}</span> -->
+        <span class="f-w-500 text-gray fs-14" (click)="selectMethod(method.title)">{{method.title}}</span>
       </div>
     </div>
     <div class="place-order">
-      <button class="btn bc-primary fc-white btn-hover-effect w-100 f-w-500" type="button">{{ 'Pagar' | translate
+      <button class="btn bc-primary fc-white btn-hover-effect w-100 f-w-500" type="button"
+        (click)="openModalPayment()">{{ 'Pagar' | translate
         }}</button>
-      <button class="btn bc-primary fc-white btn-hover-effect w-100 f-w-500" type="button">{{ 'Pagar' | translate
-        }}</button>
+
+
+
     </div>
+
+    <!-- <button (click)="openModal('cash')">Efectivo</button>
+    <button (click)="openModal('card')">Tarjeta</button>
+    <button (click)="openModal('ewallet')">Ewallet</button> -->
+
+
   </div>
 </div>
+
+<!-- <app-payment-modal [paymentType]="selectedPaymentType"
+[title]="'Método de Pago: ' + selectedPaymentType" (close)="closeModalPayment()">
+</app-payment-modal> -->

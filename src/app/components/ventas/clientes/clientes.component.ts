@@ -270,6 +270,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       });
     }
   }
+  
   toggleWithGreeting(tooltip, greeting: string) {
     if (tooltip.isOpen()) {
       tooltip.close();
