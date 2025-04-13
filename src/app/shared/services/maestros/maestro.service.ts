@@ -97,6 +97,15 @@ export class MaestroService {
   public getClientByDocument(data: any) {
     return this.http.post(this.urlBase + '/v1/clients/doc', data, this.httpOptions);
   }
+
+  public getClientByEmail(data: any) {
+    return this.http.post(this.urlBase + '/v1/clients/email', data, this.httpOptions);
+  }
+
+  public getClientByName(data: any) {
+    return this.http.post(this.urlBase + '/v1/clients/name', data, this.httpOptions);
+  }
+  
   public editClient(data: any) {
     return this.http.post(this.urlBase + '/v1/clients/edit', data, this.httpOptions);
   }

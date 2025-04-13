@@ -22,6 +22,7 @@ declare var WidgetCheckout: any;
 export class CheckOutComponent implements OnInit, OnChanges {
   @ViewChild("buscarPor") buscarPor: ElementRef;
   @ViewChild("documentoBusqueda") documentoBusqueda: ElementRef;
+  @ViewChild("whatsapp") whatsapp: ElementRef;
 
   public checkoutForm: UntypedFormGroup;
   form = new FormGroup({
@@ -52,6 +53,8 @@ export class CheckOutComponent implements OnInit, OnChanges {
   direccion_facturacion: string;
   datosFacturacionElectronica: any[] = [];
   datosEntregas: any[] = [];
+  originalDataEntregas: any[] = [];
+  originalDataFacturacionElectronica: any[] = [];
   generarFacturaElectronica: boolean = false;
   activarEntrega: boolean = true;
   datosEntregaNoEncontradosParaCiudadSeleccionada: boolean = false;
@@ -121,6 +124,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
     
     this.formulario = this.formBuilder.group({
       nombres_completos: ["", Validators.required],
+      apellidos_completos: [""],
       tipo_documento_comprador: ["", Validators.required],
       documento: ["", Validators.required],
       indicativo_celular_comprador: ["57", Validators.required],
@@ -189,6 +193,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
           sessionStorage.setItem("cliente", JSON.stringify(res));
           this.formulario.patchValue(res);
           this.datos = res;
+          this.documentoBuscar = this.formulario.value.documento;
           this.identificarDepto();
           this.identificarCiu();
           this.encontrado = true;
@@ -201,10 +206,13 @@ export class CheckOutComponent implements OnInit, OnChanges {
           // Cargar datos de facturación y entrega del cliente
           this.datosFacturacionElectronica = [];
           this.datosEntregas = [];
+          this.originalDataEntregas = [];
+          this.originalDataFacturacionElectronica = [];
           
           if (res.datosFacturacionElectronica && res.datosFacturacionElectronica.length > 0) {
             res.datosFacturacionElectronica.forEach(x => {
               this.datosFacturacionElectronica.push(x);
+              this.originalDataFacturacionElectronica.push(x);
             });
             // Asignar el primer dato de facturación al pedido
             this.pedido.facturacion = this.datosFacturacionElectronica[0];
@@ -213,12 +221,84 @@ export class CheckOutComponent implements OnInit, OnChanges {
           if (res.datosEntrega && res.datosEntrega.length > 0) {
             res.datosEntrega.forEach(x => {
               this.datosEntregas.push(x);
+              this.originalDataEntregas.push(x);
             });
             // Asignar el primer dato de entrega al pedido
             this.pedido.envio = this.datosEntregas[0];
           }
         }
       });
+    } else if (this.buscarPor.nativeElement.value == "PA") {
+      // Búsqueda por correo electrónico
+      const data = { email: this.documentoBusqueda.nativeElement.value };
+      this.service.getClientByEmail(data).subscribe((res: any) => {
+        this.handleClientResponse(res);
+      });
+    } else if (this.buscarPor.nativeElement.value == "TI") {
+      // Búsqueda por nombre y apellido
+      const data = { nombres: this.documentoBusqueda.nativeElement.value };
+      this.service.getClientByName(data).subscribe((res: any) => {
+        this.handleClientResponse(res);
+      });
+    }
+  }
+
+  // Manejo común para la respuesta de la búsqueda de clientes
+  private handleClientResponse(res: any) {
+    if (!res || res.length == 0) {
+      this.pedido.cliente = undefined;
+      this.encontrado = false;
+      this.bloqueado = false;
+      this.mostrarFormularioCliente = true;
+      Swal.fire({
+        title: "No encontrado!",
+        text: "No se encuentra el cliente. Llene los datos para crear uno nuevo.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
+    } else {
+      this.pedido.cliente = res;
+      this.ref.markForCheck();
+      sessionStorage.setItem("cliente", JSON.stringify(res));
+      this.formulario.patchValue(res);
+      this.datos = res;
+      this.documentoBuscar = this.formulario.value.documento;
+      
+      this.identificarDepto();
+      this.identificarCiu();
+      
+      this.encontrado = true;
+      this.mostrarFormularioCliente = false;
+      
+      if (this.formulario.value.estado == "Bloqueado") {
+        this.bloqueado = true;
+      }
+      
+      this.loadClientAddresses(res);
+    }
+  }
+
+  // Cargar direcciones del cliente
+  private loadClientAddresses(res: any) {
+    this.datosFacturacionElectronica = [];
+    this.datosEntregas = [];
+    this.originalDataEntregas = [];
+    this.originalDataFacturacionElectronica = [];
+    
+    if (res.datosFacturacionElectronica && res.datosFacturacionElectronica.length > 0) {
+      res.datosFacturacionElectronica.forEach(x => {
+        this.datosFacturacionElectronica.push(x);
+        this.originalDataFacturacionElectronica.push(x);
+      });
+      this.pedido.facturacion = this.datosFacturacionElectronica[0];
+    }
+    
+    if (res.datosEntrega && res.datosEntrega.length > 0) {
+      res.datosEntrega.forEach(x => {
+        this.datosEntregas.push(x);
+        this.originalDataEntregas.push(x);
+      });
+      this.pedido.envio = this.datosEntregas[0];
     }
   }
 
@@ -355,7 +435,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
     this.pedido.facturacion = this.datosFacturacionElectronica[index];
     this.pedido = { ...this.pedido };
     Swal.fire({
-      title: "Direccion Seleccionada!",
+      title: "Dirección Seleccionada!",
       text: this.datosFacturacionElectronica[index].direccion,
       icon: "success",
       confirmButtonText: "Ok",
@@ -367,11 +447,39 @@ export class CheckOutComponent implements OnInit, OnChanges {
     this.pedido.envio = this.datosEntregas[index];
     this.pedido = { ...this.pedido };
     Swal.fire({
-      title: "Direccion Seleccionada!",
+      title: "Dirección Seleccionada!",
       text: this.datosEntregas[index].direccionEntrega,
       icon: "success",
       confirmButtonText: "Ok",
     });
+  }
+
+  // Método para replicar información de teléfono a WhatsApp
+  replicarWhatsApp(event: Event) {
+    if (this.whatsapp && this.whatsapp.nativeElement.checked === true) {
+      this.formulario.controls['indicativo_celular_whatsapp'].setValue(this.formulario.value.indicativo_celular_comprador);
+      this.formulario.controls['numero_celular_whatsapp'].setValue(this.formulario.value.numero_celular_comprador);
+    } else {
+      this.formulario.controls['indicativo_celular_whatsapp'].setValue("");
+      this.formulario.controls['numero_celular_whatsapp'].setValue("");
+    }
+  }
+
+  // Método para filtrar direcciones de entrega basado en la ciudad
+  onSelectCity(event: any): void {
+    const selectedCity = event.target.value;
+    
+    if (this.originalDataEntregas && this.originalDataEntregas.length > 0) {
+      this.datosEntregas = this.originalDataEntregas.filter(x => x.ciudad === selectedCity);
+      
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = 
+        !this.datosEntregas || this.datosEntregas.length === 0;
+    }
+  }
+
+  // Método para aplicar cambios al pedido general
+  overridePedido(event: Pedido) {
+    this.pedido = { ...event };
   }
 
   checkPriceScaleProd(item) {
@@ -408,7 +516,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
     return totalPrecioSinIVADef;
   }
+
   checkPriceScale() {
+    // ... resto del método sin cambios
     let totalPrecioSinIVA = 0;
     let totalPrecioSinIVADef = 0;
     this.pedido.carrito.map(itemCarrito => {
@@ -442,7 +552,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
     return totalPrecioSinIVADef;
   }
+
   checkIVAPrice() {
+    // ... resto del método sin cambios
     let totalPrecioIVA = 0;
     let totalPrecioIVADef = 0;
     let totalExcluidosDef = 0
@@ -613,15 +725,14 @@ export class CheckOutComponent implements OnInit, OnChanges {
       this.toastrService.error('Por favor seleccione los datos de entrega', 'Error');
       return;
     }
-
-    /* try {
-      const response = await this.payment.pauymentWompi(this.pedido);
-      if (response && response.url) {
-        window.location.href = response.url;
-      }
-    } catch (error) {
-      this.toastrService.error('Error al iniciar el pago', 'Error');
-      console.error('Error al iniciar el pago:', error);
-    } */
+    
+    // Asignar forma de pago seleccionada
+    const formaPago = this.form.get('opcionSeleccionada')?.value;
+    if (formaPago) {
+      this.pedido.formaDePago = formaPago;
+    }
+    
+    // Emitir evento de compra para que lo capture el componente padre
+    this.comprarYPagar.emit(this.pedido);
   }
 }

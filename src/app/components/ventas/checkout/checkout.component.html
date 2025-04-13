@@ -113,7 +113,7 @@
                 </div>
 
                 <!-- Información de contacto -->
-                <div class="row g-3">
+                <div class="row g-3 mb-4">
                   <div class="col-12">
                     <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Información de Contacto' | translate }}</h6>
                   </div>
@@ -146,6 +146,34 @@
                         formControlName="correo_electronico_comprador" />
                     </div>
                   </div>
+                  <div class="col-12">
+                    <div class="form-check form-switch">
+                      <input #whatsapp type="checkbox" class="form-check-input" id="sameAsPhone"
+                        (change)="replicarWhatsApp($event)">
+                      <label class="form-check-label" for="sameAsPhone">
+                        {{ 'Usar el mismo número para WhatsApp' | translate }}
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6" *ngIf="!whatsapp.checked">
+                    <label class="form-label fw-medium">{{ 'WhatsApp' | translate }}</label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light" style="min-width: 90px;">
+                        <select autocomplete="on" formControlName="indicativo_celular_whatsapp"
+                          class="form-select form-select-sm border-0 bg-transparent">
+                          <option value="57" selected>+57</option>
+                          <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+                            +{{ item.phone_code }}
+                          </option>
+                        </select>
+                      </span>
+                      <input class="form-control" type="text" formControlName="numero_celular_whatsapp"
+                        placeholder="{{ 'Número de WhatsApp' | translate }}" />
+                      <span class="input-group-text bg-success text-white">
+                        <i class="fa fa-whatsapp"></i>
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Botones de acción -->
@@ -163,6 +191,112 @@
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+
+          <!-- Facturación y Entrega con Tabs -->
+          <div *ngIf="encontrado || clienteRecienCreado" class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fa fa-file-text me-2"></i>{{ 'Datos de Facturación y Entrega' | translate }}
+                </h5>
+                <span class="badge bg-info text-white">{{ 'Requerido' | translate }}</span>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <p-tabView styleClass="custom-tabs">
+                <p-tabPanel header="{{ 'Facturación' | translate }}">
+                  <div class="p-3">
+                    <div class="row mb-4">
+                      <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Direcciones de Facturación Guardadas' |
+                          translate }}</h6>
+                      </div>
+                      <div class="col-12">
+                        <div *ngIf="datosFacturacionElectronica && datosFacturacionElectronica.length > 0"
+                          class="table-responsive">
+                          <table class="table table-hover table-bordered">
+                            <thead class="table-light">
+                              <tr>
+                                <th>{{ 'Nombre' | translate }}</th>
+                                <th>{{ 'Dirección' | translate }}</th>
+                                <th>{{ 'Ciudad' | translate }}</th>
+                                <th>{{ 'Acciones' | translate }}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let dir of datosFacturacionElectronica; let i = index">
+                                <td>{{dir.nombres}}</td>
+                                <td>{{dir.direccion}}</td>
+                                <td>{{dir.ciudad}}</td>
+                                <td class="text-center">
+                                  <button class="btn btn-sm btn-primary" (click)="seleccionarDireccionFE(i)">
+                                    <i class="fa fa-check-circle me-1"></i> {{ 'Seleccionar' | translate }}
+                                  </button>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div *ngIf="!datosFacturacionElectronica || datosFacturacionElectronica.length === 0"
+                          class="alert alert-info">
+                          <i class="fa fa-info-circle me-2"></i> {{ 'No hay direcciones de facturación guardadas' |
+                          translate }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </p-tabPanel>
+
+                <p-tabPanel header="{{ 'Entrega' | translate }}" *ngIf="activarEntrega">
+                  <div class="p-3">
+                    <div *ngIf="datosEntregaNoEncontradosParaCiudadSeleccionada"
+                      class="alert alert-warning d-flex align-items-center mb-4">
+                      <i class="fa fa-exclamation-triangle me-3 fa-2x"></i>
+                      <div>
+                        {{ 'No se encontraron datos de entrega para la ciudad seleccionada.' | translate }}
+                        <strong>{{ 'Por favor cree uno nuevo para continuar.' | translate }}</strong>
+                      </div>
+                    </div>
+                    <div class="row mb-4">
+                      <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Direcciones de Entrega Guardadas' |
+                          translate }}</h6>
+                      </div>
+                      <div class="col-12">
+                        <div *ngIf="datosEntregas && datosEntregas.length > 0" class="table-responsive">
+                          <table class="table table-hover table-bordered">
+                            <thead class="table-light">
+                              <tr>
+                                <th>{{ 'Nombre' | translate }}</th>
+                                <th>{{ 'Dirección' | translate }}</th>
+                                <th>{{ 'Ciudad' | translate }}</th>
+                                <th>{{ 'Acciones' | translate }}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let dir of datosEntregas; let i = index">
+                                <td>{{dir.nombres}}</td>
+                                <td>{{dir.direccionEntrega}}</td>
+                                <td>{{dir.ciudad}}</td>
+                                <td class="text-center">
+                                  <button class="btn btn-sm btn-primary" (click)="seleccionarDireccionEntrega(i)">
+                                    <i class="fa fa-check-circle me-1"></i> {{ 'Seleccionar' | translate }}
+                                  </button>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div *ngIf="!datosEntregas || datosEntregas.length === 0" class="alert alert-info">
+                          <i class="fa fa-info-circle me-2"></i> {{ 'No hay direcciones de entrega guardadas' |
+                          translate }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </p-tabPanel>
+              </p-tabView>
             </div>
           </div>
 
