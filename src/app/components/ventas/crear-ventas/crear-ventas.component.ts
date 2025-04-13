@@ -21,7 +21,7 @@ import { NgxHotkeysService } from "@balticcode/ngx-hotkeys";
 import { ToastrService } from "ngx-toastr";
 import { UtilsService } from "../../../shared/services/utils.service";
 import { FacturacionIntegracionService } from "../../../shared/services/integraciones/facturas/facturacion.service";
-import { VoiceInteractionComponent } from 'src/app/shared/components/voice-interaction/voice-interaction.component';
+import { VoiceInteractionComponent } from '../../../shared/components/voice-interaction/voice-interaction.component';
 import { environment } from "../../../../environments/environment";
 
 @Component({
@@ -33,8 +33,8 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   @ViewChild("buscarPor") buscarPor: ElementRef;
   @ViewChild("documentoBusqueda") documentoBusqueda: ElementRef;
   @ViewChild("quickView") QuickView: QuickViewComponent;
-  @ViewChild("carrito") carrito: CarritoComponent;
-  @ViewChild("products", { static: false }) productos: EcomerceProductsComponent;
+  @ViewChild("carrito") carritoComponent: CarritoComponent;
+  @ViewChild("products", { static: false }) productosLista: EcomerceProductsComponent;
   @ViewChild("notaspedidos") notaspedido: NotasComponent;
   @ViewChild("resumen") resumen: CheckOutComponent;
   @ViewChild('wizard') mywizard: WizardComponent
@@ -45,6 +45,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   public isCollapsed1 = false;
   public isCollapsed = false;
   public listView: boolean = false;
+  public formaPago: string = 'EFECTIVO';
   formulario: FormGroup;
   public col: string = "3";
   firstFormGroup: FormGroup;
@@ -175,6 +176,26 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   mostrarFormularioCliente: boolean = false;
   clienteRecienCreado: boolean = false;
 
+  // Objeto carrito para calcular valores en la plantilla
+  carrito = {
+    calcularSubtotal: () => {
+      return this.cartService.calculateTotal() || 0;
+    },
+    calcularIVA: () => {
+      const subtotal = this.cartService.calculateTotal() || 0;
+      return subtotal * 0.19;
+    },
+    calcularEnvio: () => {
+      // Lógica para calcular envío - por defecto 0 o un valor fijo
+      return 0;
+    },
+    calcularTotal: () => {
+      const subtotal = this.cartService.calculateTotal() || 0;
+      const iva = subtotal * 0.19;
+      const envio = 0; // O la lógica de envío que corresponda
+      return subtotal + iva + envio;
+    }
+  };
 
   constructor(
     private modalService: NgbModal,
@@ -194,67 +215,29 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   ) {
     this.initForm();
 
-    // this._hotkeysService.register({
-    //   combo: 'shift+g',
-    //   handler: () => {
-    //     this.guardarPrePedido(this.pedidoGral);
-    //     console.log('Combo saved!');
-    //   },
-    //   description: 'Sends a secret message to the console.'
-    // });
-
-    // this._hotkeysService.register({
-    //   combo: 'shift+n',
-    //   handler: () => {
-    //     if (!this.pedidoSinGuardar) {
-    //       this.showPedidoConfirm = false;
-    //       this.showSteper = true;
-    //       this.newPedido();
-    //       this.wizard.goToStep(0);
-    //       console.log('Nuevo pedido');
-    //     }
-
-    //     Swal.fire({
-    //       title: 'Nuevo Pedido',
-    //       text: "¿Desea crear un nuevo pedido?, Recuerde que esto borrara el proceso que lleva actualmente",
-    //       icon: 'warning',
-    //       showCancelButton: true,
-    //       confirmButtonColor: '#3085d6',
-    //       cancelButtonColor: '#d33',
-    //       confirmButtonText: 'Nuevo',
-    //       cancelButtonText: 'Cancelar'
-    //     }).then((result) => {
-    //       if (result.isConfirmed) {
-    //         this.showPedidoConfirm = false;
-    //         this.showSteper = true;
-    //         this.newPedido();
-    //         this.wizard.goToStep(0);
-    //         console.log('Nuevo pedido');
-    //       }
-    //     })
-    //   },
-    //   description: 'Sends a secret message to the console.'
-    // });
-
     this.maxDate = new Date();
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
-    console.log("empresa", this.empresaActual);
+    const companyData = sessionStorage.getItem("currentCompany");
+    this.empresaActual = companyData ? JSON.parse(companyData) : null;
+    
     this.pedidoGral = {
       referencia: "",
-      company: this.empresaActual.nomComercial,
-      cliente: null,
-      notasPedido: null,
-      carrito: null,
-      facturacion: null,
-      envio: null,
+      company: this.empresaActual?.nomComercial || '',
+      cliente: undefined,
+      notasPedido: undefined,
+      carrito: [],
+      facturacion: undefined,
+      envio: undefined,
       estadoPago: EstadoPago.Pendiente,
       estadoProceso: EstadoProceso.SinProducir
     }
 
     this.newPedido();
 
-    this.pedidoPrm = this.route.snapshot.queryParamMap.get('pedido');
-    this.numberProduct = this.route.snapshot.queryParamMap.get('product');
+    const pedidoParam = this.route.snapshot.queryParamMap.get('pedido');
+    const productParam = this.route.snapshot.queryParamMap.get('product');
+    
+    this.pedidoPrm = pedidoParam || '';
+    this.numberProduct = productParam || '';
 
     if (this.pedidoPrm) {
       this.pedidoGral = JSON.parse(this.pedidoPrm)
@@ -263,9 +246,9 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       if (this.numberProduct) {
         this.ventasService.getProductByNumber(this.numberProduct).subscribe((res: any) => {
           console.log(res);
-          this.productos.isOpenModalDirect = true;
-          this.productos.productos = res;
-          this.productos.obtenerFiltros();
+          this.productosLista.isOpenModalDirect = true;
+          this.productosLista.productos = res;
+          this.productosLista.obtenerFiltros();
         });
       }
     }
@@ -282,21 +265,21 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
 
   private newPedido() {
-    this.pedidoSinGuardar = true;
     this.formulario.reset();
     this.cartService.clearCart();
-    this.ventasService.getNextRef(this.empresaActual.nomComercial).subscribe((res: any) => {
-      const texto = this.empresaActual.nomComercial.toString();
+    this.ventasService.getNextRef(this.empresaActual?.nomComercial || '').subscribe((res: any) => {
+      const texto = this.empresaActual?.nomComercial?.toString() || '';
       const ultimasLetras = texto.substring(texto.length - 3);
+      
       this.pedidoGral = {
         referencia: "",
-        nroPedido: ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0'),
-        company: this.empresaActual.nomComercial,
-        cliente: null,
-        notasPedido: null,
-        carrito: null,
-        facturacion: null,
-        envio: null,
+        nroPedido: ultimasLetras + '-' + (res?.nextConsecutive || '000000').toString().padStart(6, '0'),
+        company: this.empresaActual?.nomComercial || '',
+        cliente: undefined,
+        notasPedido: undefined,
+        carrito: [],
+        facturacion: undefined,
+        envio: undefined,
         estadoPago: EstadoPago.Pendiente,
         estadoProceso: EstadoProceso.SinProducir
       };
@@ -369,7 +352,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         console.log(err);
       },
     })
-    // Inicializar indicativos con valores por defecto
     this.indicativo_celular_facturacion = "57";
     this.indicativo_celular_entrega = "57";
     this.indicativo_celular_entrega2 = "57";
@@ -380,13 +362,11 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     });
     this.indicativos = this.infoIndicativo.datos;
 
-    // Establecer valores por defecto
     this.pais = "Colombia";
     this.departamento = "Antioquia";
-    this.identificarDepto(); // Para cargar los departamentos de Colombia
-    this.identificarCiu();   // Para cargar las ciudades de Antioquia
+    this.identificarDepto();
+    this.identificarCiu();
 
-    // Resto del código de inicialización del formulario
     this.firstFormGroup = this.formBuilder.group({
       firstName: ["", Validators.required],
       lastName: ["", Validators.required],
@@ -408,17 +388,16 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       city: ["", Validators.required],
     });
     this.formulario = this.formBuilder.group({
-      // Datos del comprador
       nombres_completos: ["", Validators.required],
       tipo_documento_comprador: ["", Validators.required],
       documento: ["", Validators.required],
-      indicativo_celular_comprador: ["57", Validators.required], // Valor por defecto: Colombia +57
+      indicativo_celular_comprador: ["57", Validators.required],
       numero_celular_comprador: ["", Validators.required],
       correo_electronico_comprador: [
         "",
         [Validators.required, Validators.email],
       ],
-      indicativo_celular_whatsapp: ["57", Validators.required], // Valor por defecto: Colombia +57
+      indicativo_celular_whatsapp: ["57", Validators.required],
       numero_celular_whatsapp: ["", Validators.required],
       datosFacturacionElectronica: [[""]],
       datosEntrega: [[""]],
@@ -459,11 +438,9 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         sessionStorage.setItem("cliente", JSON.stringify(res));
         this.formulario.patchValue(res);
         this.datos = res;
-        this.documentoBuscar = this.formulario.value.documento; // Guardar el documento para futuras referencias
+        this.documentoBuscar = this.formulario.value.documento;
 
-        // Si se ingresaron dirección, país, departamento, ciudad y código postal, heredarlos a facturación y entrega
         if (this.direccion_facturacion && this.pais && this.departamento && this.ciudad_municipio) {
-          // Crear datos iniciales de facturación usando los datos del cliente
           const datoFacturacionInicial = {
             alias: "Principal",
             nombres: this.formulario.value.nombres_completos,
@@ -479,7 +456,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             codigoPostal: this.codigo_postal || ""
           };
 
-          // Crear datos iniciales de entrega usando los datos del cliente
           const datoEntregaInicial = {
             alias: "Principal",
             nombres: this.formulario.value.nombres_completos,
@@ -493,24 +469,20 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             codigoPV: this.codigo_postal || ""
           };
 
-          // Asignar datos iniciales a los arreglos
           this.datosFacturacionElectronica = [datoFacturacionInicial];
           this.datosEntregas = [datoEntregaInicial];
 
-          // Guardar estos datos en el cliente
           this.formulario.controls["datosFacturacionElectronica"].setValue(this.datosFacturacionElectronica);
           this.formulario.controls["datosEntrega"].setValue(this.datosEntregas);
 
-          // Actualizar el cliente con estos datos
           this.service.editClient(this.formulario.value).subscribe(() => {
             console.log("Datos iniciales de facturación y entrega guardados");
           });
         }
 
-        // Activar los componentes de facturación y entrega
         this.pedidoGral.cliente = res;
         this.encontrado = true;
-        this.clienteRecienCreado = true; // Esto activará la visualización de facturación y entrega
+        this.clienteRecienCreado = true;
         this.identificarDepto();
         this.identificarCiu();
       });
@@ -518,7 +490,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   }
   editarCliente() {
 
-    //crear un confirm
     Swal.fire({
       title: "Editar Cliente",
       text: "¿Desea editar el cliente?",
@@ -585,12 +556,11 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.service.getClientByDocument(data).subscribe((res: any) => {
         console.log(res);
         if (res.length == 0) {
-          // Cliente no encontrado: se muestra el formulario de creación (incluyendo facturación y entrega)
           this.formulario.controls["documento"].setValue(this.documentoBusqueda.nativeElement.value);
-          this.pedidoGral.cliente = null;
+          this.pedidoGral.cliente = undefined;
           this.encontrado = false;
           this.bloqueado = false;
-          this.mostrarFormularioCliente = true; // activar formulario de creación
+          this.mostrarFormularioCliente = true;
           Swal.fire({
             title: "No encontrado!",
             text: "No se encuentra el documento. Llene los datos para crear el cliente.",
@@ -598,7 +568,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             confirmButtonText: "Ok",
           });
         } else {
-          // Cliente encontrado: se oculta el formulario de creación
           this.pedidoGral.cliente = res;
           this.ref.markForCheck();
           sessionStorage.setItem("cliente", JSON.stringify(res));
@@ -735,7 +704,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         this.datosFacturacionElectronica
       );
-      this.formulario.controls["datosEntrega"].setValue(res.datosEntregas);
+      this.formulario.controls["datosEntrega"].setValue(res.datosEntrega);
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
@@ -786,14 +755,12 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.identificarDepto1();
     this.identificarCiu1();
     this.idBillingZone(this.datosEntregas[index]);
-    // this.zona_cobro = this.datosEntregas[index].zonaCobro
     this.codigo_postal_entrega = this.datosEntregas[index].codigoPV;
     this.modalService.open(modal, { size: "lg" }).result.then(
       () => {
         this.limpiarVariables();
       },
       () => {
-        // Esto se ejecutará cuando el modal se cierre sin completarse (por ejemplo, al hacer clic fuera del modal)
         this.limpiarVariables();
       }
     );
@@ -1016,7 +983,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         this.limpiarVariables();
       },
       () => {
-        // Esto se ejecutará cuando el modal se cierre sin completarse (por ejemplo, al hacer clic fuera del modal)
         this.limpiarVariables();
       }
     );
@@ -1061,7 +1027,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.codigo_postal = "";
   }
   eliminarDato(index: number): void {
-    // Eliminar el elemento en el índice especificado
     this.datosFacturacionElectronica.splice(index, 1);
     const data = {
       documento: this.formulario.value.documento,
@@ -1085,7 +1050,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     });
   }
   eliminarDato1(index: number): void {
-    // Eliminar el elemento en el índice especificado
     this.datosEntregas.splice(index, 1);
     const data = {
       documento: this.formulario.value.documento,
@@ -1109,31 +1073,48 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     });
   }
   onSelectCity(event: any): void {
-    this.pedidoGral.envio = {
-      ...this.pedidoGral.envio,
-      ciudad: event.target.value
-    };
-    // Asignar la ciudad seleccionada al componente catálogo
-    this.productos.ciudad = this.pedidoGral.envio.ciudad;
-    // Llamar al método que recarga el catálogo filtrado según la ciudad
-    if (this.productos && typeof this.productos.cargarTodo === 'function') {
-      this.productos.cargarTodo();
-    }
-    console.log(`Ciudad seleccionada: ${this.pedidoGral.envio.ciudad}`);
-
-    this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.pedidoGral.envio.ciudad);
-    if (this.datosEntregas?.length === 0) {
-      Swal.fire({
-        title: "No encontrado!",
-        text: "No se ha encontrado la ciudad en los datos de entrega, recuerda registrarla",
-        icon: "warning",
-        confirmButtonText: "Ok",
-      });
-      this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-      this.activarDatosEntrega = true;
+    if (!this.pedidoGral.envio) {
+      this.pedidoGral.envio = {
+        ciudad: event.target.value,
+        nombres: '',
+        apellidos: '',
+        direccionEntrega: '',
+        pais: this.pais || 'Colombia',
+        departamento: this.departamento || 'Antioquia',
+        celular: '',
+        indicativoCel: '57',
+        barrio: '',
+        indicativoOtroNumero: '',
+        especificacionesInternas: '',
+        otroNumero: '',
+        observaciones: '',
+        alias: '',
+        codigoPV: '',
+        nombreUnidad: '',
+        zonaCobro: ''
+      };
     } else {
-      this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
-      this.activarDatosEntrega = false;
+      this.pedidoGral.envio = {
+        ...this.pedidoGral.envio,
+        ciudad: event.target.value
+      };
+    }
+    
+    if (this.productosLista) {
+      this.productosLista.ciudad = event.target.value;
+      
+      if (typeof this.productosLista.cargarTodo === 'function') {
+        this.productosLista.cargarTodo();
+      }
+    }
+    
+    console.log(`Ciudad seleccionada: ${event.target.value}`);
+    
+    if (this.originalDataEntregas) {
+      this.datosEntregas = this.originalDataEntregas.filter(x => x.ciudad === event.target.value);
+      
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = 
+        !this.datosEntregas || this.datosEntregas.length === 0;
     }
   }
 
@@ -1156,8 +1137,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         console.log(this.pedidoGral);
         break;
       default:
-        // this.col1 = "4";
-        // this.col2 = "6";
         break;
     }
     console.log($event);
@@ -1173,36 +1152,38 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
   private reviewStepAndExecute(index: number) {
     if (index == 3) {
-      this.productos.cargarTodo();
+      this.productosLista.cargarTodo();
     }
     if (index == 5) {
       this.carrito1 = localStorage.getItem('carrito')
     }
     if (index == 6) {
-      this.carrito1 = JSON.parse(localStorage.getItem('carrito'))
-      if (this.carrito1[0].configuracion.datosEntrega.formaEntrega.toString().toLowerCase().includes('recoge')) {
-        this.activarEntrega = false
-        const envioRecoge = {
-          alias: 'Recoge',
-          nombres: 'N/A',
-          apellidos: 'N/A',
-          indicativoCel: 'N/A',
-          celular: 'N/A',
-          indicativoOtroNumero: 'N/A',
-          otroNumero: 'N/A',
-          direccionEntrega: 'N/A',
-          observaciones: 'N/A',
-          barrio: 'N/A',
-          nombreUnidad: 'N/A',
-          especificacionesInternas: 'N/A',
-          pais: 'N/A',
-          departamento: 'N/A',
-          ciudad: this.pedidoGral.envio.ciudad,
-          zonaCobro: 'N/A',
-          valorZonaCobro: '0',
-          codigoPV: 'N/A'
-        };
-        this.pedidoGral.envio = envioRecoge;
+      const carritoData = localStorage.getItem('carrito');
+      if (carritoData) {
+        this.carrito1 = JSON.parse(carritoData);
+        if (this.carrito1?.[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase().includes('recoge')) {
+          this.activarEntrega = false;
+          const envioRecoge = {
+            apellidos: 'N/A',
+            barrio: 'N/A',
+            indicativoOtroNumero: 'N/A',
+            especificacionesInternas: 'N/A',
+            nombres: 'N/A',
+            otroNumero: 'N/A',
+            pais: 'N/A',
+            direccionEntrega: 'N/A',
+            indicativoCel: 'N/A',
+            ciudad: this.pedidoGral?.envio?.ciudad || '',
+            observaciones: 'N/A',
+            alias: 'N/A',
+            celular: 'N/A',
+            departamento: 'N/A',
+            codigoPV: 'N/A',
+            nombreUnidad: 'N/A',
+            zonaCobro: 'N/A'
+          };
+          this.pedidoGral.envio = envioRecoge;
+        }
       }
     }
   }
@@ -1215,23 +1196,18 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
     this.cambiarEstadoSegunLosProductos();
 
-    // Verificar la forma de pago
     const formaPago = this.pedidoGral.formaDePago?.toLowerCase();
     if (formaPago === 'wompi') {
-      // Para Wompi, primero guardar el pedido y después mostrar el widget de pago
-      this.pedidoGral.estadoPago = EstadoPago.Pendiente; // Asegurar que el estado comienza como pendiente
+      this.pedidoGral.estadoPago = EstadoPago.Pendiente;
       this.guardarPedidoParaWompi().then(pedidoGuardado => {
         if (pedidoGuardado) {
-          // Si el pedido se guardó correctamente, mostrar el widget de pago
           this.iniciarPagoConWompi().then(pagoExitoso => {
             if (pagoExitoso) {
-              // El pago fue exitoso, actualizar estado del pedido
               this.actualizarEstadoPedido(this.pedidoGral.nroPedido as string, EstadoPago.Aprobado);
               this.showPedidoConfirm = true;
               this.showSteper = false;
               this.mywizard.goToNextStep();
             } else {
-              // El pago fue rechazado o cancelado
               this.actualizarEstadoPedido(this.pedidoGral.nroPedido as string, EstadoPago.Rechazado);
               Swal.fire({
                 title: "Pago no completado",
@@ -1250,7 +1226,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             });
           });
         } else {
-          // Si hubo un error al guardar el pedido
           Swal.fire({
             title: "Error",
             text: "No se pudo guardar el pedido. Por favor intente nuevamente.",
@@ -1260,12 +1235,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         }
       });
     } else {
-      // Si no es Wompi, continuar con el proceso normal de creación de pedido
       this.continuarCreacionPedido();
     }
   }
 
-  // Nuevo método para guardar el pedido antes de iniciar el pago con Wompi
   private guardarPedidoParaWompi(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const context = this;
@@ -1273,7 +1246,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         next: (res: any) => {
           const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
 
-          // Guardar pedido con estado de pago pendiente
           context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
             next: (res: any) => {
               const orderSiigo = context.facturacionElectronicaService.transformarPedidoLite(context.pedidoGral);
@@ -1284,54 +1256,33 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
                 console.log("Información de pago:", res.order.pagoInformation);
               }
               context.pedidoSinGuardar = false;
-              resolve(true); // Pedido guardado exitosamente
+              resolve(true);
             },
             error: (err: any) => {
               console.error("Error al crear el pedido:", err);
-              resolve(false); // Error al guardar el pedido
+              resolve(false);
             }
           });
         },
         error: (err) => {
           console.error("Error al validar número de pedido:", err);
-          resolve(false); // Error al validar el número de pedido
+          resolve(false);
         },
       });
     });
   }
 
-  // Método modificado para actualizar el estado del pedido después del pago
   private actualizarEstadoPedido(numeroPedido: string, estadoPago: EstadoPago): void {
-    // Verificamos si el método existe en el servicio
-    // if (typeof this.ventasService.updateOrderPaymentStatus === 'function') {
-    //   this.actualizarPedidoCompleto(numeroPedido, estadoPago);
-    //   this.ventasService.updateOrderPaymentStatus(numeroPedido, estadoPago).subscribe({
-    //     next: (res: any) => {
-    //       console.log("Estado del pedido actualizado:", estadoPago);
-    //     },
-    //     error: (err: any) => {
-    //       console.error("Error al actualizar el estado del pedido:", err);
-    //       // Plan B: Si hay error, intentamos actualizar todo el pedido
-    //       this.actualizarPedidoCompleto(numeroPedido, estadoPago);
-    //     }
-    //   });
-    // } else {
-    // Si el método no existe, usamos un enfoque alternativo
     this.actualizarPedidoCompleto(numeroPedido, estadoPago);
-    // }
   }
 
-  // Método alternativo para actualizar el pedido completo si el método específico no está disponible
   private actualizarPedidoCompleto(numeroPedido: string, estadoPago: EstadoPago): void {
-    // Actualizamos el estado en el objeto pedido
     this.pedidoGral.estadoPago = estadoPago;
 
-    // Usamos el método editOrder en lugar de updateOrder
     this.ventasService.editOrder(this.pedidoGral).subscribe({
       next: (res: any) => {
         console.log("Pedido actualizado completamente con nuevo estado:", estadoPago);
 
-        // Opcionalmente, también podemos enviar el correo de confirmación si es necesario
         const htmlSanizado = this.pyamentService.getHtmlContent(this.pedidoGral);
         this.ventasService.enviarCorreoConfirmacionPedido({
           order: this.pedidoGral,
@@ -1351,21 +1302,15 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     });
   }
 
-  // Método modificado para iniciar el pago con Wompi (ahora solo inicia el widget, no guarda el pedido)
   private iniciarPagoConWompi(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
-        // Configuración del widget de Wompi
-        const amountInCents = Math.round((this.pedidoGral?.totalPedididoConDescuento ?? 0) * 100); // Convertir a centavos
+        const amountInCents = Math.round((this.pedidoGral?.totalPedididoConDescuento ?? 0) * 100);
 
-        // Asegúrate de tener estos datos disponibles en tu pedido o configuración
-        // const wompiPublicKey = environment.wompi.public_key || 'pub_test_YOUR_PUBLIC_KEY';
-        const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';  //|| 'pub_test_YOUR_PUBLIC_KEY';
+        const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';
 
-        // Usar el número de pedido ya asignado como referencia
         const reference = this.pedidoGral.nroPedido || `order-${new Date().getTime()}`;
 
-        // Configurar datos del cliente para el formulario de pago
         const customerData = {
           fullName: this.pedidoGral.cliente?.nombres_completos || '',
           phoneNumber: this.pedidoGral.cliente?.numero_celular_comprador || '',
@@ -1373,31 +1318,27 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           email: this.pedidoGral.cliente?.correo_electronico_comprador || ''
         };
 
-        // Inicializar el widget de Wompi
         const checkout = new window['WidgetCheckout']({
           currency: 'COP',
           amountInCents: amountInCents,
           reference: reference,
           publicKey: wompiPublicKey,
-          redirectUrl: 'http://localhost:4200/payment-callback',//environment.wompi.redirectURL, // URL a la que Wompi redirigirá después del pago
+          redirectUrl: 'http://localhost:4200/payment-callback',
           taxInCents: {
-            vat: Math.round((this.pedidoGral?.totalImpuesto ?? 0) * 100), // IVA, ajustar según necesidades
-            consumption: 0 // Impuesto al consumo, ajustar según necesidades
+            vat: Math.round((this.pedidoGral?.totalImpuesto ?? 0) * 100),
+            consumption: 0
           },
           signature: {
-            integrity: this.pedidoGral?.pagoInformation?.integridad || '', // Firma de seguridad, ajustar según necesidades 
+            integrity: this.pedidoGral?.pagoInformation?.integridad || '',
           },
 
           customerData: customerData,
-          // Puedes agregar más configuraciones según la documentación de Wompi
         });
 
-        // Abrir el widget y manejar la respuesta
         checkout.open((result) => {
           const { transaction } = result;
 
           if (transaction.status === 'APPROVED') {
-            // Almacenar los datos de la transacción en el pedido
             this.pedidoGral.transaccionId = transaction.id;
             this.pedidoGral.estadoPago = EstadoPago.Aprobado;
             this.pedidoGral.PagosAsentados = [{
@@ -1411,11 +1352,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
 
 
-            resolve(true); // Pago exitoso
+            resolve(true);
           } else {
             this.pedidoGral.estadoPago = EstadoPago.Rechazado;
-            // Puedes guardar más detalles sobre el rechazo si lo necesitas
-            resolve(false); // Pago rechazado
+            resolve(false);
           }
         }, (error) => {
           console.error('Error en el widget de Wompi:', error);
@@ -1429,7 +1369,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     });
   }
 
-  // Método para continuar con la creación del pedido normal (no Wompi)
   private continuarCreacionPedido() {
     const context = this;
     context.ventasService.validateNroPedido(context.pedidoGral.nroPedido as string).subscribe({
@@ -1450,7 +1389,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           }
         });
 
-        // ir al siguiente steper
         this.mywizard.goToNextStep();
       },
       error: (err) => {
@@ -1460,9 +1398,13 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   }
 
   cambiarEstadoSegunLosProductos() {
-    const siTodosSonParaProducir = this.pedidoGral?.carrito.some(x =>
-      x.producto.crearProducto.paraProduccion
-    );
+    if (!this.pedidoGral?.carrito || this.pedidoGral.carrito.length === 0) {
+      return;
+    }
+    
+    const siTodosSonParaProducir = this.pedidoGral.carrito.some(item => {
+      return item.producto?.crearProducto?.paraProduccion;
+    });
 
     if (!siTodosSonParaProducir) {
       this.pedidoGral.estadoProceso = EstadoProceso.ParaDespachar;
@@ -1472,31 +1414,20 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   overridePedido(event: Pedido) {
     this.pedidoGral = event;
     console.log(this.pedidoGral);
-    if (this.pedidoGral.facturacion.hasOwnProperty('direccion')) {
-      if (this.pedidoGral.carrito[0]?.configuracion?.datosEntrega?.formaEntrega.toString().toLowerCase().includes("domicilio")) {
-        if (this.pedidoGral.envio.hasOwnProperty('direccionEntrega')) {
-          this.nextAvailable = true
+    if (this.pedidoGral?.facturacion?.hasOwnProperty('direccion')) {
+      if (this.pedidoGral?.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase().includes("domicilio")) {
+        if (this.pedidoGral?.envio?.hasOwnProperty('direccionEntrega')) {
+          this.nextAvailable = true;
         } else {
-          this.nextAvailable = false
+          this.nextAvailable = false;
         }
-      } else {
-        this.nextAvailable = true
       }
-
-    } else {
-      this.nextAvailable = false
     }
-
-
-    // this.showPedidoConfirm = true;
-    // this.showSteper = false;
-    // this.mywizard.goToNextStep();
   }
 
   onBillingSame(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     if (checked) {
-      // Copiar datos de contacto del comprador desde el formulario reactivo
       this.alias_facturacion = this.formulario.value.nombres_completos;
       this.razon_social = this.formulario.value.nombres_completos;
       this.tipo_documento_facturacion = this.formulario.value.tipo_documento_comprador;
@@ -1504,17 +1435,12 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.indicativo_celular_facturacion = this.formulario.value.indicativo_celular_comprador;
       this.numero_celular_facturacion = this.formulario.value.numero_celular_comprador;
       this.correo_electronico_facturacion = this.formulario.value.correo_electronico_comprador;
-      // Aquí se heredan los datos de ubicación y dirección que están ligados por ngModel en la plantilla:
-      // (asegúrate de que los inputs de dirección tengan [(ngModel)] asignados a estas mismas variables)
       this.direccion_facturacion = this.direccion_facturacion;
       this.pais = this.pais;
       this.departamento = this.departamento;
       this.ciudad_municipio = this.ciudad_municipio;
       this.codigo_postal = this.codigo_postal;
-      // De esta forma, al crear el cliente, en los objetos tanto de facturación como de entrega se podrá
-      // utilizar la misma dirección y ubicación.
     } else {
-      // Opcional: limpiar los datos de facturación
       this.alias_facturacion = "";
       this.razon_social = "";
       this.tipo_documento_facturacion = "";
@@ -1571,9 +1497,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             this.ciudades1 = y.ciudades.map((c) => {
               return c;
             });
-            // this.ciudadesOrigen1 = this.ciudades.map(city => ({
-            //   value: city, label: city
-            // }))
           }
         });
       }
@@ -1591,9 +1514,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     }
   }
 
-  // NUEVO MÉTODO: Crear cliente de forma rápida usando los datos mínimos del formulario
   crearClienteRapido() {
-    // Recopilar datos mínimos para la creación del cliente
     const clienteData = {
       ...this.formulario.value,
       datosFacturacionElectronica: this.formulario.value.datosFacturacionElectronica || [],
@@ -1602,7 +1523,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       estado: "activo"
     };
     this.pedidoGral.cliente = this.utils.deepClone(clienteData);
-    // Si no tiene datos de facturación, se preconfiguran usando campos del formulario
     if (!clienteData.datosFacturacionElectronica?.length && this.direccion_facturacion) {
       const datoFacturacion = {
         alias: "Principal",
@@ -1643,7 +1563,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.service.createClient(clienteData).subscribe((r: any) => {
       this.pedidoGral.facturacion = this.datosFacturacionElectronica[0];
       this.pedidoGral.envio = this.datosEntregas[0];
-      // Si la respuesta es un ArrayBuffer, se decodifica y se parsea a JSON
       const client = (r instanceof ArrayBuffer) ? JSON.parse(new TextDecoder().decode(r)) : r;
       Swal.fire({
         title: "Guardado!",
@@ -1652,13 +1571,25 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         confirmButtonText: "Ok",
       });
       sessionStorage.setItem("cliente", JSON.stringify(clienteData));
-      this.clienteRecienCreado = true; // Esto activará la visualización de facturación y entrega
+      this.clienteRecienCreado = true;
       this.pedidoGral = { ...this.pedidoGral };
     });
   }
 
   onVoiceTranscription(text: string): void {
     console.log('Texto transcrito:', text);
-    // Aquí se podría utilizar la transcripción para realizar alguna acción
+  }
+
+  limpiarCarrito(): void {
+    if (this.pedidoGral) {
+      this.pedidoGral.carrito = [];
+      if (this.carritoComponent) {
+        try {
+          this.pedidoGral = { ...this.pedidoGral, carrito: [] };
+        } catch (error) {
+          console.error('Error al limpiar el carrito', error);
+        }
+      }
+    }
   }
 }

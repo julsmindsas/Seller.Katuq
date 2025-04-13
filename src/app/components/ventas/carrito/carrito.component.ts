@@ -1,6 +1,6 @@
 import {   Component, Input, OnInit } from "@angular/core";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
-import { VentasService } from "src/app/shared/services/ventas/ventas.service";
+import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
 import { Pedido } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";
@@ -64,6 +64,31 @@ export class CarritoComponent implements OnInit {
     });
 
     return total;
+  }
+
+  // Método para calcular el subtotal del carrito
+  calcularSubtotal(): number {
+    return this.getTotalProductPriceInCart();
+  }
+
+  // Método para calcular el IVA (19%)
+  calcularIVA(): number {
+    const subtotal = this.calcularSubtotal();
+    return subtotal * 0.19;
+  }
+
+  // Método para calcular el costo de envío
+  calcularEnvio(): number {
+    // Por defecto el valor de envío es 0, se puede modificar según la lógica del negocio
+    return 0;
+  }
+
+  // Método para calcular el total (subtotal + IVA + envío - descuento)
+  calcularTotal(): number {
+    const subtotal = this.calcularSubtotal();
+    const iva = this.calcularIVA();
+    const envio = this.calcularEnvio();
+    return subtotal + iva + envio - this.valorDescuento;
   }
 
   checkPriceScale(itemCarrito: any) {
