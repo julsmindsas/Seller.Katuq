@@ -201,4 +201,28 @@ export class CarritoComponent implements OnInit {
     })
   }
 
+  getAdiciones(item: any): string {
+    if (!item?.configuracion?.adiciones) return '';
+    return item.configuracion.adiciones
+      .map((a: any) => a.referencia?.nombre)
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  getPreferencias(item: any): string {
+    if (!item?.configuracion?.preferencias) return '';
+    return item.configuracion.preferencias
+      .map((p: any) => p.nombre)
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  editarNota(item: any) {
+    const nuevaNota = prompt('Edita la nota del producto:', item.notas);
+    if (nuevaNota !== null) {
+      item.notas = nuevaNota;
+      // Aquí podrías agregar lógica adicional como guardar en localStorage o actualizar en el backend
+    }
+  }
+
 }
