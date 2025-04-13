@@ -153,5 +153,5 @@ export const content: Routes = [
       import('../../components/integrations/integrations.module')
         .then(m => m.IntegrationsModule),
     canActivate: [AuthGuard]
-  },
+  }
 ];

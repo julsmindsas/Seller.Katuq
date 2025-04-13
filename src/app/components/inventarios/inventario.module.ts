@@ -13,6 +13,8 @@ import { environment } from 'src/environments/environment';
 import { ProductosRoutingModule } from '../productos/prductos-rounting.module';
 import { SharedModule } from 'src/app/shared/shared.module';
 import {PaginatorModule} from 'primeng/paginator';
+import { BodegasComponent } from './bodegas/bodegas.component';
+import { CrearBodegasComponent } from './bodegas/crear-bodegas/crear-bodegas.component';
 @NgModule({
     imports: [
         InventariosRoutingModule,
@@ -28,7 +30,7 @@ import {PaginatorModule} from 'primeng/paginator';
         TableModule,
         PaginatorModule
     ],
-    declarations: [InventarioCatalogoComponent],
+    declarations: [InventarioCatalogoComponent, BodegasComponent, CrearBodegasComponent],
     providers: [NgbActiveModal, ModalGalleryService],
 })
 export class InventarioCatalogoModule { }
