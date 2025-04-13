@@ -1,0 +1,13 @@
+<!-- e-wallet-payment.component.html -->
+<div class="modal-header">
+    <h4 class="modal-title">Pago con E-wallet</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <label for="emailOrPhone">Correo Electrónico o Teléfono:</label>
+    <input type="text" id="emailOrPhone" [(ngModel)]="emailOrPhone" class="form-control" />
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="confirmPayment()">Confirmar Pago</button>
+  </div>

@@ -1,0 +1,19 @@
+<!-- card-payment.component.html -->
+<div class="modal-header">
+    <h4 class="modal-title">Pago con Tarjeta</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <label for="cardNumber">Número de Tarjeta:</label>
+    <input type="text" id="cardNumber" [(ngModel)]="cardNumber" class="form-control" />
+  
+    <label for="expiryDate">Fecha de Vencimiento:</label>
+    <input type="text" id="expiryDate" [(ngModel)]="expiryDate" class="form-control" />
+  
+    <label for="cvv">CVV:</label>
+    <input type="text" id="cvv" [(ngModel)]="cvv" class="form-control" />
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="confirmPayment()">Confirmar Pago</button>
+  </div>

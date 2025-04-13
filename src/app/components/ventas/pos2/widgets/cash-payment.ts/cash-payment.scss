@@ -1,0 +1,11 @@
+/* cash-payment.component.css */
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  input[disabled] {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+  }
