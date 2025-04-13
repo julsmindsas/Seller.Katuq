@@ -1,0 +1,25 @@
+/* warehouse-selector.component.css */
+.warehouse-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .warehouse-selector label {
+    font-weight: bold;
+  }
+  
+  .warehouse-selector select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  .selected-warehouse {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f0f8ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+  }

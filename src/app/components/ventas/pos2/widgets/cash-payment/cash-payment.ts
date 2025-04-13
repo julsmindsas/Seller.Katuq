@@ -26,7 +26,7 @@ export class CashPaymentComponent {
   confirmPayment() {
     if (this.amountPaid >= this.totalAmount) {
       alert(`Pago confirmado. Cambio a devolver: $${this.change.toFixed(2)}`);
-      this.activeModal.close();
+      this.activeModal.close('Pagado');
     } else {
       alert('El monto entregado no es suficiente.');
     }
