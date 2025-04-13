@@ -41,6 +41,10 @@ import { ProductComponent } from './pos2/widgets/product/product.component';
 import { CreateCustomerModalComponent } from './pos2/widgets/create-customer-modal/create-customer-modal.component';
 import { PosCheckoutComponent } from './pos2/widgets/pos-checkout/pos-checkout.component';
 import { CrearClienteModalComponent } from './clientes/crear-cliente-modal/crear-cliente-modal.component';
+import { CardPaymentComponent } from './pos2/widgets/card-payment/card-payment';
+import { CashPaymentComponent } from './pos2/widgets/cash-payment/cash-payment';
+import { EWalletPaymentComponent } from './pos2/widgets/ewallet-payment/ewallet-payment';
+import { WarehouseSelectorComponent } from './pos2/widgets/warehouse-selector/warehouse-selector';
 
 @NgModule({
   imports: [
@@ -88,7 +92,11 @@ import { CrearClienteModalComponent } from './clientes/crear-cliente-modal/crear
     ProductComponent,
     CreateCustomerModalComponent,
     PosCheckoutComponent,
-    CrearClienteModalComponent
+    CrearClienteModalComponent,
+    CardPaymentComponent,
+    CashPaymentComponent,
+    EWalletPaymentComponent,
+    WarehouseSelectorComponent
   ],
   exports: [
     CrearVentasComponent,

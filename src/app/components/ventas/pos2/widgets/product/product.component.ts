@@ -36,8 +36,6 @@ export class ProductComponent implements OnInit {
 
   obtenerProductos() {
 
-    debugger;
-
     this.maestroService.getAllProductsPagination(100, 1).subscribe((r: any) => {
       if ((r.products as any[]).length > 0) {
         const productosPorEmpresa = r.products;
@@ -69,7 +67,6 @@ export class ProductComponent implements OnInit {
   }
 
   searchStores() {
-    debugger;
     this.filter['search'] = this.searchQuery.toLowerCase();
     this.filterDetails();
   }

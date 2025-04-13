@@ -45,13 +45,13 @@ export class CartService {
   }
 
   deleteCartItem(item: any) {
-    this.cartItems = this.cartItems.filter((product) => product.crearProducto.titulo !== item.crearProducto.titulo);
-    localStorage.setItem('cart', JSON.stringify(this.cartItems))
+    this.posCartItems= this.posCartItems.filter((product) => product.crearProducto.titulo !== item.crearProducto.titulo);
+    localStorage.setItem('cart', JSON.stringify(this.posCartItems))
   }
 
   clearCart() {
-    this.cartItems = [];
-    localStorage.setItem('cart', JSON.stringify(this.cartItems))
+    this.posCartItems = [];
+    localStorage.setItem('cart', JSON.stringify(this.posCartItems))
   }
 
   getSubTotal() {
@@ -75,14 +75,11 @@ export class CartService {
     this.toast.success(`Producto adicionado !`, '', {
       timeOut: 70000
     });
-
-    debugger;
     
     const totalQuantityInCart = this.posCartItems.reduce((total, cartItem) => {
       if (cartItem.crearProducto.titulo === item.crearProducto.titulo) {
         return total + cartItem.cantidad;
       }
-
       return total;
     }, 0);
 
