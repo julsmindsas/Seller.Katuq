@@ -5,212 +5,363 @@
       <hr> -->
       <div class="row">
         <div class="col-lg-6 col-sm-12">
-          <h5>{{ 'Datos de Cliente' | translate }}</h5>
-          <hr>
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <label for="nombres_completos"><strong>{{ 'Tipo Documento:' | translate }}</strong></label>
-              <p id="nombres_completos">{{pedido?.cliente?.tipo_documento_comprador}}</p>
+          <!-- Nueva sección de búsqueda de cliente -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light p-3">
+              <h5 class="mb-0"><i class="fa fa-search me-2"></i>{{ 'Buscar Cliente' | translate }}</h5>
             </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="apellidos_completos">{{ 'Documento:' | translate }}</label></strong><br />
-              <p id="apellidos_completos">{{pedido?.cliente?.documento}}</p>
-            </div>
-          </div>
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <label for="nombres_completos"><strong>{{ 'Nombres:' | translate }}</strong></label>
-              <p id="nombres_completos">{{pedido?.cliente?.nombres_completos}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="apellidos_completos">{{ 'Apellidos:' | translate }}</label></strong><br />
-              <p id="apellidos_completos">{{pedido?.cliente?.apellidos_completos}}</p>
-            </div>
-          </div>
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <strong><label for="numero_celular_comprador">{{ 'Número de celular:' | translate }}</label></strong><br />
-              <p id="numero_celular_comprador">({{pedido?.cliente?.indicativo_celular_comprador}}){{pedido?.cliente?.numero_celular_comprador}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="numero_celular_comprador">{{ 'Número de celular WhatsApp:' | translate }}</label></strong><br />
-              <p id="numero_celular_comprador">({{pedido?.cliente?.indicativo_celular_whatsapp}}){{pedido?.cliente?.numero_celular_whatsapp}}</p>
-            </div>
-            
-          </div>
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <strong><label for="correo_electronico_comprador">{{ 'Estado Cliente:' | translate }}</label></strong><br />
-              <p id="correo_electronico_comprador">{{pedido?.cliente?.estado}}</p>
-            </div>
-            
-            <div class="mb-3 col-sm-6">
-              <strong><label for="correo_electronico_comprador">Correo electrónico:</label></strong><br />
-              <p id="correo_electronico_comprador">{{pedido?.cliente?.correo_electronico_comprador}}</p>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
-              <h5>{{ 'Datos de Envío' | translate }}</h5>
-              <hr>
-              <div class="row">
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioNombres">{{ 'Nombres:' | translate }}</label></strong><br />
-                  <p id="envioNombres">{{pedido?.envio?.nombres}}</p>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-medium" for="tipo_documento">{{ 'Buscar por:' | translate }}</label>
+                  <select #buscarPor class="form-select" id="tipo_documento">
+                    <option value="CC-NIT" selected>CC-NIT</option>
+                    <option value="PA">Email</option>
+                    <option value="TI">Nombre Apellido</option>
+                  </select>
                 </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioApellidos">{{ 'Apellidos:' | translate }}</label></strong><br />
-                  <p id="envioApellidos">{{pedido?.envio?.apellidos}}</p>
+                <div class="col-md-5">
+                  <label class="form-label fw-medium" for="numero_documento">{{ 'Ingrese el valor:' | translate }}</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fa fa-search"></i>
+                    </span>
+                    <input #documentoBusqueda class="form-control" type="text" id="numero_documento"
+                      placeholder="{{ 'Escriba para buscar' | translate }}" />
+                  </div>
                 </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioAlias">{{ 'Referencia de Datos:' | translate }}</label></strong><br />
-                  <p id="envioAlias">{{pedido?.envio?.alias}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioDireccionEntrega">{{ 'Dirección de Entrega:' | translate }}</label></strong><br />
-                  <p id="envioDireccionEntrega">{{pedido?.envio?.direccionEntrega}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioNombreUnidad">{{ 'Nombre de Unidad:' | translate }}</label></strong><br />
-                  <p id="envioNombreUnidad">{{pedido?.envio?.nombreUnidad}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioEspecificacionesInternas">{{ 'Especificaciones Internas:' | translate }}</label></strong><br />
-                  <p id="envioEspecificacionesInternas">{{pedido?.envio?.especificacionesInternas}}</p>
-                </div>
-                
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
-                  <p id="envioDepartamento">{{pedido?.envio?.departamento}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioCiudad">{{ 'Ciudad:' | translate }}</label></strong><br />
-                  <p id="envioCiudad">{{pedido?.envio?.ciudad}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioBarrio">{{ 'Barrio:' | translate }}</label></strong><br />
-                  <p id="envioBarrio">{{pedido?.envio?.barrio}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioCodigoPV">{{ 'Código Postal:' | translate }}</label></strong><br />
-                  <p id="envioCodigoPV">{{pedido?.envio?.codigoPV}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioCelular">{{ 'Celular:' | translate }}</label></strong><br />
-                  <p id="envioCelular">({{pedido?.envio?.indicativoCel}}){{pedido?.envio?.celular}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioOtroNumero">{{ 'Otro Número:' | translate }}</label></strong><br />
-                  <p id="envioOtroNumero">({{pedido?.envio?.indicativoOtroNumero}}){{pedido?.envio?.otroNumero}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioOtroNumero">{{ 'Zona:' | translate }}</label></strong><br />
-                  <p id="envioOtroNumero">{{pedido?.envio?.zonaCobro}}</p>
+                <div class="col-md-3 d-flex align-items-end">
+                  <button class="btn btn-primary w-100" (click)="buscar()">
+                    <i class="fa fa-search me-2"></i> {{ 'Buscar' | translate }}
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-          
-          <h5>{{ 'Datos de Facturación' | translate }}</h5>
-          <hr>
-          <div class="row">
-            
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionNombres">{{ 'Nombres:' | translate }}</label></strong><br />
-              <p id="facturacionNombres">{{pedido?.facturacion?.nombres}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionTipoDocumento">{{ 'Tipo de Documento:' | translate }}</label></strong><br />
-              <p id="facturacionTipoDocumento">{{pedido?.facturacion?.tipoDocumento}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionTipoDocumento">{{ 'Documento:' | translate }}</label></strong><br />
-              <p id="facturacionTipoDocumento">{{pedido?.facturacion?.documento}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionPais">{{ 'País:' | translate }}</label></strong><br />
-              <p id="facturacionPais">{{pedido?.facturacion?.pais}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
-              <p id="facturacionDepartamento">{{pedido?.facturacion?.departamento}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionCiudad">{{ 'Ciudad:' | translate }}</label></strong><br />
-              <p id="facturacionCiudad">{{pedido?.facturacion?.ciudad}}</p>
-            </div>
-          </div>
-            
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionCodigoPostal">{{ 'Código Postal:' | translate }}</label></strong><br />
-              <p id="facturacionCodigoPostal">{{pedido?.facturacion?.codigoPostal}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionCelular">{{ 'Celular:' | translate }}</label></strong><br />
-              <p id="facturacionCelular">({{pedido?.facturacion?.indicativoCel}}){{pedido?.facturacion?.celular}}</p>
-            </div>
-            <div class="row">
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionDireccion">{{ 'Dirección:' | translate }}</label></strong><br />
-                <p id="facturacionDireccion">{{pedido?.facturacion?.direccion}}</p>
-              </div>
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionAlias">{{ 'Referencia de Datos:' | translate }}</label></strong><br />
-                <p id="facturacionAlias">{{pedido?.facturacion?.alias}}</p>
-              </div>
-            </div>
-  
-            <div class="row">
-              
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionCorreoElectronico">{{ 'Correo Electrónico:' | translate }}</label></strong><br />
-                <p id="facturacionCorreoElectronico">{{pedido?.facturacion?.correoElectronico}}</p>
-              </div>
-            </div>
 
-            <h5>{{ 'Datos Extras de Entrega' | translate }}</h5>
-            <hr>
+          <!-- Cliente encontrado -->
+          <div *ngIf="encontrado" class="card border-success border-top border-3 shadow-sm mb-4">
+            <div class="card-body p-3">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-circle bg-success text-white me-3">
+                      {{pedido.cliente?.nombres_completos?.charAt(0) || 'C'}}
+                    </div>
+                    <div>
+                      <h5 class="mb-1">{{ pedido.cliente?.nombres_completos }} {{ pedido.cliente?.apellidos_completos }}</h5>
+                      <p class="text-muted mb-0 small">
+                        <i class="fa fa-id-card me-1"></i> {{ pedido.cliente?.tipo_documento_comprador }} {{ pedido.cliente?.documento }}
+                      </p>
+                      <p class="text-muted mb-0 small">
+                        <i class="fa fa-phone me-1"></i> {{ pedido.cliente?.indicativo_celular_comprador }} {{ pedido.cliente?.numero_celular_comprador }}
+                      </p>
+                      <p class="text-muted mb-0 small">
+                        <i class="fa fa-envelope me-1"></i> {{ pedido.cliente?.correo_electronico_comprador }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                  <button class="btn btn-outline-success" (click)="mostrarFormularioCliente = true">
+                    <i class="fa fa-edit me-1"></i> {{ 'Editar Información' | translate }}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="row">
-            <div class="col-sm-12">
-              <div class="row">
+
+          <!-- Formulario de cliente -->
+          <div *ngIf="mostrarFormularioCliente" class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light p-3">
+              <h5 class="mb-0">{{ encontrado ? ('Editar Cliente' | translate) : ('Crear Nuevo Cliente' | translate) }}</h5>
+            </div>
+            <div class="card-body">
+              <form [formGroup]="formulario">
+                <!-- Información personal -->
+                <div class="row g-3 mb-4">
+                  <div class="col-12">
+                    <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Información Personal' | translate }}</h6>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label fw-medium" for="tipo_documento">
+                      {{ 'Tipo de Documento' | translate }} <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="tipo_documento" formControlName="tipo_documento_comprador">
+                      <option value="CC-NIT">CC-NIT</option>
+                      <option value="PA">PA</option>
+                      <option value="TI">TI</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label fw-medium" for="numero_documento">
+                      {{ 'Documento' | translate }} <span class="text-danger">*</span>
+                    </label>
+                    <input class="form-control" type="text" id="numero_documento" formControlName="documento" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium" for="nombres">
+                      {{ 'Nombres y Apellidos' | translate }} <span class="text-danger">*</span>
+                    </label>
+                    <input class="form-control" type="text" id="nombres" formControlName="nombres_completos" />
+                  </div>
+                </div>
+
+                <!-- Información de contacto -->
+                <div class="row g-3">
+                  <div class="col-12">
+                    <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Información de Contacto' | translate }}</h6>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">{{ 'Teléfono Celular' | translate }} <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light" style="min-width: 90px;">
+                        <select autocomplete="on" formControlName="indicativo_celular_comprador"
+                          class="form-select form-select-sm border-0 bg-transparent">
+                          <option value="57" selected>+57</option>
+                          <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+                            +{{ item.phone_code }}
+                          </option>
+                        </select>
+                      </span>
+                      <input class="form-control" type="text" formControlName="numero_celular_comprador"
+                        placeholder="{{ 'Número de celular' | translate }}" />
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium" for="correo_electronico">
+                      {{ 'Correo Electrónico' | translate }} <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light">
+                        <i class="fa fa-envelope-o"></i>
+                      </span>
+                      <input class="form-control" type="email" id="correo_electronico"
+                        placeholder="ejemplo@correo.com" formControlName="correo_electronico_comprador" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="d-flex justify-content-end mt-4">
+                  <button *ngIf="!encontrado" class="btn btn-warning btn-lg" 
+                         (click)="crearClienteRapido()" [disabled]="formulario.invalid">
+                    <i class="fa fa-bolt me-2"></i> {{ 'Crear Cliente Rápido' | translate }}
+                  </button>
+                  <button *ngIf="encontrado" class="btn btn-primary btn-lg" 
+                         (click)="editarCliente()" [disabled]="formulario.invalid">
+                    <i class="fa fa-save me-2"></i> {{ 'Guardar Cambios' | translate }}
+                  </button>
+                  <button class="btn btn-outline-secondary btn-lg ms-2" (click)="mostrarFormularioCliente = false">
+                    <i class="fa fa-times me-2"></i> {{ 'Cancelar' | translate }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Datos del cliente (visible cuando hay un cliente seleccionado) -->
+          <div *ngIf="pedido?.cliente && !mostrarFormularioCliente">
+            <h5>{{ 'Datos de Cliente' | translate }}</h5>
+            <hr>
+            <div class="row">
+              <div class="mb-3 col-sm-6">
+                <label for="nombres_completos"><strong>{{ 'Tipo Documento:' | translate }}</strong></label>
+                <p id="nombres_completos">{{pedido?.cliente?.tipo_documento_comprador}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="apellidos_completos">{{ 'Documento:' | translate }}</label></strong><br />
+                <p id="apellidos_completos">{{pedido?.cliente?.documento}}</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="mb-3 col-sm-6">
+                <label for="nombres_completos"><strong>{{ 'Nombres:' | translate }}</strong></label>
+                <p id="nombres_completos">{{pedido?.cliente?.nombres_completos}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="apellidos_completos">{{ 'Apellidos:' | translate }}</label></strong><br />
+                <p id="apellidos_completos">{{pedido?.cliente?.apellidos_completos}}</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="mb-3 col-sm-6">
+                <strong><label for="numero_celular_comprador">{{ 'Número de celular:' | translate }}</label></strong><br />
+                <p id="numero_celular_comprador">({{pedido?.cliente?.indicativo_celular_comprador}}){{pedido?.cliente?.numero_celular_comprador}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="numero_celular_comprador">{{ 'Número de celular WhatsApp:' | translate }}</label></strong><br />
+                <p id="numero_celular_comprador">({{pedido?.cliente?.indicativo_celular_whatsapp}}){{pedido?.cliente?.numero_celular_whatsapp}}</p>
+              </div>
               
-                <div class="mb-3 col-sm-12">
-                  <strong><label for="facturacionCorreoElectronico">{{ 'Fecha Entrega:' | translate }}</label></strong><br />
-                  <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}</p>
-                </div>
-              </div>
-              <div class="row">
-                  
-                <div class="mb-3 col-sm-12">
-                  <strong><label for="facturacionCorreoElectronico">Forma Entrega:</label></strong><br />
-                  <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega}}</p>
-                </div>
-              </div>
-              <div class="row">
-                  
-                <div class="mb-3 col-sm-12">
-                  <strong><label for="facturacionCorreoElectronico">Horario Entrega:</label></strong><br />
-                  <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega}}</p>
-                </div>
+            </div>
+            <div class="row">
+              <div class="mb-3 col-sm-6">
+                <strong><label for="correo_electronico_comprador">{{ 'Estado Cliente:' | translate }}</label></strong><br />
+                <p id="correo_electronico_comprador">{{pedido?.cliente?.estado}}</p>
               </div>
               
-              <div class="row">
+              <div class="mb-3 col-sm-6">
+                <strong><label for="correo_electronico_comprador">Correo electrónico:</label></strong><br />
+                <p id="correo_electronico_comprador">{{pedido?.cliente?.correo_electronico_comprador}}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Datos de Envío y Facturación cuando hay un cliente seleccionado -->
+          <div *ngIf="pedido?.cliente && !mostrarFormularioCliente">
+            <div class="row">
+              <div class="col-sm-12">
+                <h5>{{ 'Datos de Envío' | translate }}</h5>
+                <hr>
+                <div class="row">
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioNombres">{{ 'Nombres:' | translate }}</label></strong><br />
+                    <p id="envioNombres">{{pedido?.envio?.nombres}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioApellidos">{{ 'Apellidos:' | translate }}</label></strong><br />
+                    <p id="envioApellidos">{{pedido?.envio?.apellidos}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioAlias">{{ 'Referencia de Datos:' | translate }}</label></strong><br />
+                    <p id="envioAlias">{{pedido?.envio?.alias}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioDireccionEntrega">{{ 'Dirección de Entrega:' | translate }}</label></strong><br />
+                    <p id="envioDireccionEntrega">{{pedido?.envio?.direccionEntrega}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioNombreUnidad">{{ 'Nombre de Unidad:' | translate }}</label></strong><br />
+                    <p id="envioNombreUnidad">{{pedido?.envio?.nombreUnidad}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioEspecificacionesInternas">{{ 'Especificaciones Internas:' | translate }}</label></strong><br />
+                    <p id="envioEspecificacionesInternas">{{pedido?.envio?.especificacionesInternas}}</p>
+                  </div>
                   
-                
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
+                    <p id="envioDepartamento">{{pedido?.envio?.departamento}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioCiudad">{{ 'Ciudad:' | translate }}</label></strong><br />
+                    <p id="envioCiudad">{{pedido?.envio?.ciudad}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioBarrio">{{ 'Barrio:' | translate }}</label></strong><br />
+                    <p id="envioBarrio">{{pedido?.envio?.barrio}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioCodigoPV">{{ 'Código Postal:' | translate }}</label></strong><br />
+                    <p id="envioCodigoPV">{{pedido?.envio?.codigoPV}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioCelular">{{ 'Celular:' | translate }}</label></strong><br />
+                    <p id="envioCelular">({{pedido?.envio?.indicativoCel}}){{pedido?.envio?.celular}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioOtroNumero">{{ 'Otro Número:' | translate }}</label></strong><br />
+                    <p id="envioOtroNumero">({{pedido?.envio?.indicativoOtroNumero}}){{pedido?.envio?.otroNumero}}</p>
+                  </div>
+                  <div class="mb-3 col-sm-6">
+                    <strong><label for="envioOtroNumero">{{ 'Zona:' | translate }}</label></strong><br />
+                    <p id="envioOtroNumero">{{pedido?.envio?.zonaCobro}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <h5>{{ 'Datos de Facturación' | translate }}</h5>
+            <hr>
+            <div class="row">
+              
+            <div class="row">
+              <div class="mb-3 col-sm-6">
+                <strong><label for="facturacionNombres">{{ 'Nombres:' | translate }}</label></strong><br />
+                <p id="facturacionNombres">{{pedido?.facturacion?.nombres}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="facturacionTipoDocumento">{{ 'Tipo de Documento:' | translate }}</label></strong><br />
+                <p id="facturacionTipoDocumento">{{pedido?.facturacion?.tipoDocumento}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="facturacionTipoDocumento">{{ 'Documento:' | translate }}</label></strong><br />
+                <p id="facturacionTipoDocumento">{{pedido?.facturacion?.documento}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="facturacionPais">{{ 'País:' | translate }}</label></strong><br />
+                <p id="facturacionPais">{{pedido?.facturacion?.pais}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="facturacionDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
+                <p id="facturacionDepartamento">{{pedido?.facturacion?.departamento}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="facturacionCiudad">{{ 'Ciudad:' | translate }}</label></strong><br />
+                <p id="facturacionCiudad">{{pedido?.facturacion?.ciudad}}</p>
+              </div>
+            </div>
+              
+              <div class="mb-3 col-sm-6">
+                <strong><label for="facturacionCodigoPostal">{{ 'Código Postal:' | translate }}</label></strong><br />
+                <p id="facturacionCodigoPostal">{{pedido?.facturacion?.codigoPostal}}</p>
+              </div>
+              <div class="mb-3 col-sm-6">
+                <strong><label for="facturacionCelular">{{ 'Celular:' | translate }}</label></strong><br />
+                <p id="facturacionCelular">({{pedido?.facturacion?.indicativoCel}}){{pedido?.facturacion?.celular}}</p>
+              </div>
+              <div class="row">
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionDireccion">{{ 'Dirección:' | translate }}</label></strong><br />
+                  <p id="facturacionDireccion">{{pedido?.facturacion?.direccion}}</p>
+                </div>
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionAlias">{{ 'Referencia de Datos:' | translate }}</label></strong><br />
+                  <p id="facturacionAlias">{{pedido?.facturacion?.alias}}</p>
+                </div>
               </div>
     
+              <div class="row">
+                
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionCorreoElectronico">{{ 'Correo Electrónico:' | translate }}</label></strong><br />
+                  <p id="facturacionCorreoElectronico">{{pedido?.facturacion?.correoElectronico}}</p>
+                </div>
+              </div>
+
+              <h5>{{ 'Datos Extras de Entrega' | translate }}</h5>
+              <hr>
+            </div>
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="row">
+                
+                  <div class="mb-3 col-sm-12">
+                    <strong><label for="facturacionCorreoElectronico">{{ 'Fecha Entrega:' | translate }}</label></strong><br />
+                    <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}</p>
+                  </div>
+                </div>
+                <div class="row">
+                    
+                  <div class="mb-3 col-sm-12">
+                    <strong><label for="facturacionCorreoElectronico">Forma Entrega:</label></strong><br />
+                    <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega}}</p>
+                  </div>
+                </div>
+                <div class="row">
+                    
+                  <div class="mb-3 col-sm-12">
+                    <strong><label for="facturacionCorreoElectronico">Horario Entrega:</label></strong><br />
+                    <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega}}</p>
+                  </div>
+                </div>
+                
+                <div class="row"></div>
+      
+              </div>
             </div>
           </div>
-          
-         
-
-          
-
-
-
-
         </div>
 
         <div class="col-lg-6 col-sm-12">
@@ -233,12 +384,6 @@
                   </div>
                 </li>
               </ul>
-              <!-- <ul class="qty">
-                <li >Costo de Productos
-                  <span>
-                    </span>
-                </li>
-              </ul> -->
               <ul class="sub-total">
 
                 <li>Costo de productos: <span class="count"> {{checkPriceScale()| currency:'USD':'symbol':'1.0-0'}}</span></li>
@@ -265,26 +410,8 @@
                   </li>
                 </ul></li>
                 <li>total Con IVA: <span class="count"> {{pedidoUtilService.getShippingCost(allBillingZone)+pedidoUtilService.getShippingTaxCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() + checkIVAPrice().totalPrecioIVADef | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <!-- <li class="shipping-class">
-                  Costo de envio -->
-                  <!-- <div class="shopping-checkout-option">
-                    <label class="d-block" for="chk-ani"> <input class="checkbox_animated" id="chk-ani" type="checkbox"
-                        checked="" />Option 1 </label>
-                    <label class="d-block" for="chk-ani1"> <input class="checkbox_animated" id="chk-ani1"
-                        type="checkbox" />Option 2 </label>
-                  </div> -->
-                  <!-- <div class="shopping-checkout-option" >
-                    <label class="d-block"*ngFor="let formaPago of formasPago; let i = index" [for]="'chk-ani' + i">
-                      <input class="checkbox_animated" [id]="'chk-ani' + i" type="checkbox" [checked]="formaPago.id === 1" />{{formaPago.nombre}}
-                    </label>
-                  </div> -->
-                <!-- </l
-                  i> -->
               </ul>
               <hr>
-              <!-- <ul class="sub-total">
-                <li>Total <span class="count">$ {{ pedidoUtilService.getTotalToPay(pedidoUtilService.getShippingCost(allBillingZone))}}</span></li>
-              </ul> -->
               <div class="animate-chk">
                 <div class="row">
                   <form [formGroup]="form">
@@ -296,8 +423,6 @@
                           <label class="d-block nombre-largo" [for]="opcionPago.id">
                             <input class="radio_animated" [id]="opcionPago.id" type="radio" [value]="opcionPago.id" formControlName="opcionSeleccionada" />
                             <span title="{{opcionPago.nombre}}">{{opcionPago.nombre}}</span>
-                            <!-- Ejemplo condicional para mostrar imagen si aplica -->
-                            <!-- <img *ngIf="opcionPago.nombre === 'PayPal'" class="img-paypal" src="assets/images/checkout/paypal.png" alt="" /> -->
                           </label>
                         </div>
                       </div>

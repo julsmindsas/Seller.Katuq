@@ -1,5 +1,5 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormControl, FormGroup, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Pedido } from '../modelo/pedido';
 import { CartSingletonService } from '../../../shared/services/ventas/cart.singleton.service';
 import { PaymentService } from '../../../shared/services/ventas/payment.service';
@@ -8,6 +8,11 @@ import { MaestroService } from 'src/app/shared/services/maestros/maestro.service
 import { PedidosUtilService } from '../service/pedidos.util.service';
 import { UserLogged } from 'src/app/shared/models/User/UserLogged';
 import { UserLite } from 'src/app/shared/models/User/UserLite';
+import { InfoIndicativos } from "../../../../Mock/indicativosPais";
+import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
+import Swal from "sweetalert2";
+import { ToastrService } from "ngx-toastr";
+import { UtilsService } from 'src/app/shared/services/utils.service';
 declare var WidgetCheckout: any;
 @Component({
   selector: 'app-checkout',
@@ -15,6 +20,8 @@ declare var WidgetCheckout: any;
   styleUrls: ['./checkout.component.scss']
 })
 export class CheckOutComponent implements OnInit, OnChanges {
+  @ViewChild("buscarPor") buscarPor: ElementRef;
+  @ViewChild("documentoBusqueda") documentoBusqueda: ElementRef;
 
   public checkoutForm: UntypedFormGroup;
   form = new FormGroup({
@@ -25,6 +32,27 @@ export class CheckOutComponent implements OnInit, OnChanges {
   signature: string;
   formasPago: any[];
 
+  // Variables para búsqueda y gestión de clientes
+  formulario: FormGroup;
+  encontrado: boolean = false;
+  bloqueado: boolean = false;
+  mostrarFormularioCliente: boolean = false;
+  clienteRecienCreado: boolean = false;
+  documentoBuscar: string = '';
+  datos: any;
+  indicativos: any[];
+  paises: string[];
+  departamentos: string[];
+  ciudades: string[] = [];
+  ciudadesOrigen: { value: string; label: string }[];
+  pais: string = "Colombia";
+  departamento: string = "Antioquia";
+  ciudad_municipio: string;
+  codigo_postal: string;
+  direccion_facturacion: string;
+  datosFacturacionElectronica: any[] = [];
+  datosEntregas: any[] = [];
+  
   //crear un un evento emit para que el padre se entere que se hizo el pago
   @Output() comprarYPagar = new EventEmitter<any>();
 
@@ -37,9 +65,20 @@ export class CheckOutComponent implements OnInit, OnChanges {
   precioproducto: any;
 
 
-  constructor(private fb: UntypedFormBuilder, private ref: ChangeDetectorRef,
-    private singleton: CartSingletonService, private payment: PaymentService, private service: MaestroService,
-    public pedidoUtilService: PedidosUtilService) {
+  constructor(
+    private fb: UntypedFormBuilder, 
+    private ref: ChangeDetectorRef,
+    private singleton: CartSingletonService, 
+    private payment: PaymentService, 
+    private service: MaestroService,
+    private formBuilder: FormBuilder,
+    private infoIndicativo: InfoIndicativos,
+    private inforPaises: InfoPaises,
+    private toastrService: ToastrService,
+    private utils: UtilsService,
+    public pedidoUtilService: PedidosUtilService
+  ) {
+    this.initForm();
 
     this.service.consultarFormaPago().subscribe((r: any) => {
       this.formasPago = (r as any[]);
@@ -65,6 +104,38 @@ export class CheckOutComponent implements OnInit, OnChanges {
       this.pedidoUtilService.pedido = this.pedido;
     }
   }
+
+  private initForm() {
+    this.paises = this.inforPaises.paises.map((x) => {
+      return x.Pais;
+    });
+    this.indicativos = this.infoIndicativo.datos;
+
+    this.pais = "Colombia";
+    this.departamento = "Antioquia";
+    this.identificarDepto();
+    this.identificarCiu();
+    
+    this.formulario = this.formBuilder.group({
+      nombres_completos: ["", Validators.required],
+      tipo_documento_comprador: ["", Validators.required],
+      documento: ["", Validators.required],
+      indicativo_celular_comprador: ["57", Validators.required],
+      numero_celular_comprador: ["", Validators.required],
+      correo_electronico_comprador: [
+        "",
+        [Validators.required, Validators.email],
+      ],
+      indicativo_celular_whatsapp: ["57", Validators.required],
+      numero_celular_whatsapp: ["", Validators.required],
+      datosFacturacionElectronica: [[""]],
+      datosEntrega: [[""]],
+      notas: [[""]],
+      estado: ["Activo"],
+      cd: [""]
+    });
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     this.pedido = { ...this.pedido };
     console.log(this.pedido);
@@ -78,16 +149,227 @@ export class CheckOutComponent implements OnInit, OnChanges {
     });
   }
 
-
   onSubmit() {
   }
 
   ngOnInit() {
-
     if (this.pedido) {
       this.pedidoUtilService.pedido = this.pedido;
     }
   }
+
+  // Método para buscar clientes
+  buscar() {
+    this.bloqueado = false;
+    this.formulario.reset();
+    this.documentoBuscar = this.documentoBusqueda.nativeElement.value;
+    if (this.buscarPor.nativeElement.value == "CC-NIT") {
+      const data = { documento: this.documentoBusqueda.nativeElement.value };
+      this.service.getClientByDocument(data).subscribe((res: any) => {
+        console.log(res);
+        if (res.length == 0) {
+          this.formulario.controls["documento"].setValue(this.documentoBusqueda.nativeElement.value);
+          this.pedido.cliente = undefined;
+          this.encontrado = false;
+          this.bloqueado = false;
+          this.mostrarFormularioCliente = true;
+          Swal.fire({
+            title: "No encontrado!",
+            text: "No se encuentra el documento. Llene los datos para crear el cliente.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          });
+        } else {
+          this.pedido.cliente = res;
+          this.ref.markForCheck();
+          sessionStorage.setItem("cliente", JSON.stringify(res));
+          this.formulario.patchValue(res);
+          this.datos = res;
+          this.identificarDepto();
+          this.identificarCiu();
+          this.encontrado = true;
+          this.mostrarFormularioCliente = false;
+          if (this.formulario.value.estado == "Bloqueado") {
+            this.bloqueado = true;
+          }
+          this.toastrService.show('<p class="mb-0 mt-1">Cliente encontrado!</p>', '', { closeButton: true, enableHtml: true, positionClass: 'toast-bottom-right', timeOut: 1000 });
+          
+          // Cargar datos de facturación y entrega del cliente
+          this.datosFacturacionElectronica = [];
+          this.datosEntregas = [];
+          
+          if (res.datosFacturacionElectronica && res.datosFacturacionElectronica.length > 0) {
+            res.datosFacturacionElectronica.forEach(x => {
+              this.datosFacturacionElectronica.push(x);
+            });
+            // Asignar el primer dato de facturación al pedido
+            this.pedido.facturacion = this.datosFacturacionElectronica[0];
+          }
+          
+          if (res.datosEntrega && res.datosEntrega.length > 0) {
+            res.datosEntrega.forEach(x => {
+              this.datosEntregas.push(x);
+            });
+            // Asignar el primer dato de entrega al pedido
+            this.pedido.envio = this.datosEntregas[0];
+          }
+        }
+      });
+    }
+  }
+
+  // Método para crear cliente rápido
+  crearClienteRapido() {
+    const clienteData = {
+      ...this.formulario.value,
+      datosFacturacionElectronica: this.formulario.value.datosFacturacionElectronica || [],
+      datosEntrega: this.formulario.value.datosEntrega || [],
+      notas: this.formulario.value.notas || [],
+      estado: "activo"
+    };
+    this.pedido.cliente = this.utils.deepClone(clienteData);
+    if (!clienteData.datosFacturacionElectronica?.length && this.direccion_facturacion) {
+      const datoFacturacion = {
+        alias: "Principal",
+        nombres: this.formulario.value.nombres_completos,
+        tipoDocumento: this.formulario.value.tipo_documento_comprador,
+        documento: this.formulario.value.documento,
+        indicativoCel: this.formulario.value.indicativo_celular_comprador,
+        celular: this.formulario.value.numero_celular_comprador,
+        correoElectronico: this.formulario.value.correo_electronico_comprador,
+        direccion: this.direccion_facturacion,
+        pais: this.pais,
+        departamento: this.departamento,
+        ciudad: this.ciudad_municipio,
+        codigoPostal: this.codigo_postal || ""
+      };
+      this.formulario.controls["datosFacturacionElectronica"].setValue([datoFacturacion]);
+      clienteData.datosFacturacionElectronica = [datoFacturacion];
+      this.datosFacturacionElectronica = [datoFacturacion];
+    }
+    if (!clienteData.datosEntrega?.length && this.direccion_facturacion) {
+      const datoEntrega = {
+        alias: "Principal",
+        nombres: this.formulario.value.nombres_completos,
+        apellidos: "",
+        indicativoCel: this.formulario.value.indicativo_celular_comprador,
+        celular: this.formulario.value.numero_celular_comprador,
+        direccionEntrega: this.direccion_facturacion,
+        pais: this.pais,
+        departamento: this.departamento,
+        ciudad: this.ciudad_municipio,
+        codigoPV: this.codigo_postal || ""
+      };
+      this.formulario.controls["datosEntrega"].setValue([datoEntrega]);
+      clienteData.datosEntrega = [datoEntrega];
+      this.datosEntregas = [datoEntrega];
+    }
+    this.service.createClient(clienteData).subscribe((r: any) => {
+      this.pedido.facturacion = this.datosFacturacionElectronica[0];
+      this.pedido.envio = this.datosEntregas[0];
+      const client = (r instanceof ArrayBuffer) ? JSON.parse(new TextDecoder().decode(r)) : r;
+      Swal.fire({
+        title: "Guardado!",
+        text: "Cliente creado rápidamente",
+        icon: "success",
+        confirmButtonText: "Ok",
+      });
+      sessionStorage.setItem("cliente", JSON.stringify(clienteData));
+      this.clienteRecienCreado = true;
+      this.encontrado = true;
+      this.mostrarFormularioCliente = false;
+      this.pedido = { ...this.pedido };
+    });
+  }
+
+  // Método para editar cliente
+  editarCliente() {
+    Swal.fire({
+      title: "Editar Cliente",
+      text: "¿Desea editar el cliente?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Editar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.formulario.controls["datosFacturacionElectronica"].setValue(
+          this.datosFacturacionElectronica || []
+        );
+        this.formulario.controls["datosEntrega"].setValue(
+          this.datosEntregas || []
+        );
+        this.service.editClient(this.formulario.value).subscribe((r) => {
+          console.log(r);
+          Swal.fire({
+            title: "Editado!",
+            text: "Usuario editado con exito",
+            icon: "success",
+            confirmButtonText: "Ok",
+          });
+          // Actualizar el cliente en el pedido
+          this.pedido.cliente = this.formulario.value;
+          this.mostrarFormularioCliente = false;
+        });
+      }
+    });
+  }
+
+  // Métodos para manejar regiones
+  identificarDepto() {
+    this.inforPaises.paises.map((x) => {
+      if (x.Pais == this.pais) {
+        this.departamentos = x.Regiones.map((c) => {
+          return c.departamento;
+        });
+      }
+    });
+  }
+
+  identificarCiu() {
+    this.inforPaises.paises.map((x) => {
+      if (x.Pais == this.pais) {
+        x.Regiones.map((y) => {
+          if (y.departamento == this.departamento) {
+            this.ciudades = y.ciudades.map((c) => {
+              return c;
+            });
+            this.ciudadesOrigen = this.ciudades.map((city) => ({
+              value: city,
+              label: city,
+            }));
+          }
+        });
+      }
+    });
+  }
+
+  // Método para seleccionar una dirección de facturación
+  seleccionarDireccionFE(index: number) {
+    this.pedido.facturacion = this.datosFacturacionElectronica[index];
+    this.pedido = { ...this.pedido };
+    Swal.fire({
+      title: "Direccion Seleccionada!",
+      text: this.datosFacturacionElectronica[index].direccion,
+      icon: "success",
+      confirmButtonText: "Ok",
+    });
+  }
+
+  // Método para seleccionar una dirección de entrega
+  seleccionarDireccionEntrega(index: number) {
+    this.pedido.envio = this.datosEntregas[index];
+    this.pedido = { ...this.pedido };
+    Swal.fire({
+      title: "Direccion Seleccionada!",
+      text: this.datosEntregas[index].direccionEntrega,
+      icon: "success",
+      confirmButtonText: "Ok",
+    });
+  }
+
   checkPriceScaleProd(item) {
     let totalPrecioSinIVA = 0;
     let totalPrecioSinIVADef = 0;
@@ -313,6 +595,38 @@ export class CheckOutComponent implements OnInit, OnChanges {
   }
 
   async gotToPaymentOrder() {
+    // Validar que haya un cliente seleccionado
+    if (!this.pedido.cliente) {
+      Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar un cliente para continuar",
+        icon: "error",
+        confirmButtonText: "Entendido"
+      });
+      return;
+    }
+
+    // Validar que haya datos de facturación
+    if (!this.pedido.facturacion) {
+      Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar datos de facturación para continuar",
+        icon: "error",
+        confirmButtonText: "Entendido"
+      });
+      return;
+    }
+
+    // Validar que haya datos de envío
+    if (!this.pedido.envio) {
+      Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar datos de envío para continuar",
+        icon: "error",
+        confirmButtonText: "Entendido"
+      });
+      return;
+    }
 
     this.pedidoUtilService.pedido = this.pedido;
     this.pedido.totalDescuento = this.pedidoUtilService.getDiscount();
@@ -341,8 +655,5 @@ export class CheckOutComponent implements OnInit, OnChanges {
     this.pedido.formaEntrega = this.pedido.carrito[0].configuracion.datosEntrega.formaEntrega;
 
     this.comprarYPagar.emit(this.pedido);
-
   }
-
-
 }
