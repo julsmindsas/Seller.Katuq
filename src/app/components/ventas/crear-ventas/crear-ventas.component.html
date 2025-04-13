@@ -107,15 +107,24 @@
               </ng-template>
               
               <div class="container-fluid p-4">
-                <div class="row">
-                  <!-- Carrito -->
-                  <div class="col-lg-8">
+                <!-- Carrito -->
+                <div class="row mb-4">
+                  <div class="col-12">
                     <app-carrito #carrito [pedido]="pedidoGral"></app-carrito>
                   </div>
-                  
-                  <!-- Notas y resumen -->
-                  <div class="col-lg-4">
-                    <app-notas #notaspedidos [pedido]="pedidoGral" [carrito]="carrito1"></app-notas>
+                </div>
+                
+                <!-- Notas -->
+                <div class="row">
+                  <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                      <div class="card-header bg-light p-3">
+                        <h5 class="mb-0"><i class="fa fa-sticky-note me-2"></i>Notas del Pedido</h5>
+                      </div>
+                      <div class="card-body">
+                        <app-notas #notaspedidos [pedido]="pedidoGral" [carrito]="carrito1"></app-notas>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 

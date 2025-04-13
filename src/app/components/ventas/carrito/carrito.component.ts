@@ -225,4 +225,71 @@ export class CarritoComponent implements OnInit {
     }
   }
 
+  // Método para agregar nota de producción
+  agregarNotaProduccion(itemCarrito: any) {
+    // Preparar las notas existentes
+    const notasExistentes = itemCarrito.notaProduccion || [];
+
+    // Crear el contenido HTML para las notas existentes
+    const notasHtml = notasExistentes.length > 0 
+      ? notasExistentes.map((nota, index) => 
+          `<div class="nota-existente">
+            <strong>Nota ${index + 1}:</strong> 
+            <span>${nota.nota}</span>
+            <small class="text-muted ml-2">(${new Date(nota.fecha).toLocaleString()})</small>
+          </div>`
+        ).join('')
+      : '<p class="text-muted">No hay notas de producción existentes.</p>';
+
+    Swal.fire({
+      title: 'Notas de Producción',
+      html: `
+        <div class="notas-existentes mb-3">
+          <h5>Notas Existentes:</h5>
+          ${notasHtml}
+        </div>
+        <div class="nueva-nota">
+          <h5>Agregar Nueva Nota:</h5>
+          <textarea id="nuevaNota" class="form-control" placeholder="Escriba su nota de producción aquí..."></textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar Nota',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const nuevaNota = (document.getElementById('nuevaNota') as HTMLTextAreaElement).value;
+        return nuevaNota ? nuevaNota : null;
+      },
+      didOpen: () => {
+        const textarea = document.getElementById('nuevaNota') as HTMLTextAreaElement;
+        textarea.focus();
+      },
+      inputValidator: (value) => {
+        return !value ? 'Necesitas escribir una nota' : null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        // Verificar si el producto tiene un array de notas de producción
+        if (!itemCarrito.notaProduccion) {
+          itemCarrito.notaProduccion = [];
+        }
+
+        // Agregar la nueva nota
+        itemCarrito.notaProduccion.push({
+          nota: result.value,
+          fecha: new Date().toISOString()
+        });
+
+        // Actualizar el carrito en localStorage
+        localStorage.setItem('carrito', JSON.stringify(this.productos));
+        
+        // Refrescar el carrito
+        this.refreshCartWithProducts();
+
+        // Mostrar mensaje de éxito
+        this.toastrService.success('Nota de producción agregada', 'Éxito');
+      }
+    });
+  }
+
 }

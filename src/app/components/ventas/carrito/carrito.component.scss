@@ -1,0 +1,70 @@
+// Estilos para notas de producción en modal
+.notas-existentes {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #e9ecef;
+}
+
+.nota-existente {
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  strong {
+    color: #495057;
+    margin-right: 8px;
+  }
+
+  span {
+    color: #212529;
+  }
+
+  small {
+    color: #6c757d;
+    font-size: 0.7rem;
+  }
+}
+
+.nueva-nota {
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+    border-color: #ced4da;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+  }
+}
+
+// Estilos para el botón de notas de producción en la tabla de carrito
+.btn-notas-produccion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #17a2b8;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #138496;
+    transform: scale(1.1);
+  }
+
+  i {
+    margin-right: 4px;
+  }
+}

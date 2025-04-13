@@ -1,9 +1,8 @@
 import { AfterContentInit, OnChanges, SimpleChanges, Component, Input, OnInit, Output } from '@angular/core';
 import { FormGroup, FormBuilder, Validators, FormArray } from '@angular/forms';
 import { CartSingletonService } from '../../../../shared/services/ventas/cart.singleton.service';
-import { Notas, Pedido } from '../../modelo/pedido';
+import { Notas, Pedido, EstadoProceso, EstadoPago } from '../../modelo/pedido';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { After } from 'v8';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -16,12 +15,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   @Input() carrito: any;
   @Input() isEdit: boolean = false;
   fecha: Date
-  notasProduccion: any[] = [];
   notasCliente: any[] = [];
   notasDespachos: any[] = [];
   notasEntregas: any[] = [];
   notasFacturacionPagos: any[] = [];
-  notasProduccionForm: FormGroup;
   notasClienteForm: FormGroup;
   notasDespachoForm: FormGroup;
   notasEntregasForm: FormGroup;
@@ -31,57 +28,51 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   notasDespachosOrdenadas: Notas[];
   notasEntregasOrdenadas: Notas[];
   notasFacturacionPagosOrdenadas: Notas[];
-  constructor(private singleton: CartSingletonService, private formBuilder: FormBuilder, private modalService: NgbModal) {
-    localStorage.getItem('carrito')
 
-  }
+  constructor(
+    private singleton: CartSingletonService, 
+    private formBuilder: FormBuilder, 
+    private modalService: NgbModal
+  ) {}
+
   ngAfterContentInit(): void {
-    if (!this.pedido?.notasPedido && !this.pedido?.notasPedido?.notasCliente && !this.pedido?.notasPedido?.notasDespachos && !this.pedido?.notasPedido?.notasEntregas && !this.pedido?.notasPedido?.notasFacturacionPagos) {
+    // Inicializar notas ordenadas
+    this.notasClienteOrdenadas = this.ordenarNotas(this.pedido?.notasPedido?.notasCliente || []);
+    this.notasDespachosOrdenadas = this.ordenarNotas(this.pedido?.notasPedido?.notasDespachos || []);
+    this.notasEntregasOrdenadas = this.ordenarNotas(this.pedido?.notasPedido?.notasEntregas || []);
+    this.notasFacturacionPagosOrdenadas = this.ordenarNotas(this.pedido?.notasPedido?.notasFacturacionPagos || []);
+
+    // Inicializar estructura de notas si no existe
+    if (!this.pedido) {
+      this.pedido = {
+        referencia: '',
+        notasPedido: {
+          notasProduccion: [],
+          notasCliente: [],
+          notasDespachos: [],
+          notasEntregas: [],
+          notasFacturacionPagos: []
+        },
+        estadoProceso: EstadoProceso.SinProducir,
+        estadoPago: EstadoPago.Pendiente
+      };
+    }
+
+    if (!this.pedido.notasPedido) {
       this.pedido.notasPedido = {
         notasProduccion: [],
         notasCliente: [],
         notasDespachos: [],
         notasEntregas: [],
         notasFacturacionPagos: []
-      }
-
-    }
-    this.notasClienteOrdenadas = [...this.pedido?.notasPedido?.notasCliente].sort((a, b) => {
-      // Ordenar de más reciente a menos reciente
-      return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
-    });
-    this.notasDespachosOrdenadas = [...this.pedido?.notasPedido?.notasDespachos].sort((a, b) => {
-      // Ordenar de más reciente a menos reciente
-      return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
-    });
-    this.notasEntregasOrdenadas = [...this.pedido?.notasPedido?.notasEntregas].sort((a, b) => {
-      // Ordenar de más reciente a menos reciente
-      return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
-    });
-    this.notasFacturacionPagosOrdenadas = [...this.pedido?.notasPedido?.notasFacturacionPagos].sort((a, b) => {
-      // Ordenar de más reciente a menos reciente
-      return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
-    });
-
-    if (this.isEdit) {
-      this.notasProduccion = this.pedido.notasPedido.notasProduccion;
-      this.notasCliente = this.pedido.notasPedido.notasCliente;
-      this.notasDespachos = this.pedido.notasPedido.notasDespachos;
-      this.notasEntregas = this.pedido.notasPedido.notasEntregas;
-      this.notasFacturacionPagos = this.pedido.notasPedido.notasFacturacionPagos;
+      };
     }
   }
 
   ngOnInit(): void {
-
     this.fecha = new Date();
-    this.notasProduccionForm = this.formBuilder.group({
-      productos: this.formBuilder.array(this.pedido.carrito.map(prod => this.formBuilder.group({
-        notas: this.formBuilder.array((prod.notaProduccion || []).map(nota => this.formBuilder.control(nota))),
-          
-        
-      })))
-    });
+
+    // Inicializar formularios
     this.notasClienteForm = this.formBuilder.group({
       nota: ['', Validators.required]
     });
@@ -89,9 +80,11 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     this.notasDespachoForm = this.formBuilder.group({
       nota: ['', Validators.required]
     });
+
     this.notasEntregasForm = this.formBuilder.group({
       nota: ['', Validators.required]
     });
+
     this.notasFacturacionPagosForm = this.formBuilder.group({
       nota: ['', Validators.required]
     });
@@ -101,109 +94,114 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (changes.carrito) {
       this.singleton.refreshCart().subscribe((data: any) => {
         this.pedido.carrito = data;
-      })
-      // console.log('carrito En notas:',JSON.parse(this.carrito))
-      if (typeof this.carrito === 'string') {
-        this.carrito = JSON.parse(this.carrito)
-        this.llenarFormulario()
-      } else {
-        this.carrito = this.carrito
-        this.llenarFormulario()
-      }
-
+      });
     }
   }
-  llenarFormulario() {
-    if(!this.notasProduccionForm){
-      return;
-    }
-    const productos = this.notasProduccionForm.get('productos') as FormArray;
-    productos.clear();
-    this.pedido.carrito.forEach(prod => {
-      const notasArray = this.formBuilder.array((prod.notaProduccion || []).map(nota => this.formBuilder.control(nota)));
-      productos.push(this.formBuilder.group({ notas: notasArray }));
-    });
-  }
-  get notasFormArray() {
-    return this.notasProduccionForm.get('productos') as FormArray;
-  }
-  agregarNota(productoIndex: number) {
-    const notasArray = this.notasFormArray.at(productoIndex).get('notas') as FormArray;
-    notasArray.push(this.formBuilder.control(''));
-    
-  }
-  guardarNotas() {
-    const notasActualizadas = this.notasFormArray.value;
-    notasActualizadas.map(x=>{
-      if(x.fecha==undefined || x.fecha==null)
-      x.fecha=new Date()
-    })
-    this.pedido.carrito.forEach((obj, index) => {
-      obj.notaProduccion = notasActualizadas[index].notas;
 
+  // Método para ordenar notas de más reciente a menos reciente
+  private ordenarNotas(notas: Notas[]): Notas[] {
+    return [...notas].sort((a, b) => {
+      const fechaA = a.fecha ? new Date(a.fecha).getTime() : 0;
+      const fechaB = b.fecha ? new Date(b.fecha).getTime() : 0;
+      return fechaB - fechaA;
     });
-    
-    this.pedido.notasPedido.notasProduccion=notasActualizadas
-    Swal.fire('Notas Guardadas Con Exito', 'Se han guardado con exito las notas de produccion para los productos', 'success')
-    console.log(this.carrito);
-    localStorage.setItem('carrito', JSON.stringify(this.pedido.carrito))
-    this.singleton.refreshCart()
-    this.bandera = false
-  }
-  onSubmitPedido() {
-    const notaPedido = this.notasProduccionForm.value;
-    notaPedido.fecha = this.fecha;
-    this.notasProduccion.unshift(notaPedido);
-    this.pedido.notasPedido.notasProduccion = this.notasProduccion as Notas[]
-    this.notasProduccionForm.reset();
   }
 
   onSubmitCliente() {
+    if (!this.pedido.notasPedido) {
+      this.pedido.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
+    }
+
     const nota = this.notasClienteForm.value;
-    nota.fecha = this.fecha;
+    nota.fecha = new Date().toISOString();
     this.pedido.notasPedido.notasCliente.unshift(nota);
 
     this.notasClienteForm.reset();
   }
+
   onSubmitDespachos() {
+    if (!this.pedido.notasPedido) {
+      this.pedido.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
+    }
+
     const notaDespachos = this.notasDespachoForm.value;
-    notaDespachos.fecha = this.fecha;
+    notaDespachos.fecha = new Date().toISOString();
     this.notasDespachos.unshift(notaDespachos);
-    this.pedido.notasPedido.notasDespachos = this.notasDespachos as Notas[]
+    this.pedido.notasPedido.notasDespachos = this.notasDespachos as Notas[];
     this.notasDespachoForm.reset();
   }
+
   onSubmitEntregas() {
+    if (!this.pedido.notasPedido) {
+      this.pedido.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
+    }
+
     const notaEntrega = this.notasEntregasForm.value;
-    notaEntrega.fecha = this.fecha;
+    notaEntrega.fecha = new Date().toISOString();
     this.notasEntregas.unshift(notaEntrega);
-    this.pedido.notasPedido.notasEntregas = this.notasEntregas as Notas[]
+    this.pedido.notasPedido.notasEntregas = this.notasEntregas as Notas[];
     this.notasEntregasForm.reset();
   }
+
   onSubmitFacturacionPagos() {
+    if (!this.pedido.notasPedido) {
+      this.pedido.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
+    }
+
     const notaFacturacionPagos = this.notasFacturacionPagosForm.value;
-    notaFacturacionPagos.fecha = this.fecha;
+    notaFacturacionPagos.fecha = new Date().toISOString();
     this.notasFacturacionPagos.unshift(notaFacturacionPagos);
-    this.pedido.notasPedido.notasFacturacionPagos = this.notasFacturacionPagos as Notas[]
+    this.pedido.notasPedido.notasFacturacionPagos = this.notasFacturacionPagos as Notas[];
     this.notasFacturacionPagosForm.reset();
   }
 
-
   eliminarNota(index: number, tipo: string) {
+    if (!this.pedido.notasPedido) {
+      this.pedido.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
+    }
+
     switch (tipo) {
-      case 'produccion':
-        this.notasProduccion.splice(index, 1);
-        break;
       case 'cliente':
-        this.notasCliente.splice(index, 1);
+        this.pedido.notasPedido.notasCliente.splice(index, 1);
         break;
       case 'despachos':
-        this.notasDespachos.splice(index, 1);
+        this.pedido.notasPedido.notasDespachos.splice(index, 1);
         break;
       case 'entregas':
-        this.notasEntregas.splice(index, 1);
+        this.pedido.notasPedido.notasEntregas.splice(index, 1);
         break;
       case 'facturacionPagos':
-        this.notasFacturacionPagos.splice(index, 1);
+        this.pedido.notasPedido.notasFacturacionPagos.splice(index, 1);
         break;
     }
   }
