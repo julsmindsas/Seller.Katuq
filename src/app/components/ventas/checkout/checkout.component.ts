@@ -52,6 +52,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
   direccion_facturacion: string;
   datosFacturacionElectronica: any[] = [];
   datosEntregas: any[] = [];
+  generarFacturaElectronica: boolean = false;
+  activarEntrega: boolean = true;
+  datosEntregaNoEncontradosParaCiudadSeleccionada: boolean = false;
   
   //crear un un evento emit para que el padre se entere que se hizo el pago
   @Output() comprarYPagar = new EventEmitter<any>();
@@ -137,8 +140,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.pedido = { ...this.pedido };
-    console.log(this.pedido);
+    if (changes['pedido'] && changes['pedido'].currentValue) {
+      this.pedido = changes['pedido'].currentValue;
+    }
     this.pedidoUtilService.pedido = this.pedido;
     this.singleton.refreshCart().subscribe((data: any) => {
       this.pedido.carrito = data;
@@ -595,65 +599,29 @@ export class CheckOutComponent implements OnInit, OnChanges {
   }
 
   async gotToPaymentOrder() {
-    // Validar que haya un cliente seleccionado
     if (!this.pedido.cliente) {
-      Swal.fire({
-        title: "Error",
-        text: "Debe seleccionar un cliente para continuar",
-        icon: "error",
-        confirmButtonText: "Entendido"
-      });
+      this.toastrService.error('Por favor seleccione un cliente', 'Error');
       return;
     }
 
-    // Validar que haya datos de facturación
-    if (!this.pedido.facturacion) {
-      Swal.fire({
-        title: "Error",
-        text: "Debe seleccionar datos de facturación para continuar",
-        icon: "error",
-        confirmButtonText: "Entendido"
-      });
+    if (this.generarFacturaElectronica && !this.pedido.facturacion) {
+      this.toastrService.error('Por favor seleccione los datos de facturación', 'Error');
       return;
     }
 
-    // Validar que haya datos de envío
-    if (!this.pedido.envio) {
-      Swal.fire({
-        title: "Error",
-        text: "Debe seleccionar datos de envío para continuar",
-        icon: "error",
-        confirmButtonText: "Entendido"
-      });
+    if (this.activarEntrega && !this.pedido.envio) {
+      this.toastrService.error('Por favor seleccione los datos de entrega', 'Error');
       return;
     }
 
-    this.pedidoUtilService.pedido = this.pedido;
-    this.pedido.totalDescuento = this.pedidoUtilService.getDiscount();
-    this.pedido.totalEnvio = this.pedidoUtilService.getShippingCost(this.allBillingZone);
-    this.pedido.totalImpuesto = this.pedidoUtilService.checkIVAPrice() + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone)
-    this.pedido.totalPedidoSinDescuento = this.pedidoUtilService.getSubtotal();
-    this.pedido.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(this.pedido.totalEnvio) + this.pedidoUtilService.checkIVAPrice();
-    let opcionSeleccionadaId = this.form.value.opcionSeleccionada;
-    let opcionSeleccionada = this.formasPago.filter(formaPago => formaPago.id === opcionSeleccionadaId);
-
-    // Ahora opcionSeleccionada[0].nombre tiene el nombre correspondiente al id
-    this.pedido.formaDePago = opcionSeleccionada[0].nombre;
-    this.pedido.cuponAplicado = '';
-
-    const userString = localStorage.getItem('user');
-    const user = JSON.parse(userString) as UserLogged;
-    const userLite: UserLite = {
-      name: user.name,
-      email: user.email,
-      nit: user.nit
-    }
-    this.pedido.asesorAsignado = userLite;
-    this.pedido.fechaCreacion = new Date().toISOString();
-    this.pedido.fechaEntrega = new Date(this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.year, this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.month == 0 ? 0 : this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.month - 1, this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.day).toISOString();
-    this.pedido.horarioEntrega = this.pedido.carrito[0].configuracion.datosEntrega.horarioEntrega;
-    this.pedido.formaEntrega = this.pedido.carrito[0].configuracion.datosEntrega.formaEntrega;
-
-    this.comprarYPagar.emit(this.pedido);
+    /* try {
+      const response = await this.payment.pauymentWompi(this.pedido);
+      if (response && response.url) {
+        window.location.href = response.url;
+      }
+    } catch (error) {
+      this.toastrService.error('Error al iniciar el pago', 'Error');
+      console.error('Error al iniciar el pago:', error);
+    } */
   }
 }

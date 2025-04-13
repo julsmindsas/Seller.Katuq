@@ -21,7 +21,8 @@
                   </select>
                 </div>
                 <div class="col-md-5">
-                  <label class="form-label fw-medium" for="numero_documento">{{ 'Ingrese el valor:' | translate }}</label>
+                  <label class="form-label fw-medium" for="numero_documento">{{ 'Ingrese el valor:' | translate
+                    }}</label>
                   <div class="input-group">
                     <span class="input-group-text bg-light">
                       <i class="fa fa-search"></i>
@@ -49,12 +50,15 @@
                       {{pedido.cliente?.nombres_completos?.charAt(0) || 'C'}}
                     </div>
                     <div>
-                      <h5 class="mb-1">{{ pedido.cliente?.nombres_completos }} {{ pedido.cliente?.apellidos_completos }}</h5>
+                      <h5 class="mb-1">{{ pedido.cliente?.nombres_completos }} {{ pedido.cliente?.apellidos_completos }}
+                      </h5>
                       <p class="text-muted mb-0 small">
-                        <i class="fa fa-id-card me-1"></i> {{ pedido.cliente?.tipo_documento_comprador }} {{ pedido.cliente?.documento }}
+                        <i class="fa fa-id-card me-1"></i> {{ pedido.cliente?.tipo_documento_comprador }} {{
+                        pedido.cliente?.documento }}
                       </p>
                       <p class="text-muted mb-0 small">
-                        <i class="fa fa-phone me-1"></i> {{ pedido.cliente?.indicativo_celular_comprador }} {{ pedido.cliente?.numero_celular_comprador }}
+                        <i class="fa fa-phone me-1"></i> {{ pedido.cliente?.indicativo_celular_comprador }} {{
+                        pedido.cliente?.numero_celular_comprador }}
                       </p>
                       <p class="text-muted mb-0 small">
                         <i class="fa fa-envelope me-1"></i> {{ pedido.cliente?.correo_electronico_comprador }}
@@ -74,7 +78,8 @@
           <!-- Formulario de cliente -->
           <div *ngIf="mostrarFormularioCliente" class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-light p-3">
-              <h5 class="mb-0">{{ encontrado ? ('Editar Cliente' | translate) : ('Crear Nuevo Cliente' | translate) }}</h5>
+              <h5 class="mb-0">{{ encontrado ? ('Editar Cliente' | translate) : ('Crear Nuevo Cliente' | translate) }}
+              </h5>
             </div>
             <div class="card-body">
               <form [formGroup]="formulario">
@@ -113,7 +118,8 @@
                     <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Información de Contacto' | translate }}</h6>
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label fw-medium">{{ 'Teléfono Celular' | translate }} <span class="text-danger">*</span></label>
+                    <label class="form-label fw-medium">{{ 'Teléfono Celular' | translate }} <span
+                        class="text-danger">*</span></label>
                     <div class="input-group">
                       <span class="input-group-text bg-light" style="min-width: 90px;">
                         <select autocomplete="on" formControlName="indicativo_celular_comprador"
@@ -136,20 +142,20 @@
                       <span class="input-group-text bg-light">
                         <i class="fa fa-envelope-o"></i>
                       </span>
-                      <input class="form-control" type="email" id="correo_electronico"
-                        placeholder="ejemplo@correo.com" formControlName="correo_electronico_comprador" />
+                      <input class="form-control" type="email" id="correo_electronico" placeholder="ejemplo@correo.com"
+                        formControlName="correo_electronico_comprador" />
                     </div>
                   </div>
                 </div>
 
                 <!-- Botones de acción -->
                 <div class="d-flex justify-content-end mt-4">
-                  <button *ngIf="!encontrado" class="btn btn-warning btn-lg" 
-                         (click)="crearClienteRapido()" [disabled]="formulario.invalid">
+                  <button *ngIf="!encontrado" class="btn btn-warning btn-lg" (click)="crearClienteRapido()"
+                    [disabled]="formulario.invalid">
                     <i class="fa fa-bolt me-2"></i> {{ 'Crear Cliente Rápido' | translate }}
                   </button>
-                  <button *ngIf="encontrado" class="btn btn-primary btn-lg" 
-                         (click)="editarCliente()" [disabled]="formulario.invalid">
+                  <button *ngIf="encontrado" class="btn btn-primary btn-lg" (click)="editarCliente()"
+                    [disabled]="formulario.invalid">
                     <i class="fa fa-save me-2"></i> {{ 'Guardar Cambios' | translate }}
                   </button>
                   <button class="btn btn-outline-secondary btn-lg ms-2" (click)="mostrarFormularioCliente = false">
@@ -186,21 +192,26 @@
             </div>
             <div class="row">
               <div class="mb-3 col-sm-6">
-                <strong><label for="numero_celular_comprador">{{ 'Número de celular:' | translate }}</label></strong><br />
-                <p id="numero_celular_comprador">({{pedido?.cliente?.indicativo_celular_comprador}}){{pedido?.cliente?.numero_celular_comprador}}</p>
+                <strong><label for="numero_celular_comprador">{{ 'Número de celular:' | translate
+                    }}</label></strong><br />
+                <p id="numero_celular_comprador">
+                  ({{pedido?.cliente?.indicativo_celular_comprador}}){{pedido?.cliente?.numero_celular_comprador}}</p>
               </div>
               <div class="mb-3 col-sm-6">
-                <strong><label for="numero_celular_comprador">{{ 'Número de celular WhatsApp:' | translate }}</label></strong><br />
-                <p id="numero_celular_comprador">({{pedido?.cliente?.indicativo_celular_whatsapp}}){{pedido?.cliente?.numero_celular_whatsapp}}</p>
+                <strong><label for="numero_celular_comprador">{{ 'Número de celular WhatsApp:' | translate
+                    }}</label></strong><br />
+                <p id="numero_celular_comprador">
+                  ({{pedido?.cliente?.indicativo_celular_whatsapp}}){{pedido?.cliente?.numero_celular_whatsapp}}</p>
               </div>
-              
+
             </div>
             <div class="row">
               <div class="mb-3 col-sm-6">
-                <strong><label for="correo_electronico_comprador">{{ 'Estado Cliente:' | translate }}</label></strong><br />
+                <strong><label for="correo_electronico_comprador">{{ 'Estado Cliente:' | translate
+                    }}</label></strong><br />
                 <p id="correo_electronico_comprador">{{pedido?.cliente?.estado}}</p>
               </div>
-              
+
               <div class="mb-3 col-sm-6">
                 <strong><label for="correo_electronico_comprador">Correo electrónico:</label></strong><br />
                 <p id="correo_electronico_comprador">{{pedido?.cliente?.correo_electronico_comprador}}</p>
@@ -228,7 +239,8 @@
                     <p id="envioAlias">{{pedido?.envio?.alias}}</p>
                   </div>
                   <div class="mb-3 col-sm-6">
-                    <strong><label for="envioDireccionEntrega">{{ 'Dirección de Entrega:' | translate }}</label></strong><br />
+                    <strong><label for="envioDireccionEntrega">{{ 'Dirección de Entrega:' | translate
+                        }}</label></strong><br />
                     <p id="envioDireccionEntrega">{{pedido?.envio?.direccionEntrega}}</p>
                   </div>
                   <div class="mb-3 col-sm-6">
@@ -236,10 +248,11 @@
                     <p id="envioNombreUnidad">{{pedido?.envio?.nombreUnidad}}</p>
                   </div>
                   <div class="mb-3 col-sm-6">
-                    <strong><label for="envioEspecificacionesInternas">{{ 'Especificaciones Internas:' | translate }}</label></strong><br />
+                    <strong><label for="envioEspecificacionesInternas">{{ 'Especificaciones Internas:' | translate
+                        }}</label></strong><br />
                     <p id="envioEspecificacionesInternas">{{pedido?.envio?.especificacionesInternas}}</p>
                   </div>
-                  
+
                   <div class="mb-3 col-sm-6">
                     <strong><label for="envioDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
                     <p id="envioDepartamento">{{pedido?.envio?.departamento}}</p>
@@ -271,38 +284,39 @@
                 </div>
               </div>
             </div>
-            
+
             <h5>{{ 'Datos de Facturación' | translate }}</h5>
             <hr>
             <div class="row">
-              
-            <div class="row">
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionNombres">{{ 'Nombres:' | translate }}</label></strong><br />
-                <p id="facturacionNombres">{{pedido?.facturacion?.nombres}}</p>
+
+              <div class="row">
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionNombres">{{ 'Nombres:' | translate }}</label></strong><br />
+                  <p id="facturacionNombres">{{pedido?.facturacion?.nombres}}</p>
+                </div>
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionTipoDocumento">{{ 'Tipo de Documento:' | translate
+                      }}</label></strong><br />
+                  <p id="facturacionTipoDocumento">{{pedido?.facturacion?.tipoDocumento}}</p>
+                </div>
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionTipoDocumento">{{ 'Documento:' | translate }}</label></strong><br />
+                  <p id="facturacionTipoDocumento">{{pedido?.facturacion?.documento}}</p>
+                </div>
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionPais">{{ 'País:' | translate }}</label></strong><br />
+                  <p id="facturacionPais">{{pedido?.facturacion?.pais}}</p>
+                </div>
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
+                  <p id="facturacionDepartamento">{{pedido?.facturacion?.departamento}}</p>
+                </div>
+                <div class="mb-3 col-sm-6">
+                  <strong><label for="facturacionCiudad">{{ 'Ciudad:' | translate }}</label></strong><br />
+                  <p id="facturacionCiudad">{{pedido?.facturacion?.ciudad}}</p>
+                </div>
               </div>
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionTipoDocumento">{{ 'Tipo de Documento:' | translate }}</label></strong><br />
-                <p id="facturacionTipoDocumento">{{pedido?.facturacion?.tipoDocumento}}</p>
-              </div>
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionTipoDocumento">{{ 'Documento:' | translate }}</label></strong><br />
-                <p id="facturacionTipoDocumento">{{pedido?.facturacion?.documento}}</p>
-              </div>
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionPais">{{ 'País:' | translate }}</label></strong><br />
-                <p id="facturacionPais">{{pedido?.facturacion?.pais}}</p>
-              </div>
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
-                <p id="facturacionDepartamento">{{pedido?.facturacion?.departamento}}</p>
-              </div>
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionCiudad">{{ 'Ciudad:' | translate }}</label></strong><br />
-                <p id="facturacionCiudad">{{pedido?.facturacion?.ciudad}}</p>
-              </div>
-            </div>
-              
+
               <div class="mb-3 col-sm-6">
                 <strong><label for="facturacionCodigoPostal">{{ 'Código Postal:' | translate }}</label></strong><br />
                 <p id="facturacionCodigoPostal">{{pedido?.facturacion?.codigoPostal}}</p>
@@ -321,11 +335,12 @@
                   <p id="facturacionAlias">{{pedido?.facturacion?.alias}}</p>
                 </div>
               </div>
-    
+
               <div class="row">
-                
+
                 <div class="mb-3 col-sm-6">
-                  <strong><label for="facturacionCorreoElectronico">{{ 'Correo Electrónico:' | translate }}</label></strong><br />
+                  <strong><label for="facturacionCorreoElectronico">{{ 'Correo Electrónico:' | translate
+                      }}</label></strong><br />
                   <p id="facturacionCorreoElectronico">{{pedido?.facturacion?.correoElectronico}}</p>
                 </div>
               </div>
@@ -336,29 +351,34 @@
             <div class="row">
               <div class="col-sm-12">
                 <div class="row">
-                
+
                   <div class="mb-3 col-sm-12">
-                    <strong><label for="facturacionCorreoElectronico">{{ 'Fecha Entrega:' | translate }}</label></strong><br />
-                    <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}</p>
+                    <strong><label for="facturacionCorreoElectronico">{{ 'Fecha Entrega:' | translate
+                        }}</label></strong><br />
+                    <p id="facturacionCorreoElectronico">
+                      {{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}
+                    </p>
                   </div>
                 </div>
                 <div class="row">
-                    
+
                   <div class="mb-3 col-sm-12">
                     <strong><label for="facturacionCorreoElectronico">Forma Entrega:</label></strong><br />
-                    <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega}}</p>
+                    <p id="facturacionCorreoElectronico">
+                      {{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega}}</p>
                   </div>
                 </div>
                 <div class="row">
-                    
+
                   <div class="mb-3 col-sm-12">
                     <strong><label for="facturacionCorreoElectronico">Horario Entrega:</label></strong><br />
-                    <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega}}</p>
+                    <p id="facturacionCorreoElectronico">
+                      {{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega}}</p>
                   </div>
                 </div>
-                
+
                 <div class="row"></div>
-      
+
               </div>
             </div>
           </div>
@@ -374,11 +394,12 @@
                 </div>
               </div>
               <ul class="qty">
-                <li  *ngFor="let item of pedido?.carrito">
+                <li *ngFor="let item of pedido?.carrito">
                   <div class="mb-3 col-sm-12">
-                    
+
                     <p>
-                      {{item?.producto?.crearProducto?.titulo}} × {{item?.cantidad}} <span class="count"> {{checkPriceScaleProd(item)| currency:'USD':'symbol':'1.0-0'}}</span> 
+                      {{item?.producto?.crearProducto?.titulo}} × {{item?.cantidad}} <span class="count">
+                        {{checkPriceScaleProd(item)| currency:'USD':'symbol':'1.0-0'}}</span>
                       <span style="font-size: 8px;">Este valor incluye adiciones y preferencias</span>
                     </p>
                   </div>
@@ -386,30 +407,40 @@
               </ul>
               <ul class="sub-total">
 
-                <li>Costo de productos: <span class="count"> {{checkPriceScale()| currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li>Domicilio: <span class="count"> {{pedidoUtilService.getShippingCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li>Descuentos: <span class="count"> {{pedidoUtilService.getDiscount() | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li>total sin IVA: <span class="count"> {{pedidoUtilService.getShippingCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li>total IVA: <span class="count"> {{checkIVAPrice().totalPrecioIVADef + pedidoUtilService.getShippingTaxCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li><ul class="two-column-list">
-                  <li>
-                    <span class="title">Excluidos 0%:</span>
-                    <span class="value">{{ checkIVAPrice().totalExcluidos | currency:'USD':'symbol':'1.0-0' }}</span>
-                  </li>
-                  <li>
-                    <span class="title">Iva 5%:</span>
-                    <span class="value">{{ checkIVAPrice().totalIva5 | currency:'USD':'symbol':'1.0-0' }}</span>
-                  </li>
-                  <li>
-                    <span class="title">Impoconsumo 8%:</span>
-                    <span class="value">{{ checkIVAPrice().totalImpo | currency:'USD':'symbol':'1.0-0' }}</span>
-                  </li>
-                  <li>
-                    <span class="title">Iva 19%:</span>
-                    <span class="value">{{ checkIVAPrice().totalIva19 | currency:'USD':'symbol':'1.0-0' }}</span>
-                  </li>
-                </ul></li>
-                <li>total Con IVA: <span class="count"> {{pedidoUtilService.getShippingCost(allBillingZone)+pedidoUtilService.getShippingTaxCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() + checkIVAPrice().totalPrecioIVADef | currency:'USD':'symbol':'1.0-0'}}</span></li>
+                <li>Costo de productos: <span class="count"> {{checkPriceScale()|
+                    currency:'USD':'symbol':'1.0-0'}}</span></li>
+                <li>Domicilio: <span class="count"> {{pedidoUtilService.getShippingCost(allBillingZone) |
+                    currency:'USD':'symbol':'1.0-0'}}</span></li>
+                <li>Descuentos: <span class="count"> {{pedidoUtilService.getDiscount() |
+                    currency:'USD':'symbol':'1.0-0'}}</span></li>
+                <li>total sin IVA: <span class="count">
+                    {{pedidoUtilService.getShippingCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale()
+                    | currency:'USD':'symbol':'1.0-0'}}</span></li>
+                <li>total IVA: <span class="count"> {{checkIVAPrice().totalPrecioIVADef +
+                    pedidoUtilService.getShippingTaxCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span></li>
+                <li>
+                  <ul class="two-column-list">
+                    <li>
+                      <span class="title">Excluidos 0%:</span>
+                      <span class="value">{{ checkIVAPrice().totalExcluidos | currency:'USD':'symbol':'1.0-0' }}</span>
+                    </li>
+                    <li>
+                      <span class="title">Iva 5%:</span>
+                      <span class="value">{{ checkIVAPrice().totalIva5 | currency:'USD':'symbol':'1.0-0' }}</span>
+                    </li>
+                    <li>
+                      <span class="title">Impoconsumo 8%:</span>
+                      <span class="value">{{ checkIVAPrice().totalImpo | currency:'USD':'symbol':'1.0-0' }}</span>
+                    </li>
+                    <li>
+                      <span class="title">Iva 19%:</span>
+                      <span class="value">{{ checkIVAPrice().totalIva19 | currency:'USD':'symbol':'1.0-0' }}</span>
+                    </li>
+                  </ul>
+                </li>
+                <li>total Con IVA: <span class="count">
+                    {{pedidoUtilService.getShippingCost(allBillingZone)+pedidoUtilService.getShippingTaxCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale()
+                    + checkIVAPrice().totalPrecioIVADef | currency:'USD':'symbol':'1.0-0'}}</span></li>
               </ul>
               <hr>
               <div class="animate-chk">
@@ -421,12 +452,13 @@
                         <h5>{{ categoria.categoria }}</h5> <!-- Título de la categoría -->
                         <div *ngFor="let opcionPago of categoria.formasPago; let i = index">
                           <label class="d-block nombre-largo" [for]="opcionPago.id">
-                            <input class="radio_animated" [id]="opcionPago.id" type="radio" [value]="opcionPago.id" formControlName="opcionSeleccionada" />
+                            <input class="radio_animated" [id]="opcionPago.id" type="radio" [value]="opcionPago.id"
+                              formControlName="opcionSeleccionada" />
                             <span title="{{opcionPago.nombre}}">{{opcionPago.nombre}}</span>
                           </label>
                         </div>
                       </div>
-                      
+
                     </div>
                   </form>
                 </div>

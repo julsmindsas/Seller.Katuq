@@ -10,7 +10,8 @@
               <h4 class="mb-1"><i class="fa fa-shopping-cart me-2"></i>Crear Venta</h4>
               <p class="mb-0 opacity-75">Preventa # {{pedidoGral.nroPedido}}</p>
               <p *ngIf="pedidoGral?.cliente" class="mb-0 opacity-75">
-                <i class="fa fa-user me-1"></i> {{pedidoGral?.cliente.nombres_completos}} {{pedidoGral?.cliente.apellidos_completos}}
+                <i class="fa fa-user me-1"></i> {{pedidoGral?.cliente.nombres_completos}}
+                {{pedidoGral?.cliente.apellidos_completos}}
               </p>
             </div>
             <div class="d-none d-md-block">
@@ -23,8 +24,8 @@
 
         <div class="card-body p-0">
           <!-- Asistente de pasos mejorado -->
-          <aw-wizard #wizard id="wizard" name="wizard" *ngIf="showSteper" navBarLayout="large-filled-symbols" 
-                    class="wizard-modern">
+          <aw-wizard #wizard id="wizard" name="wizard" *ngIf="showSteper" navBarLayout="large-filled-symbols"
+            class="wizard-modern">
             <!-- PASO 1: CATÁLOGO -->
             <aw-wizard-step [navigationSymbol]="{ symbol: '1' }">
               <ng-template awWizardStepSymbol>
@@ -35,7 +36,7 @@
                   <p class="wizard-step-text">Catálogo</p>
                 </div>
               </ng-template>
-              
+
               <div class="container-fluid p-4">
                 <!-- Selección de ubicación -->
                 <div class="card mb-4 border-0 shadow-sm">
@@ -52,17 +53,19 @@
                           </span>
                           <select (change)="onSelectCity($event)" class="form-select" id="ciudad">
                             <option value="seleccione">Seleccione una ciudad</option>
-                            <option *ngFor="let ciudad of empresaActual?.ciudadess?.ciudadesEntrega" [value]="ciudad.value">
+                            <option *ngFor="let ciudad of empresaActual?.ciudadess?.ciudadesEntrega"
+                              [value]="ciudad.value">
                               {{ ciudad.label }}
                             </option>
                           </select>
                         </div>
-                        <small class="form-text text-muted">La disponibilidad de productos puede variar según la ubicación</small>
+                        <small class="form-text text-muted">La disponibilidad de productos puede variar según la
+                          ubicación</small>
                       </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Vista del catálogo -->
                 <div class="mb-3 d-flex justify-content-between align-items-center">
                   <div>
@@ -70,24 +73,27 @@
                     <p class="text-muted small mb-0">Seleccione los productos para su venta</p>
                   </div>
                   <div class="btn-group" role="group">
-                    <button type="button" class="btn" [class.btn-primary]="!listView" [class.btn-outline-primary]="listView" (click)="listView = false">
+                    <button type="button" class="btn" [class.btn-primary]="!listView"
+                      [class.btn-outline-primary]="listView" (click)="listView = false">
                       <i class="fa fa-th-large me-1"></i> Grid
                     </button>
-                    <button type="button" class="btn" [class.btn-primary]="listView" [class.btn-outline-primary]="!listView" (click)="listView = true">
+                    <button type="button" class="btn" [class.btn-primary]="listView"
+                      [class.btn-outline-primary]="!listView" (click)="listView = true">
                       <i class="fa fa-list me-1"></i> Lista
                     </button>
                   </div>
                 </div>
-                
+
                 <app-ecomerce-products #products></app-ecomerce-products>
-                
+
                 <!-- Botones de navegación -->
                 <div class="d-flex justify-content-end mt-4">
                   <button class="btn btn-lg btn-primary" type="button" awNextStep
                     [disabled]="!(pedidoGral?.carrito && pedidoGral.carrito.length > 0)"
                     ngbTooltip="Continuar al Carrito" placement="top">
                     <i class="fa fa-shopping-cart me-2"></i> Continuar al Carrito
-                    <span class="badge bg-white text-primary ms-2 rounded-circle" *ngIf="pedidoGral?.carrito && pedidoGral.carrito.length > 0">
+                    <span class="badge bg-white text-primary ms-2 rounded-circle"
+                      *ngIf="pedidoGral?.carrito && pedidoGral.carrito.length > 0">
                       {{pedidoGral.carrito.length}}
                     </span>
                   </button>
@@ -105,7 +111,7 @@
                   <p class="wizard-step-text">Carrito</p>
                 </div>
               </ng-template>
-              
+
               <div class="container-fluid p-4">
                 <!-- Carrito -->
                 <div class="row mb-4">
@@ -113,7 +119,7 @@
                     <app-carrito #carrito [pedido]="pedidoGral"></app-carrito>
                   </div>
                 </div>
-                
+
                 <!-- Notas -->
                 <div class="row">
                   <div class="col-12">
@@ -127,7 +133,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Botones de navegación -->
                 <div class="d-flex justify-content-between mt-4">
                   <button class="btn btn-outline-secondary" type="button" awPreviousStep>
@@ -150,7 +156,7 @@
                   <p class="wizard-step-text">Cliente</p>
                 </div>
               </ng-template>
-              
+
               <div class="container-fluid p-4">
                 <!-- Búsqueda de cliente -->
                 <div class="card border-0 shadow-sm mb-4">
@@ -196,12 +202,15 @@
                             {{pedidoGral.cliente?.nombres_completos?.charAt(0) || 'C'}}
                           </div>
                           <div>
-                            <h5 class="mb-1">{{ pedidoGral.cliente?.nombres_completos }} {{ pedidoGral.cliente?.apellidos_completos }}</h5>
+                            <h5 class="mb-1">{{ pedidoGral.cliente?.nombres_completos }} {{
+                              pedidoGral.cliente?.apellidos_completos }}</h5>
                             <p class="text-muted mb-0 small">
-                              <i class="fa fa-id-card me-1"></i> {{ pedidoGral.cliente?.tipo_documento_comprador }} {{ pedidoGral.cliente?.documento }}
+                              <i class="fa fa-id-card me-1"></i> {{ pedidoGral.cliente?.tipo_documento_comprador }} {{
+                              pedidoGral.cliente?.documento }}
                             </p>
                             <p class="text-muted mb-0 small">
-                              <i class="fa fa-phone me-1"></i> {{ pedidoGral.cliente?.indicativo_celular_comprador }} {{ pedidoGral.cliente?.numero_celular_comprador }}
+                              <i class="fa fa-phone me-1"></i> {{ pedidoGral.cliente?.indicativo_celular_comprador }} {{
+                              pedidoGral.cliente?.numero_celular_comprador }}
                             </p>
                             <p class="text-muted mb-0 small">
                               <i class="fa fa-envelope me-1"></i> {{ pedidoGral.cliente?.correo_electronico_comprador }}
@@ -260,7 +269,8 @@
                           <h6 class="border-bottom pb-2 mb-3 text-primary">Información de Contacto</h6>
                         </div>
                         <div class="col-md-6">
-                          <label class="form-label fw-medium">Teléfono Celular <span class="text-danger">*</span></label>
+                          <label class="form-label fw-medium">Teléfono Celular <span
+                              class="text-danger">*</span></label>
                           <div class="input-group">
                             <span class="input-group-text bg-light" style="min-width: 90px;">
                               <select autocomplete="on" formControlName="indicativo_celular_comprador"
@@ -318,7 +328,7 @@
                       </div>
 
                       <!-- Dirección -->
-                      <div class="row g-3 mb-4">
+                      <!-- <div class="row g-3 mb-4">
                         <div class="col-12">
                           <h6 class="border-bottom pb-2 mb-3 text-primary">Dirección Principal</h6>
                         </div>
@@ -353,16 +363,16 @@
                             <option *ngFor="let item of ciudades" [value]="item">{{ item }}</option>
                           </select>
                         </div>
-                      </div>
+                      </div> -->
 
                       <!-- Botones de acción -->
                       <div class="d-flex justify-content-end mt-4">
-                        <button *ngIf="!encontrado" class="btn btn-warning btn-lg" 
-                               (click)="crearClienteRapido()" [disabled]="formulario.invalid">
+                        <button *ngIf="!encontrado" class="btn btn-warning btn-lg" (click)="crearClienteRapido()"
+                          [disabled]="formulario.invalid">
                           <i class="fa fa-bolt me-2"></i> Crear Cliente Rápido
                         </button>
-                        <button *ngIf="encontrado" class="btn btn-primary btn-lg" 
-                               (click)="editarCliente()" [disabled]="formulario.invalid">
+                        <button *ngIf="encontrado" class="btn btn-primary btn-lg" (click)="editarCliente()"
+                          [disabled]="formulario.invalid">
                           <i class="fa fa-save me-2"></i> Guardar Cambios
                         </button>
                       </div>
@@ -416,13 +426,14 @@
                     </p-tabView>
                   </div>
                 </div>
-                
+
                 <!-- Mensaje informativo -->
                 <div *ngIf="mostrarFormularioCliente && !encontrado && !clienteRecienCreado"
                   class="alert alert-info d-flex align-items-center">
                   <i class="fa fa-info-circle me-3 fa-2x"></i>
                   <div>
-                    <strong>Información:</strong> Para continuar con la facturación y entrega, primero debe crear el cliente.
+                    <strong>Información:</strong> Para continuar con la facturación y entrega, primero debe crear el
+                    cliente.
                   </div>
                 </div>
 
@@ -436,9 +447,9 @@
                     <i class="fa fa-credit-card me-2"></i> Continuar al Pago
                   </button>
                 </div>
-                
-                <div *ngIf="!(pedidoGral?.facturacion && pedidoGral?.envio) && (encontrado || clienteRecienCreado)" 
-                     class="alert alert-warning mt-3 d-flex align-items-center">
+
+                <div *ngIf="!(pedidoGral?.facturacion && pedidoGral?.envio) && (encontrado || clienteRecienCreado)"
+                  class="alert alert-warning mt-3 d-flex align-items-center">
                   <i class="fa fa-exclamation-triangle me-3"></i>
                   <div>
                     Debe seleccionar o crear los datos de <strong>Facturación y Entrega</strong> para continuar.
@@ -446,7 +457,7 @@
                 </div>
               </div>
             </aw-wizard-step>
-            
+
             <!-- PASO 4: RESUMEN Y PAGO -->
             <aw-wizard-step (stepEnter)="enterStep($event,7)">
               <ng-template awWizardStepSymbol>
@@ -457,12 +468,12 @@
                   <p class="wizard-step-text">Pago</p>
                 </div>
               </ng-template>
-              
+
               <div class="container-fluid p-4">
                 <!-- Checkout -->
                 <app-checkout #resumen [pedido]="pedidoGral" [allBillingZone]="allBillingZone"
                   (comprarYPagar)="comprarYPagar($event)"></app-checkout>
-                
+
                 <!-- Información adicional de confianza -->
                 <div class="row mt-4">
                   <div class="col-md-4 mb-3">
@@ -502,7 +513,7 @@
                 </div>
               </div>
             </aw-wizard-step>
-            
+
             <!-- PASO 5: CONFIRMACIÓN -->
             <aw-wizard-completion-step awEnableBackLinks>
               <ng-template awWizardStepSymbol>
@@ -513,7 +524,7 @@
                   <p class="wizard-step-text">Confirmación</p>
                 </div>
               </ng-template>
-              
+
               <div class="container-fluid p-4">
                 <div class="text-center py-5">
                   <div class="check-circle mb-4">
@@ -538,7 +549,7 @@
               </div>
             </aw-wizard-completion-step>
           </aw-wizard>
-          
+
           <!-- Confirmación -->
           <app-confirm *ngIf="showPedidoConfirm" [pedido]="pedidoGral"></app-confirm>
         </div>
@@ -845,13 +856,13 @@
     --warning-color: #ff9800;
     --danger-color: #f44336;
   }
-  
+
   .wizard-step-container {
     display: flex;
     flex-direction: column;
     align-items: center;
   }
-  
+
   .wizard-step-icon {
     width: 48px;
     height: 48px;
@@ -861,14 +872,14 @@
     justify-content: center;
     font-size: 20px;
     margin-bottom: 8px;
-    box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
   }
-  
+
   .wizard-step-text {
     font-weight: 500;
     margin: 0;
   }
-  
+
   .avatar-circle {
     width: 50px;
     height: 50px;
@@ -879,22 +890,29 @@
     font-size: 24px;
     font-weight: bold;
   }
-  
+
   .check-circle {
     animation: scaleIn 0.5s ease-in-out;
   }
-  
+
   @keyframes scaleIn {
-    0% { transform: scale(0.5); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+      transform: scale(0.5);
+      opacity: 0;
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
-  
+
   /* Estilos para los tabs */
   :host ::ng-deep .custom-tabs .p-tabview-nav {
     border: none;
     background: transparent;
   }
-  
+
   :host ::ng-deep .custom-tabs .p-tabview-nav li .p-tabview-nav-link {
     border-radius: 4px 4px 0 0;
     border: 1px solid #dee2e6;
@@ -902,7 +920,7 @@
     padding: 0.75rem 1.25rem;
     font-weight: 500;
   }
-  
+
   :host ::ng-deep .custom-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link {
     border-color: var(--primary-color);
     background: var(--primary-color);
