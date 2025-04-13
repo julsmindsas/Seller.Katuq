@@ -162,6 +162,8 @@ export interface Entrega {
     observaciones?: string,
     alias?: string,
     celular?: string,
+    indicativoCel2?: string,
+    celular2?: string,
     departamento?: string,
     codigoPV?: string,
     nombreUnidad?: string,
@@ -186,6 +188,8 @@ export interface Envio {
     observaciones: string;
     alias: string;
     celular: string;
+    indicativoCel2?: string;
+    celular2?: string;
     departamento: string;
     codigoPV: string;
     nombreUnidad: string;

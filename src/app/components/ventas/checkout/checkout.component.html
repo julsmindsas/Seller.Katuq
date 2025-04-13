@@ -205,100 +205,430 @@
             </div>
             <div class="card-body p-0">
               <p-tabView styleClass="custom-tabs">
-                <p-tabPanel header="{{ 'Facturación' | translate }}">
+                <!-- Pestaña de direcciones de facturación guardadas -->
+                <p-tabPanel header="{{ 'Mis Direcciones de Facturación' | translate }}">
                   <div class="p-3">
-                    <div class="row mb-4">
-                      <div class="col-12">
-                        <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Direcciones de Facturación Guardadas' |
-                          translate }}</h6>
+                    <div class="alert alert-info">
+                      {{ 'Por favor, seleccione o ingrese los datos de Facturación Electrónica.' | translate }}
+                    </div>
+                    <div class="row mb-2">
+                      <div class="col">
+                        <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Direcciones de Facturación Guardadas' | translate }}</h6>
                       </div>
-                      <div class="col-12">
-                        <div *ngIf="datosFacturacionElectronica && datosFacturacionElectronica.length > 0"
-                          class="table-responsive">
-                          <table class="table table-hover table-bordered">
-                            <thead class="table-light">
-                              <tr>
-                                <th>{{ 'Nombre' | translate }}</th>
-                                <th>{{ 'Dirección' | translate }}</th>
-                                <th>{{ 'Ciudad' | translate }}</th>
-                                <th>{{ 'Acciones' | translate }}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr *ngFor="let dir of datosFacturacionElectronica; let i = index">
-                                <td>{{dir.nombres}}</td>
-                                <td>{{dir.direccion}}</td>
-                                <td>{{dir.ciudad}}</td>
-                                <td class="text-center">
-                                  <button class="btn btn-sm btn-primary" (click)="seleccionarDireccionFE(i)">
-                                    <i class="fa fa-check-circle me-1"></i> {{ 'Seleccionar' | translate }}
-                                  </button>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                        <div *ngIf="!datosFacturacionElectronica || datosFacturacionElectronica.length === 0"
-                          class="alert alert-info">
-                          <i class="fa fa-info-circle me-2"></i> {{ 'No hay direcciones de facturación guardadas' |
-                          translate }}
+                      <div class="col-auto">
+                        <div class="form-check">
+                          <input type="checkbox" class="form-check-input" id="generarFactura" [(ngModel)]="generarFacturaElectronica">
+                          <label class="form-check-label" for="generarFactura">
+                            {{ 'Generar Facturación Electrónica' | translate }}
+                          </label>
                         </div>
                       </div>
                     </div>
+                    
+                    <div *ngIf="pedido?.facturacion" class="alert alert-success">
+                      <strong>{{ 'Dirección de facturación seleccionada:' | translate }}</strong> {{ pedido?.facturacion?.direccion }}
+                    </div>
+                    
+                    <div *ngIf="datosFacturacionElectronica && datosFacturacionElectronica.length > 0" class="table-responsive">
+                      <table class="table table-hover table-bordered">
+                        <thead class="table-light">
+                          <tr>
+                            <th>{{ 'Referencia' | translate }}</th>
+                            <th>{{ 'Nombres/Razón Social' | translate }}</th>
+                            <th>{{ 'Tipo Documento' | translate }}</th>
+                            <th>{{ 'Documento' | translate }}</th>
+                            <th>{{ 'Dirección' | translate }}</th>
+                            <th>{{ 'Acciones' | translate }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let dir of datosFacturacionElectronica; let i = index">
+                            <td>{{dir.alias}}</td>
+                            <td>{{dir.nombres}}</td>
+                            <td>{{dir.tipoDocumento}}</td>
+                            <td>{{dir.documento}}</td>
+                            <td>{{dir.direccion}}</td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-primary" (click)="seleccionarDireccionFE(i)">
+                                <i class="fa fa-check-circle me-1"></i> {{ 'Seleccionar' | translate }}
+                              </button>
+                              <button class="btn btn-sm btn-outline-primary ms-1" (click)="editarDireccionFacturacion(dir, i)">
+                                <i class="fa fa-edit me-1"></i>
+                              </button>
+                              <button class="btn btn-sm btn-outline-danger ms-1" (click)="eliminarDireccionFacturacion(i)">
+                                <i class="fa fa-trash me-1"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div *ngIf="!datosFacturacionElectronica || datosFacturacionElectronica.length === 0" class="alert alert-info">
+                      <i class="fa fa-info-circle me-2"></i> {{ 'No hay direcciones de facturación guardadas' | translate }}
+                    </div>
                   </div>
                 </p-tabPanel>
-
-                <p-tabPanel header="{{ 'Entrega' | translate }}" *ngIf="activarEntrega">
+      
+                <!-- Pestaña para crear nueva dirección de facturación -->
+                <p-tabPanel header="{{ 'Crear Dirección de Facturación' | translate }}">
                   <div class="p-3">
-                    <div *ngIf="datosEntregaNoEncontradosParaCiudadSeleccionada"
-                      class="alert alert-warning d-flex align-items-center mb-4">
+                    <div class="form-check mb-3">
+                      <input type="checkbox" class="form-check-input" id="usoMismosDatosCliente" 
+                            [(ngModel)]="usarDatosClienteFacturacion" (change)="copiarDatosClienteFacturacion($event)">
+                      <label class="form-check-label" for="usoMismosDatosCliente">
+                        {{ 'Los datos de facturación electrónica son iguales a los del cliente' | translate }}
+                      </label>
+                    </div>
+      
+                    <form>
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label" for="alias_facturacion">{{ 'Referencia para guardar datos:' | translate }}</label>
+                          <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" 
+                                id="alias_facturacion" [(ngModel)]="alias_facturacion" name="alias_facturacion" />
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate }}</label>
+                          <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social" name="razon_social" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento:' | translate }}</label>
+                          <select class="form-select" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion" name="tipo_documento_facturacion">
+                            <option value="CC-NIT">{{ 'Cedula de Ciudadania' | translate }}</option>
+                            <option value="PA">PA</option>
+                            <option value="TI">TI</option>
+                            <option value="NIT">NIT</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label" for="numero_documento_facturacion">{{ 'Documento:' | translate }}</label>
+                          <input class="form-control" type="text" id="numero_documento_facturacion" 
+                                [(ngModel)]="numero_documento_facturacion" name="numero_documento_facturacion" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label">{{ 'Número de Celular:' | translate }}</label>
+                          <div class="input-group">
+                            <span class="input-group-text bg-light" style="min-width: 90px;">
+                              <select [(ngModel)]="indicativo_celular_facturacion" name="indicativo_celular_facturacion"
+                                    class="form-select form-select-sm border-0 bg-transparent">
+                                <option value="57" selected>+57</option>
+                                <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+                                  +{{ item.phone_code }}
+                                </option>
+                              </select>
+                            </span>
+                            <input class="form-control" type="text" [(ngModel)]="numero_celular_facturacion" 
+                                  name="numero_celular_facturacion" />
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label" for="correo_electronico_facturacion">{{ 'Correo Electrónico:' | translate }}</label>
+                          <input class="form-control" type="email" id="correo_electronico_facturacion" 
+                                [(ngModel)]="correo_electronico_facturacion" name="correo_electronico_facturacion" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label class="form-label" for="direccion_facturacion">{{ 'Dirección del Comprador:' | translate }}</label>
+                          <input class="form-control" type="text" id="direccion_facturacion" 
+                                [(ngModel)]="direccion_facturacion" name="direccion_facturacion" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-4">
+                          <label class="form-label">{{ 'País' | translate }}</label>
+                          <select [(ngModel)]="pais" name="pais" class="form-select" (change)="identificarDepto()">
+                            <option *ngFor="let item of paises" [value]="item">{{ item }}</option>
+                          </select>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label">{{ 'Departamento' | translate }}</label>
+                          <select [(ngModel)]="departamento" name="departamento" class="form-select" (change)="identificarCiu()">
+                            <option *ngFor="let item of departamentos" [value]="item">{{ item }}</option>
+                          </select>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label">{{ 'Ciudad / Municipio' | translate }}</label>
+                          <select [(ngModel)]="ciudad_municipio" name="ciudad_municipio" class="form-select" (change)="onSelectCity($event)">
+                            <option *ngFor="let item of ciudades" [value]="item">{{ item }}</option>
+                          </select>
+                        </div>
+                      </div>
+      
+                      <div class="row mb-4">
+                        <div class="col-md-4">
+                          <label class="form-label" for="codigo_postal">{{ 'Código Postal:' | translate }}</label>
+                          <input class="form-control" type="text" id="codigo_postal" [(ngModel)]="codigo_postal" name="codigo_postal" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                          <button class="btn btn-outline-primary" (click)="redirectToPostalCode()">
+                            {{ 'Conoce Tu Código Postal' | translate }}
+                          </button>
+                        </div>
+                      </div>
+      
+                      <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary" (click)="guardarDireccionFacturacion()">
+                          <i class="fa fa-save me-2"></i> {{ 'Guardar' | translate }}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </p-tabPanel>
+      
+                <!-- Pestaña de direcciones de entrega guardadas -->
+                <p-tabPanel header="{{ 'Mis Direcciones de Entrega' | translate }}" *ngIf="activarEntrega">
+                  <div class="p-3">
+                    <div *ngIf="datosEntregaNoEncontradosParaCiudadSeleccionada" class="alert alert-warning d-flex align-items-center mb-4">
                       <i class="fa fa-exclamation-triangle me-3 fa-2x"></i>
                       <div>
                         {{ 'No se encontraron datos de entrega para la ciudad seleccionada.' | translate }}
                         <strong>{{ 'Por favor cree uno nuevo para continuar.' | translate }}</strong>
                       </div>
                     </div>
-                    <div class="row mb-4">
-                      <div class="col-12">
-                        <h6 class="border-bottom pb-2 mb-3 text-primary">{{ 'Direcciones de Entrega Guardadas' |
-                          translate }}</h6>
-                      </div>
-                      <div class="col-12">
-                        <div *ngIf="datosEntregas && datosEntregas.length > 0" class="table-responsive">
-                          <table class="table table-hover table-bordered">
-                            <thead class="table-light">
-                              <tr>
-                                <th>{{ 'Nombre' | translate }}</th>
-                                <th>{{ 'Dirección' | translate }}</th>
-                                <th>{{ 'Ciudad' | translate }}</th>
-                                <th>{{ 'Acciones' | translate }}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr *ngFor="let dir of datosEntregas; let i = index">
-                                <td>{{dir.nombres}}</td>
-                                <td>{{dir.direccionEntrega}}</td>
-                                <td>{{dir.ciudad}}</td>
-                                <td class="text-center">
-                                  <button class="btn btn-sm btn-primary" (click)="seleccionarDireccionEntrega(i)">
-                                    <i class="fa fa-check-circle me-1"></i> {{ 'Seleccionar' | translate }}
-                                  </button>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                        <div *ngIf="!datosEntregas || datosEntregas.length === 0" class="alert alert-info">
-                          <i class="fa fa-info-circle me-2"></i> {{ 'No hay direcciones de entrega guardadas' |
-                          translate }}
-                        </div>
-                      </div>
+      
+                    <div *ngIf="pedido?.envio" class="alert alert-success">
+                      <strong>{{ 'Dirección de envío seleccionada:' | translate }}</strong> {{ pedido?.envio?.direccionEntrega }}
                     </div>
+      
+                    <div *ngIf="datosEntregas && datosEntregas.length > 0" class="table-responsive">
+                      <table class="table table-hover table-bordered">
+                        <thead class="table-light">
+                          <tr>
+                            <th>{{ 'Referencia' | translate }}</th>
+                            <th>{{ 'Nombres' | translate }}</th>
+                            <th>{{ 'Dirección' | translate }}</th>
+                            <th>{{ 'Ciudad' | translate }}</th>
+                            <th>{{ 'Acciones' | translate }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let dir of datosEntregas; let i = index">
+                            <td>{{dir.alias}}</td>
+                            <td>{{dir.nombres}} {{dir.apellidos}}</td>
+                            <td>{{dir.direccionEntrega}}</td>
+                            <td>{{dir.ciudad}}</td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-primary" (click)="seleccionarDireccionEntrega(i)">
+                                <i class="fa fa-check-circle me-1"></i> {{ 'Seleccionar' | translate }}
+                              </button>
+                              <button class="btn btn-sm btn-outline-primary ms-1" (click)="editarDireccionEntrega(dir, i)">
+                                <i class="fa fa-edit me-1"></i>
+                              </button>
+                              <button class="btn btn-sm btn-outline-danger ms-1" (click)="eliminarDireccionEntrega(i)">
+                                <i class="fa fa-trash me-1"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div *ngIf="!datosEntregas || datosEntregas.length === 0" class="alert alert-info">
+                      <i class="fa fa-info-circle me-2"></i> {{ 'No hay direcciones de entrega guardadas' | translate }}
+                    </div>
+                  </div>
+                </p-tabPanel>
+      
+                <!-- Pestaña para crear nueva dirección de entrega -->
+                <p-tabPanel header="{{ 'Crear Dirección de Entrega' | translate }}" *ngIf="activarEntrega">
+                  <div class="p-3">
+                    <div class="form-check mb-3">
+                      <input type="checkbox" class="form-check-input" id="usoMismosDatosClienteEntrega" 
+                            [(ngModel)]="usarDatosClienteEntrega" (change)="copiarDatosClienteEntrega($event)">
+                      <label class="form-check-label" for="usoMismosDatosClienteEntrega">
+                        {{ 'Los datos de Entrega son iguales a los datos de cliente' | translate }}
+                      </label>
+                    </div>
+      
+                    <form>
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label class="form-label" for="alias_entrega">{{ 'Referencia Para Datos de Entrega' | translate }}</label>
+                          <input class="form-control" type="text" id="alias_entrega" [(ngModel)]="alias_entrega" name="alias_entrega" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label" for="nombres_entrega">{{ 'Nombres:' | translate }}</label>
+                          <input class="form-control" type="text" id="nombres_entrega" [(ngModel)]="nombres_entrega" name="nombres_entrega" />
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label" for="apellidos_entrega">{{ 'Apellidos:' | translate }}</label>
+                          <input class="form-control" type="text" id="apellidos_entrega" [(ngModel)]="apellidos_entrega" name="apellidos_entrega" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label">{{ 'Teléfono Celular:' | translate }}</label>
+                          <div class="input-group">
+                            <span class="input-group-text bg-light" style="min-width: 90px;">
+                              <select [(ngModel)]="indicativo_celular_entrega" name="indicativo_celular_entrega"
+                                    class="form-select form-select-sm border-0 bg-transparent">
+                                <option value="57" selected>+57</option>
+                                <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+                                  +{{ item.phone_code }}
+                                </option>
+                              </select>
+                            </span>
+                            <input class="form-control" type="text" [(ngModel)]="numero_celular_entrega" 
+                                  name="numero_celular_entrega" />
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">{{ 'Otro Número (opcional):' | translate }}</label>
+                          <div class="input-group">
+                            <span class="input-group-text bg-light" style="min-width: 90px;">
+                              <select [(ngModel)]="indicativo_celular_entrega2" name="indicativo_celular_entrega2"
+                                    class="form-select form-select-sm border-0 bg-transparent">
+                                <option value="57" selected>+57</option>
+                                <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+                                  +{{ item.phone_code }}
+                                </option>
+                              </select>
+                            </span>
+                            <input class="form-control" type="text" [(ngModel)]="otro_numero_entrega" 
+                                  name="otro_numero_entrega" />
+                          </div>
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label class="form-label" for="direccion_entrega">{{ 'Dirección:' | translate }}</label>
+                          <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" name="direccion_entrega" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label" for="nombreUnidad">{{ 'Nombre de la Unidad o Edificio' | translate }}</label>
+                          <input class="form-control" type="text" id="nombreUnidad" [(ngModel)]="nombreUnidad" name="nombreUnidad" />
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label" for="especificacionesInternas">{{ 'Especificaciones Internas: Torre, Apto, Oficina' | translate }}</label>
+                          <input class="form-control" type="text" id="especificacionesInternas" 
+                                [(ngModel)]="especificacionesInternas" name="especificacionesInternas" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label class="form-label" for="barrio">{{ 'Barrio/Sector:' | translate }}</label>
+                          <input class="form-control" type="text" id="barrio" [(ngModel)]="barrio" name="barrio" />
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label class="form-label" for="observaciones">{{ 'Observaciones Adicionales / Generales para la entrega:' | translate }}</label>
+                          <textarea class="form-control" id="observaciones" rows="2" [(ngModel)]="observaciones" name="observaciones"></textarea>
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-4">
+                          <label class="form-label">{{ 'País' | translate }}</label>
+                          <select [(ngModel)]="pais_entrega" name="pais_entrega" class="form-select" (change)="identificarDepto1()">
+                            <option *ngFor="let item of paises" [value]="item">{{ item }}</option>
+                          </select>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label">{{ 'Departamento' | translate }}</label>
+                          <select [(ngModel)]="departamento_entrega" name="departamento_entrega" 
+                                class="form-select" (change)="identificarCiu1()">
+                            <option *ngFor="let item of departamentos1" [value]="item">{{ item }}</option>
+                          </select>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label">{{ 'Ciudad' | translate }}</label>
+                          <select [(ngModel)]="ciudad_municipio_entrega" name="ciudad_municipio_entrega" 
+                                class="form-select" (change)="idBillingZone('')">
+                            <option *ngFor="let item of ciudades1" [value]="item">{{ item }}</option>
+                          </select>
+                        </div>
+                      </div>
+      
+                      <div class="row mb-3">
+                        <div class="col-md-4">
+                          <label class="form-label">{{ 'Zona Cobro' | translate }}</label>
+                          <select class="form-select" [(ngModel)]="zona_cobro" name="zona_cobro" (change)="idBillingZone($event)">
+                            <option *ngFor="let item of filteredResults" [value]="item.nombreZonaCobro">
+                              {{ item.nombreZonaCobro }} ({{ item.valorZonaCobro | currency }})
+                            </option>
+                          </select>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label" for="codigo_postal_entrega">{{ 'Código Postal:' | translate }}</label>
+                          <input class="form-control" type="text" id="codigo_postal_entrega" 
+                              [(ngModel)]="codigo_postal_entrega" name="codigo_postal_entrega" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                          <button class="btn btn-outline-primary" (click)="redirectToPostalCode()">
+                            {{ 'Conoce Tu Código Postal' | translate }}
+                          </button>
+                        </div>
+                      </div>
+      
+                      <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary" (click)="guardarDireccionEntrega()">
+                          <i class="fa fa-save me-2"></i> {{ 'Guardar' | translate }}
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </p-tabPanel>
               </p-tabView>
             </div>
           </div>
+          
+          <!-- Modales para editar direcciones -->
+          <ng-template #modalFacturacion let-modal>
+            <div class="modal-header">
+              <h4 class="modal-title">{{ 'Editar Datos de Facturación' | translate }}</h4>
+              <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+            </div>
+            <div class="modal-body">
+              <!-- Contenido del modal de facturación similar al formulario de crear facturación -->
+              <!-- ... -->
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" (click)="guardarEdicionFacturacion()">
+                {{ 'Guardar Cambios' | translate }}
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('Cancel')">
+                {{ 'Cancelar' | translate }}
+              </button>
+            </div>
+          </ng-template>
+          
+          <ng-template #modalEntrega let-modal>
+            <div class="modal-header">
+              <h4 class="modal-title">{{ 'Editar Datos de Entrega' | translate }}</h4>
+              <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+            </div>
+            <div class="modal-body">
+              <!-- Contenido del modal de entrega similar al formulario de crear entrega -->
+              <!-- ... -->
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" (click)="guardarEdicionEntrega()">
+                {{ 'Guardar Cambios' | translate }}
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('Cancel')">
+                {{ 'Cancelar' | translate }}
+              </button>
+            </div>
+          </ng-template>
 
           <!-- Datos del cliente (visible cuando hay un cliente seleccionado) -->
           <div *ngIf="pedido?.cliente && !mostrarFormularioCliente">
