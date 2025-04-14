@@ -8,7 +8,7 @@ import { MovimientoInventario } from '../../../components/inventarios/model/movi
   providedIn: 'root'
 })
 export class InventarioService {
-  private apiUrl = environment.urlApi;
+  private apiUrl = environment.urlApi + '/v1';
   private firebaseApiUrl = '';
 
   constructor(private http: HttpClient) { }
