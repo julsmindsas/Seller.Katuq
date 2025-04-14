@@ -26,6 +26,7 @@ export interface Producto {
   variableForm?: string;
   rating?: number;
   otrosProcesos?: OtrosProcesos;
+  bodegaId?: string; // Agregado para relacionar el producto con una bodega
 }
 
 export interface ProductoCarrito {
@@ -41,6 +42,7 @@ export interface ProductoCarrito {
   date_edit: string;
   variableForm: string;
   rating: number;
+  bodegaId?: string; // Agregado para relacionar el producto con una bodega
 }
 
 

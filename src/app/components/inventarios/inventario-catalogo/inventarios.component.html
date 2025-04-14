@@ -1,4 +1,5 @@
-<app-breadcrumb [title]="'Inventario Catalogo' | translate" [items]="['Inventarios' | translate]" [active_item]="'Catalogo' | translate"></app-breadcrumb>
+<app-breadcrumb [title]="'Inventario Catalogo Por Bodegas' | translate" [items]="['Inventarios' | translate]"
+    [active_item]="'Catalogo' | translate"></app-breadcrumb>
 
 <div class="container-fluid">
     <div class="row">
@@ -10,22 +11,69 @@
                 </div>
 
                 <div class="custom-datatable">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <input type='text' class="filter-ngx form-control mb-3" style="width: 100% !important;"
-                                placeholder="{{'Escribe lo que quieres filtrar y luego pulsa enter para accionar' | translate}}"
-                                (keyup)='updateFilter($event)' />
+                    <!-- Cabecera con filtro de bodegas -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="fa fa-warehouse mr-2"></i> {{ 'Filtrar por bodega' | translate }}
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <select class="form-control" [(ngModel)]="bodegaSeleccionada" (change)="cambiarBodegaSeleccionada(bodegaSeleccionada)">
+                                            <option [ngValue]="null">{{ 'Todas las bodegas' | translate }}</option>
+                                            <option *ngFor="let bodega of bodegas" [ngValue]="bodega">{{ bodega.nombre }}</option>
+                                        </select>
+                                    </div>
+                                    <div *ngIf="bodegaSeleccionada" class="alert alert-info mt-2 mb-0">
+                                        <span>{{ 'Mostrando productos de la bodega:' | translate }} <strong>{{ bodegaSeleccionada.nombre }}</strong></span>
+                                        <div class="small mt-1">
+                                            <span *ngIf="bodegaSeleccionada.tipo === 'Física'">
+                                                <i class="fa fa-map-marker mr-1"></i> {{ bodegaSeleccionada.ciudad }}, {{ bodegaSeleccionada.departamento }}
+                                            </span>
+                                            <span *ngIf="bodegaSeleccionada.tipo === 'Transaccional'">
+                                                <i class="fa fa-globe mr-1"></i> {{ 'Virtual' | translate }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-sm-6 mb-3" style="text-align: end;">
-                            <button pButton class="p-button-outlined" (click)="sortByQuantity()">
-                                {{ 'Ordenar por cantidad' | translate }}
-                            </button>
-                            <button pButton class="p-button-outlined" (click)="filterOutOfStock()">
-                                {{ 'Filtrar productos agotados' | translate }}
-                            </button>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <input type='text' class="filter-ngx form-control mb-3" style="width: 100% !important;"
+                                        placeholder="{{'Escribe lo que quieres filtrar y luego pulsa enter para accionar' | translate}}"
+                                        (keyup)='updateFilter($event)' />
+                                </div>
+                                <div class="col-sm-12 mb-3" style="text-align: end;">
+                                    <button pButton class="p-button-outlined mr-2" (click)="sortByQuantity()">
+                                        <i class="fa fa-sort-amount-asc mr-1"></i>
+                                        {{ 'Ordenar por cantidad' | translate }}
+                                    </button>
+                                    <button pButton class="p-button-outlined" (click)="filterOutOfStock()">
+                                        <i class="fa fa-filter mr-1"></i>
+                                        {{ 'Filtrar productos agotados' | translate }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Información del filtro activo -->
+                    <div class="row" *ngIf="rows.length !== productosSinFiltro.length">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <i class="fa fa-info-circle"></i>
+                                {{ 'Mostrando' | translate }} <strong>{{ rows.length }}</strong> {{ 'de' | translate }} <strong>{{ productosSinFiltro.length }}</strong> {{ 'productos' | translate }}.
+                                <button class="btn btn-sm btn-outline-warning ml-2" (click)="cambiarBodegaSeleccionada(null)">
+                                    <i class="fa fa-times"></i> {{ 'Quitar filtro' | translate }}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Tabla de productos -->
                     <p-table [value]="rows" [scrollable]="true" scrollHeight="400px" [paginator]="false"
                         [rows]="pageSize" [totalRecords]="totalItems"
                         styleClass="p-datatable-customers p-datatable-gridlines" [sortField]="'nombre'" [sortOrder]="1"
@@ -44,7 +92,9 @@
                                 <th *ngIf="!isMobile" rowspan="2">
                                     <span>{{ 'Cantidad disponible' | translate }}</span>
                                 </th>
-
+                                <th *ngIf="!isMobile && bodegaSeleccionada" rowspan="2">
+                                    <span>{{ 'Bodega' | translate }}</span>
+                                </th>
                                 <th *ngIf="!isMobile" rowspan="2">
                                     <span>{{ 'Acciones' | translate }}</span>
                                 </th>
@@ -70,7 +120,12 @@
                                         {{ row.disponibilidad.cantidadDisponible }}
                                     </div>
                                 </td>
-
+                                <!-- Columna de bodega cuando hay filtro activo -->
+                                <td *ngIf="!isMobile && bodegaSeleccionada" class="text-center">
+                                    <span class="badge" [ngClass]="getClasesTipoBodega(row.bodegaId)">
+                                        {{ getNombreBodega(row.bodegaId) }}
+                                    </span>
+                                </td>
                                 <td *ngIf="!isMobile" style="text-align: center;">
                                     <i placement="top" ngbTooltip="{{'Movimiento inventario' | translate}}"
                                         style="font-size: 25px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
@@ -84,19 +139,35 @@
                                 </td>
                             </tr>
                         </ng-template>
+                        <ng-template pTemplate="emptymessage">
+                            <tr>
+                                <td [attr.colspan]="bodegaSeleccionada ? 6 : 5" class="text-center p-4">
+                                    <div class="empty-state">
+                                        <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+                                        <h5>{{ 'No hay productos disponibles' | translate }}</h5>
+                                        <p *ngIf="bodegaSeleccionada">{{ 'No hay productos asignados a esta bodega' | translate }}</p>
+                                        <button class="btn btn-primary mt-2" (click)="cambiarBodegaSeleccionada(null)" *ngIf="bodegaSeleccionada">
+                                            {{ 'Ver todos los productos' | translate }}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
                     </p-table>
                     <p-paginator [rows]="10" [totalRecords]="totalItems" (onPageChange)="onPageChange($event)"
                         [showJumpToPageDropdown]="true" [showPageLinks]="false"></p-paginator>
                     <br />
-                    <button class="btn btn-primary" style="color: white;" (click)="exportToExcel()">
-                        <i class="icofont icofont-file-excel"></i> {{ 'Excel' | translate }}
-                    </button>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-primary" style="color: white;" (click)="exportToExcel()">
+                            <i class="icofont icofont-file-excel"></i> {{ 'Excel' | translate }}
+                        </button>
+                        <span class="text-muted">{{ 'Total productos:' | translate }} {{ rows.length }}</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 
 <!-- Modal de Movimiento de Inventario -->
 <ng-template #inventoryModal let-modal>
@@ -111,6 +182,15 @@
 
     <!-- Modal body -->
     <div class="modal-body">
+        <!-- Información de la bodega -->
+        <div class="alert alert-info mb-4" *ngIf="selectedRow.bodegaId">
+            <h6 class="m-0">
+                <i class="fa fa-warehouse mr-2"></i>
+                {{ 'Bodega actual:' | translate }}
+                <strong>{{ getNombreBodega(selectedRow.bodegaId) }}</strong>
+            </h6>
+        </div>
+        
         <!-- Sección de otros Bodegas Principales -->
         <div class="other-channels-section">
             <h4 class="section-title">
@@ -165,7 +245,8 @@
                         <label class="mb-0">{{ campo.nameMP }}</label>
                     </div>
                     <input type="number" class="form-control input-inventario" [(ngModel)]="inventarioPorMarketplace[i]"
-                        placeholder="{{ 'Cantidad' | translate }}" (input)="actualizarInventarioTemp(i, inventarioPorMarketplace[i])" />
+                        placeholder="{{ 'Cantidad' | translate }}"
+                        (input)="actualizarInventarioTemp(i, inventarioPorMarketplace[i])" />
                 </div>
             </div>
         </div>
@@ -177,12 +258,14 @@
     </div>
 
 </ng-template>
-<ng-template #inventoryHistoryModal let-modal>
 
+<!-- Modal de Historial de Movimientos -->
+<ng-template #inventoryHistoryModal let-modal>
     <div class="modal-content">
         <div class="modal-header">
             <h5 class="modal-title" id="movimientosModalLabel">{{ 'Movimientos de Inventario' | translate }}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'Cerrar' | translate }}"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                aria-label="{{ 'Cerrar' | translate }}"></button>
         </div>
 
         <div class="modal-body">
@@ -203,10 +286,8 @@
                     <tbody>
                         <tr *ngFor="let movimiento of movimiento">
                             <td>
-                                <span class="badge"
-                                    [ngClass]="{'bg-success': movimiento.tipoMovimiento === 'in', 'bg-danger': movimiento.tipoMovimiento === 'out'}">
-                                    <i class="bi"
-                                        [ngClass]="{'bi-arrow-up-circle': movimiento.tipoMovimiento === 'in', 'bi-arrow-down-circle': movimiento.tipoMovimiento === 'out'}"></i>
+                                <span class="badge" [ngClass]="getClaseMovimiento(movimiento.tipoMovimiento)">
+                                    <i class="bi" [ngClass]="getClaseIconoMovimiento(movimiento.tipoMovimiento)"></i>
                                     {{ movimiento.tipoMovimiento | titlecase }}
                                 </span>
                             </td>
@@ -226,5 +307,29 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cerrar' | translate }}</button>
         </div>
     </div>
-
 </ng-template>
+
+<!-- Estilos adicionales -->
+<style>
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+}
+
+.outofstock {
+    font-weight: bold;
+    color: #ff5252 !important;
+}
+
+.lowstock {
+    font-weight: bold;
+    color: #ffa726 !important;
+}
+
+.instock {
+    font-weight: bold;
+    color: #66bb6a !important;
+}
+</style>

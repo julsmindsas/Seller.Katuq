@@ -1,79 +1,74 @@
-import { Component,OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import {CrearBodegasComponent} from './crear-bodegas/crear-bodegas.component';
+import { CrearBodegasComponent } from './crear-bodegas/crear-bodegas.component';
+import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
+
 @Component({
   selector: 'app-bodegas',
   templateUrl: './bodegas.component.html',
   styleUrls: ['./bodegas.component.scss']
 })
 export class BodegasComponent implements OnInit {
-ngOnInit(): void {
-  
-}
-cargando: boolean = false;
-bodegas: any[] = [
-  {
-    id: 1,
-    nombre: 'Bodega Principal',
-    idBodega: 'BOD-001',
-    direccion: 'Calle 123 #45-67',
-    ciudad: 'Bogotá',
-    departamento: 'Bogotá D.C.',
-    tipo: 'Física'
-  },
-  {
-    id: 2,
-    nombre: 'Bodega Virtual',
-    idBodega: 'BOD-002',
-    direccion: 'N/A',
-    ciudad: 'Virtual',
-    departamento: '',
-    tipo: 'Transaccional'
+  cargando: boolean = false;
+  bodegas: any[] = [];
+  selectedColumns: any[] = [];
+
+  constructor(
+    private modalService: NgbModal,
+    private bodegaService: BodegaService
+  ) {}
+
+  ngOnInit(): void {
+    this.cargarBodegas();
   }
-];
 
-constructor(private modalService: NgbModal) {}
+  cargarBodegas() {
+    this.cargando = true;
+    this.bodegaService.getBodegas().subscribe(bodegas => {
+      this.bodegas = bodegas;
+      this.cargando = false;
+    });
+  }
 
-abrirModalCrear() {
-  const modalRef = this.modalService.open(CrearBodegasComponent, { 
-    size: 'lg',
-    centered: true
-  });
-  
-  modalRef.result.then((result) => {
-    if (result) {
-      this.bodegas.push(result);
-    }
-  });
-}
-
-abrirModalEditar(bodega: any) {
-  const modalRef = this.modalService.open(CrearBodegasComponent, { 
-    size: 'lg',
-    centered: true
-  });
-  
-  modalRef.componentInstance.bodegaData = bodega;
-  modalRef.componentInstance.isEditMode = true;
-  
-  modalRef.result.then((result) => {
-    if (result) {
-      const index = this.bodegas.findIndex(b => b.id === result.id);
-      if (index !== -1) {
-        this.bodegas[index] = result;
+  abrirModalCrear() {
+    const modalRef = this.modalService.open(CrearBodegasComponent, { 
+      size: 'lg',
+      centered: true
+    });
+    
+    modalRef.result.then((result) => {
+      if (result) {
+        this.bodegaService.agregarBodega(result);
       }
+    }, () => {});
+  }
+
+  abrirModalEditar(bodega: any) {
+    const modalRef = this.modalService.open(CrearBodegasComponent, { 
+      size: 'lg',
+      centered: true
+    });
+    
+    modalRef.componentInstance.bodegaData = bodega;
+    modalRef.componentInstance.isEditMode = true;
+    
+    modalRef.result.then((result) => {
+      if (result) {
+        this.bodegaService.actualizarBodega(result);
+      }
+    }, () => {});
+  }
+
+  eliminarBodega(bodega: any) {
+    // Lógica para confirmar y eliminar
+    if (confirm('¿Está seguro de eliminar esta bodega?')) {
+      this.bodegaService.eliminarBodega(bodega.id);
     }
-  });
-}
+  }
 
-eliminarBodega(bodega: any) {
-  // Lógica para confirmar y eliminar
-  this.bodegas = this.bodegas.filter(b => b.id !== bodega.id);
-}
-
-exportarExcel() {
-  // Lógica para exportar a Excel
-  console.log('Exportando a Excel...');
-}
+  exportarExcel() {
+    // Lógica para exportar a Excel
+    console.log('Exportando a Excel...');
+  }
 }

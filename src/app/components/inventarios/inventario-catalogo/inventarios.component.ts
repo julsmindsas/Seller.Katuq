@@ -7,6 +7,7 @@ import { ProductDetailsComponent } from '../../productos/product-details/product
 import { Producto } from '../../../shared/models/productos/Producto';
 import { MovimientoInventario } from '../model/movimientoinventario'
 import * as XLSX from 'xlsx';
+import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 
 interface PageReference {
   firstDocId: string | null;
@@ -59,10 +60,16 @@ export class InventarioCatalogoComponent implements OnInit {
   totalPagesMovimientos = 0;
   lastDocIdMovimientos: string | null = null;
 
+  // Manejo de bodegas 
+  bodegas: any[] = [];
+  bodegaSeleccionada: any = null;
+  productosSinFiltro: Producto[] = []; // Para guardar todos los productos sin filtrar
+
   constructor(
     private service: MaestroService,
     private router: Router,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private bodegaService: BodegaService // Inyectamos el servicio de bodegas
   ) { }
 
   ngOnInit(): void {
@@ -74,7 +81,25 @@ export class InventarioCatalogoComponent implements OnInit {
     // Suponemos que no tenemos referencias para la página 1 todavía
     this.pageReferences[this.currentPage] = { firstDocId: null, lastDocId: null };
 
+    // Cargar las bodegas usando el servicio compartido
+    this.cargarBodegas();
+    
+    // Cargar los productos
     this.cargarDatos();
+    
+    // Suscribirse a cambios en la bodega seleccionada
+    this.bodegaService.getBodegaSeleccionada().subscribe(bodega => {
+      if (bodega !== this.bodegaSeleccionada) {
+        this.bodegaSeleccionada = bodega;
+        this.filtrarProductosPorBodega();
+      }
+    });
+  }
+  
+  cargarBodegas() {
+    this.bodegaService.getBodegas().subscribe(bodegas => {
+      this.bodegas = bodegas;
+    });
   }
 
   cargarDatos() {
@@ -106,6 +131,7 @@ export class InventarioCatalogoComponent implements OnInit {
       .subscribe({
         next: (response: any) => {
           this.rows = response.products;
+          this.productosSinFiltro = [...this.rows]; // Guardamos una copia sin filtrar
           this.totalItems = response.pagination.totalItems;
           this.totalPages = response.pagination.totalPages;
           this.cargando = false;
@@ -119,12 +145,32 @@ export class InventarioCatalogoComponent implements OnInit {
           // Actualizamos las variables locales
           this.lastDocId = response.pagination.lastDocId;
           this.firstDocId = response.pagination.firstDocId;
+
+          // Si hay una bodega seleccionada, filtramos los productos
+          this.filtrarProductosPorBodega();
         },
         error: (err) => {
           console.error("Error al cargar datos:", err);
           this.cargando = false;
         }
       });
+  }
+  
+  // Método para aplicar el filtro de bodega a los productos
+  filtrarProductosPorBodega() {
+    if (!this.bodegaSeleccionada) {
+      this.rows = [...this.productosSinFiltro]; // Si no hay bodega seleccionada, mostramos todos
+      return;
+    }
+    
+    this.rows = this.productosSinFiltro.filter(producto => 
+      producto.bodegaId === this.bodegaSeleccionada.idBodega
+    );
+  }
+
+  // Método para cambiar la bodega seleccionada
+  cambiarBodegaSeleccionada(bodega: any) {
+    this.bodegaService.seleccionarBodega(bodega);
   }
 
   onPageChange(event: any) {
@@ -346,8 +392,6 @@ export class InventarioCatalogoComponent implements OnInit {
     });
   }
 
-
-
   // Al dar clic en el botón "Filtrar Agotados"
   filterOutOfStock() {
     this.cargando = true;
@@ -361,7 +405,6 @@ export class InventarioCatalogoComponent implements OnInit {
     });
   }
 
-
   exportToExcel() {
     const worksheet = XLSX.utils.json_to_sheet(this.rows);
     const workbook = XLSX.utils.book_new();
@@ -372,6 +415,10 @@ export class InventarioCatalogoComponent implements OnInit {
   openInventoryModal(row: Producto, content: TemplateRef<any>) {
     this.selectedRow = row;
     this.movimiento = {}; // Resetear el objeto de movimientos
+    
+    // Mostrar en el modal la bodega a la que pertenece el producto
+    const bodegaDelProducto = this.bodegas.find(b => b.idBodega === row.bodegaId);
+    
     this.inventarioPorMarketplace = row.marketplace.campos.filter(c => c.activo === true).map(campo => ({
       name: campo.nameMP,
       cantidad: 0
@@ -387,5 +434,68 @@ export class InventarioCatalogoComponent implements OnInit {
       ariaLabelledBy: 'modal-basic-title',
       size: 'xl'
     });
+  }
+
+  // Métodos auxiliares para la plantilla
+  
+  /**
+   * Obtiene el nombre de una bodega por el ID
+   */
+  getNombreBodega(bodegaId: string): string {
+    const bodega = this.bodegas.find(b => b.idBodega === bodegaId);
+    return bodega?.nombre || 'Sin bodega asignada';
+  }
+
+  /**
+   * Obtiene el tipo de una bodega por el ID
+   */
+  getTipoBodega(bodegaId: string): string {
+    const bodega = this.bodegas.find(b => b.idBodega === bodegaId);
+    return bodega?.tipo || '';
+  }
+
+  /**
+   * Determina si una bodega es de tipo físico
+   */
+  isBodegaFisica(bodegaId: string): boolean {
+    return this.getTipoBodega(bodegaId) === 'Física';
+  }
+
+  /**
+   * Determina si una bodega es de tipo transaccional
+   */
+  isBodegaTransaccional(bodegaId: string): boolean {
+    return this.getTipoBodega(bodegaId) === 'Transaccional';
+  }
+
+  /**
+   * Devuelve las clases CSS para el movimiento de inventario
+   */
+  getClaseMovimiento(tipoMovimiento: string): any {
+    return {
+      'bg-success': tipoMovimiento === 'in',
+      'bg-danger': tipoMovimiento === 'out'
+    };
+  }
+
+  /**
+   * Devuelve las clases del icono para el movimiento de inventario
+   */
+  getClaseIconoMovimiento(tipoMovimiento: string): any {
+    return {
+      'bi-arrow-up-circle': tipoMovimiento === 'in',
+      'bi-arrow-down-circle': tipoMovimiento === 'out'
+    };
+  }
+
+  /**
+   * Devuelve las clases CSS para la etiqueta de tipo de bodega
+   */
+  getClasesTipoBodega(bodegaId: string): any {
+    const tipo = this.getTipoBodega(bodegaId);
+    return {
+      'bg-primary': tipo === 'Física',
+      'bg-info': tipo === 'Transaccional'
+    };
   }
 }
