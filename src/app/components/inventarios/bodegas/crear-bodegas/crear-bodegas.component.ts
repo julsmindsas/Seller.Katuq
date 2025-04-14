@@ -1,6 +1,8 @@
 import { Component, Input, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { HttpClient } from '@angular/common/http';
+
 @Component({
   selector: 'app-crear-bodegas',
   templateUrl: './crear-bodegas.component.html',
@@ -12,10 +14,13 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   @Input() isEditMode = false;
 
   bodegaForm: FormGroup;
-  tiposBodega = ['Física', 'Transaccional'];
-  paises = ['Colombia', 'Ecuador', 'Perú', 'Chile', 'Argentina'];
+  paises: string[] = [];
   departamentos: string[] = [];
   ciudades: string[] = [];
+  cargandoPaises = false;
+  cargandoDepartamentos = false;
+  cargandoCiudades = false;
+  tiposBodega: string[] = ['Física', 'Transaccional'];
 
   @ViewChild('mapContainer', { static: false }) mapContainer?: ElementRef;
   map: any;
@@ -24,7 +29,8 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
 
   constructor(
     private fb: FormBuilder,
-    public activeModal: NgbActiveModal
+    public activeModal: NgbActiveModal,
+    private http: HttpClient
   ) {
     this.bodegaForm = this.fb.group({
       id: [''],
@@ -48,13 +54,32 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
       this.actualizarValidaciones(tipo);
     });
 
+    // Suscripción para cargar departamentos al cambiar país
     this.bodegaForm.get('pais')?.valueChanges.subscribe(pais => {
-      this.cargarDepartamentos(pais);
+      if (pais) {
+        this.cargarDepartamentos(pais);
+        this.bodegaForm.get('departamento')?.setValue('');
+        this.bodegaForm.get('ciudad')?.setValue('');
+      } else {
+        this.departamentos = [];
+        this.ciudades = [];
+        this.bodegaForm.get('departamento')?.setValue('');
+        this.bodegaForm.get('ciudad')?.setValue('');
+      }
     });
 
+    // Suscripción para cargar ciudades al cambiar departamento
     this.bodegaForm.get('departamento')?.valueChanges.subscribe(depto => {
-      this.cargarCiudades(depto);
+      if (depto) {
+        this.cargarCiudades(depto);
+        this.bodegaForm.get('ciudad')?.setValue('');
+      } else {
+        this.ciudades = [];
+        this.bodegaForm.get('ciudad')?.setValue('');
+      }
     });
+
+    this.cargarPaises();
   }
 
   ngAfterViewInit(): void {
@@ -137,20 +162,50 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
     });
   }
 
+  cargarPaises() {
+    this.cargandoPaises = true;
+    this.http.get<any>('https://countriesnow.space/api/v0.1/countries/positions').subscribe({
+      next: (data) => {
+        this.paises = data.data.map((p: any) => p.name).sort();
+        this.cargandoPaises = false;
+      },
+      error: () => {
+        this.paises = [];
+        this.cargandoPaises = false;
+      }
+    });
+  }
+
   cargarDepartamentos(pais: string) {
-    // Simulación de carga de departamentos
-    this.departamentos = pais === 'Colombia' ? 
-      ['Bogotá D.C.', 'Antioquia', 'Valle del Cauca'] : 
-      ['Departamento 1', 'Departamento 2'];
-    this.bodegaForm.get('departamento')?.setValue('');
+    this.cargandoDepartamentos = true;
+    this.departamentos = [];
+    this.ciudades = [];
+    this.http.post<any>('https://countriesnow.space/api/v0.1/countries/states', { country: pais }).subscribe({
+      next: (data) => {
+        this.departamentos = (data.data.states || []).map((d: any) => d.name).sort();
+        this.cargandoDepartamentos = false;
+      },
+      error: () => {
+        this.departamentos = [];
+        this.cargandoDepartamentos = false;
+      }
+    });
   }
 
   cargarCiudades(departamento: string) {
-    // Simulación de carga de ciudades
-    this.ciudades = departamento === 'Bogotá D.C.' ? 
-      ['Bogotá'] : 
-      ['Ciudad 1', 'Ciudad 2'];
-    this.bodegaForm.get('ciudad')?.setValue('');
+    this.cargandoCiudades = true;
+    this.ciudades = [];
+    const pais = this.bodegaForm.get('pais')?.value;
+    this.http.post<any>('https://countriesnow.space/api/v0.1/countries/state/cities', { country: pais, state: departamento }).subscribe({
+      next: (data) => {
+        this.ciudades = (data.data || []).sort();
+        this.cargandoCiudades = false;
+      },
+      error: () => {
+        this.ciudades = [];
+        this.cargandoCiudades = false;
+      }
+    });
   }
 
   guardarBodega() {

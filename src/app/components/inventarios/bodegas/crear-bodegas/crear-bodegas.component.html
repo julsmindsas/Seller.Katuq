@@ -56,29 +56,35 @@
                 <label class="form-label fw-bold">
                   <i class="fa fa-flag me-1 text-primary"></i> País <span class="text-danger">*</span>
                 </label>
-                <select class="form-select" formControlName="pais">
+                <select class="form-select" formControlName="pais" [disabled]="cargandoPaises">
                   <option value="" disabled>Seleccionar...</option>
                   <option *ngFor="let pais of paises" [value]="pais">{{ pais }}</option>
                 </select>
+                <div *ngIf="cargandoPaises" class="text-info small mt-1"><i class="fa fa-spinner fa-spin me-1"></i> Cargando países...</div>
+                <div *ngIf="!cargandoPaises && paises.length === 0" class="text-warning small mt-1">No hay países disponibles</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label fw-bold">
                   <i class="fa fa-map me-1 text-primary"></i> Departamento <span class="text-danger">*</span>
                 </label>
-                <select class="form-select" formControlName="departamento" [disabled]="!bodegaForm.get('pais')?.value">
+                <select class="form-select" formControlName="departamento" [disabled]="!bodegaForm.get('pais')?.value || cargandoDepartamentos">
                   <option value="" disabled>Seleccionar...</option>
                   <option *ngFor="let depto of departamentos" [value]="depto">{{ depto }}</option>
                 </select>
+                <div *ngIf="cargandoDepartamentos" class="text-info small mt-1"><i class="fa fa-spinner fa-spin me-1"></i> Cargando departamentos...</div>
+                <div *ngIf="!cargandoDepartamentos && departamentos.length === 0 && bodegaForm.get('pais')?.value" class="text-warning small mt-1">No hay departamentos disponibles</div>
               </div>
             </div>
             <div class="mb-3">
               <label class="form-label fw-bold">
                 <i class="fa fa-city me-1 text-primary"></i> Ciudad <span class="text-danger">*</span>
               </label>
-              <select class="form-select" formControlName="ciudad" [disabled]="!bodegaForm.get('departamento')?.value">
+              <select class="form-select" formControlName="ciudad" [disabled]="!bodegaForm.get('departamento')?.value || cargandoCiudades">
                 <option value="" disabled>Seleccionar...</option>
                 <option *ngFor="let ciudad of ciudades" [value]="ciudad">{{ ciudad }}</option>
               </select>
+              <div *ngIf="cargandoCiudades" class="text-info small mt-1"><i class="fa fa-spinner fa-spin me-1"></i> Cargando ciudades...</div>
+              <div *ngIf="!cargandoCiudades && ciudades.length === 0 && bodegaForm.get('departamento')?.value" class="text-warning small mt-1">No hay ciudades disponibles</div>
             </div>
           </div>
         </div>
