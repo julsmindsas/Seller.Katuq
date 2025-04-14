@@ -1147,22 +1147,23 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   public col1: string = "4";
   public col2: string = "6";
 
-
-
-
   private reviewStepAndExecute(index: number) {
     if (index == 3) {
       this.productosLista.cargarTodo();
     }
     if (index == 5) {
+      // Carga el carrito desde localStorage. La configuración de entrega (fecha, forma) está dentro de los items del carrito.
       this.carrito1 = localStorage.getItem('carrito')
     }
     if (index == 6) {
       const carritoData = localStorage.getItem('carrito');
       if (carritoData) {
         this.carrito1 = JSON.parse(carritoData);
+        // Verifica la forma de entrega desde la configuración del primer item del carrito.
         if (this.carrito1?.[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase().includes('recoge')) {
-          this.activarEntrega = false;
+          this.activarEntrega = false; // Desactiva la necesidad de dirección de entrega si es para recoger.
+          // Crea un objeto 'envio' placeholder para el caso 'recoge'.
+          // Los detalles específicos de fecha/hora/forma de entrega permanecen en pedidoGral.carrito[...].configuracion.datosEntrega
           const envioRecoge = {
             apellidos: 'N/A',
             barrio: 'N/A',
@@ -1189,7 +1190,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   }
 
   comprarYPagar(event: Pedido) {
-
+    // Recibe el objeto Pedido completo desde el componente checkout, incluyendo el carrito con su configuración.
     this.pedidoGral = event;
     console.log(this.pedidoGral);
     const context = this;
@@ -1199,6 +1200,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     const formaPago = this.pedidoGral.formaDePago?.toLowerCase();
     if (formaPago === 'wompi') {
       this.pedidoGral.estadoPago = EstadoPago.Pendiente;
+      // Guarda el pedido (incluyendo carrito.configuracion.datosEntrega) antes de ir a Wompi.
       this.guardarPedidoParaWompi().then(pedidoGuardado => {
         if (pedidoGuardado) {
           this.iniciarPagoConWompi().then(pagoExitoso => {
@@ -1235,6 +1237,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         }
       });
     } else {
+      // Guarda el pedido (incluyendo carrito.configuracion.datosEntrega) para otros métodos de pago.
       this.continuarCreacionPedido();
     }
   }
@@ -1378,6 +1381,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
         const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
 
+        // Crea la orden usando el objeto pedidoGral completo.
         context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
           next: (res: any) => {
             const orderSiigo = context.facturacionElectronicaService.transformarPedidoLite(context.pedidoGral);
