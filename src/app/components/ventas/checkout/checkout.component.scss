@@ -714,4 +714,51 @@
   font-weight: bold;
   font-size: 18px;
 }
+
+/* Estilos para los datos extras de entrega */
+.delivery-extra-data {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #4361ee;
+  
+  .section-title {
+    margin-bottom: 15px;
+    
+    h5 {
+      margin: 0;
+      font-weight: 600;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+    }
+  }
+  
+  .form-label {
+    font-weight: 500;
+    color: #4a5568;
+  }
+  
+  .input-group-text {
+    background-color: #edf2f7;
+    border-color: #e2e8f0;
+    color: #4a5568;
+  }
+  
+  textarea {
+    resize: none;
+  }
+  
+  select, input, textarea {
+    border-color: #e2e8f0;
+    transition: all 0.2s ease;
+    
+    &:focus {
+      border-color: #4361ee;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+  }
+}
   

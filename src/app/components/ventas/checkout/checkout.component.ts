@@ -36,6 +36,13 @@ export class CheckOutComponent implements OnInit, OnChanges {
   signature: string;
   formasPago: any[];
 
+  // Variables para datos adicionales de entrega
+  formaEntrega: string = 'domicilio';
+  fechaEntrega: string = '';
+  fechaMinima: string = new Date().toISOString().split('T')[0]; // Fecha mínima es hoy
+  horarioEntrega: string = 'manana';
+  instruccionesEntrega: string = '';
+
   // Variables para búsqueda y gestión de clientes
   formulario: FormGroup;
   encontrado: boolean = false;

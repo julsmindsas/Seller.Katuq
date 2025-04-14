@@ -175,6 +175,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   datosEntregaNoEncontradosParaCiudadSeleccionada: boolean;
   mostrarFormularioCliente: boolean = false;
   clienteRecienCreado: boolean = false;
+  fechaMinima: string = new Date().toISOString().split('T')[0];
 
   // Objeto carrito para calcular valores en la plantilla
   carrito = {
