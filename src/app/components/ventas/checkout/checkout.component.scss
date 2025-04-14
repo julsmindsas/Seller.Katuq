@@ -761,4 +761,76 @@
     }
   }
 }
+
+/* Estilos para el formulario de datos de entrega */
+.datos-entrega-form {
+  padding: 0.5rem;
+  
+  .section-title {
+    font-weight: 500;
+    color: var(--bs-primary);
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 0.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+    
+    label {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+    
+    .input-group {
+      .calendar {
+        background-color: var(--bs-primary);
+        color: white;
+        border-color: var(--bs-primary);
+      }
+    }
+  }
+  
+  small.form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+  }
+}
+
+/* Estilos para ng-select en la sección de entrega */
+::ng-deep .ng-select {
+  .ng-select-container {
+    border-radius: 0.25rem;
+    min-height: 38px;
+  }
+  
+  .ng-placeholder {
+    font-size: 0.9rem;
+  }
+  
+  &.ng-select-focused:not(.ng-select-opened) > .ng-select-container {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+  }
+  
+  .ng-dropdown-panel {
+    border-radius: 0 0 0.25rem 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    
+    .ng-option {
+      padding: 0.5rem 0.75rem;
+      
+      &.ng-option-selected {
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+        color: var(--bs-primary);
+      }
+      
+      &.ng-option-marked {
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+      }
+    }
+  }
+}
   

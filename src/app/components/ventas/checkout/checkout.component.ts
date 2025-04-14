@@ -42,6 +42,22 @@ export class CheckOutComponent implements OnInit, OnChanges {
   fechaMinima: string = new Date().toISOString().split('T')[0]; // Fecha mínima es hoy
   horarioEntrega: string = 'manana';
   instruccionesEntrega: string = '';
+  
+  // Nuevas variables para mejor gestión de datos de entrega
+  fechaEntregaObj: any;
+  fechaMinimaObj: any;
+  placement: string = 'bottom';
+  
+  // Arrays para los selects de entrega
+  formasEntregaDisponibles: any[] = [
+    { id: 'domicilio', nombre: 'Entrega a domicilio' },
+    { id: 'recogida', nombre: 'Recoger en tienda' }
+  ];
+  
+  horariosDisponibles: any[] = [
+    { id: 'manana', nombre: 'Mañana (8:00 - 12:00)' },
+    { id: 'tarde', nombre: 'Tarde (12:00 - 18:00)' }
+  ];
 
   // Variables para búsqueda y gestión de clientes
   formulario: FormGroup;
@@ -212,6 +228,8 @@ export class CheckOutComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    this.convertirFechaObjeto();
+    
     if (this.pedido) {
       this.pedidoUtilService.pedido = this.pedido;
     }
@@ -1288,5 +1306,45 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
     // Icono por defecto
     return 'money';
+  }
+
+  // Método para convertir fecha string a objeto NgbDateStruct
+  private convertirFechaObjeto() {
+    // Convertir fecha mínima a objeto para NgbDatepicker
+    const hoy = new Date();
+    this.fechaMinimaObj = {
+      year: hoy.getFullYear(),
+      month: hoy.getMonth() + 1,
+      day: hoy.getDate()
+    };
+    
+    // Si ya hay una fecha seleccionada, convertirla también
+    if (this.fechaEntrega) {
+      const fecha = new Date(this.fechaEntrega);
+      this.fechaEntregaObj = {
+        year: fecha.getFullYear(),
+        month: fecha.getMonth() + 1,
+        day: fecha.getDate()
+      };
+    }
+  }
+
+  // Cuando cambia la fecha en el datepicker
+  onFechaEntregaChange() {
+    if (this.fechaEntregaObj) {
+      // Convertir objeto NgbDateStruct a string ISO
+      const fecha = new Date(
+        this.fechaEntregaObj.year, 
+        this.fechaEntregaObj.month - 1, 
+        this.fechaEntregaObj.day
+      );
+      this.fechaEntrega = fecha.toISOString().split('T')[0];
+    }
+  }
+
+  // Cuando cambia la forma de entrega
+  onFormaEntregaChange(event: any) {
+    console.log('Forma de entrega seleccionada:', event);
+    // Aquí puedes agregar lógica adicional si es necesario
   }
 }

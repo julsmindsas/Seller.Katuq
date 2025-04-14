@@ -1,6 +1,6 @@
 <div class="checkout-container">
   <!-- Stepper vertical y contenido principal -->
-  <div class="row">
+      <div class="row">
     <div class="col-lg-8">
       <div class="checkout-stepper">
         <!-- Proceso de checkout con steps verticales -->
@@ -16,34 +16,34 @@
               <div class="step-body" *ngIf="activeStep === 1">
                 <!-- Búsqueda de cliente -->
                 <div class="search-client-box">
-                  <div class="row g-3">
-                    <div class="col-md-4">
+              <div class="row g-3">
+                <div class="col-md-4">
                       <label class="form-label" for="tipo_documento">{{ 'Buscar por:' | translate }}</label>
-                      <select #buscarPor class="form-select" id="tipo_documento">
-                        <option value="CC-NIT" selected>CC-NIT</option>
-                        <option value="PA">Email</option>
-                        <option value="TI">Nombre Apellido</option>
-                      </select>
-                    </div>
-                    <div class="col-md-5">
+                  <select #buscarPor class="form-select" id="tipo_documento">
+                    <option value="CC-NIT" selected>CC-NIT</option>
+                    <option value="PA">Email</option>
+                    <option value="TI">Nombre Apellido</option>
+                  </select>
+                </div>
+                <div class="col-md-5">
                       <label class="form-label" for="numero_documento">{{ 'Ingrese el valor:' | translate }}</label>
-                      <div class="input-group">
+                  <div class="input-group">
                         <span class="input-group-text">
-                          <i class="fa fa-search"></i>
-                        </span>
-                        <input #documentoBusqueda class="form-control" type="text" id="numero_documento"
-                          placeholder="{{ 'Escriba para buscar' | translate }}" />
-                      </div>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                      <button class="btn btn-primary w-100" (click)="buscar()">
-                        <i class="fa fa-search me-2"></i> {{ 'Buscar' | translate }}
-                      </button>
-                    </div>
+                      <i class="fa fa-search"></i>
+                    </span>
+                    <input #documentoBusqueda class="form-control" type="text" id="numero_documento"
+                      placeholder="{{ 'Escriba para buscar' | translate }}" />
                   </div>
                 </div>
+                <div class="col-md-3 d-flex align-items-end">
+                  <button class="btn btn-primary w-100" (click)="buscar()">
+                    <i class="fa fa-search me-2"></i> {{ 'Buscar' | translate }}
+                  </button>
+              </div>
+            </div>
+          </div>
 
-                <!-- Cliente encontrado -->
+          <!-- Cliente encontrado -->
                 <div *ngIf="encontrado" class="client-info-card">
                   <div class="client-header">
                     <div class="client-avatar">{{pedido.cliente?.nombres_completos?.charAt(0) || 'C'}}</div>
@@ -120,16 +120,16 @@
                             <button class="btn btn-sm btn-link text-danger" (click)="eliminarDireccionEntrega(i); $event.stopPropagation()">
                               <i class="fa fa-trash"></i>
                             </button>
-                          </div>
-                        </div>
+                  </div>
+                  </div>
                         <div class="address-card-body">
                           <p><i class="fa fa-user me-2"></i>{{dir.nombres}} {{dir.apellidos}}</p>
                           <p><i class="fa fa-map-marker me-2"></i>{{dir.direccionEntrega}}</p>
                           <p><i class="fa fa-building me-2"></i>{{dir.ciudad}}, {{dir.departamento}}</p>
                           <p><i class="fa fa-phone me-2"></i>({{dir.indicativoCel}}) {{dir.celular}}</p>
-                        </div>
-                      </div>
-                    </div>
+                  </div>
+                  </div>
+                </div>
                     <div *ngIf="!datosEntregas || datosEntregas.length === 0" class="empty-address-list">
                       <i class="fa fa-info-circle fa-3x"></i>
                       <p>{{ 'No hay direcciones de entrega guardadas' | translate }}</p>
@@ -151,64 +151,79 @@
                   <div class="section-title">
                     <h5><i class="fa fa-truck me-2"></i>{{ 'Información adicional de entrega' | translate }}</h5>
                   </div>
-                  <div class="row g-3">
-                    <!-- Forma de entrega -->
-                    <div class="col-md-12">
-                      <label class="form-label">{{ 'Método de entrega' | translate }}</label>
-                      <div class="delivery-method-options">
-                        <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="metodoEntrega" id="entregaDomicilio" value="domicilio" [(ngModel)]="formaEntrega">
-                          <label class="form-check-label" for="entregaDomicilio">
-                            <i class="fa fa-home me-1"></i> {{ 'Entrega a domicilio' | translate }}
-                          </label>
+                  <div class="datos-entrega-form">
+                    <!-- Sección de fecha de entrega -->
+                    <div class="mb-3">
+                      <h5 class="section-title">{{ '1. Fecha de entrega' | translate }}</h5>
+                      <div class="form-group">
+                    <div class="input-group">
+                          <input class="form-control" placeholder="{{ 'Fecha de entrega' | translate }}"
+                            name="dp" [(ngModel)]="fechaEntregaObj" ngbDatepicker
+                            #d3="ngbDatepicker" [minDate]="fechaMinimaObj"
+                            [placement]="placement" [positionTarget]="buttonEl"
+                            (ngModelChange)="onFechaEntregaChange()"
+                            readonly />
+                          <button #buttonEl class="btn btn-primary calendar"
+                            (click)="d3.toggle()" type="button">
+                            <i class="fa fa-calendar"></i>
+                          </button>
                         </div>
-                        <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="metodoEntrega" id="recogerEnTienda" value="recogida" [(ngModel)]="formaEntrega">
-                          <label class="form-check-label" for="recogerEnTienda">
-                            <i class="fa fa-store me-1"></i> {{ 'Recoger en tienda' | translate }}
-                          </label>
-                        </div>
+                        <small class="form-text text-muted">{{ 'Fecha mínima de entrega: ' | translate }}{{fechaMinima}}</small>
                       </div>
                     </div>
                     
-                    <!-- Fecha de entrega -->
-                    <div class="col-md-6">
-                      <label class="form-label" for="fechaEntrega">{{ 'Fecha de entrega estimada' | translate }}</label>
-                      <div class="input-group">
-                        <span class="input-group-text"><i class="fa fa-calendar"></i></span>
-                        <input class="form-control" type="date" id="fechaEntrega" [(ngModel)]="fechaEntrega"
-                               [min]="fechaMinima" />
-                      </div>
+                    <!-- Forma de entrega -->
+                    <div class="mt-3">
+                      <h5 class="section-title">{{ '2. Forma de entrega' | translate }}</h5>
+                      <div class="form-group">
+                        <ng-select 
+                          [items]="formasEntregaDisponibles" 
+                          bindLabel="nombre"
+                          bindValue="id" 
+                          placeholder="{{ 'Seleccione forma de entrega' | translate }}"
+                          [(ngModel)]="formaEntrega"
+                          (change)="onFormaEntregaChange($event)">
+                          <ng-template ng-label-tmp let-item="item">
+                            <span><i [class]="'fa ' + (item.id === 'domicilio' ? 'fa-home' : 'fa-store')"></i> {{item.nombre}}</span>
+                          </ng-template>
+                          <ng-template ng-option-tmp let-item="item">
+                            <span><i [class]="'fa ' + (item.id === 'domicilio' ? 'fa-home' : 'fa-store')"></i> {{item.nombre}}</span>
+                          </ng-template>
+                        </ng-select>
+                  </div>
                     </div>
                     
                     <!-- Horario de entrega -->
-                    <div class="col-md-6">
-                      <label class="form-label">{{ 'Horario de entrega preferido' | translate }}</label>
-                      <div class="time-preference-options">
-                        <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="horarioPreferido" id="horarioManana" value="manana" [(ngModel)]="horarioEntrega">
-                          <label class="form-check-label" for="horarioManana">
-                            <i class="fa fa-sun-o me-1"></i> {{ 'Mañana (8:00 - 12:00)' | translate }}
-                          </label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="horarioPreferido" id="horarioTarde" value="tarde" [(ngModel)]="horarioEntrega">
-                          <label class="form-check-label" for="horarioTarde">
-                            <i class="fa fa-moon-o me-1"></i> {{ 'Tarde (12:00 - 18:00)' | translate }}
-                          </label>
-                        </div>
-                      </div>
+                    <div class="mt-3">
+                      <h5 class="section-title">{{ '3. Horario preferido' | translate }}</h5>
+                      <div class="form-group">
+                        <ng-select 
+                          [items]="horariosDisponibles" 
+                          bindLabel="nombre"
+                          bindValue="id" 
+                          placeholder="{{ 'Seleccione horario preferido' | translate }}"
+                          [(ngModel)]="horarioEntrega">
+                          <ng-template ng-label-tmp let-item="item">
+                            <span><i [class]="'fa ' + (item.id === 'manana' ? 'fa-sun-o' : 'fa-moon-o')"></i> {{item.nombre}}</span>
+                          </ng-template>
+                          <ng-template ng-option-tmp let-item="item">
+                            <span><i [class]="'fa ' + (item.id === 'manana' ? 'fa-sun-o' : 'fa-moon-o')"></i> {{item.nombre}}</span>
+                          </ng-template>
+                        </ng-select>
+                  </div>
                     </div>
                     
                     <!-- Instrucciones especiales -->
-                    <div class="col-md-12">
-                      <label class="form-label" for="instruccionesEntrega">{{ 'Instrucciones especiales para la entrega' | translate }}</label>
-                      <textarea class="form-control" id="instruccionesEntrega" rows="3" [(ngModel)]="instruccionesEntrega" 
-                                placeholder="{{ 'Ej. Dejar con el portero, llamar antes de entregar, instrucciones para el repartidor...' | translate }}"></textarea>
+                    <div class="mt-3">
+                      <h5 class="section-title">{{ '4. Instrucciones especiales' | translate }}</h5>
+                      <div class="form-group">
+                        <textarea class="form-control" id="instruccionesEntrega" rows="3" [(ngModel)]="instruccionesEntrega" 
+                          placeholder="{{ 'Ej. Dejar con el portero, llamar antes de entregar, instrucciones para el repartidor...' | translate }}"></textarea>
+                  </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Botones para navegar entre pasos -->
                 <div class="step-navigation">
                   <button class="btn btn-outline-secondary prev-step" (click)="setActiveStep(1)">
@@ -233,12 +248,12 @@
               <div class="step-body" *ngIf="activeStep === 3">
                 <div class="billing-wrapper">
                   <div class="form-check mb-3">
-                    <input type="checkbox" class="form-check-input" id="generarFactura" [(ngModel)]="generarFacturaElectronica">
-                    <label class="form-check-label" for="generarFactura">
-                      {{ 'Generar Facturación Electrónica' | translate }}
-                    </label>
-                  </div>
-                  
+                          <input type="checkbox" class="form-check-input" id="generarFactura" [(ngModel)]="generarFacturaElectronica">
+                          <label class="form-check-label" for="generarFactura">
+                            {{ 'Generar Facturación Electrónica' | translate }}
+                          </label>
+                    </div>
+                    
                   <p-tabView styleClass="billing-tabs" *ngIf="generarFacturaElectronica">
                     <!-- Tab de direcciones de facturación guardadas -->
                     <p-tabPanel header="{{ 'Mis Direcciones' | translate }}">
@@ -255,8 +270,8 @@
                               <button class="btn btn-sm btn-link text-danger" (click)="eliminarDireccionFacturacion(i); $event.stopPropagation()">
                                 <i class="fa fa-trash"></i>
                               </button>
-                            </div>
-                          </div>
+                    </div>
+                  </div>
                           <div class="address-card-body">
                             <p><i class="fa fa-id-card me-2"></i>{{dir.razonSocial}}</p>
                             <p><i class="fa fa-address-card me-2"></i>{{dir.tipoDocumento}}: {{dir.documento}}</p>
@@ -272,9 +287,9 @@
                         <button class="btn btn-outline-primary" (click)="newBillingTabActive()">
                           <i class="fa fa-plus me-2"></i>{{ 'Crear Nueva Dirección' | translate }}
                         </button>
-                      </div>
-                    </p-tabPanel>
-                    
+                  </div>
+                </p-tabPanel>
+      
                     <!-- Tab para crear nueva dirección de facturación -->
                     <p-tabPanel header="{{ 'Nueva Dirección' | translate }}">
                       <!-- Formulario para crear dirección de facturación -->
@@ -283,67 +298,67 @@
                           <input type="checkbox" class="form-check-input" id="usarDatosClienteFacturacion" [(ngModel)]="usarDatosClienteFacturacion" (change)="copiarDatosClienteFacturacion($event)">
                           <label class="form-check-label" for="usarDatosClienteFacturacion">
                             {{ 'Usar datos del cliente' | translate }}
-                          </label>
-                        </div>
-                        
+                      </label>
+                      </div>
+      
                         <div class="row g-3">
-                          <div class="col-md-6">
+                        <div class="col-md-6">
                             <label class="form-label" for="alias_facturacion">{{ 'Alias (Ej: Casa, Oficina)' | translate }} *</label>
                             <input type="text" class="form-control" id="alias_facturacion" [(ngModel)]="alias_facturacion" required>
-                          </div>
-                          <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo' | translate }} *</label>
                             <input type="text" class="form-control" id="razon_social" [(ngModel)]="razon_social" required>
-                          </div>
-                          <div class="col-md-6">
+                      </div>
+                        <div class="col-md-6">
                             <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento' | translate }} *</label>
                             <select class="form-select" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion" required>
                               <option value="CC">Cédula de Ciudadanía</option>
                               <option value="NIT">NIT</option>
                               <option value="CE">Cédula de Extranjería</option>
                               <option value="PP">Pasaporte</option>
-                            </select>
+                              </select>
                           </div>
                           <div class="col-md-6">
                             <label class="form-label" for="numero_documento_facturacion">{{ 'Número de Documento' | translate }} *</label>
                             <input type="text" class="form-control" id="numero_documento_facturacion" [(ngModel)]="numero_documento_facturacion" required>
-                          </div>
+                        </div>
                           <div class="col-md-4">
                             <label class="form-label" for="indicativo_celular_facturacion">{{ 'Indicativo' | translate }}</label>
                             <select class="form-select" id="indicativo_celular_facturacion" [(ngModel)]="indicativo_celular_facturacion">
                               <option *ngFor="let ind of indicativos" [value]="ind.phone_code">+{{ ind.phone_code }} ({{ ind.iso2 }})</option>
-                            </select>
+                              </select>
                           </div>
                           <div class="col-md-8">
                             <label class="form-label" for="numero_celular_facturacion">{{ 'Número de Celular' | translate }} *</label>
                             <input type="tel" class="form-control" id="numero_celular_facturacion" [(ngModel)]="numero_celular_facturacion" required>
-                          </div>
-                          <div class="col-md-12">
+                      </div>
+                        <div class="col-md-12">
                             <label class="form-label" for="correo_electronico_facturacion">{{ 'Correo Electrónico' | translate }} *</label>
                             <input type="email" class="form-control" id="correo_electronico_facturacion" [(ngModel)]="correo_electronico_facturacion" required>
-                          </div>
-                          <div class="col-md-12">
+                      </div>
+                        <div class="col-md-12">
                             <label class="form-label" for="direccion_facturacion">{{ 'Dirección' | translate }} *</label>
                             <input type="text" class="form-control" id="direccion_facturacion" [(ngModel)]="direccion_facturacion" required>
-                          </div>
-                          <div class="col-md-4">
+                      </div>
+                        <div class="col-md-4">
                             <label class="form-label" for="pais_facturacion">{{ 'País' | translate }} *</label>
                             <select class="form-select" id="pais_facturacion" [(ngModel)]="pais" (change)="identificarDepto()" required>
                               <option *ngFor="let p of paises" [value]="p">{{ p }}</option>
-                            </select>
-                          </div>
-                          <div class="col-md-4">
+                          </select>
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label" for="departamento_facturacion">{{ 'Departamento' | translate }} *</label>
                             <select class="form-select" id="departamento_facturacion" [(ngModel)]="departamento" (change)="identificarCiu()" required>
                               <option *ngFor="let d of departamentos" [value]="d">{{ d }}</option>
-                            </select>
-                          </div>
-                          <div class="col-md-4">
+                          </select>
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label" for="ciudad_municipio">{{ 'Ciudad / Municipio' | translate }} *</label>
                             <select class="form-select" id="ciudad_municipio" [(ngModel)]="ciudad_municipio" (change)="onSelectCity($event)" required>
                               <option *ngFor="let c of ciudadesOrigen" [value]="c.value">{{ c.label }}</option>
-                            </select>
-                          </div>
+                          </select>
+                        </div>
                           <div class="col-md-6">
                             <label class="form-label" for="codigo_postal">{{ 'Código Postal' | translate }}</label>
                             <div class="input-group">
@@ -351,9 +366,9 @@
                               <button class="btn btn-outline-secondary" type="button" (click)="redirectToPostalCode()">
                                 <i class="fa fa-search"></i>
                               </button>
-                            </div>
+                      </div>
                             <small class="form-text text-muted">{{ 'Si no conoce el código postal, puede consultarlo en el botón' | translate }}</small>
-                          </div>
+                        </div>
                         </div>
                         
                         <!-- Botones de acción -->
@@ -365,22 +380,22 @@
                             <i class="fa fa-refresh me-2"></i>{{ 'Limpiar' | translate }}
                           </button>
                         </div>
-                      </div>
-                    </p-tabPanel>
-                  </p-tabView>
-                </div>
-                
+                  </div>
+                </p-tabPanel>
+              </p-tabView>
+          </div>
+          
                 <!-- Botones para navegar entre pasos -->
                 <div class="step-navigation">
                   <button class="btn btn-outline-secondary prev-step" (click)="setActiveStep(2)">
                     <i class="fa fa-arrow-left me-2"></i>{{ 'Volver a Entrega' | translate }}
-                  </button>
+              </button>
                   <button class="btn btn-primary next-step" 
                           [disabled]="generarFacturaElectronica && !pedido?.facturacion" 
                           (click)="setActiveStep(4)">
                     {{ 'Continuar a Pago' | translate }} <i class="fa fa-arrow-right ms-2"></i>
-                  </button>
-                </div>
+              </button>
+            </div>
               </div>
             </div>
           </div>
@@ -390,7 +405,7 @@
             <div class="step-indicator" (click)="setActiveStep(4)">
               <span class="step-number">4</span>
               <div class="step-icon"><i class="fa fa-credit-card"></i></div>
-            </div>
+                  </div>
             <div class="step-content">
               <h4 class="step-title">{{ 'Método de Pago' | translate }}</h4>
               <div class="step-body" *ngIf="activeStep === 4">
@@ -409,10 +424,10 @@
                               </span>
                               <span class="payment-name">{{opcionPago.nombre}}</span>
                             </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
                   </form>
                 </div>
                 
@@ -426,11 +441,11 @@
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+              </div>
+              </div>
+                </div>
+                </div>
+              </div>
 
     <!-- Panel lateral con resumen del pedido -->
     <div class="col-lg-4">
@@ -444,7 +459,7 @@
           <div *ngFor="let item of pedido?.carrito" class="product-item">
             <div class="product-image" *ngIf="item?.producto?.crearProducto?.imagenesPrincipales?.length > 0">
               <img [src]="item?.producto?.crearProducto?.imagenesPrincipales[0]?.urls" alt="Producto">
-            </div>
+                </div>
             <div class="product-image" *ngIf="!item?.producto?.crearProducto?.imagenesPrincipales?.length">
               <div class="placeholder-image">
                 <i class="fa fa-shopping-bag"></i>
@@ -455,7 +470,7 @@
               <div class="product-metadata">
                 <span class="product-quantity">x {{item?.cantidad}}</span>
                 <span class="product-price">{{checkPriceScaleProd(item) | currency:'USD':'symbol':'1.0-0'}}</span>
-              </div>
+                  </div>
               <div *ngIf="item?.configuracion?.adiciones?.length || item?.configuracion?.preferencias?.length" 
                    class="product-additions">
                 <span class="additions-label">{{ 'Incluye adiciones y preferencias' | translate }}</span>
@@ -463,7 +478,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Costos y totales -->
         <div class="summary-costs">
           <div class="cost-row">
@@ -473,21 +488,21 @@
           <div class="cost-row">
             <span>{{ 'Envío' | translate }}</span>
             <span>{{pedidoUtilService.getShippingCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span>
-          </div>
+                </div>
           <div class="cost-row discount" *ngIf="pedidoUtilService.getDiscount() > 0">
             <span>{{ 'Descuento' | translate }}</span>
             <span>-{{pedidoUtilService.getDiscount() | currency:'USD':'symbol':'1.0-0'}}</span>
-          </div>
+              </div>
           <div class="cost-row subtotal">
             <span>{{ 'Subtotal' | translate }}</span>
             <span>{{(pedidoUtilService.getShippingCost(allBillingZone) - pedidoUtilService.getDiscount() + checkPriceScale()) | currency:'USD':'symbol':'1.0-0'}}</span>
-          </div>
+                  </div>
           <div class="cost-row">
             <span>{{ 'IVA' | translate }}</span>
             <span>{{(checkIVAPrice().totalPrecioIVADef + pedidoUtilService.getShippingTaxCost(allBillingZone)) | currency:'USD':'symbol':'1.0-0'}}</span>
-          </div>
-        </div>
-        
+                        </div>
+                      </div>
+
         <!-- Total final -->
         <div class="summary-total">
           <span>{{ 'Total' | translate }}</span>
@@ -498,20 +513,20 @@
         <div class="summary-delivery-info" *ngIf="pedido?.envio">
           <div class="delivery-info-header">
             <h6><i class="fa fa-truck me-2"></i>{{ 'Información de Entrega' | translate }}</h6>
-          </div>
+                    </div>
           <div class="delivery-address">
             <p><strong>{{ pedido?.envio?.nombres }} {{ pedido?.envio?.apellidos }}</strong></p>
             <p>{{ pedido?.envio?.direccionEntrega }}</p>
             <p>{{ pedido?.envio?.ciudad }}, {{ pedido?.envio?.departamento }}</p>
             <p><i class="fa fa-phone me-1"></i>({{ pedido?.envio?.indicativoCel }}) {{ pedido?.envio?.celular }}</p>
-          </div>
-        </div>
+                </div>
+              </div>
         
         <!-- Información de facturación -->
         <div class="summary-billing-info" *ngIf="pedido?.facturacion">
           <div class="billing-info-header">
             <h6><i class="fa fa-file-text me-2"></i>{{ 'Información de Facturación' | translate }}</h6>
-          </div>
+              </div>
           <div class="billing-address">
             <p><strong>{{ pedido?.facturacion?.nombres }}</strong></p>
             <p>{{ pedido?.facturacion?.tipoDocumento }}: {{ pedido?.facturacion?.documento }}</p>
