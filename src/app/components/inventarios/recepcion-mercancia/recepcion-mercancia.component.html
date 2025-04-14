@@ -26,7 +26,7 @@
                 <div class="card-body">
                     <form [formGroup]="productoForm" class="row">
                         <!-- Selector de bodega -->
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="bodegaSelect" class="form-label">{{ "Seleccionar Bodega" | translate }}</label>
                             <select formControlName="bodegaSeleccionada" class="form-control" id="bodegaSelect">
                                 <option value="">{{ "Seleccione una bodega" | translate }}</option>
@@ -41,8 +41,23 @@
                             </div>
                         </div>
 
+                        <!-- Selector de tipo de movimiento -->
+                        <div class="col-md-4 mb-3">
+                            <label for="tipoMovimiento" class="form-label">{{ "Tipo de Movimiento" | translate }}</label>
+                            <select formControlName="tipoMovimiento" class="form-control" id="tipoMovimiento">
+                                <option *ngFor="let tipo of tiposMovimientoRecepcion" [value]="tipo.valor">
+                                    {{ tipo.nombre }}
+                                </option>
+                            </select>
+                            <div *ngIf="productoForm.get('tipoMovimiento')?.invalid && 
+                                (productoForm.get('tipoMovimiento')?.dirty || productoForm.get('tipoMovimiento')?.touched)"
+                                class="text-danger">
+                                {{ "Por favor seleccione un tipo de movimiento" | translate }}
+                            </div>
+                        </div>
+
                         <!-- Input para buscar productos -->
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="busquedaProducto" class="form-label">{{ "Buscar Producto" | translate }}</label>
                             <div class="input-group">
                                 <input 

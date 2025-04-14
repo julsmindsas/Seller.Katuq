@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { MovimientoInventario } from '../../../components/inventarios/model/movimientoinventario';
+import { TipoMovimientoInventario } from '../../../components/inventarios/enums/tipos-movimiento.enum';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,26 @@ export class InventarioService {
     });
     
     return this.http.post(url, { movimientos }, { headers });
+  }
+  
+  /**
+   * Ingresa productos al inventario
+   * @param bodegaId ID de la bodega
+   * @param productos Lista de productos a ingresar
+   * @param tipoMovimiento Tipo de movimiento de inventario
+   * @returns Observable con el resultado de la operación
+   */
+  ingresarProductos(bodegaId: string, productos: any[], tipoMovimiento: TipoMovimientoInventario): Observable<any> {
+    const url = `${this.apiUrl}/inventario/ingresar`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    
+    return this.http.post(url, { 
+      bodegaId, 
+      productos, 
+      tipoMovimiento 
+    }, { headers });
   }
 
   /**

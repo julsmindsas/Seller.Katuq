@@ -6,6 +6,7 @@ import { InventarioService } from '../../../shared/services/inventarios/inventar
 import { ToastrService } from 'ngx-toastr';
 import { MovimientoInventario } from '../model/movimientoinventario';
 import { Producto } from '../../../shared/models/productos/Producto';
+import { TipoMovimientoInventario } from '../enums/tipos-movimiento.enum';
 
 interface ProductoRecepcion {
   id: string;
@@ -28,6 +29,15 @@ export class RecepcionMercanciaComponent implements OnInit {
   guardandoRecepcion: boolean = false;
   producto: ProductoRecepcion | null = null;
   
+  // Tipos de movimiento disponibles para recepción
+  tiposMovimientoRecepcion = [
+    { valor: TipoMovimientoInventario.INGRESO_COMPRA, nombre: 'Ingreso por compra' },
+    { valor: TipoMovimientoInventario.INGRESO_PRODUCCION, nombre: 'Ingreso por producción' },
+    { valor: TipoMovimientoInventario.INGRESO_AJUSTE, nombre: 'Ingreso por ajuste' },
+    { valor: TipoMovimientoInventario.INGRESO_INVENTARIO_FISICO, nombre: 'Ingreso por inventario físico' },
+    { valor: TipoMovimientoInventario.INGRESO_MOVIMIENTO, nombre: 'Ingreso por movimiento entre bodegas' }
+  ];
+  
   // Variables para paginación
   pageSize = 10;
   currentPage = 1;
@@ -41,6 +51,7 @@ export class RecepcionMercanciaComponent implements OnInit {
   ) {
     this.productoForm = this.fb.group({
       bodegaSeleccionada: ['', Validators.required],
+      tipoMovimiento: [TipoMovimientoInventario.INGRESO_COMPRA, Validators.required],
       busquedaProducto: ['']
     });
   }
@@ -148,42 +159,32 @@ export class RecepcionMercanciaComponent implements OnInit {
   // Guardar los datos de recepción de mercancía
   guardarRecepcion() {
     if (this.productoForm.invalid || this.productos.length === 0) {
-      this.toastr.error('Por favor selecciona una bodega y añade al menos un producto', 'Error');
+      this.toastr.error('Por favor selecciona una bodega, tipo de movimiento y añade al menos un producto', 'Error');
       return;
     }
 
     this.guardandoRecepcion = true;
     const bodegaSeleccionada = this.productoForm.get('bodegaSeleccionada')?.value;
+    const tipoMovimiento = this.productoForm.get('tipoMovimiento')?.value;
     
-    // Obtener información del usuario actual
-    const usuarioActual = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    const empresaActual = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
-    
-    // Crear movimientos de inventario para cada producto
-    const movimientos: MovimientoInventario[] = this.productos.map(item => {
+    // Preparar los datos para enviar a la API
+    const productosParaEnviar = this.productos.map(item => {
       return {
-        productId: item.producto.cd || item.id,
-        productRef: item.producto.identificacion?.referencia || '',
-        cantidadCambio: item.cantidad,
-        clienteDocumento: '',
-        tipoMovimiento: 'in',
-        origenMovimiento: 'Recepción Manual',
-        fecha: new Date().toISOString(),
-        ordenId: `REC-${Math.floor(Math.random() * 1000000)}`,
-        usuario: usuarioActual.name || 'Usuario Actual',
-        company: empresaActual.nit || 'Empresa Actual',
-        canal: 'Interno',
-        ubicacion: bodegaSeleccionada
+        productoId: item.producto.cd || item.id,
+        referencia: item.producto.identificacion?.referencia || '',
+        cantidad: item.cantidad,
       };
     });
 
-    // Llamar al servicio para guardar los movimientos
-    this.inventarioService.registrarMovimientoInventario(movimientos).subscribe({
+    // Llamar al servicio para guardar los productos ingresados
+    this.inventarioService.ingresarProductos(bodegaSeleccionada, productosParaEnviar, tipoMovimiento).subscribe({
       next: (response) => {
         this.toastr.success('Recepción de mercancía guardada con éxito', 'Guardado');
         
         // Reiniciar formulario y lista de productos
-        this.productoForm.reset();
+        this.productoForm.reset({
+          tipoMovimiento: TipoMovimientoInventario.INGRESO_COMPRA
+        });
         this.productos = [];
         this.guardandoRecepcion = false;
       },
