@@ -10,7 +10,7 @@
                         top: 10px;
                         left: 10px;
                     "></i>
-                <div class="loader-box" *ngIf="cargando">
+                <div class="loader-box" *ngIf="cargando || buscandoProducto">
                     <div class="loader-8"></div>
                 </div>
 
@@ -51,14 +51,15 @@
                                     [ngModelOptions]="{standalone: true}"
                                     class="form-control" 
                                     id="busquedaProducto" 
-                                    placeholder="{{ 'Ingrese ID o nombre del producto y presione Enter' | translate }}"
-                                    (keydown)="onKeyDown($event)">
-                                <button class="btn btn-primary" type="button" (click)="buscarProducto()">
+                                    placeholder="{{ 'Ingrese ID, referencia o nombre del producto y presione Enter' | translate }}"
+                                    (keydown)="onKeyDown($event)"
+                                    [disabled]="buscandoProducto">
+                                <button class="btn btn-primary" type="button" (click)="buscarProducto()" [disabled]="buscandoProducto">
                                     <i class="icofont icofont-search"></i> {{ "Buscar" | translate }}
                                 </button>
                             </div>
                             <small class="form-text text-muted">
-                                {{ "Presione Enter para agregar un producto o haga clic en el botón Buscar" | translate }}
+                                {{ "Ingrese al menos 3 caracteres y presione Enter o haga clic en el botón Buscar" | translate }}
                             </small>
                         </div>
                     </form>
@@ -78,24 +79,37 @@
 
                             <ng-template pTemplate="header">
                                 <tr>
-                                    <th class="text-center">{{ "ID Producto" | translate }}</th>
+                                    <th class="text-center">{{ "Imagen" | translate }}</th>
+                                    <th class="text-center">{{ "Referencia" | translate }}</th>
                                     <th class="text-center">{{ "Nombre Producto" | translate }}</th>
+                                    <th class="text-center">{{ "Precio" | translate }}</th>
                                     <th class="text-center">{{ "Cantidad" | translate }}</th>
                                     <th class="text-center">{{ "Acciones" | translate }}</th>
                                 </tr>
                             </ng-template>
 
-                            <ng-template pTemplate="body" let-producto>
+                            <ng-template pTemplate="body" let-item>
                                 <tr>
-                                    <td>{{ producto.idProducto }}</td>
-                                    <td>{{ producto.nombre }}</td>
+                                    <td class="text-center">
+                                        <img *ngIf="item.producto.crearProducto?.imagenesPrincipales?.length > 0"
+                                            [src]="item.producto.crearProducto.imagenesPrincipales[0].urls" 
+                                            alt="Imagen del producto" 
+                                            style="max-width: 50px; max-height: 50px;"
+                                            class="img-thumbnail">
+                                        <span *ngIf="!item.producto.crearProducto?.imagenesPrincipales?.length">
+                                            <i class="fa fa-image text-muted"></i>
+                                        </span>
+                                    </td>
+                                    <td>{{ item.producto.identificacion?.referencia || 'N/A' }}</td>
+                                    <td>{{ item.producto.crearProducto?.titulo || 'Sin título' }}</td>
+                                    <td class="text-end">{{ item.producto.precio?.precioUnitarioConIva | currency:'USD':'symbol':'1.2-2' || 'N/A' }}</td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center">
-                                            <button class="btn btn-sm btn-outline-danger me-2" (click)="decrementarCantidad(producto)">
+                                            <button class="btn btn-sm btn-outline-danger me-2" (click)="decrementarCantidad(item)">
                                                 <i class="fa fa-minus"></i>
                                             </button>
-                                            <span class="mx-2">{{ producto.cantidad }}</span>
-                                            <button class="btn btn-sm btn-outline-success ms-2" (click)="incrementarCantidad(producto)">
+                                            <span class="mx-2">{{ item.cantidad }}</span>
+                                            <button class="btn btn-sm btn-outline-success ms-2" (click)="incrementarCantidad(item)">
                                                 <i class="fa fa-plus"></i>
                                             </button>
                                         </div>
@@ -103,7 +117,7 @@
                                     <td class="text-center">
                                         <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
                                             style="font-size: 18px; cursor: pointer;"
-                                            class="icofont icofont-trash fc-danger" (click)="eliminarProducto(producto)">
+                                            class="icofont icofont-trash fc-danger" (click)="eliminarProducto(item)">
                                         </i>
                                     </td>
                                 </tr>
@@ -111,7 +125,7 @@
 
                             <ng-template pTemplate="emptymessage">
                                 <tr>
-                                    <td colspan="4" class="text-center">
+                                    <td colspan="6" class="text-center">
                                         {{ "No hay productos en la lista" | translate }}
                                     </td>
                                 </tr>
@@ -119,7 +133,10 @@
 
                             <ng-template pTemplate="summary">
                                 <div class="flex align-items-center justify-content-between">
-                                    {{ "Total productos" | translate }}: {{productos ? productos.length : 0 }}
+                                    <div>{{ "Total productos" | translate }}: {{productos ? productos.length : 0 }}</div>
+                                    <div *ngIf="productos.length > 0">
+                                        {{ "Total ítems" | translate }}: {{ calcularTotalItems() }}
+                                    </div>
                                 </div>
                             </ng-template>
                         </p-table>
@@ -129,7 +146,7 @@
                     <div class="d-flex justify-content-end mt-4">
                         <button 
                             class="btn btn-primary" 
-                            [disabled]="productos.length === 0 || productoForm.invalid" 
+                            [disabled]="productos.length === 0 || productoForm.invalid || guardandoRecepcion" 
                             (click)="guardarRecepcion()">
                             <i class="icofont icofont-save"></i> {{ "Guardar Recepción" | translate }}
                         </button>
