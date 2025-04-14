@@ -39,7 +39,7 @@ export class BodegasComponent implements OnInit {
     
     modalRef.result.then((result) => {
       if (result) {
-        this.bodegaService.agregarBodega(result);
+        this.cargarBodegas();
       }
     }, () => {});
   }

@@ -2,6 +2,8 @@ import { Component, Input, OnInit, AfterViewInit, ViewChild, ElementRef } from '
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { HttpClient } from '@angular/common/http';
+import { BodegaService } from '../../../../shared/services/bodegas/bodega.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-crear-bodegas',
@@ -30,7 +32,9 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   constructor(
     private fb: FormBuilder,
     public activeModal: NgbActiveModal,
-    private http: HttpClient
+    private http: HttpClient,
+    private bodegaService: BodegaService,
+    private toastr: ToastrService
   ) {
     this.bodegaForm = this.fb.group({
       id: [''],
@@ -213,8 +217,28 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
       this.marcarControlesComoTocados();
       return;
     }
-
-    this.activeModal.close(this.bodegaForm.value);
+    const bodega = this.bodegaForm.value;
+    if (this.isEditMode) {
+      this.bodegaService.actualizarBodega(bodega).subscribe({
+        next: () => {
+          this.toastr.success('Bodega actualizada correctamente', 'Éxito');
+          this.activeModal.close(true);
+        },
+        error: () => {
+          this.toastr.error('Error al actualizar la bodega', 'Error');
+        }
+      });
+    } else {
+      this.bodegaService.agregarBodega(bodega).subscribe({
+        next: () => {
+          this.toastr.success('Bodega creada correctamente', 'Éxito');
+          this.activeModal.close(true);
+        },
+        error: () => {
+          this.toastr.error('Error al crear la bodega', 'Error');
+        }
+      });
+    }
   }
 
   cancelar() {
