@@ -1,48 +1,40 @@
-/* Estilo para los iconos FAFA */
-.fafa {
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    display: inline-block;
-    font-style: normal;
-    font-variant: normal;
-    text-rendering: auto;
-    line-height: 1;
+/* Estilos para los iconos */
+.fc-primary {
+    color: #5e72e4;
   }
   
-  /* Iconos circulares */
-  .icon-shape {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
+  .fc-danger {
+    color: #f5365c;
   }
   
-  /* Badge para bodega transaccional */
-  .bg-indigo {
-    background-color: #6610f2;
-    color: white;
+  .fc-primary:hover, .fc-danger:hover {
+    opacity: 0.8;
   }
   
-  /* Efecto hover en filas */
-  .table-hover tbody tr:hover {
-    background-color: rgba(13, 110, 253, 0.05);
+  /* Icono de fondo */
+  .icon-bg {
+    z-index: 0;
   }
   
-  /* Botones de acción */
-  .btn-outline-primary, .btn-outline-danger, .btn-outline-info {
-    border-width: 1px;
-    transition: all 0.2s;
+  /* Loader */
+  .loader-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
   }
   
-  .btn-outline-primary:hover {
-    background-color: rgba(13, 110, 253, 0.1);
+  /* Badges */
+  .badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.85em;
   }
   
-  .btn-outline-danger:hover {
-    background-color: rgba(220, 53, 69, 0.1);
+  .bg-primary {
+    background-color: #5e72e4!important;
   }
   
-  .btn-outline-info:hover {
-    background-color: rgba(13, 202, 240, 0.1);
+  .bg-info {
+    background-color: #11cdef!important;
   }
