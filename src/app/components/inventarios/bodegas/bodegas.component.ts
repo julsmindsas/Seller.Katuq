@@ -33,7 +33,7 @@ export class BodegasComponent implements OnInit {
 
   abrirModalCrear() {
     const modalRef = this.modalService.open(CrearBodegasComponent, { 
-      size: 'lg',
+      size: 'xl',
       centered: true
     });
     
@@ -46,7 +46,9 @@ export class BodegasComponent implements OnInit {
 
   abrirModalEditar(bodega: any) {
     const modalRef = this.modalService.open(CrearBodegasComponent, { 
-      size: 'lg',
+      size: 'xl',
+      backdrop: 'static',
+
       centered: true
     });
     
