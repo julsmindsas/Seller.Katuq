@@ -104,6 +104,14 @@
               <h4 class="step-title">{{ 'Datos de Entrega' | translate }}</h4>
               <div class="step-body" *ngIf="activeStep === 2">
                 <!-- Contenido para la dirección de entrega -->
+                <p-tabView styleClass="delivery-tabs">
+                  <!-- Tabs de direcciones de entrega guardadas -->
+                  <p-tabPanel header="{{ 'Mis Direcciones' | translate }}" *ngIf="activarEntrega">
+                    <!-- Contenido de las direcciones de entrega guardadas -->
+                    <div *ngIf="datosEntregas && datosEntregas.length > 0" class="address-cards">
+                      <div *ngFor="let dir of datosEntregas; let i = index" class="address-card" 
+                           [class.selected]="pedido?.envio?.alias === dir.alias" (click)="seleccionarDireccionEntrega(i)">
+                        <div class="address-card-header">
                           <h6>{{dir.alias}}</h6>
                           <div class="address-actions">
                             <button class="btn btn-sm btn-link" (click)="editarDireccionEntrega(dir, i); $event.stopPropagation()">
