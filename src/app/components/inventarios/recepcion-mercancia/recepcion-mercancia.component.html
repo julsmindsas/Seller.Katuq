@@ -29,8 +29,8 @@
                         <div class="col-md-6 mb-3">
                             <label for="bodegaSelect" class="form-label">{{ "Seleccionar Bodega" | translate }}</label>
                             <select formControlName="bodegaSeleccionada" class="form-control" id="bodegaSelect">
-                                <option value="">{{ "Seleccione una bodega" | translate }}</option>
-                                <option *ngFor="let bodega of bodegas" [value]="bodega.id">
+                                <option [ngValue]="null">{{ "Seleccione una bodega" | translate }}</option>
+                                <option *ngFor="let bodega of bodegas" [ngValue]="bodega">
                                     {{ bodega.nombre }} ({{ bodega.idBodega }})
                                 </option>
                             </select>

@@ -177,7 +177,7 @@ export class RecepcionMercanciaComponent implements OnInit {
     });
 
     // Llamar al servicio para guardar los productos ingresados
-    this.inventarioService.ingresarProductos(bodegaSeleccionada, productosParaEnviar, tipoMovimiento).subscribe({
+    this.inventarioService.ingresarProductos(bodegaSeleccionada.idBodega, productosParaEnviar, tipoMovimiento).subscribe({
       next: (response) => {
         this.toastr.success('Recepción de mercancía guardada con éxito', 'Guardado');
         
