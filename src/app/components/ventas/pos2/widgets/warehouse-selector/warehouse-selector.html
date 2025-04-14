@@ -1,12 +1,16 @@
 <!-- warehouse-selector.component.html -->
 <div class="warehouse-selector">
-    <label for="warehouse">Seleccionar Bodega:</label>
-    <select id="warehouse" #ware class="form-select" (change)="onWarehouseChange($event)">
-      <option value="" disabled selected>Seleccione una bodega</option>
-      <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">{{ warehouse.name }}</option>
-    </select>
   
-    <div *ngIf="selectedWarehouse" class="selected-warehouse">
-      <strong>Bodega Seleccionada:</strong> {{ selectedWarehouse }}
-    </div>
+  <label for="warehouse">Seleccionar Bodega:</label>
+  <select #ware formControlName="bodegaSeleccionada" class="form-control" id="bodegaSelect" (change)="onWarehouseChange($event)">
+    <option value="">{{ "Seleccione una bodega" }}</option>
+    <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+        {{ bodega.nombre }} ({{ bodega.idBodega }})
+    </option>
+</select>
+
+  <div *ngIf="selectedWarehouse" class="selected-warehouse">
+    <strong>Bodega Seleccionada:</strong> {{ selectedWarehouse }}
   </div>
+
+</div>
