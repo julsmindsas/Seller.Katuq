@@ -1,0 +1,141 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12 p-2">
+            <br />
+            <div class="card">
+                <i class="icon-bg" width="80" height="80" style="
+                        opacity: 0.4;
+                        position: absolute;
+                        color: #6ec0d4;
+                        top: 10px;
+                        left: 10px;
+                    "></i>
+                <div class="loader-box" *ngIf="cargando">
+                    <div class="loader-8"></div>
+                </div>
+
+                <!-- Header Standar -->
+                <div class="row col-12 m-2">
+                    <div class="col-6">
+                        <p class="text-left fc-info fs-24 m-0 p-0">{{ "Recepción de Mercancía" | translate }}</p>
+                        <p class="text-left text-muted fs-18 m-0 p-0">{{ "Ingreso de productos al inventario" | translate }}</p>
+                    </div>
+                </div>
+                <!-- FIN Header Standar -->
+
+                <div class="card-body">
+                    <form [formGroup]="productoForm" class="row">
+                        <!-- Selector de bodega -->
+                        <div class="col-md-6 mb-3">
+                            <label for="bodegaSelect" class="form-label">{{ "Seleccionar Bodega" | translate }}</label>
+                            <select formControlName="bodegaSeleccionada" class="form-control" id="bodegaSelect">
+                                <option value="">{{ "Seleccione una bodega" | translate }}</option>
+                                <option *ngFor="let bodega of bodegas" [value]="bodega.id">
+                                    {{ bodega.nombre }} ({{ bodega.idBodega }})
+                                </option>
+                            </select>
+                            <div *ngIf="productoForm.get('bodegaSeleccionada')?.invalid && 
+                                (productoForm.get('bodegaSeleccionada')?.dirty || productoForm.get('bodegaSeleccionada')?.touched)"
+                                class="text-danger">
+                                {{ "Por favor seleccione una bodega" | translate }}
+                            </div>
+                        </div>
+
+                        <!-- Input para buscar productos -->
+                        <div class="col-md-6 mb-3">
+                            <label for="busquedaProducto" class="form-label">{{ "Buscar Producto" | translate }}</label>
+                            <div class="input-group">
+                                <input 
+                                    type="text" 
+                                    [(ngModel)]="busquedaInput" 
+                                    [ngModelOptions]="{standalone: true}"
+                                    class="form-control" 
+                                    id="busquedaProducto" 
+                                    placeholder="{{ 'Ingrese ID o nombre del producto y presione Enter' | translate }}"
+                                    (keydown)="onKeyDown($event)">
+                                <button class="btn btn-primary" type="button" (click)="buscarProducto()">
+                                    <i class="icofont icofont-search"></i> {{ "Buscar" | translate }}
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">
+                                {{ "Presione Enter para agregar un producto o haga clic en el botón Buscar" | translate }}
+                            </small>
+                        </div>
+                    </form>
+
+                    <!-- Tabla de productos -->
+                    <div class="custom-datatable mt-4" *ngIf="!cargando">
+                        <p-table 
+                            #dt 
+                            [value]="productos" 
+                            [paginator]="true" 
+                            [rows]="10" 
+                            [resizableColumns]="true" 
+                            [scrollable]="true" 
+                            scrollHeight="flex" 
+                            styleClass="p-datatable-gridlines p-datatable-striped"
+                            [rowsPerPageOptions]="[5, 10, 20]">
+
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th class="text-center">{{ "ID Producto" | translate }}</th>
+                                    <th class="text-center">{{ "Nombre Producto" | translate }}</th>
+                                    <th class="text-center">{{ "Cantidad" | translate }}</th>
+                                    <th class="text-center">{{ "Acciones" | translate }}</th>
+                                </tr>
+                            </ng-template>
+
+                            <ng-template pTemplate="body" let-producto>
+                                <tr>
+                                    <td>{{ producto.idProducto }}</td>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <button class="btn btn-sm btn-outline-danger me-2" (click)="decrementarCantidad(producto)">
+                                                <i class="fa fa-minus"></i>
+                                            </button>
+                                            <span class="mx-2">{{ producto.cantidad }}</span>
+                                            <button class="btn btn-sm btn-outline-success ms-2" (click)="incrementarCantidad(producto)">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+                                            style="font-size: 18px; cursor: pointer;"
+                                            class="icofont icofont-trash fc-danger" (click)="eliminarProducto(producto)">
+                                        </i>
+                                    </td>
+                                </tr>
+                            </ng-template>
+
+                            <ng-template pTemplate="emptymessage">
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        {{ "No hay productos en la lista" | translate }}
+                                    </td>
+                                </tr>
+                            </ng-template>
+
+                            <ng-template pTemplate="summary">
+                                <div class="flex align-items-center justify-content-between">
+                                    {{ "Total productos" | translate }}: {{productos ? productos.length : 0 }}
+                                </div>
+                            </ng-template>
+                        </p-table>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="d-flex justify-content-end mt-4">
+                        <button 
+                            class="btn btn-primary" 
+                            [disabled]="productos.length === 0 || productoForm.invalid" 
+                            (click)="guardarRecepcion()">
+                            <i class="icofont icofont-save"></i> {{ "Guardar Recepción" | translate }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

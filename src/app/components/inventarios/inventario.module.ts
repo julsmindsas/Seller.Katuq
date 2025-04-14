@@ -15,6 +15,9 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import {PaginatorModule} from 'primeng/paginator';
 import { BodegasComponent } from './bodegas/bodegas.component';
 import { CrearBodegasComponent } from './bodegas/crear-bodegas/crear-bodegas.component';
+import { RecepcionMercanciaComponent } from './recepcion-mercancia/recepcion-mercancia.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
 @NgModule({
     imports: [
         InventariosRoutingModule,
@@ -28,9 +31,16 @@ import { CrearBodegasComponent } from './bodegas/crear-bodegas/crear-bodegas.com
         NgbModule,
         GalleryModule,
         TableModule,
-        PaginatorModule
+        PaginatorModule,
+        FormsModule,
+        ReactiveFormsModule
     ],
-    declarations: [InventarioCatalogoComponent, BodegasComponent, CrearBodegasComponent],
+    declarations: [
+        InventarioCatalogoComponent, 
+        BodegasComponent, 
+        CrearBodegasComponent,
+        RecepcionMercanciaComponent
+    ],
     providers: [NgbActiveModal, ModalGalleryService],
 })
 export class InventarioCatalogoModule { }
