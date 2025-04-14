@@ -1,1 +1,115 @@
-<p>bodegas works!</p>
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-lg">
+      <!-- Card Header - Mejorado con icono FAFA -->
+      <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-0">
+              <i class="fafa fafa-warehouse me-2"></i>Gestión de Bodegas
+            </h5>
+            <small class="opacity-75">Administre el inventario de bodegas</small>
+          </div>
+          <button class="btn btn-light btn-sm" (click)="abrirModalCrear()">
+            <i class="fafa fafa-plus-circle me-1"></i>Nueva Bodega
+          </button>
+        </div>
+      </div>
+      
+      <!-- Card Body - Tabla con iconos FAFA -->
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4"><i class="fafa fafa-id-card-alt me-1"></i> ID</th>
+                <th><i class="fafa fafa-signature me-1"></i> Nombre</th>
+                <th><i class="fafa fafa-barcode me-1"></i> Código</th>
+                <th><i class="fafa fafa-tags me-1"></i> Tipo</th>
+                <th><i class="fafa fafa-map-marker-alt me-1"></i> Ubicación</th>
+                <th class="text-end pe-4"><i class="fafa fafa-cog me-1"></i> Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let bodega of bodegas">
+                <td class="ps-4">
+                  <span class="fw-bold">#{{ bodega.id }}</span>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="icon-shape bg-info text-white rounded-circle me-2">
+                      <i class="fafa fafa-warehouse"></i>
+                    </div>
+                    <span>{{ bodega.nombre }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark">{{ bodega.idBodega }}</span>
+                </td>
+                <td>
+                  <span [ngClass]="{
+                    'badge bg-success': bodega.tipo === 'Física',
+                    'badge bg-indigo': bodega.tipo === 'Transaccional'
+                  }">
+                    <i [class]="bodega.tipo === 'Física' ? 'fafa fafa-box me-1' : 'fafa fafa-random me-1'"></i>
+                    {{ bodega.tipo }}
+                  </span>
+                </td>
+                <td>
+                  <div *ngIf="bodega.tipo === 'Física'">
+                    <span class="d-block">{{ bodega.ciudad }}</span>
+                    <small class="text-muted">{{ bodega.departamento }}, {{ bodega.pais }}</small>
+                  </div>
+                  <div *ngIf="bodega.tipo === 'Transaccional'">
+                    <span class="text-muted"><i class="fafa fafa-cloud me-1"></i> Virtual</span>
+                  </div>
+                </td>
+                <td class="text-end pe-4">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-outline-primary" 
+                            (click)="abrirModalEditar(bodega)" 
+                            title="Editar">
+                      <i class="fafa fafa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" 
+                            (click)="eliminarBodega(bodega)" 
+                            title="Eliminar">
+                      <i class="fafa fafa-trash-alt"></i>
+                    </button>
+                    <button class="btn btn-outline-info" 
+                            title="Detalles">
+                      <i class="fafa fafa-eye"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  
+      <!-- Card Footer - Paginación -->
+      <div class="card-footer bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted">Mostrando 1 a {{bodegas.length}} de {{bodegas.length}} registros</span>
+          </div>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled">
+                <a class="page-link" href="#">
+                  <i class="fafa fafa-chevron-left"></i>
+                </a>
+              </li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item">
+                <a class="page-link" href="#">
+                  <i class="fafa fafa-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>

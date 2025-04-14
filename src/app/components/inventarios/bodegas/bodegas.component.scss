@@ -1,0 +1,48 @@
+/* Estilo para los iconos FAFA */
+.fafa {
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+  }
+  
+  /* Iconos circulares */
+  .icon-shape {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+  }
+  
+  /* Badge para bodega transaccional */
+  .bg-indigo {
+    background-color: #6610f2;
+    color: white;
+  }
+  
+  /* Efecto hover en filas */
+  .table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+  }
+  
+  /* Botones de acción */
+  .btn-outline-primary, .btn-outline-danger, .btn-outline-info {
+    border-width: 1px;
+    transition: all 0.2s;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+  }
+  
+  .btn-outline-danger:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+  }
+  
+  .btn-outline-info:hover {
+    background-color: rgba(13, 202, 240, 0.1);
+  }
