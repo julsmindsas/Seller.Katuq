@@ -1,44 +1,31 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BodegaService {
-  // Lista de bodegas actualizable mediante BehaviorSubject
-  private bodegasBS = new BehaviorSubject<any[]>([
-    {
-      id: 1,
-      nombre: 'Bodega Principal',
-      idBodega: 'BOD-001',
-      direccion: 'Calle 123 #45-67',
-      ciudad: 'Bogotá',
-      departamento: 'Bogotá D.C.',
-      tipo: 'Física'
-    },
-    {
-      id: 2,
-      nombre: 'Bodega Virtual',
-      idBodega: 'BOD-002',
-      direccion: 'N/A',
-      ciudad: 'Virtual',
-      departamento: '',
-      tipo: 'Transaccional'
-    }
-  ]);
-
+  private apiUrl = environment.urlApi + '/v1/bodegas';
   // Bodega seleccionada actualmente
   private bodegaSeleccionadaBS = new BehaviorSubject<any>(null);
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
-  // Métodos para acceder a las bodegas
+  // Obtener todas las bodegas
   getBodegas(): Observable<any[]> {
-    return this.bodegasBS.asObservable();
+    return this.http.get<any[]>(`${this.apiUrl}/all`);
   }
 
-  actualizarBodegas(bodegas: any[]): void {
-    this.bodegasBS.next(bodegas);
+  // Obtener bodegas activas
+  getActiveBodegas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/active`);
+  }
+
+  // Obtener bodega por nombre
+  getBodegaByName(nombre: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/byName`, { nombre });
   }
 
   // Métodos para la bodega seleccionada
@@ -50,23 +37,18 @@ export class BodegaService {
     this.bodegaSeleccionadaBS.next(bodega);
   }
 
-  // Método para agregar una bodega
-  agregarBodega(bodega: any): void {
-    const bodegas = [...this.bodegasBS.value, bodega];
-    this.bodegasBS.next(bodegas);
+  // Crear bodega
+  agregarBodega(bodega: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/create`, bodega);
   }
 
-  // Método para actualizar una bodega
-  actualizarBodega(bodega: any): void {
-    const bodegas = this.bodegasBS.value.map(b => 
-      b.id === bodega.id ? bodega : b
-    );
-    this.bodegasBS.next(bodegas);
+  // Editar bodega
+  actualizarBodega(bodega: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/edit`, bodega);
   }
 
-  // Método para eliminar una bodega
-  eliminarBodega(id: number): void {
-    const bodegas = this.bodegasBS.value.filter(b => b.id !== id);
-    this.bodegasBS.next(bodegas);
+  // Eliminar bodega
+  eliminarBodega(id: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/remove`, { id });
   }
 }
