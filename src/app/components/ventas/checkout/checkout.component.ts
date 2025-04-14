@@ -111,6 +111,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
   datosEntregas: any[] = [];
   filteredResults: any[] = [];
 
+  // Variable para controlar el paso activo del timeline
+  activeStep: number = 1;
+
   constructor(
     private fb: UntypedFormBuilder,
     private ref: ChangeDetectorRef,
@@ -243,12 +246,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
       this.encontrado = false;
       this.bloqueado = false;
       this.mostrarFormularioCliente = true;
-      Swal.fire({
-        title: "No encontrado!",
-        text: "No se encuentra el cliente. Llene los datos para crear uno nuevo.",
-        icon: "warning",
-        confirmButtonText: "Ok",
-      });
+      this.toastrService.warning('Cliente no encontrado. Por favor, complete los datos para crear uno nuevo.', 'Atención');
     } else {
       this.pedido.cliente = res;
       this.ref.markForCheck();
@@ -265,14 +263,15 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
       if (this.formulario.value.estado == "Bloqueado") {
         this.bloqueado = true;
+        this.toastrService.error('¡Este cliente está bloqueado!', 'Error');
+      } else {
+        this.toastrService.success('Cliente encontrado', 'Éxito');
+        
+        // Avanzar automáticamente después de un breve retraso
+        setTimeout(() => {
+          this.setActiveStep(2);
+        }, 1000);
       }
-
-      this.toastrService.show('<p class="mb-0 mt-1">Cliente encontrado!</p>', '', {
-        closeButton: true,
-        enableHtml: true,
-        positionClass: 'toast-bottom-right',
-        timeOut: 1000
-      });
 
       // Cargar datos de facturación y entrega del cliente
       this.cargarDireccionesCliente(res);
@@ -354,18 +353,17 @@ export class CheckOutComponent implements OnInit, OnChanges {
     this.service.createClient(clienteData).subscribe((r: any) => {
       this.pedido.facturacion = this.datosFacturacionElectronica[0];
       this.pedido.envio = this.datosEntregas[0];
-      const client = (r instanceof ArrayBuffer) ? JSON.parse(new TextDecoder().decode(r)) : r;
-      Swal.fire({
-        title: "Guardado!",
-        text: "Cliente creado rápidamente",
-        icon: "success",
-        confirmButtonText: "Ok",
-      });
+      this.toastrService.success('Cliente creado exitosamente', 'Éxito');
       sessionStorage.setItem("cliente", JSON.stringify(clienteData));
       this.clienteRecienCreado = true;
       this.encontrado = true;
       this.mostrarFormularioCliente = false;
       this.pedido = { ...this.pedido };
+      
+      // Avanzar automáticamente después de un breve retraso
+      setTimeout(() => {
+        this.setActiveStep(2);
+      }, 1000);
     });
   }
 
@@ -495,24 +493,28 @@ export class CheckOutComponent implements OnInit, OnChanges {
   seleccionarDireccionFE(index: number) {
     this.pedido.facturacion = this.datosFacturacionElectronica[index];
     this.pedido = { ...this.pedido };
-    Swal.fire({
-      title: "Dirección Seleccionada!",
-      text: this.datosFacturacionElectronica[index].direccion,
-      icon: "success",
-      confirmButtonText: "Ok",
-    });
+    this.toastrService.success(`Dirección seleccionada: ${this.datosFacturacionElectronica[index].direccion}`, 'Éxito');
+    
+    // Si estamos en el paso de facturación, avanzar automáticamente después de un breve retraso
+    if (this.activeStep === 3) {
+      setTimeout(() => {
+        this.setActiveStep(4);
+      }, 800);
+    }
   }
 
   // Método para seleccionar una dirección de entrega
   seleccionarDireccionEntrega(index: number) {
     this.pedido.envio = this.datosEntregas[index];
     this.pedido = { ...this.pedido };
-    Swal.fire({
-      title: "Dirección Seleccionada!",
-      text: this.datosEntregas[index].direccionEntrega,
-      icon: "success",
-      confirmButtonText: "Ok",
-    });
+    this.toastrService.success(`Dirección seleccionada: ${this.datosEntregas[index].direccionEntrega}`, 'Éxito');
+    
+    // Si estamos en el paso de entrega, avanzar automáticamente después de un breve retraso
+    if (this.activeStep === 2) {
+      setTimeout(() => {
+        this.setActiveStep(3);
+      }, 800);
+    }
   }
 
   // Método para replicar información de teléfono a WhatsApp
@@ -774,26 +776,32 @@ export class CheckOutComponent implements OnInit, OnChanges {
   async gotToPaymentOrder() {
     if (!this.pedido.cliente) {
       this.toastrService.error('Por favor seleccione un cliente', 'Error');
-      return;
-    }
-
-    if (this.generarFacturaElectronica && !this.pedido.facturacion) {
-      this.toastrService.error('Por favor seleccione los datos de facturación', 'Error');
+      this.setActiveStep(1);
       return;
     }
 
     if (this.activarEntrega && !this.pedido.envio) {
       this.toastrService.error('Por favor seleccione los datos de entrega', 'Error');
+      this.setActiveStep(2);
       return;
     }
 
-    // Asignar forma de pago seleccionada
-    const formaPago = this.form.get('opcionSeleccionada')?.value;
-    if (formaPago) {
-      this.pedido.formaDePago = formaPago;
+    if (this.generarFacturaElectronica && !this.pedido.facturacion) {
+      this.toastrService.error('Por favor seleccione los datos de facturación', 'Error');
+      this.setActiveStep(3);
+      return;
     }
 
-    // Emitir evento de compra para que lo capture el componente padre
+    const formaPago = this.form.get('opcionSeleccionada')?.value;
+    if (!formaPago) {
+      this.toastrService.error('Por favor seleccione una forma de pago', 'Error');
+      return;
+    }
+
+    this.pedido.formaDePago = formaPago;
+    
+    this.toastrService.info('Procesando la orden...', 'Procesando');
+
     this.comprarYPagar.emit(this.pedido);
   }
 
@@ -820,12 +828,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
   guardarDireccionFacturacion() {
     if (!this.razon_social || !this.direccion_facturacion || !this.ciudad_municipio) {
-      Swal.fire({
-        title: "Campos requeridos",
-        text: "Por favor complete todos los campos obligatorios.",
-        icon: "warning",
-        confirmButtonText: "Ok",
-      });
+      this.toastrService.warning('Por favor complete todos los campos obligatorios', 'Atención');
       return;
     }
 
@@ -858,6 +861,14 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
     // Limpiar formulario
     this.limpiarFormularioFacturacion();
+    
+    // Volver a la pestaña de direcciones guardadas
+    setTimeout(() => {
+      const tabView = document.querySelector('.billing-tabs .p-tabview-nav li:first-child a');
+      if (tabView) {
+        (tabView as HTMLElement).click();
+      }
+    }, 300);
   }
 
   private actualizarDatosClienteFacturacion() {
@@ -1010,12 +1021,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
   guardarDireccionEntrega() {
     if (!this.nombres_entrega || !this.direccion_entrega || !this.ciudad_municipio_entrega) {
-      Swal.fire({
-        title: "Campos requeridos",
-        text: "Por favor complete todos los campos obligatorios.",
-        icon: "warning",
-        confirmButtonText: "Ok",
-      });
+      this.toastrService.warning('Por favor complete todos los campos obligatorios', 'Atención');
       return;
     }
 
@@ -1054,6 +1060,14 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
     // Limpiar formulario
     this.limpiarFormularioEntrega();
+    
+    // Volver a la pestaña de direcciones guardadas
+    setTimeout(() => {
+      const tabView = document.querySelector('.delivery-tabs .p-tabview-nav li:first-child a');
+      if (tabView) {
+        (tabView as HTMLElement).click();
+      }
+    }, 300);
   }
 
   private actualizarDatosClienteEntrega() {
@@ -1201,5 +1215,71 @@ export class CheckOutComponent implements OnInit, OnChanges {
         }
       }
     });
+  }
+
+  // Método para cambiar el paso activo
+  setActiveStep(step: number): void {
+    // Validaciones para asegurar que se cumplan los requisitos antes de avanzar
+    if (step > 1 && !this.pedido?.cliente) {
+      this.toastrService.warning('Debe seleccionar o crear un cliente primero', 'Atención');
+      return;
+    }
+
+    if (step > 2 && this.activarEntrega && !this.pedido?.envio) {
+      this.toastrService.warning('Debe seleccionar o crear una dirección de entrega', 'Atención');
+      return;
+    }
+
+    if (step > 3 && this.generarFacturaElectronica && !this.pedido?.facturacion) {
+      this.toastrService.warning('Debe seleccionar o crear una dirección de facturación', 'Atención');
+      return;
+    }
+
+    this.activeStep = step;
+  }
+
+  // Método para activar la pestaña de nueva dirección de entrega
+  newDeliveryTabActive(): void {
+    const tabView = document.querySelector('.delivery-tabs .p-tabview-nav li:nth-child(2) a');
+    if (tabView) {
+      (tabView as HTMLElement).click();
+    }
+  }
+
+  // Método para activar la pestaña de nueva dirección de facturación
+  newBillingTabActive(): void {
+    const tabView = document.querySelector('.billing-tabs .p-tabview-nav li:nth-child(2) a');
+    if (tabView) {
+      (tabView as HTMLElement).click();
+    }
+  }
+
+  // Método para obtener el icono correspondiente a cada forma de pago
+  getPaymentIcon(paymentName: string): string {
+    // Mapeo de nombres de formas de pago a iconos
+    const iconMap: { [key: string]: string } = {
+      'Tarjeta de Crédito': 'credit-card',
+      'Tarjeta Débito': 'credit-card',
+      'PSE': 'university',
+      'Transferencia Bancaria': 'bank',
+      'Efectivo': 'money',
+      'PayPal': 'paypal',
+      'Bitcoin': 'bitcoin',
+      'Nequi': 'mobile',
+      'Daviplata': 'mobile',
+      'Crédito': 'handshake-o',
+      'Efecty': 'building',
+      'Western Union': 'globe'
+    };
+
+    // Buscar coincidencias parciales
+    for (const [key, icon] of Object.entries(iconMap)) {
+      if (paymentName.toLowerCase().includes(key.toLowerCase())) {
+        return icon;
+      }
+    }
+
+    // Icono por defecto
+    return 'money';
   }
 }
