@@ -153,7 +153,7 @@
     </ul>
 
     <!-- Card Balanceada -->
-    <div class="plan-card-container" id="plan-card-container" 
+    <div class="plan-card-container" id="plan-card-container" *appRoleBasedVisibility="['Katuq', 'Administrador']"
          style="border-radius: 4px; border: 0.5px solid #bebebe; margin: 5px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" 
          [class.collapsed]="collapseMenu">
       <!-- Cabecera siempre visible con botón de toggle -->

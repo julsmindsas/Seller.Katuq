@@ -31,6 +31,7 @@ import { DisableKeyPressDirective } from './directives/disable-key-press.directi
 import { OnlyAlphabetsDirective } from './directives/only-alphabets.directive';
 import { OnlyNumbersDirective } from './directives/only-numbers.directive';
 import { ShowOptionsDirective } from './directives/show-options.directive';
+import { RoleBasedVisibilityDirective } from './directives/role-based-visibility.directive';
 // Services
 import { LayoutService } from './services/layout.service';
 import { NavService } from './services/nav.service';
@@ -62,6 +63,7 @@ import { PlanSelectorComponent } from './components/plan-selector/plan-selector.
     DisableKeyPressDirective,
     OnlyAlphabetsDirective,
     OnlyNumbersDirective,
+    RoleBasedVisibilityDirective,
     LoaderComponent,
     TapToTopComponent,
     SearchComponent,
@@ -113,6 +115,7 @@ import { PlanSelectorComponent } from './components/plan-selector/plan-selector.
     DisableKeyPressDirective,
     OnlyAlphabetsDirective,
     OnlyNumbersDirective,
+    RoleBasedVisibilityDirective,
     ImagesManagerComponent,
     KatuqIntelligenceComponent,
     SharedChangePasswordComponent,

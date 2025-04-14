@@ -20,7 +20,7 @@ export class RoleBasedVisibilityDirective implements OnInit {
   async hasRoleShow() {
     const userActive = JSON.parse(localStorage.getItem('user')!);
     if (userActive) {
-      const isRole: boolean = Boolean(this.typeCustomer && this.typeCustomer.includes(userActive.tipo))
+      const isRole: boolean = Boolean(this.typeCustomer && this.typeCustomer.includes(userActive.rol))
       if (isRole) {
         this.viewContainerRef.createEmbeddedView(this.templateRef)
       } else {

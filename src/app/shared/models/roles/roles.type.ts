@@ -1,14 +1,9 @@
-export type TypeCustomer = 'Swayp' | 'Administrador' | 'Mensajeros' | 'FulFillment' | 'LastMile' | 'Drop' | 'Proveedores' | "Dropshipper"
+export type TypeCustomer = 'Katuq' | 'Administrador' | 'Bodegas' | 'Tiendas' | 'Operador' 
 
 export enum Rol {
-    Swayp = 'Katuq',
+    Katuq = 'Katuq',
     Administrador = 'Administrator',
-    Mensajeros = 'Mensajeros',
-    FulFillment = 'FulFillment',
-    Drop = 'Drop',
-    LastMile = 'LastMile',
     Bodegas = 'Bodegas',
-    Proveedores = "Proveedores",
-    Dropshipper = "Dropshipper",
-    Tiendas = "Tiendas"
+    Tiendas = "Tiendas",
+    Operador = "Operador"
 }
