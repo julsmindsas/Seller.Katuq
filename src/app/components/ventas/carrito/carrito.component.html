@@ -9,10 +9,11 @@
           <div class="row">
             <div class="order-history table-responsive wishlist">
               <table class="table table-bordered">
-                
+
                 <tbody>
                   <tr *ngIf="productos.length === 0">
-                    <td colspan="6" class="text-center" translate="No hay productos en el carrito">No hay productos en el carrito</td>
+                    <td colspan="6" class="text-center" translate="No hay productos en el carrito">No hay productos en
+                      el carrito</td>
                   </tr>
                   <ng-container *ngFor="let itemCarrito of productos">
                     <tr>
@@ -27,8 +28,10 @@
                       <td>
                         <img class="img-fluid img-40"
                           *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
-                          src="{{itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls}}"
-                          alt="{{ itemCarrito?.producto?.crearProducto?.titulo }}" width="50" height="50">
+                          [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                          [alt]="itemCarrito?.producto?.crearProducto?.titulo" appImageOptimizer [quality]="0.3"
+                          [width]="50" [height]="50" [lazy]="true" loading="lazy" priority>
+
                         <img class="img-fluid img-40"
                           *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length == 0" src=""
                           alt="{{ itemCarrito?.producto?.crearProducto.titulo }}" width="100" height="100">
@@ -63,7 +66,8 @@
                         </div>
                       </td>
                       <td>
-                        <i class="fa fa-trash-o" style="cursor: pointer;" title="Eliminar" (click)="removeThisProduct(itemCarrito)"></i>
+                        <i class="fa fa-trash-o" style="cursor: pointer;" title="Eliminar"
+                          (click)="removeThisProduct(itemCarrito)"></i>
                       </td>
                       <td>{{ checkPriceScale(itemCarrito) *
                         (itemCarrito?.cantidad) | currency:'USD':'symbol':'1.0-0' }}</td>
@@ -83,7 +87,8 @@
                       </tr>
                     </ng-container>
                     <ng-container *ngIf="itemCarrito.configuracion.preferencias.length > 0">
-                      <tr *ngIf="checkPreferencePrice(itemCarrito)"><span translate="Preferencias" style="color:black;">Preferencias</span></tr>
+                      <tr *ngIf="checkPreferencePrice(itemCarrito)"><span translate="Preferencias"
+                          style="color:black;">Preferencias</span></tr>
                       <tr *ngFor="let itempref of itemCarrito?.configuracion?.preferencias">
                         <ng-container *ngIf="itempref.precioTotalConIva !== 0">
                           <td></td>
@@ -107,11 +112,13 @@
                       </div>
                     </td>
                     <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Porcentaje descuento aplicable :">Porcentaje descuento aplicable :</span></h6>
+                      <h6 class="m-0 text-right"><span class="f-w-600"
+                          translate="Porcentaje descuento aplicable :">Porcentaje descuento aplicable :</span></h6>
                     </td>
                     <td>{{porcentajeDescuento}}%</td>
                     <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Total sin descuento :">Total sin descuento :</span></h6>
+                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Total sin descuento :">Total sin
+                          descuento :</span></h6>
                     </td>
                     <td><span>{{getTotalProductPriceInCart() |currency:'USD':'symbol':'1.0-0'}} </span></td>
                   </tr>
@@ -127,7 +134,8 @@
                     <td colspan="4">
                     </td>
                     <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Total con descuento :">Total con descuento :</span></h6>
+                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Total con descuento :">Total con
+                          descuento :</span></h6>
                     </td>
                     <td><span>{{ getTotalProductPriceWithDescountInCart() |currency:'USD':'symbol':'1.0-0'}} </span>
                     </td>
@@ -137,7 +145,8 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td><span><label translate="Estos valores incluyen impuestos, no incluye envío.">Estos valores incluyen impuestos, no incluye envío.</label></span></td>
+                    <td><span><label translate="Estos valores incluyen impuestos, no incluye envío.">Estos valores
+                          incluyen impuestos, no incluye envío.</label></span></td>
                   </tr>
                 </tbody>
               </table>
