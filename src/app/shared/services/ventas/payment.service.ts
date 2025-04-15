@@ -1066,14 +1066,14 @@ ${!isComanda ? seccionTotales : ''}
     <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         <h2 style="color: #444; margin-bottom: 10px;">Datos de Facturación Electrónica</h2>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombres: ${pedido?.facturacion?.nombres}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Tipo de Documento: ${pedido.facturacion.tipoDocumento}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Tipo de Documento: ${pedido.facturacion?.tipoDocumento ?? 'CC'}</p>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Documento: ${pedido?.facturacion?.documento}</p>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">País: ${pedido?.facturacion?.pais}</p>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Departamento: ${pedido?.facturacion?.departamento}</p>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Ciudad: ${pedido?.facturacion?.ciudad}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Código Postal: ${pedido.facturacion.codigoPostal}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Código Postal: ${pedido.facturacion?.codigoPostal}</p>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Celular: ${'(' + pedido?.facturacion?.indicativoCel + ') ' + pedido?.facturacion?.celular}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Dirección: ${pedido?.facturacion.direccion}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Dirección: ${pedido?.facturacion?.direccion}</p>
         <p style="font-size: 14px; margin: 5px 0 5px 50px;">Referencia de Datos: ${pedido?.facturacion?.alias}</p>
     </div>
     `

@@ -1239,6 +1239,7 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
       tooltip.open({ greeting });
     }
   }
+
   gridColumn(val) {
     this.col = val;
   }
@@ -1257,6 +1258,7 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
     // Asumiendo que el step 3 corresponde al catálogo
     return true; // Ajusta según la lógica real
   }
+  
   comprarYPagar(event: POSPedido) {
 
     this.pedidoGral = event;

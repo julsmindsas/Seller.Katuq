@@ -1,6 +1,7 @@
 // cash-payment.component.ts
 import { Component } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-cash-payment',
@@ -25,10 +26,14 @@ export class CashPaymentComponent {
 
   confirmPayment() {
     if (this.amountPaid >= this.totalAmount) {
-      alert(`Pago confirmado. Cambio a devolver: $${this.change.toFixed(2)}`);
-      this.activeModal.close('Pagado');
+      this.activeModal.close({ amountReceived: this.amountPaid, paymentType: 'cash', change: this.change });
     } else {
-      alert('El monto entregado no es suficiente.');
+      Swal.fire({
+        title: 'Error',
+        text: 'El monto entregado no es suficiente.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      }); 
     }
   }
 }

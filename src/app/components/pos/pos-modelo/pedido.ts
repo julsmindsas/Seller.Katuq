@@ -3,8 +3,10 @@ import { UserLite } from "src/app/shared/models/User/UserLite";
 import { Cliente, DatosEntrega, EstadoPago, EstadoProceso, Tarjeta } from "../../ventas/modelo/pedido";
 
 export interface POSPedido {
+    generarFacturaElectronica?: any;
     pdfUrlInvoice?: any;
     cambioEntregado?: number;
+    bodegaId?: string;
     pagoRecibido?: number;
     entregado?: UserLite;
     transportador?: any;

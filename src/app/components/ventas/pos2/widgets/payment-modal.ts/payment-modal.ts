@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'app-payment-modal',
@@ -6,7 +7,9 @@ import { Component, Input } from '@angular/core';
     styleUrls: ['./payment-modal.scss']
 })
 export class PaymentModalComponent {
-    
+
+    constructor(private modal: NgbModal) { }
+
     paymentType: string = ''; // 'cash', 'card', 'ewallet'
     title: string = 'Pago';
     amountReceived: number = 0;
@@ -19,10 +22,11 @@ export class PaymentModalComponent {
     }
 
     onPay(): void {
-        alert(`Pago exitoso mediante ${this.paymentType}`);
+        this.closeModal();
     }
 
     closeModal(): void {
-        // Lógica para cerrar el modal
+        // Lógica para cerrar el modal y enviar el pago
+        this.modal.dismissAll({ amountReceived: this.amountReceived, paymentType: this.paymentType, change: this.calculateChange() });
     }
 }
