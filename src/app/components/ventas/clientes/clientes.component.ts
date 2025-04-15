@@ -88,7 +88,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   allBillingZone: any;
   zona_cobro: any;
   valor_zona_cobro: any;
-  constructor(private router:Router,private dataStore:DataStoreService,private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
+  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
 
   }
   public irAlListado() {
@@ -102,7 +102,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         this.dataStore.remove('isEdit');
       }
     }
-    
+
     if (!this.clienteEdit) {
       const clienteFromStore = this.dataStore.get<any>('cliente');
       if (clienteFromStore !== null && clienteFromStore !== undefined) {
@@ -110,16 +110,16 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         this.dataStore.remove('cliente');
       }
     }
-    
-    
-  
-      if (this.isEdit) {
-        if (this.clienteEdit) {
-          this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
-          // this.formulario.controls['documento'].disable();
-          this.buscar();
-        }
+
+
+
+    if (this.isEdit) {
+      if (this.clienteEdit) {
+        this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
+        // this.formulario.controls['documento'].disable();
+        this.buscar();
       }
+    }
 
   }
 
@@ -243,7 +243,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
             this.formulario.controls['documento'].setValue(res.documento);
             this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
-            // this.formulario.controls[''].setValue(res.)
+            this.formulario.controls['estado'].setValue(res.estado);
             // this.formulario.controls[''].setValue(res.)
             // this.formulario.controls[''].setValue(res.)
             // this.formulario.controls[''].setValue(res.)
@@ -261,7 +261,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           this.identificarDepto1()
           this.identificarCiu1()
           this.encontrado = true
-          if (this.formulario.value.estado == 'Bloqueado') {
+          if (this.formulario.value.estado == 'bloqueado') {
             this.bloqueado = true
           }
           Swal.fire({
@@ -275,7 +275,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       });
     }
   }
-  
+
   toggleWithGreeting(tooltip, greeting: string) {
     if (tooltip.isOpen()) {
       tooltip.close();
@@ -286,7 +286,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   redirectToPostalCode() {
     window.open('https://visor.codigopostal.gov.co/472/visor', '_blank');
   }
-  
+
   replicarWhatsApp(event) {
     console.log(event)
     if (this.whatsapp.nativeElement.checked === true) {
@@ -413,7 +413,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       datosFacturacionElectronica: [['']],
       datosEntrega: [['']],
       notas: [['']],
-      estado: ['Activo']
+      estado: ['activo']
     });
 
     this.formularioFacturacion = this.formBuilder.group({
@@ -486,7 +486,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
   bloquear() {
 
-    this.formulario.controls['estado'].setValue('Bloqueado')
+    this.formulario.controls['estado'].setValue('bloqueado')
     this.service.editClient(this.formulario.value).subscribe(r => {
       console.log(r)
       Swal.fire({
@@ -509,7 +509,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         this.identificarDepto1()
         this.identificarCiu1()
         this.encontrado = true
-        if (this.formulario.value.estado == 'Bloqueado') {
+        if (this.formulario.value.estado == 'bloqueado') {
           this.bloqueado = true
         } else {
           this.bloqueado = false;
@@ -871,7 +871,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
   desbloquear() {
 
-    this.formulario.controls['estado'].setValue('Activo')
+    this.formulario.controls['estado'].setValue('activo')
     this.service.editClient(this.formulario.value).subscribe(r => {
       console.log(r)
       Swal.fire({
@@ -894,7 +894,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         this.identificarDepto1()
         this.identificarCiu1()
         this.encontrado = true
-        if (this.formulario.value.estado == 'Bloqueado') {
+        if (this.formulario.value.estado == 'bloqueado') {
           this.bloqueado = true
         } else {
           this.bloqueado = false
@@ -984,4 +984,20 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     })
 
   }
+
+  cambiarEstado(estado: string) {
+
+    // if (estado === 'on') {
+    //   estado = 'off';
+    // } else {
+    //   estado = 'on';
+    // }
+
+    if (estado !== 'on') {
+      this.formulario.controls['estado'].setValue('activo')
+    } else {
+      this.formulario.controls['estado'].setValue('bloqueado')
+    }
+  }
+
 }

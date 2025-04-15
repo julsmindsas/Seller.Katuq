@@ -140,14 +140,14 @@ export class ClientesListaComponent implements OnInit {
     }
 
     eliminarCliente(cliente: any): void {
-        this.clienteService.eliminarCliente(cliente.cd).subscribe({
-            next: () => {
-                this.cargarClientes();
-            },
-            error: (error) => {
-                console.error(error);
-            }
-        });
+        // this.clienteService.eliminarCliente(cliente.cd).subscribe({
+        //     next: () => {
+        //         this.cargarClientes();
+        //     },
+        //     error: (error) => {
+        //         console.error(error);
+        //     }
+        // });
     }
 
     exportarExcel() {

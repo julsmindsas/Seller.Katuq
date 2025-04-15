@@ -92,6 +92,15 @@
                                         Este campo es obligatorio
                                     </div>
                                 </div>
+
+                                <div class="col-xl-6 col-lg-12">
+                                    <label class="form-label">Estado</label>
+                                    <br>
+                                    <label class="switch">
+                                        <input class="toggle" type="checkbox" formControlName="estado" [checked]="formulario.get('estado') !== 'bloqueado'" (change)="cambiarEstado($event.target.value)" />
+                                        <span class="switch-state"></span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>

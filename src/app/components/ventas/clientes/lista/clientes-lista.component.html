@@ -65,17 +65,18 @@
                                 <td>{{ cliente.correo_electronico_comprador }}</td>
                                 <td>{{ cliente.numero_celular_comprador }}</td>
                                 <td class="text-center">
-                                    {{cliente.estado}}
+                                    <label class="switch"><input class="toggle" type="checkbox" [checked]="cliente.estado === 'activo'" disabled /><span
+                                        class="switch-state"></span></label>
                                 </td>
                                 <td class="text-center">
                                     <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
                                         style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                                         class="icofont icofont-pencil-alt-5 fc-primary" (click)="editarCliente(cliente)">
                                     </i>
-                                    <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+                                    <!-- <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
                                         style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                                         class="icofont icofont-trash fc-danger" (click)="eliminarCliente(cliente)">
-                                    </i>
+                                    </i> -->
                                 </td>
                             </tr>
                         </ng-template>
