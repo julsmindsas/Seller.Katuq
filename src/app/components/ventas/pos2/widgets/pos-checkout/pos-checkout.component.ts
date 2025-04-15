@@ -206,7 +206,8 @@ export class PosCheckoutComponent {
   }
 
   getPedido(): POSPedido {
-    const texto = this.pedido.company?.toString() || '';
+    const company = JSON.parse(localStorage.getItem('company') || '{}').nomComercial || '';
+    const texto = company.toString() || '';
     const ultimasLetras = texto.substring(texto.length - 3);
     const pedido: POSPedido = {
       referencia: `POS-${new Date().getTime()}`,

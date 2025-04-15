@@ -27,7 +27,7 @@
             <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4" *ngFor="let product of filteredProduct; track product;let i = index">
                 <div class="our-product-wrapper h-100 widget-hover">
                     <div class="our-product-img">
-                        <img [src]="product.crearProducto.imagenesPrincipales[0].urls" [alt]="product.product_name">
+                        <img [src]="product.crearProducto.imagenesPrincipales[0].urls" [alt]="product.product_name" loading="lazy" priority>
                     </div>
                     <div class="our-product-content">
                         <h6 class="f-14 f-w-500 pt-2 pb-1">{{ product.crearProducto.titulo }}</h6>

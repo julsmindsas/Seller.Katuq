@@ -121,7 +121,10 @@ export class AuthService implements OnInit {
     this.showLoader = false;
     localStorage.removeItem('user');
     sessionStorage.removeItem('currentCompany');
-    localStorage.removeItem('authorizedMenuItems')
+    localStorage.removeItem('authorizedMenuItems');
+    localStorage.removeItem('company');
+    localStorage.removeItem('warehousePOS');
+    localStorage.removeItem('warehouse');
     this.router.navigateByUrl('/login');
   }
 
