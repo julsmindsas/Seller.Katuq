@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { InventarioCatalogoComponent } from './inventario-catalogo/inventarios.component'
 import { BodegasComponent } from './bodegas/bodegas.component';
 import { RecepcionMercanciaComponent } from './recepcion-mercancia/recepcion-mercancia.component';
+import { TrasladosComponent } from './traslados/traslados.component';
 
 
 const routes: Routes = [
@@ -17,6 +18,10 @@ const routes: Routes = [
     {
         path: 'recepcion-mercancia',
         component: RecepcionMercanciaComponent
+    },
+    {
+        path: 'traslados',
+        component: TrasladosComponent
     }
 ];
 

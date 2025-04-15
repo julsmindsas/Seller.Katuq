@@ -8,6 +8,7 @@ import { Producto } from '../../../shared/models/productos/Producto';
 import { MovimientoInventario } from '../model/movimientoinventario'
 import * as XLSX from 'xlsx';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
+import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
 
 interface PageReference {
   firstDocId: string | null;
@@ -67,6 +68,7 @@ export class InventarioCatalogoComponent implements OnInit {
 
   constructor(
     private service: MaestroService,
+    private inventarioService: InventarioService,
     private router: Router,
     private modalService: NgbModal,
     private bodegaService: BodegaService // Inyectamos el servicio de bodegas
@@ -83,10 +85,10 @@ export class InventarioCatalogoComponent implements OnInit {
 
     // Cargar las bodegas usando el servicio compartido
     this.cargarBodegas();
-    
+
     // Cargar los productos
     this.cargarDatos();
-    
+
     // Suscribirse a cambios en la bodega seleccionada
     this.bodegaService.getBodegaSeleccionada().subscribe(bodega => {
       if (bodega !== this.bodegaSeleccionada) {
@@ -95,7 +97,7 @@ export class InventarioCatalogoComponent implements OnInit {
       }
     });
   }
-  
+
   cargarBodegas() {
     this.bodegaService.getBodegas().subscribe(bodegas => {
       this.bodegas = bodegas;
@@ -155,15 +157,15 @@ export class InventarioCatalogoComponent implements OnInit {
         }
       });
   }
-  
+
   // Método para aplicar el filtro de bodega a los productos
   filtrarProductosPorBodega() {
     if (!this.bodegaSeleccionada) {
       this.rows = [...this.productosSinFiltro]; // Si no hay bodega seleccionada, mostramos todos
       return;
     }
-    
-    this.rows = this.productosSinFiltro.filter(producto => 
+
+    this.rows = this.productosSinFiltro.filter(producto =>
       producto.bodegaId === this.bodegaSeleccionada.idBodega
     );
   }
@@ -415,10 +417,10 @@ export class InventarioCatalogoComponent implements OnInit {
   openInventoryModal(row: Producto, content: TemplateRef<any>) {
     this.selectedRow = row;
     this.movimiento = {}; // Resetear el objeto de movimientos
-    
+
     // Mostrar en el modal la bodega a la que pertenece el producto
     const bodegaDelProducto = this.bodegas.find(b => b.idBodega === row.bodegaId);
-    
+
     this.inventarioPorMarketplace = row.marketplace.campos.filter(c => c.activo === true).map(campo => ({
       name: campo.nameMP,
       cantidad: 0
@@ -437,7 +439,7 @@ export class InventarioCatalogoComponent implements OnInit {
   }
 
   // Métodos auxiliares para la plantilla
-  
+
   /**
    * Obtiene el nombre de una bodega por el ID
    */
@@ -497,5 +499,26 @@ export class InventarioCatalogoComponent implements OnInit {
       'bg-primary': tipo === 'Física',
       'bg-info': tipo === 'Transaccional'
     };
+  }
+
+  obtenerProductosPorBodega(bodegaId: string) {
+    this.cargando = true;
+    this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe((r: any) => {
+      if (Array.isArray(r.productos) && r.productos.length > 0) {
+        this.rows = r.productos.map(itemInventario => ({
+          id: itemInventario.productoId,
+          ...itemInventario.producto,
+          cantidad: itemInventario.cantidad,
+          bodegaId: itemInventario.bodegaId,
+          bodegaNombre: itemInventario.bodega.nombre,
+        }));
+        this.productosSinFiltro = [...this.rows];
+      } else {
+        this.rows = [];
+        this.productosSinFiltro = [];
+      }
+      this.cargando = false;
+      console.log('Productos por bodega', bodegaId, r);
+    });
   }
 }
