@@ -45,6 +45,7 @@ import { CardPaymentComponent } from './pos2/widgets/card-payment/card-payment';
 import { CashPaymentComponent } from './pos2/widgets/cash-payment/cash-payment';
 import { EWalletPaymentComponent } from './pos2/widgets/ewallet-payment/ewallet-payment';
 import { WarehouseSelectorComponent } from './pos2/widgets/warehouse-selector/warehouse-selector';
+import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer.directive';
 
 @NgModule({
   imports: [
@@ -113,7 +114,8 @@ import { WarehouseSelectorComponent } from './pos2/widgets/warehouse-selector/wa
     QuickViewComponent, 
     ModalGalleryService, 
     NgxHotkeysService, 
-    PedidosUtilService
+    PedidosUtilService,
+    ImageOptimizerDirective
   ]
 })
 export class VentasModule { }

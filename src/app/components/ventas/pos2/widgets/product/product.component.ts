@@ -2,13 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CartService } from '../../../../../shared/services/cart.service';
 import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
 import { InventarioService } from '../../../../../shared/services/inventarios/inventario.service';
+import { ImageOptimizerDirective } from '../../../../../shared/directives/image-optimizer.directive';
 
 @Component({
   selector: 'app-product',
   templateUrl: './product.component.html',
-  styleUrls: ['./product.component.scss']
+  styleUrls: ['./product.component.scss'],
 })
-
 export class ProductComponent implements OnInit {
 
   public products: any[] = [];

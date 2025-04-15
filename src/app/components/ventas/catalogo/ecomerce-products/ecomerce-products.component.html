@@ -209,8 +209,8 @@
                                             <div class="product-filter text-center"><img
                                                     class="img-fluid banner-product" alt="" data-original-title=""
                                                     title="">
-                                                <button class="btn btn-primary btn-block"
-                                                    (click)="limpiarFiltros()">{{ 'Limpiar filtro' | translate }}</button>
+                                                <button class="btn btn-primary btn-block" (click)="limpiarFiltros()">{{
+                                                    'Limpiar filtro' | translate }}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -221,9 +221,9 @@
                     <div class="col-md-9 col-sm-12">
                         <form>
                             <div class="form-group m-0">
-                                <input class="form-control" class="form-control" type="search" placeholder="{{ 'Buscar..' | translate }}"
-                                    (keyup)='updateFilter($event)' data-original-title="" title=""><i
-                                    class="fa fa-search"></i>
+                                <input class="form-control" class="form-control" type="search"
+                                    placeholder="{{ 'Buscar..' | translate }}" (keyup)='updateFilter($event)'
+                                    data-original-title="" title=""><i class="fa fa-search"></i>
                             </div>
                         </form>
                     </div>
@@ -238,8 +238,12 @@
                     <div class="card">
                         <div class="product-box">
                             <div class="product-img">
+                                <!-- <img class="img-fluid fixed-size"
+                                    [src]="producto.crearProducto.imagenesPrincipales[0]?.urls" alt=""> -->
                                 <img class="img-fluid fixed-size"
-                                    [src]="producto.crearProducto.imagenesPrincipales[0]?.urls" alt="">
+                                    [src]="producto.crearProducto.imagenesPrincipales[0].urls"
+                                    [alt]="producto.crearProducto.titulo" appImageOptimizer [quality]="0.3" [width]="300"
+                                    [height]="300" [lazy]="true" loading="lazy" priority>
                                 <div class="product-hover">
                                     <ul>
                                         <li>
@@ -270,7 +274,8 @@
                                         currency:'USD':'symbol':'1.0-0'}}</del>
                                 </div>
                                 <!-- Añadir indicador visual de si el producto requiere configuración -->
-                                <div class="product-config-indicator" *ngIf="producto.procesoComercial?.configProcesoComercialActivo">
+                                <div class="product-config-indicator"
+                                    *ngIf="producto.procesoComercial?.configProcesoComercialActivo">
                                     <small class="text-info">
                                         <i class="fa fa-cog"></i> Requiere configuración
                                     </small>
