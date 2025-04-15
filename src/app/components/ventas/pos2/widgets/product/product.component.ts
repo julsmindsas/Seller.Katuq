@@ -1,10 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-// import { products } from '../../../../../../assets/data/pos';
-// import { OrderDetailsProduct } from '../../../../../shared/models/pos/order';
-// import { products } from '../../../../../../assets/data/pos';
-// import { OrderDetailsProduct } from '../../../../../shared/models/pos/order';
 import { CartService } from '../../../../../shared/services/cart.service';
 import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
+import { InventarioService } from '../../../../../shared/services/inventarios/inventario.service';
 
 @Component({
   selector: 'app-product',
@@ -23,38 +20,63 @@ export class ProductComponent implements OnInit {
 
   constructor(
     public cartService: CartService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private inventarioService: InventarioService
   ) {
-
-    this.obtenerProductos();
-
   }
 
   ngOnInit(): void {
-
+    this.obtenerProductos(); // Carga inicial sin bodega específica
   }
 
-  obtenerProductos() {
+  obtenerProductos(bodegaId?: string) {
+    if (bodegaId) {
+      this.obtenerProductosPorBodega(bodegaId);
+    } else {
+      this.maestroService.getAllProductsPagination(100, 1).subscribe((r: any) => {
+        if (r.products && (r.products as any[]).length > 0) {
+          const productosPorEmpresa = r.products;
+          let data = productosPorEmpresa;
+          this.products = data.map(product => ({
+            ...product,
+            cantidad: 1
+          }));
+          this.filteredProduct = this.products;
+        } else {
+          this.products = [];
+          this.filteredProduct = [];
+        }
+        console.log("🚀 Productos generales cargados:", r)
+      });
+    }
+  }
 
-    this.maestroService.getAllProductsPagination(100, 1).subscribe((r: any) => {
-      if ((r.products as any[]).length > 0) {
-        const productosPorEmpresa = r.products;
-        let data = productosPorEmpresa;
-        this.products = data.map(product => ({
-          ...product,
+  obtenerProductosPorBodega(bodegaId: string) {
+    this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe((r: any) => {
+      if (Array.isArray(r.productos) && r.productos.length > 0) {
+        this.products = r.productos.map(itemInventario => ({
+          id: itemInventario.productoId,
+          ...itemInventario.producto,
           cantidad: 1
         }));
-        
         this.filteredProduct = this.products;
+      } else {
+        this.products = [];
+        this.filteredProduct = [];
       }
-      console.log("🚀 ~ file: list.component.ts:140 ~ ListComponent ~ this.nodeService.obtenerProductos ~ r", r)
+      console.log('Productos por bodega', bodegaId, r);
     });
   }
+
   updateQuantity(value: number, product: any) {
-    if (value === 1 && product.cantidad < product.disponibilidad.cantidadDisponible) {
+    const stockDisponible = product.disponibilidad?.cantidadDisponible ?? Infinity;
+
+    if (value === 1 && product.cantidad < stockDisponible) {
       product.cantidad += 1;
     } else if (value === -1 && product.cantidad > 1) {
       product.cantidad -= 1;
+    } else if (value === 1 && product.cantidad >= stockDisponible) {
+      console.warn(`No hay suficiente stock para ${product.crearProducto?.titulo}. Disponible: ${stockDisponible}`);
     }
   }
 
@@ -74,7 +96,7 @@ export class ProductComponent implements OnInit {
   filterDetails() {
     this.filteredProduct = this.products.filter(product => {
       const matchesSearch = this.filter.search
-        ? product.crearProducto.titulo.toLowerCase().includes(this.filter.search)
+        ? product.crearProducto?.titulo.toLowerCase().includes(this.filter.search)
         : true;
 
       return matchesSearch;
