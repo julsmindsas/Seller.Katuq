@@ -97,8 +97,11 @@
                                     <label class="form-label">Estado</label>
                                     <br>
                                     <label class="switch">
-                                        <input class="toggle" type="checkbox" formControlName="estado" [checked]="formulario.get('estado') !== 'bloqueado'" (change)="cambiarEstado($event.target.value)" />
+                                        <input class="toggle" type="checkbox" formControlName="estado" [checked]="!bloqueado" (change)="bloqueado ? desbloquear() : bloquear() " />
                                         <span class="switch-state"></span>
+                                        <br>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <label>{{!bloqueado ? 'Activo' : 'Bloqueado'}}</label>
                                     </label>
                                 </div>
                             </div>

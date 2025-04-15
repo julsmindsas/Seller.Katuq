@@ -519,6 +519,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     });
 
   }
+
   editarDatos1(modal, index) {
     this.idenxFacturacion = index
     this.editandodato = true
@@ -993,11 +994,45 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     //   estado = 'on';
     // }
 
-    if (estado !== 'on') {
-      this.formulario.controls['estado'].setValue('activo')
-    } else {
-      this.formulario.controls['estado'].setValue('bloqueado')
-    }
+    // if (estado !== 'on') {
+    //   this.formulario.controls['estado'].setValue('activo')
+    // } else {
+    //   this.formulario.controls['estado'].setValue('bloqueado')
+    // }
+
+    this.formulario.controls['estado'].setValue(estado !== 'on' ? 'activo' : 'bloqueado')
+    this.service.editClient(this.formulario.value).subscribe(r => {
+      console.log(r)
+      // Swal.fire({
+      //   title: 'Usuario Bloqueado!',
+      //   text: 'Usuario bloqueado con exito',
+      //   icon: 'error',
+      //   confirmButtonText: 'Ok'
+      // });
+      const data = {
+        documento: this.documentoBusqueda.nativeElement.value
+      }
+      this.service.getClientByDocument(data).subscribe((res: any) => {
+        sessionStorage.setItem('cliente', JSON.stringify(res))
+        this.formulario.patchValue(res)
+        this.datos = res
+        this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
+        this.formularioEntrega.patchValue(res.datosEntrega)
+        this.identificarDepto()
+        this.identificarCiu()
+        this.identificarDepto1()
+        this.identificarCiu1()
+        this.encontrado = true
+        if (this.formulario.value.estado == 'bloqueado') {
+          this.bloqueado = true
+        } else {
+          this.bloqueado = false;
+
+        }
+      })
+    });
+
+
   }
 
 }
