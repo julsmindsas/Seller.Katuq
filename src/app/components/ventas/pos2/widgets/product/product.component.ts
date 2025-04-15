@@ -26,7 +26,7 @@ export class ProductComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.obtenerProductos(); // Carga inicial sin bodega específica
+    // this.obtenerProductos(); // Carga inicial sin bodega específica
   }
 
   obtenerProductos(bodegaId?: string) {
