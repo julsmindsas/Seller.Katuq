@@ -4,17 +4,21 @@
     <div class="card customer-card p-2">
 
         <!-- Cabecera -->
-        <div class="text-left m-1" *ngIf="isEdit">
-            <i placement="top" ngbTooltip="{{ 'Regresar al listado' | translate }}"
-                style="font-size: 24px; color: var(--primary-color); cursor: pointer;"
-                class="icofont icofont-arrow-left" [routerLink]="'/ventas/clienteslista'"></i>
-        </div>
+
 
         <div class="card-header">
 
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <h2 class="text-left fc-secondary fs-24 m-0 p-0">{{ "Clientes" | translate }}</h2>
+                    <div class="text-left m-1">
+                        <h2 class="text-left fc-secondary fs-24 m-0 p-0">
+                            <i *ngIf="isEdit" ngbTooltip="{{ 'Regresar al listado' | translate }}"
+                                style="font-size: 24px; color: var(--primary-color); cursor: pointer;"
+                                class="icofont icofont-arrow-left" [routerLink]="'/ventas/clienteslista'">
+                            </i>
+                            {{ "Clientes" | translate }}
+                        </h2>
+                    </div>
                     <p class="text-muted mb-0">{{ "Ingresa todos los datos para crear un cliente nuevo" | translate }}
                     </p>
                 </div>

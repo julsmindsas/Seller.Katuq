@@ -208,8 +208,10 @@
     </div>
 
     <!-- Componente de chat -->
-    <app-chat [isFloating]="true" class="floating-chat" (newMessage)="onNewMessage($event)"
-      (saveConversation)="saveConversation($event)">
-    </app-chat>
+    <div *ngIf="isLoggedIn">
+      <app-chat [isFloating]="true" class="floating-chat" (newMessage)="onNewMessage($event)"
+        (saveConversation)="saveConversation($event)">
+      </app-chat>
+    </div>
   </div>
 </div>

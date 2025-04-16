@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { BehaviorSubject, forkJoin } from "rxjs";
-import { MaestroService } from "src/app/shared/services/maestros/maestro.service";
+import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import Swal from "sweetalert2";
 import { parse } from "flatted";
 import { Pedido } from "../modelo/pedido";
@@ -23,8 +23,14 @@ export class PedidosUtilService {
     adiciones: any;
 
     constructor(private maestroService: MaestroService) {
-        this.getAllMaestros();
+
+        const user = localStorage.getItem('user');
+        if(user){
+            this.getAllMaestros();
+        }
+
     }
+
     convertFechaEntregaString(fechaEntrega: { day: number, month: number, year: number }) {
         if (!fechaEntrega) {
             return '';
@@ -101,7 +107,10 @@ export class PedidosUtilService {
     }
 
     getAllMaestros() {
-        this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+
+        this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
+
+        debugger;
 
         forkJoin([
             this.maestroService.getFormaEntrega(),
@@ -165,23 +174,23 @@ export class PedidosUtilService {
 
     getSubtotal(): number {
         let totalPrecioSinIVA = 0;
-        let totalPrecioSinIVADef=0;
+        let totalPrecioSinIVADef = 0;
         if (this.pedido && this.pedido.carrito) {
 
 
             this.pedido.carrito.forEach(itemCarrito => {
                 if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
                     itemCarrito.producto.precio.preciosVolumen.map(x => {
-                      if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-                        totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA *itemCarrito.cantidad;
-                      }else {
-                        totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva)*itemCarrito.cantidad;
-                      }
-                      
+                        if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
+                            totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * itemCarrito.cantidad;
+                        } else {
+                            totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
+                        }
+
                     });
-                  } else {
-                    totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva)*itemCarrito.cantidad;
-                  }
+                } else {
+                    totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
+                }
                 // Sumar precios de adiciones
                 if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
                     itemCarrito.configuracion.adiciones.forEach(adicion => {
@@ -195,7 +204,7 @@ export class PedidosUtilService {
                         totalPrecioSinIVA += (preferencia['valorUnitarioSinIva']) * itemCarrito.cantidad;
                     });
                 }
-                totalPrecioSinIVADef+=totalPrecioSinIVA
+                totalPrecioSinIVADef += totalPrecioSinIVA
             });
 
 
@@ -259,7 +268,7 @@ export class PedidosUtilService {
         }
         return 0;
     }
-    getShippingTaxCostInvoice(allBillingZone,pedido): number {
+    getShippingTaxCostInvoice(allBillingZone, pedido): number {
         if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
 
             const valorFlete = allBillingZone.filter((item => item.ciudad === pedido.envio?.ciudad && item.nombreZonaCobro === pedido.envio?.zonaCobro))
@@ -281,8 +290,8 @@ export class PedidosUtilService {
         }
         return "";
     }
-    
-    getShippingTaxValueInvoice(allBillingZone,pedido): string {
+
+    getShippingTaxValueInvoice(allBillingZone, pedido): string {
         if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
 
             const valorFlete = allBillingZone.filter((item => item.ciudad === pedido.envio?.ciudad && item.nombreZonaCobro === pedido.envio?.zonaCobro))

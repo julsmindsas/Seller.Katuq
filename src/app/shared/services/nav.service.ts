@@ -64,8 +64,13 @@ export class NavService implements OnDestroy {
 		private utils: UtilsService
 	) {
 
-		this.refrescarCart();
 
+		const user = localStorage.getItem('user');
+		if (user) {
+
+			this.refrescarCart();
+		}
+		
 		this.setScreenWidth(window.innerWidth);
 		fromEvent(window, 'resize').pipe(
 			debounceTime(1000),
@@ -178,10 +183,10 @@ export class NavService implements OnDestroy {
 				{ path: '', title: 'Lista Lite*', type: 'link' },
 				{ path: 'inventario/catalogo', title: 'Productos Por Bodega', type: 'link' },
 				{ path: '', title: 'Cambio precios*', type: 'link' },
-				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link'},
-				{ path: 'inventario/recepcion-mercancia', title: 'Recepción', type: 'link'},
-				{ path: 'inventario/traslados', title: 'Traslados', type: 'link'},
-				{ path: 'inventario/historial-movimientos', title: 'Historial Movimientos', type: 'link'}
+				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link' },
+				{ path: 'inventario/recepcion-mercancia', title: 'Recepción', type: 'link' },
+				{ path: 'inventario/traslados', title: 'Traslados', type: 'link' },
+				{ path: 'inventario/historial-movimientos', title: 'Historial Movimientos', type: 'link' }
 			]
 		},
 		{

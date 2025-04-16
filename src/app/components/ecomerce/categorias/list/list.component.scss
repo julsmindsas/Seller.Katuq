@@ -22,22 +22,22 @@
     transition: all 0.3s ease;
     
     &.add-button {
-      background-color: #4caf50;
+      background-color: var(--success-color);
       color: white;
       border: none;
       
       &:hover {
-        background-color: #388e3c;
+        background-color: var(--success-color);
       }
     }
     
     &.delete-button {
-      background-color: #f44336;
+      background-color: var(--error-color);
       color: white;
       border: none;
       
       &:hover {
-        background-color: #d32f2f;
+        background-color: var(--error-color);
       }
     }
   }

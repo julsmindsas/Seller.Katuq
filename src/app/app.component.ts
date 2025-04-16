@@ -30,6 +30,7 @@ export class AppComponent implements OnInit {
   timedOut = false;
   lastPing?: Date;
   UserLogged: any;
+  isLoggedIn = false;
 
   // For Progressbar
   loaders = this.loader.progress$.pipe(
@@ -103,12 +104,10 @@ export class AppComponent implements OnInit {
     idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
 
     idle.onIdleEnd.subscribe(() => {
-
       this.reset();
     });
 
     idle.onTimeout.subscribe(() => {
-
       this.timedOut = true;
       this.authService.SignOut();
       this.reset();
@@ -118,7 +117,6 @@ export class AppComponent implements OnInit {
 
     idle.onTimeoutWarning.subscribe((countdown) => {
       if (countdown === 12 && !this.router.url.includes('login')) {
-
         Swal.fire({
           icon: 'warning',
           title: '¡ Sesión inactiva por 25 minutos, cerrada !',
@@ -133,8 +131,6 @@ export class AppComponent implements OnInit {
 
     this.reset();
 
-
-
   }
 
   loadNotifications() {
@@ -143,6 +139,7 @@ export class AppComponent implements OnInit {
       this.newTickets = notifications; // Lista completa de notificaciones
     });
   }
+
   // Marcar una notificación como leída
   markNotificationAsRead(notificationId: string) {
     this.notificationrlService.markAsRead(notificationId).then(() => {
@@ -163,13 +160,19 @@ export class AppComponent implements OnInit {
       this.errorHandlerService.logError(event.reason);
     });
 
-
     this.UserLogged = JSON.parse(localStorage.getItem('user')!);
 
-    this.layout.config.settings.layout_version = this.UserLogged.tema ? 'dark-only' : 'light';
-    this.ngpService.switchTheme(this.layout.config.settings.layout_version = this.UserLogged.tema ? 'md-dark-deeppurple' : 'lara-light-blue');
+    const tema = this.UserLogged?.tema;
 
-    document.body.style.backgroundColor = this.UserLogged.tema ? 'black' : 'white';
+    if (tema) {
+      this.isLoggedIn = true;
+    }
+
+    this.layout.config.settings.layout_version = tema ? 'dark-only' : 'light';
+
+    this.ngpService.switchTheme(this.layout.config.settings.layout_version = tema ? 'md-dark-deeppurple' : 'lara-light-blue');
+
+    document.body.style.backgroundColor = tema ? 'black' : 'white';
 
   }
 

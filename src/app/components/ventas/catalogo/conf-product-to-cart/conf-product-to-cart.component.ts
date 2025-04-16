@@ -66,7 +66,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     localStorage.setItem('garantiasRevisadas', this.garantiasRevisadas.toString());
     localStorage.setItem('condicionesRevisadas', this.condicionesRevisadas.toString());
     localStorage.setItem('mostrarCaracteristicas', this.mostrarCaracteristicas.toString());
-    
+
     this.subs.forEach((sub) => sub.unsubscribe());
   }
 
@@ -342,7 +342,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     this.mostrarCaracteristicas = localStorage.getItem('mostrarCaracteristicas') === 'true';
 
     this.sumar();
-  
+
     // Asegúrate de que activeAccordionPanel tiene un valor válido
     setTimeout(() => {
       this.activeAccordionPanel = this.determineInitialOpenSection();
@@ -375,6 +375,9 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   getAdiciones() {
+
+    debugger;
+
     this.maestroService.getAdiciones().subscribe((r: any) => {
       // this.cargando = false;
       this.temp = [...r];
@@ -584,7 +587,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
   addToCar() {
     console.log('Método addToCar ejecutado'); // Agregar log para verificar la ejecución
-    
+
     try {
       this.producto.rating = this.ratingForm.value.rating;
       this.productoConfiguradoForm.controls.datosEntrega.setValue(this.datosEntrega.value);
@@ -592,15 +595,15 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       this.productoConfiguradoForm.controls.preferencias.setValue(this.productPreference.filter(preference => preference.tipo === 'preferencia'));
       this.productoConfiguradoForm.controls.adiciones.setValue(this.productPreference.filter(preference => preference.tipo === 'adicion'));
       this.productoConfiguradoForm.controls.tarjetas.setValue(this.tarjetas.value);
-  
+
       let ProductoCompra: Carrito = {
         producto: this.producto,
         configuracion: this.productoConfiguradoForm.value,
         cantidad: this.cantidad,
       };
-      
+
       console.log('ProductoCompra creado:', ProductoCompra); // Log del objeto creado
-      
+
       if (!this.isEdit && !this.isRebuy) {
         console.log('Agregar al carrito...');
         this.carsingleton.addToCart(ProductoCompra);
@@ -610,19 +613,19 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
         console.log('Actualizar carrito...');
         this.modalService.dismissAll(ProductoCompra);
       }
-  
+
       this.toastrService.success('Producto agregado al carrito', 'Éxito', {
         timeOut: 5000,
         progressBar: true,
         positionClass: 'toast-bottom-right'
       });
-  
+
       this.tarjetasForm.reset();
       this.productPreference = [];
       this.cantidadTarjetas = 1;
       this.cantidad = 1;
       this.initForm();
-      
+
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
       this.toastrService.error('Hubo un problema al agregar el producto al carrito', 'Error');
@@ -1037,12 +1040,12 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     }
     this.sumar()
   }
-  
+
   // Mantener solo esta implementación del método
   hasAdicion(): boolean {
     return this.productPreference.some(preference => preference.tipo === 'adicion');
   }
-  
+
   hasOpcionesPersonalizacion(): boolean {
     return this.productPreference.some(preference => preference.tipo === 'opcionPersonalizacion');
   }
@@ -1093,7 +1096,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     if (this.cantidadTarjetas > 1) {
       this.tarjetas.removeAt(index);
       this.cantidadTarjetas--;
-      
+
       // También eliminar el control de visibilidad correspondiente
       this.tarjetaMostrada.splice(index, 1);
     }
@@ -1189,22 +1192,22 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
    */
   getDescriptionSummary(descripcion: string): string {
     if (!descripcion) return '';
-    
+
     // Si la descripción es HTML, extraer solo el texto
     let plainText = '';
-    
+
     try {
       // Crear un elemento temporal
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = descripcion;
-      
+
       // Obtener todos los párrafos
       const paragraphs = tempDiv.querySelectorAll('p');
-      
+
       // Tomar solo el primer párrafo o los primeros 150 caracteres
       if (paragraphs.length > 0) {
         plainText = paragraphs[0].textContent || '';
-        
+
         // Si es muy corto, añadir algo más del segundo párrafo
         if (plainText.length < 100 && paragraphs.length > 1) {
           plainText += ' ' + (paragraphs[1].textContent || '');
@@ -1213,15 +1216,15 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
         // Si no hay párrafos, usar el texto completo
         plainText = tempDiv.textContent || '';
       }
-      
+
       // Limitar a ~150 caracteres y añadir puntos suspensivos
       if (plainText.length > 150) {
         plainText = plainText.substring(0, 150) + '...';
       }
-      
+
       return plainText;
-      
-    } catch(e) {
+
+    } catch (e) {
       // Si hay algún error procesando el HTML, devolver fragmento limitado
       return descripcion.substring(0, 150) + '...';
     }

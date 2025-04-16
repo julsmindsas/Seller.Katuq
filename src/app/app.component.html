@@ -7,4 +7,6 @@
 
 <router-outlet></router-outlet>
 
-<app-floating-button></app-floating-button>
+<div *ngIf="isLoggedIn">
+    <app-floating-button></app-floating-button>
+</div>

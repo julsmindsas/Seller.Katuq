@@ -81,6 +81,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   };
   empresaActual: any;
   useModelBig: any;
+  isLoggedIn = false;
 
   constructor(
     public authService: AuthService,
@@ -625,7 +626,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
   // Método para inicializar las herramientas disponibles
   private initializeTools(): void {
-    console.log('🚀 Inicializando herramientas del asistente de voz');
+    // console.log('🚀 Inicializando herramientas del asistente de voz');
 
     // Catálogo de productos disponibles en formato JSON
     const catalogProducts = [

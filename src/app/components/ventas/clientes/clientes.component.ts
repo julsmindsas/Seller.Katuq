@@ -88,7 +88,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   allBillingZone: any;
   zona_cobro: any;
   valor_zona_cobro: any;
-  
+
 
   constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
 
@@ -111,13 +111,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       }
     }
 
-
-
     if (this.isEdit) {
       if (this.clienteEdit) {
         this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
         // this.formulario.controls['documento'].disable();
         this.buscar();
+
       }
     }
 
@@ -230,24 +229,20 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
             this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
 
-
             this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
             this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
             this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
             this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
-
-            this.formulario.controls['apellidos_completos'].setValue(res.datosEntrega[0].apellidos);
-
-            this.formulario.controls['nombres_completos'].setValue(res.datosEntrega[0].nombres);
-
-
+            this.formulario.controls['apellidos_completos'].setValue(res.apellidos_completos);
+            this.formulario.controls['nombres_completos'].setValue(res.nombres_completos);
             this.formulario.controls['documento'].setValue(res.documento);
             this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
             this.formulario.controls['estado'].setValue(res.estado);
-            // this.formulario.controls[''].setValue(res.)
-            // this.formulario.controls[''].setValue(res.)
-            // this.formulario.controls[''].setValue(res.)
 
+            debugger;
+
+            this.activarNotas = false;
+            this.verNotas();
 
           } catch (error) {
             console.log(error);

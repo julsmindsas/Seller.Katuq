@@ -5,6 +5,7 @@ import { PickerModule } from '@ctrl/ngx-emoji-mart';
 import { EmojiModule } from '@ctrl/ngx-emoji-mart/ngx-emoji';
 import { SharedModule } from '../../shared/shared.module';
 import { ChatRoutingModule } from './chat-routing.module';
+import { ChatComponent } from './chat/chat.component';
 
 // import { ChatComponent } from './chat/chat.component';
 

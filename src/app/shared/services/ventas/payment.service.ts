@@ -4,9 +4,9 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { DomSanitizer } from '@angular/platform-browser';
 import { DatePipe } from '@angular/common'
-import { PedidosUtilService } from 'src/app/components/ventas/service/pedidos.util.service';
-import { MaestroService } from "src/app/shared/services/maestros/maestro.service";
-import { POSPedido } from 'src/app/components/pos/pos-modelo/pedido';
+import { PedidosUtilService } from '../../../components/ventas/service/pedidos.util.service';
+import { MaestroService } from "../../../shared/services/maestros/maestro.service";
+import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
 import { Pedido, Fecha } from '../../../components/ventas/modelo/pedido';
 
 declare var WidgetCheckout: any;
@@ -21,19 +21,27 @@ export class PaymentService extends BaseService {
 
   constructor(private service: MaestroService, private pedidoUtilService: PedidosUtilService, httpClient: HttpClient, private sanitizer: DomSanitizer) {
     super(httpClient);
-    const context = this;
-    this.service.getBillingZone().subscribe({
-      next(value: any) {
-        context.allBillingZone = value;
-        sessionStorage.setItem('allBillingZone', JSON.stringify(context.allBillingZone))
 
-      },
-      error(err) {
-        console.log(err);
-      },
-    })
+    const user = localStorage.getItem('user');
+    if (user) {
+
+      const context = this;
+
+      this.service.getBillingZone().subscribe({
+        next(value: any) {
+
+          context.allBillingZone = value;
+          sessionStorage.setItem('allBillingZone', JSON.stringify(context.allBillingZone))
+
+        },
+        error(err) {
+          console.log(err);
+        },
+      });
+
+    }
+
   }
-
 
   public getPaymentMethods() {
     return this.get('payment-methods');
@@ -155,7 +163,7 @@ export class PaymentService extends BaseService {
     return totalPrecioSinIVADef;
   }
   checkIVAPrice(pedido) {
-    this.allBillingZone = JSON.parse(sessionStorage.getItem('allBillingZone'))
+    this.allBillingZone = JSON.parse(sessionStorage.getItem('allBillingZone')!)
     let totalPrecioIVA = 0;
     let totalPrecioIVADef = 0;
     let totalExcluidosDef = 0

@@ -1,7 +1,7 @@
 @import "primeng/resources/themes/lara-light-blue/theme.css";
 
 .backColorSwitch {
-    background-image: url("./assets/images/dashboard/bg-fondo-swy.png") !important;
+    background-image: url("../images/dashboard/bg-fondo-swy.png") !important;
     color: orange;
     background-size: cover !important;
     background-position: center;
@@ -14,6 +14,6 @@
   }
 
 .p-datatable .p-sortable-column.p-highlight {
-    background: var(--secondary-light-color); //#EFF6FF;
-    color: var(--secondary-color); //#1D4ED8;
+    background: var(--secondary-light-color); 
+    color: var(--secondary-color); 
 }

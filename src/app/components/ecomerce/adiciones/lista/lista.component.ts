@@ -23,6 +23,9 @@ export class ListaComponent implements OnInit {
   isMobile: any;
   constructor(private router: Router, private service: MaestroService) {
     this.cargando = true;
+
+debugger;
+
     this.service.getAdiciones().subscribe((r: any) => {
       this.cargando = false;
       this.temp = [...r];
@@ -105,6 +108,9 @@ export class ListaComponent implements OnInit {
         text:'se elimino con exito la adicion'+''+row._id,
         icon: 'success'
        })
+
+debugger;
+
        this.service.getAdiciones().subscribe((r: any) => {
         this.cargando = false;
         this.temp = [...r];

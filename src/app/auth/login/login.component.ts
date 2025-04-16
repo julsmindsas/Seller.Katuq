@@ -21,18 +21,19 @@ export class LoginComponent implements OnInit {
   // authService: any;
 
   // public authService: AuthService,
-  constructor(public authService: AuthService,
+  constructor(
+    public authService: AuthService,
     private service: ServiciosService,
     private utils: UtilsService,
     private fb: FormBuilder,
     private route: ActivatedRoute) {
-    this.loginForm = this.fb.group({
+    
+      this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required] //contraseña jarango
-      // email: ['jarango@almara.com', [Validators.required, Validators.email]],
-      // // password: ['abc123', Validators.required] contraseña daniel
-      // password: ['1234', Validators.required] //contraseña jarango
+
     });
+  
   }
 
   ngOnInit() {

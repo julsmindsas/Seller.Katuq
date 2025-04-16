@@ -47,8 +47,7 @@ import { SharedChangePasswordComponent } from './components/change-password/chan
 import { NgpThemeService } from './services/ngtheme.service';
 import { KatuqIntelligenceService } from './katuqintelligence/katuq-intelligence.service';
 import { PlanSelectorComponent } from './components/plan-selector/plan-selector.component';
-// import { FloatingButtonComponent } from './components/floating-button/floating-button.component';
-// import { ChatFormComponent } from './components/chat-form/chat.form.component';
+import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos.util.service';
 
 @NgModule({
   declarations: [
@@ -101,7 +100,8 @@ import { PlanSelectorComponent } from './components/plan-selector/plan-selector.
     SecurityService,
     ImagenService,
     FacturacionIntegracionService,
-    KatuqIntelligenceService
+    KatuqIntelligenceService,
+    POSPedidosUtilService
   ],
   exports: [
     NgbModule,

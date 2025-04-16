@@ -1,9 +1,9 @@
 import { AfterContentChecked, AfterContentInit, Component, Input, OnDestroy, OnInit, TemplateRef, ViewChild, ElementRef } from '@angular/core';
 import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
-import { Producto } from 'src/app/shared/models/productos/Producto';
+import { Producto } from '../../../../shared/models/productos/Producto';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { CarouselLibConfig, Image } from '@ks89/angular-modal-gallery';
-import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { Form, FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { finalize, Subscription } from 'rxjs';
@@ -13,7 +13,7 @@ import { MovingDirection } from 'angular-archwizard';
 import { POSPedidosUtilService } from '../../pos-service/pos-pedidos.util.service';
 import { parse } from 'flatted';
 import { ToastrService } from "ngx-toastr";
-import { NotificationService } from 'src/app/shared/services/notification.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-conf-product-to-cart',
@@ -155,8 +155,8 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
           if (r.tipoEntrega && r.tiempoEntrega && r.generos && r.ocasiones && r.formaEntrega) {
             this.tipoEntrega = r.tipoEntrega;
             this.tiemposEntrega = r.tiempoEntrega;
-            this.generos = r.generos?.filter((p: { id: number }) => producto.procesoComercial.genero.find((g: number) => g == p.id));
-            this.ocasiones = r.ocasiones?.filter((p: { id: string }) => producto.procesoComercial.ocasion.find((g: string) => g == p.id));
+            this.generos = r.generos?.filter((p: { id: number }) => producto.procesoComercial?.genero.find((g: number) => g == p.id));
+            this.ocasiones = r.ocasiones?.filter((p: { id: string }) => producto.procesoComercial?.ocasion.find((g: string) => g == p.id));
             this.formasEntrega = r.formaEntrega;
             this.adicionesPreferencias = r.adiciones.filter(p => p.esPreferencia);
             this.adicionesrows = (r.adiciones as any[]).filter(p => p.esAdicion).sort((a, b) => {
@@ -176,7 +176,7 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
             this.rowsinicialesSinMod = JSON.stringify(this.adicionesrows)
 
             this.loadFormasEntregaConfiguracionProducto();
-            this.variables = parse(producto.procesoComercial.variablesForm);
+            this.variables = parse(producto.procesoComercial?.variablesForm);
             this.configurarProducto(producto);
 
           }
@@ -206,7 +206,7 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
   masCantidad() {
     this.cantidad++;
     document.getElementById("cantidad")?.setAttribute("value", this.cantidad.toString());
-    if (this.producto.precio.preciosVolumen.length > 0) {
+    if (this.producto?.precio?.preciosVolumen?.length > 0) {
       let rangoActual = this.producto.precio.preciosVolumen.find(x =>
         this.cantidad >= x.numeroUnidadesInicial && this.cantidad <= x.numeroUnidadesLimite
       );
@@ -334,6 +334,9 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
 
 
   getAdiciones() {
+
+debugger;
+
     this.maestroService.getAdiciones().subscribe((r: any) => {
       // this.cargando = false;
       this.temp = [...r];

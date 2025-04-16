@@ -16,7 +16,6 @@ import { TabViewModule } from "primeng/tabview";
 import { ToastModule } from "primeng/toast";
 import { TreeSelectModule } from "primeng/treeselect";
 import { POSRoutingModule } from "./pos-routing.module"
-import { POSPedidosUtilService } from "./pos-service/pos-pedidos.util.service";
 import { QuickViewComponent } from "./pos-quick-view/quick-view.component";
 import { CheckOutPOSComponent } from "./pos-checkout/pos-checkout.component";
 import { ClientesComponent } from "../ventas/clientes/clientes.component";
@@ -26,7 +25,7 @@ import { POSConfProductToCartComponent } from "./pos-catalogo/conf-product-to-ca
 import { CarritoComponent } from "./pos-carrito/carrito.component";
 import { CrearPOSVentasComponent } from "./pos-crear-ventas/pos-crear-ventas.component";
 import { POSConfirmComponent } from './pos-confirm/pos-confirm.component'
-import { SharedModule } from "src/app/shared/shared.module";
+import { SharedModule } from "../../shared/shared.module";
 import { InputNumberModule } from "primeng/inputnumber";
 import { POSListOrdersComponent } from "./pos-list/list.component"
 import { POSAsentarpagomanualComponent } from './pos-asentarpagomanual/asentarpagomanual.component'
@@ -74,7 +73,7 @@ import { StepsModule } from 'primeng/steps';
   exports: [
     CustomPrimeNGWizardComponent
   ],
-  providers: [ModalGalleryService, WizardComponent, NgxHotkeysService, POSPedidosUtilService]
+  providers: [ModalGalleryService, WizardComponent, NgxHotkeysService]
 })
 export class PosModule { }
 

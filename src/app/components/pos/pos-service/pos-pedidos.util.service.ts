@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { BehaviorSubject, forkJoin } from "rxjs";
-import { MaestroService } from "src/app/shared/services/maestros/maestro.service";
+import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import Swal from "sweetalert2";
 import { parse } from "flatted";
 import { POSPedido } from "../pos-modelo/pedido";
@@ -20,11 +20,13 @@ export class POSPedidosUtilService {
     private generos: any;
     private formasPago: any;
     private categorias: any;
+
     adiciones: any;
 
     constructor(private maestroService: MaestroService) {
         this.getAllMaestros();
     }
+
     convertFechaEntregaString(fechaEntrega: { day: number, month: number, year: number }) {
         if (!fechaEntrega) {
             return '';
@@ -71,7 +73,7 @@ export class POSPedidosUtilService {
             localStorage.setItem('carrito', JSON.stringify(carrito));
         }
         else {
-            let carrito: any = JSON.parse(localStorage.getItem('carrito'));
+            let carrito: any = JSON.parse(localStorage.getItem('carrito')!);
             carrito.push(ProductoCompra);
             localStorage.setItem('carrito', JSON.stringify(carrito));
         }
@@ -101,7 +103,10 @@ export class POSPedidosUtilService {
     }
 
     getAllMaestros() {
-        this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+
+        this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
+
+debugger;
 
         forkJoin([
             this.maestroService.getFormaEntrega(),
@@ -164,14 +169,14 @@ export class POSPedidosUtilService {
     pedido: POSPedido;
 
     getSubtotal(): number {
+
         let totalPrecioSinIVA = 0;
         let totalPrecioSinIVADef=0;
         if (this.pedido && this.pedido.carrito) {
 
-
-            this.pedido.carrito.forEach(itemCarrito => {
+            this.pedido.carrito.forEach((itemCarrito: any) => {
                 if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-                    itemCarrito.producto.precio.preciosVolumen.map(x => {
+                    itemCarrito.producto.precio.preciosVolumen.map((x: any) => {
                       if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
                         totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA *itemCarrito.cantidad;
                       }else {
@@ -202,10 +207,12 @@ export class POSPedidosUtilService {
         }
         return totalPrecioSinIVADef;
     }
+
     checkIVAPrice() {
+
         let totalPrecioIVA = 0;
 
-        this.pedido.carrito.forEach(itemCarrito => {
+        this.pedido.carrito?.forEach((itemCarrito: any) => {
             if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
                 itemCarrito.producto.precio.preciosVolumen.forEach(x => {
                     if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
@@ -237,8 +244,6 @@ export class POSPedidosUtilService {
         return (this.getSubtotal() + shipinCost) - this.getDiscount();
     }
 
-
-
     getShippingTaxCostInvoice(allBillingZone,pedido): number {
         if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
 
@@ -251,7 +256,6 @@ export class POSPedidosUtilService {
         return 0;
     }
   
-    
     getShippingTaxValueInvoice(allBillingZone,pedido): string {
         if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
 
@@ -264,14 +268,11 @@ export class POSPedidosUtilService {
         return "";
     }
 
-
-
     getDiscount(): number {
         if (this.pedido && this.pedido.porceDescuento) {
             return this.getSubtotal() * ((this.pedido.porceDescuento) / 100);
         }
         return 0;
     }
-
 
 }
