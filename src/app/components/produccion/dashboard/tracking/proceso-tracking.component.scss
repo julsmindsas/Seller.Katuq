@@ -1,10 +1,33 @@
 /* SCSS */
+:host {
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --text-large: 1.2rem;
+    --text-xlarge: 1.4rem;
+    --spacing-unit: 1rem;
+}
+
+:host {
+    * {
+        font-family: Arial, sans-serif; // Fuente más legible
+    }
+
+    h4, h5, h6 {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: var(--spacing-unit);
+    }
+}
+
 .table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     color: #000; // Mantén el color del texto en negro
     font: 14px/1 'Open Sans', sans-serif;
+    --bs-table-hover-bg: rgba(0,0,0,0.02);
 }
 
 .table th,
@@ -21,8 +44,11 @@
 .table th {
     color:white;
     font-weight: bold;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-
 
 .table tbody tr:nth-child(even) {
     background: #f0f0f2;
@@ -31,6 +57,8 @@
 .table td {
     border-bottom: 1px solid #cecfd5;
     border-right: 1px solid #cecfd5;
+    vertical-align: middle;
+    line-height: 1.6;
 }
 
 .table td:first-child {
@@ -66,4 +94,86 @@
 /* Sombra para darle un aspecto 3D a la tabla */
 .table {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.info-card {
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    label {
+        font-size: var(--text-large);
+        font-weight: 500;
+    }
+
+    h5 {
+        font-size: var(--text-xlarge);
+    }
+
+    i {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+    }
+
+    &:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+}
+
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.card, .info-card, .badge {
+    transition: all 0.3s ease;
+}
+
+.text-muted {
+    color: #505050 !important;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+@media (max-width: 768px) {
+    .info-card {
+        min-height: 100px;
+        
+        label {
+            font-size: 1.1rem;
+        }
+        
+        h5 {
+            font-size: 1.2rem;
+        }
+    }
+
+    .table {
+        th, td {
+            font-size: 1rem;
+            padding: 0.75rem;
+        }
+    }
+}
+
+:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+[title] {
+    position: relative;
+    cursor: help;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.card {
+    animation: fadeIn 0.3s ease-in;
 }
