@@ -34,9 +34,12 @@ export class HistorialMovimientosComponent implements OnInit {
         private datePipe: DatePipe,
         private messageService: MessageService
     ) {
+        const hoy = new Date();
+        const haceUnaSemana = new Date();
+        haceUnaSemana.setDate(hoy.getDate() - 7);
         this.formFiltros = this.fb.group({
-            fechaInicio: [null],
-            fechaFin: [null],
+            fechaInicio: [haceUnaSemana],
+            fechaFin: [hoy],
             producto: [null],
             bodega: [null],
             orderBy: ['fecha'],
