@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { MovimientoInventario } from '../../../components/inventarios/model/movimientoinventario';
 import { TipoMovimientoInventario } from '../../../components/inventarios/enums/tipos-movimiento.enum';
+import { Bodega } from '../../models/inventarios/bodega.model';
+import { Traslado } from '../../models/inventarios/traslado.model';
 
 @Injectable({
   providedIn: 'root'
@@ -79,5 +81,17 @@ export class InventarioService {
     const url = `${this.apiUrl}/inventory/bodega/${bodegaId}`;
     
     return this.http.get<any>(url);
+  }
+
+  getBodegas(): Observable<Bodega[]> {
+    return this.http.get<Bodega[]>(`${this.apiUrl}/bodegas/all`);
+  }
+
+  getProductosBodega(bodegaId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/bodegas/${bodegaId}/productos`);
+  }
+
+  realizarTraslado(traslado: Traslado): Observable<any> {
+    return this.http.post(`${this.apiUrl}/inventory/traslados`, traslado);
   }
 }

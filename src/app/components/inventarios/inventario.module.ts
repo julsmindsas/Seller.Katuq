@@ -9,14 +9,16 @@ import { AngularFireStorageModule } from '@angular/fire/compat/storage';
 import { GalleryModule, ModalGalleryService } from '@ks89/angular-modal-gallery';
 import { NgbActiveModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { TableModule } from 'primeng/table';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../environments/environment';
 import { ProductosRoutingModule } from '../productos/prductos-rounting.module';
-import { SharedModule } from 'src/app/shared/shared.module';
-import {PaginatorModule} from 'primeng/paginator';
+import { SharedModule } from '../../shared/shared.module';
+import { PaginatorModule } from 'primeng/paginator';
 import { BodegasComponent } from './bodegas/bodegas.component';
 import { CrearBodegasComponent } from './bodegas/crear-bodegas/crear-bodegas.component';
 import { RecepcionMercanciaComponent } from './recepcion-mercancia/recepcion-mercancia.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TrasladosComponent } from './traslados/traslados.component';
+import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer.directive';
 
 @NgModule({
     imports: [
@@ -36,11 +38,12 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         ReactiveFormsModule
     ],
     declarations: [
-        InventarioCatalogoComponent, 
-        BodegasComponent, 
+        InventarioCatalogoComponent,
+        BodegasComponent,
         CrearBodegasComponent,
-        RecepcionMercanciaComponent
+        RecepcionMercanciaComponent,
+        TrasladosComponent
     ],
-    providers: [NgbActiveModal, ModalGalleryService],
+    providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective],
 })
 export class InventarioCatalogoModule { }
