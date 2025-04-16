@@ -3,6 +3,8 @@ import { Component, ElementRef, ViewChild, Output, EventEmitter, AfterViewInit }
 import { DataStoreService } from '../../../../../shared/services/dataStoreService'
 import { BodegaService } from '../../../../../shared/services/bodegas/bodega.service';
 import { ToastrService } from 'ngx-toastr';
+import { CartService } from '../../../../../shared/services/cart.service';
+import Swal from 'sweetalert2';
 
 @Component({
     selector: 'app-warehouse-selector',
@@ -24,6 +26,7 @@ export class WarehouseSelectorComponent implements AfterViewInit {
         private dataStore: DataStoreService,
         private bodegaService: BodegaService,
         private toastr: ToastrService,
+        public cartService: CartService,
     ) {
 
     }
@@ -34,7 +37,7 @@ export class WarehouseSelectorComponent implements AfterViewInit {
 
         this.bodega = JSON.parse(localStorage.getItem('warehousePOS')!);
 
-        if(this.bodega){
+        if (this.bodega) {
             this.selectedWarehouse = this.bodega.nombre;
             // El acceso a this.ware se maneja en ngAfterViewInit
         }
@@ -42,26 +45,26 @@ export class WarehouseSelectorComponent implements AfterViewInit {
 
     ngAfterViewInit() {
         // Espera a que las bodegas se carguen y la vista esté inicializada
-        if(this.bodega && this.ware && this.bodegas.length > 0) {
-             // Verifica si la bodega seleccionada existe en la lista de bodegas
-             const bodegaExists = this.bodegas.some(b => b.idBodega === this.bodega.idBodega);
-             if (bodegaExists) {
+        if (this.bodega && this.ware && this.bodegas.length > 0) {
+            // Verifica si la bodega seleccionada existe en la lista de bodegas
+            const bodegaExists = this.bodegas.some(b => b.idBodega === this.bodega.idBodega);
+            if (bodegaExists) {
                 this.ware.nativeElement.value = this.bodega.idBodega;
-             } else {
-                 console.warn('La bodega almacenada no se encontró en la lista actual.');
-                 // Opcionalmente, limpia la selección si la bodega no es válida
-                 this.selectedWarehouse = '';
-                 localStorage.removeItem('warehousePOS');
-                 this.dataStore.remove('warehousePOS');
-             }
+            } else {
+                console.warn('La bodega almacenada no se encontró en la lista actual.');
+                // Opcionalmente, limpia la selección si la bodega no es válida
+                this.selectedWarehouse = '';
+                localStorage.removeItem('warehousePOS');
+                this.dataStore.remove('warehousePOS');
+            }
         } else if (this.bodega && this.ware) {
             // Si las bodegas aún no se han cargado, intenta establecer el valor más tarde
             // Esto podría necesitar una lógica más robusta si la carga es muy lenta
             setTimeout(() => {
-                if(this.bodega && this.ware && this.bodegas.length > 0) {
+                if (this.bodega && this.ware && this.bodegas.length > 0) {
                     const bodegaExists = this.bodegas.some(b => b.idBodega === this.bodega.idBodega);
                     if (bodegaExists) {
-                       this.ware.nativeElement.value = this.bodega.idBodega;
+                        this.ware.nativeElement.value = this.bodega.idBodega;
                     }
                 }
             }, 500); // Espera un poco más
@@ -71,20 +74,20 @@ export class WarehouseSelectorComponent implements AfterViewInit {
     cargarBodegas() {
         this.cargando = true;
         this.bodegaService.getBodegas().subscribe({
-          next: (bodegas) => {
-            this.bodegas = bodegas;
-            this.cargando = false;
-            // Llama a ngAfterViewInit de nuevo o a una función específica
-            // para establecer el valor después de cargar las bodegas
-            this.setInitialWarehouseValue();
-          },
-          error: (error) => {
-            console.error('Error al cargar bodegas:', error);
-            this.toastr.error('Error al cargar las bodegas', 'Error');
-            this.cargando = false;
-          }
+            next: (bodegas) => {
+                this.bodegas = bodegas;
+                this.cargando = false;
+                // Llama a ngAfterViewInit de nuevo o a una función específica
+                // para establecer el valor después de cargar las bodegas
+                this.setInitialWarehouseValue();
+            },
+            error: (error) => {
+                console.error('Error al cargar bodegas:', error);
+                this.toastr.error('Error al cargar las bodegas', 'Error');
+                this.cargando = false;
+            }
         });
-      }
+    }
 
     // Nueva función para establecer el valor inicial después de cargar bodegas
     setInitialWarehouseValue() {
@@ -94,16 +97,31 @@ export class WarehouseSelectorComponent implements AfterViewInit {
                 this.ware.nativeElement.value = this.bodega.idBodega;
             } else {
                 console.warn('La bodega almacenada no se encontró en la lista actual (después de cargar).');
-                 // Opcionalmente, limpia la selección si la bodega no es válida
-                 this.selectedWarehouse = '';
-                 localStorage.removeItem('warehousePOS');
-                 this.dataStore.remove('warehousePOS');
+                // Opcionalmente, limpia la selección si la bodega no es válida
+                this.selectedWarehouse = '';
+                localStorage.removeItem('warehousePOS');
+                this.dataStore.remove('warehousePOS');
             }
         }
     }
 
     // Función para manejar la selección de una bodega
     onWarehouseChange(event: Event): void {
+
+        let total = this.cartService.getPOSSubTotal();
+
+        let total1: number = parseFloat(total?.replace('$','')!);
+
+        if (total1 > 0) {
+            Swal.fire({
+                title: 'Cambio bodega.',
+                text: 'No se puede cambiar de bodega si hayh productos selecciolnados en el carrito.',
+                icon: 'error',
+                confirmButtonText: 'Ok',
+            });
+            this.ware.nativeElement.selected = '';
+            return;
+        }
 
         const target = event.target as HTMLSelectElement;
         const selectedId = target.value;

@@ -1,15 +1,16 @@
 <!-- <app-breadcrumb [title]="'Clientes'" [items]="['Ventas/Clientes']" [active_item]="'Clientes'"></app-breadcrumb> -->
 <div class="container-fluid px-0">
     <br>
-    <div class="card customer-card">
+    <div class="card customer-card p-2">
 
         <!-- Cabecera -->
-        <div class="bg-light" style="text-align: left; margin: 10px 0 0 15px;" *ngIf="isEdit">
+        <div class="text-left m-1" *ngIf="isEdit">
             <i placement="top" ngbTooltip="{{ 'Regresar al listado' | translate }}"
                 style="font-size: 24px; color: var(--primary-color); cursor: pointer;"
                 class="icofont icofont-arrow-left" [routerLink]="'/ventas/clienteslista'"></i>
         </div>
-        <div class="card-header bg-light">
+
+        <div class="card-header">
 
             <div class="row align-items-center">
                 <div class="col-md-6">
@@ -37,12 +38,12 @@
         </div>
 
         <!-- Formulario principal -->
-        <div class="card-body">
+        <div class="card-body p-3">
             <form [formGroup]="formulario">
                 <div class="row g-3">
                     <!-- Sección de información básica -->
                     <div class="col-md-6">
-                        <div class="form-section">
+                        <div class="form-section shadow">
                             <h5 class="section-title">Información Básica</h5>
                             <div class="row g-3">
                                 <!-- Tipo de Documento -->
@@ -112,7 +113,7 @@
 
                     <!-- Sección de contacto -->
                     <div class="col-md-6">
-                        <div class="form-section">
+                        <div class="form-section shadow">
                             <h5 class="section-title">Información de Contacto</h5>
                             <div class="row g-3">
 
