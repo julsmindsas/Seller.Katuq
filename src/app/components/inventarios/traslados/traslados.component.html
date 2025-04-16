@@ -1,96 +1,94 @@
 <div class="traslados-container">
   <h2>Traslado de Productos entre Bodegas</h2>
-  
+
   <form [formGroup]="trasladoForm" (ngSubmit)="onSubmit()" class="traslado-form">
     <div class="form-group">
       <label for="bodegaOrigen">Bodega Origen</label>
-      <select 
-        id="bodegaOrigen" 
-        formControlName="bodegaOrigenId"
-        class="form-control"
-        [class.is-invalid]="trasladoForm.get('bodegaOrigenId')?.invalid && trasladoForm.get('bodegaOrigenId')?.touched"
-      >
+      <select id="bodegaOrigen" formControlName="bodegaOrigenId" class="form-control"
+        [class.is-invalid]="trasladoForm.get('bodegaOrigenId')?.invalid && trasladoForm.get('bodegaOrigenId')?.touched">
         <option value="">Seleccione una bodega</option>
         <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
           {{ bodega.nombre }}
         </option>
       </select>
-      <div class="invalid-feedback" *ngIf="trasladoForm.get('bodegaOrigenId')?.invalid && trasladoForm.get('bodegaOrigenId')?.touched">
+      <div class="invalid-feedback"
+        *ngIf="trasladoForm.get('bodegaOrigenId')?.invalid && trasladoForm.get('bodegaOrigenId')?.touched">
         Por favor seleccione una bodega de origen
       </div>
     </div>
 
     <div class="form-group">
       <label for="bodegaDestino">Bodega Destino</label>
-      <select 
-        id="bodegaDestino" 
-        formControlName="bodegaDestinoId"
-        class="form-control"
-        [class.is-invalid]="trasladoForm.get('bodegaDestinoId')?.invalid && trasladoForm.get('bodegaDestinoId')?.touched"
-      >
+      <select id="bodegaDestino" formControlName="bodegaDestinoId" class="form-control"
+        [class.is-invalid]="(trasladoForm.get('bodegaDestinoId')?.invalid && trasladoForm.get('bodegaDestinoId')?.touched) || errorMensaje">
         <option value="">Seleccione una bodega</option>
         <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
           {{ bodega.nombre }}
         </option>
       </select>
-      <div class="invalid-feedback" *ngIf="trasladoForm.get('bodegaDestinoId')?.invalid && trasladoForm.get('bodegaDestinoId')?.touched">
+      <div class="invalid-feedback"
+        *ngIf="trasladoForm.get('bodegaDestinoId')?.invalid && trasladoForm.get('bodegaDestinoId')?.touched">
         Por favor seleccione una bodega de destino
+      </div>
+      <div class="invalid-feedback" *ngIf="errorMensaje">
+        {{ errorMensaje }}
       </div>
     </div>
 
     <div class="form-group">
       <label for="producto">Producto</label>
-      <select 
-        id="producto" 
-        formControlName="productoId"
-        class="form-control"
+      <ng-select [items]="productos" bindLabel="productoDoc.titulo" bindValue="producto.cd" [loading]="loading"
+        [disabled]="!trasladoForm.get('bodegaOrigenId')?.value" formControlName="productoId"
         [class.is-invalid]="trasladoForm.get('productoId')?.invalid && trasladoForm.get('productoId')?.touched"
-        [disabled]="!trasladoForm.get('bodegaOrigenId')?.value || loading"
-      >
-        <option value="">Seleccione un producto</option>
-        <option *ngFor="let producto of productos" [value]="producto.id">
-          {{ producto.nombre }}
-        </option>
-      </select>
-      <div class="invalid-feedback" *ngIf="trasladoForm.get('productoId')?.invalid && trasladoForm.get('productoId')?.touched">
+        placeholder="Seleccione un producto">
+        <ng-template ng-label-tmp let-item="item">
+          <div class="producto-seleccionado">
+            <img *ngIf="item.productoDoc?.imagenesPrincipales?.length > 0"
+              [src]="item.productoDoc.imagenesPrincipales[0].urls" class="producto-imagen"
+              [alt]="item.productoDoc.titulo">
+            <span>{{item.productoDoc?.titulo}}</span>
+          </div>
+        </ng-template>
+        <ng-template ng-option-tmp let-item="item">
+          <div class="producto-opcion">
+            <img appImageOptimizer [quality]="0.3" [width]="300" [height]="300" [lazy]="true" loading="lazy" priority
+              *ngIf="item.productoDoc?.imagenesPrincipales?.length > 0"
+              [src]="item.productoDoc.imagenesPrincipales[0].urls" class="producto-imagen"
+              [alt]="item.productoDoc.titulo">
+            <div class="producto-info">
+              <span class="producto-titulo">{{item.productoDoc?.titulo}}</span>
+              <span class="producto-stock">Stock: {{item.cantidad}}</span>
+            </div>
+          </div>
+        </ng-template>
+      </ng-select>
+      <div class="invalid-feedback"
+        *ngIf="trasladoForm.get('productoId')?.invalid && trasladoForm.get('productoId')?.touched">
         Por favor seleccione un producto
-      </div>
-      <div class="loading-indicator" *ngIf="loading">
-        Cargando productos...
       </div>
     </div>
 
     <div class="form-group">
       <label for="cantidad">Cantidad</label>
-      <input 
-        type="number" 
-        id="cantidad" 
-        formControlName="cantidad"
-        class="form-control"
-        [class.is-invalid]="trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched"
-        min="1"
-      >
-      <div class="invalid-feedback" *ngIf="trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched">
+      <input type="number" id="cantidad" formControlName="cantidad" class="form-control"
+        [class.is-invalid]="(trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched) || trasladoForm.get('cantidad')?.errors?.stockInsuficiente"
+        min="1" [max]="stockDisponible">
+      <div class="invalid-feedback"
+        *ngIf="trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched">
         La cantidad debe ser mayor a 0
+      </div>
+      <div class="invalid-feedback" *ngIf="trasladoForm.get('cantidad')?.errors?.stockInsuficiente">
+        La cantidad no puede ser mayor al stock disponible ({{stockDisponible}})
       </div>
     </div>
 
     <div class="form-group">
       <label for="observaciones">Observaciones</label>
-      <textarea 
-        id="observaciones" 
-        formControlName="observaciones"
-        class="form-control"
-        rows="3"
-      ></textarea>
+      <textarea id="observaciones" formControlName="observaciones" class="form-control" rows="3"></textarea>
     </div>
 
-    <button 
-      type="submit" 
-      class="btn btn-primary"
-      [disabled]="!trasladoForm.valid || loading"
-    >
+    <button type="submit" class="btn btn-primary" [disabled]="!trasladoForm.valid || loading || errorMensaje">
       {{ loading ? 'Procesando...' : 'Realizar Traslado' }}
     </button>
   </form>
-</div> 
+</div>

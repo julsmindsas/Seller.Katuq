@@ -14,6 +14,8 @@ export class TrasladosComponent implements OnInit {
   bodegas: Bodega[] = [];
   productos: any[] = [];
   loading = false;
+  errorMensaje: string = '';
+  stockDisponible: number = 0;
 
   constructor(
     private fb: FormBuilder,
@@ -31,17 +33,55 @@ export class TrasladosComponent implements OnInit {
   ngOnInit(): void {
     this.cargarBodegas();
     
-    // Suscribirse a cambios en la bodega de origen
     this.trasladoForm.get('bodegaOrigenId')?.valueChanges.subscribe(bodegaId => {
       if (bodegaId) {
         this.cargarProductosBodega(bodegaId);
-        // Limpiar el producto seleccionado cuando cambia la bodega
         this.trasladoForm.get('productoId')?.setValue('');
+        this.validarBodegas();
       } else {
         this.productos = [];
         this.trasladoForm.get('productoId')?.setValue('');
       }
     });
+
+    this.trasladoForm.get('bodegaDestinoId')?.valueChanges.subscribe(() => {
+      this.validarBodegas();
+    });
+
+    this.trasladoForm.get('productoId')?.valueChanges.subscribe(productoId => {
+      if (productoId) {
+        const producto = this.productos.find(p => p.id === productoId);
+        this.stockDisponible = producto?.cantidad || 0;
+        this.validarCantidad();
+      } else {
+        this.stockDisponible = 0;
+      }
+    });
+
+    this.trasladoForm.get('cantidad')?.valueChanges.subscribe(() => {
+      this.validarCantidad();
+    });
+  }
+
+  validarBodegas(): void {
+    const bodegaOrigen = this.trasladoForm.get('bodegaOrigenId')?.value;
+    const bodegaDestino = this.trasladoForm.get('bodegaDestinoId')?.value;
+
+    if (bodegaOrigen && bodegaDestino && bodegaOrigen === bodegaDestino) {
+      this.errorMensaje = 'La bodega destino no puede ser la misma que la bodega origen';
+      this.trasladoForm.get('bodegaDestinoId')?.setValue('');
+    } else {
+      this.errorMensaje = '';
+    }
+  }
+
+  validarCantidad(): void {
+    const cantidad = this.trasladoForm.get('cantidad')?.value;
+    if (cantidad > this.stockDisponible) {
+      this.trasladoForm.get('cantidad')?.setErrors({ stockInsuficiente: true });
+    } else {
+      this.trasladoForm.get('cantidad')?.setErrors(null);
+    }
   }
 
   cargarBodegas(): void {
@@ -59,7 +99,7 @@ export class TrasladosComponent implements OnInit {
     this.loading = true;
     this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe(
       (productos) => {
-        this.productos = productos;
+        this.productos = productos.productos;
         this.loading = false;
       },
       (error) => {
@@ -70,7 +110,7 @@ export class TrasladosComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.trasladoForm.valid) {
+    if (this.trasladoForm.valid && !this.errorMensaje) {
       this.loading = true;
       const traslado: Traslado = {
         ...this.trasladoForm.value,

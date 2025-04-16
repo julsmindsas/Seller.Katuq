@@ -44,6 +44,42 @@
         resize: vertical;
         min-height: 100px;
       }
+
+      .producto-seleccionado,
+      .producto-opcion {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+
+        .producto-imagen {
+          width: 40px;
+          height: 40px;
+          object-fit: cover;
+          border-radius: 4px;
+        }
+
+        .producto-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+
+          .producto-titulo {
+            font-weight: 500;
+          }
+
+          .producto-stock {
+            font-size: 0.875rem;
+            color: #666;
+          }
+        }
+      }
+
+      .producto-opcion {
+        &:hover {
+          background-color: #f8f9fa;
+        }
+      }
     }
 
     button {
@@ -59,6 +95,32 @@
         opacity: 0.7;
         cursor: not-allowed;
       }
+    }
+  }
+}
+
+// Estilos para ng-select
+::ng-deep {
+  .ng-select {
+    &.is-invalid {
+      .ng-select-container {
+        border-color: #dc3545;
+      }
+    }
+
+    .ng-select-container {
+      min-height: 38px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+
+      &:hover {
+        border-color: #007bff;
+      }
+    }
+
+    .ng-dropdown-panel {
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
   }
 } 

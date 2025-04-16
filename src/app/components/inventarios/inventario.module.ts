@@ -19,6 +19,7 @@ import { RecepcionMercanciaComponent } from './recepcion-mercancia/recepcion-mer
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TrasladosComponent } from './traslados/traslados.component';
 import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer.directive';
+import { NgSelectModule } from '@ng-select/ng-select';
 
 @NgModule({
     imports: [
@@ -35,7 +36,8 @@ import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer
         TableModule,
         PaginatorModule,
         FormsModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        NgSelectModule
     ],
     declarations: [
         InventarioCatalogoComponent,

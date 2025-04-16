@@ -1,144 +1,287 @@
-<app-breadcrumb [title]="'Inventario Catalogo Por Bodegas' | translate" [items]="['Inventarios' | translate]"
-    [active_item]="'Catalogo' | translate"></app-breadcrumb>
+<app-breadcrumb [title]="'Inventario por Bodegas' | translate" [items]="['Inventarios' | translate]"
+    [active_item]="'Catálogo' | translate"></app-breadcrumb>
 
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
-            <div class="">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="fa fa-boxes text-primary me-2"></i>
+                            {{ 'Inventario de Productos' | translate }}
+                        </h5>
+                        <small class="text-muted">{{ 'Gestione el inventario de productos por bodega' | translate }}</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm" (click)="exportToExcel()" 
+                            placement="left" ngbTooltip="{{ 'Exportar a Excel' | translate }}">
+                            <i class="fa fa-file-excel me-1"></i> {{ 'Exportar' | translate }}
+                        </button>
+                    </div>
+                </div>
 
                 <div class="loader-box" *ngIf="cargando">
                     <div class="loader-8"></div>
                 </div>
 
-                <div class="custom-datatable">
-                    <!-- Cabecera con filtro de bodegas -->
+                <div class="card-body">
+                    <!-- Filtros y opciones -->
                     <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card border-primary">
-                                <div class="card-header bg-primary text-white">
-                                    <i class="fa fa-warehouse mr-2"></i> {{ 'Filtrar por bodega' | translate }}
-                                </div>
-                                <div class="card-body">
-                                    <div class="form-group">
-                                        <select class="form-control" [(ngModel)]="bodegaSeleccionada"
-                                            (change)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)">
-                                            <option [ngValue]="null">{{ 'Todas las bodegas' | translate }}</option>
-                                            <option *ngFor="let bodega of bodegas" [ngValue]="bodega">{{ bodega.nombre
-                                                }}</option>
-                                        </select>
+                        <!-- Selector de bodegas -->
+                        <div class="col-md-5 mb-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <label for="bodegaSelector" class="form-label fw-bold">
+                                        <i class="fa fa-warehouse text-primary me-1"></i>
+                                        {{ 'Bodega' | translate }}
+                                    </label>
+                                    <select id="bodegaSelector" class="form-select" 
+                                        [(ngModel)]="bodegaSeleccionada" 
+                                        (change)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)"
+                                        aria-describedby="bodegaHelp">
+                                        <option [ngValue]="null">{{ 'Todas las bodegas' | translate }}</option>
+                                        <option *ngFor="let bodega of bodegas" [ngValue]="bodega">
+                                            <span>{{ bodega.nombre }}</span>
+                                            <small *ngIf="bodega.tipo === 'Física'"> ({{ bodega.ciudad }})</small>
+                                            <small *ngIf="bodega.tipo === 'Transaccional'"> (Virtual)</small>
+                                        </option>
+                                    </select>
+                                    <div id="bodegaHelp" class="form-text small mt-2">
+                                        <i class="fa fa-info-circle text-primary me-1"></i>
+                                        {{ 'Seleccione una bodega para ver su inventario específico' | translate }}
                                     </div>
-                                    <div *ngIf="bodegaSeleccionada" class="alert alert-info mt-2 mb-0">
-                                        <span>{{ 'Mostrando productos de la bodega:' | translate }} <strong>{{
-                                                bodegaSeleccionada.nombre }}</strong></span>
-                                        <div class="small mt-1">
+                                    
+                                    <div *ngIf="bodegaSeleccionada" class="mt-3 p-2 rounded border-start border-primary border-3 bg-light">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge" [ngClass]="getClasesTipoBodega(bodegaSeleccionada.idBodega)">
+                                                <i class="fa" [ngClass]="{'fa-building': bodegaSeleccionada.tipo === 'Física', 'fa-cloud': bodegaSeleccionada.tipo === 'Transaccional'}"></i>
+                                                {{ bodegaSeleccionada.tipo }}
+                                            </span>
+                                            <span class="ms-2 fw-bold">{{ bodegaSeleccionada.nombre }}</span>
+                                        </div>
+                                        <div class="mt-1 small">
                                             <span *ngIf="bodegaSeleccionada.tipo === 'Física'">
-                                                <i class="fa fa-map-marker mr-1"></i> {{ bodegaSeleccionada.ciudad }},
-                                                {{ bodegaSeleccionada.departamento }}
+                                                <i class="fa fa-map-marker-alt text-secondary me-1"></i>
+                                                {{ bodegaSeleccionada.direccion }}, {{ bodegaSeleccionada.ciudad }}, {{ bodegaSeleccionada.departamento }}
                                             </span>
                                             <span *ngIf="bodegaSeleccionada.tipo === 'Transaccional'">
-                                                <i class="fa fa-globe mr-1"></i> {{ 'Virtual' | translate }}
+                                                <i class="fa fa-globe text-secondary me-1"></i>
+                                                {{ 'Bodega virtual para transacciones digitales' | translate }}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <input type='text' class="filter-ngx form-control mb-3"
-                                        style="width: 100% !important;"
-                                        placeholder="{{'Escribe lo que quieres filtrar y luego pulsa enter para accionar' | translate}}"
-                                        (keyup)='updateFilter($event)' />
-                                </div>
-                                <div class="col-sm-12 mb-3" style="text-align: end;">
-                                    <button pButton class="p-button-outlined mr-2" (click)="sortByQuantity()">
-                                        <i class="fa fa-sort-amount-asc mr-1"></i>
-                                        {{ 'Ordenar por cantidad' | translate }}
-                                    </button>
-                                    <button pButton class="p-button-outlined" (click)="filterOutOfStock()">
-                                        <i class="fa fa-filter mr-1"></i>
-                                        {{ 'Filtrar productos agotados' | translate }}
-                                    </button>
+                        
+                        <!-- Búsqueda y filtros -->
+                        <div class="col-md-7 mb-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <!-- Búsqueda -->
+                                    <div class="mb-3">
+                                        <label for="searchInput" class="form-label fw-bold">
+                                            <i class="fa fa-search text-primary me-1"></i>
+                                            {{ 'Buscar productos' | translate }}
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fa fa-search"></i>
+                                            </span>
+                                            <input id="searchInput" type="text" class="form-control" 
+                                                placeholder="{{ 'Ingrese referencia, nombre o categoría del producto' | translate }}"
+                                                (keyup)='updateFilter($event)'
+                                                aria-describedby="searchHelp">
+                                            <button class="btn btn-outline-primary" (click)="updateFilter({ key: 'Enter', target: { value: (document.getElementById('searchInput') as HTMLInputElement).value } })">
+                                                {{ 'Buscar' | translate }}
+                                            </button>
+                                        </div>
+                                        <div id="searchHelp" class="form-text small">
+                                            {{ 'Pulse Enter para buscar después de escribir al menos 3 caracteres' | translate }}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Filtros adicionales -->
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-outline-secondary btn-sm" (click)="sortByQuantity()"
+                                            placement="top" ngbTooltip="{{ 'Ordenar productos por cantidad (menor a mayor)' | translate }}">
+                                            <i class="fa fa-sort-amount-asc me-1"></i>
+                                            {{ 'Ordenar por cantidad' | translate }}
+                                        </button>
+                                        <button class="btn btn-outline-warning btn-sm" (click)="filterOutOfStock()"
+                                            placement="top" ngbTooltip="{{ 'Mostrar solo productos con inventario en cero' | translate }}">
+                                            <i class="fa fa-filter me-1"></i>
+                                            {{ 'Productos agotados' | translate }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Información del filtro activo -->
-                    <div class="row" *ngIf="rows.length !== productosSinFiltro.length">
-                        <div class="col-12">
-                            <div class="alert alert-warning">
-                                <i class="fa fa-info-circle"></i>
-                                {{ 'Mostrando' | translate }} <strong>{{ rows.length }}</strong> {{ 'de' | translate }}
-                                <strong>{{ productosSinFiltro.length }}</strong> {{ 'productos' | translate }}.
-                                <button class="btn btn-sm btn-outline-warning ml-2"
-                                    (click)="cambiarBodegaSeleccionada(null)">
-                                    <i class="fa fa-times"></i> {{ 'Quitar filtro' | translate }}
-                                </button>
+                    
+                    <!-- Información sobre resultados -->
+                    <div *ngIf="rows.length !== productosSinFiltro.length" class="alert alert-info mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fa fa-info-circle me-2"></i>
+                                {{ 'Mostrando' | translate }} <strong>{{ rows.length }}</strong> {{ 'de' | translate }} <strong>{{ productosSinFiltro.length }}</strong> {{ 'productos' | translate }}
                             </div>
+                            <button class="btn btn-sm btn-outline-info" (click)="cambiarBodegaSeleccionada(null)">
+                                <i class="fa fa-times-circle me-1"></i> {{ 'Quitar filtro' | translate }}
+                            </button>
                         </div>
                     </div>
 
                     <!-- Tabla de productos -->
-                    <p-table [value]="rows" [scrollable]="true" scrollHeight="400px" [paginator]="false"
-                        [rows]="pageSize" [totalRecords]="totalItems"
-                        styleClass="p-datatable-customers p-datatable-gridlines" [sortField]="'nombre'" [sortOrder]="1"
-                        [responsive]="true" [loading]="cargando" [tableStyle]="{'min-width': '50rem'}">
-                        <ng-template pTemplate="header">
-                            <tr>
-                                <th>{{ 'Imagen' | translate }}</th>
-                                <th>{{ 'Referencia' | translate }}</th>
-                                <th>{{ 'Nombre' | translate }}</th>
-                                <th>{{ 'Cantidad' | translate }}</th>
-                                <th>{{ 'Bodega' | translate }}</th>
-                                <th>{{ 'Acciones' | translate }}</th>
-                            </tr>
-                        </ng-template>
-                        <ng-template pTemplate="body" let-row>
-                            <tr>
-                                <td class="text-center">
-                                    <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
-                                        [src]="row.crearProducto.imagenesPrincipales[0].urls" app
-                                        alt="Imagen del producto" appImageOptimizer [quality]="0.2" [width]="50"
-                                        [height]="50" [lazy]="true" loading="lazy" priority
-                                        style="max-width: 50px; max-height: 50px;" class="img-thumbnail">
-                                    <span *ngIf="!row.crearProducto?.imagenesPrincipales?.length">
-                                        <i class="fa fa-image text-muted"></i>
-                                    </span>
-                                </td>
-                                <td>{{ row.identificacion?.referencia }}</td>
-                                <td>{{ row.crearProducto?.titulo }}</td>
-                                <td>{{ row.cantidad }}</td>
-                                <td>{{ row.bodegaNombre || getNombreBodega(row.bodegaId) }}</td>
-                                <td>
-                                    <!-- Acciones aquí -->
-                                    <i placement="top" ngbTooltip="{{'Movimiento inventario' | translate}}"
-                                        style="font-size: 25px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                                        class="icofont icofont-industries-alt-2"
-                                        (click)="openInventoryModal(row,inventoryModal)"></i>
-                                </td>
-                            </tr>
-                        </ng-template>
-                        <ng-template pTemplate="emptymessage">
-                            <tr>
-                                <td colspan="6" class="text-center p-4">
-                                    <div class="empty-state">
-                                        <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
-                                        <h5>{{ 'No hay productos disponibles' | translate }}</h5>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-0">
+                            <p-table [value]="rows" [scrollable]="true" scrollHeight="400px" [paginator]="false"
+                                [rows]="pageSize" [totalRecords]="totalItems" [loading]="cargando"
+                                styleClass="p-datatable-sm p-datatable-gridlines" [sortField]="'nombre'" [sortOrder]="1"
+                                [responsive]="true" [tableStyle]="{'min-width': '50rem'}" dataKey="id"
+                                [rowHover]="true">
+                                <ng-template pTemplate="header">
+                                    <tr>
+                                        <th>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-image text-primary me-2"></i>
+                                                {{ 'Imagen' | translate }}
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-barcode text-primary me-2"></i>
+                                                {{ 'Referencia' | translate }}
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-tag text-primary me-2"></i>
+                                                {{ 'Nombre' | translate }}
+                                            </div>
+                                        </th>
+                                        <th class="text-center">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <i class="fa fa-cubes text-primary me-2"></i>
+                                                {{ 'Cantidad' | translate }}
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-warehouse text-primary me-2"></i>
+                                                {{ 'Bodega' | translate }}
+                                            </div>
+                                        </th>
+                                        <th class="text-center">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <i class="fa fa-cogs text-primary me-2"></i>
+                                                {{ 'Acciones' | translate }}
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </ng-template>
+                                
+                                <ng-template pTemplate="body" let-row>
+                                    <tr [ngClass]="{'bg-light': row.cantidad === 0}">
+                                        <td class="text-center" style="width: 80px;">
+                                            <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
+                                                [src]="row.crearProducto.imagenesPrincipales[0].urls" 
+                                                alt="Imagen del producto" 
+                                                style="max-width: 60px; max-height: 60px; object-fit: contain;" 
+                                                class="img-thumbnail shadow-sm"
+                                                (click)="viewProduct(row)"
+                                                [ngbTooltip]="'Click para ver detalles del producto'"
+                                                placement="right">
+                                            <div *ngIf="!row.crearProducto?.imagenesPrincipales?.length" 
+                                                class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                style="width: 60px; height: 60px;">
+                                                <i class="fa fa-image text-muted fa-2x"></i>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold">{{ row.identificacion?.referencia || 'N/A' }}</span>
+                                            <div *ngIf="row.identificacion?.sku" class="small text-muted">
+                                                SKU: {{ row.identificacion?.sku }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-truncate" style="max-width: 200px;" 
+                                                [ngbTooltip]="row.crearProducto?.titulo"
+                                                placement="top">
+                                                {{ row.crearProducto?.titulo || 'Sin título' }}
+                                            </div>
+                                            <div *ngIf="row.categorias?.categoriaPrincipal" class="small text-muted">
+                                                <i class="fa fa-folder me-1"></i> {{ row.categorias?.categoriaPrincipal }}
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge fs-6 px-3 py-2" 
+                                                [ngClass]="{
+                                                    'bg-danger': row.cantidad === 0, 
+                                                    'bg-warning text-dark': row.cantidad > 0 && row.cantidad <= 5,
+                                                    'bg-success': row.cantidad > 5
+                                                }">
+                                                {{ row.cantidad }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge me-2" [ngClass]="getClasesTipoBodega(row.bodegaId)">
+                                                    <i class="fa" [ngClass]="{'fa-building': isBodegaFisica(row.bodegaId), 'fa-cloud': isBodegaTransaccional(row.bodegaId)}"></i>
+                                                </span>
+                                                <span>{{ row.bodegaNombre || getNombreBodega(row.bodegaId) }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button class="btn btn-sm btn-outline-info"
+                                                    (click)="getMovimientosInventarioByProduct(row, inventoryHistoryModal)"
+                                                    placement="left" ngbTooltip="{{ 'Ver historial de movimientos' | translate }}">
+                                                    <i class="fa fa-history"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-primary"
+                                                    (click)="openInventoryModal(row, inventoryModal)"
+                                                    placement="left" ngbTooltip="{{ 'Gestionar inventario' | translate }}">
+                                                    <i class="fa fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                                
+                                <ng-template pTemplate="emptymessage">
+                                    <tr>
+                                        <td colspan="6" class="text-center p-5">
+                                            <div class="empty-state">
+                                                <i class="fa fa-boxes fa-3x text-muted mb-3"></i>
+                                                <h6 class="mb-2">{{ 'No hay productos disponibles' | translate }}</h6>
+                                                <p class="text-muted mb-0">{{ bodegaSeleccionada ? 
+                                                    'No hay productos en la bodega seleccionada' : 
+                                                    'Intente seleccionar otra bodega o modificar los filtros de búsqueda' | translate }}
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                                
+                                <ng-template pTemplate="summary">
+                                    <div class="p-d-flex p-ai-center p-jc-between">
+                                        <div>
+                                            {{ 'Total:' | translate }} {{rows ? rows.length : 0 }} {{ 'productos' | translate }}
+                                        </div>
                                     </div>
-                                </td>
-                            </tr>
-                        </ng-template>
-                    </p-table>
-                    <p-paginator [rows]="10" [totalRecords]="totalItems" (onPageChange)="onPageChange($event)"
-                        [showJumpToPageDropdown]="true" [showPageLinks]="false"></p-paginator>
-                    <br />
-                    <div class="d-flex justify-content-between">
-                        <button class="btn btn-primary" style="color: white;" (click)="exportToExcel()">
-                            <i class="icofont icofont-file-excel"></i> {{ 'Excel' | translate }}
-                        </button>
-                        <span class="text-muted">{{ 'Total productos:' | translate }} {{ rows.length }}</span>
+                                </ng-template>
+                            </p-table>
+                            
+                            <div class="mt-3">
+                                <p-paginator [rows]="pageSize" [totalRecords]="totalItems" 
+                                    (onPageChange)="onPageChange($event)"
+                                    [showJumpToPageDropdown]="true" 
+                                    [showPageLinks]="false">
+                                </p-paginator>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -148,165 +291,318 @@
 
 <!-- Modal de Movimiento de Inventario -->
 <ng-template #inventoryModal let-modal>
-    <!-- Modal header -->
-    <div class="modal-header">
-        <h5 class="modal-title text-center mb-4">{{ 'Gestionar Inventario por bodegas' | translate }}
-            ({{selectedRow.identificacion?.referencia}})</h5>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+            <i class="fa fa-edit me-2"></i>
+            {{ 'Gestionar Inventario' | translate }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="modal.dismiss()">
+            <span aria-hidden="true"></span>
         </button>
     </div>
 
-    <!-- Modal body -->
     <div class="modal-body">
+        <!-- Información del producto -->
+        <div class="d-flex mb-4">
+            <div class="me-3">
+                <img *ngIf="selectedRow?.crearProducto?.imagenesPrincipales?.length > 0"
+                    [src]="selectedRow?.crearProducto?.imagenesPrincipales[0]?.urls" 
+                    alt="Imagen del producto" 
+                    style="width: 80px; height: 80px; object-fit: contain;" 
+                    class="img-thumbnail">
+                <div *ngIf="!selectedRow?.crearProducto?.imagenesPrincipales?.length" 
+                    class="bg-light rounded d-flex align-items-center justify-content-center" 
+                    style="width: 80px; height: 80px;">
+                    <i class="fa fa-image text-muted fa-2x"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1">{{ selectedRow?.crearProducto?.titulo }}</h5>
+                <div class="mb-1 text-muted">
+                    <strong>{{ 'Referencia:' | translate }}</strong> {{ selectedRow?.identificacion?.referencia }}
+                </div>
+                <div class="d-flex align-items-center">
+                    <strong class="me-2">{{ 'Inventario actual:' | translate }}</strong>
+                    <span class="badge fs-5 px-3 py-2" 
+                        [ngClass]="{
+                            'bg-danger': selectedRow?.disponibilidad?.cantidadDisponible === 0, 
+                            'bg-warning text-dark': selectedRow?.disponibilidad?.cantidadDisponible > 0 && selectedRow?.disponibilidad?.cantidadDisponible <= 5,
+                            'bg-success': selectedRow?.disponibilidad?.cantidadDisponible > 5
+                        }">
+                        {{ selectedRow?.disponibilidad?.cantidadDisponible }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <!-- Información de la bodega -->
-        <div class="alert alert-info mb-4" *ngIf="selectedRow.bodegaId">
-            <h6 class="m-0">
-                <i class="fa fa-warehouse mr-2"></i>
-                {{ 'Bodega actual:' | translate }}
-                <strong>{{ getNombreBodega(selectedRow.bodegaId) }}</strong>
-            </h6>
-        </div>
-
-        <!-- Sección de otros Bodegas Principales -->
-        <div class="other-channels-section">
-            <h4 class="section-title">
-                {{ 'Inventario global' | translate }}
-                <span style="text-align: center;"
-                    [ngClass]="{'outofstock': selectedRow.disponibilidad.cantidadDisponible === 0, 'lowstock': (selectedRow.disponibilidad.cantidadDisponible > 0 && selectedRow.disponibilidad.cantidadDisponible < 10),'instock': selectedRow.disponibilidad.cantidadDisponible > 10}">
-                    {{ selectedRow.disponibilidad.cantidadDisponible }}
-                </span>
-            </h4>
-            <hr class="divider my-3">
-            <h5 class="section-title">{{ 'Bodegas Principales' | translate }}</h5>
-            <div class="other-channels-grid">
-                <div class="other-channel-item">
-                    <div class="channel-label">
-                        <i class="fas fa-store-alt me-2"></i>
-                        <label class="mb-0">{{ 'Punto de Venta' | translate }}</label>
-                    </div>
-                    <input type="number" class="form-control input-inventario"
-                        [(ngModel)]="inventarioPorMarketplace.puntoDeVenta" placeholder="{{ 'Cantidad' | translate }}"
-                        (input)="actualizarInventarioTemp('puntoDeVenta', inventarioPorMarketplace.puntoDeVenta)" />
-                </div>
-                <div class="other-channel-item">
-                    <div class="channel-label">
-                        <i class="fas fa-warehouse me-2"></i>
-                        <label class="mb-0">{{ 'Seller Center' | translate }}</label>
-                    </div>
-                    <input type="number" class="form-control input-inventario"
-                        [(ngModel)]="inventarioPorMarketplace.sellerCenter" placeholder="{{ 'Cantidad' | translate }}"
-                        (input)="actualizarInventarioTemp('sellerCenter', inventarioPorMarketplace.sellerCenter)" />
-                </div>
-                <div class="other-channel-item">
-                    <div class="channel-label">
-                        <i class="fas fa-globe me-2"></i>
-                        <label class="mb-0">{{ 'Página Web' | translate }}</label>
-                    </div>
-                    <input type="number" class="form-control input-inventario"
-                        [(ngModel)]="inventarioPorMarketplace.paginaWeb" placeholder="{{ 'Cantidad' | translate }}"
-                        (input)="actualizarInventarioTemp('paginaWeb', inventarioPorMarketplace.paginaWeb)" />
+        <div class="alert alert-info mb-4" *ngIf="selectedRow?.bodegaId">
+            <div class="d-flex align-items-center">
+                <i class="fa fa-warehouse fa-lg me-3"></i>
+                <div>
+                    <h6 class="mb-1">{{ 'Bodega actual:' | translate }} <strong>{{ getNombreBodega(selectedRow?.bodegaId) }}</strong></h6>
+                    <p class="mb-0 small">
+                        <span *ngIf="isBodegaFisica(selectedRow?.bodegaId)">{{ 'Bodega física' | translate }}</span>
+                        <span *ngIf="isBodegaTransaccional(selectedRow?.bodegaId)">{{ 'Bodega transaccional' | translate }}</span>
+                    </p>
                 </div>
             </div>
         </div>
-
-        <!-- Divider visual para separar marketplaces de otros canales -->
-        <hr class="divider my-3" *ngIf="bodegasActivasMarketPlaces.length > 0">
-
-        <!-- Sección de marketplaces -->
-        <div class="marketplaces-section" *ngIf="bodegasActivasMarketPlaces.length > 0">
-            <h6 class="section-title">{{ 'Marketplaces' | translate }}</h6>
-            <div class="marketplace-grid">
-                <div *ngFor="let campo of bodegasActivasMarketPlaces; let i = index" class="marketplace-item">
-                    <div class="marketplace-label">
-                        <label class="mb-0">{{ campo.nameMP }}</label>
+        
+        <!-- Ajuste de inventario -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fa fa-cubes me-2"></i>
+                    {{ 'Ajustar Inventario' | translate }}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning mb-3">
+                    <i class="fa fa-exclamation-triangle me-2"></i>
+                    {{ 'Los cambios realizados afectarán directamente el inventario disponible' | translate }}
+                </div>
+                
+                <!-- Canales principales -->
+                <h6 class="section-title">
+                    <i class="fa fa-store me-2"></i>
+                    {{ 'Canales Principales' | translate }}
+                </h6>
+                <div class="other-channels-grid mb-4">
+                    <div class="other-channel-item">
+                        <div class="channel-label">
+                            <i class="fa fa-store-alt me-2"></i>
+                            <label class="mb-0">{{ 'Punto de Venta' | translate }}</label>
+                            <i class="fa fa-info-circle ms-1 text-primary" placement="top" 
+                                ngbTooltip="{{ 'Inventario disponible para puntos de venta físicos' | translate }}"></i>
+                        </div>
+                        <div class="input-group mt-2">
+                            <button class="btn btn-outline-danger" (click)="inventarioPorMarketplace.puntoDeVenta = inventarioPorMarketplace.puntoDeVenta - 1">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                            <input type="number" class="form-control text-center input-inventario"
+                                [(ngModel)]="inventarioPorMarketplace.puntoDeVenta" placeholder="{{ 'Cantidad' | translate }}"
+                                (input)="actualizarInventarioTemp('puntoDeVenta', inventarioPorMarketplace.puntoDeVenta)" />
+                            <button class="btn btn-outline-success" (click)="inventarioPorMarketplace.puntoDeVenta = inventarioPorMarketplace.puntoDeVenta + 1">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
-                    <input type="number" class="form-control input-inventario" [(ngModel)]="inventarioPorMarketplace[i]"
-                        placeholder="{{ 'Cantidad' | translate }}"
-                        (input)="actualizarInventarioTemp(i, inventarioPorMarketplace[i])" />
+                    <div class="other-channel-item">
+                        <div class="channel-label">
+                            <i class="fa fa-warehouse me-2"></i>
+                            <label class="mb-0">{{ 'Seller Center' | translate }}</label>
+                            <i class="fa fa-info-circle ms-1 text-primary" placement="top" 
+                                ngbTooltip="{{ 'Inventario disponible para marketplace propio' | translate }}"></i>
+                        </div>
+                        <div class="input-group mt-2">
+                            <button class="btn btn-outline-danger" (click)="inventarioPorMarketplace.sellerCenter = inventarioPorMarketplace.sellerCenter - 1">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                            <input type="number" class="form-control text-center input-inventario"
+                                [(ngModel)]="inventarioPorMarketplace.sellerCenter" placeholder="{{ 'Cantidad' | translate }}"
+                                (input)="actualizarInventarioTemp('sellerCenter', inventarioPorMarketplace.sellerCenter)" />
+                            <button class="btn btn-outline-success" (click)="inventarioPorMarketplace.sellerCenter = inventarioPorMarketplace.sellerCenter + 1">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="other-channel-item">
+                        <div class="channel-label">
+                            <i class="fa fa-globe me-2"></i>
+                            <label class="mb-0">{{ 'Página Web' | translate }}</label>
+                            <i class="fa fa-info-circle ms-1 text-primary" placement="top" 
+                                ngbTooltip="{{ 'Inventario disponible para la página web' | translate }}"></i>
+                        </div>
+                        <div class="input-group mt-2">
+                            <button class="btn btn-outline-danger" (click)="inventarioPorMarketplace.paginaWeb = inventarioPorMarketplace.paginaWeb - 1">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                            <input type="number" class="form-control text-center input-inventario"
+                                [(ngModel)]="inventarioPorMarketplace.paginaWeb" placeholder="{{ 'Cantidad' | translate }}"
+                                (input)="actualizarInventarioTemp('paginaWeb', inventarioPorMarketplace.paginaWeb)" />
+                            <button class="btn btn-outline-success" (click)="inventarioPorMarketplace.paginaWeb = inventarioPorMarketplace.paginaWeb + 1">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de marketplaces -->
+                <div *ngIf="bodegasActivasMarketPlaces?.length > 0">
+                    <h6 class="section-title">
+                        <i class="fa fa-shopping-bag me-2"></i>
+                        {{ 'Marketplaces' | translate }}
+                    </h6>
+                    <div class="marketplace-grid">
+                        <div *ngFor="let campo of bodegasActivasMarketPlaces; let i = index" class="marketplace-item">
+                            <div class="marketplace-label">
+                                <i class="fa fa-tag me-1"></i>
+                                <label class="mb-0">{{ campo.nameMP }}</label>
+                                <i class="fa fa-info-circle ms-1 text-primary" placement="top" 
+                                    ngbTooltip="{{ 'Inventario disponible para ' + campo.nameMP | translate }}"></i>
+                            </div>
+                            <div class="input-group mt-2">
+                                <button class="btn btn-outline-danger" (click)="inventarioPorMarketplace[i] = inventarioPorMarketplace[i] - 1">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control text-center input-inventario" 
+                                    [(ngModel)]="inventarioPorMarketplace[i]"
+                                    placeholder="{{ 'Cantidad' | translate }}"
+                                    (input)="actualizarInventarioTemp(i, inventarioPorMarketplace[i])" />
+                                <button class="btn btn-outline-success" (click)="inventarioPorMarketplace[i] = inventarioPorMarketplace[i] + 1">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal footer -->
-    <div class="modal-footer text-center mt-4">
-        <button class="btn btn-primary w-100" (click)="guardarInventario()">{{ 'Guardar Cambios' | translate }}</button>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+            <i class="fa fa-times me-1"></i>
+            {{ 'Cancelar' | translate }}
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarInventario()">
+            <i class="fa fa-save me-1"></i>
+            {{ 'Guardar Cambios' | translate }}
+        </button>
     </div>
-
 </ng-template>
 
 <!-- Modal de Historial de Movimientos -->
 <ng-template #inventoryHistoryModal let-modal>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="movimientosModalLabel">{{ 'Movimientos de Inventario' | translate }}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                aria-label="{{ 'Cerrar' | translate }}"></button>
-        </div>
+    <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+            <i class="fa fa-history me-2"></i>
+            {{ 'Historial de Movimientos' | translate }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="modal.dismiss()">
+            <span aria-hidden="true"></span>
+        </button>
+    </div>
 
-        <div class="modal-body">
-            <!-- Tabla de Movimientos -->
-            <div class="table-responsive">
-                <table class="table table-hover align-middle text-center">
-                    <thead class="table-light">
-                        <tr>
-                            <th>{{ 'Tipo' | translate }}</th>
-                            <th>{{ 'Cantidad' | translate }}</th>
-                            <th>{{ 'Fecha' | translate }}</th>
-                            <th>{{ 'Usuario' | translate }}</th>
-                            <th>{{ 'Origen' | translate }}</th>
-                            <th>{{ 'Documento Cliente' | translate }}</th>
-                            <th>{{ 'Orden ID' | translate }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let movimiento of movimiento">
-                            <td>
-                                <span class="badge" [ngClass]="getClaseMovimiento(movimiento.tipoMovimiento)">
-                                    <i class="bi" [ngClass]="getClaseIconoMovimiento(movimiento.tipoMovimiento)"></i>
-                                    {{ movimiento.tipoMovimiento | titlecase }}
-                                </span>
-                            </td>
-                            <td>{{ movimiento.cantidadCambio }}</td>
-                            <td>{{ movimiento.fecha | date: 'short' }}</td>
-                            <td>{{ movimiento.usuario }}</td>
-                            <td>{{ movimiento.origenMovimiento | titlecase }}</td>
-                            <td>{{ movimiento.clienteDocumento }}</td>
-                            <td>{{ movimiento.ordenId }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+    <div class="modal-body">
+        <!-- Información del producto -->
+        <div class="d-flex mb-4">
+            <div class="me-3">
+                <img *ngIf="selectedRow?.crearProducto?.imagenesPrincipales?.length > 0"
+                    [src]="selectedRow?.crearProducto?.imagenesPrincipales[0]?.urls" 
+                    alt="Imagen del producto" 
+                    style="width: 60px; height: 60px; object-fit: contain;" 
+                    class="img-thumbnail">
+            </div>
+            <div>
+                <h6 class="mb-0">{{ selectedRow?.crearProducto?.titulo }}</h6>
+                <div class="text-muted small">{{ selectedRow?.identificacion?.referencia }}</div>
             </div>
         </div>
 
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cerrar' | translate }}</button>
+        <!-- Tabla de Movimientos -->
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ 'Tipo' | translate }}</th>
+                        <th>{{ 'Cantidad' | translate }}</th>
+                        <th>{{ 'Fecha' | translate }}</th>
+                        <th>{{ 'Usuario' | translate }}</th>
+                        <th>{{ 'Origen' | translate }}</th>
+                        <th>{{ 'Documento' | translate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let movimiento of movimiento">
+                        <td>
+                            <span class="badge" [ngClass]="getClaseMovimiento(movimiento.tipoMovimiento)">
+                                <i class="fa" [ngClass]="{'fa-arrow-up': movimiento.tipoMovimiento === 'in', 'fa-arrow-down': movimiento.tipoMovimiento === 'out'}"></i>
+                                {{ movimiento.tipoMovimiento === 'in' ? ('Entrada' | translate) : ('Salida' | translate) }}
+                            </span>
+                        </td>
+                        <td>
+                            <span [ngClass]="{'text-success': movimiento.tipoMovimiento === 'in', 'text-danger': movimiento.tipoMovimiento === 'out'}">
+                                {{ movimiento.tipoMovimiento === 'in' ? '+' : '-' }}{{ movimiento.cantidadCambio }}
+                            </span>
+                        </td>
+                        <td>{{ movimiento.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+                        <td>{{ movimiento.usuario }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ movimiento.origenMovimiento }}</span>
+                        </td>
+                        <td>{{ movimiento.clienteDocumento !== 'N/A' ? movimiento.clienteDocumento : '-' }}</td>
+                    </tr>
+                    <tr *ngIf="!movimiento || movimiento.length === 0">
+                        <td colspan="6" class="text-center p-3">
+                            <i class="fa fa-info-circle me-1"></i>
+                            {{ 'No hay movimientos registrados para este producto' | translate }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+            <i class="fa fa-times me-1"></i>
+            {{ 'Cerrar' | translate }}
+        </button>
     </div>
 </ng-template>
 
 <!-- Estilos adicionales -->
 <style>
-    .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 2rem;
-    }
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+}
 
-    .outofstock {
-        font-weight: bold;
-        color: #ff5252 !important;
-    }
+.outofstock {
+    font-weight: bold;
+    color: #ff5252 !important;
+}
 
-    .lowstock {
-        font-weight: bold;
-        color: #ffa726 !important;
-    }
+.lowstock {
+    font-weight: bold;
+    color: #ffa726 !important;
+}
 
-    .instock {
-        font-weight: bold;
-        color: #66bb6a !important;
-    }
+.instock {
+    font-weight: bold;
+    color: #66bb6a !important;
+}
+
+.marketplace-grid, .other-channels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.marketplace-item, .other-channel-item {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s;
+}
+
+.marketplace-item:hover, .other-channel-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #ced4da;
+}
+
+.input-inventario {
+    text-align: center;
+}
+
+.section-title {
+    margin: 10px 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e9ecef;
+}
 </style>
