@@ -1,0 +1,393 @@
+<div class="container-fluid px-0">
+  <div class="card customer-card p-2">
+    <!-- Cabecera -->
+    <div class="card-header">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <div class="text-left m-1">
+            <h2 class="text-left fc-secondary fs-24 m-0 p-0">
+              <i *ngIf="isEdit" ngbTooltip="Regresar al listado"
+                style="font-size: 24px; color: var(--primary-color); cursor: pointer;"
+                class="icofont icofont-arrow-left" [routerLink]="'/prospectos'">
+              </i>
+              Gestión de Prospectos
+            </h2>
+          </div>
+          <p class="text-muted mb-0">Gestiona y da seguimiento a tus prospectos web</p>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex justify-content-end align-items-center gap-3">
+            <button class="btn btn-success d-flex align-items-center gap-2 px-4 py-2" (click)="createNewProspect()">
+              <i class="fa fa-plus"></i> 
+              <span>Nuevo Prospecto</span>
+            </button>
+            <div class="search-box">
+              <div class="input-group">
+                <select class="form-select" style="max-width: 150px;">
+                  <option value="all" selected>Todos</option>
+                  <option value="company">Empresa</option>
+                  <option value="name">Nombre</option>
+                  <option value="email">Email</option>
+                </select>
+                <input #searchInput class="form-control" type="text"
+                  placeholder="Buscar prospecto...">
+                <button class="btn btn-primary" (click)="searchProspects()">
+                  <i class="fa fa-search"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="card-body p-0">
+      <div class="row g-0">
+        <!-- Lista de Prospectos -->
+        <div class="col-md-3 border-end">
+          <div class="prospects-list">
+            <div class="prospect-item" *ngFor="let prospect of prospects" (click)="selectProspect(prospect)"
+              [class.active]="selectedProspect?.id === prospect.id">
+              <div class="prospect-header mb-2">
+                <div class="d-flex align-items-center">
+                  <img [src]="logoPath" alt="Katuq Logo" class="me-2" style="width: 24px; height: 24px;">
+                  <h4>{{ prospect.companyName }}</h4>
+                </div>
+                <p class="contact-date">{{ prospect.contactDate | date:'dd/MM/yyyy' }}</p>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm flex-grow-1">
+                  Gestionar ahora
+                </button>
+                <button class="btn btn-success btn-sm" (click)="convertToClient(prospect)">
+                  <i class="fa fa-check"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalles del Prospecto -->
+        <div class="col-md-9" *ngIf="selectedProspect || isNewProspect">
+          <div class="prospect-details p-3">
+            <div class="row">
+              <!-- Formulario -->
+              <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h3 class="m-0">{{ isNewProspect ? 'Nuevo Prospecto' : 'Información del Prospecto' }}</h3>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" (click)="toggleEditMode()" *ngIf="!isNewProspect">
+                      <i class="fa" [ngClass]="isEdit ? 'fa-times' : 'fa-edit'"></i>
+                      {{ isEdit ? 'Cancelar' : 'Editar' }}
+                    </button>
+                    <button class="btn btn-outline-secondary" (click)="isNewProspect = false" *ngIf="isNewProspect">
+                      <i class="fa fa-times"></i> Cancelar
+                    </button>
+                  </div>
+                </div>
+
+                <form [formGroup]="prospectForm">
+                  <!-- Información de Contacto -->
+                  <div class="card mb-4">
+                    <div class="card-header bg-light">
+                      <h5 class="m-0">Información de Contacto</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">Nombre de la Empresa</label>
+                          <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                            {{ selectedProspect?.companyName }}
+                          </div>
+                          <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="companyName">
+                          <div class="text-danger small" *ngIf="prospectForm.get('companyName')?.invalid && prospectForm.get('companyName')?.touched">
+                            Este campo es obligatorio
+                          </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">Fecha de Contacto</label>
+                          <div class="form-control-static">
+                            {{ selectedProspect?.contactDate | date:'dd/MM/yyyy' }}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div formGroupName="contactInfo">
+                        <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre del Contacto</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.contactInfo?.name }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="name">
+                            <div class="text-danger small" *ngIf="contactInfoForm.get('name')?.invalid && contactInfoForm.get('name')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.contactInfo?.phone }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="tel" class="form-control" formControlName="phone">
+                            <div class="text-danger small" *ngIf="contactInfoForm.get('phone')?.invalid && contactInfoForm.get('phone')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">WhatsApp</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.contactInfo?.whatsapp }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="tel" class="form-control" formControlName="whatsapp">
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.contactInfo?.email }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="email" class="form-control" formControlName="email">
+                            <div class="text-danger small" *ngIf="contactInfoForm.get('email')?.invalid && contactInfoForm.get('email')?.touched">
+                              Ingrese un correo electrónico válido
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Información Básica -->
+                  <div class="card mb-4">
+                    <div class="card-header bg-light">
+                      <h5 class="m-0">Información Básica</h5>
+                    </div>
+                    <div class="card-body">
+                      <div formGroupName="basicInfo">
+                        <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Ciudad</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.basicInfo?.city }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="city">
+                            <div class="text-danger small" *ngIf="basicInfoForm.get('city')?.invalid && basicInfoForm.get('city')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Número de Empleados</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.basicInfo?.employeeCount }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="number" class="form-control" formControlName="employeeCount">
+                            <div class="text-danger small" *ngIf="basicInfoForm.get('employeeCount')?.invalid && basicInfoForm.get('employeeCount')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Website</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.basicInfo?.website }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="url" class="form-control" formControlName="website">
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Tipo de Empresa</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.basicInfo?.companyType }}
+                            </div>
+                            <select *ngIf="isEdit || isNewProspect" class="form-select" formControlName="companyType">
+                              <option value="">Seleccione...</option>
+                              <option value="Retail">Retail</option>
+                              <option value="Restaurante">Restaurante</option>
+                              <option value="Servicios">Servicios</option>
+                              <option value="Manufactura">Manufactura</option>
+                              <option value="Otro">Otro</option>
+                            </select>
+                            <div class="text-danger small" *ngIf="basicInfoForm.get('companyType')?.invalid && basicInfoForm.get('companyType')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-md-12 mb-3">
+                            <label class="form-label">Sector</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.basicInfo?.sector }}
+                            </div>
+                            <select *ngIf="isEdit || isNewProspect" class="form-select" formControlName="sector">
+                              <option value="">Seleccione...</option>
+                              <option value="Tecnología">Tecnología</option>
+                              <option value="Alimentos">Alimentos</option>
+                              <option value="Comercio">Comercio</option>
+                              <option value="Servicios">Servicios</option>
+                              <option value="Otro">Otro</option>
+                            </select>
+                            <div class="text-danger small" *ngIf="basicInfoForm.get('sector')?.invalid && basicInfoForm.get('sector')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Botones de Acción -->
+                  <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" (click)="isNewProspect = false" *ngIf="isNewProspect">
+                      Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" [disabled]="!prospectForm.valid" (click)="saveProspect()">
+                      {{ isNewProspect ? 'Crear Prospecto' : 'Guardar Cambios' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Timeline -->
+              <div class="col-md-4">
+                <div class="card" *ngIf="selectedProspect?.timeline?.length">
+                  <div class="card-header bg-light">
+                    <h5 class="m-0">Historial de Actividades</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="timeline">
+                      <div class="timeline-item" *ngFor="let event of selectedProspect.timeline">
+                        <div class="timeline-date">
+                          {{ event.date | date:'dd/MM/yyyy HH:mm' }}
+                          <span class="badge" [ngClass]="'bg-' + getStatusColor(event.status)">
+                            {{ getStatusLabel(event.status) }}
+                          </span>
+                        </div>
+                        <div class="timeline-content">
+                          <p class="description">{{ event.description }}</p>
+                          <p class="agent-note" *ngIf="event.agentNote">
+                            <strong>Nota del agente:</strong> {{ event.agentNote }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalle -->
+<ng-template #prospectDetail let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Detalle del Prospecto</h4>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body" *ngIf="selectedProspect">
+    <h5>{{ selectedProspect.companyName }}</h5>
+    <p>{{ selectedProspect.contactInfo.name }}</p>
+    <p>{{ selectedProspect.contactInfo.email }}</p>
+    <p>{{ selectedProspect.contactInfo.phone }}</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.close()">Cerrar</button>
+  </div>
+</ng-template>
+
+<!-- Modal de Nuevo Prospecto -->
+<ng-template #newProspectModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Nuevo Prospecto</h4>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="prospectForm" (ngSubmit)="saveProspect()">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Nombre de la Empresa</label>
+          <input type="text" class="form-control" formControlName="companyName" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Fecha de Contacto</label>
+          <input type="date" class="form-control" [value]="today | date:'yyyy-MM-dd'" disabled>
+        </div>
+      </div>
+
+      <h5 class="mt-4">Información de Contacto</h5>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Nombre del Contacto</label>
+          <input type="text" class="form-control" formControlName="contactInfo.name" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Teléfono</label>
+          <input type="tel" class="form-control" formControlName="contactInfo.phone" required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">WhatsApp</label>
+          <input type="tel" class="form-control" formControlName="contactInfo.whatsapp">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Correo Electrónico</label>
+          <input type="email" class="form-control" formControlName="contactInfo.email" required>
+        </div>
+      </div>
+
+      <h5 class="mt-4">Información Básica</h5>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Ciudad</label>
+          <input type="text" class="form-control" formControlName="basicInfo.city" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Número de Empleados</label>
+          <input type="number" class="form-control" formControlName="basicInfo.employeeCount" required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Website</label>
+          <input type="url" class="form-control" formControlName="basicInfo.website">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tipo de Empresa</label>
+          <select class="form-select" formControlName="basicInfo.companyType" required>
+            <option value="">Seleccione...</option>
+            <option value="Retail">Retail</option>
+            <option value="Restaurante">Restaurante</option>
+            <option value="Servicios">Servicios</option>
+            <option value="Manufactura">Manufactura</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-12">
+          <label class="form-label">Sector</label>
+          <select class="form-select" formControlName="basicInfo.sector" required>
+            <option value="">Seleccione...</option>
+            <option value="Tecnología">Tecnología</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Comercio">Comercio</option>
+            <option value="Servicios">Servicios</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+    <button type="button" class="btn btn-primary" [disabled]="!prospectForm.valid" (click)="saveProspect(); modal.close()">
+      Guardar Prospecto
+    </button>
+  </div>
+</ng-template>

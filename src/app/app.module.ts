@@ -52,11 +52,10 @@ export function HttpLoaderFactory(http: HttpClient) {
   declarations: [
     AppComponent,
     LoaderComponent,
-    SafeUrlPipe, // Declarar el pipe aquí,
+    SafeUrlPipe,
     ChatComponent,
     FloatingButtonComponent,
-    ChatFormComponent,
-    // Eliminamos VoiceInteractionComponent de aquí porque ahora está en su propio módulo
+    ChatFormComponent
   ],
   exports: [
   ],

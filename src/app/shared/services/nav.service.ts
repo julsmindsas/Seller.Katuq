@@ -157,6 +157,7 @@ export class NavService implements OnDestroy {
 			title: 'Clientes', icon: 'user-check', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
 				{ path: 'ventas/clientes', title: 'Crear Clientes', type: 'link' },
 				{ path: 'ventas/clienteslista', title: 'Lista de clientes', type: 'link' },
+				{ path: 'prospectos/lista', title: 'Gestión de Prospectos', type: 'link' },
 				{ path: 'proceso/ocasiones', title: 'Ocasiones', type: 'link' },
 				{ path: 'proceso/generos', title: 'Géneros', type: 'link' },
 			]

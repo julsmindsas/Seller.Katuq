@@ -153,5 +153,11 @@ export const content: Routes = [
       import('../../components/integrations/integrations.module')
         .then(m => m.IntegrationsModule),
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'prospectos',
+    loadChildren: () => import('../../components/prospect-manager/prospect-manager.module').then(m => m.ProspectManagerModule),
+    canActivate: [AuthGuard],
+    data: { title: 'Gestión de Prospectos' }
   }
 ];
