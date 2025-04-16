@@ -18,8 +18,8 @@
 @import "utils/mixin";
 
 :root {
-    --theme-deafult: #7366ff;
-    --theme-secondary: #f73164;
+    --theme-deafult: var(--primary-color) !important;;
+    --theme-secondary: var(--secondary-color) !important;;
 }
 
 /* ---------------------
@@ -160,11 +160,15 @@
 }
 
 .fc-primary {
-    color: $primary-color !important;
+    color: var(--primary-color) !important;
 }
 
 .fc-secondary {
-    color: $secondary-color !important;
+    color: var(--secondary-color) !important;
+}
+
+.fc-tertiary {
+    color: var(--tertiary-color) !important;
 }
 
 .fc-danger {
@@ -197,6 +201,10 @@
 
 .bc-secondary {
     background-color: $secondary-color !important;
+}
+
+.bc-tertiary {
+    background-color: $tertiary-color !important;
 }
 
 .bc-danger {

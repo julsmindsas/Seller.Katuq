@@ -10,5 +10,10 @@
 }
 
 .bg-swayp {
-    background-color: #a554df !important
+    background-color: #00a5d2 !important
   }
+
+.p-datatable .p-sortable-column.p-highlight {
+    background: var(--secondary-light-color); //#EFF6FF;
+    color: var(--secondary-color); //#1D4ED8;
+}

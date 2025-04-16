@@ -557,14 +557,20 @@ $btn-color in (primary, $primary-color),
 }
 
 .btn-primary {
-  background-color: var(--theme-deafult) !important;
-  border-color: var(--theme-deafult) !important;
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
 }
 
 .btn-secondary {
-  background-color: var(--theme-secondary) !important;
-  border-color: var(--theme-secondary) !important;
+  background-color: var(--secondary-color) !important;
+  border-color: var(--secondary-color) !important;
 }
+
+.btn-tertiary {
+  background-color: var(--tertiary-color) !important;
+  border-color: var(--tertiary-color) !important;
+}
+
 .btn-info{
   color: $white;
   &:hover {
