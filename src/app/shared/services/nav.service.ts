@@ -180,7 +180,8 @@ export class NavService implements OnDestroy {
 				{ path: '', title: 'Cambio precios*', type: 'link' },
 				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link'},
 				{ path: 'inventario/recepcion-mercancia', title: 'Recepción', type: 'link'},
-				{ path: 'inventario/traslados', title: 'Traslados', type: 'link'}
+				{ path: 'inventario/traslados', title: 'Traslados', type: 'link'},
+				{ path: 'inventario/historial-movimientos', title: 'Historial Movimientos', type: 'link'}
 			]
 		},
 		{

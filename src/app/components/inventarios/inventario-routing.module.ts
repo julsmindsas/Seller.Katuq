@@ -1,14 +1,15 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 import { InventarioCatalogoComponent } from './inventario-catalogo/inventarios.component'
 import { BodegasComponent } from './bodegas/bodegas.component';
 import { RecepcionMercanciaComponent } from './recepcion-mercancia/recepcion-mercancia.component';
 import { TrasladosComponent } from './traslados/traslados.component';
+import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 
 
 const routes: Routes = [
     {
-        path: 'catalogo',
+        path: '',
         component: InventarioCatalogoComponent
     },
     {
@@ -22,6 +23,10 @@ const routes: Routes = [
     {
         path: 'traslados',
         component: TrasladosComponent
+    },
+    {
+        path: 'historial-movimientos',
+        component: HistorialMovimientosComponent
     }
 ];
 

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { MovimientoInventario } from '../../../components/inventarios/model/movimientoinventario';
+import { MovimientoInventario, MovimientosResponse } from '../../../components/inventarios/model/movimientoinventario';
 import { TipoMovimientoInventario } from '../../../components/inventarios/enums/tipos-movimiento.enum';
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
@@ -93,5 +93,59 @@ export class InventarioService {
 
   realizarTraslado(traslado: Traslado): Observable<any> {
     return this.http.post(`${this.apiUrl}/inventory/traslados`, traslado);
+  }
+
+  getHistorialMovimientos(filtros: {
+    fechaInicio?: string;
+    fechaFin?: string;
+    bodegaId?: string;
+    productoId?: string;
+    limit?: number;
+    lastDoc?: string;
+    orderBy?: string;
+    orderDirection?: 'asc' | 'desc';
+  }): Observable<MovimientosResponse> {
+    let params = new HttpParams();
+
+    if (filtros.fechaInicio) {
+      params = params.set('fechaInicio', filtros.fechaInicio);
+    }
+    if (filtros.fechaFin) {
+      params = params.set('fechaFin', filtros.fechaFin);
+    }
+    if (filtros.bodegaId) {
+      params = params.set('bodegaId', filtros.bodegaId);
+    }
+    if (filtros.productoId) {
+      params = params.set('productoId', filtros.productoId);
+    }
+    if (filtros.limit) {
+      params = params.set('limit', filtros.limit.toString());
+    }
+    if (filtros.lastDoc) {
+      params = params.set('lastDoc', filtros.lastDoc);
+    }
+    if (filtros.orderBy) {
+      params = params.set('orderBy', filtros.orderBy);
+    }
+    if (filtros.orderDirection) {
+      params = params.set('orderDirection', filtros.orderDirection);
+    }
+
+    return this.http.get<MovimientosResponse>(`${this.apiUrl}/inventory/historial`, { params });
+  }
+
+  exportarExcelHistorial(filtros: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportar-historial`, filtros, {
+      responseType: 'blob'
+    });
+  }
+
+  getProductos(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/productos`);
+  }
+
+  getMovimientoDetalle(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/movimiento/${id}`);
   }
 }

@@ -1,0 +1,89 @@
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-pointer:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.badge {
+    padding: 0.4em 0.65em;
+    font-size: 0.75em;
+    border-radius: 0.25rem;
+}
+
+.bg-success {
+    background-color: #4caf50 !important;
+    color: white;
+}
+
+.bg-danger {
+    background-color: #f44336 !important;
+    color: white;
+}
+
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ajustes para la tabla compact */
+:host ::ng-deep {
+    .p-datatable-sm .p-datatable-thead > tr > th {
+        padding: 0.5rem 0.5rem;
+    }
+    
+    .p-datatable-sm .p-datatable-tbody > tr > td {
+        padding: 0.4rem 0.5rem;
+    }
+    
+    .p-button-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .p-datatable-scrollable .p-datatable-wrapper {
+        border-radius: 0.25rem;
+    }
+    
+    .p-inputtext {
+        padding: 0.4rem 0.5rem;
+    }
+    
+    .p-paginator {
+        padding: 0.5rem;
+    }
+    
+    .p-button.p-button-icon-only.p-button-rounded.p-button-sm {
+        height: 2rem;
+        width: 2rem;
+    }
+}
+
+.card {
+    margin: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    padding: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.p-button {
+    margin-right: 0.5rem;
+}
+
+.p-datatable {
+    margin-top: 1rem;
+}
+
+.p-calendar {
+    width: 100%;
+} 

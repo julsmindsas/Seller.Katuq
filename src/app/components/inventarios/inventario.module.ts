@@ -20,6 +20,11 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TrasladosComponent } from './traslados/traslados.component';
 import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer.directive';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { CalendarModule } from 'primeng/calendar';
+import { DropdownModule } from 'primeng/dropdown';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 
 @NgModule({
     imports: [
@@ -37,14 +42,19 @@ import { NgSelectModule } from '@ng-select/ng-select';
         PaginatorModule,
         FormsModule,
         ReactiveFormsModule,
-        NgSelectModule
+        NgSelectModule,
+        CalendarModule,
+        DropdownModule,
+        ButtonModule,
+        InputTextModule
     ],
     declarations: [
         InventarioCatalogoComponent,
         BodegasComponent,
         CrearBodegasComponent,
         RecepcionMercanciaComponent,
-        TrasladosComponent
+        TrasladosComponent,
+        HistorialMovimientosComponent
     ],
     providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective],
 })
