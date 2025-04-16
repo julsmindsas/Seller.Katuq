@@ -9,7 +9,7 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
 
 const routes: Routes = [
     {
-        path: '',
+        path: 'inventario-catalogo',
         component: InventarioCatalogoComponent
     },
     {
