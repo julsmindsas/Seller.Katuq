@@ -50,7 +50,7 @@ export class TrasladosComponent implements OnInit {
 
     this.trasladoForm.get('productoId')?.valueChanges.subscribe(productoId => {
       if (productoId) {
-        const producto = this.productos.find(p => p.id === productoId);
+        const producto = this.productos.find(p => p.producto.cd === productoId);
         this.stockDisponible = producto?.cantidad || 0;
         this.validarCantidad();
       } else {

@@ -1,99 +1,377 @@
-.traslados-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+// Variables
+$primary-color: #3867d6;
+$secondary-color: #4b7bec;
+$text-color: #2d3436;
+$light-gray: #f1f2f6;
+$medium-gray: #dfe4ea;
+$error-color: #ff4757;
+$success-color: #2ed573;
+$border-radius: 12px;
+$box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 
-  h2 {
-    color: #333;
-    margin-bottom: 2rem;
-    text-align: center;
+// Mixins
+@mixin card {
+  background: white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: 24px;
+}
+
+@mixin hover-effect {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
   }
+}
 
-  .traslado-form {
+// Estilos principales
+.dashboard-container {
+  padding: 30px;
+  background-color: #f7f8fa;
+  min-height: calc(100vh - 100px);
+}
+
+.traslados-card {
+  @include card;
+  max-width: 1000px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.card-header {
+  margin-bottom: 32px;
+  
+  h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: $text-color;
     display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    align-items: center;
+    gap: 12px;
+    
+    i {
+      color: $primary-color;
+      font-size: 24px;
+    }
+  }
+  
+  .header-line {
+    height: 4px;
+    background: linear-gradient(to right, $primary-color, $secondary-color);
+    border-radius: 2px;
+    width: 100px;
+    margin-top: 12px;
+  }
+}
 
-    .form-group {
+.traslado-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  .bodegas-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    
+    .bodega-card {
+      flex: 1;
+      padding: 24px;
+      border-radius: $border-radius;
+      background-color: $light-gray;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-
-      label {
-        font-weight: 500;
-        color: #555;
+      align-items: center;
+      text-align: center;
+      
+      h3 {
+        margin: 12px 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: $text-color;
       }
-
-      .form-control {
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-
-        &:focus {
-          outline: none;
-          border-color: #007bff;
-          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-        }
-      }
-
-      textarea.form-control {
-        resize: vertical;
-        min-height: 100px;
-      }
-
-      .producto-seleccionado,
-      .producto-opcion {
+      
+      .bodega-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem;
-
-        .producto-imagen {
-          width: 40px;
-          height: 40px;
-          object-fit: cover;
-          border-radius: 4px;
-        }
-
-        .producto-info {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-
-          .producto-titulo {
-            font-weight: 500;
-          }
-
-          .producto-stock {
-            font-size: 0.875rem;
-            color: #666;
-          }
+        justify-content: center;
+        font-size: 24px;
+        
+        i {
+          font-size: 24px;
         }
       }
-
-      .producto-opcion {
-        &:hover {
-          background-color: #f8f9fa;
+      
+      &.origen {
+        .bodega-icon {
+          background-color: rgba($primary-color, 0.15);
+          color: $primary-color;
+        }
+      }
+      
+      &.destino {
+        .bodega-icon {
+          background-color: rgba($secondary-color, 0.15);
+          color: $secondary-color;
+        }
+      }
+      
+      .form-control {
+        margin-top: 8px;
+        width: 100%;
+        padding: 12px;
+        border: 2px solid $medium-gray;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        
+        &:focus {
+          border-color: $primary-color;
+          box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+        }
+        
+        &.is-invalid {
+          border-color: $error-color;
         }
       }
     }
-
-    button {
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      font-weight: 500;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-
-      &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
+    
+    .transfer-arrow {
+      font-size: 24px;
+      color: $primary-color;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      i {
+        font-size: 32px;
+      }
+    }
+  }
+  
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: $text-color;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    i {
+      color: $primary-color;
+    }
+  }
+  
+  .product-section {
+    .ng-select-container {
+      margin-top: 16px;
+      
+      .product-select {
+        width: 100%;
+      }
+    }
+  }
+  
+  .producto-seleccionado, .producto-opcion {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    
+    .imagen-container {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      background-color: $light-gray;
+      
+      .producto-imagen {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .no-image {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $medium-gray;
+        font-size: 20px;
+      }
+    }
+  }
+  
+  .producto-opcion {
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: $light-gray;
+    }
+    
+    .producto-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      
+      .producto-titulo {
+        font-weight: 500;
+        color: $text-color;
+        font-size: 16px;
+      }
+      
+      .stock-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 100px;
+        background-color: rgba($primary-color, 0.1);
+        color: $primary-color;
+        font-size: 13px;
+        font-weight: 500;
+      }
+    }
+  }
+  
+  .quantity-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    
+    .cantidad-container, .observaciones-container {
+      padding: 20px;
+      border-radius: $border-radius;
+      background-color: $light-gray;
+      
+      .input-group {
+        .input-group-text {
+          background-color: white;
+          border: 2px solid $medium-gray;
+          padding: 0 16px;
+          display: flex;
+          align-items: center;
+          
+          &:first-child {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+            border-right: none;
+          }
+          
+          &:last-child {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            border-left: none;
+          }
+          
+          i {
+            color: $primary-color;
+          }
+        }
+        
+        .form-control {
+          border: 2px solid $medium-gray;
+          padding: 12px;
+          font-size: 16px;
+          
+          &:focus {
+            box-shadow: none;
+            border-color: $primary-color;
+          }
+          
+          &.is-invalid {
+            border-color: $error-color;
+          }
+        }
+      }
+      
+      .stock-info {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        
+        .stock-meter {
+          height: 8px;
+          background-color: $medium-gray;
+          border-radius: 4px;
+          overflow: hidden;
+          
+          .meter-fill {
+            height: 100%;
+            background: linear-gradient(to right, $primary-color, $secondary-color);
+            transition: width 0.3s ease;
+          }
+        }
+        
+        span {
+          font-size: 14px;
+          color: $primary-color;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+      }
+    }
+  }
+  
+  .invalid-feedback {
+    margin-top: 8px;
+    color: $error-color;
+    font-size: 14px;
+  }
+  
+  .submit-section {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 16px;
+    
+    .btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      i {
+        font-size: 16px;
+      }
+      
+      &.btn-primary {
+        background-color: $primary-color;
+        border: none;
+        transition: all 0.2s ease;
+        
+        &:hover:not(:disabled) {
+          background-color: darken($primary-color, 10%);
+          transform: translateY(-2px);
+        }
+        
+        &:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+      }
+      
+      &.btn-outline-secondary {
+        border: 1px solid $medium-gray;
+        color: $text-color;
+        background-color: white;
+        
+        &:hover {
+          background-color: $light-gray;
+        }
       }
     }
   }
@@ -102,25 +380,76 @@
 // Estilos para ng-select
 ::ng-deep {
   .ng-select {
-    &.is-invalid {
-      .ng-select-container {
-        border-color: #dc3545;
-      }
-    }
-
     .ng-select-container {
-      min-height: 38px;
-      border-radius: 4px;
-      border: 1px solid #ddd;
-
+      border: 2px solid $medium-gray !important;
+      border-radius: 8px !important;
+      min-height: 48px !important;
+      padding: 0 16px !important;
+      
       &:hover {
-        border-color: #007bff;
+        border-color: $primary-color !important;
+      }
+      
+      .ng-placeholder {
+        color: #adb5bd;
+      }
+      
+      .ng-value-container {
+        padding-left: 0 !important;
       }
     }
-
+    
+    &.ng-select-focused .ng-select-container {
+      border-color: $primary-color !important;
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.2) !important;
+    }
+    
     .ng-dropdown-panel {
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+      border: none !important;
+      overflow: hidden !important;
+      
+      .ng-dropdown-panel-items {
+        padding: 8px !important;
+        
+        .ng-option {
+          border-radius: 8px !important;
+          margin-bottom: 4px !important;
+          
+          &.ng-option-selected, &.ng-option-selected.ng-option-marked {
+            background-color: rgba($primary-color, 0.1) !important;
+            color: $text-color !important;
+          }
+          
+          &.ng-option-marked {
+            background-color: $light-gray !important;
+            color: $text-color !important;
+          }
+        }
+      }
+    }
+    
+    &.is-invalid .ng-select-container {
+      border-color: $error-color !important;
+    }
+  }
+}
+
+// Media queries para responsividad
+@media (max-width: 768px) {
+  .traslado-form {
+    .bodegas-section {
+      flex-direction: column;
+      
+      .transfer-arrow {
+        transform: rotate(90deg);
+        margin: 16px 0;
+      }
+    }
+    
+    .quantity-section {
+      grid-template-columns: 1fr;
     }
   }
 } 
