@@ -59,7 +59,7 @@ export class HistorialMovimientosComponent implements OnInit {
     cargarProductos(): void {
         this.inventarioService.getProductos().subscribe({
             next: (response) => {
-                this.productos = response;
+                this.productos = response.products;
             },
             error: (error) => {
                 this.messageService.add({

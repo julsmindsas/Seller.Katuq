@@ -4,18 +4,20 @@
         Historial de Movimientos
     </h2>
     <p class="text-muted mb-0">
-        Consulta, filtra y exporta los movimientos de inventario. Usa los filtros para personalizar tu búsqueda. Haz clic en cualquier fila para ver el detalle.
+        Consulta, filtra y exporta los movimientos de inventario. Usa los filtros para personalizar tu búsqueda. Haz
+        clic en cualquier fila para ver el detalle.
     </p>
 </div>
 
 <div class="card mb-3">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2"
-        (click)="toggleFiltros()" style="cursor: pointer">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2" (click)="toggleFiltros()"
+        style="cursor: pointer">
         <h6 class="m-0">
             <i class="pi pi-filter me-2"></i>
             Filtros de búsqueda
         </h6>
-        <button type="button" class="btn btn-link btn-sm p-0" pTooltip="Haz clic para mostrar u ocultar los filtros" tooltipPosition="left">
+        <button type="button" class="btn btn-link btn-sm p-0" pTooltip="Haz clic para mostrar u ocultar los filtros"
+            tooltipPosition="left">
             <i [class]="mostrarFiltros ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
         </button>
     </div>
@@ -26,39 +28,47 @@
                     <label class="form-label mb-1">
                         <i class="pi pi-calendar me-1"></i>
                         Fecha Inicio
-                        <i class="pi pi-info-circle text-info ms-1" pTooltip="Selecciona la fecha inicial para filtrar los movimientos" tooltipPosition="top"></i>
+                        <i class="pi pi-info-circle text-info ms-1"
+                            pTooltip="Selecciona la fecha inicial para filtrar los movimientos"
+                            tooltipPosition="top"></i>
                     </label>
                     <p-calendar formControlName="fechaInicio" [showIcon]="true" dateFormat="dd/mm/yy"
-                        pTooltip="Selecciona la fecha inicial del rango a consultar" tooltipPosition="top" styleClass="w-100"></p-calendar>
+                        pTooltip="Selecciona la fecha inicial del rango a consultar" tooltipPosition="top"
+                        styleClass="w-100"></p-calendar>
                 </div>
                 <div class="col-12 col-md-3">
                     <label class="form-label mb-1">
                         <i class="pi pi-calendar me-1"></i>
                         Fecha Fin
-                        <i class="pi pi-info-circle text-info ms-1" pTooltip="Selecciona la fecha final para filtrar los movimientos" tooltipPosition="top"></i>
+                        <i class="pi pi-info-circle text-info ms-1"
+                            pTooltip="Selecciona la fecha final para filtrar los movimientos" tooltipPosition="top"></i>
                     </label>
                     <p-calendar formControlName="fechaFin" [showIcon]="true" dateFormat="dd/mm/yy"
-                        pTooltip="Selecciona la fecha final del rango a consultar" tooltipPosition="top" styleClass="w-100"></p-calendar>
+                        pTooltip="Selecciona la fecha final del rango a consultar" tooltipPosition="top"
+                        styleClass="w-100"></p-calendar>
                 </div>
                 <div class="col-12 col-md-3">
                     <label class="form-label mb-1">
                         <i class="pi pi-box me-1"></i>
                         Producto
-                        <i class="pi pi-info-circle text-info ms-1" pTooltip="Filtra por un producto específico" tooltipPosition="top"></i>
+                        <i class="pi pi-info-circle text-info ms-1" pTooltip="Filtra por un producto específico"
+                            tooltipPosition="top"></i>
                     </label>
-                    <p-dropdown [options]="productos" formControlName="producto" optionLabel="titulo"
-                        [showClear]="true" [filter]="true" placeholder="Selecciona un producto"
-                        pTooltip="Filtra por un producto específico" tooltipPosition="top" styleClass="w-100"></p-dropdown>
+                    <p-dropdown [options]="productos" formControlName="producto" optionLabel="crearProducto.titulo" [showClear]="true"
+                        [filter]="true" placeholder="Selecciona un producto"
+                        pTooltip="Filtra por un producto específico" tooltipPosition="top"
+                        styleClass="w-100"></p-dropdown>
                 </div>
                 <div class="col-12 col-md-3">
                     <label class="form-label mb-1">
                         <i class="pi pi-building me-1"></i>
                         Bodega
-                        <i class="pi pi-info-circle text-info ms-1" pTooltip="Filtra por una bodega específica" tooltipPosition="top"></i>
+                        <i class="pi pi-info-circle text-info ms-1" pTooltip="Filtra por una bodega específica"
+                            tooltipPosition="top"></i>
                     </label>
-                    <p-dropdown [options]="bodegas" formControlName="bodega" optionLabel="nombre"
-                        [showClear]="true" [filter]="true" placeholder="Selecciona una bodega"
-                        pTooltip="Filtra por una bodega específica" tooltipPosition="top" styleClass="w-100"></p-dropdown>
+                    <p-dropdown [options]="bodegas" formControlName="bodega" optionLabel="nombre" [showClear]="true"
+                        [filter]="true" placeholder="Selecciona una bodega" pTooltip="Filtra por una bodega específica"
+                        tooltipPosition="top" styleClass="w-100"></p-dropdown>
                 </div>
             </div>
             <div class="row g-2 align-items-end mt-1">
@@ -66,15 +76,17 @@
                     <label class="form-label mb-1">
                         <i class="pi pi-sort me-1"></i>
                         Ordenar por
-                        <i class="pi pi-info-circle text-info ms-1" pTooltip="Elige el campo por el que deseas ordenar los resultados" tooltipPosition="top"></i>
+                        <i class="pi pi-info-circle text-info ms-1"
+                            pTooltip="Elige el campo por el que deseas ordenar los resultados"
+                            tooltipPosition="top"></i>
                     </label>
                     <p-dropdown [options]="[
                         {label: 'Fecha', value: 'fecha', icon: 'pi pi-calendar'},
                         {label: 'Cantidad', value: 'cantidad', icon: 'pi pi-sort-numeric-down'},
                         {label: 'Producto', value: 'producto', icon: 'pi pi-box'}
-                    ]" formControlName="orderBy" [showClear]="true"
-                        placeholder="Selecciona el campo de ordenamiento"
-                        pTooltip="Selecciona cómo quieres ordenar los resultados" tooltipPosition="top" styleClass="w-100">
+                    ]" formControlName="orderBy" [showClear]="true" placeholder="Selecciona el campo de ordenamiento"
+                        pTooltip="Selecciona cómo quieres ordenar los resultados" tooltipPosition="top"
+                        styleClass="w-100">
                         <ng-template let-option pTemplate="item">
                             <div class="d-flex align-items-center">
                                 <i [class]="option.icon" class="me-2"></i>
@@ -87,14 +99,16 @@
                     <label class="form-label mb-1">
                         <i class="pi pi-sort-alt me-1"></i>
                         Dirección
-                        <i class="pi pi-info-circle text-info ms-1" pTooltip="Elige si quieres ver los resultados en orden ascendente o descendente" tooltipPosition="top"></i>
+                        <i class="pi pi-info-circle text-info ms-1"
+                            pTooltip="Elige si quieres ver los resultados en orden ascendente o descendente"
+                            tooltipPosition="top"></i>
                     </label>
                     <p-dropdown [options]="[
                         {label: 'Ascendente', value: 'asc', icon: 'pi pi-sort-up'},
                         {label: 'Descendente', value: 'desc', icon: 'pi pi-sort-down'}
-                    ]" formControlName="orderDirection" [showClear]="true"
-                        placeholder="Selecciona la dirección"
-                        pTooltip="Selecciona el orden ascendente o descendente" tooltipPosition="top" styleClass="w-100">
+                    ]" formControlName="orderDirection" [showClear]="true" placeholder="Selecciona la dirección"
+                        pTooltip="Selecciona el orden ascendente o descendente" tooltipPosition="top"
+                        styleClass="w-100">
                         <ng-template let-option pTemplate="item">
                             <div class="d-flex align-items-center">
                                 <i [class]="option.icon" class="me-2"></i>
@@ -106,15 +120,13 @@
             </div>
             <div class="row mt-3">
                 <div class="col-12 text-end">
-                    <button pButton type="submit" label="Buscar" icon="pi pi-search"
-                        class="p-button-primary me-2"
+                    <button pButton type="submit" label="Buscar" icon="pi pi-search" class="p-button-primary me-2"
                         pTooltip="Buscar movimientos con los filtros seleccionados" tooltipPosition="top"></button>
                     <button pButton type="button" label="Exportar Excel" icon="pi pi-file-excel"
                         class="p-button-success me-2" (click)="exportarExcel()"
                         pTooltip="Exportar los resultados a Excel" tooltipPosition="top"></button>
-                    <button pButton type="button" label="Limpiar" icon="pi pi-refresh"
-                        class="p-button-secondary" (click)="clear(dt)" pTooltip="Limpiar todos los filtros"
-                        tooltipPosition="top"></button>
+                    <button pButton type="button" label="Limpiar" icon="pi pi-refresh" class="p-button-secondary"
+                        (click)="clear(dt)" pTooltip="Limpiar todos los filtros" tooltipPosition="top"></button>
                 </div>
             </div>
         </form>
@@ -123,24 +135,25 @@
 
 <div class="mb-2 d-flex align-items-center">
     <i class="pi pi-info-circle text-info me-2"></i>
-    <span class="text-muted">Haz clic en cualquier fila para ver el detalle del movimiento. Usa el buscador para filtrar rápidamente.</span>
+    <span class="text-muted">Haz clic en cualquier fila para ver el detalle del movimiento. Usa el buscador para filtrar
+        rápidamente.</span>
 </div>
 
 <div class="d-flex align-items-center justify-content-between mb-2">
     <h6 class="m-0"><i class="pi pi-list me-2"></i>Resultados</h6>
     <div>
-        <button pButton icon="pi pi-list" class="p-button-text p-button-rounded p-button-sm"
-            pTooltip="Vista compacta" tooltipPosition="left"></button>
+        <button pButton icon="pi pi-list" class="p-button-text p-button-rounded p-button-sm" pTooltip="Vista compacta"
+            tooltipPosition="left"></button>
         <button pButton icon="pi pi-th-large" class="p-button-text p-button-rounded p-button-sm"
             pTooltip="Vista detallada" tooltipPosition="left"></button>
     </div>
 </div>
 
-<p-table #dt [value]="movimientos" [loading]="loading" [paginator]="true" [rows]="rows"
-    [totalRecords]="totalRecords" [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true"
-    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-    (onPage)="onPageChange($event)" styleClass="p-datatable-sm p-datatable-gridlines" [scrollable]="true"
-    scrollHeight="450px" [resizableColumns]="true" [reorderableColumns]="true" responsiveLayout="scroll">
+<p-table #dt [value]="movimientos" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
+    [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros" (onPage)="onPageChange($event)"
+    styleClass="p-datatable-sm p-datatable-gridlines" [scrollable]="true" scrollHeight="450px" [resizableColumns]="true"
+    [reorderableColumns]="true" responsiveLayout="scroll">
     <ng-template pTemplate="caption">
         <div class="d-flex justify-content-end">
             <span class="p-input-icon-left">
@@ -156,65 +169,75 @@
             <th style="width: 130px" pSortableColumn="fecha">
                 <div class="d-flex align-items-center">
                     <span>Fecha</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Fecha y hora exacta del movimiento" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Fecha y hora exacta del movimiento"
+                        tooltipPosition="top"></i>
                     <p-sortIcon field="fecha" class="ms-2"></p-sortIcon>
                 </div>
             </th>
             <th style="width: 180px" pSortableColumn="producto">
                 <div class="d-flex align-items-center">
                     <span>Producto</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Nombre del producto involucrado en el movimiento" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1"
+                        pTooltip="Nombre del producto involucrado en el movimiento" tooltipPosition="top"></i>
                     <p-sortIcon field="producto" class="ms-2"></p-sortIcon>
                 </div>
             </th>
             <th style="width: 100px">
                 <div class="d-flex align-items-center">
                     <span>Código</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Código de referencia del producto" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Código de referencia del producto"
+                        tooltipPosition="top"></i>
                 </div>
             </th>
             <th style="width: 130px">
                 <div class="d-flex align-items-center">
                     <span>Bodega</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Nombre de la bodega donde se realizó el movimiento" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1"
+                        pTooltip="Nombre de la bodega donde se realizó el movimiento" tooltipPosition="top"></i>
                 </div>
             </th>
             <th style="width: 90px" pSortableColumn="tipo">
                 <div class="d-flex align-items-center">
                     <span>Tipo</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Tipo de movimiento (Ingreso/Egreso)" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Tipo de movimiento (Ingreso/Egreso)"
+                        tooltipPosition="top"></i>
                     <p-sortIcon field="tipo" class="ms-2"></p-sortIcon>
                 </div>
             </th>
             <th style="width: 90px" pSortableColumn="cantidad" class="text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <span>Cantidad</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Cantidad de unidades movidas" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Cantidad de unidades movidas"
+                        tooltipPosition="top"></i>
                     <p-sortIcon field="cantidad" class="ms-2"></p-sortIcon>
                 </div>
             </th>
             <th style="width: 130px">
                 <div class="d-flex align-items-center">
                     <span>Observaciones</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Notas u observaciones adicionales del movimiento" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1"
+                        pTooltip="Notas u observaciones adicionales del movimiento" tooltipPosition="top"></i>
                 </div>
             </th>
             <th style="width: 110px">
                 <div class="d-flex align-items-center">
                     <span>Orden Compra</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Número de orden de compra asociada (si aplica)" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1"
+                        pTooltip="Número de orden de compra asociada (si aplica)" tooltipPosition="top"></i>
                 </div>
             </th>
             <th style="width: 110px">
                 <div class="d-flex align-items-center">
                     <span>Usuario</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Usuario que realizó el movimiento" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Usuario que realizó el movimiento"
+                        tooltipPosition="top"></i>
                 </div>
             </th>
             <th style="width: 70px" class="text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <span>Acciones</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Ver detalles del movimiento" tooltipPosition="top"></i>
+                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Ver detalles del movimiento"
+                        tooltipPosition="top"></i>
                 </div>
             </th>
         </tr>
@@ -246,8 +269,8 @@
             <td>
                 <div class="d-flex align-items-center">
                     <i class="pi pi-building me-2 text-primary"></i>
-                    <span pTooltip="Nombre de la bodega" tooltipPosition="top"
-                        class="text-truncate d-inline-block" style="max-width: 90px">
+                    <span pTooltip="Nombre de la bodega" tooltipPosition="top" class="text-truncate d-inline-block"
+                        style="max-width: 90px">
                         {{movimiento.bodega.nombre}}
                     </span>
                 </div>
@@ -281,9 +304,9 @@
                 </span>
             </td>
             <td class="text-center">
-                <button pButton type="button" icon="pi pi-eye"
-                    class="p-button-rounded p-button-text p-button-sm" pTooltip="Ver detalles del movimiento"
-                    tooltipPosition="top" (click)="$event.stopPropagation(); verDocumento(movimiento)"></button>
+                <button pButton type="button" icon="pi pi-eye" class="p-button-rounded p-button-text p-button-sm"
+                    pTooltip="Ver detalles del movimiento" tooltipPosition="top"
+                    (click)="$event.stopPropagation(); verDocumento(movimiento)"></button>
             </td>
         </tr>
     </ng-template>
@@ -292,7 +315,8 @@
             <td colspan="10" class="text-center">
                 <div class="p-4">
                     <i class="pi pi-info-circle" style="font-size: 2rem"></i>
-                    <p class="mt-2">No se encontraron movimientos con los filtros seleccionados. Ajusta los filtros o el rango de fechas para ver resultados.</p>
+                    <p class="mt-2">No se encontraron movimientos con los filtros seleccionados. Ajusta los filtros o el
+                        rango de fechas para ver resultados.</p>
                 </div>
             </td>
         </tr>

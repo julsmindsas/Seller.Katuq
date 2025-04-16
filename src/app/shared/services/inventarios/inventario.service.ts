@@ -142,7 +142,7 @@ export class InventarioService {
   }
 
   getProductos(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/productos`);
+    return this.http.get(`${this.apiUrl}/productos/all`);
   }
 
   getMovimientoDetalle(id: string): Observable<any> {
