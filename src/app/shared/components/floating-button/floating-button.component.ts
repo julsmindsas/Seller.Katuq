@@ -106,6 +106,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
     // Inicializar herramientas disponibles
     this.initializeTools();
+
   }
 
   ngOnInit() {
@@ -128,6 +129,12 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
         console.error("Error parsing saved assistant state:", e);
       }
     }
+
+    const user: any = localStorage.getItem('user');
+    if (user.company) {
+      this.isLoggedIn = true;
+    }
+
   }
 
   // Detectar si es un dispositivo móvil

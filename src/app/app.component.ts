@@ -30,7 +30,6 @@ export class AppComponent implements OnInit {
   timedOut = false;
   lastPing?: Date;
   UserLogged: any;
-  isLoggedIn = false;
 
   // For Progressbar
   loaders = this.loader.progress$.pipe(
@@ -163,10 +162,6 @@ export class AppComponent implements OnInit {
     this.UserLogged = JSON.parse(localStorage.getItem('user')!);
 
     const tema = this.UserLogged?.tema;
-
-    if (tema) {
-      this.isLoggedIn = true;
-    }
 
     this.layout.config.settings.layout_version = tema ? 'dark-only' : 'light';
 

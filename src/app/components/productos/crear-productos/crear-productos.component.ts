@@ -498,8 +498,6 @@ export class CrearProductosComponent implements OnInit, OnChanges {
       },
     });
 
-    debugger;
-
     this.service.getAdiciones().subscribe({
       next(value: any) {
         if ((value as any[]).length > 0) {
