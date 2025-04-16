@@ -171,11 +171,6 @@ export class NavService implements OnDestroy {
 			headTitle1: 'Producción'
 		},
 		{
-			title: 'Plan de Produccion', icon: 'archive', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'produccion/dashboard', title: 'Lista', type: 'link' }
-			],
-		},
-		{
 			title: 'Inventario', icon: 'package', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
 				{ path: 'productos', title: 'Productos', type: 'link' },
 				{ path: 'categorias', title: 'Categorías', type: 'link' },
@@ -187,6 +182,11 @@ export class NavService implements OnDestroy {
 				{ path: 'inventario/recepcion-mercancia', title: 'Recepción', type: 'link'},
 				{ path: 'inventario/traslados', title: 'Traslados', type: 'link'}
 			]
+		},
+		{
+			title: 'Plan de Produccion', icon: 'archive', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+				{ path: 'produccion/dashboard', title: 'Lista', type: 'link' }
+			],
 		},
 		{
 			headTitle1: 'Logística'

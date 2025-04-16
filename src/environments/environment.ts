@@ -18,11 +18,11 @@ export const environment = {
   urlPermitidas:
     "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
   // urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
-  urlApi: "http://localhost:3300", // API Local,
+  // urlApi: "http://localhost:3300", // API Local,
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app',
   // urlApi: "http://localhost:3300", // API Local,
   //   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app',
-  //  urlApi: "https://api.katuq.com", // API AWS
+   urlApi: "https://api.katuq.com", // API AWS
   wompi: {
     prod_intrity: "test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD",
     public_key_test: "pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy",

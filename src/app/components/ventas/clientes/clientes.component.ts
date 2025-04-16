@@ -88,12 +88,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   allBillingZone: any;
   zona_cobro: any;
   valor_zona_cobro: any;
+  
+
   constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
 
   }
-  public irAlListado() {
-    this.router.navigateByUrl('/ventas/clienteslista');
-  }
+
   ngAfterViewInit(): void {
     if (this.isEdit === null || this.isEdit === undefined || this.isEdit === false) {
       const isEditFromStore = this.dataStore.get<boolean>('isEdit');

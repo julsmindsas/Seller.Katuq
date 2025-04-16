@@ -27,14 +27,22 @@ body {
     z-index: 90000 !important;
 }
 
+// $primary-color: #459BD1;
+// $secondary-color: #4555D1;
+// $tertiary-color: #45D1C0;
+
 :root {
-    --primary-color: #990aff;
-    --primary-light-color: #518298;
+    --primary-color: #459BD1; //#00a5d2; //#a554df;//#ff5699;
+    --primary-light-color: rgba(--primary-color, 0.2);
     --primary-dark-color: #002c3f;
 
-    --secondary-color: #00fbce;
-    --secondary-light-color: #5dc8d3;
+    --secondary-color: #4555D1; //#00a5d2;
+    --secondary-light-color: rgba(--secondary-color, 0.2);
     --secondary-dark-color: #006973;
+
+    --tertiary-color: #00a5d2;
+    --tertiary-light-color: rgba(--tertiary-color, 0.2);
+    --tertiary-dark-color: #614c00;
 
     --white-color: #ffffff;
     --grey-color: #f6f6f6;
@@ -53,8 +61,8 @@ body {
     --main-linear-gradient: linear-gradient(45deg, rgba(32, 85, 106, 1) 22%, rgba(81, 130, 152, 1) 68%);
 
 
-    --theme-default: #7366FF;
-    --theme-secondary: #838383;
+    --theme-default: #ff5699; //#7366FF;
+    --theme-secondary: #00a5d2; //#838383;
     --light-background: rgba(242, 243, 247, .7);
     --body-font-color: #2F2F3B;
     --chart-border: #ECF3FA;
@@ -284,4 +292,3 @@ body {
         height: calc(100% - 70px);
     }
 }
-

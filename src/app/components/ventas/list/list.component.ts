@@ -47,7 +47,8 @@ export class ListOrdersComponent implements OnInit {
   pedidoSeleccionado: Pedido;
   estadosPago = Object.values(EstadoPago);
   ciudadSeleccionada: any;
-  ESTADOPAGO: any[]
+  ESTADOPAGO: any[];
+  cargando = true;
 
   ESTADOPEDIDO = [
     { id: 1, nombre: 'Pendiente' },
@@ -125,8 +126,10 @@ export class ListOrdersComponent implements OnInit {
       error(err) {
         console.log(err);
       },
+
     })
 
+    this.cargando = false;
   }
 
   filtroGlobal(event: any) {

@@ -26,8 +26,18 @@ $theme-body-sub-title-color: rgba($theme-body-font-color, 0.7);
 $body-color: #f8f8f8;
 
 // Theme colors variables
-$primary-color: #a554df;
-$secondary-color: #3eb5d5;
+// $primary-color: #659A85;//#ff5699; //#a554df;
+// $secondary-color: #85659A; //#ed5555; //#3eb5d5;
+// $tertiary-color: #9A8565;
+$primary-color: #459BD1;
+$secondary-color: #4555D1;
+$tertiary-color: #00a5d2;
+
+$primary-light-color: rgba($primary-color, 0.2);
+$secondary-light-color: rgba($secondary-color, 0.2);
+$tertiary-light-color: rgba($tertiary-color, 0.2);
+
+
 $success-color: #51bb25;
 $info-color : #a927f9;
 
@@ -71,8 +81,8 @@ $linkedin: #0077B5;
 $light-body-bg-color: #fafdff;
 
 //fonts
-$font-rubik: Rubik;
-$font-roboto: Geometr415L; //Geometr415BlkBTBlack; //Roboto;
+$font-rubik: Georama; //Rubik;
+$font-roboto: Georama; //Geometr415L; //Geometr415BlkBTBlack; //Roboto;
 $font-serif: sans-serif;
 $font-themify: themify;
 $font-awesome: FontAwesome;

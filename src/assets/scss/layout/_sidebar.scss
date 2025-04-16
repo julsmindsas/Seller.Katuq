@@ -72,7 +72,7 @@
   transform: rotateX(0deg);
   z-index: 1;
   background-color: $white;
-  color: $light-background;
+  color: $primary-color;
   font-size: 14px;
   opacity: 1;
   margin-top: -70px;
@@ -325,7 +325,7 @@
 
               button {
                 background-color: $transparent-color;
-                color: var(--theme-deafult);
+                color: var(--primary-color);
                 border: none;
 
                 &:focus {
@@ -363,7 +363,7 @@
                 transition: all 0.3s ease;
 
                 &:hover {
-                  stroke: var(--theme-deafult);
+                  stroke: var(--primary-color);
                   transition: all 0.3s ease;
                 }
               }
@@ -631,16 +631,16 @@
             &:hover {
               a {
                 span {
-                  color: var(--theme-deafult);
+                  color: var(--primary-color);
                   transition: color 0.3s ease;
                 }
 
                 svg {
-                  stroke: var(--theme-deafult);
+                  stroke: var(--primary-color);
                   transition: stroke 0.3s ease;
 
                   path {
-                    stroke: var(--theme-deafult);
+                    stroke: var(--primary-color);
                     transition: stroke 0.3s ease;
                   }
                 }
@@ -737,7 +737,7 @@
           }
 
           a {
-            color: var(--theme-deafult);
+            color: var(--primary-color);
 
             svg {
               width: 14px;
@@ -878,10 +878,10 @@
                   li {
                     a {
                       &.active {
-                        color: var(--theme-deafult);
+                        color: var(--primary-color);
 
                         &:after {
-                          background-color: var(--theme-deafult);
+                          background-color: var(--primary-color);
                         }
                       }
                     }
@@ -900,7 +900,7 @@
               &:hover {
                 >a {
                   >span {
-                    color: var(--theme-deafult);
+                    color: var(--primary-color);
                     transition: all 0.3s ease;
                   }
                 }
@@ -911,7 +911,7 @@
 
                   svg {
                     fill: rgba($primary-color, 0.10%);
-                    stroke: var(--theme-deafult);
+                    stroke: var(--primary-color);
                     transition: all 0.3s ease;
                   }
                 }
@@ -936,13 +936,13 @@
                 transition: all 0.3s ease;
 
                 &.active {
-                  //background-image: linear-gradient(90deg, var(--theme-deafult) 0%, #a26cf8 100%);
+                  //background-image: linear-gradient(90deg, var(--primary-color) 0%, #a26cf8 100%);
                   background-color: lighten($primary-color, 22%);
                   transition: all 0.3s ease;
 
                   svg,
                   span {
-                    color: var(--theme-deafult);
+                    color: var(--primary-color);
                     transition: all 0.3s ease;
                   }
                 }
@@ -995,12 +995,12 @@
                     }
 
                     &:hover {
-                      color: var(--theme-deafult);
+                      color: var(--primary-color);
                       letter-spacing: 1.5px;
                       transition: all 0.3s ease;
 
                       &:after {
-                        background-color: var(--theme-deafult);
+                        background-color: var(--primary-color);
                       }
                     }
                   }
@@ -1057,12 +1057,12 @@
                           transition: all 0.3s ease;
 
                           &:hover {
-                            color: var(--theme-deafult);
+                            color: var(--primary-color);
                             letter-spacing: 1.5px;
                             transition: all 0.3s ease;
 
                             &:after {
-                              color: var(--theme-deafult);
+                              color: var(--primary-color);
                               transition: all 0.3s ease;
                             }
                           }
@@ -1142,7 +1142,7 @@
     }
 
     h6 {
-      color: var(--theme-deafult);
+      color: var(--primary-color);
       margin-bottom: 5px;
       letter-spacing: 0.40px;
     }
@@ -1397,10 +1397,10 @@
                   li {
                     a {
                       &.active {
-                        color: var(--theme-deafult);
+                        color: var(--primary-color);
 
                         &:after {
-                          border-color: var(--theme-deafult);
+                          border-color: var(--primary-color);
                         }
                       }
                     }
@@ -1487,18 +1487,18 @@
                     &:hover {
                       svg {
                         fill: rgba($primary-color, 0.10%);
-                        stroke: var(--theme-deafult);
+                        stroke: var(--primary-color);
                         transition: all 0.3s ease;
                       }
 
                       span {
-                        color: var(--theme-deafult);
+                        color: var(--primary-color);
                         transition: all 0.3s ease;
                       }
 
                       .according-menu {
                         i {
-                          color: var(--theme-deafult);
+                          color: var(--primary-color);
                           transition: all 0.3s ease;
                         }
                       }
@@ -1566,11 +1566,11 @@
                   li {
                     &:hover {
                       >a {
-                        color: var(--theme-deafult);
+                        color: var(--primary-color);
                         transition: all 0.3s ease;
 
                         &:after {
-                          border-top: 2px solid var(--theme-deafult);
+                          border-top: 2px solid var(--primary-color);
                           transition: all 0.3s ease;
                         }
                       }
@@ -1647,11 +1647,11 @@
                     .link-section {
                       &:hover {
                         h5 {
-                          color: var(--theme-deafult) !important;
+                          color: var(--primary-color) !important;
                           transition: all 0.3s ease;
 
                           &:after {
-                            border-top: 2px solid var(--theme-deafult);
+                            border-top: 2px solid var(--primary-color);
                             transition: all 0.3s ease;
                           }
                         }
@@ -1704,7 +1704,7 @@
                               }
 
                               &.active {
-                                color: var(--theme-deafult);
+                                color: var(--primary-color);
                               }
                             }
                           }
@@ -1732,7 +1732,7 @@
                   display: block;
 
                   &.active {
-                    //background-image: linear-gradient(90deg,var(--theme-deafult) 0%,#a26cf8 100%);
+                    //background-image: linear-gradient(90deg,var(--primary-color) 0%,#a26cf8 100%);
                     transition: all 0.5s ease;
                     position: relative;
                     // box-shadow: 0px 0px 12px 0px rgba($primary-color, 0.35);
@@ -1741,18 +1741,18 @@
 
                     .according-menu {
                       i {
-                        color: var(--theme-deafult);
+                        color: var(--primary-color);
                       }
                     }
 
                     svg {
-                      color: var(--theme-deafult);
+                      color: var(--primary-color);
                       transition: all 0.3s ease;
-                      stroke: var(--theme-deafult);
+                      stroke: var(--primary-color);
                     }
 
                     span {
-                      color: var(--theme-deafult);
+                      color: var(--primary-color);
                       transition: all 0.3s ease;
                     }
                   }
@@ -1817,7 +1817,7 @@
     &.color-sidebar {
       .toggle-sidebar {
         svg {
-          stroke: var(--theme-deafult);
+          stroke: var(--primary-color);
         }
       }
 
@@ -1871,8 +1871,8 @@
                   background-color: rgba($primary-color, 0.2);
 
                   svg {
-                    color: var(--theme-deafult);
-                    stroke: var(--theme-deafult);
+                    color: var(--primary-color);
+                    stroke: var(--primary-color);
                   }
                 }
               }
@@ -1895,7 +1895,7 @@
                     }
 
                     &.active {
-                      color: var(--theme-deafult);
+                      color: var(--primary-color);
                     }
                   }
                 }
@@ -2511,7 +2511,7 @@
       }
 
       .page-title {
-        background: linear-gradient(26deg, var(--theme-deafult) 0%, #a26cf8 100%);
+        background: linear-gradient(26deg, var(--primary-color) 0%, #a26cf8 100%);
         padding-left: 30px;
         padding-right: 30px;
         margin-bottom: 30px;
@@ -2937,11 +2937,11 @@
       margin: 0 -15px;
 
       h5 {
-        color: var(--theme-deafult);
+        color: var(--primary-color);
       }
 
       svg {
-        stroke: var(--theme-deafult) !important;
+        stroke: var(--primary-color) !important;
       }
     }
   }
