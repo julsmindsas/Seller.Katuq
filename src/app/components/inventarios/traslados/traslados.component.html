@@ -1,121 +1,148 @@
-<div class="traslados-container">
-  <div class="traslados-header">
-    <h2>Traslado de Productos entre Bodegas</h2>
-    <p class="subtitle">Complete el formulario para realizar el traslado de productos entre bodegas</p>
-  </div>
-
-  <form [formGroup]="trasladoForm" (ngSubmit)="onSubmit()" class="traslado-form">
-    <div class="form-row">
-      <div class="form-group col-md-6">
-        <label for="bodegaOrigen" class="form-label">
-          <i class="fas fa-warehouse"></i> Bodega Origen
-        </label>
-        <select id="bodegaOrigen" formControlName="bodegaOrigenId" class="form-control"
-          [class.is-invalid]="trasladoForm.get('bodegaOrigenId')?.invalid && trasladoForm.get('bodegaOrigenId')?.touched">
-          <option value="">Seleccione una bodega</option>
-          <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
-            {{ bodega.nombre }}
-          </option>
-        </select>
-        <div class="invalid-feedback"
-          *ngIf="trasladoForm.get('bodegaOrigenId')?.invalid && trasladoForm.get('bodegaOrigenId')?.touched">
-          Por favor seleccione una bodega de origen
-        </div>
-      </div>
-
-      <div class="form-group col-md-6">
-        <label for="bodegaDestino" class="form-label">
-          <i class="fas fa-truck"></i> Bodega Destino
-        </label>
-        <select id="bodegaDestino" formControlName="bodegaDestinoId" class="form-control"
-          [class.is-invalid]="(trasladoForm.get('bodegaDestinoId')?.invalid && trasladoForm.get('bodegaDestinoId')?.touched) || errorMensaje">
-          <option value="">Seleccione una bodega</option>
-          <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
-            {{ bodega.nombre }}
-          </option>
-        </select>
-        <div class="invalid-feedback"
-          *ngIf="trasladoForm.get('bodegaDestinoId')?.invalid && trasladoForm.get('bodegaDestinoId')?.touched">
-          Por favor seleccione una bodega de destino
-        </div>
-        <div class="invalid-feedback" *ngIf="errorMensaje">
-          {{ errorMensaje }}
-        </div>
-      </div>
+<div class="dashboard-container">
+  <div class="traslados-card">
+    <div class="card-header">
+      <h2><i class="fas fa-exchange-alt"></i> Traslado de Productos</h2>
+      <div class="header-line"></div>
     </div>
 
-    <div class="form-group">
-      <label for="producto" class="form-label">
-        <i class="fas fa-box"></i> Producto
-      </label>
-      <ng-select [items]="productos" bindLabel="productoDoc.titulo" bindValue="producto.cd" [loading]="loading"
-        [disabled]="!trasladoForm.get('bodegaOrigenId')?.value" formControlName="productoId"
-        [class.is-invalid]="trasladoForm.get('productoId')?.invalid && trasladoForm.get('productoId')?.touched"
-        placeholder="Seleccione un producto" class="custom-select">
-        <ng-template ng-label-tmp let-item="item">
-          <div class="producto-seleccionado">
-            <img *ngIf="item.productoDoc?.imagenesPrincipales?.length > 0"
-              [src]="item.productoDoc.imagenesPrincipales[0].urls" class="producto-imagen"
-              [alt]="item.productoDoc.titulo">
-            <span>{{item.productoDoc?.titulo}}</span>
+    <form [formGroup]="trasladoForm" (ngSubmit)="onSubmit()" class="traslado-form">
+      <div class="bodegas-section">
+        <div class="bodega-card origen">
+          <div class="bodega-icon">
+            <i class="fas fa-warehouse"></i>
           </div>
-        </ng-template>
-        <ng-template ng-option-tmp let-item="item">
-          <div class="producto-opcion">
-            <img appImageOptimizer [quality]="0.3" [width]="300" [height]="300" [lazy]="true" loading="lazy" priority
-              *ngIf="item.productoDoc?.imagenesPrincipales?.length > 0"
-              [src]="item.productoDoc.imagenesPrincipales[0].urls" class="producto-imagen"
-              [alt]="item.productoDoc.titulo">
-            <div class="producto-info">
-              <span class="producto-titulo">{{item.productoDoc?.titulo}}</span>
-              <span class="producto-stock">Stock: {{item.cantidad}}</span>
+          <h3>Bodega Origen</h3>
+          <select id="bodegaOrigen" formControlName="bodegaOrigenId" class="form-control"
+            [class.is-invalid]="trasladoForm.get('bodegaOrigenId')?.invalid && trasladoForm.get('bodegaOrigenId')?.touched">
+            <option value="">Seleccione una bodega</option>
+            <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+              {{ bodega.nombre }}
+            </option>
+          </select>
+          <div class="invalid-feedback"
+            *ngIf="trasladoForm.get('bodegaOrigenId')?.invalid && trasladoForm.get('bodegaOrigenId')?.touched">
+            Seleccione bodega de origen
+          </div>
+        </div>
+
+        <div class="transfer-arrow">
+          <i class="fas fa-long-arrow-alt-right"></i>
+        </div>
+
+        <div class="bodega-card destino">
+          <div class="bodega-icon">
+            <i class="fas fa-dolly"></i>
+          </div>
+          <h3>Bodega Destino</h3>
+          <select id="bodegaDestino" formControlName="bodegaDestinoId" class="form-control"
+            [class.is-invalid]="(trasladoForm.get('bodegaDestinoId')?.invalid && trasladoForm.get('bodegaDestinoId')?.touched) || errorMensaje">
+            <option value="">Seleccione una bodega</option>
+            <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+              {{ bodega.nombre }}
+            </option>
+          </select>
+          <div class="invalid-feedback"
+            *ngIf="trasladoForm.get('bodegaDestinoId')?.invalid && trasladoForm.get('bodegaDestinoId')?.touched">
+            Seleccione bodega de destino
+          </div>
+          <div class="invalid-feedback" *ngIf="errorMensaje">
+            {{ errorMensaje }}
+          </div>
+        </div>
+      </div>
+
+      <div class="product-section">
+        <h3 class="section-title"><i class="fas fa-box"></i> Producto a Trasladar</h3>
+        <div class="ng-select-container">
+          <ng-select [items]="productos" bindLabel="producto.crearProducto.titulo" bindValue="producto.cd"
+            [loading]="loading" [disabled]="!trasladoForm.get('bodegaOrigenId')?.value" formControlName="productoId"
+            [class.is-invalid]="trasladoForm.get('productoId')?.invalid && trasladoForm.get('productoId')?.touched"
+            placeholder="Buscar producto..." class="product-select">
+            <ng-template ng-label-tmp let-item="item">
+              <div class="producto-seleccionado">
+                <div class="imagen-container">
+                  <img *ngIf="item.producto?.crearProducto?.imagenesPrincipales?.length > 0"
+                    [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls" class="producto-imagen"
+                    [alt]="item.producto?.crearProducto?.titulo">
+                  <div *ngIf="!item.producto?.crearProducto?.imagenesPrincipales?.length" class="no-image">
+                    <i class="fas fa-image"></i>
+                  </div>
+                </div>
+                <span>{{item.producto?.crearProducto?.titulo}}</span>
+              </div>
+            </ng-template>
+            <ng-template ng-option-tmp let-item="item">
+              <div class="producto-opcion">
+                <div class="imagen-container">
+                  <img appImageOptimizer [quality]="0.3" [width]="300" [height]="300" [lazy]="true" loading="lazy"
+                    priority *ngIf="item.producto?.crearProducto?.imagenesPrincipales?.length > 0"
+                    [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls" class="producto-imagen"
+                    [alt]="item.producto?.crearProducto?.titulo">
+                  <div *ngIf="!item.producto?.crearProducto?.imagenesPrincipales?.length" class="no-image">
+                    <i class="fas fa-image"></i>
+                  </div>
+                </div>
+                <div class="producto-info">
+                  <span class="producto-titulo">{{item.producto?.crearProducto?.titulo}}</span>
+                  <div class="stock-badge">
+                    <i class="fas fa-cubes"></i> {{item.cantidad}} disponibles
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-select>
+          <div class="invalid-feedback"
+            *ngIf="trasladoForm.get('productoId')?.invalid && trasladoForm.get('productoId')?.touched">
+            Seleccione un producto
+          </div>
+        </div>
+      </div>
+
+      <div class="quantity-section">
+        <div class="cantidad-container">
+          <h3 class="section-title"><i class="fas fa-hashtag"></i> Cantidad a Trasladar</h3>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+            <input type="number" id="cantidad" formControlName="cantidad" class="form-control"
+              [class.is-invalid]="(trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched) || trasladoForm.get('cantidad')?.errors?.stockInsuficiente"
+              min="1" [max]="stockDisponible" placeholder="Ingrese cantidad">
+            <span class="input-group-text">unidades</span>
+          </div>
+          <div class="invalid-feedback"
+            *ngIf="trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched && !trasladoForm.get('cantidad')?.errors?.stockInsuficiente">
+            La cantidad debe ser mayor a 0
+          </div>
+          <div class="invalid-feedback" *ngIf="trasladoForm.get('cantidad')?.errors?.stockInsuficiente">
+            La cantidad excede el stock disponible ({{stockDisponible}})
+          </div>
+          <div class="stock-info" *ngIf="stockDisponible > 0">
+            <div class="stock-meter">
+              <div class="meter-fill" [style.width.%]="(trasladoForm.get('cantidad')?.value / stockDisponible) * 100">
+              </div>
             </div>
+            <span><i class="fas fa-info-circle"></i> Stock disponible: {{stockDisponible}} unidades</span>
           </div>
-        </ng-template>
-      </ng-select>
-      <div class="invalid-feedback"
-        *ngIf="trasladoForm.get('productoId')?.invalid && trasladoForm.get('productoId')?.touched">
-        Por favor seleccione un producto
-      </div>
-    </div>
+        </div>
 
-    <div class="form-row">
-      <div class="form-group col-md-6">
-        <label for="cantidad" class="form-label">
-          <i class="fas fa-calculator"></i> Cantidad
-        </label>
-        <div class="input-group">
-          <input type="number" id="cantidad" formControlName="cantidad" class="form-control"
-            [class.is-invalid]="(trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched) || trasladoForm.get('cantidad')?.errors?.stockInsuficiente"
-            min="1" [max]="stockDisponible">
-          <span class="input-group-text">unidades</span>
-        </div>
-        <div class="invalid-feedback"
-          *ngIf="trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched">
-          La cantidad debe ser mayor a 0
-        </div>
-        <div class="invalid-feedback" *ngIf="trasladoForm.get('cantidad')?.errors?.stockInsuficiente">
-          La cantidad no puede ser mayor al stock disponible ({{stockDisponible}})
-        </div>
-        <div class="stock-info" *ngIf="stockDisponible > 0">
-          <i class="fas fa-info-circle"></i> Stock disponible: {{stockDisponible}} unidades
+        <div class="observaciones-container">
+          <h3 class="section-title"><i class="fas fa-comment-alt"></i> Observaciones</h3>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-comment-alt"></i></span>
+            <textarea id="observaciones" formControlName="observaciones" class="form-control" rows="2"
+              placeholder="Detalles adicionales del traslado (opcional)"></textarea>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="form-group">
-      <label for="observaciones" class="form-label">
-        <i class="fas fa-comment"></i> Observaciones
-      </label>
-      <textarea id="observaciones" formControlName="observaciones" class="form-control" rows="3"
-        placeholder="Ingrese cualquier observación relevante sobre el traslado"></textarea>
-    </div>
-
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary" [disabled]="!trasladoForm.valid || loading || errorMensaje">
-        <i class="fas fa-exchange-alt"></i>
-        {{ loading ? 'Procesando...' : 'Realizar Traslado' }}
-      </button>
-    </div>
-  </form>
+      <div class="submit-section">
+        <button type="button" class="btn btn-outline-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="!trasladoForm.valid || loading || errorMensaje">
+          <i class="fas fa-exchange-alt"></i>
+          {{ loading ? 'Procesando...' : 'Realizar Traslado' }}
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
