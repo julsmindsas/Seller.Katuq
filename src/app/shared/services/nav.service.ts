@@ -100,7 +100,7 @@ export class NavService implements OnDestroy {
 	refrescarCart() {
 		this.cartSingleton.refreshCart().subscribe({
 			next: (products: any[]) => {
-				console.log('products', products);
+				// console.log('products', products);
 			}
 		})
 	}
