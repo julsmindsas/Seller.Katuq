@@ -100,3 +100,7 @@ firebase-debug.log
 # Cache files
 *.cache
 .firebase/hosting.ZGlzdC9jdWJh.cache
+
+# LOS ENVIROMENTS
+src/environments/environment.ts
+src/environments/environment.prod.ts
