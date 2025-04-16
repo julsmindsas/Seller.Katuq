@@ -24,8 +24,6 @@ export class ListaComponent implements OnInit {
   constructor(private router: Router, private service: MaestroService) {
     this.cargando = true;
 
-debugger;
-
     this.service.getAdiciones().subscribe((r: any) => {
       this.cargando = false;
       this.temp = [...r];
@@ -108,8 +106,6 @@ debugger;
         text:'se elimino con exito la adicion'+''+row._id,
         icon: 'success'
        })
-
-debugger;
 
        this.service.getAdiciones().subscribe((r: any) => {
         this.cargando = false;

@@ -239,8 +239,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
             this.formulario.controls['estado'].setValue(res.estado);
 
-            debugger;
-
             this.activarNotas = false;
             this.verNotas();
 

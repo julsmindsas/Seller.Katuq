@@ -106,8 +106,6 @@ export class POSPedidosUtilService {
 
         this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
 
-debugger;
-
         forkJoin([
             this.maestroService.getFormaEntrega(),
             this.maestroService.getTiempoEntrega(),

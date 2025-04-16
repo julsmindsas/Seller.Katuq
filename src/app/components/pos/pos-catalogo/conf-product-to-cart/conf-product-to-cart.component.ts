@@ -335,8 +335,6 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
 
   getAdiciones() {
 
-debugger;
-
     this.maestroService.getAdiciones().subscribe((r: any) => {
       // this.cargando = false;
       this.temp = [...r];

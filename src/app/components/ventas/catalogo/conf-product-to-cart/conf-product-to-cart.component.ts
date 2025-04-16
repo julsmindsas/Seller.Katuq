@@ -376,8 +376,6 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
   getAdiciones() {
 
-    debugger;
-
     this.maestroService.getAdiciones().subscribe((r: any) => {
       // this.cargando = false;
       this.temp = [...r];
