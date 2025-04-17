@@ -1644,4 +1644,236 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
     if (progress >= 20) return 'warning';
     return 'danger';
   }
+
+  // Método para calcular métricas de rendimiento
+  calculatePerformanceMetrics() {
+    const metrics = {
+      totalProspects: this.prospects.length,
+      newProspects: this.prospects.filter(p => p.status === 'new').length,
+      contactedProspects: this.prospects.filter(p => p.status === 'contacted').length,
+      meetingScheduled: this.prospects.filter(p => p.status === 'meeting-scheduled').length,
+      demoCompleted: this.prospects.filter(p => p.status === 'demo-completed').length,
+      startedProspects: this.prospects.filter(p => p.status === 'started').length,
+      closedProspects: this.prospects.filter(p => p.status === 'closed').length,
+      conversionRate: 0,
+      averageResponseTime: 0,
+      pendingTasks: 0
+    };
+
+    // Calcular tasa de conversión
+    if (metrics.totalProspects > 0) {
+      metrics.conversionRate = (metrics.closedProspects / metrics.totalProspects) * 100;
+    }
+
+    // Calcular tiempo promedio de respuesta
+    const responseTimes: number[] = [];
+    this.prospects.forEach(prospect => {
+      if (prospect.timeline && prospect.timeline.length > 1) {
+        const firstContact = new Date(prospect.timeline[0].date);
+        const lastContact = new Date(prospect.timeline[prospect.timeline.length - 1].date);
+        responseTimes.push((lastContact.getTime() - firstContact.getTime()) / (1000 * 60 * 60 * 24));
+      }
+    });
+
+    if (responseTimes.length > 0) {
+      metrics.averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+    }
+
+    // Calcular tareas pendientes
+    metrics.pendingTasks = this.pendingTasks.filter(task => !task.completed).length;
+
+    return metrics;
+  }
+
+  // Método para generar reporte de prospectos
+  generateProspectReport(format: 'pdf' | 'excel' | 'csv' = 'pdf') {
+    const reportData = {
+      title: 'Reporte de Prospectos',
+      date: new Date().toLocaleDateString(),
+      metrics: this.calculatePerformanceMetrics(),
+      prospects: this.prospects.map(prospect => ({
+        ...prospect,
+        timelineCount: prospect.timeline?.length || 0,
+        lastContact: prospect.timeline?.length ? 
+          new Date(prospect.timeline[prospect.timeline.length - 1].date).toLocaleDateString() : 
+          'Sin contacto'
+      }))
+    };
+
+    if (format === 'pdf') {
+      // Lógica para generar PDF
+      this.generatePDFReport(reportData);
+    } else if (format === 'excel') {
+      // Lógica para generar Excel
+      this.generateExcelReport(reportData);
+    } else {
+      // Lógica para generar CSV
+      this.exportToCSV();
+    }
+  }
+
+  // Método para generar reporte PDF
+  private generatePDFReport(data: any) {
+    // Implementación de generación de PDF
+    console.log('Generando reporte PDF:', data);
+    // Aquí iría la lógica real de generación de PDF
+  }
+
+  // Método para generar reporte Excel
+  private generateExcelReport(data: any) {
+    // Implementación de generación de Excel
+    console.log('Generando reporte Excel:', data);
+    // Aquí iría la lógica real de generación de Excel
+  }
+
+  // Método para programar seguimiento automático
+  scheduleFollowUp(days: number) {
+    if (!this.selectedProspect) return;
+
+    const followUpDate = new Date();
+    followUpDate.setDate(followUpDate.getDate() + days);
+
+    const task = {
+      id: `followup-${Date.now()}`,
+      type: 'follow-up',
+      dueDate: followUpDate,
+      description: `Seguimiento automático programado para ${followUpDate.toLocaleDateString()}`,
+      priority: 'Alta',
+      status: 'pending'
+    };
+
+    if (this.useMockData) {
+      this.pendingTasks.push(task);
+      this.showNotification('Seguimiento Programado', 'El seguimiento ha sido programado correctamente', 'success');
+    } else {
+      this.prospectosService.scheduleTask(this.selectedProspect.id, task).subscribe({
+        next: () => {
+          this.loadPendingTasks();
+          this.showNotification('Seguimiento Programado', 'El seguimiento ha sido programado correctamente', 'success');
+        },
+        error: (error) => {
+          console.error('Error al programar seguimiento:', error);
+          this.showNotification('Error', 'No se pudo programar el seguimiento', 'error');
+        }
+      });
+    }
+  }
+
+  // Método para enviar recordatorio
+  sendReminder() {
+    if (!this.selectedProspect) return;
+
+    const task = {
+      id: `reminder-${Date.now()}`,
+      type: 'reminder',
+      dueDate: new Date(),
+      description: `Recordatorio: Tienes un seguimiento pendiente con ${this.selectedProspect.companyName}`,
+      priority: 'Alta',
+      status: 'pending'
+    };
+
+    if (this.useMockData) {
+      this.pendingTasks.push(task);
+      this.showNotification('Recordatorio Enviado', 'El recordatorio ha sido enviado correctamente', 'success');
+    } else {
+      this.prospectosService.scheduleTask(this.selectedProspect.id, task).subscribe({
+        next: () => {
+          this.loadPendingTasks();
+          this.showNotification('Recordatorio Enviado', 'El recordatorio ha sido enviado correctamente', 'success');
+        },
+        error: (error) => {
+          console.error('Error al enviar recordatorio:', error);
+          this.showNotification('Error', 'No se pudo enviar el recordatorio', 'error');
+        }
+      });
+    }
+  }
+
+  // Método para calcular probabilidad de conversión
+  calculateConversionProbability(): number {
+    if (!this.selectedProspect) return 0;
+
+    let probability = 0;
+
+    // Factores que influyen en la probabilidad
+    const factors = {
+      status: {
+        'new': 0.1,
+        'contacted': 0.3,
+        'meeting-scheduled': 0.5,
+        'demo-completed': 0.7,
+        'started': 0.9,
+        'closed': 1.0
+      },
+      timeline: 0.1, // Por cada interacción
+      documents: 0.15, // Por documento
+      responseTime: 0.05 // Por respuesta rápida
+    };
+
+    // Calcular probabilidad base por estado
+    probability += factors.status[this.selectedProspect.status] || 0;
+
+    // Ajustar por interacciones en timeline
+    const timelineCount = this.selectedProspect.timeline?.length || 0;
+    probability += Math.min(timelineCount * factors.timeline, 0.3);
+
+    // Ajustar por documentos
+    const documentCount = this.documentsList.length;
+    probability += Math.min(documentCount * factors.documents, 0.3);
+
+    // Ajustar por tiempo de respuesta
+    if (this.selectedProspect.timeline && this.selectedProspect.timeline.length > 1) {
+      const firstContact = new Date(this.selectedProspect.timeline[0].date);
+      const lastContact = new Date(this.selectedProspect.timeline[this.selectedProspect.timeline.length - 1].date);
+      const daysBetween = (lastContact.getTime() - firstContact.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysBetween < 7) {
+        probability += factors.responseTime;
+      }
+    }
+
+    // Asegurar que la probabilidad no exceda 1 (100%)
+    return Math.min(probability, 1) * 100;
+  }
+
+  // Método para obtener sugerencias de acciones
+  getActionSuggestions(): string[] {
+    if (!this.selectedProspect) return [];
+
+    const suggestions: string[] = [];
+    const status = this.selectedProspect.status;
+
+    switch (status) {
+      case 'new':
+        suggestions.push('Realizar primer contacto');
+        suggestions.push('Enviar información básica');
+        break;
+      case 'contacted':
+        suggestions.push('Programar reunión de demostración');
+        suggestions.push('Enviar propuesta inicial');
+        break;
+      case 'meeting-scheduled':
+        suggestions.push('Preparar presentación');
+        suggestions.push('Enviar recordatorio de reunión');
+        break;
+      case 'demo-completed':
+        suggestions.push('Enviar cotización detallada');
+        suggestions.push('Seguimiento post-demo');
+        break;
+      case 'started':
+        suggestions.push('Programar capacitación');
+        suggestions.push('Establecer KPI iniciales');
+        break;
+    }
+
+    // Agregar sugerencias basadas en documentos faltantes
+    if (!this.documentsList.some(doc => doc.type === 'Propuesta')) {
+      suggestions.push('Preparar propuesta comercial');
+    }
+
+    if (!this.documentsList.some(doc => doc.type === 'Contrato')) {
+      suggestions.push('Preparar borrador de contrato');
+    }
+
+    return suggestions;
+  }
 }
