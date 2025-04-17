@@ -2,47 +2,42 @@
   <div class="card customer-card p-2">
     <!-- Cabecera -->
     <div class="card-header">
-      <!-- Usar Flexbox para alinear título y acciones -->
-      <div class="d-flex justify-content-between align-items-center flex-wrap header-container">
-        <!-- Título y Subtítulo -->
-        <div class="header-title-subtitle">
-          <div class="text-left mb-1">
-            <h2 class="fc-secondary fs-24 m-0 p-0 d-flex align-items-center">
-              <i *ngIf="isEdit" ngbTooltip="Regresar al listado"
-                style="font-size: 24px; cursor: pointer; margin-right: 10px;"
-                class="icofont icofont-arrow-left" [routerLink]="'/prospectos'">
-              </i>
-              Gestión de Prospectos
-            </h2>
-          </div>
-          <p class="text-muted mb-0">Gestiona y da seguimiento a tus prospectos web</p>
+      <div class="header-main">
+        <!-- Información del módulo -->
+        <div class="header-info">
+          <h2 class="header-title">Gestión de Prospectos</h2>
+          <p class="header-subtitle">Gestiona y da seguimiento a tus prospectos web</p>
         </div>
-
-        <!-- Acciones del Encabezado -->
-        <div class="header-actions">
-          <div class="search-box">
-            <div class="input-group">
-              <select class="form-select" style="max-width: 120px;">
+        
+        <!-- Controles y acciones -->
+        <div class="header-controls">
+          <!-- Buscador -->
+          <div class="search-container">
+            <div class="search-box">
+              <select class="form-select filter-select">
                 <option value="all" selected>Todos</option>
                 <option value="company">Empresa</option>
                 <option value="name">Nombre</option>
                 <option value="email">Email</option>
               </select>
-              <input #searchInput class="form-control" type="text"
-                placeholder="Buscar prospecto...">
+              <input #searchInput class="form-control search-input" type="text" placeholder="Buscar prospecto...">
               <button class="btn btn-primary search-btn" (click)="searchProspects()">
                 <i class="fa fa-search"></i>
               </button>
             </div>
           </div>
-          <button class="btn btn-info text-white action-btn d-flex align-items-center gap-2" (click)="loadProspects()" ngbTooltip="Refrescar Lista">
-            <i class="fa fa-sync-alt"></i>
-            <span class="d-none d-lg-inline">Refrescar</span>
-          </button>
-          <button class="btn btn-success action-btn d-flex align-items-center gap-2" (click)="createNewProspect()">
-            <i class="fa fa-plus"></i>
-            <span class="d-none d-lg-inline">Nuevo Prospecto</span>
-          </button>
+          
+          <!-- Botones de acción -->
+          <div class="action-buttons">
+            <button class="btn btn-info refresh-btn" (click)="loadProspects()" ngbTooltip="Refrescar Lista">
+              <i class="fa fa-sync-alt"></i>
+              <span>Refrescar</span>
+            </button>
+            <button class="btn btn-success create-btn" (click)="createNewProspect()">
+              <i class="fa fa-plus"></i>
+              <span>Nuevo Prospecto</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
