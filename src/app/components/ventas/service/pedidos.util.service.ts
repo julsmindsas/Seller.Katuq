@@ -176,9 +176,9 @@ export class PedidosUtilService {
         if (this.pedido && this.pedido.carrito) {
 
 
-            this.pedido.carrito.forEach(itemCarrito => {
+            this.pedido.carrito.forEach((itemCarrito: any) => {
                 if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-                    itemCarrito.producto.precio.preciosVolumen.map(x => {
+                    itemCarrito.producto.precio.preciosVolumen.map((x: any) => {
                         if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
                             totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * itemCarrito.cantidad;
                         } else {
@@ -212,7 +212,7 @@ export class PedidosUtilService {
     checkIVAPrice() {
         let totalPrecioIVA = 0;
 
-        this.pedido.carrito.forEach(itemCarrito => {
+        this.pedido.carrito?.forEach((itemCarrito: any) => {
             if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
                 itemCarrito.producto.precio.preciosVolumen.forEach(x => {
                     if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
