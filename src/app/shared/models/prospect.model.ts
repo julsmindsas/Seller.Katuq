@@ -11,6 +11,10 @@ export interface ProspectBasicInfo {
   website?: string;
   companyType: string;
   sector: string;
+  // Propiedades adicionales
+  leadSource?: string;
+  budget?: string;
+  interestedIn?: string;
 }
 
 export interface ProspectTimelineEvent {
@@ -19,6 +23,15 @@ export interface ProspectTimelineEvent {
   date: Date;
   description: string;
   agentNote: string;
+  // Campos adicionales para tareas
+  isTask?: boolean;
+  taskType?: string;
+  dueDate?: string | Date;
+  dueTime?: string;
+  reminder?: boolean;
+  completed?: boolean;
+  notified?: boolean;
+  overdueNotified?: boolean;
 }
 
 export interface Prospect {
@@ -29,6 +42,8 @@ export interface Prospect {
   contactInfo: ProspectContactInfo;
   basicInfo: ProspectBasicInfo;
   timeline: ProspectTimelineEvent[];
+  // Propiedades adicionales
+  priority?: string;
 }
 
 // Datos de ejemplo para la API
@@ -38,6 +53,7 @@ export const PROSPECT_JSON_EXAMPLE = {
     "companyName": "Celuespecia",
     "contactDate": "2023-02-12T00:00:00.000Z",
     "status": "new",
+    "priority": "Alta",
     "contactInfo": {
       "name": "Jeider Torres",
       "phone": "+573206100323",
@@ -49,7 +65,10 @@ export const PROSPECT_JSON_EXAMPLE = {
       "employeeCount": 10,
       "website": "celuespecial.com",
       "companyType": "Retail",
-      "sector": "Tecnología"
+      "sector": "Tecnología",
+      "leadSource": "Sitio Web",
+      "budget": "$5M - $10M",
+      "interestedIn": "Punto de Venta"
     },
     "timeline": [
       {
@@ -61,4 +80,4 @@ export const PROSPECT_JSON_EXAMPLE = {
       }
     ]
   }
-}; 
+};
