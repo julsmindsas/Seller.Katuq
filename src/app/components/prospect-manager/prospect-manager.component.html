@@ -1,4 +1,14 @@
 <div class="container-fluid px-0">
+  <!-- Indicador de carga -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="spinner-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="loading-text mt-2">Cargando prospectos...</p>
+    </div>
+  </div>
+
   <div class="card customer-card p-2">
     <!-- Cabecera -->
     <div class="card-header">
@@ -11,25 +21,61 @@
         
         <!-- Controles y acciones -->
         <div class="header-controls">
-          <!-- Buscador -->
+          <!-- Buscador mejorado -->
           <div class="search-container">
             <div class="search-box">
-              <select class="form-select filter-select">
-                <option value="all" selected>Todos</option>
-                <option value="company">Empresa</option>
-                <option value="name">Nombre</option>
-                <option value="email">Email</option>
-              </select>
-              <input #searchInput class="form-control search-input" type="text" placeholder="Buscar prospecto...">
-              <button class="btn btn-primary search-btn" (click)="searchProspects()">
-                <i class="fa fa-search"></i>
-              </button>
+              <form [formGroup]="searchForm" (ngSubmit)="searchProspects()">
+                <div class="input-group">
+                  <select class="form-select filter-select" formControlName="filterStatus">
+                    <option value="all">Todos</option>
+                    <option value="new">Nuevos</option>
+                    <option value="contacted">Contactados</option>
+                    <option value="meeting-scheduled">Con Cita</option>
+                    <option value="demo-completed">Demo Completa</option>
+                    <option value="started">Iniciados</option>
+                    <option value="closed">Cerrados</option>
+                  </select>
+                  <input #searchInput class="form-control search-input" type="text" 
+                         placeholder="Buscar prospecto..." formControlName="searchTerm">
+                  <button type="submit" class="btn btn-primary search-btn">
+                    <i class="fa fa-search"></i>
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
           
           <!-- Botones de acción -->
           <div class="action-buttons">
-            <button class="btn btn-info refresh-btn" (click)="loadProspects()" ngbTooltip="Refrescar Lista">
+            <div class="dropdown me-2">
+              <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                      data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa fa-sort"></i>
+                <span>Ordenar</span>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" (click)="changeSort('date-desc')">
+                  <i class="fa fa-calendar-alt me-2"></i>Más recientes primero
+                </a></li>
+                <li><a class="dropdown-item" (click)="changeSort('date-asc')">
+                  <i class="fa fa-calendar me-2"></i>Más antiguos primero
+                </a></li>
+                <li><a class="dropdown-item" (click)="changeSort('company-asc')">
+                  <i class="fa fa-sort-alpha-down me-2"></i>Empresa (A-Z)
+                </a></li>
+                <li><a class="dropdown-item" (click)="changeSort('company-desc')">
+                  <i class="fa fa-sort-alpha-up me-2"></i>Empresa (Z-A)
+                </a></li>
+                <li><a class="dropdown-item" (click)="changeSort('priority-high')">
+                  <i class="fa fa-flag me-2"></i>Prioridad (Alta → Baja)
+                </a></li>
+              </ul>
+            </div>
+            <button class="btn btn-outline-info me-2" (click)="exportToCSV()" ngbTooltip="Exportar datos">
+              <i class="fa fa-file-export"></i>
+              <span>Exportar</span>
+            </button>
+            <button class="btn btn-info refresh-btn me-2" (click)="loadProspects()" ngbTooltip="Refrescar Lista">
               <i class="fa fa-sync-alt"></i>
               <span>Refrescar</span>
             </button>
@@ -42,27 +88,142 @@
       </div>
     </div>
 
+    <!-- Panel de Estadísticas -->
+    <div class="card-body stats-panel p-3 mb-3" *ngIf="!loading">
+      <div class="row g-3">
+        <!-- Progreso general -->
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <h6 class="m-0">Progreso de conversión</h6>
+            </div>
+            <div class="stat-card-body">
+              <div class="progress-container">
+                <div class="progress" style="height: 10px;">
+                  <div class="progress-bar bg-success" role="progressbar" 
+                       [style.width]="getOverallProgress() + '%'" 
+                       [attr.aria-valuenow]="getOverallProgress()" 
+                       aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                  <small>{{ getOverallProgress() }}% completado</small>
+                  <small class="text-muted">{{ stats.total }} prospectos</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Distribución de estados -->
+        <div class="col-md-9">
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <h6 class="m-0">Distribución de prospectos</h6>
+            </div>
+            <div class="stat-card-body">
+              <div class="status-pills">
+                <button class="status-pill" 
+                        [ngClass]="{'active': selectedFilter === 'all'}" 
+                        (click)="filterByStatus('all')">
+                  <div class="pill-count">{{ stats.total }}</div>
+                  <div class="pill-label">Todos</div>
+                </button>
+                <button class="status-pill" 
+                        [ngClass]="{'active': selectedFilter === 'new', 'bg-primary': selectedFilter === 'new'}" 
+                        (click)="filterByStatus('new')">
+                  <div class="pill-count">{{ stats.new }}</div>
+                  <div class="pill-label">Nuevos</div>
+                </button>
+                <button class="status-pill" 
+                        [ngClass]="{'active': selectedFilter === 'contacted', 'bg-info': selectedFilter === 'contacted'}" 
+                        (click)="filterByStatus('contacted')">
+                  <div class="pill-count">{{ stats.contacted }}</div>
+                  <div class="pill-label">Contactados</div>
+                </button>
+                <button class="status-pill" 
+                        [ngClass]="{'active': selectedFilter === 'meeting-scheduled', 'bg-warning': selectedFilter === 'meeting-scheduled'}" 
+                        (click)="filterByStatus('meeting-scheduled')">
+                  <div class="pill-count">{{ stats.meetingScheduled }}</div>
+                  <div class="pill-label">Con Cita</div>
+                </button>
+                <button class="status-pill" 
+                        [ngClass]="{'active': selectedFilter === 'demo-completed', 'bg-success': selectedFilter === 'demo-completed'}" 
+                        (click)="filterByStatus('demo-completed')">
+                  <div class="pill-count">{{ stats.demoCompleted }}</div>
+                  <div class="pill-label">Demo</div>
+                </button>
+                <button class="status-pill" 
+                        [ngClass]="{'active': selectedFilter === 'started', 'bg-success': selectedFilter === 'started'}" 
+                        (click)="filterByStatus('started')">
+                  <div class="pill-count">{{ stats.started }}</div>
+                  <div class="pill-label">Iniciados</div>
+                </button>
+                <button class="status-pill" 
+                        [ngClass]="{'active': selectedFilter === 'closed', 'bg-secondary': selectedFilter === 'closed'}" 
+                        (click)="filterByStatus('closed')">
+                  <div class="pill-count">{{ stats.closed }}</div>
+                  <div class="pill-label">Cerrados</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Contenido Principal -->
     <div class="card-body p-0">
-      <div class="row g-0">
+      <!-- Mensaje de no resultados -->
+      <div *ngIf="!loading && filteredProspects.length === 0" class="empty-state p-5">
+        <div class="text-center">
+          <i class="fa fa-search fa-3x text-muted mb-3"></i>
+          <h4>No se encontraron prospectos</h4>
+          <p class="text-muted">No hay prospectos que coincidan con tu búsqueda.</p>
+          <button class="btn btn-primary" (click)="filterByStatus('all')">Ver todos los prospectos</button>
+        </div>
+      </div>
+
+      <div class="row g-0" *ngIf="filteredProspects.length > 0">
         <!-- Lista de Prospectos -->
         <div class="col-md-3 border-end">
           <div class="prospects-list">
-            <div class="prospect-item" *ngFor="let prospect of prospects" (click)="selectProspect(prospect)"
+            <div class="prospect-item" *ngFor="let prospect of filteredProspects" (click)="selectProspect(prospect)"
               [class.active]="selectedProspect?.id === prospect.id">
-              <div class="prospect-header mb-2">
+              <div class="d-flex justify-content-between align-items-start mb-2">
                 <div class="d-flex align-items-center">
-                  <img [src]="logoPath" alt="Katuq Logo" class="me-2" style="width: 24px; height: 24px;">
+                  <div class="status-indicator" [ngClass]="'bg-' + getStatusColor(prospect.status)"></div>
+                  <div class="prospect-logo me-2">
+                    <img [src]="logoPath" alt="Logo" class="img-fluid">
+                  </div>
                   <h4>{{ prospect.companyName }}</h4>
                 </div>
-                <p class="contact-date">{{ prospect.contactDate | date:'dd/MM/yyyy' }}</p>
+                <span class="priority-badge" [ngClass]="{
+                  'priority-high': prospect.priority === 'Alta',
+                  'priority-medium': prospect.priority === 'Media' || !prospect.priority,
+                  'priority-low': prospect.priority === 'Baja'
+                }">
+                  {{ prospect.priority || 'Media' }}
+                </span>
               </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-primary btn-sm flex-grow-1">
-                  Gestionar ahora
+              <p class="contact-info">
+                <i class="fa fa-user me-1"></i> {{ prospect.contactInfo?.name }}
+              </p>
+              <div class="d-flex align-items-center justify-content-between">
+                <p class="contact-date">
+                  <i class="fa fa-calendar-alt me-1"></i> {{ prospect.contactDate | date:'dd/MM/yyyy' }}
+                </p>
+                <span class="status-label" [ngClass]="'bg-' + getStatusColor(prospect.status)">
+                  {{ getStatusLabel(prospect.status) }}
+                </span>
+              </div>
+              <div class="d-flex gap-2 mt-2">
+                <button class="btn btn-primary btn-sm manage-btn flex-grow-1"
+                        (click)="selectProspect(prospect)">
+                  Gestionar
                 </button>
-                <button class="btn btn-success btn-sm" (click)="convertToClient(prospect)">
-                  <i class="fa fa-check"></i>
+                <button class="btn btn-success btn-sm" ngbTooltip="Convertir a cliente" 
+                        (click)="convertToClient(prospect); $event.stopPropagation()">
+                  <i class="fa fa-user-check"></i>
                 </button>
               </div>
             </div>
@@ -73,16 +234,62 @@
         <div class="col-md-9" *ngIf="selectedProspect || isNewProspect">
           <div class="prospect-details p-3">
             <div class="row">
-              <!-- Formulario -->
+              <!-- Formulario y Datos -->
               <div class="col-md-8">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                  <h3 class="m-0">{{ isNewProspect ? 'Nuevo Prospecto' : 'Información del Prospecto' }}</h3>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <h3 class="m-0 d-flex align-items-center">
+                      <div *ngIf="!isNewProspect" class="status-indicator me-2" 
+                           [ngClass]="'bg-' + getStatusColor(selectedProspect?.status)"></div>
+                      {{ isNewProspect ? 'Nuevo Prospecto' : 'Información del Prospecto' }}
+                      
+                      <span class="badge ms-2" *ngIf="!isNewProspect && selectedProspect?.priority"
+                            [ngClass]="{
+                              'bg-danger': selectedProspect.priority === 'Alta',
+                              'bg-warning': selectedProspect.priority === 'Media',
+                              'bg-info': selectedProspect.priority === 'Baja'
+                            }">
+                        {{ selectedProspect?.priority }}
+                      </span>
+                    </h3>
+                    <p class="text-muted mb-0" *ngIf="!isNewProspect">
+                      {{ getStatusLabel(selectedProspect?.status) }} · Última actualización: 
+                      {{ selectedProspect?.timeline?.length ? 
+                         (selectedProspect?.timeline[selectedProspect?.timeline.length-1].date | date:'dd/MM/yyyy HH:mm') : 
+                         (selectedProspect?.contactDate | date:'dd/MM/yyyy') }}
+                    </p>
+                  </div>
                   <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary" (click)="toggleEditMode()" *ngIf="!isNewProspect">
+                    <!-- Acciones rápidas para contactar -->
+                    <div class="btn-group me-2" *ngIf="!isNewProspect">
+                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="Enviar email" 
+                              (click)="contactProspect('email')">
+                        <i class="fa fa-envelope"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="Llamar" 
+                              (click)="contactProspect('phone')">
+                        <i class="fa fa-phone"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="WhatsApp" 
+                              (click)="contactProspect('whatsapp')">
+                        <i class="fa fa-whatsapp"></i>
+                      </button>
+                    </div>
+                    
+                    <!-- Programar tarea -->
+                    <button class="btn btn-sm btn-outline-warning me-2" *ngIf="!isNewProspect"
+                            (click)="scheduleTask(scheduleTaskModal)" ngbTooltip="Programar tarea">
+                      <i class="fa fa-calendar-plus"></i> Programar
+                    </button>
+                    
+                    <!-- Botón de editar/cancelar -->
+                    <button class="btn btn-sm" 
+                            [ngClass]="isEdit ? 'btn-outline-danger' : 'btn-outline-primary'" 
+                            (click)="toggleEditMode()" *ngIf="!isNewProspect">
                       <i class="fa" [ngClass]="isEdit ? 'fa-times' : 'fa-edit'"></i>
                       {{ isEdit ? 'Cancelar' : 'Editar' }}
                     </button>
-                    <button class="btn btn-outline-secondary" (click)="isNewProspect = false" *ngIf="isNewProspect">
+                    <button class="btn btn-sm btn-outline-secondary" (click)="isNewProspect = false" *ngIf="isNewProspect">
                       <i class="fa fa-times"></i> Cancelar
                     </button>
                   </div>
@@ -91,8 +298,11 @@
                 <form [formGroup]="prospectForm">
                   <!-- Información de Contacto -->
                   <div class="card mb-4">
-                    <div class="card-header bg-light">
-                      <h5 class="m-0">Información de Contacto</h5>
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                      <h5 class="m-0">
+                        <i class="fa fa-building me-2 text-primary"></i>
+                        Información de la Empresa
+                      </h5>
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -107,96 +317,45 @@
                           </div>
                         </div>
                         <div class="col-md-6 mb-3">
+                          <label class="form-label">Prioridad</label>
+                          <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                            <span class="badge" 
+                                  [ngClass]="{
+                                    'bg-danger': selectedProspect?.priority === 'Alta', 
+                                    'bg-warning': selectedProspect?.priority === 'Media' || !selectedProspect?.priority,
+                                    'bg-info': selectedProspect?.priority === 'Baja'
+                                  }">
+                              {{ selectedProspect?.priority || 'Media' }}
+                            </span>
+                          </div>
+                          <select *ngIf="isEdit || isNewProspect" class="form-select" formControlName="priority">
+                            <option *ngFor="let priority of priorityLevels" [value]="priority">{{ priority }}</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
                           <label class="form-label">Fecha de Contacto</label>
                           <div class="form-control-static">
-                            {{ selectedProspect?.contactDate | date:'dd/MM/yyyy' }}
+                            {{ (isNewProspect ? today : selectedProspect?.contactDate) | date:'dd/MM/yyyy' }}
+                          </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">Estado</label>
+                          <div class="form-control-static" *ngIf="!isNewProspect">
+                            <span class="badge" [ngClass]="'bg-' + getStatusColor(selectedProspect?.status)">
+                              {{ getStatusLabel(selectedProspect?.status) }}
+                            </span>
+                          </div>
+                          <div class="form-control-static" *ngIf="isNewProspect">
+                            <span class="badge bg-primary">Nuevo</span>
                           </div>
                         </div>
                       </div>
                       
-                      <div formGroupName="contactInfo">
-                        <div class="row">
-                          <div class="col-md-6 mb-3">
-                            <label class="form-label">Nombre del Contacto</label>
-                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.contactInfo?.name }}
-                            </div>
-                            <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="name">
-                            <div class="text-danger small" *ngIf="contactInfoForm.get('name')?.invalid && contactInfoForm.get('name')?.touched">
-                              Este campo es obligatorio
-                            </div>
-                          </div>
-                          <div class="col-md-6 mb-3">
-                            <label class="form-label">Teléfono</label>
-                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.contactInfo?.phone }}
-                            </div>
-                            <input *ngIf="isEdit || isNewProspect" type="tel" class="form-control" formControlName="phone">
-                            <div class="text-danger small" *ngIf="contactInfoForm.get('phone')?.invalid && contactInfoForm.get('phone')?.touched">
-                              Este campo es obligatorio
-                            </div>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-md-6 mb-3">
-                            <label class="form-label">WhatsApp</label>
-                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.contactInfo?.whatsapp }}
-                            </div>
-                            <input *ngIf="isEdit || isNewProspect" type="tel" class="form-control" formControlName="whatsapp">
-                          </div>
-                          <div class="col-md-6 mb-3">
-                            <label class="form-label">Correo Electrónico</label>
-                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.contactInfo?.email }}
-                            </div>
-                            <input *ngIf="isEdit || isNewProspect" type="email" class="form-control" formControlName="email">
-                            <div class="text-danger small" *ngIf="contactInfoForm.get('email')?.invalid && contactInfoForm.get('email')?.touched">
-                              Ingrese un correo electrónico válido
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Información Básica -->
-                  <div class="card mb-4">
-                    <div class="card-header bg-light">
-                      <h5 class="m-0">Información Básica</h5>
-                    </div>
-                    <div class="card-body">
                       <div formGroupName="basicInfo">
                         <div class="row">
-                          <div class="col-md-6 mb-3">
-                            <label class="form-label">Ciudad</label>
-                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.basicInfo?.city }}
-                            </div>
-                            <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="city">
-                            <div class="text-danger small" *ngIf="basicInfoForm.get('city')?.invalid && basicInfoForm.get('city')?.touched">
-                              Este campo es obligatorio
-                            </div>
-                          </div>
-                          <div class="col-md-6 mb-3">
-                            <label class="form-label">Número de Empleados</label>
-                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.basicInfo?.employeeCount }}
-                            </div>
-                            <input *ngIf="isEdit || isNewProspect" type="number" class="form-control" formControlName="employeeCount">
-                            <div class="text-danger small" *ngIf="basicInfoForm.get('employeeCount')?.invalid && basicInfoForm.get('employeeCount')?.touched">
-                              Este campo es obligatorio
-                            </div>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-md-6 mb-3">
-                            <label class="form-label">Website</label>
-                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.basicInfo?.website }}
-                            </div>
-                            <input *ngIf="isEdit || isNewProspect" type="url" class="form-control" formControlName="website">
-                          </div>
                           <div class="col-md-6 mb-3">
                             <label class="form-label">Tipo de Empresa</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
@@ -210,13 +369,12 @@
                               <option value="Manufactura">Manufactura</option>
                               <option value="Otro">Otro</option>
                             </select>
-                            <div class="text-danger small" *ngIf="basicInfoForm.get('companyType')?.invalid && basicInfoForm.get('companyType')?.touched">
+                            <div class="text-danger small" 
+                                 *ngIf="basicInfoForm.get('companyType')?.invalid && basicInfoForm.get('companyType')?.touched">
                               Este campo es obligatorio
                             </div>
                           </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-md-12 mb-3">
+                          <div class="col-md-6 mb-3">
                             <label class="form-label">Sector</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               {{ selectedProspect?.basicInfo?.sector }}
@@ -229,9 +387,125 @@
                               <option value="Servicios">Servicios</option>
                               <option value="Otro">Otro</option>
                             </select>
-                            <div class="text-danger small" *ngIf="basicInfoForm.get('sector')?.invalid && basicInfoForm.get('sector')?.touched">
+                            <div class="text-danger small" 
+                                 *ngIf="basicInfoForm.get('sector')?.invalid && basicInfoForm.get('sector')?.touched">
                               Este campo es obligatorio
                             </div>
+                          </div>
+                        </div>
+                        
+                        <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Ciudad</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.basicInfo?.city }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="city">
+                            <div class="text-danger small" 
+                                 *ngIf="basicInfoForm.get('city')?.invalid && basicInfoForm.get('city')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Número de Empleados</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.basicInfo?.employeeCount }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="number" class="form-control" formControlName="employeeCount">
+                            <div class="text-danger small" 
+                                 *ngIf="basicInfoForm.get('employeeCount')?.invalid && basicInfoForm.get('employeeCount')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Website</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              <a [href]="'https://' + selectedProspect?.basicInfo?.website" 
+                                 target="_blank" rel="noopener noreferrer">
+                                {{ selectedProspect?.basicInfo?.website }}
+                              </a>
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="website">
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Interesado en</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.basicInfo?.interestedIn || 'No especificado' }}
+                            </div>
+                            <select *ngIf="isEdit || isNewProspect" class="form-select" formControlName="interestedIn">
+                              <option value="">Seleccione...</option>
+                              <option value="Punto de Venta">Punto de Venta</option>
+                              <option value="Inventario">Inventario</option>
+                              <option value="E-commerce">E-commerce</option>
+                              <option value="Marketing">Marketing</option>
+                              <option value="Solución Completa">Solución Completa</option>
+                              <option value="Otro">Otro</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Información de Contacto de la persona -->
+                  <div class="card mb-4">
+                    <div class="card-header bg-light">
+                      <h5 class="m-0">
+                        <i class="fa fa-user me-2 text-primary"></i>
+                        Información de Contacto
+                      </h5>
+                    </div>
+                    <div class="card-body">
+                      <div formGroupName="contactInfo">
+                        <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre del Contacto</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.contactInfo?.name }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="name">
+                            <div class="text-danger small" 
+                                 *ngIf="contactInfoForm.get('name')?.invalid && contactInfoForm.get('name')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              <a [href]="'mailto:' + selectedProspect?.contactInfo?.email">
+                                {{ selectedProspect?.contactInfo?.email }}
+                              </a>
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="email" class="form-control" formControlName="email">
+                            <div class="text-danger small" 
+                                 *ngIf="contactInfoForm.get('email')?.invalid && contactInfoForm.get('email')?.touched">
+                              Ingrese un correo electrónico válido
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              <a [href]="'tel:' + selectedProspect?.contactInfo?.phone">
+                                {{ selectedProspect?.contactInfo?.phone }}
+                              </a>
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="tel" class="form-control" formControlName="phone">
+                            <div class="text-danger small" 
+                                 *ngIf="contactInfoForm.get('phone')?.invalid && contactInfoForm.get('phone')?.touched">
+                              Este campo es obligatorio
+                            </div>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label">WhatsApp</label>
+                            <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
+                              {{ selectedProspect?.contactInfo?.whatsapp || 'No especificado' }}
+                            </div>
+                            <input *ngIf="isEdit || isNewProspect" type="tel" class="form-control" formControlName="whatsapp">
                           </div>
                         </div>
                       </div>
@@ -239,18 +513,21 @@
                   </div>
 
                   <!-- Botones de Acción -->
-                  <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-secondary" (click)="isNewProspect = false" *ngIf="isNewProspect">
+                  <div class="d-flex justify-content-end gap-2" *ngIf="isEdit || isNewProspect">
+                    <button type="button" class="btn btn-secondary" 
+                            (click)="isNewProspect ? (isNewProspect = false) : toggleEditMode()">
                       Cancelar
                     </button>
-                    <button type="button" class="btn btn-primary" [disabled]="!prospectForm.valid" (click)="saveProspect()">
+                    <button type="button" class="btn btn-primary" 
+                            [disabled]="!prospectForm.valid" 
+                            (click)="saveProspect()">
                       {{ isNewProspect ? 'Crear Prospecto' : 'Guardar Cambios' }}
                     </button>
                   </div>
                 </form>
               </div>
 
-              <!-- Timeline -->
+              <!-- Timeline y Acciones -->
               <div class="col-md-4">
                 <div class="card timeline-card">
                   <div class="card-header d-flex justify-content-between align-items-center">
@@ -288,17 +565,21 @@
                       <h6 class="mb-2">Agregar nota</h6>
                       <div class="mb-3">
                         <label class="form-label form-label-sm">Descripción</label>
-                        <input type="text" class="form-control form-control-sm" placeholder="Descripción del evento o nota" 
-                          formControlName="description">
-                         <div class="text-danger small" *ngIf="noteForm.get('description')?.invalid && noteForm.get('description')?.touched">
+                        <input type="text" class="form-control form-control-sm" 
+                               placeholder="Descripción del evento o nota" 
+                               formControlName="description">
+                         <div class="text-danger small" 
+                              *ngIf="noteForm.get('description')?.invalid && noteForm.get('description')?.touched">
                           La descripción es obligatoria
                         </div>
                       </div>
                       <div class="mb-3">
                         <label class="form-label form-label-sm">Nota del Agente (Interna)</label>
-                        <textarea class="form-control form-control-sm" rows="2" placeholder="Nota interna (visible solo para ti)"
-                          formControlName="agentNote"></textarea>
-                         <div class="text-danger small" *ngIf="noteForm.get('agentNote')?.invalid && noteForm.get('agentNote')?.touched">
+                        <textarea class="form-control form-control-sm" rows="2" 
+                                  placeholder="Nota interna (visible solo para ti)"
+                                  formControlName="agentNote"></textarea>
+                         <div class="text-danger small" 
+                              *ngIf="noteForm.get('agentNote')?.invalid && noteForm.get('agentNote')?.touched">
                           La nota interna es obligatoria
                         </div>
                       </div>
@@ -314,25 +595,50 @@
                   <div class="card-body timeline-container">
                     <div class="timeline" *ngIf="selectedProspect?.timeline?.length">
                       <div class="timeline-item" *ngFor="let event of selectedProspect.timeline">
-                        <div class="timeline-icon" [ngClass]="'bg-' + getStatusColor(event.status)">
-                          <i class="fa" [ngClass]="getStatusIcon(event.status)"></i>
-                        </div>
+                        <!-- Item especial si es una tarea -->
                         <div class="timeline-date">
                           {{ event.date | date:'dd/MM/yyyy HH:mm' }}
                           <span class="badge" [ngClass]="'bg-' + getStatusColor(event.status)">
                             {{ getStatusLabel(event.status) }}
                           </span>
                         </div>
+
                         <div class="timeline-content">
-                          <p class="description">{{ event.description }}</p>
-                          <p class="agent-note" *ngIf="event.agentNote">
-                            <strong>Nota del agente:</strong> {{ event.agentNote }}
+                          <div class="d-flex align-items-center">
+                            <div class="timeline-icon" [ngClass]="'bg-' + getStatusColor(event.status)">
+                              <i class="fa" [ngClass]="event.isTask ? 'fa-calendar-check' : getStatusIcon(event.status)"></i>
+                            </div>
+                            <p class="description mb-1">{{ event.description }}</p>
+                          </div>
+                          
+                          <!-- Detalles específicos de tareas -->
+                          <div class="task-details ps-4 mb-2" *ngIf="event.isTask">
+                            <div class="d-flex align-items-center text-muted small">
+                              <i class="fa fa-calendar-alt me-1"></i>
+                              <span>Fecha: {{ event.dueDate }}</span>
+                              <i class="fa fa-clock ms-2 me-1"></i>
+                              <span>Hora: {{ event.dueTime }}</span>
+                              <i class="fa" 
+                                 [ngClass]="event.reminder ? 'fa-bell ms-2 me-1' : 'fa-bell-slash ms-2 me-1'"></i>
+                              <span>{{ event.reminder ? 'Con recordatorio' : 'Sin recordatorio' }}</span>
+                            </div>
+                          </div>
+                          
+                          <p class="agent-note ps-4 mb-0" *ngIf="event.agentNote">
+                            <small>
+                              <i class="fa fa-user-shield me-1 text-muted"></i>
+                              <strong>Nota del agente:</strong> {{ event.agentNote }}
+                            </small>
                           </p>
                         </div>
                       </div>
-                      
-                      <div class="timeline-empty" *ngIf="selectedProspect?.timeline?.length === 0">
-                        <p class="text-muted text-center mt-4">No hay actividades registradas</p>
+                    </div>
+                    
+                    <div class="timeline-empty" *ngIf="selectedProspect && (!selectedProspect.timeline || selectedProspect.timeline.length === 0)">
+                      <div class="text-center mt-4 mb-4">
+                        <i class="fa fa-clipboard text-muted fa-2x mb-3"></i>
+                        <p class="text-muted">No hay actividades registradas</p>
+                        <p class="text-muted small">Agrega una nota o actualiza el estado para comenzar el seguimiento.</p>
                       </div>
                     </div>
                   </div>
@@ -342,116 +648,95 @@
             </div>
           </div>
         </div>
+        
+        <!-- Mensaje de selección de prospecto -->
+        <div class="col-md-9 d-flex align-items-center justify-content-center" 
+             *ngIf="!selectedProspect && !isNewProspect && filteredProspects.length > 0">
+          <div class="text-center p-5">
+            <i class="fa fa-hand-pointer fa-3x text-muted mb-3"></i>
+            <h4>Selecciona un prospecto</h4>
+            <p class="text-muted">Selecciona un prospecto de la lista para ver sus detalles.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal de Detalle -->
-<ng-template #prospectDetail let-modal>
+<!-- Modal de Programar Tarea -->
+<ng-template #scheduleTaskModal let-modal>
   <div class="modal-header">
-    <h4 class="modal-title">Detalle del Prospecto</h4>
-    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
-  </div>
-  <div class="modal-body" *ngIf="selectedProspect">
-    <h5>{{ selectedProspect.companyName }}</h5>
-    <p>{{ selectedProspect.contactInfo.name }}</p>
-    <p>{{ selectedProspect.contactInfo.email }}</p>
-    <p>{{ selectedProspect.contactInfo.phone }}</p>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.close()">Cerrar</button>
-  </div>
-</ng-template>
-
-<!-- Modal de Nuevo Prospecto -->
-<ng-template #newProspectModal let-modal>
-  <div class="modal-header">
-    <h4 class="modal-title">Nuevo Prospecto</h4>
+    <h4 class="modal-title">Programar Tarea</h4>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
   <div class="modal-body">
-    <form [formGroup]="prospectForm" (ngSubmit)="saveProspect()">
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label class="form-label">Nombre de la Empresa</label>
-          <input type="text" class="form-control" formControlName="companyName" required>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Fecha de Contacto</label>
-          <input type="date" class="form-control" [value]="today | date:'yyyy-MM-dd'" disabled>
-        </div>
-      </div>
-
-      <h5 class="mt-4">Información de Contacto</h5>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label class="form-label">Nombre del Contacto</label>
-          <input type="text" class="form-control" formControlName="contactInfo.name" required>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Teléfono</label>
-          <input type="tel" class="form-control" formControlName="contactInfo.phone" required>
-        </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label class="form-label">WhatsApp</label>
-          <input type="tel" class="form-control" formControlName="contactInfo.whatsapp">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Correo Electrónico</label>
-          <input type="email" class="form-control" formControlName="contactInfo.email" required>
-        </div>
-      </div>
-
-      <h5 class="mt-4">Información Básica</h5>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label class="form-label">Ciudad</label>
-          <input type="text" class="form-control" formControlName="basicInfo.city" required>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Número de Empleados</label>
-          <input type="number" class="form-control" formControlName="basicInfo.employeeCount" required>
+    <form [formGroup]="taskForm">
+      <div class="mb-3">
+        <label class="form-label">Tipo de tarea</label>
+        <div class="d-flex gap-2">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" 
+                   id="taskTypeCall" value="call" formControlName="taskType">
+            <label class="form-check-label" for="taskTypeCall">
+              <i class="fa fa-phone me-1"></i> Llamada
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" 
+                   id="taskTypeMeeting" value="meeting" formControlName="taskType">
+            <label class="form-check-label" for="taskTypeMeeting">
+              <i class="fa fa-handshake me-1"></i> Reunión
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" 
+                   id="taskTypeDemo" value="demo" formControlName="taskType">
+            <label class="form-check-label" for="taskTypeDemo">
+              <i class="fa fa-laptop me-1"></i> Demo
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" 
+                   id="taskTypeOther" value="other" formControlName="taskType">
+            <label class="form-check-label" for="taskTypeOther">
+              <i class="fa fa-tasks me-1"></i> Otro
+            </label>
+          </div>
         </div>
       </div>
+      
       <div class="row mb-3">
         <div class="col-md-6">
-          <label class="form-label">Website</label>
-          <input type="url" class="form-control" formControlName="basicInfo.website">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-control" formControlName="dueDate">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Tipo de Empresa</label>
-          <select class="form-select" formControlName="basicInfo.companyType" required>
-            <option value="">Seleccione...</option>
-            <option value="Retail">Retail</option>
-            <option value="Restaurante">Restaurante</option>
-            <option value="Servicios">Servicios</option>
-            <option value="Manufactura">Manufactura</option>
-            <option value="Otro">Otro</option>
-          </select>
+          <label class="form-label">Hora</label>
+          <input type="time" class="form-control" formControlName="dueTime">
         </div>
       </div>
-      <div class="row mb-3">
-        <div class="col-md-12">
-          <label class="form-label">Sector</label>
-          <select class="form-select" formControlName="basicInfo.sector" required>
-            <option value="">Seleccione...</option>
-            <option value="Tecnología">Tecnología</option>
-            <option value="Alimentos">Alimentos</option>
-            <option value="Comercio">Comercio</option>
-            <option value="Servicios">Servicios</option>
-            <option value="Otro">Otro</option>
-          </select>
-        </div>
+      
+      <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-control" rows="3" formControlName="description"
+                  placeholder="Describe la tarea a realizar..."></textarea>
+      </div>
+      
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="taskReminder" formControlName="reminder">
+        <label class="form-check-label" for="taskReminder">
+          Recordatorio (recibirás una notificación)
+        </label>
       </div>
     </form>
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
-    <button type="button" class="btn btn-primary" [disabled]="!prospectForm.valid" (click)="saveProspect(); modal.close()">
-      Guardar Prospecto
+    <button type="button" class="btn btn-primary" 
+            [disabled]="!taskForm.valid" 
+            (click)="saveTask(); modal.close()">
+      <i class="fa fa-calendar-check me-1"></i>
+      Programar Tarea
     </button>
   </div>
 </ng-template>

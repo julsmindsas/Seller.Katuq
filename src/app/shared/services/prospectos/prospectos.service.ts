@@ -43,4 +43,58 @@ export class ProspectosService {
   convertToClient(id: string): Observable<Prospect> {
     return this.http.post<Prospect>(`${this.apiUrl}/${id}/convert-to-client`, {});
   }
-} 
+  
+  // Métodos para gestión de tareas
+  getPendingTasks(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tasks/pending`);
+  }
+  
+  scheduleTask(prospectId: string, taskData: any): Observable<Prospect> {
+    return this.http.post<Prospect>(`${this.apiUrl}/${prospectId}/tasks`, taskData);
+  }
+  
+  completeTask(taskId: string): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/tasks/${taskId}/complete`, {});
+  }
+  
+  checkDueTasks(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/tasks/due-soon`);
+  }
+  
+  // Métodos para métricas y estadísticas
+  getProspectStats(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/stats`);
+  }
+  
+  getPerformanceMetrics(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/metrics/performance`);
+  }
+  
+  // Métodos para filtrado avanzado
+  getFilteredProspects(filters: any): Observable<Prospect[]> {
+    return this.http.post<Prospect[]>(`${this.apiUrl}/filter`, filters);
+  }
+  
+  // Métodos para comunicación
+  sendEmail(prospectId: string, emailData: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${prospectId}/communication/email`, emailData);
+  }
+  
+  // Métodos para exportación
+  exportProspects(data: any, options: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/export`, { data, options });
+  }
+  
+  // Métodos para gestión de documentos
+  getProspectDocuments(prospectId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${prospectId}/documents`);
+  }
+  
+  uploadDocument(prospectId: string, documentData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${prospectId}/documents`, documentData);
+  }
+  
+  deleteDocument(prospectId: string, documentId: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${prospectId}/documents/${documentId}`);
+  }
+}
