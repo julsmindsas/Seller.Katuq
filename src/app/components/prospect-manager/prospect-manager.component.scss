@@ -104,50 +104,76 @@ $subtle-accent: rgba(248, 183, 57, 0.1); // Versión sutil del acento
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 16px;
+  gap: 1rem; // Aumentar espacio entre elementos
   width: 100%;
   
   .search-box {
     flex-grow: 1;
-    max-width: 450px;
+    max-width: 500px; // Un poco más ancho
     
     .input-group {
-      border-radius: 4px;
+      border-radius: 0.3rem; // Ligeramente más redondeado
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       
       .form-select, .form-control {
         border: 1px solid $border-color;
-        height: 38px;
+        height: 42px; // Aumentar altura
+        font-size: 0.95rem; // Aumentar tamaño de fuente
+      }
+      
+      .form-select {
+        max-width: 130px; // Ajustar ancho del select
       }
       
       .search-btn {
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
-        padding: 0 12px;
+        padding: 0 1rem; // Más padding horizontal
+        height: 42px; // Misma altura que inputs
+        font-size: 1rem; // Icono más grande
       }
     }
   }
   
-  .create-btn {
+  .action-btn { // Aplicar a ambos botones (Refrescar, Nuevo)
     white-space: nowrap;
-    height: 38px;
-    padding: 0 16px;
-    background-color: #2e9958;
-    border-color: #2e9958;
+    height: 42px; // Misma altura que inputs
+    padding: 0 1.2rem; // Más padding horizontal
     font-weight: 500;
+    font-size: 0.9rem; // Ajustar tamaño de fuente del texto
     
-    &:hover {
-      background-color: #257a47;
-      border-color: #257a47;
-      opacity: 1;
+    i {
+      font-size: 1rem; // Ajustar tamaño del icono
+    }
+    
+    &.btn-success {
+      background-color: #2e9958;
+      border-color: #2e9958;
+      
+      &:hover {
+        background-color: #257a47;
+        border-color: #257a47;
+        opacity: 1;
+      }
+    }
+    
+    &.btn-info {
+      background-color: #17a2b8;
+      border-color: #17a2b8;
+      
+      &:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+        opacity: 1;
+      }
     }
   }
 }
 
 @media (max-width: 1199px) {
   .header-actions {
-    margin-top: 10px;
+    margin-top: 1rem; // Más espacio en pantallas medianas
   }
 }
 
@@ -155,13 +181,14 @@ $subtle-accent: rgba(248, 183, 57, 0.1); // Versión sutil del acento
   .header-actions {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem; // Ajustar espacio en móvil
     
     .search-box {
       max-width: 100%;
-      margin-bottom: 10px;
+      margin-bottom: 0.5rem; // Menos margen inferior en móvil
     }
     
-    .create-btn {
+    .action-btn {
       justify-content: center;
     }
   }

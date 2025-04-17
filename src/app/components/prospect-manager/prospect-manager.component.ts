@@ -140,7 +140,7 @@ export class ProspectManagerComponent implements OnInit {
   loading: boolean = false;
   isEdit: boolean = false;
   isNewProspect: boolean = false;
-  useMockData: boolean = true;
+  useMockData: boolean = false;
   logoPath: string = 'assets/images/favicon.png';
   today: Date = new Date();
   updateStatusSection: boolean = false; // Nueva propiedad para mostrar/ocultar la sección de actualización de estado
@@ -355,41 +355,117 @@ export class ProspectManagerComponent implements OnInit {
     }
   }
 
+  // Método para alternar el modo edición
+  toggleEditMode() {
+    this.isEdit = !this.isEdit;
+    // Si se cancela la edición, recargar los datos del prospecto seleccionado
+    if (!this.isEdit && this.selectedProspect) {
+      this.selectProspect(this.selectedProspect);
+    }
+  }
+
   saveProspect() {
     if (this.prospectForm.valid) {
       const prospectData: Partial<Prospect> = {
         ...this.prospectForm.value,
         contactDate: new Date(),
-        status: 'new',
-        timeline: [{
+      };
+
+      if (this.isNewProspect) {
+        // Crear nuevo prospecto
+        prospectData.status = 'new';
+        prospectData.timeline = [{
           id: Date.now().toString(),
           status: 'new',
           date: new Date(),
           description: 'Nuevo prospecto creado',
           agentNote: 'Prospecto creado manualmente'
-        }]
-      };
+        }];
 
-      this.prospectosService.createProspecto(prospectData).subscribe({
-        next: (prospect) => {
-          this.prospects.push(prospect);
-          this.selectProspect(prospect);
+        if (this.useMockData) {
+          const newProspect: Prospect = {
+            id: (MOCK_PROSPECTS.length + 1).toString(),
+            ...prospectData as Prospect
+          };
+          this.prospects.push(newProspect);
+          this.selectedProspect = null;
           this.isNewProspect = false;
           this.isEdit = false;
+          this.prospectForm.reset();
           Swal.fire({
             title: '¡Éxito!',
             text: 'Prospecto creado correctamente',
             icon: 'success'
           });
-        },
-        error: (error) => {
-          Swal.fire({
-            title: 'Error',
-            text: 'No se pudo crear el prospecto',
-            icon: 'error'
-          });
+          return;
         }
-      });
+
+        this.prospectosService.createProspecto(prospectData).subscribe({
+          next: (prospect) => {
+            this.prospects.push(prospect);
+            this.selectedProspect = null;
+            this.isNewProspect = false;
+            this.isEdit = false;
+            this.prospectForm.reset();
+            Swal.fire({
+              title: '¡Éxito!',
+              text: 'Prospecto creado correctamente',
+              icon: 'success'
+            });
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'No se pudo crear el prospecto',
+              icon: 'error'
+            });
+          }
+        });
+      } else if (this.isEdit && this.selectedProspect) {
+        // Editar prospecto existente
+        const updatedProspect: Prospect = {
+          ...this.selectedProspect,
+          ...prospectData,
+        };
+
+        if (this.useMockData) {
+          const idx = this.prospects.findIndex(p => p.id === this.selectedProspect.id);
+          if (idx !== -1) {
+            this.prospects[idx] = updatedProspect;
+            this.selectedProspect = updatedProspect;
+          }
+          this.isEdit = false;
+          Swal.fire({
+            title: '¡Éxito!',
+            text: 'Prospecto actualizado correctamente',
+            icon: 'success'
+          });
+          return;
+        }
+
+        this.prospectosService.updateProspecto(this.selectedProspect.id, prospectData).subscribe({
+          next: (prospect) => {
+            const idx = this.prospects.findIndex(p => p.id === this.selectedProspect.id);
+            if (idx !== -1) {
+              this.prospects[idx] = prospect;
+              this.selectedProspect = prospect;
+            }
+            this.isEdit = false;
+            Swal.fire({
+              title: '¡Éxito!',
+              text: 'Prospecto actualizado correctamente',
+              icon: 'success'
+            });
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'No se pudo actualizar el prospecto',
+              icon: 'error'
+            });
+          }
+        });
+      }
     }
   }
 
