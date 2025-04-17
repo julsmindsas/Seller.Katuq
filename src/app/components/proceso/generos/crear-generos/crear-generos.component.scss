@@ -10,3 +10,87 @@ input[type="checkbox"] {
 input[type="checkbox"] {
     transform: scale(2);
   }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: right;
+  }
+
+input[type="checkbox"] {
+  width: 25%;
+}
+input[type="checkbox"] {
+    transform: scale(2);
+  }
+  .file-upload-label {
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* Estilos para el toggle switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #0d6efd;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Estilos para la carga de archivos */
+.file-upload-label {
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px dashed #ced4da;
+  background-color: #f8f9fa;
+}
+
+.file-upload-label:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.file-upload-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  max-width: 80%;
+  vertical-align: middle;
+}
