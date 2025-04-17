@@ -94,32 +94,41 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
   }
 
-  ngAfterViewInit(): void {
-    if (this.isEdit === null || this.isEdit === undefined || this.isEdit === false) {
-      const isEditFromStore = this.dataStore.get<boolean>('isEdit');
-      if (isEditFromStore !== null && isEditFromStore !== undefined) {
-        this.isEdit = isEditFromStore;
-        this.dataStore.remove('isEdit');
+  async ngAfterViewInit(): Promise<void> {
+    try {
+      // Verificar y cargar isEdit desde IndexedDB
+      if (this.isEdit === null || this.isEdit === undefined || this.isEdit === false) {
+        const isEditFromStore = await this.dataStore.get<boolean>('isEdit');
+        if (isEditFromStore !== null && isEditFromStore !== undefined) {
+          this.isEdit = isEditFromStore;
+          await this.dataStore.remove('isEdit'); // Limpiar después de usar
+        }
       }
-    }
-
-    if (!this.clienteEdit) {
-      const clienteFromStore = this.dataStore.get<any>('cliente');
-      if (clienteFromStore !== null && clienteFromStore !== undefined) {
-        this.clienteEdit = clienteFromStore;
-        this.dataStore.remove('cliente');
+  
+      // Verificar y cargar cliente desde IndexedDB
+      if (!this.clienteEdit) {
+        const clienteFromStore = await this.dataStore.get<any>('cliente');
+        if (clienteFromStore !== null && clienteFromStore !== undefined) {
+          this.clienteEdit = clienteFromStore;
+          await this.dataStore.remove('cliente'); // Limpiar después de usar
+        }
       }
-    }
-
-    if (this.isEdit) {
-      if (this.clienteEdit) {
+  
+      // Si estamos en modo edición y tenemos datos del cliente
+      if (this.isEdit && this.clienteEdit) {
         this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
-        // this.formulario.controls['documento'].disable();
         this.buscar();
-
       }
+    } catch (error) {
+      console.error('Error al cargar datos desde IndexedDB:', error);
+      // Opcional: Mostrar mensaje al usuario
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudieron cargar los datos de edición',
+        icon: 'error',
+        confirmButtonText: 'Ok'
+      });
     }
-
   }
 
   identificarDepto() {
