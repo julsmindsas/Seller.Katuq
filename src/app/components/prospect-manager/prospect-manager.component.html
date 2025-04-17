@@ -7,7 +7,7 @@
           <div class="text-left m-1">
             <h2 class="text-left fc-secondary fs-24 m-0 p-0">
               <i *ngIf="isEdit" ngbTooltip="Regresar al listado"
-                style="font-size: 24px; color: var(--primary-color); cursor: pointer;"
+                style="font-size: 24px; cursor: pointer;"
                 class="icofont icofont-arrow-left" [routerLink]="'/prospectos'">
               </i>
               Gestión de Prospectos
@@ -16,14 +16,10 @@
           <p class="text-muted mb-0">Gestiona y da seguimiento a tus prospectos web</p>
         </div>
         <div class="col-md-6">
-          <div class="d-flex justify-content-end align-items-center gap-3">
-            <button class="btn btn-success d-flex align-items-center gap-2 px-4 py-2" (click)="createNewProspect()">
-              <i class="fa fa-plus"></i> 
-              <span>Nuevo Prospecto</span>
-            </button>
+          <div class="header-actions">
             <div class="search-box">
               <div class="input-group">
-                <select class="form-select" style="max-width: 150px;">
+                <select class="form-select" style="max-width: 120px;">
                   <option value="all" selected>Todos</option>
                   <option value="company">Empresa</option>
                   <option value="name">Nombre</option>
@@ -31,11 +27,15 @@
                 </select>
                 <input #searchInput class="form-control" type="text"
                   placeholder="Buscar prospecto...">
-                <button class="btn btn-primary" (click)="searchProspects()">
+                <button class="btn btn-primary search-btn" (click)="searchProspects()">
                   <i class="fa fa-search"></i>
                 </button>
               </div>
             </div>
+            <button class="btn btn-success create-btn d-flex align-items-center gap-2" (click)="createNewProspect()">
+              <i class="fa fa-plus"></i> 
+              <span>Nuevo Prospecto</span>
+            </button>
           </div>
         </div>
       </div>
@@ -251,13 +251,63 @@
 
               <!-- Timeline -->
               <div class="col-md-4">
-                <div class="card" *ngIf="selectedProspect?.timeline?.length">
-                  <div class="card-header bg-light">
-                    <h5 class="m-0">Historial de Actividades</h5>
+                <div class="card timeline-card">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 d-flex align-items-center">
+                      <i class="fa fa-history me-2"></i>
+                      Historial de Actividades
+                    </h5>
+                    <div class="timeline-actions" *ngIf="selectedProspect && !isNewProspect">
+                      <button class="btn btn-sm btn-outline-primary" (click)="updateStatusSection = !updateStatusSection">
+                        <i class="fa fa-exchange-alt me-1"></i> Cambiar estado
+                      </button>
+                    </div>
                   </div>
-                  <div class="card-body">
-                    <div class="timeline">
+                  
+                  <!-- Sección para actualizar estado -->
+                  <div class="card-body border-bottom bg-light" *ngIf="updateStatusSection && selectedProspect">
+                    <div class="status-update-section">
+                      <h6 class="mb-2">Actualizar estado del prospecto</h6>
+                      <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button 
+                          *ngFor="let status of ['new', 'contacted', 'meeting-scheduled', 'demo-completed', 'started', 'closed']"
+                          class="btn btn-sm" 
+                          [ngClass]="'btn-outline-' + getStatusColor(status)"
+                          [disabled]="selectedProspect.status === status"
+                          (click)="updateStatus(status)">
+                          {{ getStatusLabel(status) }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Sección para agregar nota -->
+                  <div class="card-body border-bottom" *ngIf="selectedProspect && !isNewProspect">
+                    <form [formGroup]="noteForm" (ngSubmit)="addNote()">
+                      <h6 class="mb-2">Agregar nota</h6>
+                      <div class="mb-3">
+                        <input type="text" class="form-control form-control-sm" placeholder="Descripción" 
+                          formControlName="description">
+                      </div>
+                      <div class="mb-3">
+                        <textarea class="form-control form-control-sm" rows="2" placeholder="Nota del agente (visible solo para ti)"
+                          formControlName="agentNote"></textarea>
+                      </div>
+                      <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-sm btn-primary" [disabled]="!noteForm.valid">
+                          <i class="fa fa-plus-circle me-1"></i> Agregar nota
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <!-- Timeline -->
+                  <div class="card-body timeline-container">
+                    <div class="timeline" *ngIf="selectedProspect?.timeline?.length">
                       <div class="timeline-item" *ngFor="let event of selectedProspect.timeline">
+                        <div class="timeline-icon" [ngClass]="'bg-' + getStatusColor(event.status)">
+                          <i class="fa" [ngClass]="getStatusIcon(event.status)"></i>
+                        </div>
                         <div class="timeline-date">
                           {{ event.date | date:'dd/MM/yyyy HH:mm' }}
                           <span class="badge" [ngClass]="'bg-' + getStatusColor(event.status)">
@@ -271,10 +321,15 @@
                           </p>
                         </div>
                       </div>
+                      
+                      <div class="timeline-empty" *ngIf="selectedProspect?.timeline?.length === 0">
+                        <p class="text-muted text-center mt-4">No hay actividades registradas</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
         </div>

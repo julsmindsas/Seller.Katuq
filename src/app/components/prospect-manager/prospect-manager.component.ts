@@ -143,6 +143,7 @@ export class ProspectManagerComponent implements OnInit {
   useMockData: boolean = true;
   logoPath: string = 'assets/images/favicon.png';
   today: Date = new Date();
+  updateStatusSection: boolean = false; // Nueva propiedad para mostrar/ocultar la sección de actualización de estado
 
   constructor(
     private formBuilder: FormBuilder,
@@ -416,6 +417,18 @@ export class ProspectManagerComponent implements OnInit {
     return labels[status] || status;
   }
 
+  getStatusIcon(status: string): string {
+    const icons = {
+      'new': 'fa-star',
+      'contacted': 'fa-phone',
+      'meeting-scheduled': 'fa-calendar',
+      'demo-completed': 'fa-laptop',
+      'started': 'fa-check-circle',
+      'closed': 'fa-flag'
+    };
+    return icons[status] || 'fa-circle';
+  }
+
   openModal(content: any) {
     this.modalService.open(content, { size: 'lg' });
   }
@@ -461,4 +474,4 @@ export class ProspectManagerComponent implements OnInit {
       }
     });
   }
-} 
+}
