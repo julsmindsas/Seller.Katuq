@@ -67,11 +67,16 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <span [ngClass]="{
-                                        'badge bg-primary': bodega.tipo === 'Física',
-                                        'badge bg-info': bodega.tipo === 'Transaccional'
-                                    }">
-                                        {{ bodega.tipo }}
+                                    <!-- Para bodegas Físicas -->
+                                    <span *ngIf="bodega.tipo === 'Física'" 
+                                          class="badge rounded-pill bg-primary p-2">
+                                        <i class="fa fa-building me-1"></i> {{ bodega.tipo }}
+                                    </span>
+                                    
+                                    <!-- Para bodegas Transaccionales -->
+                                    <span *ngIf="bodega.tipo === 'Transaccional'" 
+                                          class="badge rounded-pill bg-info p-2">
+                                        <i class="fa fa-cloud me-1"></i> {{ bodega.tipo }}
                                     </span>
                                 </td>
                                 <td class="text-center">
