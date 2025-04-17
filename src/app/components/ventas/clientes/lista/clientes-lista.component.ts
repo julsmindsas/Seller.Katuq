@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { DataStoreService } from '../../../../shared/services/dataStoreService';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente-modal.component';
-
+import Swal from 'sweetalert2';
 
 
 interface Column {
@@ -131,12 +131,20 @@ export class ClientesListaComponent implements OnInit {
         this.clientes = temp;
     }
 
-    editarCliente(cliente: any): void {
+    async editarCliente(cliente: any): Promise<void> {
         console.log('Editar cliente', cliente);
         
-        this.storeService.set('cliente', cliente);
-        this.storeService.set('isEdit', true);
-        this.router.navigate(['/ventas/clientes']);
+        try {
+            // Guardamos los datos en IndexedDB
+            await this.storeService.set('cliente', cliente);
+            await this.storeService.set('isEdit', true);
+            
+            this.router.navigate(['/ventas/clientes']);
+        } catch (error) {
+            console.error('Error al guardar datos en IndexedDB:', error);
+            // Puedes mostrar un mensaje al usuario si lo deseas
+           
+        }
     }
 
     eliminarCliente(cliente: any): void {
