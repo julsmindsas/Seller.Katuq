@@ -1,0 +1,178 @@
+<div class="container-fluid">
+  <div class="row">
+    <!-- Tarjetas de Resumen -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card widget-1">
+        <div class="card-body">
+          <div class="widget-content">
+            <div class="widget-round secondary">
+              <div class="bg-round">
+                <svg class="svg-fill">
+                  <use href="assets/svg/icon-sprite.svg#users-alt"></use>
+                </svg>
+                <svg class="half-circle svg-fill">
+                  <use href="assets/svg/icon-sprite.svg#halfcircle"></use>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h4>{{ totalClientes }}</h4><span class="f-light">Total Clientes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+      <div class="card widget-1">
+        <div class="card-body">
+          <div class="widget-content">
+            <div class="widget-round success">
+              <div class="bg-round">
+                 <svg class="svg-fill">
+                  <use href="assets/svg/icon-sprite.svg#user-check"></use>
+                </svg>
+                <svg class="half-circle svg-fill">
+                  <use href="assets/svg/icon-sprite.svg#halfcircle"></use>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h4>{{ clientesActivosCount }}</h4><span class="f-light">Clientes Activos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+     <div class="col-xl-3 col-md-6">
+      <div class="card widget-1">
+        <div class="card-body">
+          <div class="widget-content">
+            <div class="widget-round danger">
+              <div class="bg-round">
+                 <svg class="svg-fill">
+                  <use href="assets/svg/icon-sprite.svg#user-minus"></use>
+                </svg>
+                <svg class="half-circle svg-fill">
+                  <use href="assets/svg/icon-sprite.svg#halfcircle"></use>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h4>{{ clientesBloqueadosCount }}</h4><span class="f-light">Clientes Bloqueados</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+     <div class="col-xl-3 col-md-6">
+      <div class="card widget-1">
+        <div class="card-body">
+          <div class="widget-content">
+            <div class="widget-round warning">
+              <div class="bg-round">
+                 <svg class="svg-fill">
+                  <use href="assets/svg/icon-sprite.svg#user-clock"></use>
+                </svg>
+                <svg class="half-circle svg-fill">
+                  <use href="assets/svg/icon-sprite.svg#halfcircle"></use>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h4>{{ clientesPendientesCount }}</h4><span class="f-light">Clientes Pendientes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Fin Tarjetas de Resumen -->
+
+    <!-- Tabla de Clientes -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Gestión de Clientes</h5>
+        </div>
+        <div class="card-body">
+          <!-- Filtros -->
+          <div class="row mb-3 gx-3">
+            <div class="col-md-6">
+              <input type="text" class="form-control" placeholder="Buscar por nombre, empresa o email..." [(ngModel)]="filtroNombre" (ngModelChange)="filtrarClientes()">
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" [(ngModel)]="filtroEstado" (ngModelChange)="filtrarClientes()">
+                <option value="">Todos los Estados</option>
+                <option value="Activo">Activo</option>
+                <option value="Bloqueado">Bloqueado</option>
+                <option value="Pendiente">Pendiente</option>
+              </select>
+            </div>
+             <div class="col-md-2 text-end">
+               <!-- Botón para futuro modal de creación -->
+               <button class="btn btn-primary" type="button">Nuevo Cliente</button>
+            </div>
+          </div>
+          <!-- Fin Filtros -->
+
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Empresa</th>
+                  <th>Email</th>
+                  <th>Teléfono</th>
+                  <th>Estado</th>
+                  <th>Registro</th>
+                  <th>Último Acceso</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let cliente of clientesFiltrados">
+                  <td>{{ cliente.id }}</td>
+                  <td>{{ cliente.nombre }}</td>
+                  <td>{{ cliente.empresa }}</td>
+                  <td>{{ cliente.email }}</td>
+                  <td>{{ cliente.telefono }}</td>
+                  <td>
+                    <span class="badge"
+                          [class.badge-light-success]="cliente.estado === 'Activo'"
+                          [class.badge-light-danger]="cliente.estado === 'Bloqueado'"
+                          [class.badge-light-warning]="cliente.estado === 'Pendiente'">
+                      {{ cliente.estado }}
+                    </span>
+                  </td>
+                  <td>{{ cliente.fechaRegistro | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ cliente.ultimoAcceso ? (cliente.ultimoAcceso | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-info me-1" title="Ver Detalles" (click)="verDetalles(cliente)">
+                      <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-primary me-1" title="Editar" (click)="editarCliente(cliente)">
+                      <i class="fa fa-edit"></i>
+                    </button>
+                    <button *ngIf="cliente.estado !== 'Bloqueado'" class="btn btn-sm btn-danger me-1" title="Bloquear" (click)="cambiarEstado(cliente, 'Bloqueado')">
+                      <i class="fa fa-lock"></i>
+                    </button>
+                     <button *ngIf="cliente.estado === 'Bloqueado'" class="btn btn-sm btn-success me-1" title="Activar" (click)="cambiarEstado(cliente, 'Activo')">
+                      <i class="fa fa-unlock"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" title="Eliminar" (click)="eliminarCliente(cliente)">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="clientesFiltrados.length === 0">
+                    <td colspan="9" class="text-center">No se encontraron clientes con los filtros aplicados.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Fin Tabla de Clientes -->
+  </div>
+</div>

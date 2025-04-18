@@ -119,173 +119,162 @@ export class NavService implements OnDestroy {
 
 	filterMenuItemsByAuthorization() {
 		const authorizedPaths = JSON.parse(localStorage.getItem('authorizedMenuItems') || '[]').map((item: any) => item.path);
+		// Obtener el rol del usuario para filtrar menús de superadmin
+		const user = JSON.parse(localStorage.getItem('user') || '{}');
+		const isSuperAdmin = user.rol === 'Super Administrador'; // Asume que el rol se llama así
+
 		const filteredMenu = this.ALLMENUITEMS.map(item => {
+			// Ocultar item si es solo para superadmin y el usuario no lo es
+			if (item.isOnlySuperAdministrador && !isSuperAdmin) {
+				return null;
+			}
+
 			if (item.headTitle1) {
-				// Si es un encabezado, eliminar cualquier propiedad children
+				// ... lógica existente para encabezados ...
+				// Asegurarse de no eliminar el encabezado si los items siguientes son solo de superadmin y el usuario lo es
 				const header = { ...item };
 				delete header.children;
 				return header;
 			}
 			if (item.children) {
-				// Filtrar hijos autorizados
-				const filteredChildren = item.children.filter(child => authorizedPaths.includes(child.path));
-				return filteredChildren.length > 0 ? { ...item, children: filteredChildren } : null;
+				// Filtrar hijos autorizados Y verificar si son solo para superadmin
+				const filteredChildren = item.children.filter(child =>
+					(!child.isOnlySuperAdministrador || isSuperAdmin) && // Verifica permiso de superadmin
+					authorizedPaths.includes(child.path)
+				);
+				// Ocultar el padre si es solo para superadmin y el usuario no lo es, o si no tiene hijos visibles
+				if ((item.isOnlySuperAdministrador && !isSuperAdmin) || filteredChildren.length === 0) {
+					return null;
+				}
+				return { ...item, children: filteredChildren };
 			}
-			return authorizedPaths.includes(item.path) ? item : null;
+			// Ocultar item si es solo para superadmin y el usuario no lo es, o si no está autorizado
+			if ((item.isOnlySuperAdministrador && !isSuperAdmin) || !authorizedPaths.includes(item.path)) {
+				return null;
+			}
+			return item;
 		}).filter(item => item !== null) as any[];
 
-		// Remover encabezados consecutivos: Si hay dos items consecutivos con "headTitle1", se elimina el segundo
+		// ... lógica existente para remover encabezados consecutivos ...
 		const finalMenu: Menu[] = [];
 		filteredMenu.forEach(item => {
-			if ((item as Menu).headTitle1 && finalMenu.length && (finalMenu[finalMenu.length - 1] as Menu).headTitle1) {
-				// Omitir este encabezado ya que es consecutivo
+			const currentIsHeader = (item as Menu).headTitle1;
+			const previousIsHeader = finalMenu.length && (finalMenu[finalMenu.length - 1] as Menu).headTitle1;
+
+			// Evitar encabezados consecutivos, excepto si el anterior era solo superadmin y este no, o viceversa
+			const previousWasSuperAdminOnly = finalMenu.length && (finalMenu[finalMenu.length - 1] as Menu).isOnlySuperAdministrador;
+			const currentIsSuperAdminOnly = (item as Menu).isOnlySuperAdministrador;
+
+			if (currentIsHeader && previousIsHeader && previousWasSuperAdminOnly === currentIsSuperAdminOnly) {
+				// Omitir encabezado consecutivo del mismo tipo de visibilidad
 			} else {
 				finalMenu.push(item);
 			}
 		});
+
 
 		this.MENUITEMS = finalMenu;
 		this.items.next(this.MENUITEMS);
 	}
 
 	MENUITEMS: Menu[] = [
-
+		{ headTitle1: 'Gestión Comercial' },
 		{
-			headTitle1: 'Ventas'
-		},
-		{
-			title: 'Clientes', icon: 'user-check', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
+			title: 'Clientes', icon: 'user-check', type: 'sub', active: false, children: [
 				{ path: 'ventas/clientes', title: 'Crear Clientes', type: 'link' },
-				{ path: 'ventas/clienteslista', title: 'Lista de clientes', type: 'link' },
+				{ path: 'ventas/clienteslista', title: 'Lista de Clientes', type: 'link' },
 				{ path: 'prospectos/lista', title: 'Gestión de Prospectos', type: 'link' },
 				{ path: 'proceso/ocasiones', title: 'Ocasiones', type: 'link' },
-				{ path: 'proceso/generos', title: 'Géneros', type: 'link' },
+				{ path: 'proceso/generos', title: 'Géneros', type: 'link' }
 			]
 		},
 		{
-			title: 'Ventas', icon: 'dollar-sign', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'ventas/crear-ventas', title: 'Crear Venta', type: 'link' },
-				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas', type: 'link' },
-				{ path: 'ventas/pedidos', title: 'Lista de pedidos', type: 'link' },
-				{ path: 'ventas/pos2', title: 'Ventas POS2', type: 'link' },
-				{ path: 'pos/ventas', title: 'Ventas POS', type: 'link' },
+			title: 'Pedidos y Ventas', icon: 'dollar-sign', type: 'sub', active: false, children: [
+				{ path: 'ventas/crear-ventas', title: 'Crear Venta Asistida', type: 'link' },
+				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas Masivas', type: 'link' },
+				{ path: 'ventas/pedidos', title: 'Lista de Pedidos', type: 'link' },
+				{ path: 'ventas/pos2', title: 'Ventas POS Avanzado', type: 'link' },
+				{ path: 'pos/ventas', title: 'Ventas POS Rápido', type: 'link' },
 				{ path: 'pos/list-ventas', title: 'Listado Ventas POS', type: 'link' }
 			]
 		},
 
+		{ headTitle1: 'Operaciones Internas' },
 		{
-			headTitle1: 'Producción'
-		},
-		{
-			title: 'Inventario', icon: 'package', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'productos', title: 'Productos', type: 'link' },
-				{ path: 'categorias', title: 'Categorías', type: 'link' },
-				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones', type: 'link' },
-				{ path: '', title: 'Lista Lite*', type: 'link' },
-				{ path: 'inventario/inventario-catalogo', title: 'Productos Por Bodega', type: 'link' },
-				{ path: '', title: 'Cambio precios*', type: 'link' },
+			title: 'Inventario y Productos', icon: 'package', type: 'sub', active: false, children: [
+				{ path: 'productos', title: 'Maestro de Productos', type: 'link' },
+				{ path: 'categorias', title: 'Categorías Globales', type: 'link' },
+				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones Globales', type: 'link' },
+				{ path: 'inventario/inventario-catalogo', title: 'Inventario por Bodega', type: 'link' },
 				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link' },
-				{ path: 'inventario/recepcion-mercancia', title: 'Recepción', type: 'link' },
-				{ path: 'inventario/traslados', title: 'Traslados', type: 'link' },
+				{ path: 'inventario/recepcion-mercancia', title: 'Recepción Mercancía', type: 'link' },
+				{ path: 'inventario/traslados', title: 'Traslados entre Bodegas', type: 'link' },
 				{ path: 'inventario/historial-movimientos', title: 'Historial Movimientos', type: 'link' }
 			]
 		},
 		{
-			title: 'Plan de Produccion', icon: 'archive', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'produccion/dashboard', title: 'Lista', type: 'link' }
-			],
-		},
-		{
-			headTitle1: 'Logística'
-		},
-		{
-			title: 'Entregas', icon: 'map-pin', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'formasEntrega', title: 'Formas Entrega', type: 'link' },
-				{ path: 'formasEntrega/tipoentrega/lista', title: 'Tipo de Entrega', type: 'link' },
-				{ path: 'tiempoentrega', title: 'Tiempos de entrega', type: 'link' },
-				{ path: 'despachos', title: 'Lista despachos', type: 'link' },
-				{ path: 'extras/zonasCobro', title: 'Zonas Cobro', type: 'link' },
-				{ path: '', title: 'Bloqueo fechas y horarios*', type: 'link' },
-			]
-		},
-		{
-			headTitle1: 'Inteligencia de Negocios',
-			isOnlySuperAdministrador: true
-		},
-		{
-			title: 'Indicadores KPI', icon: 'home', type: 'sub', badgeType: 'success', badgeValue: '', active: true, children: [
-				{ path: 'dashboards', title: 'Graficos', type: 'link' },
+			title: 'Plan de Producción', icon: 'archive', type: 'sub', active: false, children: [
+				{ path: 'produccion/dashboard', title: 'Dashboard Producción', type: 'link' }
 			]
 		},
 
+		{ headTitle1: 'Logística' },
 		{
-			headTitle1: 'Administración',
-			isOnlySuperAdministrador: true
-		},
-		{
-			title: 'Seguridad', icon: 'shield', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'rol/rol', title: 'Roles', type: 'link' },
-				{ path: 'usuarios', title: 'Usuarios*', type: 'link' },
-			],
-			isOnlySuperAdministrador: true
-		},
-
-		{
-			title: 'Empresa', icon: 'home', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-
-				{ path: 'empresas', title: 'Empresas', type: 'link' },
-				{ path: 'empresas', title: 'Módulos Fijos*', type: 'link' },
-				{ path: 'empresas/modulovariable/produccion/opciones', title: 'Módulos Variables', type: 'link' },
-				{ path: 'empresas', title: 'Módulos Adicionales*', type: 'link' },
-				{ path: 'empresas', title: 'Modulos Aliados*', type: 'link' },
-				{ path: 'empresas', title: 'Integraciones*', type: 'link' },
-			], isOnlySuperAdministrador: true
-		},
-		{
-			title: 'Notificaciones*', icon: 'message-circle', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'notificaciones', title: 'Notificaciones*', type: 'link' }
+			title: 'Envíos y Entregas', icon: 'map-pin', type: 'sub', active: false, children: [
+				{ path: 'formasEntrega', title: 'Formas Entrega Globales', type: 'link' },
+				{ path: 'formasEntrega/tipoentrega/lista', title: 'Tipos de Entrega Globales', type: 'link' },
+				{ path: 'tiempoentrega', title: 'Tiempos de Entrega Globales', type: 'link' },
+				{ path: 'despachos', title: 'Lista de Despachos', type: 'link' },
+				{ path: 'extras/zonasCobro', title: 'Zonas de Cobro Envío', type: 'link' }
 			]
-			, isOnlySuperAdministrador: true
 		},
+
+		{ headTitle1: 'Inteligencia de Negocios', isOnlySuperAdministrador: true },
 		{
-			headTitle1: 'Integraciones'
+			title: 'Indicadores KPI', icon: 'trending-up', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
+				{ path: 'dashboards', title: 'Dashboard Gerencial', type: 'link' }
+			]
 		},
+
+		{ headTitle1: 'Administración Global', isOnlySuperAdministrador: true },
 		{
-			title: 'Integraciones', icon: 'link', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'integrations', title: 'Configurar', type: 'link' }
+			title: 'Usuarios y Permisos', icon: 'shield', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
+				{ path: 'rol/rol', title: 'Gestión de Roles', type: 'link' },
+				{ path: 'usuarios', title: 'Gestión de Usuarios', type: 'link' }
 			]
 		},
 		{
-			title: 'Pagos', icon: 'star', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-
-				{ path: 'extras/formasPago', title: 'Formas de pago', type: 'link' },
-				{ path: 'extras/pos/formasPago', title: 'Formas de pagos POS', type: 'link' }
+			title: 'Gestión de Empresas', icon: 'briefcase', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
+				{ path: 'empresas', title: 'Directorio de Empresas', type: 'link' },
+				{ path: 'empresas/modulovariable/produccion/opciones', title: 'Módulos Variables', type: 'link' }
 			]
 		},
+
+		{ headTitle1: 'Configuración Plataforma', isOnlySuperAdministrador: true },
 		{
-			headTitle1: 'Katuq'
+			title: 'Gestión General', icon: 'settings', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
+				{ path: 'superadmin/clientes', title: 'Gestión Clientes Plataforma', type: 'link' },
+				{ path: 'notificaciones', title: 'Notificaciones Globales', type: 'link' },
+				{ path: 'integrations', title: 'Integraciones Globales', type: 'link' },
+				{ path: 'extras/formasPago', title: 'Formas de Pago Globales', type: 'link' }
+			]
 		},
 
+		{ headTitle1: 'Soporte Katuq' },
 		{
-			title: 'Tickets', icon: 'headphones', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'soporte', title: 'Crear', type: 'link' },
+			title: 'Tickets y Ayuda', icon: 'headphones', type: 'sub', active: false, children: [
+				{ path: 'soporte', title: 'Crear Ticket/Idea', type: 'link' },
 				{ path: 'misTickets', title: 'Mis Tickets', type: 'link' },
-				{ path: 'misIdeas', title: 'Mis Ideas', type: 'link' },
+				{ path: 'misIdeas', title: 'Mis Ideas', type: 'link' }
 			]
 		},
 		{
-			title: 'K.A.I', icon: 'box', type: 'sub', badgeType: 'success', badgeValue: '', active: false, children: [
-				{ path: 'chat', title: 'Asistencia', type: 'link' },
-			],
-			isOnlySuperAdministrador: false
+			title: 'K.A.I Asistente IA', icon: 'cpu', type: 'sub', active: false, children: [
+				{ path: 'chat', title: 'Chatear con K.A.I', type: 'link' }
+			]
 		},
 
-		{
-			headTitle1: 'Katuq',
-			headTitle2: '' + new Date().getFullYear() + ' © Julsmind S.A.S',
-		},
-
-
+		{ headTitle1: 'Katuq', headTitle2: `${new Date().getFullYear()} © Julsmind S.A.S` }
 	];
 
 	MEGAMENUITEMS: Menu[] = [

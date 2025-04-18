@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from '../guards/auth.guard'; // Importar el guard
+import { AdminGuard } from '../guard/admin.guard'; // Importar AdminGuard
 
 export const content: Routes = [
   {
@@ -73,7 +74,7 @@ export const content: Routes = [
     canActivate: [AuthGuard] // Agregar el guard
   },
   {
-    path: 'dashboards',
+    path: 'dashboards', // Ruta existente para el dashboard principal
     loadChildren: () => import('../../components/dashboard/dashboard.module').then(m => m.DashboardModule),
     canActivate: [AuthGuard] // Agregar el guard
   },
@@ -143,9 +144,9 @@ export const content: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'dashboard',
-    loadChildren: () => import('../../components/dashboard/dashboard.module').then(m => m.DashboardModule),
-    canActivate: [AuthGuard] // Agregar el guard
+    path: 'superadmin', // Ruta correcta para superadmin
+    loadChildren: () => import('../../components/superadmin/superadmin.module').then(m => m.SuperadminModule), // Apuntar al módulo correcto
+    canActivate: [AdminGuard] // Usar AdminGuard como estaba previsto
   },
   {
     path: 'integrations',
@@ -157,7 +158,7 @@ export const content: Routes = [
   {
     path: 'prospectos',
     loadChildren: () => import('../../components/prospect-manager/prospect-manager.module').then(m => m.ProspectManagerModule),
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard], // O AdminGuard si aplica
     data: { title: 'Gestión de Prospectos' }
   }
 ];
