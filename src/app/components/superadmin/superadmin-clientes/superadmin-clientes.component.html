@@ -87,6 +87,179 @@
     </div>
     <!-- Fin Tarjetas de Resumen -->
 
+    <!-- KPIs y Analítica Global Katuq -->
+    <div class="col-12">
+      <div class="card">
+        <div class="row mt-1 mb-3 p-3">
+          <div class="col-md-4 p-l-5">
+            <p class="text-left fw-bold fc-secondary fs-24 m-0 p-0">Gestión de Tiendas</p>
+            <p class="text-left text-muted fs-18 m-0 p-0">
+              Métricas clave de ventas y rendimiento por tienda.
+            </p>
+          </div>
+          <div class="col-md-8">
+            <div class="d-flex justify-content-end align-items-right flex-wrap gap-3 rounded w-100">
+              <div class="date-control">
+                <label for="fechaInicial" class="fw-bold text-muted fs-16">Fecha Inicial</label>
+                <input type="date" id="fechaInicial" class="form-control fs-16" value="2025-03-01">
+              </div>
+              <div class="date-control">
+                <label for="fechaFinal" class="fw-bold text-muted fs-16">Fecha Final</label>
+                <input type="date" id="fechaFinal" class="form-control fs-16" value="2025-04-18">
+              </div>
+              <button class="btn fc-white bc-secondary fs-18 mt-3 mr-1 pull-right">
+                Filtrar
+              </button>
+              <button class="btn fc-white bc-primary fs-18 mt-3 mr-1 pull-right">
+                Mes actual
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="container-fluid">
+          <!-- Gráficos de Tiendas -->
+          <div class="row p-3">
+            <div class="col-md-6 col-lg-6 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bc-secondary text-white py-3">
+                  <h6 class="mb-0 text-center">Ventas por Tienda</h6>
+                </div>
+                <div class="card-body p-3">
+                  <div id="chart-ventas-tiendas" class="apex-chart"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-6 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bc-primary text-white py-3">
+                  <h6 class="mb-0 text-center">Distribución de Pedidos</h6>
+                </div>
+                <div class="card-body p-3">
+                  <div id="chart-pedidos-tiendas" class="apex-chart"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row p-3">
+            <div class="col-md-8 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bc-tertiary text-white py-3">
+                  <h6 class="mb-0 text-center">Crecimiento Mensual por Tienda</h6>
+                </div>
+                <div class="card-body p-3">
+                  <div id="chart-crecimiento-tiendas" class="apex-chart"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bc-primary text-white py-3">
+                  <h6 class="mb-0 text-center">Análisis de K.A.I.</h6>
+                </div>
+                <div class="card-body p-3">
+                  <button class="btn fc-white bc-secondary w-100 mb-2">Analizar Rendimiento</button>
+                  <div class="p-3 fc-primary fs-16 border rounded bg-light text-center">
+                    <span class="text-muted">Aquí verás el análisis inteligente de ventas, tendencias y recomendaciones de K.A.I. para todas tus tiendas.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tabla de Rendimiento por Tienda -->
+          <div class="row p-3">
+            <div class="col-12">
+              <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                  <thead class="bc-secondary text-white">
+                    <tr class="text-center">
+                      <th>Tienda</th>
+                      <th>Ventas Mes</th>
+                      <th>Pedidos Hoy</th>
+                      <th>Crecimiento</th>
+                      <th>Tiempo Entrega</th>
+                      <th>Satisfacción</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="text-center">
+                      <td>Tienda A</td>
+                      <td class="fw-bold text-success">$ 40.000.000</td>
+                      <td>120</td>
+                      <td><span class="badge badge-light-success">+15%</span></td>
+                      <td>25 min</td>
+                      <td>4.8/5.0</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary me-1" title="Ver Detalles">
+                          <i class="fa fa-chart-bar"></i>
+                        </button>
+                        <button class="btn btn-sm btn-info" title="Configurar">
+                          <i class="fa fa-cog"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr class="text-center">
+                      <td>Tienda B</td>
+                      <td class="fw-bold text-success">$ 30.000.000</td>
+                      <td>80</td>
+                      <td><span class="badge badge-light-success">+5%</span></td>
+                      <td>32 min</td>
+                      <td>4.5/5.0</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary me-1" title="Ver Detalles">
+                          <i class="fa fa-chart-bar"></i>
+                        </button>
+                        <button class="btn btn-sm btn-info" title="Configurar">
+                          <i class="fa fa-cog"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr class="text-center">
+                      <td>Tienda C</td>
+                      <td class="fw-bold text-success">$ 25.000.000</td>
+                      <td>70</td>
+                      <td><span class="badge badge-light-danger">-2%</span></td>
+                      <td>28 min</td>
+                      <td>4.2/5.0</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary me-1" title="Ver Detalles">
+                          <i class="fa fa-chart-bar"></i>
+                        </button>
+                        <button class="btn btn-sm btn-info" title="Configurar">
+                          <i class="fa fa-cog"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr class="text-center">
+                      <td>Tienda D</td>
+                      <td class="fw-bold text-success">$ 25.000.000</td>
+                      <td>50</td>
+                      <td><span class="badge badge-light-success">+8%</span></td>
+                      <td>30 min</td>
+                      <td>4.6/5.0</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary me-1" title="Ver Detalles">
+                          <i class="fa fa-chart-bar"></i>
+                        </button>
+                        <button class="btn btn-sm btn-info" title="Configurar">
+                          <i class="fa fa-cog"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabla de Clientes -->
     <div class="col-12">
       <div class="card">
