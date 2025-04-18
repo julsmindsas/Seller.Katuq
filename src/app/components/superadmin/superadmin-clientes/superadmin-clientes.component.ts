@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import * as ApexCharts from 'apexcharts';
-import { UserService } from '../../../../services/user.service';
-import { AnalyticsService } from '../../../../services/analytics.service';
+import { UserService } from '../../../services/user.service';
+import { AnalyticsService } from '../../../services/analytics.service';
 
 // Interfaz para definir la estructura del cliente (opcional pero recomendado)
 interface Cliente {
@@ -304,6 +304,7 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   }
   // --- Fin: Añadir Getters ---
 
+  // Declarar instancias de gráficos
   private renderRevenueChartInstance: any;
   private renderCategoryChartInstance: any;
   private renderPerformanceChartInstance: any;
@@ -316,7 +317,6 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.clientes = this.mockClientes;
     this.filtrarClientes(); // Inicializar la lista filtrada
-    this.loadAdvancedMetrics();
   }
 
   ngAfterViewInit(): void {
@@ -324,6 +324,7 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     this.renderKPICharts();
     this.renderEngagementChart();
     this.renderLTVChart();
+    this.loadAdvancedMetrics();
   }
 
   filtrarClientes(): void {
@@ -376,12 +377,14 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     const options = {
       chart: { 
         type: 'bar',
-        height: 250,
-        toolbar: { show: false }
+        height: 350,
+        toolbar: { show: false },
+        fontFamily: 'Helvetica, Arial, sans-serif'
       },
       plotOptions: {
         bar: {
-          borderRadius: 4,
+          borderRadius: 6,
+          columnWidth: '60%',
           distributed: true,
           dataLabels: {
             position: 'top'
@@ -396,7 +399,8 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         },
         offsetY: -20,
         style: {
-          fontSize: '12px',
+          fontSize: '13px',
+          fontWeight: '600',
           colors: ["#304758"]
         }
       },
@@ -404,15 +408,36 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         name: 'Ingresos',
         data: this.tiendas.map(t => t.ingresos)
       }],
+      grid: {
+        padding: {
+          left: 20,
+          right: 20
+        }
+      },
       xaxis: {
         categories: this.tiendas.map(t => t.nombre),
-        position: 'bottom'
+        position: 'bottom',
+        labels: {
+          style: {
+            fontSize: '14px'
+          }
+        },
+        axisBorder: {
+          show: false
+        },
+        axisTicks: {
+          show: false
+        }
       },
       yaxis: {
         axisBorder: { show: false },
+        axisTicks: { show: false },
         labels: {
           formatter: function (val: number) {
             return '$' + (val / 1000000).toFixed(1) + 'M';
+          },
+          style: {
+            fontSize: '13px'
           }
         }
       },
@@ -421,8 +446,10 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         floating: false,
         align: 'center',
         style: {
+          fontSize: '16px',
           fontWeight: 600
-        }
+        },
+        margin: 15
       }
     };
 
@@ -435,23 +462,51 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     const options = {
       chart: {
         type: 'donut',
-        height: 250
+        height: 350,
+        fontFamily: 'Helvetica, Arial, sans-serif'
       },
       series: this.tiendas.map(t => t.pedidos),
       labels: this.tiendas.map(t => t.nombre),
       colors: ['#008ffb', '#00e396', '#feb019', '#ff4560'],
       legend: {
-        position: 'bottom'
+        position: 'bottom',
+        horizontalAlign: 'center',
+        fontSize: '14px',
+        markers: {
+          width: 12,
+          height: 12,
+          radius: 12
+        },
+        itemMargin: {
+          horizontal: 15,
+          vertical: 5
+        }
       },
       plotOptions: {
         pie: {
           donut: {
             size: '65%',
+            background: 'transparent',
             labels: {
               show: true,
+              name: {
+                show: true,
+                fontSize: '14px',
+                fontWeight: 600
+              },
+              value: {
+                show: true,
+                fontSize: '18px',
+                fontWeight: 700,
+                formatter: function(val: number) {
+                  return val.toString();
+                }
+              },
               total: {
                 show: true,
                 label: 'Total Pedidos',
+                fontSize: '16px',
+                fontWeight: 600,
                 formatter: function (w: any) {
                   return w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
                 }
@@ -460,12 +515,31 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
           }
         }
       },
+      stroke: {
+        width: 2
+      },
+      dataLabels: {
+        enabled: false
+      },
+      responsive: [{
+        breakpoint: 480,
+        options: {
+          chart: {
+            height: 250
+          },
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }],
       title: {
         text: 'Distribución de Pedidos',
         align: 'center',
         style: {
+          fontSize: '16px',
           fontWeight: 600
-        }
+        },
+        margin: 15
       }
     };
 
@@ -478,41 +552,87 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     const options = {
       chart: {
         type: 'line',
-        height: 250,
-        toolbar: { show: false }
+        height: 350,
+        toolbar: { show: false },
+        fontFamily: 'Helvetica, Arial, sans-serif'
       },
       stroke: {
         curve: 'smooth',
-        width: 3
+        width: 4
       },
       series: [{
         name: 'Crecimiento %',
         data: this.tiendas.map(t => t.crecimiento)
       }],
       colors: ['#43cea2'],
+      grid: {
+        borderColor: '#e7e7e7',
+        row: {
+          colors: ['#f3f3f3', 'transparent'],
+          opacity: 0.3
+        },
+        padding: {
+          left: 20,
+          right: 20
+        }
+      },
       xaxis: {
-        categories: this.tiendas.map(t => t.nombre)
+        categories: this.tiendas.map(t => t.nombre),
+        labels: {
+          style: {
+            fontSize: '14px'
+          }
+        },
+        axisBorder: {
+          show: false
+        },
+        axisTicks: {
+          show: false
+        }
       },
       yaxis: {
         labels: {
           formatter: function (val: number) {
             return val.toFixed(1) + '%';
+          },
+          style: {
+            fontSize: '13px'
           }
         }
       },
       markers: {
-        size: 6,
+        size: 7,
         strokeWidth: 0,
         hover: {
-          size: 8
+          size: 9
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: function(val: number) {
+          return val.toFixed(1) + '%';
+        },
+        style: {
+          fontSize: '13px',
+          fontWeight: 'bold',
+          colors: ['#333']
+        },
+        background: {
+          enabled: true,
+          foreColor: '#fff',
+          padding: 4,
+          borderRadius: 4,
+          borderWidth: 0
         }
       },
       title: {
         text: 'Crecimiento Mensual por Tienda',
         align: 'center',
         style: {
+          fontSize: '16px',
           fontWeight: 600
-        }
+        },
+        margin: 15
       }
     };
 
@@ -833,7 +953,41 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // Métodos de renderizado de nuevos gráficos
   private renderRevenueChart(): void {
+    this.revenueChart.chart.height = 350;
+    this.revenueChart.chart.fontFamily = 'Helvetica, Arial, sans-serif';
+    this.revenueChart.title = {
+      text: 'Tendencia de Ingresos',
+      align: 'center',
+      style: {
+        fontSize: '16px',
+        fontWeight: 600
+      },
+      margin: 15
+    };
+    this.revenueChart.grid = {
+      borderColor: '#e7e7e7',
+      row: {
+        colors: ['#f8f9fa', 'transparent'],
+        opacity: 0.3
+      },
+      padding: {
+        left: 20,
+        right: 20
+      }
+    };
+    this.revenueChart.xaxis.labels = {
+      style: {
+        fontSize: '13px'
+      }
+    };
+    this.revenueChart.yaxis.labels = {
+      style: {
+        fontSize: '13px'
+      }
+    };
+    
     if (this.renderRevenueChartInstance) {
       this.renderRevenueChartInstance.updateOptions(this.revenueChart);
     } else {
@@ -843,6 +997,38 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   }
 
   private renderCategoryChart(): void {
+    this.categoryChart.chart.height = 350;
+    this.categoryChart.chart.fontFamily = 'Helvetica, Arial, sans-serif';
+    this.categoryChart.title = {
+      text: 'Crecimiento por Categoría',
+      align: 'center',
+      style: {
+        fontSize: '16px',
+        fontWeight: 600
+      },
+      margin: 15
+    };
+    this.categoryChart.grid = {
+      padding: {
+        left: 20,
+        right: 20
+      }
+    };
+    this.categoryChart.plotOptions.bar.borderRadius = 6;
+    this.categoryChart.plotOptions.bar.columnWidth = '70%';
+    this.categoryChart.xaxis.labels = {
+      style: {
+        fontSize: '13px'
+      }
+    };
+    this.categoryChart.yaxis = {
+      labels: {
+        style: {
+          fontSize: '13px'
+        }
+      }
+    };
+    
     if (this.renderCategoryChartInstance) {
       this.renderCategoryChartInstance.updateOptions(this.categoryChart);
     } else {
@@ -852,6 +1038,27 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   }
 
   private renderPerformanceChart(): void {
+    this.performanceChart.chart.height = 350;
+    this.performanceChart.chart.fontFamily = 'Helvetica, Arial, sans-serif';
+    this.performanceChart.title = {
+      text: 'Métricas de Rendimiento',
+      align: 'center',
+      style: {
+        fontSize: '16px',
+        fontWeight: 600
+      },
+      margin: 15
+    };
+    this.performanceChart.plotOptions.radialBar.dataLabels.name.fontSize = '14px';
+    this.performanceChart.plotOptions.radialBar.dataLabels.value.fontSize = '20px';
+    this.performanceChart.plotOptions.radialBar.dataLabels.value.fontWeight = 700;
+    this.performanceChart.plotOptions.radialBar.dataLabels.total = {
+      show: true,
+      label: 'Promedio',
+      fontSize: '16px',
+      fontWeight: 600
+    };
+    
     if (this.renderPerformanceChartInstance) {
       this.renderPerformanceChartInstance.updateOptions(this.performanceChart);
     } else {

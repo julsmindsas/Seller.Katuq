@@ -2,20 +2,22 @@
 // Por ahora vacío, heredará estilos globales.
 
 .apex-chart {
-  width: 100px;
-  height: 50px;
-  min-height: 300px;
+  width: 100%;
+  min-height: 350px;
+  margin: 0 auto;
 }
 
 .metric-card {
   background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
+  border-radius: 10px;
   text-align: center;
   transition: transform 0.3s ease;
+  height: 100%;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 
   &:hover {
     transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   }
 
   .card-body {
@@ -23,33 +25,57 @@
     
     h6 {
       font-size: 0.875rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      color: #6c757d;
     }
     
     h4 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
+      font-size: 1.75rem;
+      margin-bottom: 1.25rem;
+      font-weight: 600;
     }
     
     .progress {
-      height: 6px;
-      border-radius: 3px;
-      background-color: rgba(0, 0, 0, 0.1);
+      height: 8px;
+      border-radius: 4px;
+      background-color: rgba(0, 0, 0, 0.05);
+      
+      .progress-bar {
+        border-radius: 4px;
+      }
     }
   }
 }
 
 .card {
   transition: all 0.3s ease;
+  margin-bottom: 25px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   }
 
   .card-header {
     background-color: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
+    
+    h5, h6 {
+      margin-bottom: 0;
+      font-weight: 600;
+    }
+  }
+  
+  .card-body {
+    padding: 20px 25px;
+    
+    .row {
+      margin-bottom: 15px;
+    }
   }
 }
 
@@ -59,39 +85,92 @@
     background: #fff;
     border: 1px solid #e9ecef;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 10px 12px;
+    border-radius: 6px;
   }
 
   .apexcharts-tooltip-title {
     background: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
+    padding: 8px 12px;
+    margin-bottom: 5px;
   }
 
-  .apexcharts-xaxis-label {
-    font-size: 12px;
-  }
-
+  .apexcharts-xaxis-label, 
   .apexcharts-yaxis-label {
     font-size: 12px;
+    fill: #6c757d;
+  }
+  
+  .apexcharts-legend {
+    padding: 10px 0;
+    
+    .apexcharts-legend-series {
+      margin: 5px 10px;
+    }
+  }
+  
+  .apexcharts-canvas {
+    margin: 0 auto;
+  }
+  
+  // Mejora para donut y pie charts
+  .apexcharts-pie, 
+  .apexcharts-radialbar {
+    .apexcharts-datalabel {
+      font-size: 14px;
+      font-weight: 600;
+    }
+  }
+  
+  // Mejora para bar charts
+  .apexcharts-bar-series {
+    .apexcharts-datalabel {
+      font-weight: 600;
+    }
   }
 }
 
 // Estilos para la tabla de análisis
 .table {
+  margin-top: 10px;
+  
   th {
     font-weight: 600;
     color: #495057;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 12px 15px;
   }
   
   td {
     vertical-align: middle;
+    padding: 12px 15px;
   }
   
   .progress {
     height: 8px;
     margin-bottom: 0;
+    border-radius: 4px;
   }
   
   .text-success, .text-danger {
     font-weight: 600;
+  }
+}
+
+// Espaciado de secciones
+.row.mt-4 {
+  margin-top: 2rem !important;
+}
+
+// Responsividad para dispositivos pequeños
+@media (max-width: 768px) {
+  .apex-chart {
+    min-height: 250px;
+  }
+  
+  .card-body {
+    padding: 15px;
   }
 }

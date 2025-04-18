@@ -125,7 +125,7 @@
                 <div class="card-header bc-secondary text-white py-3">
                   <h6 class="mb-0 text-center">Ventas por Tienda</h6>
                 </div>
-                <div class="card-body p-3">
+                <div class="card-body p-4">
                   <div id="chart-ventas-tiendas" class="apex-chart"></div>
                 </div>
               </div>
@@ -136,7 +136,7 @@
                 <div class="card-header bc-primary text-white py-3">
                   <h6 class="mb-0 text-center">Distribución de Pedidos</h6>
                 </div>
-                <div class="card-body p-3">
+                <div class="card-body p-4">
                   <div id="chart-pedidos-tiendas" class="apex-chart"></div>
                 </div>
               </div>
@@ -149,7 +149,7 @@
                 <div class="card-header bc-tertiary text-white py-3">
                   <h6 class="mb-0 text-center">Crecimiento Mensual por Tienda</h6>
                 </div>
-                <div class="card-body p-3">
+                <div class="card-body p-4">
                   <div id="chart-crecimiento-tiendas" class="apex-chart"></div>
                 </div>
               </div>
@@ -160,8 +160,8 @@
                 <div class="card-header bc-primary text-white py-3">
                   <h6 class="mb-0 text-center">Análisis de K.A.I.</h6>
                 </div>
-                <div class="card-body p-3">
-                  <button class="btn fc-white bc-secondary w-100 mb-2">Analizar Rendimiento</button>
+                <div class="card-body p-4">
+                  <button class="btn fc-white bc-secondary w-100 mb-3">Analizar Rendimiento</button>
                   <div class="p-3 fc-primary fs-16 border rounded bg-light text-center">
                     <span class="text-muted">Aquí verás el análisis inteligente de ventas, tendencias y recomendaciones de K.A.I. para todas tus tiendas.</span>
                   </div>
@@ -656,9 +656,9 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h6>Tendencia de Ingresos</h6>
+            <h6 class="mb-0 text-center">Tendencia de Ingresos</h6>
           </div>
-          <div class="card-body">
+          <div class="card-body p-4">
             <div id="chart-revenue" class="apex-chart"></div>
           </div>
         </div>
@@ -666,9 +666,9 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h6>Rendimiento de la Plataforma</h6>
+            <h6 class="mb-0 text-center">Rendimiento de la Plataforma</h6>
           </div>
-          <div class="card-body">
+          <div class="card-body p-4">
             <div id="chart-performance" class="apex-chart"></div>
           </div>
         </div>
@@ -680,9 +680,9 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h5>Análisis por Categoría</h5>
+            <h5 class="mb-0 text-center">Análisis por Categoría</h5>
           </div>
-          <div class="card-body">
+          <div class="card-body p-4">
             <div class="row">
               <div class="col-md-8">
                 <div id="chart-categories" class="apex-chart"></div>
@@ -699,13 +699,17 @@
                     </thead>
                     <tbody>
                       <tr *ngFor="let category of categoryTrends">
-                        <td>{{ category.name }}</td>
+                        <td><span class="fw-bold">{{ category.name }}</span></td>
                         <td>{{ category.revenue | currency }}</td>
                         <td>
                           <span [ngClass]="{
                             'text-success': category.growth > 0,
                             'text-danger': category.growth < 0
                           }">
+                            <i class="fas" [ngClass]="{
+                              'fa-arrow-up': category.growth > 0,
+                              'fa-arrow-down': category.growth < 0
+                            }"></i>
                             {{ category.growth }}%
                           </span>
                         </td>
