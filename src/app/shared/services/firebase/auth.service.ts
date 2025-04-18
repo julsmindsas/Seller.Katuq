@@ -5,6 +5,7 @@ import { ServiciosService } from "../servicios.service";
 import { TranslateService } from "@ngx-translate/core";
 import Swal from "sweetalert2";
 import { NavService } from "../nav.service";
+import { BehaviorSubject } from 'rxjs';
 
 export interface User {
   uid: string;
@@ -18,8 +19,10 @@ export interface User {
   providedIn: "root",
 })
 export class AuthService implements OnInit {
+  private _showLoader = new BehaviorSubject<boolean>(false);
+  public showLoader$ = this._showLoader.asObservable();
+
   public userData: any;
-  public showLoader: boolean = false;
 
   constructor(
     private services: ServiciosService,
@@ -32,7 +35,18 @@ export class AuthService implements OnInit {
 
   ngOnInit(): void { }
 
+  // Getter y setter para showLoader
+  get showLoader(): boolean {
+    return this._showLoader.value;
+  }
+
+  set showLoader(value: boolean) {
+    this._showLoader.next(value);
+  }
+
   SignIn(email: string, password: string, token: string): void {
+    this.showLoader = true; // Activar indicador de carga
+    
     const datos = {
       email: email.toLowerCase(),
       password: password,
@@ -41,23 +55,27 @@ export class AuthService implements OnInit {
 
     this.services.signInWithEmailAndPassword(datos).subscribe({
       next: (result: any) => this.handleSignInSuccess(result),
-      error: (err) => this.handleSignInError(err),
+      error: (err) => {
+        this.handleSignInError(err);
+        this.showLoader = false; // Desactivar indicador de carga en caso de error
+      }
     });
   }
 
   private handleSignInSuccess(result: any): void {
     if (result.error) {
+      this.showLoader = false; // Desactivar indicador de carga
       this.showErrorAlert("¡ Datos incorrectos !");
       return;
     }
 
     if (result.token) {
-
       this.SetUserData(result.token);
       this.setMenu(result.menu);
       
-      if (result.lang)
+      if (result.lang) {
         this.setLanguage(result.lang);
+      }
 
       localStorage.setItem("user", JSON.stringify(result));
       localStorage.setItem("loginTime", new Date().toISOString());
@@ -65,18 +83,28 @@ export class AuthService implements OnInit {
       if (result.mustChangePassword) {
         this.router.navigate(["/change-password"]);
         this.services.getEmpresaByName({ company: result.company });
-        this.showLoader = true;
         return;
       }
 
-      // Redirigir a la página de bienvenida con accesos directos
-      this.router.navigate(["/welcome"]);
+      // Verificar roles y redirigir según corresponda
+      const isSuperAdmin = result.rol === 'Super Administrador';
+      const isJulsmindAdmin = result.rol === 'Administrador' && result.company === 'Julsmind';
+
+      if (isSuperAdmin) {
+        // Redirigir a la página principal de superadmin
+        this.router.navigate(["/superadmin/clientes"]);
+      } else if (isJulsmindAdmin) {
+        // Redirigir a la página de administración de Julsmind
+        this.router.navigate(["/dashboards"]);
+      } else {
+        // Redirigir a la página de bienvenida para otros roles
+        this.router.navigate(["/welcome"]);
+      }
 
       this.services.getEmpresaByName({ company: result.company });
-      this.showLoader = true;
     } else {
+      this.showLoader = false; // Desactivar indicador de carga
       this.showErrorAlert("¡ Datos incorrectos !");
-      this.showLoader = false;
       this.ngZone.run(() => this.router.navigate(["/login"]));
     }
   }

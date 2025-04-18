@@ -19,6 +19,7 @@ export interface Menu {
 	bookmark?: boolean;
 	children?: Menu[];
 	isOnlySuperAdministrador?: boolean;
+	isOnlyAdmin?: boolean;
 }
 
 @Injectable({
@@ -47,14 +48,25 @@ export class NavService implements OnDestroy {
 	// Collapse Sidebar
 	public collapseSidebar: boolean = window.innerWidth < 991 ? true : false;
 
+	// Verifica si es superadmin o admin de Julsmind
+	isSuperAdmin: boolean = (() => {
+		const user = localStorage.getItem('user');
+		if (user) {
+			const parsedUser = JSON.parse(user);
+			return parsedUser.rol === 'Super Administrador';
+		}
+		return false;
+	})();
+
 	isAdmin: boolean = (() => {
 		const user = localStorage.getItem('user');
 		if (user) {
 			const parsedUser = JSON.parse(user);
-			return parsedUser.rol === 'Administrador' && parsedUser.company == 'Julsmind';
+			return parsedUser.rol === 'Administrador' && parsedUser.company === 'Julsmind';
 		}
 		return false;
 	})();
+
 	// Full screen
 	public fullScreen: boolean = false;
 	ALLMENUITEMS: Menu[];
@@ -63,11 +75,8 @@ export class NavService implements OnDestroy {
 		private cartSingleton: CartSingletonService,
 		private utils: UtilsService
 	) {
-
-
 		const user = localStorage.getItem('user');
 		if (user) {
-
 			this.refrescarCart();
 		}
 		
@@ -86,7 +95,7 @@ export class NavService implements OnDestroy {
 				this.megaMenuColapse = true;
 			}
 		});
-		if (window.innerWidth < 991) { // Detect Route change sidebar close
+		if (window.innerWidth < 991) {
 			this.router.events.subscribe(event => {
 				this.collapseSidebar = true;
 				this.megaMenu = false;
@@ -119,59 +128,69 @@ export class NavService implements OnDestroy {
 
 	filterMenuItemsByAuthorization() {
 		const authorizedPaths = JSON.parse(localStorage.getItem('authorizedMenuItems') || '[]').map((item: any) => item.path);
-		// Obtener el rol del usuario para filtrar menús de superadmin
 		const user = JSON.parse(localStorage.getItem('user') || '{}');
-		const isSuperAdmin = user.rol === 'Super Administrador'; // Asume que el rol se llama así
+		const isSuperAdmin = user.rol === 'Super Administrador';
+		const isJulsmindAdmin = user.rol === 'Administrador' && user.company === 'Julsmind';
 
 		const filteredMenu = this.ALLMENUITEMS.map(item => {
 			// Ocultar item si es solo para superadmin y el usuario no lo es
-			if (item.isOnlySuperAdministrador && !isSuperAdmin) {
+			if ((item.isOnlySuperAdministrador && !isSuperAdmin) || 
+				(item.isOnlyAdmin && !isJulsmindAdmin)) {
 				return null;
 			}
 
 			if (item.headTitle1) {
-				// ... lógica existente para encabezados ...
-				// Asegurarse de no eliminar el encabezado si los items siguientes son solo de superadmin y el usuario lo es
 				const header = { ...item };
 				delete header.children;
 				return header;
 			}
+
 			if (item.children) {
-				// Filtrar hijos autorizados Y verificar si son solo para superadmin
 				const filteredChildren = item.children.filter(child =>
-					(!child.isOnlySuperAdministrador || isSuperAdmin) && // Verifica permiso de superadmin
+					((!child.isOnlySuperAdministrador || isSuperAdmin) &&
+					(!child.isOnlyAdmin || isJulsmindAdmin)) &&
 					authorizedPaths.includes(child.path)
 				);
-				// Ocultar el padre si es solo para superadmin y el usuario no lo es, o si no tiene hijos visibles
-				if ((item.isOnlySuperAdministrador && !isSuperAdmin) || filteredChildren.length === 0) {
+
+				if ((item.isOnlySuperAdministrador && !isSuperAdmin) ||
+					(item.isOnlyAdmin && !isJulsmindAdmin) ||
+					filteredChildren.length === 0) {
 					return null;
 				}
 				return { ...item, children: filteredChildren };
 			}
-			// Ocultar item si es solo para superadmin y el usuario no lo es, o si no está autorizado
-			if ((item.isOnlySuperAdministrador && !isSuperAdmin) || !authorizedPaths.includes(item.path)) {
+
+			if ((item.isOnlySuperAdministrador && !isSuperAdmin) ||
+				(item.isOnlyAdmin && !isJulsmindAdmin) ||
+				!authorizedPaths.includes(item.path)) {
 				return null;
 			}
 			return item;
-		}).filter(item => item !== null) as any[];
+		}).filter(item => item !== null) as Menu[];
 
-		// ... lógica existente para remover encabezados consecutivos ...
 		const finalMenu: Menu[] = [];
+		let previousItem: Menu | null = null;
+
 		filteredMenu.forEach(item => {
-			const currentIsHeader = (item as Menu).headTitle1;
-			const previousIsHeader = finalMenu.length && (finalMenu[finalMenu.length - 1] as Menu).headTitle1;
+			const currentIsHeader = item.headTitle1;
+			const previousIsHeader = previousItem?.headTitle1;
 
-			// Evitar encabezados consecutivos, excepto si el anterior era solo superadmin y este no, o viceversa
-			const previousWasSuperAdminOnly = finalMenu.length && (finalMenu[finalMenu.length - 1] as Menu).isOnlySuperAdministrador;
-			const currentIsSuperAdminOnly = (item as Menu).isOnlySuperAdministrador;
+			if (currentIsHeader && previousIsHeader) {
+				// Solo agregar el encabezado si tiene elementos visibles después
+				const hasVisibleItems = filteredMenu.some((nextItem, index) => {
+					const currentIndex = filteredMenu.indexOf(item);
+					return index > currentIndex && !nextItem.headTitle1 && nextItem.children && nextItem.children.length > 0;
+				});
 
-			if (currentIsHeader && previousIsHeader && previousWasSuperAdminOnly === currentIsSuperAdminOnly) {
-				// Omitir encabezado consecutivo del mismo tipo de visibilidad
+				if (hasVisibleItems) {
+					finalMenu.push(item);
+				}
 			} else {
 				finalMenu.push(item);
 			}
-		});
 
+			previousItem = item;
+		});
 
 		this.MENUITEMS = finalMenu;
 		this.items.next(this.MENUITEMS);
