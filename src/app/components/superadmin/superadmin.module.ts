@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms'; // Importar FormsModule para ngMod
 
 import { SuperadminClientesComponent } from './superadmin-clientes/superadmin-clientes.component';
 import { SuperadminRoutingModule } from './superadmin-routing.module';
+import { UserService } from '../../services/user.service';
+import { AnalyticsService } from '../../services/analytics.service';
 
 // Podrías importar aquí módulos compartidos si los necesitas (ej: SharedModule)
 
@@ -16,6 +18,10 @@ import { SuperadminRoutingModule } from './superadmin-routing.module';
     FormsModule, // Añadir FormsModule aquí
     SuperadminRoutingModule
     // Importar SharedModule si es necesario
+  ],
+  providers: [
+    UserService,
+    AnalyticsService
   ]
 })
 export class SuperadminModule { }

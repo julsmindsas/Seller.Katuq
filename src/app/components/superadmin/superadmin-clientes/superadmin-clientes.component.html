@@ -260,6 +260,114 @@
       </div>
     </div>
 
+    <!-- KPIs y Métricas -->
+    <div class="row mt-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Ventas Totales</h6>
+                <h4 class="mb-0">{{ kpiData.ventasTotales | currency }}</h4>
+              </div>
+              <div id="chart-ventas-mensuales" class="apex-chart"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Pedidos Promedio</h6>
+                <h4 class="mb-0">{{ kpiData.pedidosPromedio }}</h4>
+              </div>
+              <div id="chart-metricas-rendimiento" class="apex-chart"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Tiempo Entrega</h6>
+                <h4 class="mb-0">{{ kpiData.tiempoEntregaPromedio }} min</h4>
+              </div>
+              <div class="text-success">
+                <i class="fas fa-arrow-down"></i>
+                <span>12%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Satisfacción Global</h6>
+                <h4 class="mb-0">{{ kpiData.satisfaccionGlobal }}/5.0</h4>
+              </div>
+              <div id="chart-satisfaccion" class="apex-chart"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Métricas Detalladas -->
+    <div class="row mt-4">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">Métricas de Rendimiento</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6 mb-3">
+                <div class="metric-card">
+                  <h6 class="text-muted">Ticket Promedio</h6>
+                  <h4 class="text-primary">{{ kpiData.ticketPromedio | currency }}</h4>
+                </div>
+              </div>
+              <div class="col-6 mb-3">
+                <div class="metric-card">
+                  <h6 class="text-muted">Retención</h6>
+                  <h4 class="text-success">{{ kpiData.retencionClientes | percent }}</h4>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="metric-card">
+                  <h6 class="text-muted">Eficiencia</h6>
+                  <h4 class="text-info">{{ kpiData.eficienciaEntrega | percent }}</h4>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="metric-card">
+                  <h6 class="text-muted">Tiendas Activas</h6>
+                  <h4 class="text-warning">{{ kpiData.tiendasActivas }}</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">Análisis de Satisfacción</h6>
+          </div>
+          <div class="card-body">
+            <div id="chart-satisfaccion-detalle" class="apex-chart"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabla de Clientes -->
     <div class="col-12">
       <div class="card">
@@ -347,5 +455,328 @@
       </div>
     </div>
     <!-- Fin Tabla de Clientes -->
+
+    <!-- Nueva sección de Análisis Avanzado de Usuarios -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Análisis Avanzado de Usuarios</h5>
+          </div>
+          <div class="card-body">
+            <!-- Métricas Globales -->
+            <div class="row mb-4">
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">Usuarios Activos</h6>
+                    <h4 class="text-primary">{{ metricasGlobales.usuariosActivos }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-primary" style="width: 85%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">Tasa de Retención</h6>
+                    <h4 class="text-success">{{ metricasGlobales.tasaRetencion | percent }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-success" style="width: 85%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">LTV Promedio</h6>
+                    <h4 class="text-info">{{ metricasGlobales.valorLTVPromedio | currency }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-info" style="width: 75%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">Tiempo Sesión Promedio</h6>
+                    <h4 class="text-warning">{{ metricasGlobales.tiempoSesionPromedio }} min</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-warning" style="width: 65%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gráficos de Análisis -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header">
+                    <h6>Score de Engagement</h6>
+                  </div>
+                  <div class="card-body">
+                    <div id="chart-engagement" class="apex-chart"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header">
+                    <h6>Valor de Vida del Cliente (LTV)</h6>
+                  </div>
+                  <div class="card-body">
+                    <div id="chart-ltv" class="apex-chart"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de Análisis Detallado -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Usuario</th>
+                        <th>Sesiones</th>
+                        <th>Tiempo Promedio</th>
+                        <th>Tasa Conversión</th>
+                        <th>LTV</th>
+                        <th>Engagement</th>
+                        <th>Tendencia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let usuario of analisisUsuarios">
+                        <td>{{ usuario.nombre }}</td>
+                        <td>{{ usuario.actividad.sesiones }}</td>
+                        <td>{{ usuario.actividad.tiempoPromedio }} min</td>
+                        <td>{{ usuario.conversion.tasa | percent }}</td>
+                        <td>{{ usuario.conversion.valorLTV | currency }}</td>
+                        <td>
+                          <div class="progress">
+                            <div class="progress-bar" [ngClass]="{
+                              'bg-success': usuario.engagement.score >= 80,
+                              'bg-warning': usuario.engagement.score >= 60 && usuario.engagement.score < 80,
+                              'bg-danger': usuario.engagement.score < 60
+                            }" [style.width.%]="usuario.engagement.score">
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span [ngClass]="{
+                            'text-success': usuario.engagement.tendencia > 0,
+                            'text-danger': usuario.engagement.tendencia < 0
+                          }">
+                            <i class="fas" [ngClass]="{
+                              'fa-arrow-up': usuario.engagement.tendencia > 0,
+                              'fa-arrow-down': usuario.engagement.tendencia < 0
+                            }"></i>
+                            {{ usuario.engagement.tendencia }}%
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nueva sección de KPIs de Crecimiento -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Métricas de Crecimiento</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">Tiendas Nuevas</h6>
+                    <h4 class="text-primary">{{ growthMetrics.newStores }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-primary" [style.width.%]="(growthMetrics.newStores / 100) * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">Tiendas Activas</h6>
+                    <h4 class="text-success">{{ growthMetrics.activeStores }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-success" [style.width.%]="(growthMetrics.activeStores / 500) * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">MRR</h6>
+                    <h4 class="text-info">{{ growthMetrics.mrr | currency }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-info" [style.width.%]="(growthMetrics.mrr / 1000000) * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">Tasa de Churn</h6>
+                    <h4 class="text-warning">{{ growthMetrics.churnRate | percent }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-warning" [style.width.%]="growthMetrics.churnRate * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos de Rendimiento -->
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h6>Tendencia de Ingresos</h6>
+          </div>
+          <div class="card-body">
+            <div id="chart-revenue" class="apex-chart"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h6>Rendimiento de la Plataforma</h6>
+          </div>
+          <div class="card-body">
+            <div id="chart-performance" class="apex-chart"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Análisis por Categoría -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Análisis por Categoría</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <div id="chart-categories" class="apex-chart"></div>
+              </div>
+              <div class="col-md-4">
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Categoría</th>
+                        <th>Ingresos</th>
+                        <th>Crecimiento</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let category of categoryTrends">
+                        <td>{{ category.name }}</td>
+                        <td>{{ category.revenue | currency }}</td>
+                        <td>
+                          <span [ngClass]="{
+                            'text-success': category.growth > 0,
+                            'text-danger': category.growth < 0
+                          }">
+                            {{ category.growth }}%
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Métricas de Marketing -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Métricas de Marketing</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">CPA</h6>
+                    <h4 class="text-primary">{{ marketingMetrics.cpa | currency }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-primary" [style.width.%]="(marketingMetrics.cpa / 200) * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">ROAS</h6>
+                    <h4 class="text-success">{{ marketingMetrics.roas }}x</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-success" [style.width.%]="(marketingMetrics.roas / 5) * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">Email Open Rate</h6>
+                    <h4 class="text-info">{{ marketingMetrics.emailOpenRate | percent }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-info" [style.width.%]="marketingMetrics.emailOpenRate * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                  <div class="card-body">
+                    <h6 class="text-muted">CTR</h6>
+                    <h4 class="text-warning">{{ marketingMetrics.clickThroughRate | percent }}</h4>
+                    <div class="progress mt-2">
+                      <div class="progress-bar bg-warning" [style.width.%]="marketingMetrics.clickThroughRate * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
