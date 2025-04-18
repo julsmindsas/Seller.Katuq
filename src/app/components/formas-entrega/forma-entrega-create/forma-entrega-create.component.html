@@ -1,129 +1,99 @@
-<!-- <app-breadcrumb [title]="'Forma Entrega'" [items]="['Maestros']" [active_item]="'Forma Entrega'"></app-breadcrumb> -->
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12 p-2">
-            <br>
-            <div class="card">
-
-                <div class="card-header p-4">
-                    <div class="row col-sm-12">
-                        <div class="col-sm-8">
-                            <p class="text-left fc-secondaryndaryndaryndary fs-24 m-0 p-0"><i class="icofont icofont-truck"></i>&nbsp;Crea una forma de entrega</p>
-                            <p class="text-left text-muted fs-18 m-0 p-0">
-                                Ingresa todos los datos y define el horario de la forma de entrega, sino existe, lo
-                                puedes
-                                crear.
-                            </p>
-                        </div>
-                        <div class="col-sm-4">
-                            <button class="btn btn-primary mt-2 pull-right" (click)="regresar()">
-                                <i class="icofont icofont-close"></i> {{ 'Regresar' | translate }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <span class="clearfix"></span>
-
-                <div class="card-body p-4">
-                    <form [formGroup]="form2">
-                        <div class="row">
-                            <div class="col-md-4 col-sm-6 mb-3">
-                                <label class="form-label" for="text1">Nombre</label>
-                                <input class="form-control" type="text" id="nombre" formControlName="nombre">
-                            </div>
-                            <div class="col-md-4 col-sm-6 mb-3">
-                                <label class="form-label" for="">Posición</label>&nbsp;
-                                <span type="button" class="help" placement="top"
-                                    ngbPopover="{{'Valor numérico: Define con un numero la posicion de la forma de entrega en el listado de formas de entrega.' | translate}}">
-                                    <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i></span>
-                                <input class="form-control" formControlName="posicion" id="checkThree" type="number" />
-                            </div>
-
-                            <div class="col-md-4 col-sm-6 mb-3">
-                                <label class="form-label" for="time1">Ciudades</label>&nbsp;
-                                <span type="button" class="help" placement="top"
-                                    ngbPopover="{{'Selecciona las ciudades para las que aplica esta forma de pago.' | translate}}">
-                                    <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i></span>
-                                <ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega"
-                                    style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
-                                    formControlName="ciudad" [closeOnSelect]="false">
-                                </ng-select>
-                            </div>
-                            <div class="col-md-4 col-sm-6 mb-3">
-                                <label class="form-label" for="text2">Horario</label>
-                                <ng-select [items]="horarios" style="font-family: roboto;color: #ffffff !important;"
-                                    [multiple]="true" formControlName="horariosSeleccionados" [closeOnSelect]="false"
-                                    bindLabel="nombre" bindValue="nombre">
-                                </ng-select>
-                            </div>
-                            <div class="col-md-4 col-sm-6 mb-3">
-                                <label class="form-label" for="">Activo/InActivo</label>&nbsp;<br>
-                                <input class="checkboxK" formControlName="activo" id="checkThree" type="checkbox" />
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="row w-100 p-2">
-                                <button type="button" class="btn btn-primary"
-                                    style="max-width: 200px; right:20px; position: absolute;"
-                                    (click)="submit()"><i class="icofont icofont-save"></i>&nbsp; Guardar</button>
-                            </div>
-                        </div>
-
-                        <br><br>
-                        <hr><br>
-
-                        <div class="card p-4">
-                            <div class="row col-sm-12 mb-4">
-                                <div class="col-sm-8">
-                                    <p class="text-left fc-secondary fs-20 m-0 p-0"><i class="icofont icofont-time"></i>&nbsp;Crear horario</p>
-                                    <p class="text-left text-muted fs-18 m-0 p-0">
-                                        Utiliza esta opción para ver y crear los horarios disponibles.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-3 col-md-2 p-1 mb-3">
-                                <button type="Button" class="btn btn-primary" (click)="addHorario()">
-                                    <i class="icofont icofont-time"></i>&nbsp;Crear
-                                    horario</button>
-                            </div>
-                            <div>
-                                <table class="table">
-                                    <thead>
-                                        <th>Nombre Horario</th>
-                                        <th>Acciones</th>
-                                    </thead>
-                                    <tbody>
-                                        <tr *ngFor="let item of horarioSeleccionados;let i = index">
-                                            <td>{{item}}</td>
-                                            <td>
-                                                <div class="row col-sm-12">
-
-
-                                                    <button class="btn w-25 pull-right"
-                                                        (click)="eliminar(i,item)">
-                                                        <i class="icofont icofont-ui-edit fc-primary" ></i>
-                                                    </button>
-
-                                                    <button class="btn w-25 pull-right"
-                                                        (click)="deleter(i,item)">
-                                                        <i class="icofont icofont-ui-delete fc-danger"></i>
-                                                    </button>
-
-                                                </div>
-
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </form>
-
-                </div>
+<div class="modal-header">
+    <h4 class="modal-title">
+      <i class="icofont icofont-truck"></i>&nbsp;{{ isEditing ? 'Editar' : 'Crear' }} forma de entrega
+    </h4>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  
+  <div class="modal-body">
+    <div class="card">
+      <div class="card-body p-4">
+        <form [formGroup]="form2">
+          <div class="row">
+            <div class="col-md-4 col-sm-6 mb-3">
+              <label class="form-label" for="text1">Nombre</label>
+              <input class="form-control" type="text" id="nombre" formControlName="nombre">
             </div>
-        </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+              <label class="form-label" for="">Posición</label>&nbsp;
+              <span type="button" class="help" placement="top"
+                ngbPopover="{{'Valor numérico: Define con un numero la posicion de la forma de entrega en el listado de formas de entrega.' | translate}}">
+                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i></span>
+              <input class="form-control" formControlName="posicion" id="checkThree" type="number" />
+            </div>
+  
+            <div class="col-md-4 col-sm-6 mb-3">
+              <label class="form-label" for="time1">Ciudades</label>&nbsp;
+              <span type="button" class="help" placement="top"
+                ngbPopover="{{'Selecciona las ciudades para las que aplica esta forma de pago.' | translate}}">
+                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i></span>
+              <ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega"
+                style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+                formControlName="ciudad" [closeOnSelect]="false">
+              </ng-select>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+              <label class="form-label" for="text2">Horario</label>
+              <ng-select [items]="horarios" style="font-family: roboto;color: #ffffff !important;"
+                [multiple]="true" formControlName="horariosSeleccionados" [closeOnSelect]="false"
+                bindLabel="nombre" bindValue="nombre">
+              </ng-select>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+              <label class="form-label" for="">Activo/InActivo</label>&nbsp;<br>
+              <input class="checkboxK" formControlName="activo" id="checkThree" type="checkbox" />
+            </div>
+          </div>
+  
+          <div class="card p-4 mt-3">
+            <div class="row col-sm-12 mb-4">
+              <div class="col-sm-8">
+                <p class="text-left fc-secondary fs-20 m-0 p-0"><i class="icofont icofont-time"></i>&nbsp;Crear horario</p>
+                <p class="text-left text-muted fs-18 m-0 p-0">
+                  Utiliza esta opción para ver y crear los horarios disponibles.
+                </p>
+              </div>
+            </div>
+  
+            <div class="col-sm-3 col-md-2 p-1 mb-3">
+              <button type="Button" class="btn btn-primary" (click)="addHorario()">
+                <i class="icofont icofont-time"></i>&nbsp;Crear horario
+              </button>
+            </div>
+            <div>
+              <table class="table">
+                <thead>
+                  <th>Nombre Horario</th>
+                  <th>Acciones</th>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of horarioSeleccionados;let i = index">
+                    <td>{{item}}</td>
+                    <td>
+                      <div class="row col-sm-12">
+                        <button class="btn w-25 pull-right" (click)="eliminar(i,item)">
+                          <i class="icofont icofont-ui-edit fc-primary"></i>
+                        </button>
+                        <button class="btn w-25 pull-right" (click)="deleter(i,item)">
+                          <i class="icofont icofont-ui-delete fc-danger"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
-</div>
+  </div>
+  
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="!form2.valid">
+      <i class="icofont icofont-save"></i>&nbsp; {{ isEditing ? 'Actualizar' : 'Guardar' }}
+    </button>
+  </div>

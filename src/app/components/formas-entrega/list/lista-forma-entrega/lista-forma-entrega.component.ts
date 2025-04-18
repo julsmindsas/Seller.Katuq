@@ -2,8 +2,9 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ColumnMode, DatatableComponent } from '@swimlane/ngx-datatable';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service'
+import { FormaEntregaCreateComponent } from '../../forma-entrega-create/forma-entrega-create.component';
 import Swal from 'sweetalert2';
-
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap'; 
 @Component({
   selector: 'app-lista-forma-entrega',
   templateUrl: './lista-forma-entrega.component.html',
@@ -21,26 +22,24 @@ export class ListaFormaEntregaComponent implements OnInit {
   closeResult: string;
   temp: any;
   isMobile: any;
-  constructor(private router: Router, private service: MaestroService) {
+  constructor(
+    private router: Router, 
+    private service: MaestroService,
+    private modalService: NgbModal
+  ) {
     this.cargando = true;
     this.service.getFormaEntrega().subscribe((r: any) => {
       this.cargando = false;
       this.temp = [...r];
       this.rows = (r as any[]).sort((a, b) => {
-        const nameA = parseInt(a.posicion); // ignore upper and lowercase
-        const nameB = parseInt(b.posicion); // ignore upper and lowercase
-        if (nameA < nameB) {
-          return -1;
-        }
-        if (nameA > nameB) {
-          return 1;
-        }
-
-        // names must be equal
+        const nameA = parseInt(a.posicion);
+        const nameB = parseInt(b.posicion);
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
         return 0;
       });
       this.cargando = false;
-    })
+    });
   }
 
   ngOnInit(): void {
@@ -83,13 +82,57 @@ export class ListaFormaEntregaComponent implements OnInit {
 
   editar(row) {
     sessionStorage.setItem("formaEntrega", JSON.stringify(row));
-    this.router.navigateByUrl("/formasEntrega/crear")
+    const modalRef = this.modalService.open(FormaEntregaCreateComponent, {
+      size: 'xl',
+      backdrop: 'static'
+    });
+    
+    modalRef.result.then((result) => {
+      if (result === 'success') {
+        // Recargar los datos después de editar
+        this.cargando = true;
+        this.service.getFormaEntrega().subscribe((r: any) => {
+          this.cargando = false;
+          this.temp = [...r];
+          this.rows = (r as any[]).sort((a, b) => {
+            const nameA = parseInt(a.posicion);
+            const nameB = parseInt(b.posicion);
+            if (nameA < nameB) return -1;
+            if (nameA > nameB) return 1;
+            return 0;
+          });
+        });
+      }
+    }, (reason) => {
+      // Se cerró el modal con cancelar
+    });
   }
   create() {
     sessionStorage.removeItem("formaEntrega");
-
-    this.router.navigateByUrl("/formasEntrega/crear")
-    // clear the rows array
+    const modalRef = this.modalService.open(FormaEntregaCreateComponent, {
+      size: 'xl',
+      backdrop: 'static'
+    });
+    
+    modalRef.result.then((result) => {
+      if (result === 'success') {
+        // Recargar los datos después de guardar
+        this.cargando = true;
+        this.service.getFormaEntrega().subscribe((r: any) => {
+          this.cargando = false;
+          this.temp = [...r];
+          this.rows = (r as any[]).sort((a, b) => {
+            const nameA = parseInt(a.posicion);
+            const nameB = parseInt(b.posicion);
+            if (nameA < nameB) return -1;
+            if (nameA > nameB) return 1;
+            return 0;
+          });
+        });
+      }
+    }, (reason) => {
+      // Se cerró el modal con cancelar
+    });
   }
   eliminarFila(row) {
     Swal.fire({
