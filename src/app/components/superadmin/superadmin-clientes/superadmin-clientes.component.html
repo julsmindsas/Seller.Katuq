@@ -268,7 +268,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="text-muted mb-1">Ventas Totales</h6>
-                <h4 class="mb-0">{{ kpiData.ventasTotales | number:'1.0-0' | currency }}</h4>
+                <h4 class="mb-0">{{ kpiData.ventasTotales ? (kpiData.ventasTotales | currency) : '$0' }}</h4>
               </div>
               <div id="chart-ventas-mensuales" class="apex-chart"></div>
             </div>
@@ -331,7 +331,7 @@
               <div class="col-6 mb-3">
                 <div class="metric-card">
                   <h6 class="text-muted">Ticket Promedio</h6>
-                  <h4 class="text-primary">{{ kpiData.ticketPromedio | number:'1.0-0' | currency }}</h4>
+                  <h4 class="text-primary">{{ kpiData.ticketPromedio ? (kpiData.ticketPromedio | currency:'COP':'symbol-narrow') : '$0' }}</h4>
                 </div>
               </div>
               <div class="col-6 mb-3">
@@ -511,7 +511,7 @@
                 <div class="card metric-card">
                   <div class="card-body">
                     <h6 class="text-muted">LTV Promedio</h6>
-                    <h4 class="text-info">{{ metricasGlobales.valorLTVPromedio | currency }}</h4>
+                    <h4 class="text-info">{{ metricasGlobales.valorLTVPromedio ? (metricasGlobales.valorLTVPromedio | currency) : '$0' }}</h4>
                     <div class="progress mt-2">
                       <div class="progress-bar bg-info" style="width: 75%"></div>
                     </div>
@@ -719,7 +719,7 @@
                     <tbody>
                       <tr *ngFor="let category of categoryTrends">
                         <td><span class="fw-bold">{{ category.name }}</span></td>
-                        <td>{{ category.revenue | currency }}</td>
+                        <td>{{ category.revenue != null ? (category.revenue | currency) : '$0' }}</td>
                         <td>
                           <span [ngClass]="{
                             'text-success': category.growth > 0,
@@ -756,7 +756,7 @@
                 <div class="card metric-card">
                   <div class="card-body">
                     <h6 class="text-muted">CPA</h6>
-                    <h4 class="text-primary">{{ marketingMetrics.cpa | currency }}</h4>
+                    <h4 class="text-primary">{{ marketingMetrics.cpa != null ? (marketingMetrics.cpa | currency) : '$0' }}</h4>
                     <div class="progress mt-2">
                       <div class="progress-bar bg-primary" [style.width.%]="(marketingMetrics.cpa / 200) * 100"></div>
                     </div>

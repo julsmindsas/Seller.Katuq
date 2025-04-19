@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, catchError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { 
@@ -16,139 +16,205 @@ import {
 })
 export class AnalyticsService {
   private apiUrl = environment.urlApi;
-  private useMockData = false; // Cambiar a false cuando los endpoints estén disponibles
+  private useMockData = false; // Usar datos reales del backend
 
   constructor(private http: HttpClient) { }
 
-  // Obtener KPIs generales
+  /**
+   * Obtener KPIs generales de todas las tiendas/clientes
+   */
   getKpiGeneral(): Observable<any> {
     if (this.useMockData) {
       return of(kpiGeneralMock);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/kpi/general`)
       .pipe(
-        catchError(() => of(kpiGeneralMock))
+        catchError(error => {
+          console.error('Error al obtener KPIs generales:', error);
+          return of(kpiGeneralMock);
+        })
       );
   }
 
-  // Obtener análisis de usuarios
+  /**
+   * Obtener análisis de usuarios
+   */
   getAnalysisUsers(): Observable<any> {
     if (this.useMockData) {
       return of(advancedMetricsMock.userAnalysis);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/users`)
       .pipe(
-        catchError(() => of(advancedMetricsMock.userAnalysis))
+        catchError(error => {
+          console.error('Error al obtener análisis de usuarios:', error);
+          return of(advancedMetricsMock.userAnalysis);
+        })
       );
   }
 
-  // Obtener métricas globales
+  /**
+   * Obtener métricas globales
+   */
   getGlobalMetrics(): Observable<any> {
     if (this.useMockData) {
       return of(metricasGlobalesMock);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/metrics/global`)
       .pipe(
-        catchError(() => of(metricasGlobalesMock))
+        catchError(error => {
+          console.error('Error al obtener métricas globales:', error);
+          return of(metricasGlobalesMock);
+        })
       );
   }
 
-  // Obtener datos de tiendas
+  /**
+   * Obtener datos de tiendas
+   */
   getStoresData(): Observable<any> {
     if (this.useMockData) {
       return of(tiendasMock);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/stores`)
       .pipe(
-        catchError(() => of(tiendasMock))
+        catchError(error => {
+          console.error('Error al obtener datos de tiendas:', error);
+          return of(tiendasMock);
+        })
       );
   }
 
-  // Obtener datos de engagement
+  /**
+   * Obtener datos de engagement
+   */
   getEngagementData(): Observable<any> {
     if (this.useMockData) {
       return of(engagementDataMock);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/engagement`)
       .pipe(
-        catchError(() => of(engagementDataMock))
+        catchError(error => {
+          console.error('Error al obtener datos de engagement:', error);
+          return of(engagementDataMock);
+        })
       );
   }
 
-  // Obtener datos de LTV
+  /**
+   * Obtener datos de LTV
+   */
   getLTVData(): Observable<any> {
     if (this.useMockData) {
       return of(ltvDataMock);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/ltv`)
       .pipe(
-        catchError(() => of(ltvDataMock))
+        catchError(error => {
+          console.error('Error al obtener datos de LTV:', error);
+          return of(ltvDataMock);
+        })
       );
   }
 
-  // Obtener métricas avanzadas (todas las métricas en una sola llamada)
-  getAdvancedMetrics(): Observable<any> {
-    if (this.useMockData) {
-      return of(advancedMetricsMock);
-    }
-    return this.http.get(`${this.apiUrl}/v1/analytics/advanced`)
-      .pipe(
-        catchError(() => of(advancedMetricsMock))
-      );
-  }
-
-  // Obtener métricas de crecimiento
+  /**
+   * Obtener métricas de crecimiento
+   */
   getGrowthMetrics(): Observable<any> {
     if (this.useMockData) {
       return of(advancedMetricsMock.growthMetrics);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/growth`)
       .pipe(
-        catchError(() => of(advancedMetricsMock.growthMetrics))
+        catchError(error => {
+          console.error('Error al obtener métricas de crecimiento:', error);
+          return of(advancedMetricsMock.growthMetrics);
+        })
       );
   }
 
-  // Obtener métricas de conversión
+  /**
+   * Obtener métricas de conversión
+   */
   getConversionMetrics(): Observable<any> {
     if (this.useMockData) {
       return of(advancedMetricsMock.conversionMetrics);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/conversion`)
       .pipe(
-        catchError(() => of(advancedMetricsMock.conversionMetrics))
+        catchError(error => {
+          console.error('Error al obtener métricas de conversión:', error);
+          return of(advancedMetricsMock.conversionMetrics);
+        })
       );
   }
 
-  // Obtener métricas de rendimiento
+  /**
+   * Obtener métricas de rendimiento
+   */
   getPerformanceMetrics(): Observable<any> {
     if (this.useMockData) {
       return of(advancedMetricsMock.performanceMetrics);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/performance`)
       .pipe(
-        catchError(() => of(advancedMetricsMock.performanceMetrics))
+        catchError(error => {
+          console.error('Error al obtener métricas de rendimiento:', error);
+          return of(advancedMetricsMock.performanceMetrics);
+        })
       );
   }
 
-  // Obtener tendencias por categoría
+  /**
+   * Obtener tendencias por categoría
+   */
   getCategoryTrends(): Observable<any> {
     if (this.useMockData) {
       return of(advancedMetricsMock.categoryTrends);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/categories`)
       .pipe(
-        catchError(() => of(advancedMetricsMock.categoryTrends))
+        catchError(error => {
+          console.error('Error al obtener tendencias por categoría:', error);
+          return of(advancedMetricsMock.categoryTrends);
+        })
       );
   }
 
-  // Obtener métricas de marketing
+  /**
+   * Obtener métricas de marketing
+   */
   getMarketingMetrics(): Observable<any> {
     if (this.useMockData) {
       return of(advancedMetricsMock.marketingMetrics);
     }
     return this.http.get(`${this.apiUrl}/v1/analytics/marketing`)
       .pipe(
-        catchError(() => of(advancedMetricsMock.marketingMetrics))
+        catchError(error => {
+          console.error('Error al obtener métricas de marketing:', error);
+          return of(advancedMetricsMock.marketingMetrics);
+        })
+      );
+  }
+
+  /**
+   * Obtener métricas avanzadas (todas las métricas en una sola llamada)
+   * Este método combina todas las métricas anteriores para reducir
+   * el número de peticiones al servidor
+   */
+  getAdvancedMetrics(): Observable<any> {
+    if (this.useMockData) {
+      return of(advancedMetricsMock);
+    }
+    
+    // Como no hay un endpoint específico para todas las métricas,
+    // podríamos considerar implementarlo en el backend
+    // Por ahora, usamos los endpoints individuales y los combinamos
+    return this.http.get(`${this.apiUrl}/v1/analytics/kpi/general`)
+      .pipe(
+        catchError(error => {
+          console.error('Error al obtener métricas avanzadas:', error);
+          return of(advancedMetricsMock);
+        })
       );
   }
 } 
