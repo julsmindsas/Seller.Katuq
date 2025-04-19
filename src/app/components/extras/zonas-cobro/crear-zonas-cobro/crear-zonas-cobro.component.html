@@ -1,116 +1,87 @@
+<div class="modal-header d-flex justify-content-between align-items-center">
+    <h4 class="modal-title mb-0">
+      <i class="icofont icofont-money"></i>&nbsp;{{ editando ? 'Editar' : 'Crear' }} zona de cobro
+    </h4>
+    <button type="button" class="btn-close p-2" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
 
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12 p-2">
-            <br>
-            <div class="card">
-                <div class="card-header p-4">
-                    <div class="row col-sm-12">
-                        <div class="col-sm-8">
-                            <p class="text-left fc-secondary fs-24 m-0 p-0"><i class="icofont icofont-money"></i>&nbsp;Crea
-                                una Zona de Cobro</p>
-                            <p class="text-left text-muted fs-18 m-0 p-0">
-                                Ingresa todos los datos y define la zona de cobro, sino existe, la
-                                puedes crear.
-                            </p>
-                        </div>
-                        <div class="col-sm-4">
-                            <button class="btn btn-primary mt-2 pull-right" (click)="regresar()">
-                                <i class="icofont icofont-close"></i> {{ 'Regresar' | translate }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <form [formGroup]="zonasCorbroForm">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="ciudad">Ciudad</label>&nbsp;
-                                    <span type="button" class="help" placement="top"
-                                        ngbPopover="{{'Selecciona la ciudad asociada a la zona de cobro.' | translate}}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
-                                    </span>
-                                    <select class="form-control" id="ciudad" formControlName="ciudad">
-                                        <option value="Seleccione" selected disabled>Seleccione</option>
-                                        <option *ngFor="let item of ciudades" [value]="item.label">{{item.label}}</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="nombreZonaCobro">Nombre Zona Cobro</label>&nbsp;
-                                    <span type="button" class="help" placement="top"
-                                        ngbPopover="{{'Ingresa el nombre de la zona de cobro.' | translate}}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
-                                    </span>
-                                    <input class="form-control" type="text" id="nombreZonaCobro" formControlName="nombreZonaCobro">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="valorZonaCobro">Valor Zona Cobro</label>&nbsp;
-                                    <span type="button" class="help" placement="top"
-                                        ngbPopover="{{'Ingresa el valor base de la zona de cobro.' | translate}}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
-                                    </span>
-                                    <input class="form-control" type="number" id="valorZonaCobro" formControlName="valorZonaCobro">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="impuestoZonaCobro">Porcentaje Impuesto Zona Cobro</label>&nbsp;
-                                    <span type="button" class="help" placement="top"
-                                        ngbPopover="{{'Selecciona el porcentaje de impuesto aplicable a la zona de cobro.' | translate}}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
-                                    </span>
-                                    <select class="form-control" id="impuestoZonaCobro" formControlName="impuestoZonaCobro">
-                                        <option value="0">0%</option>
-                                        <option value="5">5%</option>
-                                        <option value="8">8%</option>
-                                        <option value="19">19%</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="impuesto">Impuesto</label>&nbsp;
-                                    <span type="button" class="help" placement="top"
-                                        ngbPopover="{{'Calcula automáticamente el impuesto basado en el valor y el porcentaje seleccionado.' | translate}}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
-                                    </span>
-                                    <br>
-                                    <span style="font-weight: bolder;">{{ (zonasCorbroForm.value.valorZonaCobro * (zonasCorbroForm.value.impuestoZonaCobro / 100)) | currency }}</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="total">Total</label>&nbsp;
-                                    <span type="button" class="help" placement="top"
-                                        ngbPopover="{{'Calcula automáticamente el total sumando el valor base y el impuesto.' | translate}}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
-                                    </span>
-                                    <br>
-                                    <span style="font-weight: bolder;">{{ zonasCorbroForm.value.valorZonaCobro + (zonasCorbroForm.value.valorZonaCobro * (zonasCorbroForm.value.impuestoZonaCobro / 100)) | currency }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <br>
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <button class="btn btn-primary" type="submit" (click)="editando ? editar() : guardar()">
-                                    {{ editando ? 'Guardar cambios' : 'Guardar' }}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+    </button>
+  </div>
+  
+  <div class="modal-body">
+    <div class="card">
+      <div class="card-body p-4">
+        <form [formGroup]="zonasCorbroForm">
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="ciudad">Ciudad</label>&nbsp;
+              <span type="button" class="help" placement="top"
+                ngbPopover="{{'Selecciona la ciudad asociada a la zona de cobro.' | translate}}">
+                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+              </span>
+              <select class="form-control" id="ciudad" formControlName="ciudad">
+                <option value="Seleccione" selected disabled>Seleccione</option>
+                <option *ngFor="let item of ciudades" [value]="item.label">{{item.label}}</option>
+              </select>
             </div>
-        </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="nombreZonaCobro">Nombre Zona Cobro</label>&nbsp;
+              <span type="button" class="help" placement="top"
+                ngbPopover="{{'Ingresa el nombre de la zona de cobro.' | translate}}">
+                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+              </span>
+              <input class="form-control" type="text" id="nombreZonaCobro" formControlName="nombreZonaCobro">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="valorZonaCobro">Valor Zona Cobro</label>&nbsp;
+              <span type="button" class="help" placement="top"
+                ngbPopover="{{'Ingresa el valor base de la zona de cobro.' | translate}}">
+                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+              </span>
+              <input class="form-control" type="number" id="valorZonaCobro" formControlName="valorZonaCobro">
+            </div>
+          </div>
+  
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="impuestoZonaCobro">Porcentaje Impuesto Zona Cobro</label>&nbsp;
+              <span type="button" class="help" placement="top"
+                ngbPopover="{{'Selecciona el porcentaje de impuesto aplicable a la zona de cobro.' | translate}}">
+                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+              </span>
+              <select class="form-control" id="impuestoZonaCobro" formControlName="impuestoZonaCobro">
+                <option value="0">0%</option>
+                <option value="5">5%</option>
+                <option value="8">8%</option>
+                <option value="19">19%</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="impuesto">Impuesto</label>&nbsp;
+              <span type="button" class="help" placement="top"
+                ngbPopover="{{'Calcula automáticamente el impuesto basado en el valor y el porcentaje seleccionado.' | translate}}">
+                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+              </span>
+              <br>
+              <span style="font-weight: bolder;">{{ (zonasCorbroForm.value.valorZonaCobro * (zonasCorbroForm.value.impuestoZonaCobro / 100)) | currency }}</span>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="total">Total</label>&nbsp;
+              <span type="button" class="help" placement="top"
+                ngbPopover="{{'Calcula automáticamente el total sumando el valor base y el impuesto.' | translate}}">
+                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+              </span>
+              <br>
+              <span style="font-weight: bolder;">{{ zonasCorbroForm.value.valorZonaCobro + (zonasCorbroForm.value.valorZonaCobro * (zonasCorbroForm.value.impuestoZonaCobro / 100)) | currency }}</span>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
-</div>
+  </div>
+  
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="editando ? editar() : guardar()" [disabled]="!zonasCorbroForm.valid">
+      <i class="icofont icofont-save"></i>&nbsp; {{ editando ? 'Guardar cambios' : 'Guardar' }}
+    </button>
+  </div>

@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { DatatableComponent, ColumnMode } from '@swimlane/ngx-datatable';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TipoEntregaComponent } from '../tipo-entrega.component';
 
 @Component({
   selector: 'app-list-tipo-entrega',
@@ -21,36 +23,34 @@ export class ListTipoEntregaComponent implements OnInit {
   closeResult: string;
   temp: any;
   isMobile: any;
-  constructor(private router: Router, private service: MaestroService) {
+  
+  constructor(
+    private router: Router, 
+    private service: MaestroService,
+    private modalService: NgbModal
+  ) {
     this.cargando = true;
+    this.loadData();
+  }
+
+  ngOnInit(): void {}
+
+  loadData() {
     this.service.getTipoEntrega().subscribe((r: any) => {
       this.cargando = false;
       this.temp = [...r];
       this.rows = (r as any[]).sort((a, b) => {
-        const nameA = parseInt(a.posicion); // ignore upper and lowercase
-        const nameB = parseInt(b.posicion); // ignore upper and lowercase
-        if (nameA < nameB) {
-          return -1;
-        }
-        if (nameA > nameB) {
-          return 1;
-        }
-
-        // names must be equal
+        const nameA = parseInt(a.posicion);
+        const nameB = parseInt(b.posicion);
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
         return 0;
       });
-      this.cargando = false;
-    })
-  }
-
-  ngOnInit(): void {
-
+    });
   }
 
   updateFilter(event: any) {
-
     const val = event.target.value.toLowerCase();
-
     let temp: any;
 
     if (this.isMobile) {
@@ -63,25 +63,38 @@ export class ListTipoEntregaComponent implements OnInit {
       temp = this.temp.filter(function (d) {
         const res1 = d.nombreExterno.toLowerCase().indexOf(val) !== -1 || !val;
         const res3 = d.nombreInterno.toLowerCase().indexOf(val) !== -1 || !val;
-        return  res1 || res3 ;
+        return res1 || res3;
       });
     }
 
     this.rows = temp;
-
     this.table.offset = 0;
   }
 
-
   editar(row) {
-    sessionStorage.setItem("formaEntregaEdit",JSON.stringify(row));
-    this.router.navigateByUrl("/formasEntrega/tipoentrega")
+    sessionStorage.setItem("formaEntregaEdit", JSON.stringify(row));
+    this.openModal();
   }
+
   create() {
     sessionStorage.removeItem("formaEntregaEdit");
+    this.openModal();
+  }
 
-    this.router.navigateByUrl("/formasEntrega/tipoentrega")
-    // clear the rows array
+  openModal() {
+    const modalRef = this.modalService.open(TipoEntregaComponent, {
+      size: 'lg',
+      backdrop: 'static'
+    });
+
+    modalRef.result.then((result) => {
+      if (result === 'success') {
+        this.cargando = true;
+        this.loadData(); // Recargar los datos después de cerrar el modal
+      }
+    }, (reason) => {
+      // Manejar el cierre del modal si es necesario
+    });
   }
 
   eliminarFila(row) {
@@ -97,7 +110,12 @@ export class ListTipoEntregaComponent implements OnInit {
       if (result.isConfirmed) {
         this.service.deleteTipoDeEntrega(row).subscribe(r => {
           this.rows = this.rows.filter((p: any) => p !== row);
-        })
+          Swal.fire(
+            'Eliminado!',
+            'El tipo de entrega ha sido eliminado.',
+            'success'
+          );
+        });
       }
     });
   }

@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { SharedModule } from 'src/app/shared/shared.module';
 
-import { TiempoEntregaComponent } from '../tiempos-entrega/create/tiempo-entrega/tiempo-entrega.component';
+import { TiempoEntregaComponent } from './create/tiempo-entrega/tiempo-entrega.component';
 import { TiempoEntregaRoutingModule } from './tiempoentrega-routing.module';
 import { ListaTiemposComponent } from '../tiempos-entrega/lista-tiempos/listatiempos.component';
 import { NgSelectModule } from '@ng-select/ng-select';

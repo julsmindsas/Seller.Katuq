@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { Route, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { TableColumn } from '@swimlane/ngx-datatable';
-import { MaestroService } from '../../../shared/services/maestros/maestro.service'
+import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TiempoEntregaComponent } from '../create/tiempo-entrega/tiempo-entrega.component';
 
 @Component({
   selector: 'app-listatiempos',
@@ -11,11 +13,9 @@ import Swal from 'sweetalert2';
 })
 export class ListaTiemposComponent implements OnInit {
   icons: any;
-
   items: any = [];
-  constructor(private router: Router, private service: MaestroService) {
-  }
   cargando = true;
+
   columns: TableColumn[] = [
     { name: 'Nombre Interno' },
     { name: 'Nombre externo' },
@@ -26,32 +26,51 @@ export class ListaTiemposComponent implements OnInit {
     { name: 'Acciones' }
   ];
 
-  editar(row) {
-    // Handle edit event here
-    sessionStorage.setItem("tiempoEntregaEdit", JSON.stringify(row));
-    this.router.navigateByUrl("/tiempoentrega/create")
-  }
-
-  onDelete(row) {
-    // Handle delete event here
-  }
-
+  constructor(
+    private router: Router,
+    private service: MaestroService,
+    private modalService: NgbModal
+  ) { }
 
   ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData() {
+    this.cargando = true;
     this.service.getTiempoEntrega().subscribe((r: any) => {
       this.items = (r as any[]);
       this.cargando = false;
-    })
+    });
   }
 
-
+  editar(row: any) {
+    sessionStorage.setItem("tiempoEntregaEdit", JSON.stringify(row));
+    this.openTiempoEntregaModal();
+  }
 
   create() {
-    this.router.navigateByUrl("/tiempoentrega/create")
-    // clear the items array
+    sessionStorage.removeItem("tiempoEntregaEdit");
+    this.openTiempoEntregaModal();
   }
 
-  eliminarFila(row) {
+  openTiempoEntregaModal() {
+    const modalRef = this.modalService.open(TiempoEntregaComponent, {
+      size: 'lg',
+      backdrop: 'static',
+      keyboard: false
+    });
+
+    modalRef.result.then((result) => {
+      if (result === 'success') {
+        this.loadData(); // Recargar los datos después de cerrar el modal
+      }
+    }, (reason) => {
+      // Manejar el cierre del modal si es necesario
+    });
+  }
+
+  eliminarFila(row: any) {
     Swal.fire({
       title: '¿Está seguro de eliminar tiempo de entrega?',
       text: 'Esta acción no se puede revertir',
@@ -64,10 +83,13 @@ export class ListaTiemposComponent implements OnInit {
       if (result.isConfirmed) {
         this.service.deleteTipoDeEntrega(row).subscribe(r => {
           this.items = this.items.filter((p: any) => p !== row);
-        })
+          Swal.fire(
+            'Eliminado!',
+            'El tiempo de entrega ha sido eliminado.',
+            'success'
+          );
+        });
       }
     });
-
   }
-
 }

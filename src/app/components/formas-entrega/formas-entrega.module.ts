@@ -9,10 +9,10 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormaEntregaCreateComponent } from './forma-entrega-create/forma-entrega-create.component';
 import { HorarioEntregaModule } from '../formas-entrega/horario-entrega/horario-entrega.module';
-import { TipoEntregaComponent } from './tipo-entrega/tipo-entrega.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { ListTipoEntregaComponent } from '../formas-entrega/tipo-entrega/list/list-tipo-entrega.component';
 import { TableModule } from 'primeng/table';
+import { TipoEntregaComponent } from './tipo-entrega/tipo-entrega.component';
 
 @NgModule({
   imports: [
