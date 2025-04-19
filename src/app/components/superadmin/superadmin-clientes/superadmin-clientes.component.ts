@@ -361,6 +361,11 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   private renderEngagementChartInstance: any;
   private renderLTVChartInstance: any;
 
+  // Propiedades para la vista mejorada
+  percentageActiveClients: number = 0;
+  filtroFecha: string;
+  viewMode: string = 'table'; // o 'cards' para vista móvil
+
   constructor(
     private userService: UserService,
     private analyticsService: AnalyticsService,
@@ -374,6 +379,9 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     this.cargarKPIs();
     this.cargarMetricasGlobales();
     this.cargarDatosTiendas();
+    this.calcularPorcentajeClientesActivos();
+    this.initializeResponsiveView();
+    this.initializeCharts();
   }
 
   ngAfterViewInit(): void {
@@ -1422,5 +1430,68 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
              // Si no hay tiendas, las ventas totales también son 0 (ya asignado arriba)
           }
       });
+  }
+
+  // Nuevos métodos UI
+  refreshData() {
+    console.log('Actualizando datos...');
+    this.cargarClientes();
+  }
+
+  exportData() {
+    console.log('Exportando datos...');
+    // Implementar lógica de exportación
+  }
+
+  openNewClientModal() {
+    console.log('Abriendo modal de nuevo cliente...');
+    // Implementar lógica para abrir modal
+  }
+
+  toggleViewMode() {
+    this.viewMode = this.viewMode === 'table' ? 'cards' : 'table';
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  }
+
+  getClienteColor(cliente: any): string {
+    if (cliente.estado === 'Activo') return 'success-dark';
+    if (cliente.estado === 'Bloqueado') return 'danger-dark';
+    if (cliente.estado === 'Pendiente') return 'warning-dark';
+    return 'info-dark';
+  }
+
+  private calcularPorcentajeClientesActivos() {
+    if (this.totalClientes > 0) {
+      this.percentageActiveClients = (this.clientesActivosCount / this.totalClientes) * 100;
+    }
+  }
+
+  private initializeResponsiveView() {
+    // Detectar dispositivo móvil para mostrar vista de tarjetas automáticamente
+    if (window.innerWidth < 768) {
+      this.viewMode = 'cards';
+    }
+    
+    // Listener para cambiar vista en resize
+    window.addEventListener('resize', () => {
+      if (window.innerWidth < 768 && this.viewMode === 'table') {
+        this.viewMode = 'cards';
+      }
+    });
+  }
+
+  private initializeCharts() {
+    // Inicialización de gráficos cuando se cargue la página
+    // (Se implementará con ApexCharts o similar)
+    console.log('Inicializando gráficos...');
   }
 }
