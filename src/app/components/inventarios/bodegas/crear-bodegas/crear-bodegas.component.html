@@ -1,123 +1,137 @@
-<div class="modal-header bg-primary text-white">
-  <h5 class="modal-title">
-    <i class="fas fa-warehouse me-2"></i>
-    {{ isEditMode ? 'Editar Bodega' : 'Crear Nueva Bodega' }}
-  </h5>
-  <button type="button" class="btn-close btn-close-white" (click)="cancelar()" aria-label="Close"></button>
-</div>
-
-<div class="modal-body">
-  <form [formGroup]="bodegaForm" autocomplete="off">
-    <div class="alert alert-info mb-3">
-      <i class="fa fa-info-circle me-2"></i>
-      Los campos marcados con <span class="text-danger">*</span> son obligatorios.
-    </div>
-    <div class="row g-4">
-      <!-- Datos generales -->
-      <div class="col-12 col-lg-6">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body">
-            <div class="mb-3">
-              <label class="form-label fw-bold">
-                <i class="fa fa-tag me-1 text-primary"></i> Nombre <span class="text-danger">*</span>
-              </label>
-              <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre de la bodega" autofocus>
-              <div *ngIf="bodegaForm.get('nombre')?.invalid && bodegaForm.get('nombre')?.touched" class="text-danger small mt-1">
-                <i class="fas fa-exclamation-circle me-1"></i> El nombre es requerido
+<div class="modal-header">
+    <h4 class="modal-title">
+      <i class="icofont icofont-truck"></i>&nbsp;{{ isEditMode ? 'Editar Bodega' : 'Crear Nueva Bodega' }}
+    </h4>
+    <button type="button" class="close" aria-label="Close" (click)="cancelar()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  
+  <div class="modal-body">
+    <div class="card">
+      <div class="card-body p-4">
+        <form [formGroup]="bodegaForm" autocomplete="off">
+          <div class="alert alert-info mb-3">
+            <i class="icofont icofont-info-circle"></i>&nbsp;
+            Los campos marcados con <span class="text-danger">*</span> son obligatorios.
+          </div>
+          
+          <div class="row g-4">
+            <!-- Datos generales -->
+            <div class="col-12 col-lg-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label class="form-label">
+                      <i class="icofont icofont-tag"></i>&nbsp;Nombre <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre de la bodega" autofocus>
+                    <div *ngIf="bodegaForm.get('nombre')?.invalid && bodegaForm.get('nombre')?.touched" class="text-danger small mt-1">
+                      <i class="icofont icofont-close-circled"></i> El nombre es requerido
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">
+                      <i class="icofont icofont-barcode"></i>&nbsp;Código Bodega <span class="text-danger">*</span>
+                      <span class="ms-1 text-muted" style="font-size: 0.9em;">Ej: BOD-001</span>
+                    </label>
+                    <input type="text" class="form-control" formControlName="idBodega" placeholder="BOD-001">
+                    <div *ngIf="bodegaForm.get('idBodega')?.invalid && bodegaForm.get('idBodega')?.touched" class="text-danger small mt-1">
+                      <i class="icofont icofont-close-circled"></i>
+                      <span *ngIf="bodegaForm.get('idBodega')?.hasError('required')">
+                        El código es requerido
+                      </span>
+                      <span *ngIf="bodegaForm.get('idBodega')?.hasError('pattern')">
+                        Formato: BOD- seguido de 3 caracteres/números
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">
+                      <i class="icofont icofont-box"></i>&nbsp;Tipo de Bodega <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-control" formControlName="tipo">
+                      <option value="" disabled>Seleccionar tipo...</option>
+                      <option *ngFor="let tipo of tiposBodega" [value]="tipo">{{ tipo }}</option>
+                    </select>
+                  </div>
+                  
+                  <div class="row g-2">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">
+                        <i class="icofont icofont-flag"></i>&nbsp;País <span class="text-danger">*</span>
+                      </label>
+                      <select class="form-control" formControlName="pais" [disabled]="cargandoPaises">
+                        <option value="" disabled>Seleccionar...</option>
+                        <option *ngFor="let pais of paises" [value]="pais">{{ pais }}</option>
+                      </select>
+                      <div *ngIf="cargandoPaises" class="text-info small mt-1"><i class="icofont icofont-spinner"></i> Cargando países...</div>
+                      <div *ngIf="!cargandoPaises && paises.length === 0" class="text-warning small mt-1">No hay países disponibles</div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">
+                        <i class="icofont icofont-map"></i>&nbsp;Departamento <span class="text-danger">*</span>
+                      </label>
+                      <select class="form-control" formControlName="departamento" [disabled]="!bodegaForm.get('pais')?.value || cargandoDepartamentos">
+                        <option value="" disabled>Seleccionar...</option>
+                        <option *ngFor="let depto of departamentos" [value]="depto">{{ depto }}</option>
+                      </select>
+                      <div *ngIf="cargandoDepartamentos" class="text-info small mt-1"><i class="icofont icofont-spinner"></i> Cargando departamentos...</div>
+                      <div *ngIf="!cargandoDepartamentos && departamentos.length === 0 && bodegaForm.get('pais')?.value" class="text-warning small mt-1">No hay departamentos disponibles</div>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">
+                      <i class="icofont icofont-location-pin"></i>&nbsp;Ciudad <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-control" formControlName="ciudad" [disabled]="!bodegaForm.get('departamento')?.value || cargandoCiudades">
+                      <option value="" disabled>Seleccionar...</option>
+                      <option *ngFor="let ciudad of ciudades" [value]="ciudad">{{ ciudad }}</option>
+                    </select>
+                    <div *ngIf="cargandoCiudades" class="text-info small mt-1"><i class="icofont icofont-spinner"></i> Cargando ciudades...</div>
+                    <div *ngIf="!cargandoCiudades && ciudades.length === 0 && bodegaForm.get('departamento')?.value" class="text-warning small mt-1">No hay ciudades disponibles</div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">
-                <i class="fa fa-barcode me-1 text-primary"></i> Código Bodega <span class="text-danger">*</span>
-                <span class="ms-1 text-muted" style="font-size: 0.9em;">Ej: BOD-001</span>
-              </label>
-              <input type="text" class="form-control" formControlName="idBodega" placeholder="BOD-001">
-              <div *ngIf="bodegaForm.get('idBodega')?.invalid && bodegaForm.get('idBodega')?.touched" class="text-danger small mt-1">
-                <i class="fas fa-exclamation-circle me-1"></i>
-                <span *ngIf="bodegaForm.get('idBodega')?.hasError('required')">
-                  El código es requerido
-                </span>
-                <span *ngIf="bodegaForm.get('idBodega')?.hasError('pattern')">
-                  Formato: BOD- seguido de 3 caracteres/números
-                </span>
+            
+            <!-- Datos de localización física -->
+            <div class="col-12 col-lg-6" *ngIf="bodegaForm.get('tipo')?.value === 'Física'">
+              <div class="card h-100">
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label class="form-label">
+                      <i class="icofont icofont-map-marker"></i>&nbsp;Dirección <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" formControlName="direccion" placeholder="Calle, número, etc.">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">
+                      <i class="icofont icofont-location-arrow"></i>&nbsp;Coordenadas <span class="text-danger">*</span>
+                      <span class="ms-1 text-muted" style="font-size: 0.9em;">Selecciona en el mapa</span>
+                    </label>
+                    <input type="text" class="form-control" formControlName="coordenadas" placeholder="Latitud, Longitud" readonly>
+                    <div #mapContainer style="height: 220px; width: 100%; margin-top: 10px;"></div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">
-                <i class="fa fa-archive me-1 text-primary"></i> Tipo de Bodega <span class="text-danger">*</span>
-              </label>
-              <select class="form-select" formControlName="tipo">
-                <option value="" disabled>Seleccionar tipo...</option>
-                <option *ngFor="let tipo of tiposBodega" [value]="tipo">{{ tipo }}</option>
-              </select>
-            </div>
-            <div class="row g-2">
-              <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold">
-                  <i class="fa fa-flag me-1 text-primary"></i> País <span class="text-danger">*</span>
-                </label>
-                <select class="form-select" formControlName="pais" [disabled]="cargandoPaises">
-                  <option value="" disabled>Seleccionar...</option>
-                  <option *ngFor="let pais of paises" [value]="pais">{{ pais }}</option>
-                </select>
-                <div *ngIf="cargandoPaises" class="text-info small mt-1"><i class="fa fa-spinner fa-spin me-1"></i> Cargando países...</div>
-                <div *ngIf="!cargandoPaises && paises.length === 0" class="text-warning small mt-1">No hay países disponibles</div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold">
-                  <i class="fa fa-map me-1 text-primary"></i> Departamento <span class="text-danger">*</span>
-                </label>
-                <select class="form-select" formControlName="departamento" [disabled]="!bodegaForm.get('pais')?.value || cargandoDepartamentos">
-                  <option value="" disabled>Seleccionar...</option>
-                  <option *ngFor="let depto of departamentos" [value]="depto">{{ depto }}</option>
-                </select>
-                <div *ngIf="cargandoDepartamentos" class="text-info small mt-1"><i class="fa fa-spinner fa-spin me-1"></i> Cargando departamentos...</div>
-                <div *ngIf="!cargandoDepartamentos && departamentos.length === 0 && bodegaForm.get('pais')?.value" class="text-warning small mt-1">No hay departamentos disponibles</div>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">
-                <i class="fa fa-city me-1 text-primary"></i> Ciudad <span class="text-danger">*</span>
-              </label>
-              <select class="form-select" formControlName="ciudad" [disabled]="!bodegaForm.get('departamento')?.value || cargandoCiudades">
-                <option value="" disabled>Seleccionar...</option>
-                <option *ngFor="let ciudad of ciudades" [value]="ciudad">{{ ciudad }}</option>
-              </select>
-              <div *ngIf="cargandoCiudades" class="text-info small mt-1"><i class="fa fa-spinner fa-spin me-1"></i> Cargando ciudades...</div>
-              <div *ngIf="!cargandoCiudades && ciudades.length === 0 && bodegaForm.get('departamento')?.value" class="text-warning small mt-1">No hay ciudades disponibles</div>
             </div>
           </div>
-        </div>
-      </div>
-      <!-- Datos de localización física -->
-      <div class="col-12 col-lg-6" *ngIf="bodegaForm.get('tipo')?.value === 'Física'">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body">
-            <div class="mb-3">
-              <label class="form-label fw-bold">
-                <i class="fa fa-map-marker-alt me-1 text-primary"></i> Dirección <span class="text-danger">*</span>
-              </label>
-              <input type="text" class="form-control" formControlName="direccion" placeholder="Calle, número, etc.">
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">
-                <i class="fa fa-location-arrow me-1 text-primary"></i> Coordenadas <span class="text-danger">*</span>
-                <span class="ms-1 text-muted" style="font-size: 0.9em;">Selecciona en el mapa</span>
-              </label>
-              <input type="text" class="form-control" formControlName="coordenadas" placeholder="Latitud, Longitud" readonly>
-              <div #mapContainer style="height: 220px; width: 100%; margin-top: 10px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"></div>
-            </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="cancelar()">
+              <i class="icofont icofont-close"></i>&nbsp;Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" (click)="guardarBodega()" [disabled]="bodegaForm.invalid">
+              <i class="icofont icofont-save"></i>&nbsp;{{ isEditMode ? 'Actualizar' : 'Guardar' }}
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
-    <div class="d-flex justify-content-end mt-4 gap-2">
-      <button type="button" class="btn btn-outline-secondary px-4" (click)="cancelar()">
-        <i class="fas fa-times me-2"></i>Cancelar
-      </button>
-      <button type="button" class="btn btn-primary px-4" (click)="guardarBodega()" [disabled]="bodegaForm.invalid">
-        <i class="fas fa-save me-2"></i>{{ isEditMode ? 'Actualizar' : 'Guardar' }}
-      </button>
-    </div>
-  </form>
-</div>
+  </div>
