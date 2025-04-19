@@ -6,7 +6,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Sede, Contacto, HorarioPV, MarketPlace, CanalComunicacion, RedSocial } from '../../../shared/models/empresa/empresa';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { CompaniesService } from '../../../services/companies.service';
-import { catchError, finalize, forkJoin } from 'rxjs';
+import { catchError, finalize, forkJoin, Observable, of } from 'rxjs';
 import { NotificationService } from '../../../shared/services/notification.service';
 
 // Interfaz para definir la estructura del cliente
@@ -104,203 +104,27 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   cargando: boolean = false;
   error: string = '';
 
-  // Datos mock actualizados con estructura de empresa
-  private mockClientes: Cliente[] = [
-    {
-      id: 1,
-      empresa: {
-        nombre: 'Empresa X',
-        nit: '123456789-0',
-        direccion: 'Calle 123 #45-67',
-        ciudad: 'Bogotá',
-        departamento: 'Cundinamarca',
-        pais: 'Colombia',
-        emailContacto: 'contacto@empresax.com',
-        telContacto: '6012345678',
-        nombreSede: 'Sede Principal',
-        fijoContacto: '6012345678',
-        emailFactuElec: 'facturacion@empresax.com',
-        cel: '3001234567',
-        comoLlegarSede: 'https://maps.google.com/...',
-        extensionFijo: '123',
-        direccionSede: 'Calle 123 #45-67',
-        sedes: [],
-        contactos: [],
-        horarios: [],
-        marketplaces: [],
-        canalesComunicacion: [],
-        redesSociales: []
-      },
-      estado: 'Activo',
-      fechaRegistro: new Date(2024, 10, 15)
-    },
-    {
-      id: 2,
-      empresa: {
-        nombre: 'Empresa Y',
-        nit: '987654321-0',
-        direccion: 'Carrera 50 #30-40',
-        ciudad: 'Medellín',
-        departamento: 'Antioquia',
-        pais: 'Colombia',
-        emailContacto: 'contacto@empresay.com',
-        telContacto: '6045678901',
-        nombreSede: 'Sede Principal',
-        fijoContacto: '6045678901',
-        emailFactuElec: 'facturacion@empresay.com',
-        cel: '3001234567',
-        comoLlegarSede: 'Cerca al metro',
-        extensionFijo: '456',
-        direccionSede: 'Carrera 50 #30-40',
-        sedes: [
-          {
-            nombreSede: 'Sede Principal',
-            rotuloDireccionSede: 'Centro Empresarial',
-            ciudadSede: 'Medellín',
-            direccionSede: 'Carrera 50 #30-40',
-            paisSede: 'Colombia',
-            comoLlegarSede: 'Cerca al metro',
-            dptoSede: 'Antioquia',
-            codigoPostalSede: '050001'
-          }
-        ],
-        contactos: [
-          {
-            fijoContacto: '6045678901',
-            extensionFijoContacto: '456',
-            cargoContacto: 'Director',
-            emailContacto: 'maria@empresay.com',
-            telContacto: '6045678901',
-            nomCompletoContacto: 'María Rodríguez',
-            indicativoFijoContacto: '604',
-            indicativoTelContacto: '604'
-          }
-        ],
-        horarios: [],
-        marketplaces: [
-          {
-            nombreMP: 'Mercado Libre',
-            logoMP: 'assets/images/marketplace/mercadolibre.png',
-            linkMP: 'https://mercadolibre.com/empresay',
-            activoMp: true
-          }
-        ],
-        canalesComunicacion: [],
-        redesSociales: []
-      },
-      estado: 'Pendiente',
-      fechaRegistro: new Date(2024, 10, 20)
-    },
-    {
-      id: 3,
-      empresa: {
-        nombre: 'Empresa Z',
-        nit: '123456789-0',
-        direccion: 'Avenida 30 #12-34',
-        ciudad: 'Bogotá',
-        departamento: 'Cundinamarca',
-        pais: 'Colombia',
-        emailContacto: 'contacto@empresaz.com',
-        telContacto: '6023456789',
-        nombreSede: 'Sede Principal',
-        fijoContacto: '6023456789',
-        emailFactuElec: 'facturacion@empresaz.com',
-        cel: '3009876543',
-        comoLlegarSede: 'Frente al centro comercial',
-        extensionFijo: '789',
-        direccionSede: 'Avenida 30 #12-34',
-        sedes: [
-          {
-            nombreSede: 'Sede Principal',
-            rotuloDireccionSede: 'Edificio Corporativo',
-            ciudadSede: 'Bogotá',
-            direccionSede: 'Avenida 30 #12-34',
-            paisSede: 'Colombia',
-            comoLlegarSede: 'Frente al centro comercial',
-            dptoSede: 'Cundinamarca',
-            codigoPostalSede: '110111'
-          }
-        ],
-        contactos: [
-          {
-            fijoContacto: '6023456789',
-            extensionFijoContacto: '789',
-            cargoContacto: 'Gerente',
-            emailContacto: 'juan@empresaz.com',
-            telContacto: '6023456789',
-            nomCompletoContacto: 'Juan Pérez',
-            indicativoFijoContacto: '602',
-            indicativoTelContacto: '602'
-          }
-        ],
-        horarios: [],
-        marketplaces: [
-          {
-            nombreMP: 'Amazon',
-            logoMP: 'assets/images/marketplace/amazon.png',
-            linkMP: 'https://amazon.com/empresaz',
-            activoMp: true
-          }
-        ],
-        canalesComunicacion: [],
-        redesSociales: []
-      },
-      estado: 'Activo',
-      fechaRegistro: new Date(2024, 11, 15)
-    },
-    {
-      id: 4,
-      empresa: {
-        nombre: 'Empresa X',
-        nit: '789123456-0',
-        direccion: 'Calle 321 #67-89',
-        ciudad: 'Barranquilla',
-        departamento: 'Atlántico',
-        pais: 'Colombia',
-        emailContacto: 'contacto@empresax2.com',
-        telContacto: '6056789012',
-        nombreSede: 'Sede Principal',
-        fijoContacto: '6056789012',
-        emailFactuElec: 'facturacion@empresax2.com',
-        cel: '3004567890',
-        comoLlegarSede: 'Cerca al centro comercial',
-        extensionFijo: '789',
-        direccionSede: 'Calle 321 #67-89',
-        sedes: [],
-        contactos: [],
-        horarios: [],
-        marketplaces: [],
-        canalesComunicacion: [],
-        redesSociales: []
-      },
-      estado: 'Activo',
-      fechaRegistro: new Date(2023, 8, 1)
-    }
-  ];
-
   // Datos para KPIs
-  kpiData = {
-    ventasTotales: 120000000,
-    pedidosPromedio: 320,
-    tiempoEntregaPromedio: 28,
-    satisfaccionGlobal: 4.6,
-    tiendasActivas: 4,
-    zonasCobertura: 3,
-    conversionPedidos: 0.75,
-    ticketPromedio: 35000,
-    retencionClientes: 0.85,
-    eficienciaEntrega: 0.92
+  kpiData: any = {
+    ventasTotales: 0,
+    pedidosPromedio: 0,
+    tiempoEntregaPromedio: 0,
+    satisfaccionGlobal: 0,
+    tiendasActivas: 0,
+    zonasCobertura: 0,
+    conversionPedidos: 0,
+    ticketPromedio: 0,
+    retencionClientes: 0,
+    eficienciaEntrega: 0
   };
 
   // Datos para gráficos de KPIs
-  private tiendas = [
-    { nombre: 'Tienda A', ingresos: 40000000, pedidos: 120, crecimiento: 15 },
-    { nombre: 'Tienda B', ingresos: 30000000, pedidos: 80, crecimiento: 5 },
-    { nombre: 'Tienda C', ingresos: 25000000, pedidos: 70, crecimiento: -2 },
-    { nombre: 'Tienda D', ingresos: 25000000, pedidos: 50, crecimiento: 8 }
-  ];
+  storePerformanceData: any[] = [];
+  monthlySalesData: any = { series: [{ data: [] }], xaxis: { categories: [] } };
+  satisfactionData: any = { series: [{ data: [] }], labels: [] };
+  loadingInitialCharts: boolean = false;
 
-  // Nuevas propiedades para análisis avanzado
+  // Propiedades para datos secundarios (se cargan bajo demanda)
   analisisUsuarios: AnalisisUsuario[] = [];
   metricasGlobales: MetricasGlobales = {
     usuariosActivos: 0,
@@ -308,12 +132,22 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     valorLTVPromedio: 0,
     tiempoSesionPromedio: 0
   };
+  userAnalysis: any[] = [];
+  growthMetrics: any = {};
+  conversionMetrics: any = {};
+  performanceMetrics: any = {};
+  categoryTrends: any[] = [];
+  marketingMetrics: any = {};
 
-  // Nuevas métricas
-  activeUsers: number = 0;
-  retentionRate: number = 0;
-  averageLTV: number = 0;
-  averageSessionTime: number = 0;
+  // Banderas de carga para secciones secundarias
+  loadingUserAnalysis: boolean = false;
+  loadingGrowthPerformance: boolean = false;
+  loadingCategoryMarketing: boolean = false;
+
+  // Banderas para saber si los datos ya se cargaron
+  userAnalysisLoaded: boolean = false;
+  growthPerformanceLoaded: boolean = false;
+  categoryMarketingLoaded: boolean = false;
 
   // Datos para gráficos
   engagementData: any = {
@@ -368,17 +202,6 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     }
   };
 
-  // Datos para la tabla de análisis
-  userAnalysis: any[] = [];
-
-  // Nuevas propiedades para métricas mejoradas
-  growthMetrics: any = {};
-  conversionMetrics: any = {};
-  performanceMetrics: any = {};
-  categoryTrends: any[] = [];
-  marketingMetrics: any = {};
-
-  // Configuración mejorada para gráficos
   revenueChart: any = {
     series: [{
       name: 'Ingresos',
@@ -503,6 +326,10 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     labels: ['Uptime', 'Satisfacción', 'Tiempo Respuesta']
   };
 
+  // Propiedad para datos reales de tiendas
+  storesData: any[] = []; 
+  loadingStoresData: boolean = false;
+
   // --- Inicio: Añadir Getters ---
   get totalClientes(): number {
     return this.clientes.length;
@@ -521,10 +348,18 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   }
   // --- Fin: Añadir Getters ---
 
-  // Declarar instancias de gráficos
+  // Instancias de gráficos (se inicializan/actualizan en los métodos de carga)
+  private renderVentasTiendasChartInstance: any;
+  private renderPedidosTiendasChartInstance: any;
+  private renderCrecimientoTiendasChartInstance: any;
+  private renderVentasMensualesChartInstance: any;
+  private renderMetricasRendimientoChartInstance: any;
+  private renderSatisfaccionChartInstance: any;
   private renderRevenueChartInstance: any;
   private renderCategoryChartInstance: any;
   private renderPerformanceChartInstance: any;
+  private renderEngagementChartInstance: any;
+  private renderLTVChartInstance: any;
 
   constructor(
     private userService: UserService,
@@ -538,60 +373,52 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     this.cargarClientes();
     this.cargarKPIs();
     this.cargarMetricasGlobales();
+    this.cargarDatosTiendas();
+  }
+
+  ngAfterViewInit(): void {
+    this.renderStoreCharts();
+    this.renderKPICharts();
   }
 
   cargarClientes(): void {
     this.cargando = true;
     this.error = '';
-    
-    // Crear objeto de filtros
+    this.clientes = [];
+    this.clientesFiltrados = [];
     const filters = {
       nombre: this.filtroNombre || undefined,
       estado: this.filtroEstado || undefined
     };
     
-    // Si hay filtros activos, usar el método filterCompanies
+    let serviceCall: Observable<any[]>;
     if (this.filtroNombre || this.filtroEstado) {
-      this.companiesService.filterCompanies(filters)
-        .pipe(
-          catchError(err => {
-            this.error = 'Error al conectar con el servidor';
-            console.error('Error en la petición de empresas:', err);
-            this.notificationService.error('Error', 'No se pudieron cargar los clientes. Intente nuevamente.');
-            this.clientes = this.mockClientes; // Usar datos mock como fallback
-            return [];
-          }),
-          finalize(() => {
-            this.cargando = false;
-            this.filtrarClientes();
-          })
-        )
-        .subscribe(res => {
-          this.procesarRespuestaClientes(res);
-        });
+      serviceCall = this.companiesService.filterCompanies(filters);
     } else {
-      // Si no hay filtros, obtener todas las empresas
-      this.companiesService.getAllCompanies()
-        .pipe(
-          catchError(err => {
-            this.error = 'Error al conectar con el servidor';
-            console.error('Error en la petición de empresas:', err);
-            this.notificationService.error('Error', 'No se pudieron cargar los clientes. Intente nuevamente.');
-            this.clientes = this.mockClientes; // Usar datos mock como fallback
-            return [];
-          }),
-          finalize(() => {
-            this.cargando = false;
-            this.filtrarClientes();
-          })
-        )
-        .subscribe(res => {
-          this.procesarRespuestaClientes(res);
-        });
+      serviceCall = this.companiesService.getAllCompanies();
     }
-  }
 
-  // Método para procesar la respuesta del servidor y formatear los datos
+    serviceCall.pipe(
+        catchError(err => {
+          this.error = 'Error al conectar con el servidor. No se pudieron cargar los clientes.';
+          console.error('Error en la petición de empresas:', err);
+          this.notificationService.error('Error', this.error); 
+          this.clientes = [];
+          this.clientesFiltrados = [];
+          return of([]);
+        }),
+        finalize(() => {
+          this.cargando = false;
+        })
+      )
+      .subscribe(res => {
+        if (this.error === '') { 
+          this.procesarRespuestaClientes(res);
+          this.filtrarClientes(); 
+        } 
+      });
+  }
+  
   private procesarRespuestaClientes(res: any[]): void {
     if (res && Array.isArray(res)) {
       this.clientes = res.map((empresa: any, index: number) => {
@@ -626,46 +453,53 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       });
       this.notificationService.success('Éxito', 'Clientes cargados correctamente');
     } else {
-      this.error = 'No se pudo obtener la lista de empresas';
-      console.error('Error al obtener empresas:', res);
-      this.notificationService.error('Error', 'No se pudieron cargar los clientes correctamente');
-      this.clientes = this.mockClientes; // Usar datos mock como fallback
+      this.error = 'La respuesta del servidor para empresas no fue válida.';
+      console.error('Error al obtener empresas (respuesta inválida):', res);
+      this.notificationService.error('Error', this.error);
+      this.clientes = [];
+      this.clientesFiltrados = [];
     }
   }
 
   cargarKPIs(): void {
     this.analyticsService.getKpiGeneral()
-      .pipe(
+    .pipe(
         catchError(err => {
-          console.error('Error al cargar KPIs:', err);
-          return []; // Usar los datos mock que ya están definidos
-        })
-      )
-      .subscribe(data => {
-        if (data) {
-          // Asegurarse de que los valores son numéricos
-          this.kpiData = {
-            ventasTotales: this.asegurarNumero(data.ventasTotales, 120000000),
-            pedidosPromedio: this.asegurarNumero(data.pedidosPromedio, 320),
-            tiempoEntregaPromedio: this.asegurarNumero(data.tiempoEntregaPromedio, 28),
-            satisfaccionGlobal: this.asegurarNumero(data.satisfaccionGlobal, 4.6),
-            tiendasActivas: this.asegurarNumero(data.tiendasActivas, 4),
-            zonasCobertura: this.asegurarNumero(data.zonasCobertura, 3),
-            conversionPedidos: this.asegurarNumero(data.conversionPedidos, 0.75),
-            ticketPromedio: this.asegurarNumero(data.ticketPromedio, 35000),
-            retencionClientes: this.asegurarNumero(data.retencionClientes, 0.85),
-            eficienciaEntrega: this.asegurarNumero(data.eficienciaEntrega, 0.92)
-          };
+            console.error('Error al cargar KPIs generales:', err);
+            this.notificationService.info('Información', 'No se pudieron cargar KPIs generales, usando valores por defecto.');
+            return of({ 
+                pedidosPromedio: 320,
+                tiempoEntregaPromedio: 28,
+                satisfaccionGlobal: 4.6,
+                tiendasActivas: 4,
+                zonasCobertura: 3,
+                conversionPedidos: 0.75,
+                ticketPromedio: 35000,
+                retencionClientes: 0.85,
+                eficienciaEntrega: 0.92
+            }); 
+        }),
+    )
+    .subscribe(data => {
+        const kpiDataResponse = data || {};
+        this.kpiData = {
+            ...this.kpiData,
+            pedidosPromedio: this.asegurarNumero(kpiDataResponse.pedidosPromedio),
+            tiempoEntregaPromedio: this.asegurarNumero(kpiDataResponse.tiempoEntregaPromedio),
+            satisfaccionGlobal: this.asegurarNumero(kpiDataResponse.satisfaccionGlobal, 0, 1),
+            tiendasActivas: this.asegurarNumero(kpiDataResponse.tiendasActivas),
+            zonasCobertura: this.asegurarNumero(kpiDataResponse.zonasCobertura),
+            conversionPedidos: this.asegurarNumero(kpiDataResponse.conversionPedidos, 0, 2),
+            ticketPromedio: this.asegurarNumero(kpiDataResponse.ticketPromedio),
+            retencionClientes: this.asegurarNumero(kpiDataResponse.retencionClientes, 0, 2),
+            eficienciaEntrega: this.asegurarNumero(kpiDataResponse.eficienciaEntrega, 0, 2)
+        };
+        
+        // Re-renderizar gráficos dependientes que ya estén inicializados
+        if (this.renderMetricasRendimientoChartInstance) {
+             this.renderMetricasRendimientoChart();
         }
-      });
-  }
-
-  // Método para asegurar que un valor es numérico
-  private asegurarNumero(valor: any, valorPorDefecto: number = 0): number {
-    if (valor === null || valor === undefined || isNaN(Number(valor))) {
-      return valorPorDefecto;
-    }
-    return Number(valor);
+    });
   }
 
   cargarMetricasGlobales(): void {
@@ -673,167 +507,144 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       .pipe(
         catchError(err => {
           console.error('Error al cargar métricas globales:', err);
-          // Usar valores por defecto en caso de error
-          this.metricasGlobales = {
-            usuariosActivos: 0,
-            tasaRetencion: 0.85,
-            valorLTVPromedio: 950000,
-            tiempoSesionPromedio: 22
-          };
-          
-          // Actualizar también las propiedades individuales
-          this.activeUsers = 0;
-          this.retentionRate = 0.85;
-          this.averageLTV = 950000;
-          this.averageSessionTime = 22;
-          return [];
+          this.notificationService.info('Información', 'No se pudieron cargar métricas globales, mostrando valores por defecto.');
+          return of({
+             usuariosActivos: 500,
+             tasaRetencion: 0.85,
+             valorLTVPromedio: 950000,
+             tiempoSesionPromedio: 22
+          });
         })
       )
       .subscribe(data => {
         if (data) {
-          // Asegurarse de que los valores son numéricos
           this.metricasGlobales = {
             usuariosActivos: this.asegurarNumero(data.usuariosActivos, 0),
             tasaRetencion: this.asegurarNumero(data.tasaRetencion, 0.85),
             valorLTVPromedio: this.asegurarNumero(data.valorLTVPromedio, 950000),
             tiempoSesionPromedio: this.asegurarNumero(data.tiempoSesionPromedio, 22)
           };
-          
-          // Actualizar también las propiedades individuales para asegurar que son números
-          this.activeUsers = this.asegurarNumero(data.usuariosActivos, 0);
-          this.retentionRate = this.asegurarNumero(data.tasaRetencion, 0.85);
-          this.averageLTV = this.asegurarNumero(data.valorLTVPromedio, 950000);
-          this.averageSessionTime = this.asegurarNumero(data.tiempoSesionPromedio, 22);
         }
       });
   }
 
-  ngAfterViewInit(): void {
-    // Cargar datos iniciales de gráficos
-    this.loadAdvancedMetrics();
+  loadUserAnalysisData(): void {
+    if (this.userAnalysisLoaded) return;
+    
+    this.loadingUserAnalysis = true;
+    this.analyticsService.getAnalysisUsers()
+      .pipe(
+        catchError(err => {
+          console.error('Error al cargar análisis de usuarios:', err);
+          this.notificationService.error('Error', 'No se pudo cargar el análisis de usuarios.');
+          return of([]);
+        }),
+        finalize(() => { 
+          this.loadingUserAnalysis = false;
+          this.userAnalysisLoaded = true;
+        })
+      )
+      .subscribe(users => {
+        this.analisisUsuarios = users.map((u: any) => ({
+           id: u.id || 0,
+           nombre: u.nombre || 'Usuario Desconocido',
+           actividad: {
+             sesiones: this.asegurarNumero(u.actividad?.sesiones),
+             tiempoPromedio: this.asegurarNumero(u.actividad?.tiempoPromedio),
+             ultimaActividad: u.actividad?.ultimaActividad ? new Date(u.actividad.ultimaActividad) : new Date()
+           },
+           conversion: {
+             tasa: this.asegurarNumero(u.conversion?.tasa),
+             valorLTV: this.asegurarNumero(u.conversion?.valorLTV)
+           },
+           engagement: {
+             score: this.asegurarNumero(u.engagement?.score),
+             tendencia: this.asegurarNumero(u.engagement?.tendencia)
+           }
+        }));
+        this.userAnalysis = this.analisisUsuarios;
+        
+        this.renderEngagementChart(); 
+        this.renderLTVChart();
+        this.notificationService.success('Éxito', 'Análisis de usuarios cargado.');
+      });
   }
 
-  /**
-   * Carga todas las métricas avanzadas necesarias para las visualizaciones
-   */
-  loadAdvancedMetrics(): void {
-    // Cargar todas las métricas necesarias en paralelo usando forkJoin
+  loadGrowthPerformanceData(): void {
+    if (this.growthPerformanceLoaded) return; 
+
+    this.loadingGrowthPerformance = true;
     forkJoin({
-      kpiGeneral: this.analyticsService.getKpiGeneral(),
-      users: this.analyticsService.getAnalysisUsers(),
-      global: this.analyticsService.getGlobalMetrics(),
-      growth: this.analyticsService.getGrowthMetrics(),
-      conversion: this.analyticsService.getConversionMetrics(),
-      performance: this.analyticsService.getPerformanceMetrics(),
-      categories: this.analyticsService.getCategoryTrends(),
-      marketing: this.analyticsService.getMarketingMetrics()
+      growth: this.analyticsService.getGrowthMetrics().pipe(catchError(() => of({}))),
+      performance: this.analyticsService.getPerformanceMetrics().pipe(catchError(() => of({})))
     })
     .pipe(
-      catchError(err => {
-        console.error('Error al cargar métricas avanzadas:', err);
-        this.notificationService.error('Error', 'No se pudieron cargar las métricas avanzadas');
-        return []; // Usar los datos mock que ya están definidos
+      finalize(() => {
+         this.loadingGrowthPerformance = false;
+         this.growthPerformanceLoaded = true;
       })
     )
     .subscribe(results => {
-      if (results) {
-        // KPIs Principales - asegurar valores numéricos
-        this.activeUsers = this.asegurarNumero(results.global?.usuariosActivos || 0);
-        this.retentionRate = this.asegurarNumero(results.global?.tasaRetencion || 0);
-        this.averageLTV = this.asegurarNumero(results.global?.valorLTVPromedio || 0);
-        this.averageSessionTime = this.asegurarNumero(results.global?.tiempoSesionPromedio || 0);
-        
-        // Métricas globales
-        this.metricasGlobales = {
-          usuariosActivos: this.asegurarNumero(results.global?.usuariosActivos || 0),
-          tasaRetencion: this.asegurarNumero(results.global?.tasaRetencion || 0),
-          valorLTVPromedio: this.asegurarNumero(results.global?.valorLTVPromedio || 0),
-          tiempoSesionPromedio: this.asegurarNumero(results.global?.tiempoSesionPromedio || 0)
-        };
-        
-        // Métricas de Crecimiento
         this.growthMetrics = results.growth || {};
-        
-        // Métricas de Conversión
-        this.conversionMetrics = results.conversion || {};
-        
-        // Métricas de Rendimiento
         this.performanceMetrics = results.performance || {};
         
-        // Tendencias de Categorías
-        this.categoryTrends = Array.isArray(results.categories) ? results.categories : [];
-        
-        // Métricas de Marketing
-        this.marketingMetrics = results.marketing || {};
-        
-        // Cargar datos para gráficos y tablas
-        this.cargarDatosGraficos(results);
-        this.userAnalysis = Array.isArray(results.users) ? results.users : [];
-
-        // Notificar al usuario
-        this.notificationService.success('Éxito', 'Métricas cargadas correctamente');
-      }
+        this.cargarDatosGraficosCrecimientoRendimiento(results);
+        this.notificationService.success('Éxito', 'Métricas de crecimiento y rendimiento cargadas.');
     });
   }
+  
+  loadCategoryMarketingData(): void {
+     if (this.categoryMarketingLoaded) return; 
+     
+     this.loadingCategoryMarketing = true;
+     forkJoin({
+        categories: this.analyticsService.getCategoryTrends().pipe(catchError(() => of([]))),
+        marketing: this.analyticsService.getMarketingMetrics().pipe(catchError(() => of({})))
+     })
+     .pipe(
+       finalize(() => {
+          this.loadingCategoryMarketing = false;
+          this.categoryMarketingLoaded = true;
+       })
+     )
+     .subscribe(results => {
+         this.categoryTrends = Array.isArray(results.categories) ? results.categories : [];
+         this.marketingMetrics = results.marketing || {};
+         
+         this.cargarDatosGraficosCategoriaMarketing(results);
+         this.notificationService.success('Éxito', 'Datos de categorías y marketing cargados.');
+     });
+  }
 
-  // Método para cargar datos de gráficos - versión actualizada
-  private cargarDatosGraficos(results: any): void {
-    // Cargar datos para el gráfico de ingresos
-    if (results.growth && results.growth.revenueTrend) {
-      const ltvTrend = Array.isArray(results.growth.revenueTrend.data) ? 
-                      results.growth.revenueTrend.data.map((val: any) => this.asegurarNumero(val, 0)) : 
-                      [];
-      const ltvDates = Array.isArray(results.growth.revenueTrend.categories) ? 
-                      results.growth.revenueTrend.categories : 
-                      [];
-      
-      this.revenueChart.series[0].data = ltvTrend;
-      this.revenueChart.xaxis.categories = ltvDates;
+  private asegurarNumero(valor: any, valorPorDefecto: number = 0, decimales: number | null = null): number {
+    let numero = valorPorDefecto;
+    if (valor !== null && valor !== undefined && !isNaN(Number(valor))) {
+      numero = Number(valor);
     }
-    
-    // Cargar datos para el gráfico de categorías
-    if (Array.isArray(results.categories)) {
-      this.categoryChart.series[0].data = results.categories.map((cat: any) => 
-        this.asegurarNumero(cat?.growth, 0)
-      );
-      this.categoryChart.xaxis.categories = results.categories.map((cat: any) => 
-        cat?.name || 'Sin nombre'
-      );
+    if (decimales !== null) {
+        return parseFloat(numero.toFixed(decimales));
     }
-    
-    // Cargar datos para el gráfico de rendimiento
-    if (results.performance) {
-      this.performanceChart.series[0].data = [
-        this.asegurarNumero(results.performance.systemUptime, 0),
-        this.asegurarNumero(results.performance.customerSatisfaction, 0) * 20,
-        (100 - this.asegurarNumero(results.performance.supportResponseTime, 0))
-      ];
-    }
-    
-    // Renderizar los gráficos con los datos actualizados
-    this.renderStoreCharts();
-    this.renderKPICharts();
-    this.renderEngagementChart();
-    this.renderLTVChart();
-    this.renderRevenueChart();
-    this.renderCategoryChart();
-    this.renderPerformanceChart();
+    return numero;
   }
 
   filtrarClientes(): void {
+    if (!this.clientes) {
+       this.clientesFiltrados = [];
+       return;
+    }
     this.clientesFiltrados = this.clientes.filter(cliente => {
-      const coincideNombre = cliente.empresa.nombre.toLowerCase().includes(this.filtroNombre.toLowerCase()) ||
-                             cliente.empresa.nombre.toLowerCase().includes(this.filtroNombre.toLowerCase()) ||
-                             cliente.empresa.emailContacto.toLowerCase().includes(this.filtroNombre.toLowerCase());
-      const coincideEstado = this.filtroEstado === '' || cliente.estado === this.filtroEstado;
+      const nombreEmpresa = cliente.empresa?.nombre?.toLowerCase() || '';
+      const emailContacto = cliente.empresa?.emailContacto?.toLowerCase() || '';
+      const filtro = this.filtroNombre.toLowerCase();
+      
+      const coincideNombre = nombreEmpresa.includes(filtro) || emailContacto.includes(filtro);
+      const coincideEstado = !this.filtroEstado || cliente.estado === this.filtroEstado;
       return coincideNombre && coincideEstado;
     });
   }
 
-  // Métodos para acciones (editar, cambiar estado, etc.)
   editarCliente(cliente: Cliente): void {
     console.log('Editar cliente:', cliente);
-    // Implementación pendiente - Podría abrir un modal de edición
   }
 
   cambiarEstado(cliente: Cliente, nuevoEstado: 'Activo' | 'Bloqueado'): void {
@@ -845,16 +656,17 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
           return [];
         })
       )
-      .subscribe(res => {
-        if (res && res.success) {
+      .subscribe((res: any) => {
+        if (res?.success) {
           const index = this.clientes.findIndex(c => c.id === cliente.id);
           if (index !== -1) {
             this.clientes[index].estado = nuevoEstado;
-            this.filtrarClientes(); // Actualizar vista
+            this.filtrarClientes();
             this.notificationService.success('Éxito', `Estado del cliente actualizado a ${nuevoEstado}`);
           }
         } else {
-          this.notificationService.error('Error', 'No se pudo cambiar el estado del cliente');
+          const errorMsg = res?.message || 'No se pudo cambiar el estado del cliente';
+          this.notificationService.error('Error', errorMsg);
         }
       });
   }
@@ -862,18 +674,16 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   verDetalles(cliente: Cliente): void {
     this.clienteSeleccionado = cliente;
     
-    // Opcionalmente, cargar datos adicionales desde el API
     this.companiesService.getCompanyById(cliente.id.toString())
       .pipe(
         catchError(err => {
           console.error('Error al cargar detalles del cliente:', err);
           this.notificationService.error('Error', 'No se pudieron cargar los detalles del cliente');
-          return []; // Usar los datos que ya tenemos
+          return of(null);
         })
       )
       .subscribe(data => {
         if (data) {
-          // Actualizar el cliente seleccionado con datos más completos
           this.clienteSeleccionado = {
             ...cliente,
             empresa: {
@@ -897,29 +707,38 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
           catchError(err => {
             console.error('Error al eliminar cliente:', err);
             this.notificationService.error('Error', 'No se pudo eliminar el cliente');
-            return [];
+            return of(null);
           })
         )
-        .subscribe(res => {
-          if (res && res.success) {
+        .subscribe((res: any) => {
+          if (res?.success) {
             this.clientes = this.clientes.filter(c => c.id !== cliente.id);
-            this.filtrarClientes(); // Actualizar vista
+            this.filtrarClientes();
             this.notificationService.success('Éxito', 'Cliente eliminado correctamente');
           } else {
-            this.notificationService.error('Error', 'No se pudo eliminar el cliente');
+            const errorMsg = res?.message || 'No se pudo eliminar el cliente';
+            this.notificationService.error('Error', errorMsg);
           }
         });
     }
   }
-
-  // Método para inicializar los gráficos de tiendas
+  
   private renderStoreCharts(): void {
+    if (!this.storesData || this.storesData.length === 0) { 
+        console.warn("No hay datos de tiendas para renderizar gráficos.");
+        if(this.renderVentasTiendasChartInstance) this.renderVentasTiendasChartInstance.destroy();
+        if(this.renderPedidosTiendasChartInstance) this.renderPedidosTiendasChartInstance.destroy();
+        if(this.renderCrecimientoTiendasChartInstance) this.renderCrecimientoTiendasChartInstance.destroy();
+        this.renderVentasTiendasChartInstance = null;
+        this.renderPedidosTiendasChartInstance = null;
+        this.renderCrecimientoTiendasChartInstance = null;
+        return;
+    }
     this.renderVentasPorTiendaChart();
     this.renderPedidosPorTiendaChart();
     this.renderCrecimientoTiendasChart();
   }
-
-  // Gráfico de barras para ventas por tienda
+  
   private renderVentasPorTiendaChart(): void {
     const options = {
       chart: { 
@@ -953,7 +772,7 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       },
       series: [{
         name: 'Ingresos',
-        data: this.tiendas.map(t => t.ingresos)
+        data: this.storesData.map(t => this.asegurarNumero(t.ingresos))
       }],
       grid: {
         padding: {
@@ -962,7 +781,7 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         }
       },
       xaxis: {
-        categories: this.tiendas.map(t => t.nombre),
+        categories: this.storesData.map(t => t.nombre || 'Desconocida'),
         position: 'bottom',
         labels: {
           style: {
@@ -1000,11 +819,13 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       }
     };
 
-    const chart = new ApexCharts(document.querySelector('#chart-ventas-tiendas'), options);
-    chart.render();
+    const chartElement = document.querySelector('#chart-ventas-tiendas');
+    if (chartElement) {
+       if (this.renderVentasTiendasChartInstance) this.renderVentasTiendasChartInstance.updateOptions(options, true);
+       else { this.renderVentasTiendasChartInstance = new ApexCharts(chartElement, options); this.renderVentasTiendasChartInstance.render(); }
+    } else console.warn('Elemento #chart-ventas-tiendas no encontrado.');
   }
 
-  // Gráfico de donut para distribución de pedidos
   private renderPedidosPorTiendaChart(): void {
     const options = {
       chart: {
@@ -1012,8 +833,8 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         height: 350,
         fontFamily: 'Helvetica, Arial, sans-serif'
       },
-      series: this.tiendas.map(t => t.pedidos),
-      labels: this.tiendas.map(t => t.nombre),
+      series: this.storesData.map(t => this.asegurarNumero(t.pedidos)),
+      labels: this.storesData.map(t => t.nombre || 'Desconocida'),
       colors: ['#008ffb', '#00e396', '#feb019', '#ff4560'],
       legend: {
         position: 'bottom',
@@ -1073,10 +894,10 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         options: {
           chart: {
             height: 250
-          },
-          legend: {
-            position: 'bottom'
-          }
+        },
+        legend: {
+          position: 'bottom'
+        }
         }
       }],
       title: {
@@ -1090,11 +911,13 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       }
     };
 
-    const chart = new ApexCharts(document.querySelector('#chart-pedidos-tiendas'), options);
-    chart.render();
+    const chartElement = document.querySelector('#chart-pedidos-tiendas');
+    if (chartElement) {
+       if (this.renderPedidosTiendasChartInstance) this.renderPedidosTiendasChartInstance.updateOptions(options, true);
+       else { this.renderPedidosTiendasChartInstance = new ApexCharts(chartElement, options); this.renderPedidosTiendasChartInstance.render(); }
+    } else console.warn('Elemento #chart-pedidos-tiendas no encontrado.');
   }
 
-  // Gráfico de líneas para crecimiento de tiendas
   private renderCrecimientoTiendasChart(): void {
     const options = {
       chart: {
@@ -1109,7 +932,7 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       },
       series: [{
         name: 'Crecimiento %',
-        data: this.tiendas.map(t => t.crecimiento)
+        data: this.storesData.map(t => this.asegurarNumero(t.crecimiento, 0, 1))
       }],
       colors: ['#43cea2'],
       grid: {
@@ -1124,7 +947,7 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         }
       },
       xaxis: {
-        categories: this.tiendas.map(t => t.nombre),
+        categories: this.storesData.map(t => t.nombre || 'Desconocida'),
         labels: {
           style: {
             fontSize: '14px'
@@ -1172,8 +995,8 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
           borderWidth: 0
         }
       },
-      title: {
-        text: 'Crecimiento Mensual por Tienda',
+        title: {
+          text: 'Crecimiento Mensual por Tienda',
         align: 'center',
         style: {
           fontSize: '16px',
@@ -1183,10 +1006,13 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       }
     };
 
-    const chart = new ApexCharts(document.querySelector('#chart-crecimiento-tiendas'), options);
-    chart.render();
+    const chartElement = document.querySelector('#chart-crecimiento-tiendas');
+    if (chartElement) {
+       if (this.renderCrecimientoTiendasChartInstance) this.renderCrecimientoTiendasChartInstance.updateOptions(options, true);
+       else { this.renderCrecimientoTiendasChartInstance = new ApexCharts(chartElement, options); this.renderCrecimientoTiendasChartInstance.render(); }
+    } else console.warn('Elemento #chart-crecimiento-tiendas no encontrado.');
   }
-
+  
   private renderKPICharts(): void {
     this.renderVentasMensualesChart();
     this.renderMetricasRendimientoChart();
@@ -1222,33 +1048,31 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       }],
       colors: ['#008ffb'],
       xaxis: {
-        categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+        // Las categorías no son relevantes para un sparkline simple
+        // categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
       },
-      tooltip: {
-        fixed: {
-          enabled: false
-        },
-        x: {
-          show: false
-        },
-        y: {
-          title: {
-            formatter: function (seriesName: string) {
-              return '';
-            }
-          }
-        },
-        marker: {
-          show: false
-        }
-      }
+      tooltip: { enabled: false }
     };
 
-    const chart = new ApexCharts(document.querySelector('#chart-ventas-mensuales'), options);
-    chart.render();
+    const chartElement = document.querySelector('#chart-ventas-mensuales');
+    if (chartElement) {
+        try {
+           if (this.renderVentasMensualesChartInstance) { 
+               this.renderVentasMensualesChartInstance.updateOptions(options, true);
+           } else { 
+               this.renderVentasMensualesChartInstance = new ApexCharts(chartElement, options);
+               this.renderVentasMensualesChartInstance.render(); 
+           }
+        } catch (e) {
+            console.error("Error renderizando/actualizando gráfico de ventas mensuales:", e);
+            if(this.renderVentasMensualesChartInstance) this.renderVentasMensualesChartInstance.destroy();
+            this.renderVentasMensualesChartInstance = null;
+        }
+    } 
   }
 
   private renderMetricasRendimientoChart(): void {
+    const conversionRate = this.asegurarNumero(this.kpiData?.conversionPedidos * 100, 0, 1);
     const options = {
       chart: {
         type: 'radialBar',
@@ -1270,7 +1094,7 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
               fontSize: '16px',
               color: '#333',
               formatter: function (val: number) {
-                return val + '%';
+                return val.toFixed(1) + '%';
               }
             }
           }
@@ -1290,13 +1114,20 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       stroke: {
         dashArray: 4
       },
-      series: [this.kpiData.conversionPedidos * 100],
-      labels: ['Tasa de Conversión'],
+      series: [conversionRate], 
+      labels: ['Tasa Conversión'],
       colors: ['#00e396']
     };
 
-    const chart = new ApexCharts(document.querySelector('#chart-metricas-rendimiento'), options);
-    chart.render();
+    const chartElement = document.querySelector('#chart-metricas-rendimiento');
+     if (chartElement) {
+       if (this.renderMetricasRendimientoChartInstance) {
+           this.renderMetricasRendimientoChartInstance.updateOptions(options);
+       } else {
+           this.renderMetricasRendimientoChartInstance = new ApexCharts(chartElement, options);
+           this.renderMetricasRendimientoChartInstance.render();
+       }
+    }
   }
 
   private renderSatisfaccionChart(): void {
@@ -1308,7 +1139,7 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       },
       series: [{
         name: 'Satisfacción',
-        data: [4.8, 4.5, 4.2, 4.6, 4.9]
+        data: [4.8, 4.5, 4.2, 4.6, 4.9] 
       }],
       labels: ['Atención', 'Entrega', 'Producto', 'Precio', 'Soporte'],
       colors: ['#ff4560'],
@@ -1330,56 +1161,64 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         strokeWidth: 2,
       },
       tooltip: {
-        y: {
-          formatter: function(val: number) {
-            return val + '/5.0';
-          }
-        }
+        y: { formatter: (val: number) => val.toFixed(1) + '/5.0' }
       }
     };
 
-    const chart = new ApexCharts(document.querySelector('#chart-satisfaccion'), options);
-    chart.render();
+     const chartElement = document.querySelector('#chart-satisfaccion');
+     if (chartElement) {
+       if (this.renderSatisfaccionChartInstance) {
+           this.renderSatisfaccionChartInstance.updateOptions(options);
+       } else {
+           this.renderSatisfaccionChartInstance = new ApexCharts(chartElement, options);
+           this.renderSatisfaccionChartInstance.render();
+       }
+    }
   }
 
-  // Método para cargar datos de análisis
-  private cargarAnalisisUsuarios(): void {
-    // Datos mock para ejemplo
-    this.analisisUsuarios = [
-      {
-        id: 1,
-        nombre: 'Cliente Alfa',
-        actividad: {
-          sesiones: 45,
-          tiempoPromedio: 25,
-          ultimaActividad: new Date(2024, 3, 18)
-        },
-        conversion: {
-          tasa: 0.75,
-          valorLTV: 1200000
-        },
-        engagement: {
-          score: 85,
-          tendencia: 12
-        }
-      },
-      // ... más datos mock
-    ];
-
-    this.calcularMetricasGlobales();
+  private cargarDatosGraficosCrecimientoRendimiento(results: any): void {
+    if (results.growth && results.growth.revenueTrend) {
+      const revenueTrend = Array.isArray(results.growth.revenueTrend.data) ? 
+                      results.growth.revenueTrend.data.map((val: any) => this.asegurarNumero(val, 0)) : 
+                      [];
+      const revenueDates = Array.isArray(results.growth.revenueTrend.categories) ? 
+                      results.growth.revenueTrend.categories : 
+                      [];
+      
+      this.revenueChart.series[0].data = revenueTrend;
+      this.revenueChart.xaxis.categories = revenueDates;
+      this.renderRevenueChart();
+    }
+    
+    if (results.performance) {
+      this.performanceChart.series = [
+        this.asegurarNumero(results.performance.systemUptime, 0),
+        this.asegurarNumero(results.performance.customerSatisfaction, 0),
+        this.asegurarNumero(results.performance.supportResponseTime, 0)
+      ];
+      this.performanceChart.labels = [
+        `Uptime (${this.performanceChart.series[0]}%)`,
+        `Satisfacción (${this.performanceChart.series[1]}%)`,
+        `Resp. Soporte (${this.performanceChart.series[2]}%)`
+      ];
+      this.renderPerformanceChart();
+    }
+  }
+  
+  private cargarDatosGraficosCategoriaMarketing(results: any): void {
+    if (Array.isArray(results.categories)) {
+      this.categoryChart.series[0].data = results.categories.map((cat: any) => 
+        this.asegurarNumero(cat?.growth, 0)
+      );
+      this.categoryChart.xaxis.categories = results.categories.map((cat: any) => 
+        cat?.name || 'Sin nombre'
+      );
+       this.renderCategoryChart();
+    }
   }
 
-  private calcularMetricasGlobales(): void {
-    this.metricasGlobales = {
-      usuariosActivos: this.analisisUsuarios.length,
-      tasaRetencion: 0.85,
-      valorLTVPromedio: 950000,
-      tiempoSesionPromedio: 22
-    };
-  }
-
-  // Nuevo método para gráfico de engagement
   private renderEngagementChart(): void {
+    if (!this.analisisUsuarios || this.analisisUsuarios.length === 0) return;
     const options = {
       chart: {
         type: 'heatmap',
@@ -1406,13 +1245,22 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
         align: 'center'
       }
     };
-
-    const chart = new ApexCharts(document.querySelector('#chart-engagement'), options);
-    chart.render();
+    
+    const chartElement = document.querySelector('#chart-engagement');
+    if (chartElement) {
+       if (this.renderEngagementChartInstance) {
+          this.renderEngagementChartInstance.updateOptions(options);
+       } else {
+          this.renderEngagementChartInstance = new ApexCharts(chartElement, options);
+          this.renderEngagementChartInstance.render();
+       }
+    } else {
+       console.warn('Elemento #chart-engagement no encontrado para renderizar gráfico.');
+    }
   }
 
-  // Nuevo método para gráfico de LTV
   private renderLTVChart(): void {
+    if (!this.analisisUsuarios || this.analisisUsuarios.length === 0) return;
     const options = {
       chart: {
         type: 'bar',
@@ -1430,7 +1278,11 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       dataLabels: {
         enabled: true,
         formatter: function(val: number) {
-          return '$' + (val / 1000) + 'K';
+          return '$' + (val / 1000).toFixed(0) + 'K';
+        },
+        style: {
+           fontSize: '12px',
+           colors: ["#304758"]
         }
       },
       series: [{
@@ -1446,125 +1298,67 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       }
     };
 
-    const chart = new ApexCharts(document.querySelector('#chart-ltv'), options);
-    chart.render();
+     const chartElement = document.querySelector('#chart-ltv');
+     if (chartElement) {
+       if (this.renderLTVChartInstance) {
+          this.renderLTVChartInstance.updateOptions(options);
+       } else {
+          this.renderLTVChartInstance = new ApexCharts(chartElement, options);
+          this.renderLTVChartInstance.render();
+       }
+    } else {
+       console.warn('Elemento #chart-ltv no encontrado para renderizar gráfico.');
+    }
   }
 
-  // Métodos de renderizado de nuevos gráficos
   private renderRevenueChart(): void {
-    this.revenueChart.chart.height = 350;
-    this.revenueChart.chart.fontFamily = 'Helvetica, Arial, sans-serif';
-    this.revenueChart.title = {
-      text: 'Tendencia de Ingresos',
-      align: 'center',
-      style: {
-        fontSize: '16px',
-        fontWeight: 600
-      },
-      margin: 15
-    };
-    this.revenueChart.grid = {
-      borderColor: '#e7e7e7',
-      row: {
-        colors: ['#f8f9fa', 'transparent'],
-        opacity: 0.3
-      },
-      padding: {
-        left: 20,
-        right: 20
-      }
-    };
-    this.revenueChart.xaxis.labels = {
-      style: {
-        fontSize: '13px'
-      }
-    };
-    this.revenueChart.yaxis.labels = {
-      style: {
-        fontSize: '13px'
-      }
-    };
-    
-    if (this.renderRevenueChartInstance) {
-      this.renderRevenueChartInstance.updateOptions(this.revenueChart);
+    if (!this.revenueChart?.series?.[0]?.data?.length) return;
+    const options = this.revenueChart;
+    const chartElement = document.querySelector('#chart-revenue');
+    if (chartElement) {
+       if (this.renderRevenueChartInstance) {
+          this.renderRevenueChartInstance.updateOptions(options);
+       } else {
+          this.renderRevenueChartInstance = new ApexCharts(chartElement, options);
+          this.renderRevenueChartInstance.render();
+       }
     } else {
-      this.renderRevenueChartInstance = new ApexCharts(document.querySelector('#chart-revenue'), this.revenueChart);
-      this.renderRevenueChartInstance.render();
+       console.warn('Elemento #chart-revenue no encontrado para renderizar gráfico.');
     }
   }
 
   private renderCategoryChart(): void {
-    this.categoryChart.chart.height = 350;
-    this.categoryChart.chart.fontFamily = 'Helvetica, Arial, sans-serif';
-    this.categoryChart.title = {
-      text: 'Crecimiento por Categoría',
-      align: 'center',
-      style: {
-        fontSize: '16px',
-        fontWeight: 600
-      },
-      margin: 15
-    };
-    this.categoryChart.grid = {
-      padding: {
-        left: 20,
-        right: 20
-      }
-    };
-    this.categoryChart.plotOptions.bar.borderRadius = 6;
-    this.categoryChart.plotOptions.bar.columnWidth = '70%';
-    this.categoryChart.xaxis.labels = {
-      style: {
-        fontSize: '13px'
-      }
-    };
-    this.categoryChart.yaxis = {
-      labels: {
-        style: {
-          fontSize: '13px'
-        }
-      }
-    };
-    
-    if (this.renderCategoryChartInstance) {
-      this.renderCategoryChartInstance.updateOptions(this.categoryChart);
+    if (!this.categoryChart?.series?.[0]?.data?.length) return;
+    const options = this.categoryChart;
+    const chartElement = document.querySelector('#chart-categories');
+    if (chartElement) {
+       if (this.renderCategoryChartInstance) {
+          this.renderCategoryChartInstance.updateOptions(options);
+       } else {
+          this.renderCategoryChartInstance = new ApexCharts(chartElement, options);
+          this.renderCategoryChartInstance.render();
+       }
     } else {
-      this.renderCategoryChartInstance = new ApexCharts(document.querySelector('#chart-categories'), this.categoryChart);
-      this.renderCategoryChartInstance.render();
+       console.warn('Elemento #chart-categories no encontrado para renderizar gráfico.');
     }
   }
 
   private renderPerformanceChart(): void {
-    this.performanceChart.chart.height = 350;
-    this.performanceChart.chart.fontFamily = 'Helvetica, Arial, sans-serif';
-    this.performanceChart.title = {
-      text: 'Métricas de Rendimiento',
-      align: 'center',
-      style: {
-        fontSize: '16px',
-        fontWeight: 600
-      },
-      margin: 15
-    };
-    this.performanceChart.plotOptions.radialBar.dataLabels.name.fontSize = '14px';
-    this.performanceChart.plotOptions.radialBar.dataLabels.value.fontSize = '20px';
-    this.performanceChart.plotOptions.radialBar.dataLabels.value.fontWeight = 700;
-    this.performanceChart.plotOptions.radialBar.dataLabels.total = {
-      show: true,
-      label: 'Promedio',
-      fontSize: '16px',
-      fontWeight: 600
-    };
-    
-    if (this.renderPerformanceChartInstance) {
-      this.renderPerformanceChartInstance.updateOptions(this.performanceChart);
+    if (!this.performanceChart?.series?.length) return;
+    const options = this.performanceChart;
+    const chartElement = document.querySelector('#chart-performance');
+    if (chartElement) {
+        if (this.renderPerformanceChartInstance) {
+            this.renderPerformanceChartInstance.updateOptions(options);
+        } else {
+            this.renderPerformanceChartInstance = new ApexCharts(chartElement, options);
+            this.renderPerformanceChartInstance.render();
+        }
     } else {
-      this.renderPerformanceChartInstance = new ApexCharts(document.querySelector('#chart-performance'), this.performanceChart);
-      this.renderPerformanceChartInstance.render();
+       console.warn('Elemento #chart-performance no encontrado para renderizar gráfico.');
     }
   }
 
-  // Método para obtener detalles completos de un cliente
   getDetallesCliente(cliente: Cliente): any {
     return {
       infoGeneral: {
@@ -1592,5 +1386,41 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
       canalesComunicacion: cliente.empresa.canalesComunicacion,
       redesSociales: cliente.empresa.redesSociales
     };
+  }
+
+  cargarDatosTiendas(): void {
+    this.loadingStoresData = true;
+    this.analyticsService.getStoresData()
+      .pipe(
+          catchError(err => {
+              console.error('Error al cargar datos de tiendas:', err);
+              this.notificationService.error('Error', 'No se pudieron cargar los datos de rendimiento de tiendas.');
+              return of([]);
+          }),
+          finalize(() => {
+              this.loadingStoresData = false;
+          })
+      )
+      .subscribe(data => {
+          this.storesData = Array.isArray(data) ? data : [];
+          
+          // CALCULAR ventasTotales desde storesData
+          const totalVentasTiendas = this.storesData.reduce((sum, tienda) => 
+              sum + this.asegurarNumero(tienda.ingresos), 0
+          );
+          // Actualizar kpiData.ventasTotales
+          this.kpiData.ventasTotales = totalVentasTiendas;
+          
+          // Renderizar gráficos de tiendas 
+          this.renderStoreCharts(); 
+          
+          // Notificar
+          if (this.storesData.length > 0) {
+             this.notificationService.success('Éxito', 'Datos de tiendas cargados.');
+          } else {
+             this.notificationService.info('Información', 'No se encontraron datos de rendimiento de tiendas.');
+             // Si no hay tiendas, las ventas totales también son 0 (ya asignado arriba)
+          }
+      });
   }
 }

@@ -174,3 +174,155 @@
     padding: 15px;
   }
 }
+
+/* Variables (opcional, pero útil para consistencia) */
+:host {
+  --card-bg: #fff;
+  --card-border-radius: 0.5rem; // Más redondeado
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --card-hover-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  --icon-round-size: 50px;
+}
+
+/* Estilos para las tarjetas de resumen - Mejorados */
+.card.widget-1 {
+  background-color: var(--card-bg);
+  border: none; // Quitar borde por defecto si existe
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s ease-in-out;
+  margin-bottom: 1.5rem; // Espacio entre tarjetas
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .card-body {
+    padding: 1.5rem; // Más padding interno
+  }
+
+  .widget-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; // Asegurar espacio entre icono y texto
+  }
+
+  .widget-round {
+    height: var(--icon-round-size);
+    width: var(--icon-round-size);
+    min-width: var(--icon-round-size); // Evitar que se encoja
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem; // Espacio entre icono y texto
+    position: relative; // Para el pseudo-elemento de fondo
+    overflow: hidden; // Para contener el gradiente
+
+    // Gradiente sutil como fondo para los iconos
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 50%;
+      opacity: 0.2;
+      z-index: 0;
+    }
+
+    // Colores específicos y gradientes
+    &.secondary::before { background: linear-gradient(135deg, #6e4ff5, #8d7bf7); }
+    &.success::before   { background: linear-gradient(135deg, #17c684, #53d1a1); }
+    &.danger::before    { background: linear-gradient(135deg, #e53d51, #f06a7a); }
+    &.warning::before   { background: linear-gradient(135deg, #ff8a00, #ffae4c); }
+
+    .bg-round {
+      height: 100%; // Ocupar todo el espacio
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative; // Para que el icono esté sobre el ::before
+      z-index: 1;
+      
+      svg.svg-fill {
+        height: 24px; // Tamaño del icono
+        width: 24px;
+        fill: #fff; // Icono blanco para buen contraste
+      }
+      // Ocultar el half-circle que puede no ser necesario con el nuevo fondo
+      svg.half-circle {
+         display: none; 
+      }
+    }
+  }
+
+  // Estilos para el texto
+  .widget-content > div:last-child { // El div que contiene h4 y span
+    text-align: right; // Alinear texto a la derecha
+    h4 {
+      font-size: 1.5rem; // Tamaño más grande para el número
+      font-weight: 600; // Más peso
+      margin-bottom: 0.25rem;
+      color: #2c323f; // Color oscuro principal
+    }
+    span.f-light {
+      font-size: 0.875rem; // Ligeramente más pequeño
+      color: #6c757d; // Gris estándar para texto secundario
+    }
+  }
+}
+
+/* Otros estilos existentes del componente... */
+.metric-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  h6 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  h4 {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  .progress {
+    height: 6px;
+    border-radius: 3px;
+  }
+}
+
+.apex-chart {
+  min-height: 300px; /* Ajusta según sea necesario */
+}
+
+/* Estilos para la tabla */
+.table {
+  th {
+    font-weight: 600; // Encabezados más notorios
+    color: #495057; // Un gris oscuro para encabezados
+  }
+
+  td {
+    vertical-align: middle;
+  }
+
+  .badge {
+    font-size: 0.8em;
+    padding: 0.4em 0.7em;
+  }
+}
