@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
 
@@ -9,12 +9,16 @@ import Swal from 'sweetalert2';
   templateUrl: './tipo-entrega.component.html',
   styleUrls: ['./tipo-entrega.component.scss']
 })
-export class TipoEntregaComponent implements OnInit,OnDestroy {
+export class TipoEntregaComponent implements OnInit, OnDestroy {
   formasEntrega: ArrayBuffer;
   form: FormGroup;
+  isEditing = false;
 
-  constructor(private formBuilder: FormBuilder, private service: MaestroService, private router: Router) { }
- 
+  constructor(
+    private formBuilder: FormBuilder, 
+    private service: MaestroService, 
+    public activeModal: NgbActiveModal
+  ) { }
 
   ngOnInit(): void {
     const formaEntregaEditStr = sessionStorage.getItem("formaEntregaEdit");
@@ -30,50 +34,42 @@ export class TipoEntregaComponent implements OnInit,OnDestroy {
       descripcion: [formaEntregaEdit ? formaEntregaEdit.descripcion : '', Validators.required],
       posicion: [formaEntregaEdit ? formaEntregaEdit.posicion : null, Validators.required],
       activo: [formaEntregaEdit ? formaEntregaEdit.activo : true],
-      formaEntrega: [formaEntregaEdit ? formaEntregaEdit.formaEntrega : [], Validators.required], // Suponiendo que formaEntrega es un array que debe convertirse a una cadena separada por comas.
+      formaEntrega: [formaEntregaEdit ? formaEntregaEdit.formaEntrega : [], Validators.required],
       cd: [formaEntregaEdit ? formaEntregaEdit.cd : null],
     });
+
+    this.isEditing = !!formaEntregaEdit;
   }
 
-  regresar() {
-    this.router.navigateByUrl("/formasEntrega/tipoentrega/lista")
-  }
   onSubmit() {
     if (this.form.valid) {
-      // form is valid, do something with the form values
-      console.log(this.form.value);
       if (this.form.value.cd == null) {
         this.service.createTipoEntrega(this.form.value).subscribe(res => {
-          console.log("🚀 ~ file: horario-entrega.component.ts:33 ~ HorarioEntregaComponent ~ this.service.createHorario ~ res", res)
           Swal.fire({
+            title: 'Guardado!',
+            text: 'Guardado con éxito',
             icon: 'success',
-            title: 'Creado',
-            text: 'Se creo correctamente',
-            showConfirmButton: false,
-            timer: 1500
+            confirmButtonText: 'Ok'
+          }).then(() => {
+            this.activeModal.close('success');
           });
-          this.router.navigateByUrl('/formasEntrega/tipoentrega/lista')
         });
       } else {
         this.service.updateTipoEntrega(this.form.value).subscribe(res => {
-          console.log("🚀 ~ file: horario-entrega.component.ts:33 ~ HorarioEntregaComponent ~ this.service.createHorario ~ res", res)
           Swal.fire({
+            title: 'Actualizado!',
+            text: 'Actualizado con éxito',
             icon: 'success',
-            title: 'Actualizado',
-            text: 'Se actualizo correctamente',
-            showConfirmButton: false,
-            timer: 1500
+            confirmButtonText: 'Ok'
+          }).then(() => {
+            this.activeModal.close('success');
           });
-          this.router.navigateByUrl('/formasEntrega/tipoentrega/lista');
         });
       }
-    } else {
-      // form is invalid, show an error message
     }
   }
 
   ngOnDestroy(): void {
     sessionStorage.removeItem("formaEntregaEdit");
   }
-
 }

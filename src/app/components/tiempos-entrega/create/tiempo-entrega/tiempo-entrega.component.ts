@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-tiempo-entrega',
@@ -10,43 +11,14 @@ import { MaestroService } from 'src/app/shared/services/maestros/maestro.service
 })
 export class TiempoEntregaComponent implements OnInit {
   form: FormGroup;
-
-  selectOptions: string[] = ['Option 1', 'Option 2', 'Option 3'];
   empresaActual: any;
-  constructor(private formBuilder: FormBuilder, private service: MaestroService, private router: Router) { }
-  formasEntrega: any;
-  ciudadesMedellin = [
-    {
-      "city": "Medellín"
-    },
-    {
-      "city": "Envigado"
-    },
-    {
-      "city": "Sabaneta"
-    },
-    {
-      "city": "Itagüí"
-    },
-    {
-      "city": "Caldas"
-    },
-    {
-      "city": "La Estrella"
-    },
-    {
-      "city": "Bello"
-    },
-    {
-      "city": "Copacabana"
-    },
-    {
-      "city": "Girardota"
-    },
-    {
-      "city": "Rionegro"
-    }
-  ]
+  isEditing = false;
+
+  constructor(
+    private formBuilder: FormBuilder,
+    private service: MaestroService,
+    public activeModal: NgbActiveModal
+  ) { }
 
   ngOnInit(): void {
     const tiempoEntregaStr = sessionStorage.getItem("tiempoEntregaEdit");
@@ -54,7 +26,6 @@ export class TiempoEntregaComponent implements OnInit {
 
     this.service.consultarEmpresasByUser(null).subscribe((r: any) => {
       this.empresaActual = (r as any[])[0];
-      console.log("🚀 ~ file: tiempo-entrega.component.ts:71 ~ TiempoEntregaComponent ~ this.service.consultarEmpresasByUser ~ this.empresaActual", this.empresaActual)
     });
 
     this.form = this.formBuilder.group({
@@ -64,31 +35,38 @@ export class TiempoEntregaComponent implements OnInit {
       minDias: [tiempoEntregaEdit ? tiempoEntregaEdit.minDias : null, Validators.required],
       posicion: [tiempoEntregaEdit ? tiempoEntregaEdit.posicion : null, Validators.required],
       activo: [tiempoEntregaEdit ? tiempoEntregaEdit.activo : true],
-      ciudad: [tiempoEntregaEdit ? tiempoEntregaEdit.ciudad : [], Validators.required],  // Suponiendo que ciudad es un array que debe convertirse a una cadena separada por comas.
+      ciudad: [tiempoEntregaEdit ? tiempoEntregaEdit.ciudad : [], Validators.required],
       cd: [tiempoEntregaEdit ? tiempoEntregaEdit.cd : null]
     });
+
+    this.isEditing = !!tiempoEntregaEdit;
   }
-  regresar() {
-    this.router.navigateByUrl("/tiempoentrega")
-  }
+
   onSubmit() {
     if (this.form.valid) {
-      // form is valid, do something with the form values
-      console.log(this.form.value);
       if (this.form.value.cd == null) {
         this.service.createTiempoEntrega(this.form.value).subscribe(res => {
-          console.log("🚀 ~ file: tiempo-entrega.component.ts:71 ~ TiempoEntregaComponent ~ this.service.createTipoEntrega ~ res:", res)
-          this.router.navigateByUrl('/tiempoentrega')
-        })
+          Swal.fire({
+            title: 'Guardado!',
+            text: 'Tiempo de entrega creado con éxito',
+            icon: 'success',
+            confirmButtonText: 'Ok'
+          }).then(() => {
+            this.activeModal.close('success');
+          });
+        });
       } else {
-
         this.service.updateTiempoEntrega(this.form.value).subscribe(res => {
-          console.log("🚀 ~ file: tiempo-entrega.component.ts:71 ~ TiempoEntregaComponent ~ this.service.createTipoEntrega ~ res:", res)
-          this.router.navigateByUrl('/tiempoentrega')
-        })
+          Swal.fire({
+            title: 'Actualizado!',
+            text: 'Tiempo de entrega actualizado con éxito',
+            icon: 'success',
+            confirmButtonText: 'Ok'
+          }).then(() => {
+            this.activeModal.close('success');
+          });
+        });
       }
-    } else {
-      // form is invalid, show an error message
     }
   }
 }
