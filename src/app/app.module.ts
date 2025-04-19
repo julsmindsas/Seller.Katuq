@@ -44,6 +44,10 @@ import { AppTranslateModule } from './shared/modules/translate.module';
 // Importamos el nuevo módulo en lugar del componente individual
 import { VoiceInteractionModule } from './shared/components/voice-interaction/voice-interaction.module';
 
+// Importar servicios
+import { AnalyticsService } from './services/analytics.service';
+import { CompaniesService } from './services/companies.service';
+
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, "./assets/i18n/", ".json");
 }
@@ -104,7 +108,9 @@ export function HttpLoaderFactory(http: HttpClient) {
     CartSingletonService,
     NotificationrlService,
     { provide: HTTP_INTERCEPTORS, useClass: HttpInterceptor2, multi: true },
-    { provide: HTTP_INTERCEPTORS, useClass: LoaderInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: LoaderInterceptor, multi: true },
+    AnalyticsService,
+    CompaniesService
     // {
     //   provide: ErrorHandler,
     //   useClass: GlobalErrorHandlerService,

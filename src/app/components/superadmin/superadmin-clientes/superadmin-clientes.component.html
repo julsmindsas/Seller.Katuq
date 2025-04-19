@@ -268,7 +268,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="text-muted mb-1">Ventas Totales</h6>
-                <h4 class="mb-0">{{ kpiData.ventasTotales | currency }}</h4>
+                <h4 class="mb-0">{{ kpiData.ventasTotales | number:'1.0-0' | currency }}</h4>
               </div>
               <div id="chart-ventas-mensuales" class="apex-chart"></div>
             </div>
@@ -331,19 +331,19 @@
               <div class="col-6 mb-3">
                 <div class="metric-card">
                   <h6 class="text-muted">Ticket Promedio</h6>
-                  <h4 class="text-primary">{{ kpiData.ticketPromedio | currency }}</h4>
+                  <h4 class="text-primary">{{ kpiData.ticketPromedio | number:'1.0-0' | currency }}</h4>
                 </div>
               </div>
               <div class="col-6 mb-3">
                 <div class="metric-card">
                   <h6 class="text-muted">Retención</h6>
-                  <h4 class="text-success">{{ kpiData.retencionClientes | percent }}</h4>
+                  <h4 class="text-success">{{ kpiData.retencionClientes | number:'1.2-2' | percent }}</h4>
                 </div>
               </div>
               <div class="col-6">
                 <div class="metric-card">
                   <h6 class="text-muted">Eficiencia</h6>
-                  <h4 class="text-info">{{ kpiData.eficienciaEntrega | percent }}</h4>
+                  <h4 class="text-info">{{ kpiData.eficienciaEntrega | number:'1.2-2' | percent }}</h4>
                 </div>
               </div>
               <div class="col-6">
@@ -395,61 +395,80 @@
           </div>
           <!-- Fin Filtros -->
 
-          <div class="table-responsive">
-            <table class="table table-striped table-hover">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Empresa</th>
-                  <th>Email</th>
-                  <th>Teléfono</th>
-                  <th>Estado</th>
-                  <th>Registro</th>
-                  <th>Último Acceso</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let cliente of clientesFiltrados">
-                  <td>{{ cliente.id }}</td>
-                  <td>{{ cliente.nombre }}</td>
-                  <td>{{ cliente.empresa }}</td>
-                  <td>{{ cliente.email }}</td>
-                  <td>{{ cliente.telefono }}</td>
-                  <td>
-                    <span class="badge"
-                          [class.badge-light-success]="cliente.estado === 'Activo'"
-                          [class.badge-light-danger]="cliente.estado === 'Bloqueado'"
-                          [class.badge-light-warning]="cliente.estado === 'Pendiente'">
-                      {{ cliente.estado }}
-                    </span>
-                  </td>
-                  <td>{{ cliente.fechaRegistro | date:'dd/MM/yyyy' }}</td>
-                  <td>{{ cliente.ultimoAcceso ? (cliente.ultimoAcceso | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
-                  <td>
-                    <button class="btn btn-sm btn-info me-1" title="Ver Detalles" (click)="verDetalles(cliente)">
-                      <i class="fa fa-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-primary me-1" title="Editar" (click)="editarCliente(cliente)">
-                      <i class="fa fa-edit"></i>
-                    </button>
-                    <button *ngIf="cliente.estado !== 'Bloqueado'" class="btn btn-sm btn-danger me-1" title="Bloquear" (click)="cambiarEstado(cliente, 'Bloqueado')">
-                      <i class="fa fa-lock"></i>
-                    </button>
-                     <button *ngIf="cliente.estado === 'Bloqueado'" class="btn btn-sm btn-success me-1" title="Activar" (click)="cambiarEstado(cliente, 'Activo')">
-                      <i class="fa fa-unlock"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" title="Eliminar" (click)="eliminarCliente(cliente)">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr *ngIf="clientesFiltrados.length === 0">
-                    <td colspan="9" class="text-center">No se encontraron clientes con los filtros aplicados.</td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- Indicador de carga -->
+          <div class="row" *ngIf="cargando">
+            <div class="col-12 d-flex justify-content-center my-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <span class="ms-2">Cargando empresas...</span>
+            </div>
+          </div>
+
+          <!-- Mensaje de error -->
+          <div class="row" *ngIf="error && !cargando">
+            <div class="col-12">
+              <div class="alert alert-danger" role="alert">
+                {{ error }}
+                <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="cargarClientes()">
+                  <i class="bi bi-arrow-clockwise"></i> Reintentar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contenido principal (se oculta durante la carga) -->
+          <div [hidden]="cargando && !clientes.length">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Empresa</th>
+                    <th>Contacto</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let cliente of clientesFiltrados">
+                    <td>{{cliente.nombre}}</td>
+                    <td>
+                      <div class="d-flex flex-column">
+                        <strong>{{cliente.empresa.nombre}}</strong>
+                        <small class="text-muted">{{cliente.empresa.nit}}</small>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex flex-column">
+                        <span>{{cliente.email}}</span>
+                        <small class="text-muted">{{cliente.telefono}}</small>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="{
+                        'bg-success': cliente.estado === 'Activo',
+                        'bg-danger': cliente.estado === 'Bloqueado',
+                        'bg-warning': cliente.estado === 'Pendiente'
+                      }">
+                        {{cliente.estado}}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn btn-sm btn-primary me-2" (click)="verDetalles(cliente)">
+                        <i class="fas fa-eye"></i> Ver
+                      </button>
+                      <button class="btn btn-sm btn-warning me-2" (click)="editarCliente(cliente)">
+                        <i class="fas fa-edit"></i> Editar
+                      </button>
+                      <button class="btn btn-sm btn-danger" (click)="eliminarCliente(cliente)">
+                        <i class="fas fa-trash"></i> Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -780,6 +799,142 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalles -->
+<div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detallesModalLabel">Detalles del Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="clienteSeleccionado">
+          <!-- Información General -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0">Información General</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Nombre:</strong> {{clienteSeleccionado.nombre}}</p>
+                  <p><strong>Empresa:</strong> {{clienteSeleccionado.empresa.nombre}}</p>
+                  <p><strong>NIT:</strong> {{clienteSeleccionado.empresa.nit}}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Dirección:</strong> {{clienteSeleccionado.empresa.direccion}}</p>
+                  <p><strong>Ciudad:</strong> {{clienteSeleccionado.empresa.ciudad}}</p>
+                  <p><strong>País:</strong> {{clienteSeleccionado.empresa.pais}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sedes -->
+          <div class="card mb-3" *ngIf="clienteSeleccionado.empresa.sedes?.length">
+            <div class="card-header">
+              <h6 class="mb-0">Sedes</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6" *ngFor="let sede of clienteSeleccionado.empresa.sedes">
+                  <div class="border rounded p-3 mb-3">
+                    <h6>{{sede.nombreSede}}</h6>
+                    <p class="mb-1">{{sede.direccionSede}}</p>
+                    <p class="mb-1">{{sede.ciudadSede}}, {{sede.paisSede}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contactos -->
+          <div class="card mb-3" *ngIf="clienteSeleccionado.empresa.contactos?.length">
+            <div class="card-header">
+              <h6 class="mb-0">Contactos</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6" *ngFor="let contacto of clienteSeleccionado.empresa.contactos">
+                  <div class="border rounded p-3 mb-3">
+                    <h6>{{contacto.nomCompletoContacto}}</h6>
+                    <p class="mb-1">{{contacto.cargoContacto}}</p>
+                    <p class="mb-1">{{contacto.emailContacto}}</p>
+                    <p class="mb-0">{{contacto.telContacto}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Marketplaces -->
+          <div class="card mb-3" *ngIf="clienteSeleccionado.empresa.marketPlace?.length">
+            <div class="card-header">
+              <h6 class="mb-0">Marketplaces</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4" *ngFor="let mp of clienteSeleccionado.empresa.marketPlace">
+                  <div class="border rounded p-3 mb-3 text-center">
+                    <img [src]="mp.logoMP" [alt]="mp.nombreMP" class="img-fluid mb-2" style="max-height: 50px;">
+                    <h6>{{mp.nombreMP}}</h6>
+                    <a [href]="mp.linkMP" target="_blank" class="btn btn-sm btn-outline-primary">
+                      Visitar
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canales de Comunicación -->
+          <div class="card mb-3" *ngIf="clienteSeleccionado.empresa.canalesComunicacion?.length">
+            <div class="card-header">
+              <h6 class="mb-0">Canales de Comunicación</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4" *ngFor="let canal of clienteSeleccionado.empresa.canalesComunicacion">
+                  <div class="border rounded p-3 mb-3 text-center">
+                    <img [src]="canal.logoCC" [alt]="canal.nombreCC" class="img-fluid mb-2" style="max-height: 50px;">
+                    <h6>{{canal.nombreCC}}</h6>
+                    <a [href]="canal.linkCC" target="_blank" class="btn btn-sm btn-outline-primary">
+                      Contactar
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Redes Sociales -->
+          <div class="card mb-3" *ngIf="clienteSeleccionado.empresa.redesSociales?.length">
+            <div class="card-header">
+              <h6 class="mb-0">Redes Sociales</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4" *ngFor="let red of clienteSeleccionado.empresa.redesSociales">
+                  <div class="border rounded p-3 mb-3 text-center">
+                    <img [src]="red.logoRS" [alt]="red.nombreRS" class="img-fluid mb-2" style="max-height: 50px;">
+                    <h6>{{red.nombreRS}}</h6>
+                    <a [href]="red.linkRS" target="_blank" class="btn btn-sm btn-outline-primary">
+                      Seguir
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
       </div>
     </div>
   </div>
