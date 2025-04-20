@@ -255,15 +255,15 @@ export class NavService implements OnDestroy {
 			]
 		},
 
-		{ headTitle1: 'Administración Global', isOnlySuperAdministrador: true },
+		{ headTitle1: 'Administración Global', isOnlySuperAdministrador: false },
 		{
-			title: 'Usuarios y Permisos', icon: 'shield', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
+			title: 'Usuarios y Permisos', icon: 'shield', type: 'sub', active: false, isOnlySuperAdministrador: false, children: [
 				{ path: 'rol/rol', title: 'Gestión de Roles', type: 'link' },
 				{ path: 'usuarios', title: 'Gestión de Usuarios', type: 'link' }
 			]
 		},
 		{
-			title: 'Gestión de Empresas', icon: 'briefcase', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
+			title: 'Gestión de Empresas', icon: 'briefcase', type: 'sub', active: false, isOnlySuperAdministrador: false, children: [
 				{ path: 'empresas', title: 'Directorio de Empresas', type: 'link' },
 				{ path: 'empresas/modulovariable/produccion/opciones', title: 'Módulos Variables', type: 'link' }
 			]
