@@ -361,6 +361,11 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
   private renderEngagementChartInstance: any;
   private renderLTVChartInstance: any;
 
+  // Propiedades para la vista mejorada
+  percentageActiveClients: number = 0;
+  filtroFecha: string;
+  viewMode: string = 'table'; // o 'cards' para vista móvil
+
   constructor(
     private userService: UserService,
     private analyticsService: AnalyticsService,
@@ -374,6 +379,9 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
     this.cargarKPIs();
     this.cargarMetricasGlobales();
     this.cargarDatosTiendas();
+    this.calcularPorcentajeClientesActivos();
+    this.initializeResponsiveView();
+    this.initializeCharts();
   }
 
   ngAfterViewInit(): void {
@@ -1422,5 +1430,146 @@ export class SuperadminClientesComponent implements OnInit, AfterViewInit {
              // Si no hay tiendas, las ventas totales también son 0 (ya asignado arriba)
           }
       });
+  }
+
+  // Nuevos métodos UI
+  refreshData() {
+    console.log('Actualizando datos...');
+    this.cargarClientes();
+  }
+
+  exportData() {
+    console.log('Exportando datos...');
+    // Implementar lógica de exportación
+  }
+
+  openNewClientModal() {
+    console.log('Abriendo modal de nuevo cliente...');
+    // Implementar lógica para abrir modal
+  }
+
+  toggleViewMode() {
+    this.viewMode = this.viewMode === 'table' ? 'cards' : 'table';
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  }
+
+  getClienteColor(cliente: any): string {
+    if (cliente.estado === 'Activo') return 'success-dark';
+    if (cliente.estado === 'Bloqueado') return 'danger-dark';
+    if (cliente.estado === 'Pendiente') return 'warning-dark';
+    return 'info-dark';
+  }
+
+  private calcularPorcentajeClientesActivos() {
+    if (this.totalClientes > 0) {
+      this.percentageActiveClients = (this.clientesActivosCount / this.totalClientes) * 100;
+    }
+  }
+
+  private initializeResponsiveView() {
+    // Detectar dispositivo móvil para mostrar vista de tarjetas automáticamente
+    if (window.innerWidth < 768) {
+      this.viewMode = 'cards';
+    }
+    
+    // Listener para cambiar vista en resize
+    window.addEventListener('resize', () => {
+      if (window.innerWidth < 768 && this.viewMode === 'table') {
+        this.viewMode = 'cards';
+      }
+    });
+  }
+
+  private initializeCharts() {
+    // Inicialización de gráficos cuando se cargue la página
+    // (Se implementará con ApexCharts o similar)
+    console.log('Inicializando gráficos...');
+  }
+
+  // Agregar nuevas funciones para manejar la tabla de tiendas mejorada
+  getTiendaStatus(tienda: any): string {
+    if (!tienda) return 'inactive';
+    if (tienda.pedidos > 10) return 'active';
+    if (tienda.pedidos > 0) return 'moderate';
+    return 'inactive';
+  }
+
+  getPedidosBadgeClass(pedidos: number): string {
+    if (pedidos > 10) return 'bg-success';
+    if (pedidos > 5) return 'bg-warning';
+    if (pedidos > 0) return 'bg-info';
+    return 'bg-secondary';
+  }
+
+  getClientesActivosBadgeClass(clientesActivos: number): string {
+    if (clientesActivos > 50) return 'bg-success';
+    if (clientesActivos > 20) return 'bg-primary';
+    if (clientesActivos > 0) return 'bg-info';
+    return 'bg-secondary';
+  }
+
+  // Considerar un cliente activo si ha realizado al menos un pedido
+  calcularClientesActivos(): void {
+    if (!this.storesData) return;
+    
+    this.storesData = this.storesData.map(tienda => {
+      // Lógica para contar clientes con al menos un pedido
+      // Simulación: asignar un número basado en los pedidos
+      const clientesActivos = Math.round(tienda.pedidos * 2.5);
+      return {
+        ...tienda,
+        clientesActivos
+      };
+    });
+  }
+
+  // Nuevos métodos para las acciones adicionales
+  verClientesTienda(tienda: any): void {
+    console.log('Ver clientes de la tienda', tienda);
+    // Implementar lógica para mostrar clientes de tienda específica
+  }
+
+  recargarDatosTiendas(): void {
+    this.loadingStoresData = true;
+    // Simular recarga de datos
+    setTimeout(() => {
+      this.loadingStoresData = false;
+      this.calcularClientesActivos();
+    }, 1500);
+  }
+
+  enviarInforme(tienda: any): void {
+    console.log('Enviando informe de tienda', tienda);
+    // Implementar lógica para exportar/enviar informe
+  }
+
+  revisarInventario(tienda: any): void {
+    console.log('Revisando inventario de tienda', tienda);
+    // Implementar lógica para revisar inventario
+  }
+
+  desactivarTienda(tienda: any): void {
+    console.log('Desactivando tienda', tienda);
+    // Implementar lógica para desactivar tienda
+  }
+
+  cambiarPeriodoProyeccion(event: any): void {
+    const meses = event.target.value;
+    console.log('Cambiando período de proyección a', meses, 'meses');
+    // Actualizar gráfico de proyección
+  }
+
+  cambiarVistaComparativa(tipo: string): void {
+    console.log('Cambiando vista comparativa a', tipo);
+    // Actualizar gráfico de comparativa
   }
 }

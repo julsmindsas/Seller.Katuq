@@ -326,3 +326,546 @@
     padding: 0.4em 0.7em;
   }
 }
+
+/* Estilos para el acordeón */
+:host ::ng-deep ngb-accordion {
+  .card {
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  
+  .accordion-button {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    color: #212529;
+    
+    &:focus {
+      box-shadow: none;
+      outline: none;
+    }
+    
+    &:not(.collapsed) {
+      background-color: #f8f9fa;
+      color: #0d6efd;
+    }
+    
+    &::after {
+      margin-left: auto;
+    }
+  }
+  
+  .card-header {
+    padding: 0;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+  }
+  
+  .card-body {
+    padding: 1.25rem;
+  }
+}
+
+/* Estilos para el acordeón de Bootstrap estándar */
+.accordion {
+  --bs-accordion-border-radius: 10px;
+  --bs-accordion-inner-border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  
+  .accordion-item {
+    border: none;
+    background-color: #fff;
+    
+    &:not(:last-child) {
+      border-bottom: 1px solid rgba(0,0,0,0.125);
+    }
+  }
+  
+  .accordion-button {
+    font-weight: 600;
+    color: #212529;
+    padding: 1.25rem;
+    background-color: #f8f9fa;
+    
+    &:not(.collapsed) {
+      color: #0d6efd;
+      background-color: #f8f9fa;
+      box-shadow: none;
+    }
+    
+    &:focus {
+      box-shadow: none;
+      border-color: rgba(0,0,0,0.125);
+    }
+    
+    &::after {
+      background-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+  }
+  
+  .accordion-body {
+    padding: 1.25rem;
+    background-color: #fff;
+  }
+}
+
+/* Estilos para la tabla de rendimiento de tiendas */
+.store-performance-table {
+  th, td {
+    padding: 0.85rem;
+    vertical-align: middle;
+  }
+  
+  th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 10;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dee2e6;
+  }
+  
+  .table-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .store-row {
+    transition: background-color 0.15s ease;
+    
+    &:hover {
+      background-color: #f8f9fa;
+      box-shadow: inset 0 0 0 1px #dee2e6;
+    }
+  }
+  
+  .store-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    
+    i {
+      font-size: 1.2rem;
+    }
+    
+    &.store-icon-active {
+      background: linear-gradient(45deg, #2bd980, #55e7aa);
+      color: white;
+    }
+    
+    &.store-icon-moderate {
+      background: linear-gradient(45deg, #3f9ce8, #5bc0de);
+      color: white;
+    }
+    
+    &.store-icon-inactive {
+      background: linear-gradient(45deg, #e9ecef, #ced4da);
+      color: #6c757d;
+    }
+  }
+}
+
+/* Estilos para la tabla de rendimiento de tiendas */
+.store-performance-table {
+  th, td {
+    padding: 0.85rem;
+    vertical-align: middle;
+  }
+  
+  th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 10;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dee2e6;
+  }
+  
+  .table-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .store-row {
+    transition: background-color 0.15s ease;
+    
+    &:hover {
+      background-color: #f8f9fa;
+      box-shadow: inset 0 0 0 1px #dee2e6;
+    }
+  }
+  
+  .store-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    
+    i {
+      font-size: 1.2rem;
+    }
+    
+    &.store-icon-active {
+      background: linear-gradient(45deg, #2bd980, #55e7aa);
+      color: white;
+    }
+    
+    &.store-icon-moderate {
+      background: linear-gradient(45deg, #3f9ce8, #5bc0de);
+      color: white;
+    }
+    
+    &.store-icon-inactive {
+      background: linear-gradient(45deg, #e9ecef, #ced4da);
+      color: #6c757d;
+    }
+  }
+  
+  .pedidos-badge {
+    .badge {
+      font-size: 0.85rem;
+      padding: 0.5em 0.85em;
+      font-weight: 500;
+    }
+  }
+  
+  .growth-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    
+    i {
+      margin-right: 5px;
+      font-size: 0.85rem;
+    }
+    
+    &.positive {
+      background-color: rgba(40, 167, 69, 0.1);
+      color: #28a745;
+    }
+    
+    &.negative {
+      background-color: rgba(220, 53, 69, 0.1);
+      color: #dc3545;
+    }
+    
+    &.neutral {
+      background-color: rgba(108, 117, 125, 0.1);
+      color: #6c757d;
+    }
+  }
+  
+  .active-clients-count {
+    .badge {
+      font-size: 0.85rem;
+      padding: 0.5em 0.85em;
+      min-width: 50px;
+    }
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
+      
+      i {
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+/* Estilos para estados vacíos */
+.empty-state-small {
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  i {
+    opacity: 0.6;
+  }
+  
+  p {
+    color: #6c757d;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Personalización de dropdowns */
+.dropdown-menu {
+  padding: 0.5rem 0;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  
+  .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    
+    &:hover {
+      background-color: rgba(13,110,253,0.04);
+    }
+    
+    &:active {
+      background-color: rgba(13,110,253,0.08);
+    }
+    
+    i {
+      width: 20px;
+    }
+  }
+}
+
+/* Mejoras responsive */
+@media (max-width: 992px) {
+  .store-performance-table {
+    th, td {
+      padding: 0.75rem 0.5rem;
+    }
+    
+    .store-icon {
+      width: 36px;
+      height: 36px;
+    }
+    
+    .action-buttons {
+      flex-wrap: wrap;
+      
+      .btn-icon {
+        width: 32px;
+        height: 32px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  :host ::ng-deep ngb-accordion {
+    .accordion-button {
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+    }
+  }
+  
+  .store-performance-table {
+    th, td {
+      font-size: 0.85rem;
+    }
+  }
+  
+  .growth-indicator {
+    padding: 3px 8px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Ajustes para los nuevos gráficos */
+#chart-proyeccion-ventas,
+#chart-comparativa-tiendas {
+  height: 300px;
+}
+
+/* Estilos para el acordeón de PrimeNG */
+:host ::ng-deep .custom-accordion {
+  .p-accordion-header {
+    a {
+      padding: 1rem 1.25rem;
+      font-weight: 600;
+      color: #212529;
+      background: #f8f9fa;
+      border-radius: 8px;
+      
+      &:focus {
+        box-shadow: none;
+        outline: none;
+      }
+      
+      &:not(.p-disabled):hover {
+        background-color: #f0f0f0;
+      }
+      
+      .p-accordion-toggle-icon {
+        margin-left: auto;
+      }
+    }
+    
+    &.p-highlight a {
+      background-color: #f8f9fa;
+      color: #0d6efd;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+  
+  .p-accordion-content {
+    padding: 1.25rem;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-top: 0;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+  
+  .p-accordion-tab {
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+}
+
+/* Estilos mejorados para la tabla de clientes */
+.custom-table {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  
+  th {
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+    border-top: none;
+    white-space: nowrap;
+    background-color: #f8f9fa;
+    vertical-align: middle;
+  }
+  
+  td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+  }
+  
+  .table-row {
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: rgba(0, 123, 255, 0.03);
+      border-left: 3px solid #0d6efd;
+    }
+  }
+}
+
+.avatar-circle {
+  min-width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  text-transform: uppercase;
+}
+
+/* Iconos de acciones */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+    color: white;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+    }
+  }
+}
+
+/* Información de contacto */
+.contact-info {
+  .contact-text {
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 200px;
+  }
+}
+
+/* Badges de estado */
+.status-badge {
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  border-radius: 30px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  
+  &.status-active {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+  }
+  
+  &.status-blocked {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+  }
+  
+  &.status-pending {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+  }
+}
