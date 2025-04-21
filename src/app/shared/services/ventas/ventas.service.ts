@@ -133,6 +133,8 @@ export class VentasService extends BaseService {
     return this.get<any>(`/v1/orders/status/${numeroPedido}`);
   }
 
-
+  realizarCierreCaja(cierreData: any): Observable<any> {
+    return this.post<any>('/v1/orders/cash-closing', cierreData);
+  }
 
 }

@@ -9,7 +9,7 @@
                             <app-product-category></app-product-category>
                         </div>
                         <div class="col-4">
-                            <app-warehouse-selector (warehouseChange)="onWarehouseChanged()"></app-warehouse-selector>
+                            <app-warehouse-selector (warehouseChanged)="onWarehouseChanged()"></app-warehouse-selector>
                         </div>
                     </div>
                 </div>
@@ -22,4 +22,8 @@
             <app-pos-checkout></app-pos-checkout>
         </div>
     </div>
+
+    <button class="btn btn-primary cash-closing-btn" (click)="openCashClosingModal()">
+        <i class="fas fa-cash-register"></i> Cierre de Caja
+    </button>
 </div>

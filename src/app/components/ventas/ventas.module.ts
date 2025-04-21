@@ -46,6 +46,7 @@ import { CashPaymentComponent } from './pos2/widgets/cash-payment/cash-payment';
 import { EWalletPaymentComponent } from './pos2/widgets/ewallet-payment/ewallet-payment';
 import { WarehouseSelectorComponent } from './pos2/widgets/warehouse-selector/warehouse-selector';
 import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer.directive';
+import { CashClosingComponent } from './pos2/widgets/cash-closing/cash-closing.component';
 
 @NgModule({
   imports: [
@@ -61,9 +62,8 @@ import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer
     SliderModule,
     GalleryModule,
     FormsModule,
-    CalendarModule,
-    FormsModule,
     ReactiveFormsModule,
+    CalendarModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
     TableModule,
@@ -97,7 +97,8 @@ import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer
     CardPaymentComponent,
     CashPaymentComponent,
     EWalletPaymentComponent,
-    WarehouseSelectorComponent
+    WarehouseSelectorComponent,
+    CashClosingComponent
   ],
   exports: [
     CrearVentasComponent,

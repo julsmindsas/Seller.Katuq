@@ -1,0 +1,59 @@
+<div class="cash-closing-container">
+  <div class="card">
+    <div class="card-header">
+      <h4>Cierre de Caja</h4>
+    </div>
+    <div class="card-body">
+      <form (ngSubmit)="calcularInforme()">
+        <div class="form-group">
+          <label for="fechaCierre">Fecha de Cierre</label>
+          <input type="date" class="form-control" id="fechaCierre" [(ngModel)]="fechaCierre" name="fechaCierre">
+        </div>
+        
+        <div class="form-group">
+          <label for="efectivoInicial">Efectivo Inicial</label>
+          <input type="number" class="form-control" id="efectivoInicial" [(ngModel)]="efectivoInicial" name="efectivoInicial">
+        </div>
+        
+        <div class="form-group">
+          <label for="efectivoFinal">Efectivo Final</label>
+          <input type="number" class="form-control" id="efectivoFinal" [(ngModel)]="efectivoFinal" name="efectivoFinal" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="observaciones">Observaciones</label>
+          <textarea class="form-control" id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="3"></textarea>
+        </div>
+
+        <div class="informe-preview" *ngIf="informe.totalVentas > 0">
+          <h5>Resumen de Ventas</h5>
+          <div class="informe-item">
+            <span>Ventas en Efectivo:</span>
+            <strong>${{informe.ventasEfectivo | number:'1.2-2'}}</strong>
+          </div>
+          <div class="informe-item">
+            <span>Ventas con Tarjeta:</span>
+            <strong>${{informe.ventasTarjeta | number:'1.2-2'}}</strong>
+          </div>
+          <div class="informe-item">
+            <span>Ventas E-Wallet:</span>
+            <strong>${{informe.ventasEwallet | number:'1.2-2'}}</strong>
+          </div>
+          <div class="informe-item total">
+            <span>Total Ventas:</span>
+            <strong>${{informe.totalVentas | number:'1.2-2'}}</strong>
+          </div>
+          <div class="informe-item diferencia" [ngClass]="{'positivo': informe.diferencia >= 0, 'negativo': informe.diferencia < 0}">
+            <span>Diferencia en Efectivo:</span>
+            <strong>${{informe.diferencia | number:'1.2-2'}}</strong>
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button type="button" class="btn btn-secondary" (click)="modal.dismissAll()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Realizar Cierre</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div> 
