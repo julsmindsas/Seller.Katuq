@@ -61,7 +61,7 @@ export class CashClosingHistoryComponent implements OnInit {
   constructor(
     public activeModal: NgbActiveModal,
     private ventasService: VentasService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadHistory();
@@ -70,16 +70,17 @@ export class CashClosingHistoryComponent implements OnInit {
   loadHistory() {
     this.loading = true;
 
-    // Obtener la fecha actual (o ajustar según sea necesario para el filtro)
+    // Obtener la fecha actual en UTC (00:00:00.000Z y 23:59:59.999Z)
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const fechaInicio = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0, 0));
+    const fechaFina = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59, 999));
 
     // Crear objeto de filtro (verifica si necesitas todos estos campos)
     const filter = {
       company: JSON.parse(sessionStorage.getItem('currentCompany') || '{}').nomComercial,
       origenConsulta: 'POS', // Ajusta si es necesario
-      fechaInicio: today.toISOString(), // Podrías querer usar historyData.fechaInicio si lo obtienes antes
-      fechaFin: new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1).toISOString() // O historyData.fechaFin
+      fechaInicio: fechaInicio.toISOString(),
+      fechaFin: fechaFina.toISOString()
     };
 
     // Asumiendo que getCashClosingHistory devuelve la nueva estructura
@@ -134,7 +135,7 @@ export class CashClosingHistoryComponent implements OnInit {
 
   formatShortDate(dateString: string | undefined): string {
     if (!dateString) return 'N/A';
-     try {
+    try {
       const date = new Date(dateString);
       return date.toLocaleDateString('es-CL', {
         year: 'numeric',
@@ -142,8 +143,8 @@ export class CashClosingHistoryComponent implements OnInit {
         day: 'numeric'
       });
     } catch (e) {
-       console.error('Error formatting short date:', dateString, e);
-       return dateString;
+      console.error('Error formatting short date:', dateString, e);
+      return dateString;
     }
   }
-} 
+}

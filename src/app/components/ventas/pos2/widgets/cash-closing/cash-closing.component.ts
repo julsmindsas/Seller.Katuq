@@ -37,9 +37,11 @@ export class CashClosingComponent {
     }
 
     // Obtener las ventas del día
-    const fechaInicio = new Date(this.fechaCierre);
+    const fechaCierreDate  = new Date(this.fechaCierre);
+    fechaCierreDate.setDate(fechaCierreDate.getDate() + 1);
+    const fechaInicio = new Date(fechaCierreDate);
     fechaInicio.setHours(0, 0, 0, 0);
-    const fechaFin = new Date(this.fechaCierre);
+    const fechaFin = new Date(fechaCierreDate);
     fechaFin.setHours(23, 59, 59, 999);
     const filter = {
       fechaInicial: fechaInicio.toISOString(),
