@@ -1,0 +1,147 @@
+<div class="cash-closing-history">
+  <div class="modal-header">
+    <h4 class="modal-title">Historial de Cierres de Caja</h4>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-body" *ngIf="!loading">
+    <div *ngIf="historyData" class="history-content">
+      <!-- Encabezado con Rango de Fechas y Compañía -->
+      <div class="header-section mb-4 p-3 bg-light rounded">
+        <h2 class="text-center text-primary mb-2">{{ historyData.company }}</h2>
+        <p class="text-center text-muted">
+          <strong>Periodo del Informe:</strong> {{ formatShortDate(historyData.fechaInicio) }} - {{ formatShortDate(historyData.fechaFin) }}
+        </p>
+      </div>
+
+      <!-- Resumen General -->
+      <div class="card summary-card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Resumen General del Periodo</h3>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-4 mb-3">
+              <span class="d-block text-muted">Total Días</span>
+              <strong class="d-block fs-5">{{ formatNumber(historyData.resumenGeneral.totalDias) }}</strong>
+            </div>
+            <div class="col-md-4 mb-3">
+              <span class="d-block text-muted">Total Ventas</span>
+              <strong class="d-block fs-5 text-success">{{ formatCurrency(historyData.resumenGeneral.totalVentas) }}</strong>
+            </div>
+            <div class="col-md-4 mb-3">
+              <span class="d-block text-muted">Promedio Diario</span>
+              <strong class="d-block fs-5">{{ formatCurrency(historyData.resumenGeneral.promedioDiario) }}</strong>
+            </div>
+          </div>
+          <hr>
+          <div class="row text-center">
+            <div class="col-md-4 mb-3">
+              <span class="d-block text-muted">Total Efectivo</span>
+              <strong class="d-block fs-5">{{ formatCurrency(historyData.resumenGeneral.totalEfectivo) }}</strong>
+            </div>
+            <div class="col-md-4 mb-3">
+              <span class="d-block text-muted">Total Tarjeta</span>
+              <strong class="d-block fs-5">{{ formatCurrency(historyData.resumenGeneral.totalTarjeta) }}</strong>
+            </div>
+            <div class="col-md-4 mb-3">
+              <span class="d-block text-muted">Total Transferencia</span>
+              <strong class="d-block fs-5">{{ formatCurrency(historyData.resumenGeneral.totalTransferencia) }}</strong>
+            </div>
+          </div>
+          <div class="mt-2">
+            <span class="text-muted">Usuarios que realizaron cierre:</span>
+            <strong class="ms-2">{{ historyData.resumenGeneral.usuariosCierre.join(', ') || 'Ninguno' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial Detallado por Día/Cierre -->
+      <h3 class="mb-3">Historial de Cierres</h3>
+      <div *ngIf="historyData.historial && historyData.historial.length > 0; else noHistory">
+        <div class="accordion" id="historyAccordion">
+          <div class="accordion-item" *ngFor="let item of historyData.historial; let i = index">
+            <h2 class="accordion-header" [id]="'heading' + i">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" [attr.data-bs-target]="'#collapse' + i" aria-expanded="true" [attr.aria-controls]="'collapse' + i">
+                <strong>{{ formatShortDate(item.fecha) }}</strong> - {{ item.usuarioCierre }} - Ventas: {{ formatCurrency(item.totalVentas) }}
+              </button>
+            </h2>
+            <div [id]="'collapse' + i" class="accordion-collapse collapse" [attr.aria-labelledby]="'heading' + i" data-bs-parent="#historyAccordion">
+              <div class="accordion-body">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <p><strong>Efectivo Inicial:</strong> {{ formatCurrency(item.efectivoInicial) }}</p>
+                    <p><strong>Efectivo Final:</strong> {{ formatCurrency(item.efectivoFinal) }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <p><strong>Observaciones:</strong> {{ item.observaciones || 'Ninguna' }}</p>
+                     <p><strong>Informe:</strong> {{ item.informe || 'No disponible' }}</p> <!-- Si existe -->
+                  </div>
+                </div>
+                <h5>Detalle de Ventas del Cierre</h5>
+                <div class="row text-center mb-3">
+                   <div class="col-4"><strong>Efectivo:</strong> {{ formatCurrency(item.totalEfectivo) }}</div>
+                   <div class="col-4"><strong>Tarjeta:</strong> {{ formatCurrency(item.totalTarjeta) }}</div>
+                   <div class="col-4"><strong>Transferencia:</strong> {{ formatCurrency(item.totalTransferencia) }}</div>
+                </div>
+                 <div class="row text-center mb-3">
+                   <div class="col-4"><strong>Pedidos:</strong> {{ formatNumber(item.cantidadPedidos) }}</div>
+                   <div class="col-4"><strong>Productos:</strong> {{ formatNumber(item.cantidadProductos) }}</div>
+                   <div class="col-4"><strong>Descuentos:</strong> {{ formatCurrency(item.totalDescuentos) }}</div>
+                </div>
+
+                <h5>Pedidos Incluidos en este Cierre ({{ item.pedidos.length }})</h5>
+                <div *ngIf="item.pedidos && item.pedidos.length > 0; else noPedidos" class="table-responsive">
+                  <table class="table table-sm table-striped table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th># Pedido</th>
+                        <th>Forma Pago</th>
+                        <th>Total</th>
+                        <th>Fecha Creación</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let pedido of item.pedidos">
+                        <td>{{ pedido.nroPedido }}</td>
+                        <td>{{ pedido.formaDePago }}</td>
+                        <td>{{ formatCurrency(pedido.total) }}</td>
+                        <td>{{ formatDate(pedido.fechaCreacion) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ng-template #noPedidos>
+                  <p class="text-muted fst-italic">No hay pedidos registrados para este cierre.</p>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ng-template #noHistory>
+        <div class="alert alert-info" role="alert">
+          No se encontraron registros de cierres de caja para el periodo seleccionado.
+        </div>
+      </ng-template>
+
+    </div>
+    <div *ngIf="!historyData && !loading" class="alert alert-warning" role="alert">
+      No hay datos disponibles para mostrar.
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cerrar</button>
+  </div>
+</div>
+
+<!-- Spinner de carga -->
+<div *ngIf="loading" class="loading-overlay">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Cargando...</span>
+  </div>
+  <p class="mt-2">Cargando historial...</p>
+</div> 

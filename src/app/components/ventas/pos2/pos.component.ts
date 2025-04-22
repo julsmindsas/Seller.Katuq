@@ -6,6 +6,7 @@ import { ProductComponent } from './widgets/product/product.component';
 import { PosCheckoutComponent } from "./widgets/pos-checkout/pos-checkout.component";
 import { WarehouseSelectorComponent } from './widgets/warehouse-selector/warehouse-selector'; // Importar WarehouseSelectorComponent
 import { CashClosingComponent } from './widgets/cash-closing/cash-closing.component';
+import { CashClosingHistoryComponent } from './widgets/cash-closing-history/cash-closing-history.component';
 
 @Component({
   selector: 'app-pos',
@@ -44,6 +45,15 @@ export class PosComponent implements AfterViewInit { // Implementar AfterViewIni
     this.modal.open(CashClosingComponent, {
       centered: true,
       size: 'lg',
+      backdrop: 'static',
+      keyboard: false
+    });
+  }
+
+  openCashClosingHistoryModal() {
+    this.modal.open(CashClosingHistoryComponent, {
+      centered: true,
+      size: 'xl',
       backdrop: 'static',
       keyboard: false
     });

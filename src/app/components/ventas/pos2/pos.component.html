@@ -1,17 +1,23 @@
 <div class="container-fluid">
-    <br>
+    <div class="pos-header">
+        <div class="warehouse-selector">
+            <app-warehouse-selector (warehouseChange)="onWarehouseChanged()"></app-warehouse-selector>
+        </div>
+        <div class="action-buttons">
+            <button class="btn btn-primary cash-closing-btn" (click)="openCashClosingModal()">
+                <i class="fas fa-cash-register"></i> Cierre de Caja
+            </button>
+            <button class="btn btn-info history-btn" (click)="openCashClosingHistoryModal()">
+                <i class="fas fa-history"></i> Historial
+            </button>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-xxl-9 col-xl-8 box-col-8">
             <div class="row">
                 <div class="col-xl-12">
-                    <div class="row">
-                        <div class="col-8">
-                            <app-product-category></app-product-category>
-                        </div>
-                        <div class="col-4">
-                            <app-warehouse-selector (warehouseChanged)="onWarehouseChanged()"></app-warehouse-selector>
-                        </div>
-                    </div>
+                    <app-product-category></app-product-category>
                 </div>
                 <div class="col-xl-12">
                     <app-product></app-product>
@@ -22,8 +28,4 @@
             <app-pos-checkout></app-pos-checkout>
         </div>
     </div>
-
-    <button class="btn btn-primary cash-closing-btn" (click)="openCashClosingModal()">
-        <i class="fas fa-cash-register"></i> Cierre de Caja
-    </button>
 </div>

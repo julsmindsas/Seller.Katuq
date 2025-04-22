@@ -137,4 +137,8 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/orders/cash-closing', cierreData);
   }
 
+  getCashClosingHistory(filter: any) {
+    return this.post<any>('/v1/orders/cash-closing-history', filter);
+  }
+
 }

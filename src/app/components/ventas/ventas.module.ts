@@ -47,6 +47,7 @@ import { EWalletPaymentComponent } from './pos2/widgets/ewallet-payment/ewallet-
 import { WarehouseSelectorComponent } from './pos2/widgets/warehouse-selector/warehouse-selector';
 import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer.directive';
 import { CashClosingComponent } from './pos2/widgets/cash-closing/cash-closing.component';
+import { CashClosingHistoryComponent } from './pos2/widgets/cash-closing-history/cash-closing-history.component';
 
 @NgModule({
   imports: [
@@ -98,7 +99,8 @@ import { CashClosingComponent } from './pos2/widgets/cash-closing/cash-closing.c
     CashPaymentComponent,
     EWalletPaymentComponent,
     WarehouseSelectorComponent,
-    CashClosingComponent
+    CashClosingComponent,
+    CashClosingHistoryComponent
   ],
   exports: [
     CrearVentasComponent,
