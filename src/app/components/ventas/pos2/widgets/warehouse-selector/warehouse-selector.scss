@@ -1,25 +1,64 @@
-/* warehouse-selector.component.css */
+/* warehouse-selector.component.scss */
 .warehouse-selector {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  
+  .warehouse-title {
+    margin-bottom: 0;
+    font-weight: 500;
+    font-size: 1.25rem;
   }
   
-  .warehouse-selector label {
-    font-weight: bold;
-  }
-  
-  .warehouse-selector select {
-    width: 100%;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+  .select-container {
+    margin-bottom: 0;
+    
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #cad4e4;
+      background-color: #f9faff;
+    }
   }
   
   .selected-warehouse {
-    margin-top: 10px;
-    padding: 10px;
-    background-color: #f0f8ff;
+    padding: 15px;
+    background-color: #f8f9fe;
     border: 1px solid #b3d9ff;
-    border-radius: 4px;
+    border-radius: 6px;
+    
+    strong {
+      font-weight: 600;
+    }
   }
+}
+
+// Estilo para pantallas más grandes - elementos en línea
+@media (min-width: 768px) {
+  .warehouse-selector {
+    flex-direction: row;
+    align-items: center;
+    
+    .warehouse-title {
+      margin-right: 15px;
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+    
+    .select-container {
+      flex: 1;
+      margin: 0 15px 0 0;
+      
+      select {
+        width: auto;
+        min-width: 200px;
+      }
+    }
+    
+    .selected-warehouse {
+      margin-top: 0;
+      white-space: nowrap;
+    }
+  }
+}
