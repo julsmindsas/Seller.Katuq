@@ -1,6 +1,6 @@
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12 p-2">
+        <div class="col-12 p-3">
             <br />
             <div class="card">
                 <i class="icon-bg" width="80" height="80" style="
@@ -16,7 +16,7 @@
 
                 <!-- Header Standar -->
                 <div class="row col-12 m-2">
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                         <p class="text-left fc-secondary fw-bold fs-24 m-0 p-0">{{ "Recepción de Mercancía" | translate }}</p>
                         <p class="text-left text-muted fs-18 m-0 p-0">{{ "Ingreso de productos al inventario" | translate }}</p>
                     </div>
@@ -26,9 +26,9 @@
                 <div class="card-body">
                     <form [formGroup]="productoForm" class="row">
                         <!-- Selector de bodega -->
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label for="bodegaSelect" class="form-label">{{ "Seleccionar Bodega" | translate }}</label>
-                            <select formControlName="bodegaSeleccionada" class="form-control" id="bodegaSelect">
+                            <select formControlName="bodegaSeleccionada" class="form-control form-control-sm" id="bodegaSelect">
                                 <option [ngValue]="null">{{ "Seleccione una bodega" | translate }}</option>
                                 <option *ngFor="let bodega of bodegas" [ngValue]="bodega">
                                     {{ bodega.nombre }} ({{ bodega.idBodega }})
@@ -42,9 +42,9 @@
                         </div>
 
                         <!-- Selector de tipo de movimiento -->
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label for="tipoMovimiento" class="form-label">{{ "Tipo de Movimiento" | translate }}</label>
-                            <select formControlName="tipoMovimiento" class="form-control" id="tipoMovimiento">
+                            <select formControlName="tipoMovimiento" class="form-control form-control-sm" id="tipoMovimiento">
                                 <option *ngFor="let tipo of tiposMovimientoRecepcion" [value]="tipo.valor">
                                     {{ tipo.nombre }}
                                 </option>
@@ -59,23 +59,24 @@
 
                     <!-- Fila nueva para la búsqueda de producto -->
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 mb-3">
                             <label for="busquedaProducto" class="form-label">{{ "Buscar Producto" | translate }}</label>
                             <div class="input-group">
                                 <input 
                                     type="text" 
                                     [(ngModel)]="busquedaInput" 
                                     [ngModelOptions]="{standalone: true}"
-                                    class="form-control" 
+                                    class="form-control form-control-sm" 
                                     id="busquedaProducto" 
-                                    placeholder="{{ 'Ingrese ID, referencia o nombre del producto y presione Enter' | translate }}"
+                                    placeholder="{{ 'ID, referencia o nombre...' | translate }}"
                                     (keydown)="onKeyDown($event)"
                                     [disabled]="buscandoProducto">
-                                <button class="btn btn-primary" type="button" (click)="buscarProducto()" [disabled]="buscandoProducto">
-                                    <i class="icofont icofont-search"></i> {{ "Buscar" | translate }}
+                                <button class="btn btn-primary btn-sm" type="button" (click)="buscarProducto()" [disabled]="buscandoProducto">
+                                    <i class="icofont icofont-search"></i>
+                                    <span class="d-none d-sm-inline ms-1">{{ "Buscar" | translate }}</span>
                                 </button>
                             </div>
-                            <small class="form-text text-muted">
+                            <small class="form-text text-muted d-none d-sm-block">
                                 {{ "Ingrese al menos 3 caracteres y presione Enter o haga clic en el botón Buscar" | translate }}
                             </small>
                         </div>
@@ -90,18 +91,19 @@
                             [rows]="10" 
                             [resizableColumns]="true" 
                             [scrollable]="true" 
-                            scrollHeight="flex" 
-                            styleClass="p-datatable-gridlines p-datatable-striped"
-                            [rowsPerPageOptions]="[5, 10, 20]">
+                            scrollHeight="400px"
+                            styleClass="p-datatable-gridlines p-datatable-striped p-datatable-sm"
+                            [rowsPerPageOptions]="[5, 10, 20]"
+                            responsiveLayout="scroll">
 
                             <ng-template pTemplate="header">
                                 <tr>
-                                    <th class="text-center">{{ "Imagen" | translate }}</th>
+                                    <th style="width: 70px;" class="text-center">{{ "Imagen" | translate }}</th>
                                     <th class="text-center">{{ "Referencia" | translate }}</th>
                                     <th class="text-center">{{ "Nombre Producto" | translate }}</th>
-                                    <th class="text-center">{{ "Precio" | translate }}</th>
-                                    <th class="text-center">{{ "Cantidad" | translate }}</th>
-                                    <th class="text-center">{{ "Acciones" | translate }}</th>
+                                    <th style="width: 100px;" class="text-center">{{ "Precio" | translate }}</th>
+                                    <th style="width: 150px;" class="text-center">{{ "Cantidad" | translate }}</th>
+                                    <th style="width: 70px;" class="text-center">{{ "Acciones" | translate }}</th>
                                 </tr>
                             </ng-template>
 
@@ -111,10 +113,10 @@
                                         <img *ngIf="item.producto.crearProducto?.imagenesPrincipales?.length > 0"
                                             [src]="item.producto.crearProducto.imagenesPrincipales[0].urls" 
                                             alt="Imagen del producto" 
-                                            style="max-width: 50px; max-height: 50px;"
+                                            style="max-width: 40px; max-height: 40px;"
                                             class="img-thumbnail">
                                         <span *ngIf="!item.producto.crearProducto?.imagenesPrincipales?.length">
-                                            <i class="fa fa-image text-muted"></i>
+                                            <i class="fa fa-image text-muted fs-24"></i>
                                         </span>
                                     </td>
                                     <td>{{ item.producto.identificacion?.referencia || 'N/A' }}</td>
@@ -122,36 +124,35 @@
                                     <td class="text-end">{{ item.producto.precio?.precioUnitarioConIva | currency:'USD':'symbol':'1.2-2' || 'N/A' }}</td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center">
-                                            <button class="btn btn-sm btn-outline-danger me-2" (click)="decrementarCantidad(item)">
+                                            <button class="btn btn-sm btn-outline-danger me-1" (click)="decrementarCantidad(item)">
                                                 <i class="fa fa-minus"></i>
                                             </button>
-                                            <span class="mx-2">{{ item.cantidad }}</span>
-                                            <button class="btn btn-sm btn-outline-success ms-2" (click)="incrementarCantidad(item)">
+                                            <span class="mx-1 fw-bold">{{ item.cantidad }}</span>
+                                            <button class="btn btn-sm btn-outline-success ms-1" (click)="incrementarCantidad(item)">
                                                 <i class="fa fa-plus"></i>
                                             </button>
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
-                                            style="font-size: 18px; cursor: pointer;"
-                                            class="icofont icofont-trash fc-danger" (click)="eliminarProducto(item)">
-                                        </i>
+                                        <button class="btn btn-sm btn-danger" (click)="eliminarProducto(item)" placement="top" ngbTooltip="{{ 'Eliminar' | translate }}">
+                                            <i class="icofont icofont-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             </ng-template>
 
                             <ng-template pTemplate="emptymessage">
                                 <tr>
-                                    <td colspan="6" class="text-center">
+                                    <td colspan="6" class="text-center p-4">
                                         {{ "No hay productos en la lista" | translate }}
                                     </td>
                                 </tr>
                             </ng-template>
 
                             <ng-template pTemplate="summary">
-                                <div class="flex align-items-center justify-content-between">
+                                <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-2">
                                     <div>{{ "Total productos" | translate }}: {{productos ? productos.length : 0 }}</div>
-                                    <div *ngIf="productos.length > 0">
+                                    <div *ngIf="productos.length > 0" class="mt-1 mt-sm-0">
                                         {{ "Total ítems" | translate }}: {{ calcularTotalItems() }}
                                     </div>
                                 </div>
@@ -162,10 +163,10 @@
                     <!-- Botones de acción -->
                     <div class="d-flex justify-content-end mt-4">
                         <button 
-                            class="btn btn-primary" 
+                            class="btn btn-primary w-100 w-sm-auto" 
                             [disabled]="productos.length === 0 || productoForm.invalid || guardandoRecepcion" 
                             (click)="guardarRecepcion()">
-                            <i class="icofont icofont-save"></i> {{ "Guardar Recepción" | translate }}
+                            <i class="icofont icofont-save me-1"></i> {{ "Guardar Recepción" | translate }}
                         </button>
                     </div>
                 </div>
