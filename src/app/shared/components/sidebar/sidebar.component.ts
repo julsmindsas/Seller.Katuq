@@ -5,7 +5,17 @@ import { LayoutService } from '../../services/layout.service';
 import { environment } from '../../../../environments/environment';
 import { SecurityService } from '../../services/security/security.service';
 import { CompanyInformation } from '../../models/User/CompanyInformation';
-import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
+// Asegúrate de que PlanSelectorComponent esté importado si aún no lo está
+// import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
+
+// Nueva interfaz para las secciones
+interface SidebarSection {
+  title: string | null;
+  items: Menu[];
+  collapsed: boolean;
+  isHeaderSection: boolean; // Para saber si tiene título o es la sección inicial
+}
+
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
@@ -21,12 +31,11 @@ export class SidebarComponent implements OnInit {
     walletBalance: 0
   };
   public iconSidebar;
-  public menuItems: Menu[];
+  // public menuItems: Menu[]; // Ya no usaremos esto directamente en el template
   public url: any;
   public fileurl: any;
-  companyInformation: CompanyInformation
+  companyInformation: CompanyInformation;
 
-  // For Horizontal Menu
   public margin: any = 0;
   public width: any = window.innerWidth;
   public leftArrowNone: boolean = true;
@@ -34,53 +43,57 @@ export class SidebarComponent implements OnInit {
   version = environment.version;
 
   public isCollapsed: boolean = false;
-  public collapseMenu: boolean = false
+  public collapseMenu: boolean = false;
   public isPlanCardCollapsed: boolean = false;
 
-  constructor(private router: Router, public navServices: NavService,
+  // Nueva propiedad para las secciones colapsables
+  public sections: SidebarSection[] = [];
+
+  constructor(
+    private router: Router,
+    public navServices: NavService,
     public layout: LayoutService,
-    private securityService: SecurityService) {
+    private securityService: SecurityService
+  ) {
     this.navServices.items.subscribe(menuItems => {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      // if (user.rol !== 'Super Administrador') {
-      //   this.menuItems = menuItems.filter(item => !item.isOnlySuperAdministrador); // Filter Only Administrador 
-      // } else {
-      this.menuItems = menuItems;
-      // }
+      this.processMenuItems(menuItems); // Procesar items para crear secciones
+
+      // El resto de la lógica de suscripción para activar items se mantiene
       this.router.events.subscribe((event) => {
         if (event instanceof NavigationEnd) {
-          menuItems.filter(items => {
-            if (items.path === event.url) {
-              this.setNavActive(items);
-            }
-            if (!items.children) { return false; }
-            items.children.filter(subItems => {
-              if (subItems.path === event.url) {
-                this.setNavActive(subItems);
-              }
-              if (!subItems.children) { return false; }
-              subItems.children.filter(subSubItems => {
-                if (subSubItems.path === event.url) {
-                  this.setNavActive(subSubItems);
-                }
-              });
+          // Actualizar active state en los items originales o en las secciones
+           // Primero, obtenemos los items originales de NavService para limpiarlos
+          const originalMenuItems = this.navServices.getMenuItems(); // Asumiendo que NavService tiene un método así o acceso a la lista original
+          originalMenuItems.forEach(item => this.clearActiveStatesRecursive(item, null)); // Limpiar estados activos primero en la fuente original
+
+          // Volver a marcar como activo basado en la URL actual
+          let activeItemFound = false;
+          originalMenuItems.forEach(items => {
+            if (activeItemFound) return; // Si ya encontramos el activo, no seguir
+            if (items.path === event.url) { this.setNavActive(items); activeItemFound = true; return; }
+            if (!items.children) return;
+            items.children.forEach(subItems => {
+              if (activeItemFound) return;
+               if (subItems.path === event.url) { this.setNavActive(subItems); activeItemFound = true; return; }
+               if (!subItems.children) return;
+               subItems.children.forEach(subSubItems => {
+                  if (activeItemFound) return;
+                  if (subSubItems.path === event.url) { this.setNavActive(subSubItems); activeItemFound = true; return; }
+               });
             });
           });
-          this.collapseMenu = this.navServices.collapseSidebar
+
+          // Reflejar cambios de active state en las secciones procesadas
+          // Usamos los items originales actualizados de NavService para reprocesar
+          this.processMenuItems(originalMenuItems);
+          this.collapseMenu = this.navServices.collapseSidebar;
         }
       });
     });
   }
 
-
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.loadPlanFromLocalStorage();
-    // const res: any = await JSON.parse(localStorage.getItem(environment.user));
-    // this.idUsuario = res.email;
-
-    // this.navServices.collapseSidebar = true || false;
-    // this.collapseMenu = true || false;
-
     this.securityService.getCompanyInformationLogged$().subscribe((companyInformation: CompanyInformation) => {
       if (!companyInformation) {
         companyInformation = this.securityService.getCompanyInformationLogged();
@@ -88,12 +101,107 @@ export class SidebarComponent implements OnInit {
       this.companyInformation = companyInformation;
     });
 
-    // Recuperar estado del acordeón
     const savedState = localStorage.getItem('planCardCollapsed');
     if (savedState) {
       this.isPlanCardCollapsed = savedState === 'true';
     }
+
+     // Ya procesamos los items en el constructor y aplicamos el estado guardado ahí
+     // Si navServices.items emite después de ngOnInit, processMenuItems se llamará de nuevo
+     // y aplicará el estado guardado.
   }
+
+  // Nueva función para procesar los items del menú en secciones
+  private processMenuItems(menuItems: Menu[]): void {
+    const sections: SidebarSection[] = [];
+    let currentSection: SidebarSection | null = null;
+
+    menuItems.forEach(item => {
+      if (item.headTitle1) {
+        // Es un encabezado, crea una nueva sección
+        // Si la sección anterior estaba vacía (solo header), la eliminamos
+        if (currentSection && currentSection.items.length === 0 && currentSection.isHeaderSection) {
+          sections.pop();
+        }
+        currentSection = {
+          title: item.headTitle1,
+          items: [],
+          collapsed: false, // Estado inicial, se sobrescribe abajo si hay guardado
+          isHeaderSection: true
+        };
+        sections.push(currentSection);
+      } else if (item.headTitle2) {
+        // Ignorar headTitle2 por ahora
+      } else {
+        // Es un item normal
+        if (!currentSection) {
+          // Items antes del primer header
+          currentSection = { title: null, items: [], collapsed: false, isHeaderSection: false };
+          sections.push(currentSection);
+        }
+         // Solo añadir el item si no es null (filtrado previo de NavService)
+         if (item) {
+           currentSection.items.push(item);
+         }
+      }
+    });
+
+    // Eliminar la última sección si es un header sin items
+    if (currentSection && currentSection.items.length === 0 && currentSection.isHeaderSection) {
+       sections.pop();
+    }
+
+    // Recuperar estado colapsado después de construir las secciones
+    const savedSectionsState = localStorage.getItem('sidebarSectionsState');
+    let collapsedStates: { [title: string]: boolean } = {};
+    if (savedSectionsState) {
+      try {
+        collapsedStates = JSON.parse(savedSectionsState);
+      } catch (e) {
+        console.error("Error loading sidebar sections state:", e);
+        localStorage.removeItem('sidebarSectionsState');
+      }
+    }
+    sections.forEach(section => {
+      if (section.title && collapsedStates[section.title] !== undefined) {
+        section.collapsed = collapsedStates[section.title];
+      }
+    });
+
+    this.sections = sections;
+  }
+
+  // Nueva función para colapsar/expandir secciones
+  toggleSection(section: SidebarSection): void {
+    if (section.isHeaderSection) {
+      section.collapsed = !section.collapsed;
+      this.saveSectionsState(); // Guardar estado
+    }
+  }
+
+  // Guardar estado colapsado en localStorage
+  private saveSectionsState(): void {
+    const collapsedStates: { [title: string]: boolean } = {};
+    this.sections.forEach(section => {
+      if (section.title) {
+        collapsedStates[section.title] = section.collapsed;
+      }
+    });
+    localStorage.setItem('sidebarSectionsState', JSON.stringify(collapsedStates));
+  }
+
+  // Limpiar estados activos recursivamente
+  private clearActiveStatesRecursive(item: Menu | null, activeItem: Menu | null): void {
+     if (!item) return; // Si el item es null (filtrado), no hacer nada
+     if (item !== activeItem) {
+        item.active = false;
+     }
+     if (item.children) {
+       item.children.forEach(child => this.clearActiveStatesRecursive(child, activeItem));
+     }
+  }
+
+  // --- Métodos existentes (adaptar setNavActive si es necesario) ---
 
   private calculateWidth(windowWidth: number): void {
     this.width = windowWidth - 500;
@@ -105,205 +213,137 @@ export class SidebarComponent implements OnInit {
   }
   openPlanModal() {
     this.showPlanModal = true;
-    document.body.style.overflow = 'hidden'; // Bloquear scroll del body
+    document.body.style.overflow = 'hidden';
   }
 
   closePlanModal() {
     this.showPlanModal = false;
-    document.body.style.overflow = ''; // Restaurar scroll del body
+    document.body.style.overflow = '';
   }
-  // sidebar.component.ts
-private loadPlanFromLocalStorage(): void {
-  const defaultPlan = {
-    type: 'Plan Básico',
-    progress: 0,
-    renewalDate: 'No definida',
-    walletBalance: 0
-  };
 
-  try {
-    // 1. Obtener el objeto del localStorage
-    const currentCompanyStr = sessionStorage.getItem('currentCompany');
-    if (!currentCompanyStr) {
-      this.currentPlan = defaultPlan;
-      return;
-    }
-
-    // 2. Parsear y verificar la estructura
-    const currentCompany = JSON.parse(currentCompanyStr);
-    if (!currentCompany || typeof currentCompany !== 'object') {
-      this.currentPlan = defaultPlan;
-      return;
-    }
-
-    // 3. Extraer específicamente la propiedad plan
-    const plan = currentCompany.plan;
-    if (!plan || typeof plan !== 'object') {
-      this.currentPlan = defaultPlan;
-      return;
-    }
-
-    // 4. Asignar valores con protecciones
-    this.currentPlan = {
-      type: this.getPlanName(plan.nombre),
-      progress: this.calculatePlanProgress(plan.fechaInicio, plan.fechaFin),
-      renewalDate: this.formatRenewalDate(plan.fechaFin, plan.fechaUltimoPago),
-      walletBalance: this.calculateWalletBalance(plan.precio)
-    };
-
-  } catch (error) {
-    console.error('Error loading plan:', error);
-    this.currentPlan = defaultPlan;
+  private loadPlanFromLocalStorage(): void {
+    const defaultPlan = { type: 'Plan Básico', progress: 0, renewalDate: 'No definida', walletBalance: 0 };
+    try {
+      const currentCompanyStr = sessionStorage.getItem('currentCompany');
+      if (!currentCompanyStr) { this.currentPlan = defaultPlan; return; }
+      const currentCompany = JSON.parse(currentCompanyStr);
+      if (!currentCompany || typeof currentCompany !== 'object') { this.currentPlan = defaultPlan; return; }
+      const plan = currentCompany.plan;
+      if (!plan || typeof plan !== 'object') { this.currentPlan = defaultPlan; return; }
+      this.currentPlan = {
+        type: this.getPlanName(plan.nombre),
+        progress: this.calculatePlanProgress(plan.fechaInicio, plan.fechaFin),
+        renewalDate: this.formatRenewalDate(plan.fechaFin, plan.fechaUltimoPago),
+        walletBalance: this.calculateWalletBalance(plan.precio)
+      };
+    } catch (error) { console.error('Error loading plan:', error); this.currentPlan = defaultPlan; }
   }
-}
 
-// Helper para nombres de planes
-private getPlanName(planName: any): string {
-  const validNames = ['Early Adopters', 'Plan Básico', 'Plan Avanzado', 'Plan Empresarial'];
-  return typeof planName === 'string' && validNames.includes(planName) 
-    ? planName 
-    : 'Plan Básico';
-}
-
-// Helper para cálculo de progreso
-private calculatePlanProgress(startDate: string, endDate: string): number {
-  if (!startDate || !endDate) return 0;
-  
-  try {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const today = new Date();
-    
-    if (today >= end) return 100;
-    if (today <= start) return 0;
-    
-    const totalDuration = end.getTime() - start.getTime();
-    const elapsedDuration = today.getTime() - start.getTime();
-    
-    return Math.round((elapsedDuration / totalDuration) * 100);
-  } catch (e) {
-    return 0;
+  private getPlanName(planName: any): string {
+    const validNames = ['Early Adopters', 'Plan Básico', 'Plan Avanzado', 'Plan Empresarial'];
+    return typeof planName === 'string' && validNames.includes(planName) ? planName : 'Plan Básico';
   }
-}
 
-// Helper para formatear fecha de renovación
-private formatRenewalDate(endDate: any, lastPaymentDate: any): string {
-  try {
-    const dateToUse = endDate || lastPaymentDate;
-    if (!dateToUse) return 'No definida';
-
-    const date = new Date(dateToUse);
-    return date.toLocaleDateString('es-CO', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  } catch {
-    return 'No definida';
+  private calculatePlanProgress(startDate: string, endDate: string): number {
+    if (!startDate || !endDate) return 0;
+    try {
+      const start = new Date(startDate); const end = new Date(endDate); const today = new Date();
+      if (today >= end) return 100; if (today <= start) return 0;
+      const totalDuration = end.getTime() - start.getTime(); const elapsedDuration = today.getTime() - start.getTime();
+      return Math.round((elapsedDuration / totalDuration) * 100);
+    } catch (e) { return 0; }
   }
-}
 
-// Helper para calcular el saldo
-private calculateWalletBalance(price: any): number {
-  try {
-    if (price === '0' || price === 0) return 0;
-    const balance = parseFloat(price);
-    return isNaN(balance) ? 0 : balance;
-  } catch {
-    return 0;
+  private formatRenewalDate(endDate: any, lastPaymentDate: any): string {
+    try {
+      const dateToUse = endDate || lastPaymentDate; if (!dateToUse) return 'No definida';
+      const date = new Date(dateToUse);
+      return date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch { return 'No definida'; }
   }
-}
+
+  private calculateWalletBalance(price: any): number {
+    try {
+      if (price === '0' || price === 0) return 0;
+      const balance = parseFloat(price); return isNaN(balance) ? 0 : balance;
+    } catch { return 0; }
+  }
+
   onPlanSelected(planId: string) {
-    // Actualizar el plan actual
     this.currentPlan.type = this.getPlanName(planId);
-    
-    // Aquí deberías llamar a tu servicio para guardar el cambio
-    // Ejemplo:
-    // this.planService.updateUserPlan(planId).subscribe(() => {
-    //   this.showSuccessNotification('Plan actualizado correctamente');
-    // });
-    
     this.closePlanModal();
   }
-  
-  // private getPlanName(planId: string): string {
-  //   const planNames = {
-  //     'basico': 'Básico',
-  //     'completo': 'Completo',
-  //     'empresarial': 'Empresarial'
-  //   };
-  //   return planNames[planId] || 'Completo';
-  // }
-
 
   sidebarToggle() {
-    // this.navServices.collapseSidebar = !this.navServices.collapseSidebar;
     this.navServices.collapseSidebar = !this.navServices.collapseSidebar;
-    this.collapseMenu = this.navServices.collapseSidebar
-    // this.navServices.megaMenu = false;
-    // this.navServices.levelMenu = false;
-
-    // let country: ICountry = this.manageLocalStorageService.getCurrentCountryActive()
-
-    // const item = {
-    //   email: this.idUsuario,
-    //   emailAnt: this.idUsuario,
-    //   collapsible: this.navServices.collapseSidebar,
-    //   settings: '1',
-    //   country
-    // }
-
-    // await this.service.editUsuario(item).then(res => {
-
-    //   const res2: any = JSON.parse(localStorage.getItem(environment.user));
-    //   res2.collapsible = this.navServices.collapseSidebar;
-
-    //   localStorage.setItem(environment.user, JSON.stringify(res2));
-
-    // });
+    this.collapseMenu = this.navServices.collapseSidebar;
   }
 
-  // Active Nave state
+  // Active Nav state - Marca el item activo y sus ancestros en la fuente original
   setNavActive(item) {
-    this.menuItems.filter(menuItem => {
-      if (menuItem !== item) {
-        menuItem.active = false;
-      }
-      if (menuItem.children && menuItem.children.includes(item)) {
-        menuItem.active = true;
-      }
-      if (menuItem.children) {
-        menuItem.children.filter(submenuItems => {
-          if (submenuItems.children && submenuItems.children.includes(item)) {
-            menuItem.active = true;
-            submenuItems.active = true;
-          }
-        });
-      }
-      this.collapseMenu = this.navServices.collapseSidebar
-    });
+    if (!item) return;
+    const originalMenuItems = this.navServices.getMenuItems(); // Trabajar con la fuente
+     originalMenuItems.forEach(menuItem => this.setActiveRecursive(menuItem, item));
+     this.processMenuItems(originalMenuItems); // Actualizar la vista (secciones)
+     this.collapseMenu = this.navServices.collapseSidebar;
   }
 
-  // Click Toggle menu
+   // Helper recursivo para marcar el estado activo en el item y sus ancestros
+   private setActiveRecursive(currentItem: Menu, activeItem: Menu): boolean {
+       let isActive = false;
+       if (currentItem === activeItem) {
+           isActive = true;
+       } else if (currentItem.children) {
+           currentItem.children.forEach(child => {
+               if (this.setActiveRecursive(child, activeItem)) {
+                   isActive = true;
+               }
+           });
+       }
+       currentItem.active = isActive; // Marcar como activo si es el item o un ancestro
+       return isActive; // Devolver si este subárbol contiene el item activo
+   }
+
+
+  // Click Toggle menu - Para submenús dentro de items (Funciona sobre item recibido)
   toggletNavActive(item) {
-    if (!item.active) {
-      this.menuItems.forEach(a => {
-        if (this.menuItems.includes(item)) {
-          a.active = false;
-        }
-        if (!a.children) { return false; }
-        a.children.forEach(b => {
-          if (a.children && a.children.includes(item)) {
-            b.active = false;
-          }
-        });
-      });
+    const currentlyActive = item.active; // Guardar estado actual
+    // Si no está activo, cerramos otros menús del mismo nivel o superiores antes de abrir
+    if (!currentlyActive) {
+       this.sections.forEach(section => {
+         section.items.forEach(menuItem => {
+           this.resetActiveState(menuItem, item); // Resetear hermanos y tíos, etc.
+         });
+       });
     }
-    item.active = !item.active;
+     item.active = !currentlyActive; // Cambiar estado del item clickeado
+
+     // No necesitamos reprocesar las secciones aquí si solo cambia el 'active' de un submenú
+     // Pero si el cambio de active debe reflejarse en this.sections, sí haría falta
+     // this.processMenuItems(this.navServices.getMenuItems()); // Descomentar si es necesario
+  }
+
+  // Helper para resetear el estado activo al hacer toggle en submenús
+   private resetActiveState(currentItem: Menu, toggledItem: Menu): void {
+     // Solo desactivar si NO es el item clickeado Y NO es un ancestro del item clickeado
+     if (currentItem !== toggledItem && !this.isAncestor(currentItem, toggledItem)) {
+        currentItem.active = false;
+     }
+     // Recorrer hijos independientemente de si se desactivó el padre
+     if (currentItem.children) {
+        currentItem.children.forEach(child => this.resetActiveState(child, toggledItem));
+     }
   }
 
 
-  // For Horizontal Menu
+  // Helper para verificar si un item es ancestro de otro
+  private isAncestor(potentialAncestor: Menu, item: Menu): boolean {
+    if (!potentialAncestor.children) return false;
+    if (potentialAncestor.children.includes(item)) return true;
+    return potentialAncestor.children.some(child => this.isAncestor(child, item));
+  }
+
+  // For Horizontal Menu (Sin cambios)
   scrollToLeft() {
     if (this.margin >= -this.width) {
       this.margin = 0;
@@ -316,8 +356,8 @@ private calculateWalletBalance(price: any): number {
   }
 
   scrollToRight() {
-    if (this.margin <= -3051) {
-      this.margin = -3464;
+    if (this.margin <= -3051) { // Ajustar este valor si es necesario
+      this.margin = -3464; // Ajustar este valor si es necesario
       this.leftArrowNone = false;
       this.rightArrowNone = true;
     } else {
@@ -328,7 +368,6 @@ private calculateWalletBalance(price: any): number {
 
   togglePlanCard() {
     this.isPlanCardCollapsed = !this.isPlanCardCollapsed;
-    // Guardar preferencia en localStorage para mantener el estado entre sesiones
     localStorage.setItem('planCardCollapsed', this.isPlanCardCollapsed ? 'true' : 'false');
   }
 }

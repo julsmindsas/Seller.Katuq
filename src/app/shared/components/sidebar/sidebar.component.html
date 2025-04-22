@@ -44,111 +44,149 @@
         </div>
       </li>
 
-      <li [class]="menuItem.headTitle1 ? 'sidebar-main-title' : 'sidebar-list'" *ngFor="let menuItem of menuItems"
-        [ngClass]="{active: menuItem.active}">
-        <div *ngIf="menuItem.headTitle1">
-          <h6 class="lan-1">{{menuItem.headTitle1 | translate}}</h6>
-          <p class="lan-2">{{menuItem.headTitle2 | translate}}</p>
-        </div>
+      <!-- *********************************************************** -->
+      <!-- Inicio: Iterar sobre las secciones colapsables -->
+      <!-- *********************************************************** -->
+      <ng-container *ngFor="let section of sections; let sectionIndex = index">
 
-        <label class="badge badge-{{menuItem.badgeType}}"
-          *ngIf="menuItem.badgeType && menuItem.badgeValue">{{menuItem.badgeValue}}</label>
-        <!-- Sub -->
-        <a href="javascript:void(0)" class="sidebar-link sidebar-title" [class.link-nav]="!menuItem.children"
-          [ngClass]="{active: menuItem.active}" *ngIf="menuItem.type === 'sub'" (click)="toggletNavActive(menuItem)">
-          <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
-          <div class="according-menu">
-            <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
+        <!-- Renderizar el encabezado de la sección si tiene título -->
+        <li class="sidebar-main-title collapsible-header" *ngIf="section.isHeaderSection" (click)="toggleSection(section)">
+          <div>
+            <h6 class="lan-1">
+              {{ section.title | translate }}
+              <i class="fa pull-right" [ngClass]="section.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
+            </h6>
+            <!-- <p class="lan-2">{{menuItem.headTitle2 | translate}}</p> -->
           </div>
-        </a>
-        <!-- Link -->
-        <a [routerLink]="!menuItem.type ? null : [menuItem.path]" routerLinkActive="active"
-          class="sidebar-link sidebar-title" [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
-          *ngIf="menuItem.type === 'link'">
-          <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
-          <div class="according-menu">
-            <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
-          </div>
-        </a>
-        <!-- External Link -->
-        <a href="{{ !menuItem.type ? null : menuItem.path }}" class="sidebar-link sidebar-title"
-          [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
-          *ngIf="menuItem.type === 'extLink'">
-          <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
-          <div class="according-menu">
-            <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
-          </div>
-        </a>
-        <!-- External Tab Link -->
-        <a href="{{ !menuItem.type ? null : menuItem.path }}" target="_blank" class="sidebar-link sidebar-title"
-          [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
-          *ngIf="menuItem.type === 'extTabLink'">
-          <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
-          <div class="according-menu">
-            <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
-          </div>
-        </a>
-        <!-- 2nd Level Menu -->
-        <ul class="sidebar-submenu" [ngClass]="{active: menuItem.active}"
-          [ngClass]="{'menu-open': menuItem.active, 'menu-close': !menuItem.active }" *ngIf="menuItem.children"
-          [style.display]="menuItem.active ? 'block' : 'none'">
-          <li *ngFor="let childrenItem of menuItem.children" [ngClass]="{active: childrenItem.active}">
-            <!-- Sub -->
-            <a class="submenu-title" href="javascript:void(0)" *ngIf="childrenItem.type === 'sub'"
-              (click)="toggletNavActive(childrenItem)">
-              <span> {{childrenItem.title | translate}}</span>
+        </li>
+
+        <!-- Renderizar los items de la sección (si no está colapsada) -->
+        <ng-container *ngIf="!section.collapsed">
+          <li class="sidebar-list" *ngFor="let menuItem of section.items" 
+              [ngClass]="{active: menuItem.active}">
+
+            <!-- Ocultar div de headTitle1 ya que ahora lo manejamos arriba -->
+            <!-- <div *ngIf="menuItem.headTitle1"> ... </div> -->
+
+            <label class="badge badge-{{menuItem.badgeType}}"
+              *ngIf="menuItem.badgeType && menuItem.badgeValue">{{menuItem.badgeValue}}</label>
+
+            <!-- Submenú -->
+            <a href="javascript:void(0)" class="sidebar-link sidebar-title" [class.link-nav]="!menuItem.children"
+              [ngClass]="{active: menuItem.active}" *ngIf="menuItem.type === 'sub'" (click)="toggletNavActive(menuItem)">
+              <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
               <div class="according-menu">
-                <i class="fa fa-angle-{{childrenItem.active ? 'down' : 'right'}} pull-right"
-                  *ngIf="childrenItem.children"></i>
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
               </div>
             </a>
             <!-- Link -->
-            <a class="submenu-title" [routerLink]="!childrenItem.type ? null : [childrenItem.path]"
-              *ngIf="childrenItem.type === 'link'" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-              <span>{{childrenItem.title | translate}}</span>
-              <i class="fa fa-angle-down pull-right" *ngIf="childrenItem.children"></i>
+            <a [routerLink]="!menuItem.type ? null : [menuItem.path]" routerLinkActive="active"
+              class="sidebar-link sidebar-title" [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
+              *ngIf="menuItem.type === 'link'">
+              <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
+               <!-- No mostramos el ángulo aquí si es un enlace directo sin hijos -->
+               <div class="according-menu">
+                 <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
+               </div>
             </a>
             <!-- External Link -->
-            <a class="submenu-title" href="{{ !childrenItem.type ? null : childrenItem.path }}"
-              *ngIf="childrenItem.type === 'extLink'" routerLinkActive="active"
-              [routerLinkActiveOptions]="{exact: true}">
-              <span>{{childrenItem.title | translate}}</span>
-              <i class="fa fa-angle-down pull-right" *ngIf="childrenItem.children"></i>
+            <a href="{{ !menuItem.type ? null : menuItem.path }}" class="sidebar-link sidebar-title"
+              [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
+              *ngIf="menuItem.type === 'extLink'">
+               <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
+                <div class="according-menu">
+                  <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
+                </div>
             </a>
             <!-- External Tab Link -->
-            <a class="submenu-title" href="{{ !childrenItem.type ? null : childrenItem.path }}" target="_blank"
-              *ngIf="childrenItem.type === 'extTabLink'">
-              <span>{{childrenItem.title | translate}}</span>
-              <i class="fa fa-angle-down pull-right" *ngIf="childrenItem.children"></i>
+            <a href="{{ !menuItem.type ? null : menuItem.path }}" target="_blank" class="sidebar-link sidebar-title"
+              [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
+              *ngIf="menuItem.type === 'extTabLink'">
+               <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
+                <div class="according-menu">
+                  <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
+                </div>
             </a>
-            <!-- 3rd Level Menu -->
-            <ul class="nav-sub-childmenu submenu-content" *ngIf="childrenItem.children"
-              [ngClass]="{active: childrenItem.active}"
-              [ngClass]="{'menu-open': childrenItem.active, 'menu-close': !childrenItem.active }"
-              [style.display]="childrenItem.active ? 'block' : 'none'">
-              <li *ngFor="let childrenSubItem of childrenItem.children" [ngClass]="{active: childrenSubItem.active}">
+
+            <!-- 2nd Level Menu (Submenú desplegable) -->
+            <ul class="sidebar-submenu"
+                [ngClass]="{'menu-open': menuItem.active, 'menu-close': !menuItem.active }"
+                *ngIf="menuItem.children"
+                [style.max-height]="menuItem.active ? '1000px' : '0'"
+                style="overflow: hidden; transition: max-height 0.3s ease-in-out;">
+              <li *ngFor="let childrenItem of menuItem.children" [ngClass]="{active: childrenItem.active}">
+                <!-- Sub -->
+                <a class="submenu-title" href="javascript:void(0)" *ngIf="childrenItem.type === 'sub'"
+                  (click)="toggletNavActive(childrenItem)">
+                  <span> {{childrenItem.title | translate}}</span>
+                  <div class="according-menu">
+                    <i class="fa fa-angle-{{childrenItem.active ? 'down' : 'right'}} pull-right"
+                      *ngIf="childrenItem.children"></i>
+                  </div>
+                </a>
                 <!-- Link -->
-                <a [routerLink]="!childrenSubItem.type ? null : [childrenSubItem.path]"
-                  *ngIf="childrenSubItem.type === 'link'" routerLinkActive="active"
-                  [routerLinkActiveOptions]="{exact: true}">
-                  <span> {{childrenSubItem.title | translate}}</span>
+                <a class="submenu-title" [routerLink]="!childrenItem.type ? null : [childrenItem.path]"
+                   *ngIf="childrenItem.type === 'link'" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+                  <span>{{childrenItem.title | translate}}</span>
+                   <div class="according-menu">
+                     <i class="fa fa-angle-{{childrenItem.active ? 'down' : 'right'}} pull-right"
+                        *ngIf="childrenItem.children"></i>
+                   </div>
                 </a>
                 <!-- External Link -->
-                <a href="{{ !childrenSubItem.type ? null : childrenSubItem.path }}"
-                  *ngIf="childrenSubItem.type === 'extLink'" routerLinkActive="active"
-                  [routerLinkActiveOptions]="{exact: true}">
-                  <span>{{childrenSubItem.title | translate}}</span>
+                <a class="submenu-title" href="{{ !childrenItem.type ? null : childrenItem.path }}"
+                   *ngIf="childrenItem.type === 'extLink'" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+                   <span>{{childrenItem.title | translate}}</span>
+                   <div class="according-menu">
+                     <i class="fa fa-angle-{{childrenItem.active ? 'down' : 'right'}} pull-right"
+                        *ngIf="childrenItem.children"></i>
+                   </div>
                 </a>
                 <!-- External Tab Link -->
-                <a href="{{ !childrenSubItem.type ? null : childrenSubItem.path }}" target="_blank"
-                  *ngIf="childrenSubItem.type === 'extTabLink'">
-                  <span>{{childrenSubItem.title | translate}}</span>
+                <a class="submenu-title" href="{{ !childrenItem.type ? null : childrenItem.path }}" target="_blank"
+                   *ngIf="childrenItem.type === 'extTabLink'">
+                   <span>{{childrenItem.title | translate}}</span>
+                   <div class="according-menu">
+                     <i class="fa fa-angle-{{childrenItem.active ? 'down' : 'right'}} pull-right"
+                        *ngIf="childrenItem.children"></i>
+                   </div>
                 </a>
+
+                <!-- 3rd Level Menu -->
+                <ul class="nav-sub-childmenu submenu-content" *ngIf="childrenItem.children"
+                    [ngClass]="{'menu-open': childrenItem.active, 'menu-close': !childrenItem.active }"
+                    [style.max-height]="childrenItem.active ? '1000px' : '0'"
+                    style="overflow: hidden; transition: max-height 0.3s ease-in-out;">
+                   <li *ngFor="let childrenSubItem of childrenItem.children" [ngClass]="{active: childrenSubItem.active}">
+                    <!-- Link -->
+                    <a [routerLink]="!childrenSubItem.type ? null : [childrenSubItem.path]"
+                      *ngIf="childrenSubItem.type === 'link'" routerLinkActive="active"
+                      [routerLinkActiveOptions]="{exact: true}">
+                      <span> {{childrenSubItem.title | translate}}</span>
+                    </a>
+                    <!-- External Link -->
+                    <a href="{{ !childrenSubItem.type ? null : childrenSubItem.path }}"
+                      *ngIf="childrenSubItem.type === 'extLink'" routerLinkActive="active"
+                      [routerLinkActiveOptions]="{exact: true}">
+                      <span>{{childrenSubItem.title | translate}}</span>
+                    </a>
+                    <!-- External Tab Link -->
+                    <a href="{{ !childrenSubItem.type ? null : childrenSubItem.path }}" target="_blank"
+                      *ngIf="childrenSubItem.type === 'extTabLink'">
+                      <span>{{childrenSubItem.title | translate}}</span>
+                    </a>
+                  </li>
+                </ul>
               </li>
             </ul>
           </li>
-        </ul>
-      </li>
+        </ng-container> <!-- Fin *ngIf="!section.collapsed" -->
+
+      </ng-container>
+      <!-- *********************************************************** -->
+      <!-- Fin: Iterar sobre las secciones colapsables                 -->
+      <!-- *********************************************************** -->
+
       <br><br><br><br><br>
     </ul>
 

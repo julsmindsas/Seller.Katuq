@@ -200,4 +200,37 @@
   }
 }
 
+/* Estilos para encabezados colapsables */
+.sidebar-main-title.collapsible-header {
+  cursor: pointer;
+  user-select: none; /* Evita seleccionar el texto al hacer click */
+
+  &:hover {
+    // Opcional: algún efecto hover si lo deseas
+    // background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  h6 {
+    display: flex; /* Para alinear el icono a la derecha */
+    justify-content: space-between; /* Separa título e icono */
+    align-items: center; /* Centra verticalmente */
+    width: 100%; /* Asegura que ocupe todo el ancho para el click */
+  }
+}
+
+/* Ajustar animación de submenús para usar max-height */
+.sidebar-submenu,
+.nav-sub-childmenu {
+  transition: max-height 0.3s ease-in-out;
+  overflow: hidden;
+  max-height: 0; /* Estado colapsado por defecto */
+}
+
+.sidebar-submenu.menu-open,
+.nav-sub-childmenu.menu-open {
+   max-height: 1000px; /* Un valor suficientemente grande para mostrar contenido */
+}
+
+/* Opcional: eliminar [style.display] del HTML si se usa max-height */
+
 
