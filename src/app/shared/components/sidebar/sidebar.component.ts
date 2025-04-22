@@ -117,41 +117,46 @@ export class SidebarComponent implements OnInit {
     let currentSection: SidebarSection | null = null;
 
     menuItems.forEach(item => {
+       // Si item es null (puede pasar por el filtrado en NavService), saltarlo
+       if (!item) return;
+
       if (item.headTitle1) {
-        // Es un encabezado, crea una nueva sección
-        // Si la sección anterior estaba vacía (solo header), la eliminamos
-        if (currentSection && currentSection.items.length === 0 && currentSection.isHeaderSection) {
+        // Si la sección anterior existe, es de tipo header y no tiene items, la eliminamos antes de crear la nueva.
+        if (currentSection && currentSection.isHeaderSection && currentSection.items.length === 0) {
           sections.pop();
         }
+        // Es un encabezado, crea una nueva sección
         currentSection = {
           title: item.headTitle1,
           items: [],
-          collapsed: false, // Estado inicial, se sobrescribe abajo si hay guardado
+          collapsed: true, // <--- Cambiado a true para que inicien colapsadas
           isHeaderSection: true
         };
         sections.push(currentSection);
       } else if (item.headTitle2) {
-        // Ignorar headTitle2 por ahora
+        // Ignorar headTitle2 o manejar como necesites. No afecta a currentSection aquí.
       } else {
         // Es un item normal
         if (!currentSection) {
-          // Items antes del primer header
-          currentSection = { title: null, items: [], collapsed: false, isHeaderSection: false };
+          // Items antes del primer header, crea una sección inicial sin título
+          // Esta sección usualmente no será colapsable visualmente, pero mantenemos la consistencia
+          currentSection = { title: null, items: [], collapsed: true, isHeaderSection: false }; 
           sections.push(currentSection);
         }
-         // Solo añadir el item si no es null (filtrado previo de NavService)
-         if (item) {
-           currentSection.items.push(item);
+         // Asegurarse de que currentSection no es null antes de añadir items
+         // y que el item no es un headTitle (aunque ya filtrado arriba, doble check)
+         if (currentSection && !item.headTitle1 && !item.headTitle2) {
+             currentSection.items.push(item);
          }
       }
     });
 
-    // Eliminar la última sección si es un header sin items
-    if (currentSection && currentSection.items.length === 0 && currentSection.isHeaderSection) {
+    // Revisar la última sección creada: si es de tipo header y no tiene items, eliminarla.
+    if (currentSection && currentSection.isHeaderSection && currentSection.items.length === 0) {
        sections.pop();
     }
 
-    // Recuperar estado colapsado después de construir las secciones
+    // Recuperar estado colapsado (esta parte sobrescribe el 'true' por defecto si hay estado guardado)
     const savedSectionsState = localStorage.getItem('sidebarSectionsState');
     let collapsedStates: { [title: string]: boolean } = {};
     if (savedSectionsState) {
@@ -163,9 +168,11 @@ export class SidebarComponent implements OnInit {
       }
     }
     sections.forEach(section => {
+      // Solo sobrescribir si existe un estado guardado para esta sección
       if (section.title && collapsedStates[section.title] !== undefined) {
         section.collapsed = collapsedStates[section.title];
-      }
+      } 
+      // Si no tiene título o no hay estado guardado, se queda con el valor por defecto (true)
     });
 
     this.sections = sections;
