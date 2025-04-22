@@ -24,8 +24,7 @@
           <div class="col-6 p-3" style="text-align: end">
             <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearRol()">
               <i placement="top" ngbTooltip="{{ 'Nuevo' | translate }}"
-                style="font-size: 18px; color: white; cursor: pointer;"
-                class="icofont icofont-plus"></i>&nbsp;
+                style="font-size: 18px; color: white; cursor: pointer;" class="icofont icofont-plus"></i>&nbsp;
               <span style="color: white;">{{ 'Crear Rol' | translate }}</span>
             </button>
             <button class="btn btn-primary ml-3 mb-2 mr-5">
@@ -46,7 +45,6 @@
                 <th class="text-center" pSortableColumn="rol">{{ 'Rol' | translate }}</th>
                 <th class="text-center" pSortableColumn="nombre">{{ 'Nombre' | translate }}</th>
                 <th class="text-center" pSortableColumn="empresa">{{ 'Empresa' | translate }}</th>
-                <th class="text-center" pSortableColumn="date_edit">{{ 'Fecha de Edición' | translate }}</th>
                 <th class="text-center" pSortableColumn="user_edit">{{ 'Usuario que Editó' | translate }}</th>
                 <th class="text-center">{{ 'Acciones' | translate }}</th>
               </tr>
@@ -57,7 +55,6 @@
                 <td class="text-center">{{ role.rol }}</td>
                 <td>{{ role.nombre }}</td>
                 <td>{{ role.empresa }}</td>
-                <td class="text-center">{{ role?.date_edit | date:'dd/MM/yyyy' }}</td>
                 <td class="text-center">{{ role?.user_edit }}</td>
                 <td class="text-center">
                   <i placement="top" ngbTooltip="{{ 'Edit' | translate }}"

@@ -25,7 +25,7 @@ export class PedidosUtilService {
     constructor(private maestroService: MaestroService) {
 
         const user = localStorage.getItem('user');
-        if(user){
+        if (user) {
             this.getAllMaestros();
         }
 
@@ -107,58 +107,38 @@ export class PedidosUtilService {
     }
 
     getAllMaestros() {
-
         this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
 
-        forkJoin([
-            this.maestroService.getFormaEntrega(),
-            this.maestroService.getTiempoEntrega(),
-            this.maestroService.getTipoEntrega(),
-            this.maestroService.consultarOcasion(),
-            this.maestroService.consultarGenero(),
-            this.maestroService.consultarFormaPago(),
-            this.maestroService.getCategorias(),
-            this.maestroService.getAdiciones()
-        ]).subscribe({
-            next: (results: any[]) => {
-                this.formaEntrega = results[0];
-                this.tiempoEntrega = results[1];
-                this.tipoEntrega = results[2];
-                this.ocasiones = results[3];
-                this.generos = results[4];
-                this.formasPago = results[5];
-                this.adiciones = results[7];
-                this.categorias = parse((results[6] as any[])[0].categoria).map(p => {
-                    return {
-                        label: p.data.nombre,
-                        data: p.data,
-                        children: p.children.map(sub => {
-                            return {
-                                label: sub.data.nombre,
-                                data: sub.data,
-                                children: sub.children ? sub.children.map(sub2 => {
-                                    return {
-                                        label: sub2.data.nombre,
-                                        data: sub2.data,
-                                        children: sub2.children ? sub2.children.map(sub2 => {
-                                            return {
-
-                                            }
-                                        }) : null
-                                    }
-                                }) : null
-                            }
-                        })
-                    }
-                });
-
+        forkJoin({
+            formaEntrega: this.maestroService.getFormaEntrega(),
+            tiempoEntrega: this.maestroService.getTiempoEntrega(),
+            tipoEntrega: this.maestroService.getTipoEntrega(),
+            ocasiones: this.maestroService.consultarOcasion(),
+            generos: this.maestroService.consultarGenero(),
+            formasPago: this.maestroService.consultarFormaPago(),
+            categorias: this.maestroService.getCategorias(),
+            adiciones: this.maestroService.getAdiciones()
+        }).subscribe({
+            next: (results: any) => {
+                this.formaEntrega = results.formaEntrega;
+                this.tiempoEntrega = results.tiempoEntrega;
+                this.tipoEntrega = results.tipoEntrega;
+                this.ocasiones = results.ocasiones;
+                this.generos = results.generos;
+                this.formasPago = results.formasPago;
+                this.adiciones = results.adiciones;
+                try {
+                    const categoriasRaw = (results.categorias as any[])[0]?.categoria;
+                    this.categorias = categoriasRaw ? parse(categoriasRaw).map(p => this.mapCategoria(p)) : [];
+                } catch (e) {
+                    this.categorias = [];
+                }
                 this.getAllMaestro$();
-
             },
             error: (error) => {
                 Swal.fire({
                     title: 'Error!',
-                    text: 'Error al cargar los datos' + error,
+                    text: 'Error al cargar los datos: ' + error,
                     icon: 'error',
                     confirmButtonText: 'Aceptar'
                 });
@@ -166,6 +146,13 @@ export class PedidosUtilService {
         });
     }
 
+    private mapCategoria(p: any): any {
+        return {
+            label: p.data?.nombre,
+            data: p.data,
+            children: p.children ? p.children.map(sub => this.mapCategoria(sub)) : null
+        };
+    }
 
     //calcular valores del pedido
     pedido: Pedido;
