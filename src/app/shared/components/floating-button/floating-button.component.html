@@ -48,6 +48,42 @@
           </div>
         </div>
 
+        <!-- Nueva sección de Soporte -->
+        <div class="option-separator">Soporte</div>
+
+        <div class="option-item" (click)="navigateTo('/soporte', $event)">
+          <div class="option-icon">
+            <i class="fa fa-headphones"></i>
+          </div>
+          <div class="option-details">
+            <span class="option-title">Crear Ticket/Idea</span>
+            <span class="option-description">Reporta un problema o sugiere una mejora</span>
+          </div>
+        </div>
+
+        <div class="option-item" (click)="navigateTo('/misTickets', $event)">
+          <div class="option-icon">
+            <i class="fa fa-ticket"></i>
+          </div>
+          <div class="option-details">
+            <span class="option-title">Mis Tickets</span>
+            <span class="option-description">Consulta el estado de tus tickets</span>
+          </div>
+        </div>
+
+        <div class="option-item" (click)="navigateTo('/misIdeas', $event)">
+          <div class="option-icon">
+            <i class="fa fa-lightbulb-o"></i>
+          </div>
+          <div class="option-details">
+            <span class="option-title">Mis Ideas</span>
+            <span class="option-description">Revisa tus ideas enviadas</span>
+          </div>
+        </div>
+        <!-- Fin Nueva sección de Soporte -->
+
+        <div class="option-separator">Otros</div>
+
         <div class="option-item" (click)="selectMode('help', $event)" [ngClass]="{'selected': selectedMode === 'help'}">
           <div class="option-icon">
             <i class="fa fa-question-circle"></i>

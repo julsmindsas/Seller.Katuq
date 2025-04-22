@@ -1941,4 +1941,12 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Método público para navegación desde el template
+  public navigateTo(route: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.router.navigate([route]);
+    this.optionsPanelVisible = false;
+    this.saveState();
+  }
+
 }

@@ -213,7 +213,7 @@ export class NavService implements OnDestroy {
 				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas Masivas', type: 'link' },
 				{ path: 'ventas/pedidos', title: 'Lista de Pedidos', type: 'link' },
 				{ path: 'ventas/pos2', title: 'Ventas POS Avanzado', type: 'link' },
-				{ path: 'pos/ventas', title: 'Ventas POS Rápido', type: 'link' },
+				// { path: 'pos/ventas', title: 'Ventas POS Rápido', type: 'link' },
 				{ path: 'pos/list-ventas', title: 'Listado Ventas POS', type: 'link' }
 			]
 		},
@@ -276,20 +276,6 @@ export class NavService implements OnDestroy {
 				{ path: 'notificaciones', title: 'Notificaciones Globales', type: 'link' },
 				{ path: 'integrations', title: 'Integraciones Globales', type: 'link' },
 				{ path: 'extras/formasPago', title: 'Formas de Pago Globales', type: 'link' }
-			]
-		},
-
-		{ headTitle1: 'Soporte Katuq' },
-		{
-			title: 'Tickets y Ayuda', icon: 'headphones', type: 'sub', active: false, children: [
-				{ path: 'soporte', title: 'Crear Ticket/Idea', type: 'link' },
-				{ path: 'misTickets', title: 'Mis Tickets', type: 'link' },
-				{ path: 'misIdeas', title: 'Mis Ideas', type: 'link' }
-			]
-		},
-		{
-			title: 'K.A.I Asistente IA', icon: 'cpu', type: 'sub', active: false, children: [
-				{ path: 'chat', title: 'Chatear con K.A.I', type: 'link' }
 			]
 		},
 
