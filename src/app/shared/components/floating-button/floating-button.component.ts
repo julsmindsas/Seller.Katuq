@@ -240,9 +240,9 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       await this.startSession();
 
       // Solo para demostración, cargar algunos pasos después de un breve retraso
-      setTimeout(() => this.loadDemoContent(), 2000);
+      // setTimeout(() => this.loadDemoContent(), 2000);
 
-    } catch (error) {
+    } catch (error: any) { // Especificar tipo 'any' o un tipo más específico
       console.error('Error al iniciar la sesión de voz:', error);
       this.isListening = false;
       this.audioError = `Error: ${error.message}`;
@@ -307,11 +307,13 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       this.isMuted = !this.isMuted;
 
       const audioTracks = this.peerConnection.getSenders()
-        .filter(sender => sender.track && sender.track.kind === 'audio')
-        .map(sender => sender.track);
+        .map(sender => sender.track)
+        .filter(track => track && track.kind === 'audio'); // Filtrar nulos aquí
 
       audioTracks.forEach(track => {
-        track.enabled = !this.isMuted;
+        if (track) { // Comprobación adicional por si acaso
+          track.enabled = !this.isMuted;
+        }
       });
     }
   }
@@ -509,7 +511,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       });
       this.peerConnection.addTrack(ms.getTracks()[0]);
       console.log("Micrófono conectado correctamente");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error al acceder al micrófono:", err);
       this.audioError = `Error de micrófono: ${err.message}`;
       throw err;
@@ -599,8 +601,10 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
           }
         };
 
-        // Enviar la configuración al canal de datos
-        this.dataChannel.send(JSON.stringify(configEvent));
+        // Enviar la configuración al canal de datos (con verificación)
+        if (this.dataChannel && this.dataChannel.readyState === 'open') {
+          this.dataChannel.send(JSON.stringify(configEvent));
+        }
       };
 
       // Manejar mensajes recibidos (adaptado al patrón proporcionado)
@@ -638,7 +642,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
                 // Enviar el resultado y solicitar respuesta
                 this.dataChannel.send(JSON.stringify(event));
                 this.dataChannel.send(JSON.stringify({ type: "response.create" }));
-              } catch (error) {
+              } catch (error: any) {
                 console.error(`Error executing function ${msg.name}:`, error);
 
                 // En caso de error, informar al modelo
@@ -831,8 +835,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
           currentStep: this.currentStepIndex + 1,
           steps: this.visualSteps.map((step, index) => ({
             number: index + 1,
-            title: step.caption.split(':')[0].trim(),
-            description: step.caption.split(':')[1]?.trim() || step.caption
+            title: step.caption ? step.caption.split(':')[0].trim() : 'Paso ' + (index + 1), // Añadir verificación
+            description: step.caption ? (step.caption.split(':')[1]?.trim() || step.caption) : '' // Añadir verificación
           }))
         };
       },
@@ -1424,9 +1428,9 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
             message: `¡Venta ${pedido.nroPedido} procesada correctamente!`,
             pedido: pedido // Devolver el objeto pedido en formato correcto
           };
-        } catch (error) {
-          console.error('❌ Error al procesar venta:', error);
-          this.toastr.error('Ocurrió un error al procesar la venta', 'Error');
+        } catch (error: any) {
+          console.error('❌ Error al procesar la venta:', error);
+          this.sendTextMessage(`Hubo un error al procesar la venta: ${error.message}`);
           return { success: false, error: error.message };
         }
       },
@@ -1783,7 +1787,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
   // Actualizar el texto que se muestra bajo el avatar para ser más específico
   updateCurrentStepText() {
-    if (this.hasVisualContent && this.visualSteps[this.currentStepIndex]) {
+    if (this.hasVisualContent && this.visualSteps[this.currentStepIndex]?.caption) { // Añadir verificación ?.caption
       const stepNumber = this.currentStepIndex + 1;
       const stepPrefix = stepNumber === 1 ? 'Comienza por ' :
         stepNumber === this.visualSteps.length ? 'Finalmente, ' :
@@ -1806,7 +1810,10 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       this.updateCurrentStepText();
 
       // Opcional: Anunciar el cambio de paso mediante voz
-      this.sendTextMessage(`Mostrando paso ${stepIndex + 1}: ${this.visualSteps[stepIndex].caption.split(':')[1].trim()}`);
+      const caption = this.visualSteps[stepIndex]?.caption; // Añadir verificación
+      if (caption) {
+        this.sendTextMessage(`Mostrando paso ${stepIndex + 1}: ${caption.split(':')[1]?.trim() || caption}`);
+      }
     } else {
       console.warn(`⚠️ Intento de navegación a paso inválido: ${stepIndex + 1}`);
     }
@@ -1875,6 +1882,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       this.events = [message, ...this.events];
     } else {
       console.error("Failed to send message - no data channel available", message);
+      // Opcional: Mostrar error al usuario
+      // this.audioError = "Error de conexión. Intenta de nuevo.";
     }
   }
 

@@ -79,7 +79,7 @@ export class NavService implements OnDestroy {
 		if (user) {
 			this.refrescarCart();
 		}
-		
+
 		this.setScreenWidth(window.innerWidth);
 		fromEvent(window, 'resize').pipe(
 			debounceTime(1000),
@@ -123,7 +123,7 @@ export class NavService implements OnDestroy {
 	}
 
 	getMenuItems(): Menu[] {
-		return this.ALLMENUITEMS;
+		return this.MENUITEMS;
 	}
 
 	filterMenuItemsByAuthorization() {
@@ -132,65 +132,85 @@ export class NavService implements OnDestroy {
 		const isSuperAdmin = user.rol === 'Super Administrador';
 		const isJulsmindAdmin = user.rol === 'Administrador' && user.company === 'Julsmind';
 
+		// Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
 		const filteredMenu = this.ALLMENUITEMS.map(item => {
-			// Ocultar item si es solo para superadmin y el usuario no lo es
-			if ((item.isOnlySuperAdministrador && !isSuperAdmin) || 
+			// Omitir item si es solo para superadmin/admin y el usuario no lo es
+			if ((item.isOnlySuperAdministrador && !isSuperAdmin) ||
 				(item.isOnlyAdmin && !isJulsmindAdmin)) {
 				return null;
 			}
 
+			// Si es un encabezado, mantenerlo por ahora (se validará después)
 			if (item.headTitle1) {
-				const header = { ...item };
-				delete header.children;
-				return header;
+				return { ...item };
 			}
 
+			// Si tiene hijos, filtrar los hijos
 			if (item.children) {
 				const filteredChildren = item.children.filter(child =>
 					((!child.isOnlySuperAdministrador || isSuperAdmin) &&
-					(!child.isOnlyAdmin || isJulsmindAdmin)) &&
+						(!child.isOnlyAdmin || isJulsmindAdmin)) &&
 					authorizedPaths.includes(child.path)
 				);
 
+				// Si el padre está restringido o no quedan hijos visibles, omitir el padre
 				if ((item.isOnlySuperAdministrador && !isSuperAdmin) ||
 					(item.isOnlyAdmin && !isJulsmindAdmin) ||
 					filteredChildren.length === 0) {
 					return null;
 				}
+				// Devolver el padre con los hijos filtrados
 				return { ...item, children: filteredChildren };
 			}
 
+			// Si es un enlace directo, verificar roles y permisos
 			if ((item.isOnlySuperAdministrador && !isSuperAdmin) ||
 				(item.isOnlyAdmin && !isJulsmindAdmin) ||
 				!authorizedPaths.includes(item.path)) {
 				return null;
 			}
+			// Devolver el enlace si pasa las verificaciones
 			return item;
 		}).filter(item => item !== null) as Menu[];
 
+		// Paso 2: Construir el menú final, asegurándose de que los encabezados tengan contenido visible debajo
 		const finalMenu: Menu[] = [];
-		let previousItem: Menu | null = null;
+		for (let i = 0; i < filteredMenu.length; i++) {
+			const currentItem = filteredMenu[i];
 
-		filteredMenu.forEach(item => {
-			const currentIsHeader = item.headTitle1;
-			const previousIsHeader = previousItem?.headTitle1;
+			if (currentItem.headTitle1) {
+				// Es un encabezado. Verificar si hay elementos visibles después de él antes del siguiente encabezado.
+				let hasVisibleItemsFollowing = false;
+				for (let j = i + 1; j < filteredMenu.length; j++) {
+					const nextItem = filteredMenu[j];
+					if (nextItem.headTitle1) {
+						// Se encontró el siguiente encabezado, detener la búsqueda.
+						break;
+					}
+					// Si es un elemento de menú (no un encabezado), marcar que hay contenido visible.
+					if (nextItem.title) {
+						hasVisibleItemsFollowing = true;
+						break;
+					}
+				}
 
-			if (currentIsHeader && previousIsHeader) {
-				// Solo agregar el encabezado si tiene elementos visibles después
-				const hasVisibleItems = filteredMenu.some((nextItem, index) => {
-					const currentIndex = filteredMenu.indexOf(item);
-					return index > currentIndex && !nextItem.headTitle1 && nextItem.children && nextItem.children.length > 0;
-				});
-
-				if (hasVisibleItems) {
-					finalMenu.push(item);
+				// Solo agregar el encabezado si tiene elementos visibles debajo y no es consecutivo a otro encabezado.
+				if (hasVisibleItemsFollowing) {
+					// Evitar añadir encabezados consecutivos (mantener solo el primero si hay varios juntos)
+					if (finalMenu.length === 0 || !finalMenu[finalMenu.length - 1].headTitle1) {
+						finalMenu.push(currentItem);
+					}
 				}
 			} else {
-				finalMenu.push(item);
+				// No es un encabezado, agregarlo directamente (ya pasó el filtro inicial).
+				finalMenu.push(currentItem);
 			}
+		}
 
-			previousItem = item;
-		});
+		// Eliminar el último elemento si es un encabezado sin nada después (caso borde)
+		if (finalMenu.length > 0 && finalMenu[finalMenu.length - 1].headTitle1) {
+			finalMenu.pop();
+		}
 
 		this.MENUITEMS = finalMenu;
 		this.items.next(this.MENUITEMS);
@@ -272,7 +292,7 @@ export class NavService implements OnDestroy {
 		{ headTitle1: 'Configuración Plataforma', isOnlySuperAdministrador: true },
 		{
 			title: 'Gestión General', icon: 'settings', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
-				{ path: 'superadmin/clientes', title: 'Gestión Clientes Plataforma', type: 'link' },
+				{ path: 'superadmin/clientes', title: 'Gestión Clientes Plataforma', type: 'link', isOnlySuperAdministrador: true },
 				{ path: 'notificaciones', title: 'Notificaciones Globales', type: 'link' },
 				{ path: 'integrations', title: 'Integraciones Globales', type: 'link' },
 				{ path: 'extras/formasPago', title: 'Formas de Pago Globales', type: 'link' }
