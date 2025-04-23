@@ -220,43 +220,47 @@
       
       <!-- Contenido colapsable -->
       <div class="plan-card-content" 
-           [style.max-height]="isPlanCardCollapsed ? '0' : '210px'"
+           [style.max-height]="isPlanCardCollapsed ? '0' : '260px'"
            [style.opacity]="isPlanCardCollapsed ? '0' : '1'"
            [style.padding]="isPlanCardCollapsed ? '0 8px' : '8px'" 
            style="transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease; overflow: hidden;">
         
-        <div class="card-details" style="margin-bottom: 6px;">
-          <div class="detail-item" style="margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
-            <small style="margin-bottom: 0; font-size: 11px;">Vence</small>
-            <span style="font-size: 11px;">{{currentPlan.renewalDate}}</span>
+        <div class="credit-card">
+          <!-- Parte superior: chip + tipo plan -->
+          <div class="card-top">
+            <div class="card-chip"></div>
+            <div class="plan-tag inside-card">{{currentPlan.type}}</div>
           </div>
-          
-          <div class="detail-item" style="margin-bottom: 6px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-              <small style="font-size: 11px;">Uso</small>
-              <span class="usage-percentage" style="font-size: 11px;">{{currentPlan.progress}}%</span>
+
+          <!-- Saldo -->
+          <div class="card-balance">
+            <span class="currency">$</span>
+            <span class="amount">{{currentPlan.walletBalance.toFixed(2)}}</span>
+          </div>
+
+          <!-- Información adicional -->
+          <div class="card-info">
+            <div class="expires">
+              <small>Vence</small>
+              <span>{{currentPlan.renewalDate}}</span>
             </div>
-            <div class="usage-display">
-              <div class="usage-bar" style="height: 5px; background-color: #e6e6e6; border-radius: 2px; width: 100%;">
-                <div class="usage-progress" [style.width.%]="currentPlan.progress" style="height: 100%; background-color: #7366ff; border-radius: 2px;"></div>
-              </div>
+            <div class="usage">
+              <small>Uso</small>
+              <span>{{currentPlan.progress}}%</span>
             </div>
           </div>
-          
-          <div class="wallet-tag" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
-            <small style="font-size: 11px;">Saldo</small>
-            <div style="display: flex; align-items: center;">
-              <i class="fa fa-wallet" style="margin-right: 3px; font-size: 11px;"></i>
-              <span style="font-size: 11px;">${{currentPlan.walletBalance.toFixed(2)}}</span>
-            </div>
+
+          <!-- Barra de progreso -->
+          <div class="usage-bar white-version">
+            <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
           </div>
+
+          <!-- Botón -->
+          <button class="action-btn inside-card" (click)="openPlanModal(); $event.stopPropagation();">
+            <i class="fas fa-credit-card"></i>
+            <span>Cambiar Plan</span>
+          </button>
         </div>
-        
-        <button class="action-btn bc-black fc-white" (click)="openPlanModal(); $event.stopPropagation();" 
-                style="width: 100%; padding: 5px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fas fa-coins" style="margin-right: 4px; font-size: 10px;"></i>
-          <span>Cambiar plan</span>
-        </button>
       </div>
     </div>
 

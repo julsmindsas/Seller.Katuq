@@ -434,5 +434,326 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
   }
 }
 
+.plan-card-content {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle at 100% 0%, rgba(69, 155, 209, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+  }
+
+  .credit-card {
+    position: relative;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    background: linear-gradient(135deg, #459BD1 0%, #6BB4E0 100%);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(69, 155, 209, 0.15);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 0;
+    opacity: 1;
+    transition: all 0.3s ease;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+      border-radius: 14px;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .plan-tag.inside-card {
+        background: rgba(255,255,255,0.15);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        color: white;
+      }
+    }
+
+    .card-balance {
+      margin: 14px 0 8px;
+      .currency {
+        font-size: 16px;
+        font-weight: 400;
+        color: rgba(255,255,255,0.85);
+        margin-right: 4px;
+      }
+      .amount {
+        font-size: 26px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 1px;
+      }
+    }
+
+    .card-info {
+      display: flex;
+      justify-content: space-between;
+      .expires, .usage {
+        display: flex;
+        flex-direction: column;
+        small {
+          font-size: 9px;
+          color: rgba(255,255,255,0.7);
+          margin-bottom: 2px;
+        }
+        span {
+          font-size: 11px;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .usage-bar.white-version {
+      margin: 10px 0 12px;
+      height: 6px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      .usage-progress {
+        background: linear-gradient(90deg, #ffd700 0%, #ffa500 100%);
+      }
+    }
+
+    .action-btn.inside-card {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 11px;
+      padding: 4px;
+      border-radius: 4px;
+      width: fit-content;
+      margin: 0 auto;
+      &:hover {
+        background: rgba(255,255,255,0.25);
+        transform: translateY(-1px);
+      }
+    }
+
+    .card-chip {
+      width: 44px;
+      height: 32px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+          45deg,
+          rgba(0,0,0,0.1) 0px,
+          rgba(0,0,0,0.1) 2px,
+          transparent 2px,
+          transparent 4px
+        );
+      }
+    }
+
+    .card-number {
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      font-size: 12px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+
+      .card-holder {
+        text-transform: uppercase;
+      }
+
+      .card-expiry {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+    }
+  }
+
+  .wallet-display {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+
+    .wallet-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #459BD1 0%, #6BB4E0 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+
+      i {
+        color: white;
+        font-size: 20px;
+      }
+    }
+
+    .balance-display {
+      .balance-label {
+        font-size: 11px;
+        color: #6c757d;
+        margin-bottom: 2px;
+      }
+
+      .balance-amount {
+        display: flex;
+        align-items: center;
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+
+        i {
+          font-size: 14px;
+          margin-right: 4px;
+          color: #459BD1;
+        }
+      }
+    }
+  }
+
+  .plan-details {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    backdrop-filter: blur(5px);
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .label {
+        font-size: 11px;
+        color: #6c757d;
+      }
+
+      .value {
+        font-size: 12px;
+        font-weight: 500;
+        color: #2c3e50;
+      }
+    }
+
+    .usage-section {
+      margin: 12px 0;
+
+      .usage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+
+        .label {
+          font-size: 11px;
+          color: #6c757d;
+        }
+
+        .percentage {
+          font-size: 12px;
+          font-weight: 600;
+          color: #459BD1;
+        }
+      }
+
+      .usage-bar {
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+
+        .usage-progress {
+          height: 100%;
+          background: linear-gradient(90deg, #459BD1 0%, #6BB4E0 100%);
+          border-radius: 3px;
+          transition: width 0.3s ease;
+        }
+      }
+    }
+  }
+
+  .action-btn {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding: 8px;
+    background: linear-gradient(135deg, #459BD1 0%, #6BB4E0 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    i {
+      font-size: 14px;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(69, 155, 209, 0.2);
+    }
+  }
+}
+
 
 
