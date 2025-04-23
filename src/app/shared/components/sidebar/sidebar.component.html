@@ -53,8 +53,9 @@
         <li class="sidebar-main-title collapsible-header" *ngIf="section.isHeaderSection" (click)="toggleSection(section)">
           <div>
             <h6 class="lan-1">
+              <app-feather-icons [icon]="getSectionIcon(section.title)" class="section-icon"></app-feather-icons>
               {{ section.title | translate }}
-              <i class="fa pull-right" [ngClass]="section.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
+              <i class="fa chevron" [ngClass]="section.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
             </h6>
             <!-- <p class="lan-2">{{menuItem.headTitle2 | translate}}</p> -->
           </div>

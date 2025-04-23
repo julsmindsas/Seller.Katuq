@@ -1,236 +1,438 @@
-.sizeLogoKatuq {
-  max-width: 100%;
-}
+// --- Tema Moderno Minimalista ---
+// Variables
+$primary-color: #459BD1;     // Color primario del tema
+$secondary-color: #4555D1;   // Color secundario del tema
+$sidebar-bg: #ffffff;        // Fondo blanco puro
+$section-bg: #f8f9fa;       // Fondo para títulos de sección
+$text-color: #2c3e50;       // Texto principal más oscuro
+$text-color-muted: #6c757d;  // Texto secundario
+$border-color: #e9ecef;      // Borde/separador
+$hover-bg: rgba(69, 155, 209, 0.08); // Fondo hover más sutil
+$active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
 
-.sizeLogoKatuqSideBar {
-  max-width: 4%;
-}
+// Base Sidebar
+.sidebar-main {
+  background-color: $sidebar-bg;
+  border-right: 1px solid $border-color;
+  box-shadow: 0 0 20px rgba(0,0,0,0.03);
 
-.custom-sidebar-katuq {
-  padding-left: 0px !important;
-}
-
-/* ... otros estilos existentes ... */
-
-.plan-card-container {
-  position: sticky;
-  bottom: 0;
-  padding: 12px 15px;
-  background: rgb(243, 243, 243);
-  border-top: 1px solid #f0f0f0;
-}
-
-.plan-card-collapsed{
-  display: none !important;
-  background: transparent !important;
-}
-
-.plan-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-  padding: 12px;
-}
-
-@media (max-width: 900px) {
-  .plan-card-container {
-    display: none !important;
-    background: transparent !important;
+  a, a:hover, a:focus {
+    text-decoration: none;
   }
 }
 
-.plan-card-container.collapsed {
-  display: none !important;
-  background: transparent !important;
+// Contenedor de Links
+.sidebar-links {
+  padding: 4px 0;
+  list-style: none;
+  margin: 0;
+  height: calc(100vh - 150px);
+  padding-bottom: 50px;
+
+  // Estilos Links (Todos los niveles)
+  .sidebar-link, .submenu-title {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    color: $text-color;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    background-color: transparent;
+    border-radius: 4px;
+    margin: 2px 4px;
+
+    app-feather-icons, i.fa {
+      margin-right: 12px;
+      font-size: 16px;
+      color: $text-color-muted;
+      width: 20px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    span {
+      transition: all 0.2s ease;
+    }
+
+    .according-menu {
+      margin-left: auto;
+      i.fa {
+        font-size: 12px;
+        margin-right: 0;
+        color: $text-color-muted;
+        transition: all 0.2s ease;
+      }
+    }
+
+    // Hover: Efecto sutil con sombra
+    &:hover {
+      background-color: $hover-bg;
+      color: $primary-color;
+      box-shadow: 0 2px 8px rgba(26, 8, 225, 0.1);
+      span { color: $primary-color; }
+      app-feather-icons, i.fa { color: $primary-color; }
+      .according-menu i.fa { color: $primary-color; }
+    }
+  }
+
+  // Estilo Activo: Fondo y borde lateral
+  .sidebar-list.active > a,
+  .sidebar-submenu li.active > a,
+  .nav-sub-childmenu li.active > a {
+     background-color: $active-bg;
+     color: $primary-color;
+     font-weight: 600;
+     box-shadow: 0 2px 8px rgba(115, 102, 255, 0.15);
+
+     &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background-color: $primary-color;
+        border-radius: 4px 0 0 4px;
+     }
+
+     app-feather-icons, i.fa {
+        color: $primary-color;
+      }
+     .according-menu i.fa {
+       color: $primary-color;
+     }
+  }
 }
 
+// Títulos de Sección
+.sidebar-main-title.collapsible-header {
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+  background: linear-gradient(135deg, rgba(69, 155, 209, 0.05) 0%, rgba(69, 155, 209, 0.02) 100%);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(to bottom, #459BD1, #6BB4E0);
+    border-radius: 3px 0 0 3px;
+  }
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  h6 {
+    color: $primary-color;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 8px 12px;
+
+    i.fa {
+      font-size: 12px;
+      color: $primary-color;
+      transition: all 0.3s ease;
+      opacity: 0.8;
+    }
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(69, 155, 209, 0.08) 0%, rgba(69, 155, 209, 0.04) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(69, 155, 209, 0.1);
+
+    h6 {
+      color: darken($primary-color, 5%);
+    }
+
+    i.fa {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+
+  // Efecto cuando está expandido
+  &.expanded {
+    background: linear-gradient(135deg, rgba(69, 155, 209, 0.1) 0%, rgba(69, 155, 209, 0.05) 100%);
+    
+    h6 {
+      color: darken($primary-color, 10%);
+    }
+
+    i.fa {
+      transform: rotate(180deg);
+    }
+  }
 }
 
-.plan-tag,
-.wallet-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
+// Submenús
+.sidebar-submenu, .nav-sub-childmenu {
+  list-style: none;
+  padding-left: 0;
+  margin: 2px 4px;
+  background-color: transparent;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+  max-height: 0;
+
+  &.menu-open {
+     max-height: 1000px;
+  }
+
+  li a {
+    padding-left: 36px;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: $text-color;
+    border-radius: 4px;
+    margin: 1px 0;
+
+    &::before { display: none; }
+  }
+
+   .nav-sub-childmenu li a {
+      padding-left: 48px;
+      font-size: 13px;
+   }
+
+   li.active > a {
+      background-color: $active-bg;
+      color: $primary-color;
+      font-weight: 600;
+
+      &::before {
+         content: '';
+         position: absolute;
+         left: 0;
+         top: 0;
+         bottom: 0;
+         width: 4px;
+         background-color: $primary-color;
+         border-radius: 4px 0 0 4px;
+      }
+   }
+}
+
+// Scrollbar (estilo moderno)
+.custom-scrollbar {
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { 
+    background: $border-color; 
+    border-radius: 4px;
+    &:hover { background: darken($border-color, 10%); }
+  }
+}
+
+// --- Logo y Tarjeta Plan ---
+.sizeLogoKatuq { max-width: 100%; }
+.sizeLogoKatuqSideBar { max-width: 4%; }
+.custom-sidebar-katuq { /* sin cambios */ }
+
+.plan-card-container {
+  position: sticky; 
+  bottom: 0; 
+  padding: 12px 15px;
+  background: $sidebar-bg;
+  border-top: 1px solid $border-color;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+}
+
+.plan-card-collapsed{ display: none !important; background: transparent !important; }
+
+.plan-card {
+  background: #f0f7ff;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 8px;
+  border: 1px solid #d0e3ff;
+}
+
+@media (max-width: 900px) { 
+  .plan-card-container { 
+    display: none !important; 
+    background: transparent !important; 
+  } 
+}
+
+.plan-card-container.collapsed { 
+  display: none !important; 
+  background: transparent !important; 
+}
+
+.card-header { 
+  display: flex; 
+  justify-content: space-between; 
+  margin-bottom: 12px; 
+}
+
+.plan-tag { 
+  color: $primary-color;
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  font-size: 13px; 
   font-weight: 600;
+  background: rgba(69, 155, 209, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-bottom: 4px;
 }
 
-.plan-tag {
-  color: #7367F0;
-}
-
-.wallet-tag {
-  color: #28C76F;
+.wallet-tag { 
+  color: $primary-color;
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  font-size: 13px; 
+  font-weight: 600; 
+  background: rgba(69, 155, 209, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-bottom: 4px;
 }
 
 .card-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
+  margin-bottom: 4px;
 }
 
 .detail-item small {
-  font-size: 10px;
-  color: #b9b9c3;
+  color: $text-color-muted;
+  font-size: 11px;
   margin-bottom: 2px;
 }
 
-.detail-item span {
-  font-size: 12px;
+.detail-item span { 
+  color: $text-color; 
+  font-size: 13px; 
   font-weight: 500;
-  color: #5e5873;
 }
 
-.usage-bar {
-  height: 6px;
-  background: #f0f0f0;
-  border-radius: 3px;
+.usage-bar { 
+  background: $border-color; 
+  height: 6px; 
+  border-radius: 3px; 
   margin-top: 4px;
-}
-
-.usage-progress {
-  height: 100%;
-  background: linear-gradient(90deg, #7367F0 0%, #9E95F5 100%);
-  border-radius: 3px;
-}
-
-.action-btn {
-  width: 100%;
-  background: rgba(115, 103, 240, 0.08);
-  color: #7367F0;
-  border: none;
-  border-radius: 6px;
-  padding: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-  background: rgba(115, 103, 240, 0.15);
-}
-
-.action-btn i {
-  font-size: 12px;
-}
-
-.usage-display {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.usage-bar {
-  flex-grow: 1;
-  height: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
   overflow: hidden;
 }
 
-.usage-progress {
-  height: 100%;
-  background-color: #4CAF50;
+.usage-progress { 
+  background: $primary-color;
+  height: 100%; 
+  border-radius: 3px;
   transition: width 0.3s ease;
 }
 
-.usage-percentage {
+.action-btn { 
+  background: rgba(69, 155, 209, 0.1);
+  color: $primary-color;
+  width: 100%; 
+  border: none; 
+  border-radius: 4px; 
+  padding: 4px; 
+  font-size: 13px; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 8px; 
+  cursor: pointer; 
+  transition: all 0.2s ease;
+  margin-top: 4px;
+
+  &:hover { 
+    background: rgba(69, 155, 209, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(69, 155, 209, 0.2);
+  }
+}
+
+.action-btn i { 
   font-size: 12px;
-  font-weight: 600;
-  color: #555;
-  min-width: 35px;
+}
+
+.usage-display { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  width: 100%;
+}
+
+.usage-percentage { 
+  color: $text-color; 
+  font-size: 13px; 
+  font-weight: 600; 
+  min-width: 35px; 
   text-align: right;
 }
 
-.plan-card-collapsed {
-  /* ... estilos existentes ... */
-
-  &:hover {
-    .compact-tooltip {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(0);
-    }
-  }
+.plan-card-collapsed { 
+  &:hover { 
+    .compact-tooltip { 
+      opacity: 1; 
+      visibility: visible; 
+      transform: translateX(0); 
+    } 
+  } 
 }
 
-.compact-tooltip {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%) translateX(-10px);
-  background: #7367F0;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  pointer-events: none;
+.compact-tooltip { 
+  background: $primary-color; 
+  position: absolute; 
+  left: 100%; 
+  top: 50%; 
+  transform: translateY(-50%) translateX(-10px); 
+  color: white; 
+  padding: 8px 12px; 
+  border-radius: 4px; 
+  font-size: 12px; 
+  white-space: nowrap; 
+  opacity: 0; 
+  visibility: hidden; 
+  transition: all 0.2s ease; 
+  pointer-events: none; 
   z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 
-  &:before {
-    content: '';
-    position: absolute;
-    right: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border-width: 6px;
-    border-style: solid;
-    border-color: transparent #7367F0 transparent transparent;
+  &:before { 
+    border-color: transparent $primary-color transparent transparent; 
+    content: ''; 
+    position: absolute; 
+    right: 100%; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    border-width: 6px; 
+    border-style: solid; 
   }
 }
 
-/* Estilos para encabezados colapsables */
-.sidebar-main-title.collapsible-header {
-  cursor: pointer;
-  user-select: none; /* Evita seleccionar el texto al hacer click */
-
-  &:hover {
-    // Opcional: algún efecto hover si lo deseas
-    // background-color: rgba(0, 0, 0, 0.03);
-  }
-
-  h6 {
-    display: flex; /* Para alinear el icono a la derecha */
-    justify-content: space-between; /* Separa título e icono */
-    align-items: center; /* Centra verticalmente */
-    width: 100%; /* Asegura que ocupe todo el ancho para el click */
-  }
-}
-
-/* Ajustar animación de submenús para usar max-height */
-.sidebar-submenu,
-.nav-sub-childmenu {
-  transition: max-height 0.3s ease-in-out;
-  overflow: hidden;
-  max-height: 0; /* Estado colapsado por defecto */
-}
-
-.sidebar-submenu.menu-open,
-.nav-sub-childmenu.menu-open {
-   max-height: 1000px; /* Un valor suficientemente grande para mostrar contenido */
-}
-
-/* Opcional: eliminar [style.display] del HTML si se usa max-height */
 
 

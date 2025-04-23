@@ -377,4 +377,16 @@ export class SidebarComponent implements OnInit {
     this.isPlanCardCollapsed = !this.isPlanCardCollapsed;
     localStorage.setItem('planCardCollapsed', this.isPlanCardCollapsed ? 'true' : 'false');
   }
+
+  getSectionIcon(sectionTitle: string): string {
+    const iconMap: { [key: string]: string } = {
+      'Gestión Comercial': 'shopping-cart',
+      'Operaciones Internas': 'settings',
+      'Logística': 'truck',
+      'Inteligencia de Negocios': 'bar-chart-2',
+      'Administración Global': 'users',
+      'Configuración Plataforma': 'tool'
+    };
+    return iconMap[sectionTitle] || 'folder';
+  }
 }
