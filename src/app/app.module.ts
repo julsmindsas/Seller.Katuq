@@ -116,6 +116,6 @@ export function HttpLoaderFactory(http: HttpClient) {
     //   useClass: GlobalErrorHandlerService,
     // }
   ],
-  bootstrap: [AppComponent, ChatComponent]
+  bootstrap: [AppComponent]
 })
 export class AppModule { }

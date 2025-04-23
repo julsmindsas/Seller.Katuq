@@ -244,7 +244,7 @@
     </div>
 
     <!-- Componente de chat -->
-    <div *ngIf="isLoggedIn">
+    <div *ngIf="authService.isLoggedIn">
       <app-chat [isFloating]="true" class="floating-chat" (newMessage)="onNewMessage($event)"
         (saveConversation)="saveConversation($event)">
       </app-chat>

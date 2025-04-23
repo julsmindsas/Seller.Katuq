@@ -107,6 +107,23 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     // Inicializar herramientas disponibles
     this.initializeTools();
 
+    // Verificamos si el usuario está autenticado correctamente
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user && user.company) {
+          this.isLoggedIn = true;
+        }
+      } catch (err) {
+        console.error('Error al parsear user desde localStorage:', err);
+        // Si ocurre un error al parsear, usamos el getter del AuthService como respaldo
+        this.isLoggedIn = this.authService.isLoggedIn;
+      }
+    } else {
+      // Si no hay info en localStorage validamos con el servicio de autenticación
+      this.isLoggedIn = this.authService.isLoggedIn;
+    }
   }
 
   ngOnInit() {
@@ -135,6 +152,21 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       this.isLoggedIn = true;
     }
 
+    // Verificar nuevamente si existe sesión activa para habilitar el chat
+    const userStrInit = localStorage.getItem('user');
+    if (userStrInit) {
+      try {
+        const parsedUser = JSON.parse(userStrInit);
+        if (parsedUser && parsedUser.company) {
+          this.isLoggedIn = true;
+        }
+      } catch (err) {
+        console.error('Error al parsear user en ngOnInit:', err);
+        this.isLoggedIn = this.authService.isLoggedIn;
+      }
+    } else {
+      this.isLoggedIn = this.authService.isLoggedIn;
+    }
   }
 
   // Detectar si es un dispositivo móvil
