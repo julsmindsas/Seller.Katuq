@@ -126,6 +126,17 @@ export class NavService implements OnDestroy {
 		return this.MENUITEMS;
 	}
 
+	getMenuOriginal(): Menu[] {
+		return this.ALLMENUITEMS.map(item => {
+			if ((item.isOnlySuperAdministrador) ||
+				(item.isOnlyAdmin)) {
+				return null;
+			}
+
+			return item;
+		}).filter(item => item !== null) as Menu[];
+	}
+
 	filterMenuItemsByAuthorization() {
 		const authorizedPaths = JSON.parse(localStorage.getItem('authorizedMenuItems') || '[]').map((item: any) => item.path);
 		const user = JSON.parse(localStorage.getItem('user') || '{}');

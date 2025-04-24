@@ -66,7 +66,7 @@ export class RolesComponent implements OnInit {
   }
 
   loadMenus(): void {
-    this.menus = this.navService.getMenuItems();
+    this.menus = this.navService.getMenuOriginal();
     this.availableMenus = this.getChildrenMenus(this.menus);
     this.availableMenusCopy = this.utilsService.deepClone(this.availableMenus);
   }
