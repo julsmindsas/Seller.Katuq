@@ -16,7 +16,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   public users : ChatUsers[] = []
   public searchUsers : ChatUsers[] = []
   public chatUser : any;
-  public profile : any;
+  public profile : any = {
+    id: 0,
+    name: 'Usuario'
+  };
   public chats : any;
   public chatText : string;
   public error : boolean = false;
@@ -42,8 +45,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     if (this.isFloating) {
       // Posibles ajustes específicos para el modo flotante
     }
-    this.userChat(this.id)
-    this.getProfile()
+    // Primero obtener el perfil y luego iniciar el chat
+    this.getProfile();
+    this.userChat(1); // ID por defecto para KAI
   }
   
   ngAfterViewChecked() {
@@ -88,7 +92,17 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   // Get user Profile
   public getProfile() {
-    this.chatService.getCurrentUser().subscribe(userProfile => this.profile = userProfile)
+    this.chatService.getCurrentUser().subscribe({
+      next: (userProfile) => {
+        if (userProfile) {
+          this.profile = userProfile;
+        }
+        // Si no hay perfil, se mantiene el default
+      },
+      error: (err) => {
+        console.error('Error al obtener perfil:', err);
+      }
+    });
   }
 
   // User Chat

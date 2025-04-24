@@ -677,15 +677,72 @@
     }
 }
 
-// Cuando está en modo flotante, ajustar alturas para garantizar visibilidad del input
+// Cuando está en modo flotante, ajustar para garantizar visibilidad del input
 .floating-mode {
+  height: 100% !important; // Forzar altura completa
+  display: flex;
+  flex-direction: column;
+  
+  .chat-card {
+    height: 100% !important; // Forzar altura completa
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0;
+    border-radius: 0; // Eliminar bordes redondeados para aprovechar todo el espacio
+  }
+  
+  .chat-header {
+    flex-shrink: 0;
+    padding: 8px 12px; // Reducir padding para más espacio
+  }
+  
   .messages-container {
-    // Asegurar que el contenedor de mensajes no ocupe todo el espacio
-    height: calc(100% - 60px); // Reservar espacio para el input
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 200px; // Altura mínima para contenido de mensajes
+    max-height: none !important; // Sin límite de altura máxima
+    border: none; // Sin bordes
   }
   
   .chat-input-area {
-    height: 60px; // Altura fija para el área de input
-    min-height: 60px;
+    flex-shrink: 0;
+    position: sticky; 
+    bottom: 0;
+    background: white;
+    padding: 8px;
+    border-top: 1px solid #e9ecef;
+    z-index: 10; // Asegurar que esté encima
   }
+}
+
+/* Override para modo flotante dentro del panel */
+:host ::ng-deep .modern-chat-container.floating-mode {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+:host ::ng-deep .modern-chat-container.floating-mode .chat-card {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+:host ::ng-deep .modern-chat-container.floating-mode .messages-container {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  max-height: none !important;
+}
+
+:host ::ng-deep .modern-chat-container.floating-mode .chat-input-area {
+  position: sticky !important;
+  bottom: 0 !important;
+  flex-shrink: 0 !important;
+  z-index: 10 !important;
 }

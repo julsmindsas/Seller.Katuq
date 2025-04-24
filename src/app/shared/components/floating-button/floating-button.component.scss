@@ -62,8 +62,20 @@ a {
         padding: 10px;
     }
     &.maximized {
-        width: 600px;
-        height: calc(100vh - 120px);
+        width: 680px;
+        height: calc(100vh - 40px) !important; // Restar header y margen
+        
+        .floating-chat-overlay {
+            padding: 0;
+            top: 40px !important;
+            bottom: 10px !important;
+            height: auto !important;
+            
+            app-chat, .floating-chat {
+                height: 100%;
+                display: block;
+            }
+        }
     }
 }
 
@@ -374,18 +386,120 @@ a {
 }
 
 .floating-chat-overlay {
+    /* contenedor principal */
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
+    top: 60px;
+    bottom: 20px;
+    right: 10px;
+    width: 50vw;
+    max-width: 600px;
     background-color: white;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    animation: slide-up 0.3s ease;
+
+    /* usar posicionamiento relativo para ubicar input absoluto */
+    position: relative;
+
+    /* área de mensajes rellena espacio disponible y deja espacio abajo para el input */
+    .chat-card .messages-container {
+        position: absolute;
+        top: 0;
+        bottom: 60px; /* altura del input + padding */
+        left: 0;
+        right: 0;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    /* input fijo abajo */
+    .chat-card .chat-input-area {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 10px;
+        background: white;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .chat-header {
+        flex: 0 0 auto;
+    }
+
+    > div { /* este div contiene <app-chat> */
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        app-chat {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+
+            .modern-chat-container {
+                flex: 1 1 auto;
+                display: flex;
+                flex-direction: column;
+
+                .chat-card {
+                    flex: 1 1 auto;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+
+                    .messages-container {
+                        flex: 1 1 auto;
+                        overflow-y: auto;
+                    }
+
+                    .chat-input-area {
+                        flex: 0 0 auto;
+                        position: sticky;
+                        bottom: 0;
+                        z-index: 10;
+                        background: #fff;
+                        border-top: 1px solid #e9ecef;
+                    }
+                }
+            }
+        }
+    }
+
+    /* Reglas de layout flex para el contenido de chat */
+    > * .modern-chat-container {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+    }
+
+    /* Card de chat ocupa todo el espacio disponible */
+    > * .modern-chat-container .chat-card {
+        flex: 1 1 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Mensajes ocupan todo excepto el input */
+    > * .modern-chat-container .chat-card .messages-container {
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        min-height: 0 !important;
+    }
+
+    /* Input siempre pegado al bottom */
+    > * .modern-chat-container .chat-card .chat-input-area {
+        flex: 0 0 auto !important;
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 10 !important;
+        background: white;
+        border-top: 1px solid #e9ecef;
+    }
 }
 
 .chat-header {
