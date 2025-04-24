@@ -26,6 +26,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
   public adm = '';
   public fecha = Date.now();
   public fechact = new Date(this.fecha);
+  public kaiPrompt: string = ''; // Nueva propiedad para el prompt de KAI
+  public kaiPromptPlaceholder: string = ''; // Nueva propiedad para el placeholder dinámico
 
 
   public fileLogo;;
@@ -81,6 +83,10 @@ export class EditProfileComponent implements OnInit, OnDestroy {
     this.namestorage = this.name;
     this.email = this.UserLogged.email;
     this.img = this.UserLogged.image;
+    this.kaiPrompt = this.UserLogged.kaiPrompt || ''; // Cargar prompt existente o inicializar vacío
+
+    // Construir el placeholder dinámico más explícito
+    this.kaiPromptPlaceholder = `Aquí puedes definir la personalidad o el rol de K.A.I, similar a como personalizarías en ChatGPT. Por ejemplo: "Actúa como un asistente experto en análisis de datos de ventas para ${this.UserLogged.rol}. Proporciona insights claros y accionables basados en los datos que te proporciono. Mi nombre es ${this.UserLogged.name}."`;
 
   }
 
@@ -124,7 +130,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
               timer: 1700
             });
             setTimeout(() => {
-              this.cargarDatos();
+              // No es necesario recargar toda la data, solo la imagen si es necesario
+              this.img = data; // Actualizar directamente la imagen en el componente
             }, 100);
           }
 
@@ -132,6 +139,49 @@ export class EditProfileComponent implements OnInit, OnDestroy {
       });
     });
   }
+
+  //*********************************** Prompt KAI ***************************************************/
+  saveKaiPrompt() {
+    const item = {
+      "identificacion": this.UserLogged.nit,
+      "kaiPersonalitityUserPrompt": this.kaiPrompt
+    };
+
+    this.service.updateUser(item).subscribe({
+      next: (res: any) => {
+        if (res.error) {
+          Swal.fire({
+            icon: "error",
+            title: 'Error al guardar',
+            text: 'No se pudo actualizar el prompt. Inténtelo nuevamente.',
+            showConfirmButton: true
+          });
+        } else {
+          // Actualizar localStorage
+          this.UserLogged.kaiPersonalitityUserPrompt = this.kaiPrompt;
+          localStorage.setItem('user', JSON.stringify(this.UserLogged));
+
+          Swal.fire({
+            icon: 'success',
+            title: '¡Prompt guardado!',
+            text: 'Tu prompt personalizado para K.A.I ha sido actualizado.',
+            showConfirmButton: false,
+            timer: 1700
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Error updating KAI prompt:', err);
+        Swal.fire({
+          icon: "error",
+          title: 'Error de conexión',
+          text: 'No se pudo conectar con el servidor para guardar el prompt.',
+          showConfirmButton: true
+        });
+      }
+    });
+  }
+
 
   private getDismissReason(reason: any): string {
 
