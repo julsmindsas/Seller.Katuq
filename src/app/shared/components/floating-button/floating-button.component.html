@@ -3,7 +3,8 @@
         'minimized': chatMinimized,
         'options-visible': optionsPanelVisible,
         'voice-mode': selectedMode === 'voice' && isListening,
-        'voice-call-mode': selectedMode === 'voice' && isListening
+        'voice-call-mode': selectedMode === 'voice' && isListening,
+        'maximized': chatMaximized
      }">
 
   <!-- Botón flotante principal -->
@@ -236,6 +237,9 @@
       <div class="chat-controls">
         <button class="minimize-chat-btn" (click)="minimizeChat($event)" title="Minimizar">
           <i class="fa fa-minus"></i>
+        </button>
+        <button class="resize-chat-btn" (click)="toggleChatSize($event)" title="Maximizar/Restaurar">
+          <i class="fa" [ngClass]="chatMaximized ? 'fa-compress' : 'fa-expand'"></i>
         </button>
         <button class="close-chat-btn" (click)="closeChat($event)" title="Cerrar">
           <i class="fa fa-times"></i>

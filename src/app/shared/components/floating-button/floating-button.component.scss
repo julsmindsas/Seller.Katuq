@@ -61,6 +61,10 @@ a {
         box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
         padding: 10px;
     }
+    &.maximized {
+        width: 600px;
+        height: calc(100vh - 120px);
+    }
 }
 
 .floating-button {
@@ -1030,8 +1034,7 @@ a {
 
 /* Vista estándar para escritorio */
 .voice-mode-standard {
-    width: 100%;
-    height: 100%;
+    display: none; /* Ocultamos la vista antigua */
 }
 
 @media (max-width: 576px) {
@@ -1388,11 +1391,7 @@ a {
     }
 }
 
-// ...existing code...
-
 /* Vista estándar para escritorio - Ya no se usa, pero mantenemos por compatibilidad */
 .voice-mode-standard {
     display: none; /* Ocultamos la vista antigua */
 }
-
-// ...existing code...

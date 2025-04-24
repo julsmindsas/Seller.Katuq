@@ -82,6 +82,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   empresaActual: any;
   useModelBig: any;
   isLoggedIn = false;
+  public chatMaximized: boolean = false;
 
   constructor(
     public authService: AuthService,
@@ -383,6 +384,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     if (event) event.stopPropagation();
     this.chatFormVisible = false;
     this.chatMinimized = false;
+    this.chatMaximized = false;
     this.conversationState = null;
     this.saveState();
   }
@@ -1988,6 +1990,13 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     this.router.navigate([route]);
     this.optionsPanelVisible = false;
     this.saveState();
+  }
+
+  toggleChatSize(event: MouseEvent) {
+    if (event) event.stopPropagation();
+    if (this.chatFormVisible && !this.chatMinimized) {
+      this.chatMaximized = !this.chatMaximized;
+    }
   }
 
 }
