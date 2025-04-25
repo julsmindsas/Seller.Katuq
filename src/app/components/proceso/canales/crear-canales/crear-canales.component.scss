@@ -1,0 +1,52 @@
+/* Estilos para el componente de crear canales */
+.form-label {
+  margin-bottom: 0.5rem;
+}
+
+.text-danger {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.form-control {
+  &:focus {
+    border-color: #6ec0d4;
+    box-shadow: 0 0 0 0.2rem rgba(110, 192, 212, 0.25);
+  }
+}
+
+.form-check-input {
+  &:checked {
+    background-color: #6ec0d4;
+    border-color: #6ec0d4;
+  }
+  
+  &:focus {
+    border-color: #6ec0d4;
+    box-shadow: 0 0 0 0.2rem rgba(110, 192, 212, 0.25);
+  }
+}
+
+/* Botones del modal */
+.modal-footer {
+  .btn-primary {
+    background-color: #6ec0d4;
+    border-color: #6ec0d4;
+    
+    &:hover, &:focus {
+      background-color: darken(#6ec0d4, 10%);
+      border-color: darken(#6ec0d4, 10%);
+    }
+  }
+}
+
+/* Estilos para hacer el formulario más compacto en dispositivos pequeños */
+@media (max-width: 768px) {
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .row.g-4 {
+    --bs-gutter-x: 0.5rem;
+  }
+} 

@@ -255,6 +255,7 @@ export class NavService implements OnDestroy {
 				{ path: 'productos', title: 'Maestro de Productos', type: 'link' },
 				{ path: 'categorias', title: 'Categorías Globales', type: 'link' },
 				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones Globales', type: 'link' },
+				{ path: 'proceso/canales', title: 'Canales de Venta', type: 'link' },
 				{ path: 'inventario/inventario-catalogo', title: 'Inventario por Bodega', type: 'link' },
 				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link' },
 				{ path: 'inventario/recepcion-mercancia', title: 'Recepción Mercancía', type: 'link' },

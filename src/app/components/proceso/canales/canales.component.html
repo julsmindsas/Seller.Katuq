@@ -1,0 +1,102 @@
+<div class="container-fluid">
+  <div class="row">
+      <div class="col-sm-12 p-2">
+          <br />
+          <div class="card">
+              <i class="icon-bg" width="80" height="80" style="
+                      opacity: 0.4;
+                      position: absolute;
+                      color: #6ec0d4;
+                      top: 10px;
+                      left: 10px;
+                  "></i>
+              <div class="loader-box" *ngIf="cargando">
+                  <div class="loader-8"></div>
+              </div>
+
+              <!-- Header Standar -->
+              <div class="row col-12 p-4 pb-0">
+                  <div class="col-6">
+                      <p class="text-left fc-secondary fw-bold fs-24 m-0 p-0">{{ "Canales de Venta" | translate }}</p>
+                      <p class="text-left text-muted fs-18 m-0 p-0">{{ "Usados para definir los diferentes canales de distribución de tus productos." | translate }}</p>
+                  </div>
+
+                  <div class="col-6 p-3" style="text-align: end">
+                      <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="openCrearModal()">
+                          <i placement="top" ngbTooltip="Nuevo" style="font-size: 18px; color: white; cursor: pointer;" 
+                             class="icofont icofont-plus"></i>&nbsp;
+                          <span style="color: white">{{ "Crear Canal" | translate }}</span>
+                        </button>
+                      <button class="btn btn-success ml-3 mb-2" style="color: white" >
+                          <i class="icofont icofont-file-excel"></i>&nbsp;
+                          {{ "Excel" | translate }}
+                      </button>
+                  </div>
+              </div>
+              <!-- FIN Header Standar -->
+
+              <div class="card-body custom-datatable" *ngIf="!cargando">
+                  <p-table #dt [columns]="selectedColumns" [value]="rows" [paginator]="true" [rows]="10"
+                      [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
+                      styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
+                      [sortField]="'name'" [sortOrder]="1" [globalFilterFields]="[
+                          'name',
+                          'tipo',
+                          'bodega',
+                          'activo'
+                      ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
+                      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
+
+                      <ng-template pTemplate="header" let-columns>
+                          <tr>
+                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="id">{{ "Id" | translate }}</th>
+                              <th class="text-center" pSortableColumn="name">{{ "Nombre" | translate }}</th>
+                              <th class="text-center" pSortableColumn="tipo">{{ "Tipo" | translate }}</th>
+                              <th class="text-center" pSortableColumn="bodega">{{ "Bodega" | translate }}</th>
+                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">{{ "Activo" | translate }}</th>
+                              <th class="text-center">{{ "Acciones" | translate }}</th>
+                          </tr>
+                      </ng-template>
+
+                      <ng-template pTemplate="body" let-row>
+                          <tr>
+                              <td *ngIf="!isMobile" class="text-center">{{ row.id }}</td>
+                              <td>{{ row.name }}</td>
+                              <td>{{ row.tipo }}</td>
+                              <td>{{ row.bodega }}</td>
+                              <td *ngIf="!isMobile" class="text-center">
+                                  <label class="switch">
+                                      <input class="toggle" type="checkbox" [checked]="row.activo" disabled />
+                                      <span class="switch-state"></span>
+                                  </label>
+                              </td>
+                              <td class="text-center">
+                                  <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
+                                      style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                                      class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
+                                  </i>
+                                  <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+                                      style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                                      class="icofont icofont-trash fc-danger" (click)="deleteCanal(row)">
+                                  </i>
+                              </td>
+                          </tr>
+                      </ng-template>
+
+                      <ng-template pTemplate="emptymessage">
+                          <tr>
+                              <td [attr.colspan]="isMobile ? 4 : 6">{{ "No hay datos disponibles" | translate }}</td>
+                          </tr>
+                      </ng-template>
+
+                      <ng-template pTemplate="summary">
+                          <div class="flex align-items-center justify-content-between">
+                              {{ "Total en esta consulta" | translate }}: {{rows ? rows.length : 0 }} {{ "registros" | translate }}.
+                          </div>
+                      </ng-template>
+                  </p-table>
+              </div>
+          </div>
+      </div>
+  </div>
+</div> 
