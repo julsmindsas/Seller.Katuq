@@ -148,6 +148,49 @@ export class PosCheckoutComponent {
     this.modal.open(CrearClienteModalComponent, { centered: true, size: 'xl', modalDialogClass: 'create-customers custom-input' });
   }
 
+  editarCliente() {
+    // Verificar que tenemos datos de cliente válidos
+    if (!this.datosCliente) {
+      this.showAlert('Error', 'No hay cliente seleccionado para editar');
+      return;
+    }
+    
+    const modalRef = this.modal.open(CrearClienteModalComponent, { 
+      centered: true, 
+      size: 'xl', 
+      modalDialogClass: 'create-customers custom-input' 
+    });
+    
+    // Pasar los datos del cliente al modal y establecer que es edición
+    modalRef.componentInstance.clienteData = this.datosCliente;
+    modalRef.componentInstance.isEdit = true;
+    
+    // Manejar el cierre del modal
+    modalRef.result.then(
+      (result) => {
+        if (result === 'success') {
+          // Mostrar mensaje de éxito
+          Swal.fire({
+            title: 'Cliente actualizado',
+            text: 'Los datos del cliente han sido actualizados correctamente',
+            icon: 'success',
+            confirmButtonText: 'Ok'
+          });
+          
+          // Intentar recargar los datos del cliente si es posible
+          if (this.clienteBuscar && this.clienteBuscar.nativeElement) {
+            const docValue = this.clienteBuscar.nativeElement.value;
+            // Solo si hay un valor en el input
+            if (docValue) {
+              this.buscar();
+            }
+          }
+        }
+      },
+      () => {}
+    );
+  }
+
   limpiar() {
     this.datosCliente = '';
     if (this.clienteBuscar) {

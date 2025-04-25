@@ -22,6 +22,12 @@
       </div>
 
       <div class="p-2" *ngIf="datosCliente">
+        <div class="d-flex justify-content-between">
+          <h6 class="mb-2 fw-bold">Información del Cliente</h6>
+          <button class="btn btn-sm btn-outline-primary" (click)="editarCliente()">
+            <i class="icofont icofont-pencil-alt-5"></i>
+          </button>
+        </div>
         <p class="mb-1"><strong>Documento: </strong>&nbsp;{{datosCliente?.documento}}</p>
         <p class="mb-1"><strong>Nombre: </strong>&nbsp;{{datosCliente?.nombres_completos}} {{datosCliente?.apellidos_completos}}</p>
         <p class="mb-1"><strong>Celular: </strong>&nbsp;{{datosCliente?.numero_celular_comprador}}</p>

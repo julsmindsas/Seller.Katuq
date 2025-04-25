@@ -7,6 +7,9 @@ import { OcasionesComponent } from './ocasiones/ocasiones.component';
 import { CrearOcasionesComponent } from './ocasiones/crear-ocasiones/crear-ocasiones.component';
 import { VariablesComponent } from './variables/variables.component';
 import { CrearVariablesComponent } from './variables/crear-variables/crear-variables.component';
+import { CanalesComponent } from './canales/canales.component';
+import { CrearCanalesComponent } from './canales/crear-canales/crear-canales.component';
+
 const routes: Routes = [
   {
     path: 'generos',
@@ -31,6 +34,14 @@ const routes: Routes = [
   {
     path: 'variables/crear-variables',
     component: CrearVariablesComponent
+  },
+  {
+    path: 'canales',
+    component: CanalesComponent
+  },
+  {
+    path: 'canales/crear-canales',
+    component: CrearCanalesComponent
   }
 ];
 

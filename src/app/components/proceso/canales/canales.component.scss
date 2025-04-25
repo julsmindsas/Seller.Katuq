@@ -1,0 +1,81 @@
+/* Estilos para el componente de canales */
+.loader-box {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-datatable {
+  min-height: 400px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  margin-bottom: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-state {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.switch-state:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .switch-state {
+  background-color: #2196F3;
+}
+
+input:focus + .switch-state {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .switch-state:before {
+  transform: translateX(20px);
+}
+
+/* Estilo personalizado para los iconos */
+.fc-primary {
+  color: #4099ff;
+}
+
+.fc-danger {
+  color: #ff5370;
+}
+
+.fc-secondary {
+  color: #6ec0d4;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .text-left {
+    text-size: 20px;
+  }
+} 
