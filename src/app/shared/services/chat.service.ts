@@ -85,7 +85,7 @@ export class ChatService {
             this.chat.filter(chats => {
               if (chats.id == chat.receiver) {
                 setTimeout(() => {
-                  chats.message.push({ sender: chat.receiver, time: today.toLowerCase(), text: response.result.responseText })
+                  chats.message.push({ sender: chat.receiver, time: today.toLowerCase(), text: response.result })
                 }, 1000);
                 setTimeout(function () {
                   document.querySelector(".chat-history")?.scrollBy({ top: 250, behavior: 'smooth' });
