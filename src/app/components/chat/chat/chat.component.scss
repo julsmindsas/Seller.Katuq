@@ -1,11 +1,11 @@
 // Variables
 :root {
-  --chat-primary: #4A90E2;
-  --chat-primary-darker: #3A80D2;
+  --chat-primary: #10A37F;           /* Verde ChatGPT */
+  --chat-primary-darker: #0E8F70;
   --chat-bg: #ffffff;
   --chat-input-bg: #f8f9fa;
-  --user-message-bg: #e9f2ff;
-  --assistant-message-bg: #f8f9fa;
+  --user-message-bg: #DCF2FF;        /* Azul muy claro para usuario */
+  --assistant-message-bg: #F7F7F8;   /* Gris claro para asistente */
   --chat-text: #2c3e50;
   --chat-text-light: #636e72;
   --chat-border: #e9ecef;
@@ -177,13 +177,13 @@
   justify-content: flex-end;
   
   .message-content {
-    background-color: #3f87e2;
-    color: white;
+    background-color: var(--user-message-bg);
+    color: var(--chat-text);
     border-radius: 18px 18px 0 18px;
     padding: 0.75rem 1rem;
     max-width: 80%;
     font-size: 1rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     
     p {
       margin: 0;
@@ -217,8 +217,8 @@
   }
   
   .message-content {
-    background-color: #f5f8ff;
-    border: 1px solid var(--chat-primary-darker);
+    background-color: var(--assistant-message-bg);
+    border: none;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     border-radius: 18px 18px 18px 0;
     padding: 0.75rem 1rem;
@@ -421,6 +421,10 @@
     border-color: #e74c3c;
     box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
   }
+  
+  // Si se usa textarea (autoredimensionable)
+  resize: none;
+  overflow: hidden;
 }
 
 .emoji-picker-container {
@@ -452,6 +456,28 @@
   from {
     opacity: 0;
     transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Animación de aparición gradual por palabra
+.blinking-words {
+  display: inline-block;
+}
+
+.blink-word {
+  opacity: 0;
+  display: inline-block;
+  animation: fadeInWord 0.3s ease forwards;
+}
+
+@keyframes fadeInWord {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;

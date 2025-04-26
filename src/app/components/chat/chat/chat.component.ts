@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, Input } from '@angular/core';
 import { ChatUsers } from '../../../shared/models/chat/chat.model';
 import { ChatService } from '../../../shared/services/chat.service';
+import { NgForm } from '@angular/forms';
 
 @Component({
   selector: 'app-chat',
@@ -122,7 +123,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
   
   // Send Message to User - mejoramos la animación y respuesta
-  public sendMessage(form) {
+  public sendMessage(form: NgForm) {
     if(!form.value.message?.trim()){
       this.error = true
       return false
@@ -166,6 +167,27 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       this.cdRef.detectChanges();
       this.scrollToBottom();
     }, 100);
+  }
+
+  /**
+   * Ajusta automáticamente la altura del textarea para que se expanda acorde al contenido.
+   */
+  autoResize(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    if (!textarea) return;
+    // Reiniciar altura para calcular scrollHeight correcto
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  /**
+   * Maneja el envío con Enter. Si el usuario mantiene Shift+Enter se permite salto de línea.
+   */
+  handleEnter(event: KeyboardEvent, form: NgForm): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage(form);
+    }
   }
 
   searchTerm(term: any) {
