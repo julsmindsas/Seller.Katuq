@@ -341,6 +341,27 @@
       }
     }
   }
+  // Texto de procesamiento con animación cálida
+  .typing-text {
+    margin-left: 0.75rem;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--chat-primary);
+    opacity: 0;
+    animation: pulseProcessing 2s ease-in-out infinite;
+  }
+}
+
+// Animación para la pulsación del texto 'Procesando...'
+@keyframes pulseProcessing {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
 }
 
 // Chat Input Area

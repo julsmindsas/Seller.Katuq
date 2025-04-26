@@ -3,18 +3,18 @@
   <div class="chat-card">
     <header class="chat-header">
       <div class="chat-header-content">
-        <img src="assets/images/chatgpt-logo.png" alt="KAI" class="chat-logo" onerror="this.src='assets/images/default-avatar.png'">
+        <!-- <img src="assets/images/kai-avatar.png" alt="KAI" class="chat-logo" onerror="this.src='assets/images/default-avatar.png'"> -->
         <h4>{{ 'KAI - Tu asistente personal' | translate }}</h4>
         <p class="subtitle" *ngIf="!isFloating">{{ 'Consulta y obtén respuestas rápidas para mejorar tu desempeño' | translate }}</p>
       </div>
     </header>
 
-    <div class="messages-container" #chatHistoryContainer role="log" aria-live="polite" (scroll)="onChatScroll()">
+    <div class="messages-container chat-history" #chatHistoryContainer role="log" aria-live="polite" (scroll)="onChatScroll()">
       <div class="chat-messages-wrapper">
         <!-- Mensaje de bienvenida inicial -->
         <ng-container *ngIf="!chats?.message?.length">
           <div class="welcome-message">
-            <img src="assets/images/kai-avatar.png" alt="KAI" class="ai-avatar" onerror="this.src='assets/images/default-avatar.png'">
+            <!-- <img src="assets/images/kai-avatar.png" alt="KAI" class="ai-avatar" onerror="this.src='assets/images/default-avatar.png'"> -->
             <div class="welcome-text">
               <h3>{{ '¡Hola! Soy KAI, tu asistente personal.' | translate }}</h3>
               <p>{{ '¿En qué puedo ayudarte hoy? Puedes preguntarme sobre cualquier tema relacionado con tu trabajo.' | translate }}</p>
@@ -25,7 +25,7 @@
         <!-- Mensajes del chat -->
         <ng-container *ngFor="let chat of chats?.message">
           <div class="message-row" [ngClass]="{'user-message': chat.sender === profile.id, 'assistant-message': chat.sender !== profile.id}">
-            <img *ngIf="chat.sender !== profile.id" [src]="chatUser?.profile" alt="KAI" class="ai-avatar" onerror="this.src='assets/images/default-avatar.png'">
+            <!-- <img *ngIf="chat.sender !== profile.id" [src]="chatUser?.profile" alt="KAI" class="ai-avatar" onerror="this.src='assets/images/default-avatar.png'"> -->
             <div class="message-content">
               <!-- Mensaje del usuario -->
               <ng-container *ngIf="chat.sender === profile.id">
@@ -39,6 +39,10 @@
                   </ng-container>
                 </div>
               </ng-container>
+              <!-- Imagen en la respuesta, si existe -->
+              <div *ngIf="chat.image" class="image-content">
+                <img [src]="chat.image" alt="Imagen de respuesta" class="response-image" onerror="this.src='assets/images/default-avatar.png'">
+              </div>
               <time class="message-timestamp">{{ chat.time }}</time>
             </div>
           </div>
@@ -47,13 +51,12 @@
         <!-- Indicador de escritura -->
         <div *ngIf="chatUser?.typing" class="message-row assistant-message typing-indicator">
           <div class="avatar-container">
-            <div class="avatar">
-              <img [src]="chatUser?.profile" alt="KAI" class="ai-avatar" onerror="this.src='assets/images/default-avatar.png'">
-            </div>
+            <!-- <img [src]="chatUser?.profile" alt="KAI" class="ai-avatar" onerror="this.src='assets/images/default-avatar.png'"> -->
           </div>
           <div class="typing-animation">
             <span></span><span></span><span></span>
           </div>
+          <div class="typing-text">{{ 'Procesando...' | translate }}</div>
         </div>
       </div>
     </div>

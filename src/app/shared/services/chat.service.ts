@@ -70,7 +70,7 @@ export class ChatService {
   public sendMessage(chat) {
     this.chat.filter(chats => {
       if (chats.id == chat.receiver) {
-        chats.message.push({ sender: chat.sender, time: today.toLowerCase(), text: chat.message })
+        chats.message.push({ sender: chat.sender, time: today.toLowerCase(), text: chat.message });
         setTimeout(function () {
           const chatHistory = document.querySelector(".chat-history");
           if (chatHistory) {
@@ -85,9 +85,11 @@ export class ChatService {
             this.chat.filter(chats => {
               if (chats.id == chat.receiver) {
                 setTimeout(() => {
-                  chats.message.push({ sender: chat.receiver, time: today.toLowerCase(), text: response.result })
+                  chats.message.push({ sender: chat.receiver, time: today.toLowerCase(), text: response.result });
+                  const user = this.users.find(u => u.id === chat.receiver);
+                  if (user) { user.typing = false; }
                 }, 1000);
-                setTimeout(function () {
+                setTimeout(() => {
                   document.querySelector(".chat-history")?.scrollBy({ top: 250, behavior: 'smooth' });
                 }, 1310)
               }
