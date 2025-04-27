@@ -54,7 +54,7 @@
           <div>
             <h6 class="lan-1">
               <app-feather-icons [icon]="getSectionIcon(section.title)" class="section-icon"></app-feather-icons>
-              {{ section.title | translate }}
+              <span class="sidebar-link sidebar-title collap" >{{ section.title | translate }}</span>
               <i class="fa chevron" [ngClass]="section.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
             </h6>
             <!-- <p class="lan-2">{{menuItem.headTitle2 | translate}}</p> -->
@@ -114,11 +114,12 @@
                 [ngClass]="{'menu-open': menuItem.active, 'menu-close': !menuItem.active }"
                 *ngIf="menuItem.children"
                 [style.max-height]="menuItem.active ? '1000px' : '0'"
-                style="overflow: hidden; transition: max-height 0.3s ease-in-out;">
+                style="overflow: hidden; transition: max-height 0.3s ease-in-out;"
+                (click)="$event.stopPropagation()">
               <li *ngFor="let childrenItem of menuItem.children" [ngClass]="{active: childrenItem.active}">
                 <!-- Sub -->
                 <a class="submenu-title" href="javascript:void(0)" *ngIf="childrenItem.type === 'sub'"
-                  (click)="toggletNavActive(childrenItem)">
+                  (click)="toggletNavActive(childrenItem); $event.stopPropagation()">
                   <span> {{childrenItem.title | translate}}</span>
                   <div class="according-menu">
                     <i class="fa fa-angle-{{childrenItem.active ? 'down' : 'right'}} pull-right"
@@ -146,7 +147,7 @@
                 <!-- External Tab Link -->
                 <a class="submenu-title" href="{{ !childrenItem.type ? null : childrenItem.path }}" target="_blank"
                    *ngIf="childrenItem.type === 'extTabLink'">
-                   <span>{{childrenItem.title | translate}}</span>
+                   <span>{{childrenItem.title | translate}} eee</span>
                    <div class="according-menu">
                      <i class="fa fa-angle-{{childrenItem.active ? 'down' : 'right'}} pull-right"
                         *ngIf="childrenItem.children"></i>
@@ -157,7 +158,8 @@
                 <ul class="nav-sub-childmenu submenu-content" *ngIf="childrenItem.children"
                     [ngClass]="{'menu-open': childrenItem.active, 'menu-close': !childrenItem.active }"
                     [style.max-height]="childrenItem.active ? '1000px' : '0'"
-                    style="overflow: hidden; transition: max-height 0.3s ease-in-out;">
+                    style="overflow: hidden; transition: max-height 0.3s ease-in-out;"
+                    (click)="$event.stopPropagation()">
                    <li *ngFor="let childrenSubItem of childrenItem.children" [ngClass]="{active: childrenSubItem.active}">
                     <!-- Link -->
                     <a [routerLink]="!childrenSubItem.type ? null : [childrenSubItem.path]"

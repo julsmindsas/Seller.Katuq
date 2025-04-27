@@ -1,12 +1,12 @@
 // --- Tema Moderno Minimalista ---
 // Variables
-$primary-color: #459BD1;     // Color primario del tema
-$secondary-color: #4555D1;   // Color secundario del tema
-$sidebar-bg: #ffffff;        // Fondo blanco puro
-$section-bg: #f8f9fa;       // Fondo para títulos de sección
-$text-color: #2c3e50;       // Texto principal más oscuro
-$text-color-muted: #6c757d;  // Texto secundario
-$border-color: #e9ecef;      // Borde/separador
+$primary-color: #459BD1; // Color primario del tema
+$secondary-color: #4555D1; // Color secundario del tema
+$sidebar-bg: #ffffff; // Fondo blanco puro
+$section-bg: #f8f9fa; // Fondo para títulos de sección
+$text-color: #2c3e50; // Texto principal más oscuro
+$text-color-muted: #6c757d; // Texto secundario
+$border-color: #e9ecef; // Borde/separador
 $hover-bg: rgba(69, 155, 209, 0.08); // Fondo hover más sutil
 $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
 
@@ -14,9 +14,11 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
 .sidebar-main {
   background-color: $sidebar-bg;
   border-right: 1px solid $border-color;
-  box-shadow: 0 0 20px rgba(0,0,0,0.03);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.03);
 
-  a, a:hover, a:focus {
+  a,
+  a:hover,
+  a:focus {
     text-decoration: none;
   }
 }
@@ -30,7 +32,8 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
   padding-bottom: 50px;
 
   // Estilos Links (Todos los niveles)
-  .sidebar-link, .submenu-title {
+  .sidebar-link,
+  .submenu-title {
     display: flex;
     align-items: center;
     padding: 8px 16px;
@@ -43,7 +46,8 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
     border-radius: 4px;
     margin: 2px 4px;
 
-    app-feather-icons, i.fa {
+    app-feather-icons,
+    i.fa {
       margin-right: 12px;
       font-size: 16px;
       color: $text-color-muted;
@@ -58,6 +62,7 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
 
     .according-menu {
       margin-left: auto;
+
       i.fa {
         font-size: 12px;
         margin-right: 0;
@@ -71,38 +76,50 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
       background-color: $hover-bg;
       color: $primary-color;
       box-shadow: 0 2px 8px rgba(26, 8, 225, 0.1);
-      span { color: $primary-color; }
-      app-feather-icons, i.fa { color: $primary-color; }
-      .according-menu i.fa { color: $primary-color; }
+
+      span {
+        color: $primary-color;
+      }
+
+      app-feather-icons,
+      i.fa {
+        color: $primary-color;
+      }
+
+      .according-menu i.fa {
+        color: $primary-color;
+      }
     }
   }
 
   // Estilo Activo: Fondo y borde lateral
-  .sidebar-list.active > a,
-  .sidebar-submenu li.active > a,
-  .nav-sub-childmenu li.active > a {
-     background-color: $active-bg;
-     color: $primary-color;
-     font-weight: 600;
-     box-shadow: 0 2px 8px rgba(115, 102, 255, 0.15);
+  .sidebar-list.active>a,
+  .sidebar-submenu li.active>a,
+  .nav-sub-childmenu li.active>a {
+    background-color: $active-bg;
+    color: $primary-color;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(115, 102, 255, 0.15);
 
-     &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background-color: $primary-color;
-        border-radius: 4px 0 0 4px;
-     }
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: $primary-color;
+      border-radius: 4px 0 0 4px;
+    }
 
-     app-feather-icons, i.fa {
-        color: $primary-color;
-      }
-     .according-menu i.fa {
-       color: $primary-color;
-     }
+    app-feather-icons,
+    i.fa {
+      color: $primary-color;
+    }
+
+    .according-menu i.fa {
+      color: $primary-color;
+    }
   }
 }
 
@@ -141,8 +158,8 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
     letter-spacing: 0.8px;
     margin: 0;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: left !important;
+    align-items: left !important;
     transition: all 0.3s ease;
     position: relative;
     padding: 8px 12px;
@@ -173,7 +190,7 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
   // Efecto cuando está expandido
   &.expanded {
     background: linear-gradient(135deg, rgba(69, 155, 209, 0.1) 0%, rgba(69, 155, 209, 0.05) 100%);
-    
+
     h6 {
       color: darken($primary-color, 10%);
     }
@@ -185,17 +202,37 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
 }
 
 // Submenús
-.sidebar-submenu, .nav-sub-childmenu {
+.sidebar-submenu,
+.nav-sub-childmenu {
   list-style: none;
   padding-left: 0;
   margin: 2px 4px;
   background-color: transparent;
   overflow: hidden;
-  transition: max-height 0.3s ease-in-out;
+  // EXPANDIR AL PASAR EL MOUSE SOBRE EL PADRE
+  pointer-events: auto;
+
+  // Por defecto cerrados
   max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: max-height 0.3s, opacity 0.2s, visibility 0.2s;
 
   &.menu-open {
-     max-height: 1000px;
+    max-height: 1000px;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  // Mostrar submenú al hacer hover sobre el padre
+  li:hover>&,
+  .sidebar-list:hover>&,
+  .sidebar-link:hover+&,
+  .submenu-title:hover+& {
+    max-height: 1000px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: max-height 0.3s, opacity 0.2s, visibility 0.2s;
   }
 
   li a {
@@ -206,91 +243,113 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
     border-radius: 4px;
     margin: 1px 0;
 
-    &::before { display: none; }
+    &::before {
+      display: none;
+    }
   }
 
-   .nav-sub-childmenu li a {
-      padding-left: 48px;
-      font-size: 13px;
-   }
+  .nav-sub-childmenu li a {
+    padding-left: 48px;
+    font-size: 13px;
+  }
 
-   li.active > a {
-      background-color: $active-bg;
-      color: $primary-color;
-      font-weight: 600;
+  li.active>a {
+    background-color: $active-bg;
+    color: $primary-color;
+    font-weight: 600;
 
-      &::before {
-         content: '';
-         position: absolute;
-         left: 0;
-         top: 0;
-         bottom: 0;
-         width: 4px;
-         background-color: $primary-color;
-         border-radius: 4px 0 0 4px;
-      }
-   }
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: $primary-color;
+      border-radius: 4px 0 0 4px;
+    }
+  }
 }
 
 // Scrollbar (estilo moderno)
 .custom-scrollbar {
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { 
-    background: $border-color; 
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
     border-radius: 4px;
-    &:hover { background: darken($border-color, 10%); }
+
+    &:hover {
+      background: darken($border-color, 10%);
+    }
   }
 }
 
 // --- Logo y Tarjeta Plan ---
-.sizeLogoKatuq { max-width: 100%; }
-.sizeLogoKatuqSideBar { max-width: 4%; }
-.custom-sidebar-katuq { /* sin cambios */ }
+.sizeLogoKatuq {
+  max-width: 100%;
+}
+
+.sizeLogoKatuqSideBar {
+  max-width: 4%;
+}
+
+.custom-sidebar-katuq {
+  /* sin cambios */
+}
 
 .plan-card-container {
-  position: sticky; 
-  bottom: 0; 
+  position: sticky;
+  bottom: 0;
   padding: 12px 15px;
   background: $sidebar-bg;
   border-top: 1px solid $border-color;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
 }
 
-.plan-card-collapsed{ display: none !important; background: transparent !important; }
+.plan-card-collapsed {
+  display: none !important;
+  background: transparent !important;
+}
 
 .plan-card {
   background: #f0f7ff;
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 8px;
   border: 1px solid #d0e3ff;
 }
 
-@media (max-width: 900px) { 
-  .plan-card-container { 
-    display: none !important; 
-    background: transparent !important; 
-  } 
+@media (max-width: 900px) {
+  .plan-card-container {
+    display: none !important;
+    background: transparent !important;
+  }
 }
 
-.plan-card-container.collapsed { 
-  display: none !important; 
-  background: transparent !important; 
+.plan-card-container.collapsed {
+  display: none !important;
+  background: transparent !important;
 }
 
-.card-header { 
-  display: flex; 
-  justify-content: space-between; 
-  margin-bottom: 12px; 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
-.plan-tag { 
+.plan-tag {
   color: $primary-color;
-  display: flex; 
-  align-items: center; 
-  gap: 6px; 
-  font-size: 13px; 
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
   font-weight: 600;
   background: rgba(69, 155, 209, 0.1);
   padding: 2px 4px;
@@ -298,13 +357,13 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
   margin-bottom: 4px;
 }
 
-.wallet-tag { 
+.wallet-tag {
   color: $primary-color;
-  display: flex; 
-  align-items: center; 
-  gap: 6px; 
-  font-size: 13px; 
-  font-weight: 600; 
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
   background: rgba(69, 155, 209, 0.1);
   padding: 2px 4px;
   border-radius: 4px;
@@ -330,107 +389,107 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
   margin-bottom: 2px;
 }
 
-.detail-item span { 
-  color: $text-color; 
-  font-size: 13px; 
+.detail-item span {
+  color: $text-color;
+  font-size: 13px;
   font-weight: 500;
 }
 
-.usage-bar { 
-  background: $border-color; 
-  height: 6px; 
-  border-radius: 3px; 
+.usage-bar {
+  background: $border-color;
+  height: 6px;
+  border-radius: 3px;
   margin-top: 4px;
   overflow: hidden;
 }
 
-.usage-progress { 
+.usage-progress {
   background: $primary-color;
-  height: 100%; 
+  height: 100%;
   border-radius: 3px;
   transition: width 0.3s ease;
 }
 
-.action-btn { 
+.action-btn {
   background: rgba(69, 155, 209, 0.1);
   color: $primary-color;
-  width: 100%; 
-  border: none; 
-  border-radius: 4px; 
-  padding: 4px; 
-  font-size: 13px; 
-  font-weight: 600; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  gap: 8px; 
-  cursor: pointer; 
+  width: 100%;
+  border: none;
+  border-radius: 4px;
+  padding: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
   transition: all 0.2s ease;
   margin-top: 4px;
 
-  &:hover { 
+  &:hover {
     background: rgba(69, 155, 209, 0.15);
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(69, 155, 209, 0.2);
   }
 }
 
-.action-btn i { 
+.action-btn i {
   font-size: 12px;
 }
 
-.usage-display { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
+.usage-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
 }
 
-.usage-percentage { 
-  color: $text-color; 
-  font-size: 13px; 
-  font-weight: 600; 
-  min-width: 35px; 
+.usage-percentage {
+  color: $text-color;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 35px;
   text-align: right;
 }
 
-.plan-card-collapsed { 
-  &:hover { 
-    .compact-tooltip { 
-      opacity: 1; 
-      visibility: visible; 
-      transform: translateX(0); 
-    } 
-  } 
+.plan-card-collapsed {
+  &:hover {
+    .compact-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+    }
+  }
 }
 
-.compact-tooltip { 
-  background: $primary-color; 
-  position: absolute; 
-  left: 100%; 
-  top: 50%; 
-  transform: translateY(-50%) translateX(-10px); 
-  color: white; 
-  padding: 8px 12px; 
-  border-radius: 4px; 
-  font-size: 12px; 
-  white-space: nowrap; 
-  opacity: 0; 
-  visibility: hidden; 
-  transition: all 0.2s ease; 
-  pointer-events: none; 
+.compact-tooltip {
+  background: $primary-color;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(-10px);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
   z-index: 100;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
-  &:before { 
-    border-color: transparent $primary-color transparent transparent; 
-    content: ''; 
-    position: absolute; 
-    right: 100%; 
-    top: 50%; 
-    transform: translateY(-50%); 
-    border-width: 6px; 
-    border-style: solid; 
+  &:before {
+    border-color: transparent $primary-color transparent transparent;
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 6px;
+    border-style: solid;
   }
 }
 
@@ -440,7 +499,7 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
   padding: 16px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 
   &::before {
     content: '';
@@ -478,7 +537,7 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+      background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
       border-radius: 14px;
     }
 
@@ -488,7 +547,7 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
       align-items: center;
 
       .plan-tag.inside-card {
-        background: rgba(255,255,255,0.15);
+        background: rgba(255, 255, 255, 0.15);
         padding: 2px 6px;
         border-radius: 4px;
         font-size: 10px;
@@ -499,12 +558,14 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
 
     .card-balance {
       margin: 14px 0 8px;
+
       .currency {
         font-size: 16px;
         font-weight: 400;
-        color: rgba(255,255,255,0.85);
+        color: rgba(255, 255, 255, 0.85);
         margin-right: 4px;
       }
+
       .amount {
         font-size: 26px;
         font-weight: 700;
@@ -516,14 +577,18 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
     .card-info {
       display: flex;
       justify-content: space-between;
-      .expires, .usage {
+
+      .expires,
+      .usage {
         display: flex;
         flex-direction: column;
+
         small {
           font-size: 9px;
-          color: rgba(255,255,255,0.7);
+          color: rgba(255, 255, 255, 0.7);
           margin-bottom: 2px;
         }
+
         span {
           font-size: 11px;
           font-weight: 600;
@@ -534,23 +599,25 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
     .usage-bar.white-version {
       margin: 10px 0 12px;
       height: 6px;
-      background: rgba(255,255,255,0.3);
+      background: rgba(255, 255, 255, 0.3);
       border-radius: 3px;
+
       .usage-progress {
         background: linear-gradient(90deg, #ffd700 0%, #ffa500 100%);
       }
     }
 
     .action-btn.inside-card {
-      background: rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.15);
       color: white;
       font-size: 11px;
       padding: 4px;
       border-radius: 4px;
       width: fit-content;
       margin: 0 auto;
+
       &:hover {
-        background: rgba(255,255,255,0.25);
+        background: rgba(255, 255, 255, 0.25);
         transform: translateY(-1px);
       }
     }
@@ -570,13 +637,11 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
         left: 0;
         right: 0;
         bottom: 0;
-        background: repeating-linear-gradient(
-          45deg,
-          rgba(0,0,0,0.1) 0px,
-          rgba(0,0,0,0.1) 2px,
-          transparent 2px,
-          transparent 4px
-        );
+        background: repeating-linear-gradient(45deg,
+            rgba(0, 0, 0, 0.1) 0px,
+            rgba(0, 0, 0, 0.1) 2px,
+            transparent 2px,
+            transparent 4px);
       }
     }
 
@@ -585,7 +650,7 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
       font-size: 16px;
       font-weight: 600;
       letter-spacing: 2px;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .card-footer {
@@ -594,7 +659,7 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
       align-items: center;
       color: white;
       font-size: 12px;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 
       .card-holder {
         text-transform: uppercase;
@@ -754,6 +819,3 @@ $active-bg: rgba(69, 155, 209, 0.12); // Fondo activo
     }
   }
 }
-
-
-
