@@ -54,7 +54,7 @@
           <div>
             <h6 class="lan-1">
               <app-feather-icons [icon]="getSectionIcon(section.title)" class="section-icon"></app-feather-icons>
-              {{ section.title | translate }}
+              <span class="sidebar-link sidebar-title collap" >{{ section.title | translate }} xxx</span>
               <i class="fa chevron" [ngClass]="section.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
             </h6>
             <!-- <p class="lan-2">{{menuItem.headTitle2 | translate}}</p> -->
@@ -146,7 +146,7 @@
                 <!-- External Tab Link -->
                 <a class="submenu-title" href="{{ !childrenItem.type ? null : childrenItem.path }}" target="_blank"
                    *ngIf="childrenItem.type === 'extTabLink'">
-                   <span>{{childrenItem.title | translate}}</span>
+                   <span>{{childrenItem.title | translate}} eee</span>
                    <div class="according-menu">
                      <i class="fa fa-angle-{{childrenItem.active ? 'down' : 'right'}} pull-right"
                         *ngIf="childrenItem.children"></i>
