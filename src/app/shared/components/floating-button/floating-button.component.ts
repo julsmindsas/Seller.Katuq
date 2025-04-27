@@ -369,12 +369,17 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   minimizeChat(event?: MouseEvent) {
     if (event) event.stopPropagation();
     this.chatMinimized = true;
-    // No cerramos el chat, solo lo minimizamos
+    // Cerrar completamente el cuadro al minimizar
+    this.chatFormVisible = false;
+    this.optionsPanelVisible = false;
+    this.chatMaximized = false;
     this.saveState();
   }
 
   maximizeChat(event: MouseEvent) {
     if (event) event.stopPropagation();
+    // Restaurar y mostrar el chat al maximizar
+    this.chatFormVisible = true;
     this.chatMinimized = false;
     this.hasUnreadMessages = false;
     this.saveState();
