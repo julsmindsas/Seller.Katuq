@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { ChatUsers } from '../../../shared/models/chat/chat.model';
 import { ChatService } from '../../../shared/services/chat.service';
 import { NgForm } from '@angular/forms';
@@ -8,7 +8,7 @@ import { NgForm } from '@angular/forms';
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
-export class ChatComponent implements OnInit, AfterViewChecked {
+export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, OnDestroy {
   @ViewChild('chatHistoryContainer') private chatHistoryContainer: ElementRef;
   @Input() isFloating: boolean = false; // Indica si está en modo flotante
   private shouldScrollToBottom = true;
@@ -31,6 +31,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   public emojies: any;
   public mobileToggle: boolean = false
 
+  // Modo oscuro automático
+  public isDarkMode: boolean = false;
+
   constructor(
     private chatService: ChatService,
     private cdRef: ChangeDetectorRef
@@ -42,6 +45,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   ngOnInit() {  
+    // Detectar modo oscuro del sistema
+    this.isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      this.isDarkMode = e.matches;
+    });
     // Ajustar comportamiento si está en modo flotante
     if (this.isFloating) {
       // Posibles ajustes específicos para el modo flotante
@@ -61,18 +69,39 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     }
   }
   
-  private scrollToBottom(): void {
+  private scrollToBottom(retry = 0): void {
     try {
-      if (this.chatHistoryContainer && this.chatHistoryContainer.nativeElement) {
-        const element = this.chatHistoryContainer.nativeElement;
-        
-        // Uso de scrollTo con behavior: smooth para una animación de desplazamiento suave
-        element.scrollTo({
-          top: element.scrollHeight,
-          behavior: 'smooth'
-        });
-      }
-    } catch(err) { 
+      // Esperar a que Angular termine el ciclo de detección de cambios
+      setTimeout(() => {
+        if (this.chatHistoryContainer && this.chatHistoryContainer.nativeElement) {
+          const element = this.chatHistoryContainer.nativeElement;
+          
+          // Intentar scroll suave
+          element.scrollTo({
+            top: element.scrollHeight,
+            behavior: 'smooth'
+          });
+          
+          // Verificar si el scroll llegó al final o está cerca
+          const isAtBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 10;
+          
+          // Si no está al final, aplicar un fallback inmediato con scrollTop directo
+          if (!isAtBottom) {
+            element.scrollTop = element.scrollHeight;
+          }
+          
+          // Intentar nuevamente si después de un tiempo no está en el fondo
+          // (máximo 3 intentos con delay incremental)
+          if (retry < 3) {
+            setTimeout(() => {
+              if (element.scrollHeight - element.scrollTop - element.clientHeight > 10) {
+                this.scrollToBottom(retry + 1);
+              }
+            }, 150 * (retry + 1));
+          }
+        }
+      }, 10);
+    } catch(err) {
       console.error('Error scrolling to bottom:', err);
     }
   }
@@ -106,32 +135,46 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  // User Chat
+  // User Chat - mejorado para gestionar mensajes y scroll
   public userChat(id:number =1){    
     this.chatService.chatToUser(id).subscribe(chatUser => {
       this.chatUser = chatUser;
       this.shouldScrollToBottom = true;
+      this.cdRef.detectChanges();
     });
     
     this.chatService.getChatHistory(id).subscribe(chats => {
+      // Activar scroll solo si es la carga inicial o si estamos ya al final del chat
+      const element = this.chatHistoryContainer?.nativeElement;
+      const wasAtBottom = !element || (element.scrollHeight - element.scrollTop - element.clientHeight < 100);
+      
       this.chats = chats;
-      this.shouldScrollToBottom = true;
-      // Forzar detección de cambios y luego scroll
+      this.shouldScrollToBottom = wasAtBottom; // Scroll solo si estaba en el fondo
+      
+      // Forzar detección de cambios para actualizar la vista
       this.cdRef.detectChanges();
-      setTimeout(() => this.scrollToBottom(), 100);
+      
+      // Asegurar que el scroll ocurre DESPUÉS de la actualización de la vista
+      if (wasAtBottom) {
+        setTimeout(() => this.scrollToBottom(), 50);
+      }
     });
   }
   
-  // Send Message to User - mejoramos la animación y respuesta
+  // Send Message to User - mejora con gestión de estados de scroll
   public sendMessage(form: NgForm) {
     if(!form.value.message?.trim()){
-      this.error = true
-      return false
+      this.error = true;
+      return false;
     }
     
     this.error = false;
     const message = form.value.message;
     this.chatText = '';
+    
+    // Guardar referencia previa al scroll
+    const element = this.chatHistoryContainer?.nativeElement;
+    const wasAtBottom = !element || (element.scrollHeight - element.scrollTop - element.clientHeight < 100);
     
     let chat = {
       sender: this.profile.id,
@@ -139,9 +182,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       receiver_name: this.chatUser.name,
       message: message,
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    }
+    };
     
-    // Activamos el scroll antes de que llegue la respuesta
+    // Siempre hacemos scroll al enviar un mensaje
     this.shouldScrollToBottom = true;
     
     // Enviamos el mensaje
@@ -151,22 +194,15 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.chatUser.seen = 'online';
     this.chatUser.online = true;
     
-    // Simulamos "typing" durante un tiempo
+    // Simulamos "typing" y aseguramos que se apliquen cambios
     setTimeout(() => {
       if (this.chatUser) {
         this.chatUser.typing = true;
         this.cdRef.detectChanges();
+        // Scroll para mostrar el indicador de escritura
+        this.scrollToBottom();
       }
-      
-      // Aseguramos que el scroll siga al typing indicator
-      this.shouldScrollToBottom = true;
-    }, 300);
-    
-    // Forzamos scroll después de enviar mensaje
-    setTimeout(() => {
-      this.cdRef.detectChanges();
-      this.scrollToBottom();
-    }, 100);
+    }, 200);
   }
 
   /**
@@ -212,5 +248,29 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     // Consideramos un threshold más pequeño para una mejor experiencia
     const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
     this.shouldScrollToBottom = atBottom;
+  }
+
+  // Alternar modo claro/oscuro manualmente
+  public toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
+  }
+
+  // Inicialización - Asegurar que el contenedor esté listo
+  ngAfterViewInit() {
+    // Habilitar MutationObserver para detectar cambios en el DOM del chat
+    if (this.chatHistoryContainer && this.chatHistoryContainer.nativeElement) {
+      const config = { childList: true, subtree: true };
+      const observer = new MutationObserver((mutations) => {
+        if (this.shouldScrollToBottom) {
+          this.scrollToBottom();
+        }
+      });
+      observer.observe(this.chatHistoryContainer.nativeElement, config);
+    }
+  }
+  
+  // Manejar cuando el componente se destruye
+  ngOnDestroy() {
+    // Limpiar cualquier suscripción o temporizador pendiente
   }
 }
