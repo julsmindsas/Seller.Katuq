@@ -3,17 +3,40 @@ import { ChatUsers } from '../../../shared/models/chat/chat.model';
 import { ChatService } from '../../../shared/services/chat.service';
 import { NgForm } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { trigger, style, animate, transition, state, query, stagger } from '@angular/animations';
 
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.scss']
+  styleUrls: ['./chat.component.scss'],
+  animations: [
+    // Animación para la apertura/cierre del chat
+    trigger('fadeAnimation', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(10px)' }))
+      ])
+    ]),
+    // Animación para los mensajes individuales
+    trigger('messageAnimation', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ])
+  ]
 })
 export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, OnDestroy {
+  // Variables de la clase
   @ViewChild('chatHistoryContainer') private chatHistoryContainer: ElementRef;
-  @Input() isFloating: boolean = false; // Indica si está en modo flotante
-  private shouldScrollToBottom = true;
-  
+  @Input() isFloating: boolean = false;
+  private shouldScrollToBottom: boolean = true;
+  private userHasScrolled: boolean = false;
+  private scrollThreshold: number = 100; // Para determinar cercanía al final del chat
+
   public openTab : string = "call";
   public users : ChatUsers[] = []
   public searchUsers : ChatUsers[] = []
@@ -71,40 +94,34 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
     }
   }
   
-  private scrollToBottom(retry = 0): void {
+  private scrollToBottom(retry: number = 0): void {
     try {
-      // Esperar a que Angular termine el ciclo de detección de cambios
+      // Si el usuario ha scrolleado manualmente y no está cerca del fondo, respetamos su posición
+      if (this.userHasScrolled) {
+        return;
+      }
+
       setTimeout(() => {
         if (this.chatHistoryContainer && this.chatHistoryContainer.nativeElement) {
           const element = this.chatHistoryContainer.nativeElement;
           
-          // Intentar scroll suave
+          // Scroll suave solo si estamos cerca del fondo
           element.scrollTo({
             top: element.scrollHeight,
             behavior: 'smooth'
           });
           
-          // Verificar si el scroll llegó al final o está cerca
+          // Verificamos si efectivamente llegó al fondo
           const isAtBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 10;
           
-          // Si no está al final, aplicar un fallback inmediato con scrollTop directo
-          if (!isAtBottom) {
+          // Si no llegó al fondo por alguna razón, forzamos el scroll (sin animación)
+          if (!isAtBottom && retry < 1) {
             element.scrollTop = element.scrollHeight;
-          }
-          
-          // Intentar nuevamente si después de un tiempo no está en el fondo
-          // (máximo 3 intentos con delay incremental)
-          if (retry < 3) {
-            setTimeout(() => {
-              if (element.scrollHeight - element.scrollTop - element.clientHeight > 10) {
-                this.scrollToBottom(retry + 1);
-              }
-            }, 150 * (retry + 1));
           }
         }
       }, 10);
     } catch(err) {
-      console.error('Error scrolling to bottom:', err);
+      console.error('Error en scrollToBottom:', err);
     }
   }
 
@@ -174,20 +191,20 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
     const message = form.value.message;
     this.chatText = '';
     
-    // Guardar referencia previa al scroll
-    const element = this.chatHistoryContainer?.nativeElement;
-    const wasAtBottom = !element || (element.scrollHeight - element.scrollTop - element.clientHeight < 100);
+    // Al enviar un mensaje, siempre debemos hacer scroll al fondo
+    // Temporalmente ignoramos si el usuario ha scrolleado
+    const tempUserScrolled = this.userHasScrolled;
+    this.userHasScrolled = false;
+    this.shouldScrollToBottom = true;
     
     let chat = {
       sender: this.profile.id,
       receiver: this.chatUser.id,
       receiver_name: this.chatUser.name,
       message: message,
+      text: message, // Para compatibilidad con la interfaz actual
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     };
-    
-    // Siempre hacemos scroll al enviar un mensaje
-    this.shouldScrollToBottom = true;
     
     // Enviamos el mensaje
     this.chatService.sendMessage(chat);
@@ -203,6 +220,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
         this.cdRef.detectChanges();
         // Scroll para mostrar el indicador de escritura
         this.scrollToBottom();
+        
+        // Restauramos el estado de scroll del usuario después de un tiempo
+        setTimeout(() => {
+          this.userHasScrolled = tempUserScrolled;
+        }, 500);
       }
     }, 200);
   }
@@ -258,7 +280,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   onChatScroll(): void {
     const element = this.chatHistoryContainer.nativeElement;
     // Consideramos un threshold más pequeño para una mejor experiencia
-    const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+    const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < this.scrollThreshold;
+    
+    // Determinamos si el usuario ha hecho scroll manualmente hacia arriba
+    this.userHasScrolled = !atBottom;
+    
+    // Solo configuramos auto-scroll si está cerca del fondo
     this.shouldScrollToBottom = atBottom;
   }
 
@@ -273,7 +300,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
     if (this.chatHistoryContainer && this.chatHistoryContainer.nativeElement) {
       const config = { childList: true, subtree: true };
       const observer = new MutationObserver((mutations) => {
-        if (this.shouldScrollToBottom) {
+        // Solo hacemos auto-scroll si el usuario no ha scrolleado manualmente o si estamos cerca del fondo
+        if (this.shouldScrollToBottom && !this.userHasScrolled) {
           this.scrollToBottom();
         }
       });
