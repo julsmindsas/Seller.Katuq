@@ -143,7 +143,6 @@ export class NavService implements OnDestroy {
 		const isSuperAdmin = user.rol === 'Super Administrador';
 		const isJulsmindAdmin = user.rol === 'Administrador' && user.company === 'Julsmind';
 
-debugger;
 
 		// Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
 		const filteredMenu = this.ALLMENUITEMS.map(item => {

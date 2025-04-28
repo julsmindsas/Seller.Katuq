@@ -1,78 +1,78 @@
 <!-- <app-breadcrumb [title]="'Asistencia'" [items]="['IA']" [active_item]="'Asistencia'"></app-breadcrumb> -->
 <!-- Botón flotante para abrir/cerrar chat -->
-<button class="floating-button" *ngIf="!isFloating" (click)="toggleFloating()" aria-label="Abrir chat">
-  <i class="fa fa-comments"></i>
-</button>
 
-<div class="modern-chat-container" [ngClass]="{'floating-mode': isFloating, 'dark-mode': isDarkMode}">
+<div class="modern-chat-container" [ngClass]="{'floating-mode': isFloating, 'dark-mode': isDarkMode}" style="max-height: 400px; height: 400px;">
   <div class="chat-card">
     <!-- Cabecera del chat -->
     <header class="chat-header">
       <div class="chat-header-content">
-        <img src="assets/images/kai/kai.gif" alt="KAI" class="chat-logo" onerror="this.src='assets/images/default-avatar.png'">
+        <img src="assets/images/kai/kai.gif" alt="KAI" class="chat-logo"
+          onerror="this.src='assets/images/default-avatar.png'">
         <div class="header-info">
-          <h4>KAI <span class="status-dot" [ngClass]="{'online': chatUser?.online, 'typing': chatUser?.typing}"></span></h4>
+          <h4>KAI <span class="status-dot" [ngClass]="{'online': chatUser?.online, 'typing': chatUser?.typing}"></span>
+          </h4>
           <p class="subtitle">{{ chatUser?.typing ? 'Escribiendo...' : 'En línea' }}</p>
         </div>
-        
+
         <!-- Modo claro/oscuro -->
         <button class="mode-toggle-btn" (click)="toggleDarkMode()" aria-label="Alternar modo claro/oscuro">
           <i class="fa" [ngClass]="isDarkMode ? 'fa-sun-o' : 'fa-moon-o'"></i>
         </button>
-        
-        <!-- Botón cerrar en modo flotante -->
-        <button *ngIf="isFloating" class="close-chat-btn" (click)="toggleFloating()" aria-label="Cerrar chat">
-          <i class="fa fa-times"></i>
-        </button>
+
       </div>
     </header>
 
     <!-- Área de mensajes -->
-    <div class="messages-container chat-history" #chatHistoryContainer role="log" aria-live="polite" (scroll)="onChatScroll()">
+    <div class="messages-container chat-history" #chatHistoryContainer role="log" aria-live="polite"
+      (scroll)="onChatScroll()">
       <div class="chat-messages-wrapper">
         <!-- Mensaje de bienvenida -->
         <ng-container *ngIf="!chats?.message?.length">
           <div class="welcome-message">
             <div class="welcome-text">
               <h3>{{ '¡Hola! Soy KAI, tu asistente personal.' | translate }}</h3>
-              <p>{{ '¿En qué puedo ayudarte hoy? Puedes preguntarme sobre cualquier tema relacionado con tu trabajo.' | translate }}</p>
+              <p>{{ '¿En qué puedo ayudarte hoy? Puedes preguntarme sobre cualquier tema relacionado con tu trabajo.' |
+                translate }}</p>
             </div>
           </div>
         </ng-container>
 
         <!-- Mensajes del chat -->
         <ng-container *ngFor="let chat of chats?.message; let i = index">
-          <div class="message-row" [ngClass]="{'user-message': chat.sender === profile.id, 'assistant-message': chat.sender !== profile.id, 'animate-message': i === chats.message.length - 1}">
+          <div class="message-row"
+            [ngClass]="{'user-message': chat.sender === profile.id, 'assistant-message': chat.sender !== profile.id, 'animate-message': i === chats.message.length - 1}">
             <!-- Avatar para asistente -->
             <div *ngIf="chat.sender !== profile.id" class="avatar-container">
               <div class="avatar">
                 <img src="assets/images/kai/kai.gif" alt="KAI" onerror="this.src='assets/images/default-avatar.png'">
               </div>
             </div>
-            
+
             <div class="message-content">
               <!-- Mensaje del usuario -->
               <ng-container *ngIf="chat.sender === profile.id">
                 <p>{{ chat.text }}</p>
               </ng-container>
-              
+
               <!-- Mensaje del asistente con animación de palabras -->
               <ng-container *ngIf="chat.sender !== profile.id">
                 <!-- Usar la animación de palabras solo si no es HTML -->
                 <div *ngIf="!isHtml(chat.text)" class="blinking-words">
                   <ng-container *ngFor="let word of chat.text.split(' '); let idx = index">
-                    <span class="blink-word" [style.animationDelay]="(idx * 0.05) + 's'">{{ word }}</span><span>&nbsp;</span>
+                    <span class="blink-word" [style.animationDelay]="(idx * 0.05) + 's'">{{ word
+                      }}</span><span>&nbsp;</span>
                   </ng-container>
                 </div>
                 <!-- Si es HTML, usar innerHTML para mostrarlo correctamente -->
                 <div *ngIf="isHtml(chat.text)" class="html-content" [innerHTML]="sanitizeHtml(chat.text)"></div>
               </ng-container>
-              
+
               <!-- Imagen en respuesta -->
               <div *ngIf="chat.image" class="image-content">
-                <img [src]="chat.image" alt="Imagen de respuesta" class="response-image" onerror="this.src='assets/images/default-avatar.png'">
+                <img [src]="chat.image" alt="Imagen de respuesta" class="response-image"
+                  onerror="this.src='assets/images/default-avatar.png'">
               </div>
-              
+
               <time class="message-timestamp">{{ chat.time }}</time>
             </div>
           </div>
@@ -105,28 +105,22 @@
     <footer class="chat-input-area">
       <form #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)" class="input-form">
         <div class="input-container">
-          <textarea
-            class="message-input"
-            [class.error]="error"
-            placeholder="{{ 'Escribe un mensaje...' | translate }}"
-            [(ngModel)]="chatText"
-            name="message"
-            rows="1"
-            (input)="autoResize($event)"
-            (keydown.enter)="handleEnter($event, chatForm)"
-            aria-label="Mensaje"></textarea>
-            
+          <textarea class="message-input" [class.error]="error" placeholder="{{ 'Escribe un mensaje...' | translate }}"
+            [(ngModel)]="chatText" name="message" rows="1" (input)="autoResize($event)"
+            (keydown.enter)="handleEnter($event, chatForm)" aria-label="Mensaje"></textarea>
+
           <div class="chat-actions">
-            <button type="button" class="action-btn emoji-button" (click)="toggleEmojiPicker()" aria-label="Emoji picker">
+            <button type="button" class="action-btn emoji-button" (click)="toggleEmojiPicker()"
+              aria-label="Emoji picker">
               <i class="fa fa-smile-o"></i>
             </button>
           </div>
         </div>
-        
+
         <button type="submit" [disabled]="!chatText?.trim()" class="action-btn send-button" aria-label="Enviar mensaje">
           <i class="fa fa-paper-plane"></i>
         </button>
-        
+
         <div class="emoji-picker-container" *ngIf="showEmojiPicker">
           <emoji-mart (emojiClick)="addEmoji($event)" set="apple" useButton="true"></emoji-mart>
         </div>
