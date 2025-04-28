@@ -3,28 +3,25 @@ import { ChatUsers } from '../../../shared/models/chat/chat.model';
 import { ChatService } from '../../../shared/services/chat.service';
 import { NgForm } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { trigger, style, animate, transition, state, query, stagger } from '@angular/animations';
+import { trigger, style, animate, transition, state } from '@angular/animations';
 
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss'],
   animations: [
-    // Animación para la apertura/cierre del chat
-    trigger('fadeAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(10px)' }))
-      ])
-    ]),
-    // Animación para los mensajes individuales
+    // Animación mejorada para los mensajes individuales con definiciones más detalladas
     trigger('messageAnimation', [
+      state('void', style({
+        opacity: 0,
+        transform: 'translateY(10px)'
+      })),
+      state('*', style({
+        opacity: 1,
+        transform: 'translateY(0)'
+      })),
       transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+        animate('200ms ease-out')
       ])
     ])
   ]

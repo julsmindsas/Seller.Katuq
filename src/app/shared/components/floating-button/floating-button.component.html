@@ -235,18 +235,19 @@
     <div class="chat-header">
       <span class="chat-title">K.A.I. - Asistente Virtual</span>
       <div class="chat-controls">
-        <!-- Opción de maximizar eliminada -->
+        <button class="chat-control-btn" (click)="toggleChatSize($event)" title="Cambiar tamaño">
+          <i class="fa" [ngClass]="chatMaximized ? 'fa-compress' : 'fa-expand'"></i>
+        </button>
         <button class="close-chat-btn" (click)="closeChat($event)" title="Cerrar">
           <i class="fa fa-times"></i>
         </button>
       </div>
     </div>
 
-    <!-- Componente de chat -->
-    <div *ngIf="authService.isLoggedIn" style="height: 100%; display: flex; flex-direction: column;">
+    <!-- Contenedor del chat con estructura flexbox -->
+    <div *ngIf="authService.isLoggedIn" class="floating-chat-container">
       <app-chat [isFloating]="true" class="floating-chat" (newMessage)="onNewMessage($event)"
-        (saveConversation)="saveConversation($event)"
-        style="flex: 1 1 auto; min-height: 0; height: 100%;">
+        (saveConversation)="saveConversation($event)">
       </app-chat>
     </div>
   </div>

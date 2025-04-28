@@ -1,4 +1,4 @@
-<div class="chat-container" [ngClass]="{'floating-mode': isFloating, 'dark-mode': isDarkMode}" [@fadeAnimation]>
+<div class="chat-container" [ngClass]="{'floating-mode': isFloating, 'dark-mode': isDarkMode}">
   <!-- Header del chat -->
   <div class="chat-header">
     <div class="header-content">
@@ -65,8 +65,8 @@
       </div>
     </ng-container>
 
-    <!-- Indicador de escritura -->
-    <div class="message-row assistant-message typing-indicator" *ngIf="chatUser?.typing" [@fadeAnimation]>
+    <!-- Indicador de escritura - Removimos la animación fadeAnimation aquí -->
+    <div class="message-row assistant-message typing-indicator" *ngIf="chatUser?.typing">
       <div class="avatar-container small">
         <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
       </div>
@@ -112,8 +112,8 @@
       </button>
     </form>
 
-    <!-- Emoji picker -->
-    <div class="emoji-picker-container" *ngIf="showEmojiPicker" [@fadeAnimation]>
+    <!-- Emoji picker - Removimos la animación fadeAnimation aquí -->
+    <div class="emoji-picker-container" *ngIf="showEmojiPicker">
       <emoji-mart (emojiClick)="addEmoji($event)" set="apple" useButton="true"></emoji-mart>
     </div>
   </div>
