@@ -25,21 +25,28 @@ a {
 
 // Contenedor principal del botón flotante
 .floating-button-container {
-   
-    
+    position: fixed; // Asegura que el contenedor esté fijo en la pantalla
+    bottom: 20px;    // Posición desde abajo
+    right: 20px;     // Posición desde la derecha
+    z-index: 1000;   // Asegura que esté sobre la mayoría del contenido
+    width: 60px;     // Ancho inicial (tamaño del botón)
+    height: 60px;    // Alto inicial (tamaño del botón)
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); // Transición suave para cambios de tamaño/posición
+
     // Estado abierto (cuando el chat está visible)
     &.open {
         width: 350px;
         height: 500px;
-        bottom: 0; /* Pegado al borde inferior de la pantalla */
+        bottom: 100px; /* Aumentado de 0 a 80px para subir el chat */
         
         .floating-button {
-            transform: rotate(45deg);
-            background-color: $secondary-color;
-            box-shadow: $shadow-standard;
+            // Se elimina la rotación y estilos duplicados que ya maneja la clase .active
+            // box-shadow: $shadow-standard; // Quitado, .active puede manejarlo
             position: absolute; /* Posicionamiento absoluto cuando el chat está abierto */
-            bottom: 25px; /* Mantiene la misma distancia desde el borde inferior */
-            right: 25px; /* Mantiene la misma distancia desde el borde derecho */
+            bottom: -66px; /* Mover el botón 30px por debajo del borde inferior del contenedor */
+            right: 0px; /* Mantiene la misma distancia desde el borde derecho */
+            // transform: rotate(45deg); // Quitado, la clase .active ya rota el icono interno
+            // background-color: $secondary-color; // Quitado, la clase .active ya cambia el color
         }
     }
     
@@ -386,10 +393,10 @@ a {
 // Chat overlay
 .floating-chat-overlay {
     position: absolute;
-    bottom: 0; /* Cambio: pegado al borde inferior */
+    bottom: 0; /* Pegado al borde inferior del contenedor */
     right: 0;
-    width: 30%;
-    height: 100%;
+    width: 100%; // Cambiado de 30% a 100% para ocupar el contenedor padre
+    height: 100%; // Ocupa toda la altura del contenedor padre
     background-color: $light-color;
     border-radius: 12px 12px 0 0; /* Redondeamos solo las esquinas superiores */
     overflow: hidden;
@@ -935,148 +942,5 @@ a {
     
     .options-wrapper {
         max-width: 280px;
-    }
-}
-
-
-
-.floating-button {
-    position:fixed;
-    bottom: 80px;
-    right: 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    z-index: 0;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  }
-
-  .floating-button:hover {
-    background-color: #0056b3;
-  }
-
-.floating-button-container {
-    position: fixed;
-    bottom: 60px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    z-index: 1000;
-    /* Eliminamos fondo opaco y suave */
-    // background: rgba(255, 255, 255, 0.8);
-    padding: 8px;
-    // border-radius: 12px;
-    // box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.floating-button {
-    /* Mejoramos la apariencia del botón haciéndolo más redondo */
-    background-image: url('assets/images/kai/kai.gif');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    color: white;
-    border: none;
-    border-radius: 50%; /* Ya es redondo con 50% */
-    width: 60px;
-    height: 60px;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Sombra mejorada */
-    position: relative;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border: 2px solid rgba(255, 255, 255, 0.8); /* Borde blanco para resaltar */
-    overflow: hidden; /* Evitar fugas de contenido */
-}
-
-.floating-button:hover {
-    transform: scale(1.1) translateY(-5px); /* Elevación más pronunciada */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); /* Sombra más intensa al pasar el mouse */
-}
-
-.floating-button-container:hover .floating-button:hover .tooltip-text {
-    visibility: visible;
-    opacity: 1;
-}
-
-.tooltip-text-floating {
-    visibility: hidden;
-    opacity: 0;
-    background-color: white;
-    color: black;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px;
-    position: absolute;
-    bottom: 50px;
-    width: 120px;
-    right: 40px;
-    transition: opacity 0.3s;
-    z-index: 1;
-}
-
-.floating-chat-overlay {
-    position: fixed !important;
-    bottom: 0 !important; /* Cambiamos de 80px a 0 para que comience desde el borde inferior */
-    right: 20px !important;
-    width: 320px;
-    max-width: 90vw;
-    height: 450px;
-    max-height: calc(100vh - 80px); /* Ajustamos altura máxima */
-    background-color: white;
-    z-index: 1000;
-    padding: 0; /* Quitamos el padding para mejor uso del espacio */
-    border-radius: 12px 12px 0 0; /* Redondeamos solo las esquinas superiores */
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25); /* Sombra ajustada para elevación desde abajo */
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Animación suave */
-    transform-origin: bottom center; /* Origen de transformación en la parte inferior */
-    animation: slideUpChat 0.3s forwards; /* Animación de entrada */
-}
-
-@keyframes slideUpChat {
-    from {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@media (max-width: 576px) {
-    .floating-button-container {
-        bottom: 10px;
-        right: 10px;
-
-        &.open {
-            width: 300px;
-            height: calc(100vh - 80px);
-        }
-    }
-
-    .floating-button {
-        width: 50px;
-        height: 50px;
-    }
-
-    .tooltip-text-floating {
-        width: 100px;
-        right: 60px;
-        bottom: 40px;
-    }
-
-    .floating-chat-overlay {
-        top: 60px;
-        right: 10px;
-        width: calc(100% - 20px);
-        height: calc(100% - 70px);
     }
 }

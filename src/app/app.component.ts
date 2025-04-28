@@ -69,7 +69,7 @@ export class AppComponent implements OnInit {
           this.toastrService.info("Tienes notificaciones pendientes", 'Notification', {
             timeOut: 5000,
             progressBar: true,
-            positionClass: 'toast-bottom-right'
+            positionClass: 'toast-top-right'
           });
         }
       }
@@ -93,7 +93,7 @@ export class AppComponent implements OnInit {
       this.toastrService.warning('¡Nueva versión disponible!', 'Actualización', {
         timeOut: 5000,
         progressBar: true,
-        positionClass: 'toast-bottom-right'
+        positionClass: 'toast-top-right'
       });
 
     });
