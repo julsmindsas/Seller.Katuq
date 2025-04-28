@@ -58,11 +58,14 @@
               
               <!-- Mensaje del asistente con animación de palabras -->
               <ng-container *ngIf="chat.sender !== profile.id">
-                <div class="blinking-words">
+                <!-- Usar la animación de palabras solo si no es HTML -->
+                <div *ngIf="!isHtml(chat.text)" class="blinking-words">
                   <ng-container *ngFor="let word of chat.text.split(' '); let idx = index">
                     <span class="blink-word" [style.animationDelay]="(idx * 0.05) + 's'">{{ word }}</span><span>&nbsp;</span>
                   </ng-container>
                 </div>
+                <!-- Si es HTML, usar innerHTML para mostrarlo correctamente -->
+                <div *ngIf="isHtml(chat.text)" class="html-content" [innerHTML]="sanitizeHtml(chat.text)"></div>
               </ng-container>
               
               <!-- Imagen en respuesta -->
@@ -76,18 +79,23 @@
         </ng-container>
 
         <!-- Indicador de escritura -->
-        <div *ngIf="chatUser?.typing" class="message-row assistant-message typing-indicator">
+        <div *ngIf="chatUser?.typing" class="message-row assistant-message">
           <div class="avatar-container">
             <div class="avatar">
               <img src="assets/images/kai/kai.gif" alt="KAI" onerror="this.src='assets/images/default-avatar.png'">
             </div>
           </div>
-          <div class="typing-animation">
-            <span></span><span></span><span></span>
-          </div>
-          <div class="typing-text">
-            <i class="fa fa-circle-notch spinner-icon"></i>
-            <span>{{ 'Procesando...' | translate }}</span>
+          <div class="message-content thinking-message">
+            <div class="thinking-container">
+              <div class="thinking-dots">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="thinking-text">
+                <span>{{ 'Pensando...' | translate }}</span>
+                <i class="fa fa-cog fa-spin"></i>
+              </div>
+            </div>
+            <time class="message-timestamp">{{ getCurrentTime() }}</time>
           </div>
         </div>
       </div>
