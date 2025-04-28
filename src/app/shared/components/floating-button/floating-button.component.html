@@ -12,6 +12,7 @@
             'has-unread': hasUnreadMessages,
             'listening': isListening
           }">
+    <!-- <i class="fa fa-comments main-icon"></i> -->
     <span class="notification-indicator" *ngIf="hasUnreadMessages"></span>
     <i *ngIf="isListening" class="listening-indicator"></i>
   </button>
@@ -242,9 +243,10 @@
     </div>
 
     <!-- Componente de chat -->
-    <div *ngIf="authService.isLoggedIn">
+    <div *ngIf="authService.isLoggedIn" style="height: 100%; display: flex; flex-direction: column;">
       <app-chat [isFloating]="true" class="floating-chat" (newMessage)="onNewMessage($event)"
-        (saveConversation)="saveConversation($event)">
+        (saveConversation)="saveConversation($event)"
+        style="flex: 1 1 auto; min-height: 0; height: 100%;">
       </app-chat>
     </div>
   </div>

@@ -25,26 +25,21 @@ a {
 
 // Contenedor principal del botón flotante
 .floating-button-container {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    transition: $transition-standard;
-    width: 60px;
-    height: 60px;
+   
     
     // Estado abierto (cuando el chat está visible)
     &.open {
         width: 350px;
         height: 500px;
+        bottom: 0; /* Pegado al borde inferior de la pantalla */
         
         .floating-button {
             transform: rotate(45deg);
             background-color: $secondary-color;
             box-shadow: $shadow-standard;
+            position: absolute; /* Posicionamiento absoluto cuando el chat está abierto */
+            bottom: 25px; /* Mantiene la misma distancia desde el borde inferior */
+            right: 25px; /* Mantiene la misma distancia desde el borde derecho */
         }
     }
     
@@ -77,32 +72,45 @@ a {
     background-color: $primary-color;
     color: $light-color;
     border: none;
-    box-shadow: $shadow-standard;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Sombra mejorada */
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: $transition-standard;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     position: relative;
     z-index: 1001;
     font-size: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.8); /* Borde blanco para mejor definición */
+    overflow: hidden; /* Asegura que el contenido no desborde */
     
-    &:before {
-        content: "\f075"; // Icono de chat de Font Awesome
-        font-family: "FontAwesome";
+    // Eliminamos el pseudo-elemento que causaba la superposición
+    // &:before {
+    //     content: "\f075"; // Icono de chat de Font Awesome
+    //     font-family: "FontAwesome";
+    // }
+    
+    // Estilo para el icono principal
+    .main-icon {
+        font-size: 24px;
+        transition: all 0.3s;
     }
     
     &:hover {
-        transform: translateY(-3px);
-        box-shadow: $shadow-hover;
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+        
+        .main-icon {
+            transform: scale(1.1);
+        }
     }
     
     // Estado activo
     &.active {
         background-color: $secondary-color;
         
-        &:before {
-            content: "\f00d"; // Icono de cerrar
+        .main-icon {
+            transform: rotate(45deg);
         }
     }
     
@@ -110,8 +118,13 @@ a {
     &.listening {
         background-color: $tertiary-color;
         
-        &:before {
+        .main-icon {
+            display: none; // Ocultamos el icono principal cuando está escuchando
+        }
+        
+        &:after {
             content: "\f130"; // Icono de micrófono
+            font-family: "FontAwesome";
         }
     }
     
@@ -373,17 +386,17 @@ a {
 // Chat overlay
 .floating-chat-overlay {
     position: absolute;
-    bottom: 0;
+    bottom: 0; /* Cambio: pegado al borde inferior */
     right: 0;
-    width: 100%;
+    width: 30%;
     height: 100%;
     background-color: $light-color;
-    border-radius: $radius-standard;
+    border-radius: 12px 12px 0 0; /* Redondeamos solo las esquinas superiores */
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    animation: fade-in 0.3s;
+    animation: slideUpOverlay 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     
     .chat-header {
         display: flex;
@@ -837,6 +850,15 @@ a {
     }
     to {
         opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUpOverlay {
+    from {
+        transform: translateY(100%);
+    }
+    to {
         transform: translateY(0);
     }
 }

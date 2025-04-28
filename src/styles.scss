@@ -206,26 +206,28 @@ body {
 }
 
 .floating-button {
-    /* Mantenemos el GIF para representar el botón de IA */
+    /* Mejoramos la apariencia del botón haciéndolo más redondo */
     background-image: url('assets/images/kai/kai.gif');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     color: white;
     border: none;
-    border-radius: 50%;
+    border-radius: 50%; /* Ya es redondo con 50% */
     width: 60px;
     height: 60px;
     font-size: 16px;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Sombra mejorada */
     position: relative;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 2px solid rgba(255, 255, 255, 0.8); /* Borde blanco para resaltar */
+    overflow: hidden; /* Evitar fugas de contenido */
 }
 
 .floating-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1) translateY(-5px); /* Elevación más pronunciada */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); /* Sombra más intensa al pasar el mouse */
 }
 
 .floating-button-container:hover .floating-button:hover .tooltip-text {
@@ -251,17 +253,31 @@ body {
 
 .floating-chat-overlay {
     position: fixed !important;
-    bottom: 80px !important;
+    bottom: 0 !important; /* Cambiamos de 80px a 0 para que comience desde el borde inferior */
     right: 20px !important;
     width: 320px;
     max-width: 90vw;
     height: 450px;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 80px); /* Ajustamos altura máxima */
     background-color: white;
     z-index: 1000;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 0; /* Quitamos el padding para mejor uso del espacio */
+    border-radius: 12px 12px 0 0; /* Redondeamos solo las esquinas superiores */
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25); /* Sombra ajustada para elevación desde abajo */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Animación suave */
+    transform-origin: bottom center; /* Origen de transformación en la parte inferior */
+    animation: slideUpChat 0.3s forwards; /* Animación de entrada */
+}
+
+@keyframes slideUpChat {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 @media (max-width: 576px) {

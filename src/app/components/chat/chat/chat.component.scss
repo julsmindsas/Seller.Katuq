@@ -754,7 +754,7 @@
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--chat-border);
   background-color: var(--chat-input-bg);
-  position: fixed; // Fijar al fondo de la pantalla
+  position: sticky; // Fijar al fondo de la pantalla
   bottom: 0;
   left: 0;
   right: 0;
@@ -764,6 +764,7 @@
   transition: all var(--transition-speed);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  flex-shrink: 0;
   
   .floating-mode & {
     padding: 0.75rem;
@@ -979,6 +980,10 @@
     height: 100vh !important;
     max-height: 100vh !important;
     width: 100vw;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
   }
   
   .modern-chat-container.floating-mode {
@@ -994,6 +999,12 @@
   
   .messages-container {
     padding: 0.75rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    position: relative;
   }
   
   .message-content {
@@ -1007,6 +1018,16 @@
   
   .chat-input-area {
     padding: 0.75rem;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    width: 100%;
+    background-color: var(--chat-input-bg);
+    border-top: 1px solid var(--chat-border);
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
   }
   
   .user-message .message-content,
