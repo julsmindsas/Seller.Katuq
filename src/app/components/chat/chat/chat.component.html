@@ -47,16 +47,9 @@
           <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
         </div>
         <div class="message-bubble">
-          <!-- Texto con animación de escritura -->
-          <div *ngIf="!isHtml(chat.text)" class="typing-animation">
-            <ng-container *ngFor="let word of chat.text.split(' '); let idx = index">
-              <span class="typing-word" [style.animation-delay]="(idx * 0.05) + 's'">{{ word }}</span><span>&nbsp;</span>
-            </ng-container>
-          </div>
+          <!-- Mostrar siempre el texto directamente -->
+          <p class="message-text">{{ chat.text }}</p>
           
-          <!-- Contenido HTML formateado -->
-          <div *ngIf="isHtml(chat.text)" class="formatted-content" [innerHTML]="sanitizeHtml(chat.text)"></div>
-
           <!-- Imagen si existe -->
           <img *ngIf="chat.image" [src]="chat.image" class="message-image" alt="Imagen de respuesta" onerror="this.src='assets/images/default-avatar.png'">
           

@@ -2,7 +2,6 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, ChangeDetec
 import { ChatUsers } from '../../../shared/models/chat/chat.model';
 import { ChatService } from '../../../shared/services/chat.service';
 import { NgForm } from '@angular/forms';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { trigger, style, animate, transition, state } from '@angular/animations';
 
 @Component({
@@ -57,8 +56,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
 
   constructor(
     private chatService: ChatService,
-    private cdRef: ChangeDetectorRef,
-    private sanitizer: DomSanitizer
+    private cdRef: ChangeDetectorRef
   ) {   
     this.chatService.getUsers().subscribe(users => { 
       this.searchUsers = users
@@ -309,22 +307,5 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   // Manejar cuando el componente se destruye
   ngOnDestroy() {
     // Limpiar cualquier suscripción o temporizador pendiente
-  }
-
-  /**
-   * Detecta si una cadena de texto contiene HTML
-   */
-  isHtml(text: string): boolean {
-    if (!text) return false;
-    // Expresiones regulares para detectar etiquetas HTML comunes
-    const htmlRegex = /<\/?[a-z][\s\S]*>/i;
-    return htmlRegex.test(text);
-  }
-
-  /**
-   * Sanea el HTML para renderizarlo de forma segura
-   */
-  sanitizeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 }
