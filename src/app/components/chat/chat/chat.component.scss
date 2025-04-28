@@ -44,26 +44,26 @@
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100%; // Asegura que el contenedor ocupe toda la altura disponible
   width: 100%;
   background-color: var(--bg-light);
   color: var(--text-light);
   border-radius: var(--radius-md);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow: hidden; // Evita desbordamientos
   position: relative;
 }
 
 /* Header del chat */
 .chat-header {
-  flex-shrink: 0; /* Impide que el header se encoja */
+  flex-shrink: 0; // Evita que el header se encoja
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-md);
   border-bottom: 1px solid var(--border-light);
   background-color: var(--bg-light);
-  position: sticky;
+  position: sticky; // Mantenemos sticky para el header si se desea
   top: 0;
   z-index: 10;
   
@@ -179,16 +179,18 @@
 
 /* Área de mensajes */
 .messages-area {
-  flex: 1 1 auto; /* Permite que el área de mensajes crezca y se encoja */
-  overflow-y: auto;
+  flex: 1 1 auto; // Permite que esta área crezca y ocupe el espacio restante
+  overflow-y: auto; // Habilita el scroll vertical solo para esta área
   overflow-x: hidden;
   padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch; /* Mejorar scroll en iOS */
-  height: calc(100% - 140px); /* Altura calculada restando el header y footer aproximados */
+  -webkit-overflow-scrolling: touch;
+  // Eliminamos la altura calculada fija, flexbox se encargará
+  // height: calc(100% - 140px); 
+  padding-bottom: var(--spacing-lg); // Espacio extra al final
   
   &::-webkit-scrollbar {
     width: 6px;
@@ -410,13 +412,13 @@
 
 /* Área de input */
 .input-area {
-  flex-shrink: 0; /* Impide que el área de input se encoja */
+  flex-shrink: 0; // Evita que el área de input se encoja
   padding: var(--spacing-md);
   border-top: 1px solid var(--border-light);
   background-color: var(--bg-light);
-  z-index: 10;
+  z-index: 10; // Asegura que esté sobre los mensajes si hay solapamiento
   width: 100%;
-  /* Eliminar position: sticky que estaba causando problemas */
+  // No necesita position: sticky o fixed aquí, flexbox lo maneja
 }
 
 .input-form {
@@ -547,16 +549,11 @@
 /* Media queries para responsividad */
 @media (max-width: 768px) {
   .chat-container {
-    height: 100vh;
+    height: 100vh; // Ocupa toda la pantalla en móvil
     border-radius: 0;
     
     &.floating-mode {
-      height: 100%;
+      height: 100%; // Asegura altura completa en modo flotante móvil
     }
-  }
-  
-  .messages-area {
-    /* Ajuste de altura en dispositivos móviles */
-    height: calc(100% - 130px); /* Valor ajustado para móvil */
   }
 }

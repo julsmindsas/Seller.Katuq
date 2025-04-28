@@ -1,6 +1,6 @@
 <div class="chat-container" [ngClass]="{'floating-mode': isFloating, 'dark-mode': isDarkMode}">
-  <!-- Header del chat -->
-  <div class="chat-header">
+  <!-- Encabezado del Chat -->
+  <header class="chat-header">
     <div class="header-content">
       <div class="avatar-container">
         <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
@@ -21,10 +21,10 @@
         <i class="fa fa-times"></i>
       </button>
     </div>
-  </div>
+  </header>
 
-  <!-- Área de mensajes con scroll independiente -->
-  <div class="messages-area" #chatHistoryContainer (scroll)="onChatScroll()">
+  <!-- Cuerpo de Mensajes (con scroll) -->
+  <section class="messages-area" #chatHistoryContainer (scroll)="onChatScroll()">
     <!-- Mensaje de bienvenida -->
     <div class="welcome-message" *ngIf="!chats?.message?.length">
       <h3>¡Hola! Soy KAI, tu asistente personal.</h3>
@@ -65,7 +65,7 @@
       </div>
     </ng-container>
 
-    <!-- Indicador de escritura - Removimos la animación fadeAnimation aquí -->
+    <!-- Indicador de escritura -->
     <div class="message-row assistant-message typing-indicator" *ngIf="chatUser?.typing">
       <div class="avatar-container small">
         <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
@@ -79,10 +79,10 @@
         <span class="typing-text">Pensando...</span>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Área de input fija en la parte inferior -->
-  <div class="input-area">
+  <!-- Pie de Página - Área de Entrada (fija) -->
+  <footer class="input-area">
     <form #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)" class="input-form">
       <div class="input-wrapper">
         <textarea 
@@ -112,9 +112,9 @@
       </button>
     </form>
 
-    <!-- Emoji picker - Removimos la animación fadeAnimation aquí -->
+    <!-- Emoji picker -->
     <div class="emoji-picker-container" *ngIf="showEmojiPicker">
       <emoji-mart (emojiClick)="addEmoji($event)" set="apple" useButton="true"></emoji-mart>
     </div>
-  </div>
+  </footer>
 </div>
