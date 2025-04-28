@@ -1,618 +1,814 @@
+// Variables de diseño
+$primary-color: #3f51b5;
+$secondary-color: #ff4081;
+$tertiary-color: #4caf50;
+$light-color: #ffffff;
+$dark-color: #333333;
+$shadow-standard: 0 3px 8px rgba(0, 0, 0, 0.2);
+$shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.25);
+$radius-standard: 12px;
+$transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+// Estilos generales
 a {
     cursor: pointer;
 }
 
+// Estilos para el chat moderno
 ::ng-deep .modern-chat.container {
     height: 600px;
-
+    
     .chat-card {
         height: 600px;
     }
 }
 
+// Contenedor principal del botón flotante
 .floating-button-container {
     position: fixed;
-    bottom: 20px; // Posición fija inferior
-    right: 20px; // Posición fija derecha
+    bottom: 25px;
+    right: 25px;
+    z-index: 1000;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    cursor: pointer; // Cursor normal por ahora
-    z-index: 1000;
-    transition: all 0.3s ease;
-    /* En estado cerrado, el contenedor ocupa solo el tamaño mínimo */
+    transition: $transition-standard;
     width: 60px;
     height: 60px;
+    
+    // Estado abierto (cuando el chat está visible)
     &.open {
-        width: 380px;
-        height: calc(100vh - 80px);
-        max-height: 600px; // Limitar altura máxima
-        padding: 10px;
-        background-color: rgba(255, 255, 255, 0.05); // Fondo casi transparente
-        border-radius: 15px;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(5px); // Efecto de desenfoque para un look moderno
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
-    }
-    &.minimized {
-        width: 220px;
-        height: 48px;
-        background-color: #ffffff;
-        border-radius: 24px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-        transition: all 0.3s ease;
-        overflow: hidden;
-    }
-    &.options-visible {
-        width: 320px;
-        height: auto;
-        background-color: transparent; /* Fondo transparente para mejor visualización */
-        border-radius: 15px;
-        box-shadow: none; /* Quitamos sombra del contenedor */
-        padding-bottom: 0; /* Sin padding inferior */
-    }
-    &.maximized {
-        width: 680px;
-        height: calc(100vh - 40px) !important; // Restar header y margen
+        width: 350px;
+        height: 500px;
         
-        .floating-chat-overlay {
-            padding: 0;
-            top: 40px !important;
-            bottom: 10px !important;
-            height: auto !important;
-            
-            app-chat, .floating-chat {
-                height: 100%;
-                display: block;
-            }
+        .floating-button {
+            transform: rotate(45deg);
+            background-color: $secondary-color;
+            box-shadow: $shadow-standard;
+        }
+    }
+    
+    // Estado minimizado
+    &.minimized {
+        width: 280px;
+        height: 60px;
+    }
+    
+    // Estado con panel de opciones visible
+    &.options-visible {
+        width: 340px;
+        height: auto;
+    }
+    
+    // Estado de modo de voz
+    &.voice-mode {
+        .floating-button {
+            background-color: $tertiary-color;
+            animation: pulse 2s infinite;
         }
     }
 }
 
+// Botón flotante principal
 .floating-button {
     width: 60px;
     height: 60px;
-    flex-shrink: 0; // Evita que se deforme cuando el contenedor se expanda
-    background-image: url('../../../../assets/images/kai/kai.gif');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    border: none;
     border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    position: relative;
-    transition: transform 0.2s, box-shadow 0.2s;
-    margin-bottom: 8px; // Espacio para el chat al abrirse
-    z-index: 2; // Asegura que esté por encima en modo abierto
-    &.has-unread::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 14px;
-        height: 14px;
-        background-color: #ff4757;
-        border-radius: 50%;
-        border: 2px solid white;
-    }
-    &.listening {
-        border: 3px solid #4caf50;
-        animation: pulse 1.5s infinite;
-    }
-}
-
-.floating-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-}
-
-.tooltip-text-floating {
-    visibility: hidden;
-    opacity: 0;
-    background-color: white;
-    color: black;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px;
-    position: absolute;
-    bottom: 50px;
-    width: 120px;
-    right: 40px;
-    transition: opacity 0.3s;
-    z-index: 1;
-}
-
-.floating-button-container:hover .floating-button:hover+.tooltip-text-floating {
-    visibility: visible;
-    opacity: 1;
-}
-
-/* Wrapper para mejor posicionamiento del panel */
-.options-wrapper {
-    position: relative;
-    width: 100%;
-    height: 0;
-    z-index: 100;
-}
-
-/* Panel de opciones - posicionándolo ENCIMA del botón */
-.options-panel {
-    position: absolute;
-    bottom: 70px; /* Posicionamos desde el fondo, encima del botón */
-    right: 0;
-    width: 100%;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    animation: slide-down 0.3s ease; /* Cambiamos a animación hacia abajo */
-}
-
-.options-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-    
-    span {
-        font-weight: 600;
-        font-size: 16px;
-        color: #343a40;
-    }
-    
-    .close-options-btn {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background-color: transparent;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        
-        &:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-            color: #f44336;
-        }
-    }
-}
-
-.options-list {
-    padding: 10px 0;
-    
-    .option-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 15px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        
-        &:hover {
-            background-color: #f5f5f5;
-        }
-        
-        &.selected {
-            background-color: #e8f0fe;
-            border-left: 3px solid #4285f4;
-        }
-        
-        .option-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            
-            i {
-                font-size: 18px;
-                color: #5f6368;
-            }
-        }
-        
-        .option-details {
-            flex: 1;
-            
-            .option-title {
-                font-weight: 500;
-                font-size: 14px;
-                color: #202124;
-                display: block;
-                margin-bottom: 2px;
-            }
-            
-            .option-description {
-                font-size: 12px;
-                color: #5f6368;
-                display: block;
-            }
-        }
-    }
-}
-
-/* Modo de voz - también posicionado encima del botón */
-.voice-mode-container {
-    position: absolute;
-    bottom: 70px; /* Posicionamos desde el fondo */
-    right: 0;
-    width: 100%;
-    height: auto; /* Auto height en lugar de calc */
-    min-height: 160px; /* Altura mínima */
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    animation: slide-down 0.3s ease;
-    padding: 15px;
-}
-
-.voice-mode-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    
-    .voice-title {
-        font-weight: 600;
-        font-size: 16px;
-        color: #343a40;
-    }
-    
-    .stop-voice-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-color: #f44336;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: white;
-        
-        &:hover {
-            background-color: #d32f2f;
-        }
-        
-        i {
-            font-size: 18px;
-        }
-    }
-}
-
-.voice-visualizer {
+    background-color: $primary-color;
+    color: $light-color;
+    border: none;
+    box-shadow: $shadow-standard;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 60px;
-    margin-bottom: 15px;
+    cursor: pointer;
+    transition: $transition-standard;
+    position: relative;
+    z-index: 1001;
+    font-size: 24px;
     
-    .voice-wave {
-        width: 3px;
-        height: 30px;
-        background-color: #4285f4;
-        margin: 0 3px;
-        border-radius: 3px;
-        animation: sound-wave 1.5s infinite ease-in-out;
+    &:before {
+        content: "\f075"; // Icono de chat de Font Awesome
+        font-family: "FontAwesome";
+    }
+    
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: $shadow-hover;
+    }
+    
+    // Estado activo
+    &.active {
+        background-color: $secondary-color;
         
-        &:nth-child(2) {
-            animation-delay: 0.2s;
+        &:before {
+            content: "\f00d"; // Icono de cerrar
         }
+    }
+    
+    // Estado escuchando
+    &.listening {
+        background-color: $tertiary-color;
         
-        &:nth-child(3) {
-            animation-delay: 0.4s;
+        &:before {
+            content: "\f130"; // Icono de micrófono
         }
+    }
+    
+    // Indicador de notificación
+    &.has-unread .notification-indicator {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 16px;
+        height: 16px;
+        background-color: $secondary-color;
+        border-radius: 50%;
+        border: 2px solid $light-color;
+        animation: pulse 2s infinite;
+    }
+    
+    // Indicador de escucha
+    .listening-indicator {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
         
-        &:nth-child(4) {
-            animation-delay: 0.6s;
-        }
-        
-        &:nth-child(5) {
-            animation-delay: 0.8s;
+        &:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            animation: wave 1.5s infinite;
         }
     }
 }
 
-.voice-instructions {
-    text-align: center;
+// Tooltip del botón flotante
+.tooltip-text-floating {
+    position: absolute;
+    right: 70px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: $light-color;
+    padding: 8px 12px;
+    border-radius: 4px;
     font-size: 14px;
-    color: #5f6368;
-    line-height: 1.5;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: $transition-standard;
+    
+    &:after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -5px;
+        transform: translateY(-50%);
+        border-left: 5px solid rgba(0, 0, 0, 0.8);
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+    }
 }
 
-/* Estilos para el chat minimizado */
+// Mostrar tooltip al hacer hover
+.floating-button-container:hover .tooltip-text-floating {
+    opacity: 1;
+    right: 75px;
+}
+
+// Panel de opciones renovado - NUEVO POSICIONAMIENTO Y DISEÑO
+.options-wrapper {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    width: 320px;
+    border-radius: $radius-standard;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    animation: slide-up 0.3s forwards;
+    z-index: 1000;
+    transition: $transition-standard;
+    transform-origin: bottom right;
+}
+
+.options-panel {
+    background-color: $light-color;
+    overflow: hidden;
+    
+    .options-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, $primary-color, darken($primary-color, 15%));
+        color: $light-color;
+        
+        .close-options-btn {
+            background: transparent;
+            border: none;
+            color: $light-color;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+            
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+        }
+    }
+    
+    // Lista de opciones con estilos mejorados
+    .options-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 10px;
+        
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            
+            &:hover {
+                background-color: rgba(0, 0, 0, 0.05);
+                transform: translateX(5px);
+            }
+            
+            &.selected {
+                background-color: rgba($primary-color, 0.1);
+                border-left: 3px solid $primary-color;
+            }
+            
+            .option-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background-color: rgba($primary-color, 0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 15px;
+                color: $primary-color;
+                font-size: 20px;
+                transition: all 0.3s;
+            }
+            
+            &:hover .option-icon {
+                transform: scale(1.1);
+                background-color: rgba($primary-color, 0.15);
+            }
+            
+            .option-details {
+                flex: 1;
+                
+                .option-title {
+                    display: block;
+                    font-weight: 600;
+                    font-size: 15px;
+                    margin-bottom: 2px;
+                    color: $dark-color;
+                }
+                
+                .option-description {
+                    display: block;
+                    font-size: 12px;
+                    color: rgba(0, 0, 0, 0.6);
+                    white-space: normal;
+                }
+            }
+        }
+        
+        .option-separator {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 5px 3px;
+            margin: 15px 0 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+    }
+}
+
+// Burbuja de chat minimizada
 .minimized-chat-bubble {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    background-color: $light-color;
+    border-radius: 30px;
+    padding: 0 15px;
+    box-shadow: $shadow-standard;
+    height: 50px;
     width: 100%;
-    height: 100%;
-    padding: 0 16px;
-    color: #333;
-    font-size: 14px;
-    font-weight: 500;
-    position: relative;
+    transition: $transition-standard;
+    
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: $shadow-hover;
+    }
     
     .minimize-text {
         flex: 1;
+        font-weight: 500;
         white-space: nowrap;
-        text-overflow: ellipsis;
         overflow: hidden;
-    }
-    
-    .maximize-chat-btn {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background-color: transparent;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        
-        &:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
+        text-overflow: ellipsis;
     }
     
     .notification-indicator {
         width: 8px;
         height: 8px;
-        background-color: #ff4757;
+        background-color: $secondary-color;
         border-radius: 50%;
-        margin-right: 8px;
+        margin-right: 10px;
+        animation: pulse 2s infinite;
+    }
+    
+    .maximize-chat-btn {
+        background-color: transparent;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        color: $primary-color;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        
+        &:hover {
+            background-color: rgba($primary-color, 0.1);
+            transform: scale(1.1);
+        }
     }
 }
 
+// Chat overlay
 .floating-chat-overlay {
-    position: fixed !important;
-    bottom: 80px !important;
-    right: 20px !important;
-    width: 320px;
-    max-width: 90vw;
-    height: 450px;
-    max-height: calc(100vh - 100px);
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background-color: $light-color;
+    border-radius: $radius-standard;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    z-index: 1000;
-
+    animation: fade-in 0.3s;
+    
     .chat-header {
-        flex-shrink: 0; /* Evitar que el header se encoja */
-        // ... (estilos existentes del header)
-    }
-
-    /* Contenedor para el componente app-chat */
-    > div {
-        flex: 1 1 auto; /* Permitir que crezca y se encoja */
         display: flex;
-        flex-direction: column;
-        overflow: hidden; /* Ocultar overflow aquí también */
-        position: relative; /* Para posicionar elementos internos si es necesario */
-
-        app-chat {
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, $primary-color, darken($primary-color, 15%));
+        color: $light-color;
+        
+        .chat-title {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .chat-controls {
             display: flex;
-            flex-direction: column;
-            height: 100%; /* Ocupar toda la altura del contenedor padre */
-            width: 100%; /* Ocupar todo el ancho */
-
-            /* Asegurar que el contenedor interno de app-chat también sea flexible */
-            .modern-chat-container {
+            gap: 5px;
+            
+            button {
+                background: transparent;
+                border: none;
+                color: $light-color;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
                 display: flex;
-                flex-direction: column;
-                flex: 1 1 auto; /* Ocupar espacio disponible */
-                height: 100%;
-                padding: 0; /* Quitar padding si interfiere */
-
-                .chat-card {
-                    display: flex;
-                    flex-direction: column;
-                    flex: 1 1 auto; /* Ocupar espacio disponible */
-                    height: 100%;
-                    border: none !important;
-                    box-shadow: none !important;
-                    overflow: hidden; /* Ocultar overflow aquí */
-
-                    .messages-container {
-                        flex: 1 1 auto; /* Permitir que crezca y se encoja */
-                        overflow-y: auto; /* Permitir scroll vertical */
-                        padding: 1rem; /* Añadir padding si es necesario */
-                        min-height: 0; /* Importante para flexbox */
-                    }
-
-                    .chat-input-area {
-                        flex-shrink: 0; /* Evitar que se encoja */
-                        position: relative; /* Cambiar a relative */
-                        bottom: auto; /* Quitar bottom fijo */
-                        border-top: 1px solid var(--chat-border);
-                        background-color: var(--chat-input-bg);
-                        padding: 1rem;
-                    }
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s;
+                
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.2);
                 }
             }
         }
     }
-
-    /* Ajustes para modo maximizado */
-    &.maximized {
-        width: 680px;
-        height: calc(100vh - 100px); /* Ajustar altura */
-        // ... otros estilos maximizados si los hay
+    
+    .floating-chat {
+        flex: 1;
+        overflow: hidden;
     }
 }
 
-.chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
+// Estilos para el modo de voz
+.voice-mode-container {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 320px;
+    background-color: $light-color;
+    border-radius: $radius-standard;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: slide-up 0.3s forwards;
     
-    .chat-title {
-        font-weight: 600;
-        font-size: 16px;
-        color: #343a40;
+    &.voice-call-mode {
+        height: auto;
+        max-height: 500px;
+    }
+}
+
+.voice-call-ui {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    
+    .call-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        background: linear-gradient(135deg, $tertiary-color, darken($tertiary-color, 15%));
+        color: $light-color;
+        
+        &.draggable {
+            cursor: move;
+        }
+        
+        .call-status {
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            
+            .call-timer {
+                font-size: 14px;
+            }
+            
+            .header-end-call-btn {
+                background-color: rgba(255, 255, 255, 0.2);
+                border: none;
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                color: $light-color;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transform: rotate(135deg);
+                transition: all 0.2s;
+                
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.3);
+                    transform: rotate(135deg) scale(1.1);
+                }
+            }
+        }
     }
     
-    .chat-controls {
+    .call-avatar-container {
+        padding: 20px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         
-        button {
-            width: 28px;
-            height: 28px;
+        .call-avatar {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            background-color: transparent;
+            background-color: #f0f0f0;
+            background-image: url('/assets/images/logo-kai.png');
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 12px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .call-name {
+            font-weight: 600;
+            font-size: 18px;
+            color: $dark-color;
+            margin-bottom: 5px;
+        }
+        
+        .call-status-text {
+            color: rgba(0, 0, 0, 0.6);
+            font-size: 14px;
+            text-align: center;
+            
+            .badge {
+                padding: 2px 6px;
+                font-size: 10px;
+                vertical-align: middle;
+            }
+        }
+    }
+    
+    .call-visual-content {
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s;
+        background-color: #f5f5f5;
+        
+        &.has-content {
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            
+            &::-webkit-scrollbar {
+                width: 5px;
+            }
+            
+            &::-webkit-scrollbar-thumb {
+                background-color: rgba(0, 0, 0, 0.2);
+                border-radius: 3px;
+            }
+        }
+        
+        .no-content-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            color: rgba(0, 0, 0, 0.4);
+            
+            i {
+                font-size: 24px;
+                margin-bottom: 10px;
+            }
+        }
+        
+        .content-steps {
+            .steps-indicator {
+                display: flex;
+                justify-content: center;
+                gap: 6px;
+                margin-bottom: 15px;
+                
+                .step-dot {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    background-color: rgba(0, 0, 0, 0.2);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    
+                    &.active {
+                        background-color: $primary-color;
+                        transform: scale(1.3);
+                    }
+                    
+                    &:hover {
+                        background-color: rgba($primary-color, 0.7);
+                    }
+                }
+            }
+            
+            .steps-carousel {
+                position: relative;
+                
+                .step-item {
+                    display: none;
+                    
+                    &.active {
+                        display: block;
+                        animation: fade-in 0.3s;
+                    }
+                    
+                    .step-title {
+                        font-size: 16px;
+                        margin-bottom: 10px;
+                        text-align: center;
+                        color: $dark-color;
+                    }
+                    
+                    .step-image {
+                        width: 100%;
+                        height: 180px;
+                        background-size: contain;
+                        background-position: center;
+                        background-repeat: no-repeat;
+                        border-radius: 8px;
+                        margin-bottom: 10px;
+                        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+                    }
+                    
+                    .step-caption {
+                        font-size: 14px;
+                        color: rgba(0, 0, 0, 0.7);
+                        text-align: center;
+                        padding: 0 5px;
+                    }
+                }
+            }
+            
+            .steps-controls {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 15px;
+                
+                .step-control {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    background-color: rgba($primary-color, 0.1);
+                    border: none;
+                    color: $primary-color;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    
+                    &:hover:not(:disabled) {
+                        background-color: rgba($primary-color, 0.2);
+                        transform: scale(1.1);
+                    }
+                    
+                    &:disabled {
+                        opacity: 0.4;
+                        cursor: not-allowed;
+                    }
+                }
+                
+                .step-counter {
+                    font-size: 14px;
+                    color: rgba(0, 0, 0, 0.6);
+                }
+            }
+        }
+    }
+    
+    .call-visualizer {
+        height: 50px;
+        background-color: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        
+        .call-wave {
+            height: 30px;
+            width: 3px;
+            background: $primary-color;
+            border-radius: 3px;
+            animation: sound-wave 0.8s infinite alternate;
+            
+            &:nth-child(2) {
+                animation-delay: 0.2s;
+                height: 20px;
+            }
+            
+            &:nth-child(3) {
+                animation-delay: 0.4s;
+                height: 25px;
+            }
+            
+            &:nth-child(4) {
+                animation-delay: 0.6s;
+                height: 15px;
+            }
+            
+            &:nth-child(5) {
+                animation-delay: 0.8s;
+                height: 30px;
+            }
+        }
+    }
+    
+    .call-controls {
+        display: flex;
+        justify-content: space-around;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        
+        &.fixed-controls {
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+        
+        .call-control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             border: none;
-            margin-left: 8px;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             
-            &:hover {
-                background-color: rgba(0, 0, 0, 0.05);
+            &:active {
+                transform: scale(0.95);
+            }
+            
+            &.mute-btn {
+                background-color: #607d8b;
+                
+                &.muted {
+                    background-color: #f44336;
+                }
+                
+                &:hover {
+                    transform: scale(1.1);
+                }
+            }
+            
+            &.end-call-btn {
+                background-color: #f44336;
+                transform: rotate(135deg);
+                
+                &:hover {
+                    transform: rotate(135deg) scale(1.1);
+                }
+            }
+            
+            &.speaker-btn {
+                background-color: #607d8b;
+                
+                &.active {
+                    background-color: #4caf50;
+                }
+                
+                &:hover {
+                    transform: scale(1.1);
+                }
             }
         }
-        
-        .minimize-chat-btn:hover {
-            color: #2196f3;
-        }
-        
-        .close-chat-btn:hover {
-            color: #f44336;
-        }
     }
-}
-
-.floating-chat {
-    display: flex;
-    flex-direction: column;
-    height: 100%; /* Ocupar toda la altura disponible */
-    overflow: hidden;
-
-    .modern-chat-container {
-        height: 100%;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 auto;
-
-        .chat-card {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            flex: 1 1 auto;
-            border: none !important;
-            box-shadow: none !important;
-            overflow: hidden; /* Ocultar overflow */
-        }
-
-        .messages-container {
-            flex: 1 1 auto; /* Permitir crecer y encoger */
-            overflow-y: auto; /* Scroll vertical */
-            min-height: 0; /* Necesario para flexbox */
-            padding: 1rem; /* Ajustar padding */
-        }
-
-        .chat-input-area {
-            flex-shrink: 0; /* No encoger */
-            position: relative; /* Posición relativa */
-            padding: 1rem; /* Ajustar padding */
-            border-top: 1px solid #e9ecef;
-            background-color: white;
-        }
-    }
-}
-
-::ng-deep .floating-chat {
-    display: flex;
-    flex-direction: column;
-    height: calc(100% - 52px); /* Restamos la altura del header */
-    overflow: hidden;
     
-    .modern-chat-container {
-        height: 100%;
-        padding: 0;
-        
-        .chat-card {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            border: none !important;
-            box-shadow: none !important;
-        }
-        
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-        }
-        
-        .chat-input-area {
-            position: relative; // Cambiar de sticky a relative para evitar problemas
-            flex-shrink: 0; // Evitar que el input se contraiga
-            padding: 12px;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 5;
-            background-color: white;
-            border-top: 1px solid #e9ecef;
-        }
+    .call-error {
+        padding: 10px 15px;
+        background-color: #ffebee;
+        color: #f44336;
+        font-size: 13px;
+        font-weight: 500;
     }
 }
 
-.notification-indicator {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 14px;
-    height: 14px;
-    background-color: #ff4757;
-    border-radius: 50%;
-    border: 2px solid white;
-}
-
-.listening-indicator {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 12px;
-    height: 12px;
-    background-color: #4caf50;
-    border-radius: 50%;
-    border: 2px solid white;
-    animation: pulse 1.5s infinite;
-}
-
+// Animaciones
 @keyframes pulse {
     0% {
-        transform: scale(0.8);
-        opacity: 0.7;
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba($secondary-color, 0.7);
     }
-    50% {
-        transform: scale(1.2);
-        opacity: 1;
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba($secondary-color, 0);
     }
     100% {
-        transform: scale(0.8);
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba($secondary-color, 0);
+    }
+}
+
+@keyframes wave {
+    0% {
         opacity: 0.7;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
     }
 }
 
@@ -620,11 +816,17 @@ a {
     0% {
         height: 5px;
     }
-    50% {
-        height: 40px;
-    }
     100% {
-        height: 5px;
+        height: 30px;
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 
@@ -639,872 +841,77 @@ a {
     }
 }
 
-/* Añadimos animación para deslizar desde arriba */
-@keyframes slide-down {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Estilos para WebRTC y elementos de audio */
-.webrtc-controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 10px;
-}
-
-.audio-error {
-    color: #f44336;
-    text-align: center;
-    font-size: 12px;
-    margin-top: 5px;
-}
-
-.audio-indicator {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background-color: #4caf50;
-    border-radius: 50%;
-    margin-right: 5px;
-    animation: pulse 1.5s infinite;
-}
-
-.audio-status {
-    font-size: 12px;
-    color: #555;
-}
-
-/* Estilos para la interfaz de llamada en modo voz */
-.voice-call-mode {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-height: none !important;
-    background-color: rgba(0, 0, 0, 0.85) !important;
-    backdrop-filter: blur(10px);
-    z-index: 9999 !important;
-    border-radius: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    animation: slide-up-fullscreen 0.3s ease !important;
-    padding: 20px !important;
-}
-
-/* Estilos mejorados para la interfaz de llamada en modo voz */
-.voice-call-mode {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-height: none !important;
-    max-width: 100vw !important;
-    background-color: rgba(0, 0, 0, 0.9) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 99999 !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-    padding: 20px !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    animation: slide-up-fullscreen 0.3s ease !important;
-    box-shadow: none !important;
-    transform: none !important;
-}
-
-.voice-call-ui {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-    color: white;
-    
-    .call-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 0;
-        
-        .call-status {
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        
-        .call-timer {
-            font-size: 14px;
-            font-weight: 500;
-        }
-    }
-    
-    .call-avatar-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin: 40px 0;
-        
-        .call-avatar {
-            width: 120px;
-            height: 120px;
-            background-image: url('../../../../assets/images/kai/kai.gif');
-            background-size: cover;
-            background-position: center;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            border: 3px solid #4caf50;
-            animation: avatar-pulse 2s infinite;
-        }
-        
-        .call-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .call-status-text {
-            font-size: 14px;
-            opacity: 0.8;
-            animation: blink 1.5s infinite;
-        }
-    }
-    
-    .call-visualizer {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 60px;
-        margin: 20px 0;
-        
-        .call-wave {
-            width: 4px;
-            height: 20px;
-            background-color: #4caf50;
-            margin: 0 4px;
-            border-radius: 2px;
-            animation: call-wave 1.5s infinite ease-in-out;
-            
-            &:nth-child(1) {
-                animation-delay: 0s;
-            }
-            
-            &:nth-child(2) {
-                animation-delay: 0.2s;
-                height: 35px;
-            }
-            
-            &:nth-child(3) {
-                animation-delay: 0.4s;
-                height: 50px;
-            }
-            
-            &:nth-child(4) {
-                animation-delay: 0.2s;
-                height: 35px;
-            }
-            
-            &:nth-child(5) {
-                animation-delay: 0s;
-                height: 20px;
-            }
-        }
-    }
-    
-    .call-controls {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        margin-top: auto;
-        padding: 20px 0 40px;
-        
-        .call-control-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
-            
-            &:active {
-                transform: scale(0.95);
-            }
-            
-            &.mute-btn {
-                background-color: #2196f3;
-                color: white;
-                
-                &.muted {
-                    background-color: #f44336;
-                }
-            }
-            
-            &.end-call-btn {
-                background-color: #f44336;
-                color: white;
-                transform: rotate(135deg);
-                font-size: 28px;
-                width: 70px;
-                height: 70px;
-            }
-            
-            &.speaker-btn {
-                background-color: #9e9e9e;
-                color: white;
-                
-                &.active {
-                    background-color: #4caf50;
-                }
-            }
-        }
-    }
-    
-    .call-error {
-        color: #ff6b6b;
-        text-align: center;
-        font-size: 14px;
-        margin: 10px 0;
-    }
-
-    /* Estilos para el área de contenido visual */
-    .call-visual-content {
-        width: 100%;
-        min-height: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: all 0.5s ease-in-out;
-        opacity: 0;
-        margin: 0;
-        
-        &.has-content {
-            min-height: 220px;
-            max-height: 340px;
-            opacity: 1;
-            margin: 10px 0;
-        }
-        
-        .content-steps {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+// Media queries para responsividad
+@media (max-width: 768px) {
+    .floating-button-container {
+        &.open {
             width: 100%;
             height: 100%;
-            padding: 15px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            
-            .steps-indicator {
-                display: flex;
-                justify-content: center;
-                margin-bottom: 10px;
-                
-                .step-dot {
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                    background-color: rgba(255, 255, 255, 0.3);
-                    margin: 0 4px;
-                    transition: all 0.3s ease;
-                    
-                    &.active {
-                        width: 20px;
-                        border-radius: 4px;
-                        background-color: #4caf50;
-                    }
-                }
-            }
-            
-            .steps-carousel {
-                flex: 1;
-                position: relative;
-                overflow: hidden;
-                
-                .step-item {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    flex-direction: column;
-                    opacity: 0;
-                    transform: translateX(100%);
-                    transition: all 0.5s ease;
-                    
-                    &.active {
-                        opacity: 1;
-                        transform: translateX(0);
-                        z-index: 2;
-                    }
-                    
-                    .step-image {
-                        flex: 1;
-                        background-size: contain;
-                        background-position: center;
-                        background-repeat: no-repeat;
-                        border-radius: 8px;
-                        margin-bottom: 10px;
-                        background-color: rgba(255, 255, 255, 0.05);
-                    }
-                    
-                    .step-caption {
-                        font-size: 14px;
-                        color: white;
-                        text-align: center;
-                        padding: 5px;
-                    }
-                }
-            }
-            
-            .steps-controls {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-top: 10px;
-                
-                .step-control {
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
-                    border: none;
-                    background-color: rgba(255, 255, 255, 0.2);
-                    color: white;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    
-                    &:disabled {
-                        opacity: 0.3;
-                        cursor: not-allowed;
-                    }
-                    
-                    &:not(:disabled):hover {
-                        background-color: rgba(255, 255, 255, 0.3);
-                    }
-                }
-                
-                .step-counter {
-                    font-size: 14px;
-                    color: rgba(255, 255, 255, 0.8);
-                }
-            }
-        }
-        
-        .no-content-message {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: rgba(255, 255, 255, 0.5);
-            
-            i {
-                font-size: 40px;
-                margin-bottom: 10px;
-                opacity: 0.5;
-            }
-            
-            span {
-                font-size: 14px;
-            }
-        }
-    }
-
-    /* Mejora para los pasos visuales en la llamada */
-    .call-visual-content {
-        // ...existing code...
-        
-        .content-steps {
-            // ...existing code...
-            
-            .steps-carousel {
-                // ...existing code...
-                
-                .step-item {
-                    // ...existing code...
-                    
-                    .step-title {
-                        color: #4caf50;
-                        font-size: 16px;
-                        margin: 0 0 8px 0;
-                        text-align: center;
-                        font-weight: 500;
-                    }
-                    
-                    .step-image {
-                        // ...existing code...
-                        min-height: 120px; // Asegura un tamaño mínimo
-                        background-color: #2c2c2c; // Fondo oscuro para imágenes
-                    }
-                    
-                    .step-caption {
-                        // ...existing code...
-                        padding: 10px;
-                        line-height: 1.3;
-                    }
-                }
-            }
-            
-            .steps-indicator {
-                // ...existing code...
-                
-                .step-dot {
-                    // ...existing code...
-                    cursor: pointer; // Hacer clicable para navegar directamente
-                    
-                    &:hover {
-                        background-color: rgba(255, 255, 255, 0.5);
-                    }
-                }
-            }
-        }
-    }
-
-    /* Mejora para la navegación entre pasos */
-    .steps-controls {
-        // ...existing code...
-        
-        .step-control {
-            // ...existing code...
-            
-            &.prev:hover:not(:disabled) {
-                background-color: rgba(33, 150, 243, 0.3); // Azul para anterior
-            }
-            
-            &.next:hover:not(:disabled) {
-                background-color: rgba(76, 175, 80, 0.3); // Verde para siguiente
-            }
-        }
-    }
-}
-
-/* Animaciones para la interfaz de llamada */
-@keyframes call-wave {
-    0%, 100% {
-        height: 20px;
-    }
-    50% {
-        height: 50px;
-    }
-}
-
-@keyframes blink {
-    0%, 100% {
-        opacity: 0.6;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-@keyframes avatar-pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-    }
-}
-
-@keyframes slide-up-fullscreen {
-    from {
-        opacity: 0;
-        transform: translateY(50px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Vista estándar para escritorio */
-.voice-mode-standard {
-    display: none; /* Ocultamos la vista antigua */
-}
-
-@media (max-width: 576px) {
-    .floating-button-container {
-        bottom: 20px;
-        right: 10px;
-        
-        &.open {
-            width: 90vw;
-            height: 80vh;
-            max-height: none;
-            bottom: 10vh !important;
-            right: 5vw !important;
-        }
-        
-        &.minimized {
-            width: 180px;
-            height: 40px;
+            bottom: 0;
+            right: 0;
+            border-radius: 0;
         }
         
         &.options-visible {
-            width: 280px;
+            width: calc(100% - 20px);
+            bottom: 10px;
+            right: 10px;
         }
     }
-
-    .floating-button {
-        width: 50px;
-        height: 50px;
-        font-size: 14px;
-    }
-
-    .tooltip-text-floating {
-        width: 100px;
-        right: 60px;
-        bottom: 40px;
-    }
-
-    .floating-chat-overlay,
-    .options-panel,
-    .voice-mode-container {
+    
+    .options-wrapper {
         width: 100%;
+        max-width: 320px;
+        bottom: 70px;
+        right: 0;
+        border-radius: $radius-standard;
     }
     
-    .options-list .option-item {
+    .voice-mode-container {
+        width: 100%;
+        height: 100%;
+        bottom: 0;
+        right: 0;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+    
+    .floating-chat-overlay {
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .floating-button-container {
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .call-controls {
+        padding: 10px;
+        
+        .call-control-btn {
+            width: 45px;
+            height: 45px;
+        }
+    }
+    
+    .options-panel .options-list .option-item {
         padding: 10px;
         
         .option-icon {
-            width: 32px;
-            height: 32px;
-            margin-right: 10px;
-            
-            i {
-                font-size: 16px;
-            }
-        }
-    }
-
-    // Override for mobile
-    .floating-chat-overlay {
-        position: fixed !important;
-        bottom: 60px !important;
-        right: 10px !important;
-        width: calc(100% - 20px);
-        height: calc(100% - 80px);
-        max-height: none;
-    }
-}
-
-/* Aseguramos que en móviles la interfaz de voz ocupe toda la pantalla */
-@media (max-width: 768px) {
-    .floating-button-container {
-        // ...existing code...
-        
-        &.voice-mode {
-            &.voice-call-mode {
-                width: 100vw !important;
-                height: 100vh !important;
-                max-height: 100vh !important;
-                bottom: 0 !important;
-                right: 0 !important;
-                left: 0 !important;
-                top: 0 !important;
-                padding: 20px !important;
-                margin: 0 !important;
-                border-radius: 0 !important;
-                animation: none !important;
-            }
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
         }
     }
     
-    /* Mejoramos controles para móviles */
-    .call-controls {
-        padding-bottom: 60px !important;
-        
-        .call-control-btn {
-            &.end-call-btn {
-                width: 80px !important;
-                height: 80px !important;
-            }
-        }
+    .floating-button {
+        width: 55px;
+        height: 55px;
     }
     
-    /* Asegurar que el avatar es visible */
-    .call-avatar-container {
-        margin: 30px 0 !important;
-        
-        .call-avatar {
-            width: 150px !important;
-            height: 150px !important;
-        }
+    .options-wrapper {
+        max-width: 280px;
     }
-
-    /* Ajustamos espacio para los nuevos elementos en móvil */
-    .call-avatar-container {
-        margin: 20px 0 !important;
-        
-        .call-avatar {
-            width: 100px !important;
-            height: 100px !important;
-        }
-    }
-    
-    .call-visualizer {
-        margin: 10px 0 !important;
-        height: 40px !important;
-    }
-    
-    .call-controls {
-        padding-bottom: 30px !important;
-    }
-    
-    /* Aseguramos que el área visual tenga buen tamaño en diferentes pantallas */
-    .voice-call-ui .call-visual-content.has-content {
-        min-height: 180px;
-        max-height: 240px;
-        
-        /* En dispositivos más pequeños */
-        @media (max-height: 700px) {
-            min-height: 140px;
-            max-height: 180px;
-        }
-        
-        /* En dispositivos muy pequeños */
-        @media (max-height: 600px) {
-            min-height: 100px;
-            max-height: 150px;
-        }
-    }
-}
-
-/* Estilos para la interfaz de llamada en modo voz - Ahora universales */
-.voice-call-mode {
-    position: fixed !important;
-    z-index: 99999 !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    animation: slide-up-fullscreen 0.3s ease !important;
-    display: flex !important;
-    flex-direction: column !important;
-    
-    /* Estilo para móvil (pantalla completa) */
-    @media (max-width: 768px) {
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        max-height: none !important;
-        max-width: 100vw !important;
-        background-color: rgba(0, 0, 0, 0.9) !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 20px !important;
-        box-shadow: none !important;
-    }
-    
-    /* Estilo para escritorio (panel flotante con más tamaño) */
-    @media (min-width: 769px) {
-        /* En escritorio no usamos posición fija para permitir que se mueva */
-        /* position ya no es fixed para permitir transform */
-        width: 450px !important; /* Aumentamos el ancho de 400px a 450px */
-        min-height: 600px !important; /* Aumentamos la altura mínima de 500px a 600px */
-        max-height: 90vh !important; /* Aumentamos la altura máxima de 80vh a 90vh */
-        background-color: rgba(0, 0, 0, 0.85) !important;
-        border-radius: 16px !important;
-        padding: 20px !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
-        overflow: hidden !important;
-    }
-}
-
-/* Estilos para el encabezado cuando es arrastrable */
-.call-header.draggable {
-    cursor: grab;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    &:active {
-        cursor: grabbing;
-    }
-    
-    /* Estilos para los controles en el encabezado */
-    .header-controls {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        
-        .header-end-call-btn {
-            width: 28px;
-            height: 28px;
-            background-color: #f44336;
-            border: none;
-            border-radius: 50%;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transform: rotate(135deg);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            
-            &:hover {
-                background-color: darken(#f44336, 10%);
-                transform: rotate(135deg) scale(1.1);
-            }
-        }
-    }
-}
-
-.voice-call-ui {
-    // ...existing code...
-    
-    /* Mejoras para botones especialmente en escritorio */
-    .call-controls {
-        /* Asegurar que los controles son siempre visibles */
-        padding: 15px 0 25px;
-        background-color: rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
-        margin-top: 10px;
-        position: relative; /* Cambio a relative por defecto */
-        z-index: 10;
-        
-        /* Cuando los controles están fijos (en escritorio con contenido visual) */
-        &.fixed-controls {
-            position: sticky !important; /* Usar sticky para mantenerlo visible */
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            margin-top: 20px;
-            padding-bottom: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-        }
-        
-        .call-control-btn {
-            /* Mejora de visibilidad */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            
-            &.end-call-btn {
-                /* Asegurar que el botón de colgar sea más destacado */
-                background-color: #f44336;
-                color: white;
-                transform: rotate(135deg);
-                font-size: 24px;
-                
-                @media (min-width: 769px) {
-                    width: 60px !important;
-                    height: 60px !important;
-                    font-size: 22px !important;
-                }
-            }
-        }
-    }
-    
-    /* Ajustes adicionales para cuando hay contenido visual en escritorio */
-    @media (min-width: 769px) {
-        .call-visual-content.has-content {
-            /* Reducimos un poco la altura máxima para dejar espacio a los controles */
-            max-height: 340px;
-            margin-bottom: 60px;
-        }
-    }
-    
-    .call-avatar-container {
-        // ...existing code...
-        
-        /* Reducimos el margen en escritorio para dar más espacio a los pasos */
-        @media (min-width: 769px) {
-            margin: 20px 0 !important;
-            
-            .call-avatar {
-                width: 100px !important;
-                height: 100px !important;
-            }
-        }
-    }
-    
-    /* Mejoras para el área visual en escritorio */
-    .call-visual-content {
-        // ...existing code...
-        
-        /* En escritorio, aumentamos el espacio para el contenido visual */
-        @media (min-width: 769px) {
-            &.has-content {
-                min-height: 280px !important; /* Aumentamos la altura mínima */
-                max-height: 400px !important; /* Aumentamos la altura máxima */
-                margin: 15px 0 !important;
-            }
-        }
-    }
-    
-    .call-visualizer {
-        // ...existing code...
-        
-        /* Reducimos la altura del visualizador en escritorio */
-        @media (min-width: 769px) {
-            height: 40px !important;
-            margin: 10px 0 !important;
-        }
-    }
-    
-    /* Mejoras para botones especialmente en escritorio */
-    .call-controls {
-        // ...existing code...
-        
-        /* Ajustamos el padding en escritorio */
-        @media (min-width: 769px) {
-            padding: 10px 0 15px !important;
-            margin-top: 5px !important;
-        }
-        
-        // ...existing code...
-    }
-    
-    /* Ajustes adicionales para cuando hay contenido visual en escritorio */
-    @media (min-width: 769px) {
-        .call-visual-content.has-content {
-            /* Reducimos un poco el margen inferior */
-            margin-bottom: 20px !important;
-        }
-        
-        /* Mejora para el carrusel de pasos */
-        .content-steps .steps-carousel .step-item .step-image {
-            min-height: 180px !important; /* Aumentamos la altura mínima de las imágenes */
-        }
-        
-        /* Hacemos más visible el título del paso */
-        .content-steps .steps-carousel .step-item .step-title {
-            font-size: 18px !important;
-            margin-bottom: 12px !important;
-        }
-    }
-}
-
-/* Vista estándar para escritorio - Ya no se usa, pero mantenemos por compatibilidad */
-.voice-mode-standard {
-    display: none; /* Ocultamos la vista antigua */
 }
