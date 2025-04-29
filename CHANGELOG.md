@@ -5,6 +5,11 @@ Todos los cambios notables en Katuq serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto sigue [Versionado basado en fecha](./VERSIONADO.md).
 
+## [2025.04.29.4] - 29 de Abril 2025
+
+### Añadido
+- Sistema de canales de ventas asignando multiples bodegas
+
 ## [2025.04.29.1] - 29 de Abril 2025
 
 ### Añadido
