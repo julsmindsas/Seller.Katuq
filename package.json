@@ -9,7 +9,13 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "gc": "ng generate component"
+    "gc": "ng generate component",
+    "update-version": "node update-version.js",
+    "prebuild": "npm run update-version",
+    "prebuild:prod": "npm run update-version",
+    
+    "actualizar-compilar": "npm run update-version && npm run build",    
+    "release": "npm run update-version && npm run build:prod"
   },
   "private": true,
   "dependencies": {
