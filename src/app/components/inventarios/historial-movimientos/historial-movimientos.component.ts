@@ -27,6 +27,8 @@ export class HistorialMovimientosComponent implements OnInit {
     rows: number = 10;
     lastDoc: string = '';
     mostrarFiltros: boolean = true;
+    viewMode: 'compact' | 'detailed' = 'compact'; // Modo de visualización
+    selectedMovimiento: Movimiento | null = null; // Movimiento seleccionado
 
     constructor(
         private inventarioService: InventarioService,
@@ -50,6 +52,13 @@ export class HistorialMovimientosComponent implements OnInit {
     ngOnInit(): void {
         this.cargarProductos();
         this.cargarBodegas();
+        // Cargar datos iniciales al entrar a la página
+        this.buscarMovimientos();
+    }
+
+    // Método para cambiar el modo de visualización de la tabla
+    setViewMode(mode: 'compact' | 'detailed'): void {
+        this.viewMode = mode;
     }
 
     toggleFiltros(): void {
@@ -89,7 +98,7 @@ export class HistorialMovimientosComponent implements OnInit {
     buscarMovimientos(event?: any): void {
         if (this.formFiltros.valid) {
             this.loading = true;
-            const filtros = this.formFiltros.value;
+            const filtros = {...this.formFiltros.value};
 
             // Formatear fechas
             if (filtros.fechaInicio) {
@@ -125,7 +134,7 @@ export class HistorialMovimientosComponent implements OnInit {
     }
 
     exportarExcel(): void {
-        const filtros = this.formFiltros.value;
+        const filtros = {...this.formFiltros.value};
 
         if (filtros.fechaInicio) {
             filtros.fechaInicio = this.datePipe.transform(filtros.fechaInicio, 'yyyy-MM-dd');
@@ -133,6 +142,14 @@ export class HistorialMovimientosComponent implements OnInit {
         if (filtros.fechaFin) {
             filtros.fechaFin = this.datePipe.transform(filtros.fechaFin, 'yyyy-MM-dd');
         }
+
+        // Mostrar mensaje de carga
+        this.messageService.add({
+            severity: 'info',
+            summary: 'Procesando',
+            detail: 'Preparando exportación a Excel...',
+            life: 3000
+        });
 
         this.inventarioService.getHistorialMovimientos(filtros).subscribe({
             next: (response: MovimientosResponse) => {
@@ -143,8 +160,8 @@ export class HistorialMovimientosComponent implements OnInit {
                     'Bodega': movimiento.bodegaDoc.nombre,
                     'Tipo': movimiento.tipo,
                     'Cantidad': movimiento.cantidad,
-                    'Observaciones': movimiento.observaciones,
-                    'Orden Compra': movimiento.ordenCompraId,
+                    'Observaciones': movimiento.observaciones || 'N/A',
+                    'Orden Compra': movimiento.ordenCompraId || 'N/A',
                     'Usuario': movimiento.usuario,
                     'Compañía': movimiento.company
                 }));
@@ -153,7 +170,16 @@ export class HistorialMovimientosComponent implements OnInit {
                 const wb: XLSX.WorkBook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Historial Movimientos');
 
-                XLSX.writeFile(wb, `historial_movimientos_${new Date().getTime()}.xlsx`);
+                const fileName = `historial_movimientos_${new Date().getTime()}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                // Mostrar mensaje de éxito
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Éxito',
+                    detail: `Archivo ${fileName} exportado correctamente`,
+                    life: 5000
+                });
             },
             error: (error) => {
                 this.messageService.add({
@@ -166,10 +192,26 @@ export class HistorialMovimientosComponent implements OnInit {
     }
 
     verDocumento(movimiento: Movimiento): void {
+        // Seleccionar el movimiento actual
+        this.selectedMovimiento = movimiento;
+
+        // Si estamos en modo detallado, no necesitamos hacer una nueva consulta
+        // ya que el detalle se muestra expandiendo la fila
+        if (this.viewMode === 'detailed') {
+            return;
+        }
+
         this.inventarioService.getMovimientoDetalle(movimiento.id).subscribe({
             next: (response) => {
-                // Aquí puedes implementar la lógica para mostrar el detalle del documento
-                // Por ejemplo, abrir un modal o navegar a otra página
+                // Implementar lógica para mostrar detalles, por ejemplo en un modal
+                this.messageService.add({
+                    severity: 'info',
+                    summary: 'Detalle del movimiento',
+                    detail: `Mostrando detalles del movimiento ID: ${movimiento.id}`,
+                    life: 3000
+                });
+                
+                // Aquí podríamos abrir un modal o navegar a otra página con los detalles
             },
             error: (error) => {
                 this.messageService.add({
@@ -182,13 +224,34 @@ export class HistorialMovimientosComponent implements OnInit {
     }
 
     getTipoMovimientoClass(tipo: string): string {
-        return tipo.startsWith('INGRESO') ? 'bg-success' : 'bg-danger';
+        if (tipo.includes('INGRESO')) {
+            return 'bg-success';
+        } else if (tipo.includes('SALIDA')) {
+            return 'bg-danger';
+        } else {
+            return 'bg-secondary';
+        }
     }
 
     clear(table: Table): void {
         table.clear();
-        this.formFiltros.reset();
+        
+        // Resetear formulario con valores predeterminados
+        const hoy = new Date();
+        const haceUnaSemana = new Date();
+        haceUnaSemana.setDate(hoy.getDate() - 7);
+        
+        this.formFiltros.reset({
+            fechaInicio: haceUnaSemana,
+            fechaFin: hoy,
+            producto: null,
+            bodega: null,
+            orderBy: 'fecha',
+            orderDirection: 'desc'
+        });
+        
         this.lastDoc = '';
+        this.selectedMovimiento = null;
         this.buscarMovimientos();
     }
 
@@ -196,4 +259,4 @@ export class HistorialMovimientosComponent implements OnInit {
         this.rows = event.rows;
         this.buscarMovimientos(event);
     }
-} 
+}

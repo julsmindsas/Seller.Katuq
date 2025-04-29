@@ -143,30 +143,47 @@
     <h6 class="m-0"><i class="pi pi-list me-2"></i>Resultados</h6>
     <div>
         <button pButton icon="pi pi-list" class="p-button-text p-button-rounded p-button-sm" pTooltip="Vista compacta"
-            tooltipPosition="left"></button>
+            tooltipPosition="left" (click)="setViewMode('compact')"></button>
         <button pButton icon="pi pi-th-large" class="p-button-text p-button-rounded p-button-sm"
-            pTooltip="Vista detallada" tooltipPosition="left"></button>
+            pTooltip="Vista detallada" tooltipPosition="left" (click)="setViewMode('detailed')"></button>
     </div>
 </div>
 
 <p-table #dt [value]="movimientos" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
-    [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true" [rowHover]="true"
     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros" (onPage)="onPageChange($event)"
-    styleClass="p-datatable-sm p-datatable-gridlines" [scrollable]="true" scrollHeight="450px" [resizableColumns]="true"
+    styleClass="p-datatable-sm p-datatable-gridlines movimientos-table" [scrollable]="true" 
+    [scrollHeight]="viewMode === 'compact' ? '450px' : '650px'" 
+    [resizableColumns]="true" [autoLayout]="true"
     [reorderableColumns]="true" responsiveLayout="scroll">
+    
+    <!-- Caption con buscador global -->
     <ng-template pTemplate="caption">
-        <div class="d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+            <span class="me-auto">
+                <strong class="text-primary">{{totalRecords}}</strong> movimientos encontrados
+            </span>
             <span class="p-input-icon-left">
                 <i class="pi pi-search"></i>
                 <input pInputText type="text" placeholder="Buscar en toda la tabla"
                     (input)="dt.filterGlobal($event.target.value, 'contains')"
+                    class="p-inputtext-sm"
                     pTooltip="Escribe para filtrar los resultados de la tabla" tooltipPosition="top" />
             </span>
         </div>
     </ng-template>
+    
+    <!-- Header de la tabla -->
     <ng-template pTemplate="header">
         <tr>
-            <th style="width: 130px" pSortableColumn="fecha">
+            <th *ngIf="viewMode === 'detailed'" style="width: 3rem">
+                <div class="d-flex justify-content-center">
+                    <span pTooltip="Expandir/Colapsar" tooltipPosition="top">
+                        <i class="pi pi-plus-circle"></i>
+                    </span>
+                </div>
+            </th>
+            <th style="width: 140px" pSortableColumn="fecha">
                 <div class="d-flex align-items-center">
                     <span>Fecha</span>
                     <i class="pi pi-info-circle text-info ms-1" pTooltip="Fecha y hora exacta del movimiento"
@@ -174,7 +191,7 @@
                     <p-sortIcon field="fecha" class="ms-2"></p-sortIcon>
                 </div>
             </th>
-            <th style="width: 180px" pSortableColumn="producto">
+            <th style="min-width: 200px; width: 20%" pSortableColumn="producto">
                 <div class="d-flex align-items-center">
                     <span>Producto</span>
                     <i class="pi pi-info-circle text-info ms-1"
@@ -182,21 +199,21 @@
                     <p-sortIcon field="producto" class="ms-2"></p-sortIcon>
                 </div>
             </th>
-            <th style="width: 100px">
+            <th style="width: 120px">
                 <div class="d-flex align-items-center">
                     <span>Código</span>
                     <i class="pi pi-info-circle text-info ms-1" pTooltip="Código de referencia del producto"
                         tooltipPosition="top"></i>
                 </div>
             </th>
-            <th style="width: 130px">
+            <th style="min-width: 150px; width: 15%">
                 <div class="d-flex align-items-center">
                     <span>Bodega</span>
                     <i class="pi pi-info-circle text-info ms-1"
                         pTooltip="Nombre de la bodega donde se realizó el movimiento" tooltipPosition="top"></i>
                 </div>
             </th>
-            <th style="width: 90px" pSortableColumn="tipo">
+            <th style="width: 120px" pSortableColumn="tipo">
                 <div class="d-flex align-items-center">
                     <span>Tipo</span>
                     <i class="pi pi-info-circle text-info ms-1" pTooltip="Tipo de movimiento (Ingreso/Egreso)"
@@ -204,7 +221,7 @@
                     <p-sortIcon field="tipo" class="ms-2"></p-sortIcon>
                 </div>
             </th>
-            <th style="width: 90px" pSortableColumn="cantidad" class="text-center">
+            <th style="width: 100px" pSortableColumn="cantidad" class="text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <span>Cantidad</span>
                     <i class="pi pi-info-circle text-info ms-1" pTooltip="Cantidad de unidades movidas"
@@ -212,118 +229,205 @@
                     <p-sortIcon field="cantidad" class="ms-2"></p-sortIcon>
                 </div>
             </th>
-            <th style="width: 130px">
+            <th style="min-width: 150px; width: 15%">
                 <div class="d-flex align-items-center">
                     <span>Observaciones</span>
                     <i class="pi pi-info-circle text-info ms-1"
                         pTooltip="Notas u observaciones adicionales del movimiento" tooltipPosition="top"></i>
                 </div>
             </th>
-            <th style="width: 110px">
+            <th style="width: 120px">
                 <div class="d-flex align-items-center">
                     <span>Orden Compra</span>
                     <i class="pi pi-info-circle text-info ms-1"
                         pTooltip="Número de orden de compra asociada (si aplica)" tooltipPosition="top"></i>
                 </div>
             </th>
-            <th style="width: 110px">
+            <th style="min-width: 130px">
                 <div class="d-flex align-items-center">
                     <span>Usuario</span>
                     <i class="pi pi-info-circle text-info ms-1" pTooltip="Usuario que realizó el movimiento"
                         tooltipPosition="top"></i>
                 </div>
             </th>
-            <th style="width: 70px" class="text-center">
+            <th style="width: 80px" class="text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <span>Acciones</span>
-                    <i class="pi pi-info-circle text-info ms-1" pTooltip="Ver detalles del movimiento"
-                        tooltipPosition="top"></i>
                 </div>
             </th>
         </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-movimiento>
-        <tr class="cursor-pointer" (click)="verDocumento(movimiento)">
-            <td>
+    
+    <!-- Filas expandibles cuando se usa vista detallada -->
+    <ng-template pTemplate="body" let-movimiento let-expanded="expanded">
+        <tr class="cursor-pointer" [ngClass]="{'highlight-row': selectedMovimiento?.id === movimiento.id}">
+            <!-- Columna de expansión solo en modo detallado -->
+            <td *ngIf="viewMode === 'detailed'" class="text-center" style="width: 3rem">
+                <button type="button" pButton pRipple [pRowToggler]="movimiento" 
+                    class="p-button-text p-button-rounded p-button-sm p-button-plain"
+                    [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
+            </td>
+            
+            <!-- Fecha -->
+            <td (click)="verDocumento(movimiento)">
                 <div class="d-flex align-items-center">
                     <i class="pi pi-calendar-plus me-2 text-primary"></i>
-                    <span pTooltip="Fecha y hora exacta del movimiento" tooltipPosition="top">
+                    <span pTooltip="{{movimiento.fecha._seconds * 1000 | date:'dd/MM/yyyy HH:mm:ss'}}" tooltipPosition="top">
                         {{movimiento.fecha._seconds * 1000 | date:'dd/MM/yyyy'}}
                     </span>
                 </div>
             </td>
-            <td>
+            
+            <!-- Producto -->
+            <td (click)="verDocumento(movimiento)" class="expandable-cell">
                 <div class="d-flex align-items-center">
                     <i class="pi pi-box me-2 text-primary"></i>
-                    <span pTooltip="Nombre del producto involucrado" tooltipPosition="top"
-                        class="text-truncate d-inline-block" style="max-width: 130px">
+                    <span class="text-cell" [title]="movimiento.producto.crearProducto?.titulo">
                         {{movimiento.producto.crearProducto?.titulo}}
                     </span>
                 </div>
             </td>
-            <td>
-                <span pTooltip="Código de referencia del producto" tooltipPosition="top">
+            
+            <!-- Código -->
+            <td (click)="verDocumento(movimiento)">
+                <span class="badge bg-light text-dark fw-normal">
                     {{movimiento.producto.identificacion.referencia}}
                 </span>
             </td>
-            <td>
+            
+            <!-- Bodega -->
+            <td (click)="verDocumento(movimiento)" class="expandable-cell">
                 <div class="d-flex align-items-center">
                     <i class="pi pi-building me-2 text-primary"></i>
-                    <span pTooltip="Nombre de la bodega" tooltipPosition="top" class="text-truncate d-inline-block"
-                        style="max-width: 90px">
+                    <span class="text-cell" [title]="movimiento.bodega.nombre">
                         {{movimiento.bodega.nombre}}
                     </span>
                 </div>
             </td>
-            <td>
-                <span class="badge" [ngClass]="getTipoMovimientoClass(movimiento.tipo)"
-                    pTooltip="Tipo de movimiento realizado" tooltipPosition="top">
+            
+            <!-- Tipo -->
+            <td (click)="verDocumento(movimiento)">
+                <span class="badge" [ngClass]="getTipoMovimientoClass(movimiento.tipo)">
                     {{movimiento.tipo}}
                 </span>
             </td>
-            <td class="text-center">
-                <span pTooltip="Cantidad movida" tooltipPosition="top" class="fw-bold">
+            
+            <!-- Cantidad -->
+            <td (click)="verDocumento(movimiento)" class="text-center">
+                <span class="fw-bold" [ngClass]="{'text-success': movimiento.tipo.includes('INGRESO'), 'text-danger': !movimiento.tipo.includes('INGRESO')}">
                     {{movimiento.cantidad}}
                 </span>
             </td>
-            <td>
-                <span pTooltip="Notas u observaciones adicionales del movimiento" tooltipPosition="top"
-                    class="text-truncate d-inline-block" style="max-width: 110px">
-                    {{movimiento.observaciones}}
+            
+            <!-- Observaciones -->
+            <td (click)="verDocumento(movimiento)" class="expandable-cell">
+                <span class="text-cell" [title]="movimiento.observaciones">
+                    {{movimiento.observaciones || 'N/A'}}
                 </span>
             </td>
-            <td>
-                <span pTooltip="Número de orden de compra asociada (si aplica)" tooltipPosition="top">
+            
+            <!-- Orden de compra -->
+            <td (click)="verDocumento(movimiento)">
+                <span class="badge bg-light text-dark fw-normal" *ngIf="movimiento.ordenCompraId">
                     {{movimiento.ordenCompraId}}
                 </span>
+                <span class="text-muted" *ngIf="!movimiento.ordenCompraId">N/A</span>
             </td>
-            <td>
-                <span pTooltip="Usuario que realizó el movimiento" tooltipPosition="top"
-                    class="text-truncate d-inline-block" style="max-width: 90px">
-                    {{movimiento.usuario}}
-                </span>
+            
+            <!-- Usuario -->
+            <td (click)="verDocumento(movimiento)" class="expandable-cell">
+                <div class="d-flex align-items-center">
+                    <i class="pi pi-user me-2 text-primary"></i>
+                    <span class="text-cell" [title]="movimiento.usuario">
+                        {{movimiento.usuario}}
+                    </span>
+                </div>
             </td>
+            
+            <!-- Acciones -->
             <td class="text-center">
-                <button pButton type="button" icon="pi pi-eye" class="p-button-rounded p-button-text p-button-sm"
+                <button pButton type="button" icon="pi pi-eye" 
+                    class="p-button-rounded p-button-sm"
+                    [ngClass]="viewMode === 'detailed' ? 'p-button-outlined' : 'p-button-text'"
                     pTooltip="Ver detalles del movimiento" tooltipPosition="top"
                     (click)="$event.stopPropagation(); verDocumento(movimiento)"></button>
             </td>
         </tr>
     </ng-template>
+    
+    <!-- Template para fila expandida en modo detallado -->
+    <ng-template pTemplate="rowexpansion" let-movimiento>
+        <tr *ngIf="viewMode === 'detailed'">
+            <td colspan="11">
+                <div class="p-3 expanded-row">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <h6 class="detail-title"><i class="pi pi-info-circle me-2"></i>Información del Movimiento</h6>
+                                <div class="detail-row">
+                                    <span class="detail-label">Fecha y Hora:</span>
+                                    <span class="detail-value">{{movimiento.fecha._seconds * 1000 | date:'dd/MM/yyyy HH:mm:ss'}}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Tipo:</span>
+                                    <span class="detail-value">
+                                        <span class="badge" [ngClass]="getTipoMovimientoClass(movimiento.tipo)">{{movimiento.tipo}}</span>
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Cantidad:</span>
+                                    <span class="detail-value fw-bold">{{movimiento.cantidad}} unidades</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Observaciones:</span>
+                                    <span class="detail-value">{{movimiento.observaciones || 'No hay observaciones registradas'}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <h6 class="detail-title"><i class="pi pi-box me-2"></i>Información del Producto</h6>
+                                <div class="detail-row">
+                                    <span class="detail-label">Nombre:</span>
+                                    <span class="detail-value">{{movimiento.producto.crearProducto?.titulo}}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Código:</span>
+                                    <span class="detail-value">{{movimiento.producto.identificacion.referencia}}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Bodega:</span>
+                                    <span class="detail-value">{{movimiento.bodega.nombre}}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Order ID:</span>
+                                    <span class="detail-value">{{movimiento.ordenCompraId || 'N/A'}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+    
+    <!-- Mensaje cuando no hay resultados -->
     <ng-template pTemplate="emptymessage">
         <tr>
-            <td colspan="10" class="text-center">
-                <div class="p-4">
-                    <i class="pi pi-info-circle" style="font-size: 2rem"></i>
+            <td [attr.colspan]="viewMode === 'detailed' ? 11 : 10" class="text-center">
+                <div class="p-4 empty-message">
+                    <i class="pi pi-info-circle"></i>
                     <p class="mt-2">No se encontraron movimientos con los filtros seleccionados. Ajusta los filtros o el
                         rango de fechas para ver resultados.</p>
                 </div>
             </td>
         </tr>
     </ng-template>
+    
+    <!-- Footer del paginador -->
     <ng-template pTemplate="paginatorleft">
         <div class="p-2">
-            Total: {{totalRecords}} movimientos
+            Total: <strong class="text-primary">{{totalRecords}}</strong> movimientos
         </div>
     </ng-template>
 </p-table>

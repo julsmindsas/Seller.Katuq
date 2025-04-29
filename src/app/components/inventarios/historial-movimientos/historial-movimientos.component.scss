@@ -22,25 +22,127 @@
     color: white;
 }
 
-.text-truncate {
+.bg-secondary {
+    background-color: #757575 !important;
+    color: white;
+}
+
+.bg-light {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+    border: 1px solid #ddd;
+}
+
+/* Estilos para las celdas expandibles */
+.expandable-cell {
+    position: relative;
+}
+
+.text-cell {
+    display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
+    transition: all 0.2s ease-in-out;
+}
+
+.expandable-cell:hover .text-cell {
+    white-space: normal;
+    overflow: visible;
+    background-color: #f8f9fa;
+    position: absolute;
+    z-index: 100;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    min-width: 200px;
+    max-width: 350px;
+}
+
+/* Estilos para filas seleccionadas */
+.highlight-row {
+    background-color: rgba(115, 103, 240, 0.08) !important;
+}
+
+/* Estilos para filas expandidas */
+.expanded-row {
+    background-color: #fafafa;
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+}
+
+.detail-section {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background-color: white;
+}
+
+.detail-title {
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.detail-row {
+    display: flex;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #666;
+    width: 140px;
+    flex-shrink: 0;
+}
+
+.detail-value {
+    color: #333;
+    flex-grow: 1;
+}
+
+/* Mensaje vacío */
+.empty-message {
+    text-align: center;
+    padding: 2rem;
+}
+
+.empty-message i {
+    font-size: 2rem;
+    color: #ccc;
+    margin-bottom: 1rem;
 }
 
 /* Ajustes para la tabla compact */
 :host ::ng-deep {
     .p-datatable-sm .p-datatable-thead > tr > th {
-        padding: 0.5rem 0.5rem;
+        padding: 0.6rem 0.5rem;
+        font-weight: 600;
+        color: #505050;
     }
     
     .p-datatable-sm .p-datatable-tbody > tr > td {
-        padding: 0.4rem 0.5rem;
+        padding: 0.6rem 0.5rem;
+        line-height: 1.3;
     }
     
     .p-button-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .p-datatable.p-datatable-gridlines .p-datatable-thead > tr > th {
+        border-width: 1px;
+    }
+    
+    .p-datatable.p-datatable-gridlines .p-datatable-tbody > tr > td {
+        border-width: 1px;
     }
     
     .p-datatable-scrollable .p-datatable-wrapper {
@@ -59,17 +161,61 @@
         height: 2rem;
         width: 2rem;
     }
+    
+    // Ajustes específicos para PrimeNG
+    .movimientos-table {
+        .p-datatable-wrapper {
+            max-height: 700px;
+        }
+        
+        .p-datatable-tbody > tr:focus {
+            outline: none !important;
+        }
+        
+        .p-datatable-tbody > tr:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+        
+        .p-column-title {
+            font-weight: 600;
+        }
+        
+        .p-datatable-tbody > tr > td {
+            vertical-align: middle;
+        }
+        
+        // Colores para los estados
+        .text-success {
+            color: #4caf50 !important;
+        }
+        
+        .text-danger {
+            color: #f44336 !important;
+        }
+        
+        .text-warning {
+            color: #ff9800 !important;
+        }
+        
+        .text-info {
+            color: #2196f3 !important;
+        }
+    }
 }
 
 .card {
-    margin: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    border-radius: 0.5rem;
+    border: none;
 }
 
 .card-header {
     background-color: #f8f9fa;
     border-bottom: 1px solid rgba(0,0,0,.125);
-    padding: 1rem;
+    padding: 0.8rem 1rem;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
 }
 
 .form-group {
@@ -80,10 +226,14 @@
     margin-right: 0.5rem;
 }
 
-.p-datatable {
-    margin-top: 1rem;
-}
-
 .p-calendar {
     width: 100%;
-} 
+}
+
+/* Reducir espacio entre filas para modo compact */
+@media (min-width: 768px) {
+    .compact-row td {
+        padding-top: 0.4rem !important;
+        padding-bottom: 0.4rem !important;
+    }
+}
