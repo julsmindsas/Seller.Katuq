@@ -127,7 +127,7 @@
                                             <button class="btn btn-sm btn-outline-danger me-1" (click)="decrementarCantidad(item)">
                                                 <i class="fa fa-minus"></i>
                                             </button>
-                                            <span class="mx-1 fw-bold">{{ item.cantidad }}</span>
+                                            <input type="number" min="1" class="form-control form-control-sm d-inline-block text-center mx-1 fw-bold" style="width: 60px; max-width: 80px; padding: 2px 4px; height: 30px;" [(ngModel)]="item.cantidad" (change)="cambiarCantidadManual(item, $event)" name="cantidad_{{item.id}}" />
                                             <button class="btn btn-sm btn-outline-success ms-1" (click)="incrementarCantidad(item)">
                                                 <i class="fa fa-plus"></i>
                                             </button>

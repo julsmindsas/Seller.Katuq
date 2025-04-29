@@ -29,14 +29,22 @@ export class RecepcionMercanciaComponent implements OnInit {
   guardandoRecepcion: boolean = false;
   producto: ProductoRecepcion | null = null;
   
-  // Tipos de movimiento disponibles para recepción
-  tiposMovimientoRecepcion = [
-    { valor: TipoMovimientoInventario.INGRESO_COMPRA, nombre: 'Ingreso por compra' },
-    { valor: TipoMovimientoInventario.INGRESO_PRODUCCION, nombre: 'Ingreso por producción' },
-    { valor: TipoMovimientoInventario.INGRESO_AJUSTE, nombre: 'Ingreso por ajuste' },
-    { valor: TipoMovimientoInventario.INGRESO_INVENTARIO_FISICO, nombre: 'Ingreso por inventario físico' },
-    { valor: TipoMovimientoInventario.INGRESO_MOVIMIENTO, nombre: 'Ingreso por movimiento entre bodegas' }
-  ];
+  // Tipos de movimiento completos
+  TIPOS_MOVIMIENTO = {
+    INGRESO_INVENTARIO_FISICO: 'Ingreso por inventario fisico',
+    INGRESO_COMPRA: 'Ingreso por compra',
+    INGRESO_PRODUCCION: 'Ingreso por Produccion',
+    INGRESO_AJUSTE: 'Ingreso por Ajuste de inventario',
+    INGRESO_MOVIMIENTO: 'Ingreso por movimientos entre bodegas',
+    SALIDA_INVENTARIO_FISICO: 'Salida por inventario fisico',
+    SALIDA_VENTA_POS: 'Salida por venta POS',
+    SALIDA_VENTA_ASISTIDA: 'Salida por venta Asistida',
+    SALIDA_OBSEQUIO: 'Salida por obsequio',
+    SALIDA_AJUSTE: 'Salida por ajuste de inventario',
+    SALIDA_ROBO: 'Salida por robo'
+  };
+  tiposMovimientoRecepcion: { valor: string, nombre: string }[] = [];
+
   
   // Variables para paginación
   pageSize = 10;
@@ -51,9 +59,21 @@ export class RecepcionMercanciaComponent implements OnInit {
   ) {
     this.productoForm = this.fb.group({
       bodegaSeleccionada: ['', Validators.required],
-      tipoMovimiento: [TipoMovimientoInventario.INGRESO_COMPRA, Validators.required],
+      tipoMovimiento: ['INGRESO_COMPRA', Validators.required],
       busquedaProducto: ['']
     });
+
+    // Generar dinámicamente las opciones para el select
+    this.tiposMovimientoRecepcion = Object.entries(this.TIPOS_MOVIMIENTO).map(([valor, nombre]) => ({ valor, nombre }));
+  }
+
+  // Cambiar cantidad manualmente desde input
+  cambiarCantidadManual(producto: ProductoRecepcion, event: any) {
+    let value = Number(event.target.value);
+    if (isNaN(value) || value < 1) {
+      value = 1;
+    }
+    producto.cantidad = value;
   }
 
   ngOnInit(): void {
