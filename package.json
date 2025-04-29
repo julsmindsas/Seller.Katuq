@@ -13,7 +13,6 @@
     "update-version": "node update-version.js",
     "prebuild": "npm run update-version",
     "prebuild:prod": "npm run update-version",
-    
     "actualizar-compilar": "npm run update-version && npm run build",    
     "release": "npm run update-version && npm run build:prod"
   },
