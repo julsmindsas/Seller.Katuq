@@ -18,7 +18,7 @@ import { ToastModule } from 'primeng/toast';
 import { TreeSelectModule } from 'primeng/treeselect';
 import { VentasRoutingModule } from '../ventas/ventas-routing.module';
 import { ProduccionService } from '../../shared/services/produccion/produccion.service';
-import { SharedModule } from 'src/app/shared/shared.module';
+import { SharedModule } from '../../shared/shared.module';
 import { CheckboxModule } from 'primeng/checkbox';
 import { CerrararticuloComponent } from './dashboard/cerrararticulo/cerrararticulo.component';
 import { DropdownModule } from 'primeng/dropdown';

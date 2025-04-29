@@ -5,7 +5,7 @@
   <div class="select-container">
     <select #ware class="form-control" id="bodegaSelect" (change)="onWarehouseChange($event)">
       <option value="">{{ "Seleccione una bodega" }}</option>
-      <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+      <option *ngFor="let bodega of bodegas" [value]="bodega.id">
         {{ bodega.nombre }} ({{ bodega.idBodega }})
       </option>
     </select>

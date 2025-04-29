@@ -125,8 +125,8 @@ export class WarehouseSelectorComponent implements AfterViewInit {
 
         const target = event.target as HTMLSelectElement;
         const selectedId = target.value;
-        // Asegúrate de comparar con idBodega
-        const selected = this.bodegas.find(warehouse => warehouse.idBodega === selectedId);
+        // Asegúrate de comparar con id
+        const selected = this.bodegas.find(warehouse => warehouse.id === selectedId);
 
         if (selected) {
             this.selectedWarehouse = selected.nombre;

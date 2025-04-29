@@ -27,24 +27,30 @@ export class CanalesComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    // Simular carga de datos ya que no hay servicio aún
     this.cargarDatos();
   }
 
   cargarDatos() {
     this.cargando = true;
-    // Como no hay servicio aún, vamos a usar datos de ejemplo
-    setTimeout(() => {
-      this.rows = [
-        { id: 1, name: 'POS', tipo: 'Físico', bodega: 'Bodega Principal', activo: true },
-        { id: 2, name: 'Mercado Libre', tipo: 'Marketplace', bodega: 'Bodega E-commerce', activo: true },
-        { id: 3, name: 'Rappi', tipo: 'Delivery', bodega: 'Bodega Principal', activo: false },
-        { id: 4, name: 'VTEX', tipo: 'E-commerce', bodega: 'Bodega E-commerce', activo: true },
-        { id: 5, name: 'Venta Asistida', tipo: 'Físico', bodega: 'Bodega Principal', activo: true }
-      ];
-      this.temp = [...this.rows];
-      this.cargando = false;
-    }, 1000);
+    this.service.getCanales().subscribe({
+      next: (response) => {
+        this.rows = response;
+        this.temp = [...this.rows];
+        this.cargando = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar canales:', error);
+        this.cargando = false;
+        
+        // Mostrar mensaje de error
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudieron cargar los canales. Por favor, intente nuevamente.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    });
   }
 
   openCrearModal() {
@@ -82,10 +88,10 @@ export class CanalesComponent implements OnInit {
     });
   }
 
-  deleteCanal(row: any) {
+  eliminarCanal(row: any) {
     Swal.fire({
       title: '¿Está seguro?',
-      text: "¡No podrá revertir esta acción!",
+      text: "¡El canal cambiara de estado a desactivado!",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -94,16 +100,27 @@ export class CanalesComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        // Aquí iría la llamada al servicio para eliminar
-        // Como no hay servicio, simulamos la eliminación
-        this.rows = this.rows.filter(item => item.id !== row.id);
-        this.temp = [...this.rows];
+        this.cargando = true;
         
-        Swal.fire(
-          '¡Eliminado!',
-          'El canal ha sido eliminado.',
-          'success'
-        );
+        this.service.eliminarCanal(row.id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            Swal.fire(
+              '¡Eliminado!',
+              'El canal ha sido desactivado correctamente.',
+              'success'
+            );
+          },
+          error: (error) => {
+            console.error('Error al eliminar canal:', error);
+            this.cargando = false;
+            Swal.fire(
+              'Error',
+              'Ocurrió un error al eliminar el canal. Por favor, intente nuevamente.',
+              'error'
+            );
+          }
+        });
       }
     });
   }

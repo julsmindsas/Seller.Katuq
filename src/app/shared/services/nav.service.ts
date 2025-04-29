@@ -257,6 +257,7 @@ export class NavService implements OnDestroy {
 				{ path: 'categorias', title: 'Categorías Globales', type: 'link' },
 				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones Globales', type: 'link' },
 				{ path: 'proceso/canales', title: 'Canales de Venta', type: 'link' },
+				{ path: 'proceso/bodegas-por-canal', title: 'Bodegas por Canal', type: 'link' },
 				{ path: 'inventario/inventario-catalogo', title: 'Inventario por Bodega', type: 'link' },
 				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link' },
 				{ path: 'inventario/recepcion-mercancia', title: 'Ajustes de Inventario', type: 'link' },
@@ -269,7 +270,6 @@ export class NavService implements OnDestroy {
 				{ path: 'produccion/dashboard', title: 'Dashboard Producción', type: 'link' }
 			]
 		},
-
 		{ headTitle1: 'Logística' },
 		{
 			title: 'Envíos y Entregas', icon: 'map-pin', type: 'sub', active: false, children: [

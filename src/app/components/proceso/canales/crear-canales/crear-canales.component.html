@@ -4,54 +4,44 @@
 </div>
 
 <div class="modal-body">
-  <form [formGroup]="canalForm">
-    <div class="row g-4">
-      <!-- Columna Izquierda -->
-      <div class="col-md-6">
-        <!-- Nombre -->
-        <div class="mb-3">
-          <label for="name" class="form-label fw-bold">Nombre del Canal</label>
-          <input class="form-control" type="text" id="name" formControlName="name" placeholder="Nombre del canal de venta">
-          <div *ngIf="canalForm.get('name')?.invalid && canalForm.get('name')?.touched" class="text-danger">
-            Este campo es requerido
-          </div>
-        </div>
-        
-        <!-- Tipo de Canal -->
-        <div class="mb-3">
-          <label for="tipo" class="form-label fw-bold">Tipo de Canal</label>
-          <select class="form-control" id="tipo" formControlName="tipo">
-            <option value="">Seleccione un tipo</option>
-            <option *ngFor="let tipo of tiposCanal" [value]="tipo.id">{{tipo.name}}</option>
-          </select>
-          <div *ngIf="canalForm.get('tipo')?.invalid && canalForm.get('tipo')?.touched" class="text-danger">
-            Este campo es requerido
-          </div>
-        </div>
+  <div *ngIf="loading" class="text-center my-3">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2">Cargando información...</p>
+  </div>
+
+  <form [formGroup]="canalForm" *ngIf="!loading">
+    <!-- Nombre -->
+    <div class="mb-4">
+      <label for="name" class="form-label fw-bold">Nombre del Canal</label>
+      <input class="form-control" type="text" id="name" formControlName="name" placeholder="Nombre del canal de venta">
+      <div *ngIf="f['name'].invalid && f['name'].touched" class="text-danger small mt-1">
+        <i class="fas fa-exclamation-circle me-1"></i>Este campo es requerido
       </div>
-      
-      <!-- Columna Derecha -->
-      <div class="col-md-6">
-        <!-- Bodega Asignada -->
-        <div class="mb-3">
-          <label for="bodega" class="form-label fw-bold">Bodega Asignada</label>
-          <select class="form-control" id="bodega" formControlName="bodega">
-            <option value="">Seleccione una bodega</option>
-            <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">{{bodega.nombre}}</option>
-          </select>
-          <div *ngIf="canalForm.get('bodega')?.invalid && canalForm.get('bodega')?.touched" class="text-danger">
-            Este campo es requerido
-          </div>
-        </div>
-        
-        <!-- Activo -->
-        <div class="mb-3">
-          <label for="activo" class="form-label fw-bold d-block">Estado</label>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="activo" formControlName="activo">
-            <label class="form-check-label" for="activo">{{ canalForm.get('activo')?.value ? 'Activo' : 'Inactivo' }}</label>
-          </div>
-        </div>
+    </div>
+    
+    <!-- Tipo de Canal -->
+    <div class="mb-4">
+      <label for="tipo" class="form-label fw-bold">Tipo de Canal</label>
+      <select class="form-select" id="tipo" formControlName="tipo">
+        <option value="">Seleccione un tipo</option>
+        <option *ngFor="let tipo of tiposCanal" [value]="tipo.id">{{tipo.name}}</option>
+      </select>
+      <div *ngIf="f['tipo'].invalid && f['tipo'].touched" class="text-danger small mt-1">
+        <i class="fas fa-exclamation-circle me-1"></i>Este campo es requerido
+      </div>
+    </div>
+    
+    <!-- Activo -->
+    <div class="mb-3">
+      <label for="activo" class="form-label fw-bold d-block">Estado</label>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="activo" formControlName="activo">
+        <label class="form-check-label" for="activo">
+          <span *ngIf="f['activo'].value" class="text-success">Activo</span>
+          <span *ngIf="!f['activo'].value" class="text-secondary">Inactivo</span>
+        </label>
       </div>
     </div>
   </form>
@@ -59,7 +49,10 @@
 
 <div class="modal-footer">
   <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
-  <button type="button" class="btn btn-primary" (click)="mostrarCrear ? guardar() : editar()">
+  <button type="button" class="btn btn-primary" 
+          [disabled]="canalForm.invalid || loading" 
+          (click)="mostrarCrear ? guardar() : editar()">
+    <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
     {{ mostrarCrear ? 'Guardar' : 'Actualizar' }}
   </button>
 </div> 

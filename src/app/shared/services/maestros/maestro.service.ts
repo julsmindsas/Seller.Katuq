@@ -271,7 +271,6 @@ export class MaestroService {
   public consultarUsuarios() {
     return this.http.get(this.urlBase + '/v1/users/all', this.httpOptions);
   }
-  public
 
   deleteFormaEntrega(value: any) {
     return this.http.post(this.urlBase + '/v1/formaentrega/delete', value, this.httpOptions);
@@ -325,4 +324,42 @@ export class MaestroService {
   // createRol(role: Role): Observable<Role> {
   //   return this.http.post<Role>(`${this.urlBase}/roles`, role);
   // }
+
+  // Servicios para canales
+  getCanales(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.urlBase}/v1/canales`);
+  }
+
+  getCanalesActivos(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.urlBase}/v1/canales`);
+  }
+
+  getCanalById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.urlBase}/v1/canales/${id}`);
+  }
+
+  crearCanal(canal: any): Observable<any> {
+    return this.http.post<any>(`${this.urlBase}/v1/canales`, canal);
+  }
+
+  actualizarCanal(id: string, canal: any): Observable<any> {
+    return this.http.put<any>(`${this.urlBase}/v1/canales/${id}`, canal);
+  }
+
+  eliminarCanal(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.urlBase}/v1/canales/${id}`);
+  }
+
+  // Métodos para la relación entre bodegas y canales
+  getBodegasPorCanal(canalId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.urlBase}/v1/canales/${canalId}/bodegas`);
+  }
+
+  asignarBodegaACanal(canalId: string, bodegaId: string): Observable<any> {
+    return this.http.post<any>(`${this.urlBase}/v1/canales/${canalId}/bodegas`, { bodegaId });
+  }
+
+  removerBodegaDeCanal(canalId: string, bodegaId: string): Observable<any> {
+    return this.http.delete<any>(`${this.urlBase}/v1/canales/${canalId}/canales/${bodegaId}`);
+  }
 }

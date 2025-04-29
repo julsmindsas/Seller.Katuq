@@ -1,0 +1,140 @@
+// Variables
+$primary-color: #6ec0d4;
+$secondary-color: #5cb85c;
+$danger-color: #d9534f;
+$info-color: #5bc0de;
+$warning-color: #f0ad4e;
+$light-bg: #f8f9fa;
+$border-color: #dee2e6;
+
+// General styles
+.card {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  
+  .card-header {
+    font-weight: 500;
+  }
+}
+
+// Canal Info Card
+.card.border-primary {
+  border-color: $primary-color !important;
+  background-color: rgba($primary-color, 0.03);
+}
+
+// Bodega items
+.bodega-item {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f0f7ff !important;
+    border-color: $primary-color !important;
+  }
+  
+  .btn-outline-danger {
+    &:hover {
+      background-color: $danger-color;
+      color: #fff;
+    }
+  }
+  
+  .btn-outline-success {
+    &:hover {
+      background-color: $secondary-color;
+      color: #fff;
+    }
+  }
+}
+
+// Custom scrollbar for bodega lists
+.bodega-list::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.bodega-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.bodega-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+}
+
+// Animation for loading spinner
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .row > div[class^="col"] {
+    margin-bottom: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .bodega-list {
+    max-height: 300px !important;
+  }
+}
+
+// Icon styles
+.icon-bg {
+  font-size: 4rem;
+}
+
+// Badge styles
+.badge {
+  font-weight: 500;
+  
+  &.bg-info {
+    background-color: rgba($info-color, 0.2) !important;
+    color: darken($info-color, 20%) !important;
+    border: 1px solid rgba($info-color, 0.3);
+  }
+}
+
+// Add hover effect to select control
+.form-select {
+  &:hover {
+    border-color: $primary-color;
+  }
+  
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 0.25rem rgba($primary-color, 0.25);
+  }
+}
+
+// Style for empty state messages
+.alert-info, .alert-warning {
+  i {
+    display: block;
+    margin: 0 auto;
+  }
+}
+
+.bodega-asignada {
+  opacity: 0.7;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  cursor: not-allowed;
+}
+
+.badge-asignada {
+  background-color: #28a745;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+} 

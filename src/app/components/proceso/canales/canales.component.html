@@ -27,6 +27,10 @@
                              class="icofont icofont-plus"></i>&nbsp;
                           <span style="color: white">{{ "Crear Canal" | translate }}</span>
                         </button>
+                      <button class="btn btn-info ml-3 mb-2" style="color: white" routerLink="/proceso/bodegas-por-canal">
+                          <i class="icofont icofont-exchange"></i>&nbsp;
+                          {{ "Asignar Bodegas" | translate }}
+                      </button>
                       <button class="btn btn-success ml-3 mb-2" style="color: white" >
                           <i class="icofont icofont-file-excel"></i>&nbsp;
                           {{ "Excel" | translate }}
@@ -42,17 +46,14 @@
                       [sortField]="'name'" [sortOrder]="1" [globalFilterFields]="[
                           'name',
                           'tipo',
-                          'bodega',
                           'activo'
                       ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
                       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
 
                       <ng-template pTemplate="header" let-columns>
                           <tr>
-                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="id">{{ "Id" | translate }}</th>
                               <th class="text-center" pSortableColumn="name">{{ "Nombre" | translate }}</th>
                               <th class="text-center" pSortableColumn="tipo">{{ "Tipo" | translate }}</th>
-                              <th class="text-center" pSortableColumn="bodega">{{ "Bodega" | translate }}</th>
                               <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">{{ "Activo" | translate }}</th>
                               <th class="text-center">{{ "Acciones" | translate }}</th>
                           </tr>
@@ -60,10 +61,8 @@
 
                       <ng-template pTemplate="body" let-row>
                           <tr>
-                              <td *ngIf="!isMobile" class="text-center">{{ row.id }}</td>
                               <td>{{ row.name }}</td>
                               <td>{{ row.tipo }}</td>
-                              <td>{{ row.bodega }}</td>
                               <td *ngIf="!isMobile" class="text-center">
                                   <label class="switch">
                                       <input class="toggle" type="checkbox" [checked]="row.activo" disabled />
@@ -77,7 +76,7 @@
                                   </i>
                                   <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
                                       style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                                      class="icofont icofont-trash fc-danger" (click)="deleteCanal(row)">
+                                      class="icofont icofont-trash fc-danger" (click)="eliminarCanal(row)">
                                   </i>
                               </td>
                           </tr>
@@ -85,7 +84,7 @@
 
                       <ng-template pTemplate="emptymessage">
                           <tr>
-                              <td [attr.colspan]="isMobile ? 4 : 6">{{ "No hay datos disponibles" | translate }}</td>
+                              <td [attr.colspan]="isMobile ? 3 : 4">{{ "No hay datos disponibles" | translate }}</td>
                           </tr>
                       </ng-template>
 

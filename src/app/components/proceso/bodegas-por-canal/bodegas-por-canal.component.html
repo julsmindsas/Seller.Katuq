@@ -1,0 +1,190 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12 p-2">
+      <br />
+      <div class="card">
+        <i class="icon-bg fa fa-link" width="80" height="80" style="
+                opacity: 0.4;
+                position: absolute;
+                color: #6ec0d4;
+                top: 10px;
+                left: 10px;
+            "></i>
+        <div class="loader-box" *ngIf="cargando">
+          <div class="loader-8"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="row col-12 p-4 pb-0">
+          <div class="col-md-8">
+            <p class="text-left fc-secondary fw-bold fs-24 m-0 p-0">Bodegas por Canal</p>
+            <p class="text-left text-muted fs-18 m-0 p-0">Permite relacionar canales de venta con las bodegas disponibles.</p>
+          </div>
+        </div>
+        <!-- Fin Header -->
+
+        <div class="card-body">
+          <form [formGroup]="seleccionForm">
+            <!-- Selector de Canal -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="canal" class="form-label fw-bold">Seleccionar Canal de Venta</label>
+                  <select class="form-select" id="canal" formControlName="canal">
+                    <option value="">Seleccione un canal</option>
+                    <option *ngFor="let canal of canales" [value]="canal.id" [disabled]="!canal.activo">
+                      {{ canal.name }} ({{ canal.tipo }})
+                      <span *ngIf="!canal.activo"> - Inactivo</span>
+                    </option>
+                  </select>
+                  <div *ngIf="seleccionForm.get('canal')?.invalid && seleccionForm.get('canal')?.touched" 
+                       class="text-danger small mt-1">
+                    Debe seleccionar un canal de venta
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <!-- Info del Canal Seleccionado -->
+          <div *ngIf="canalSeleccionado" class="row mb-3">
+            <div class="col-12">
+              <div class="card border-primary">
+                <div class="card-body pt-2 pb-2">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                      <span class="badge rounded-pill"
+                            [ngClass]="{
+                              'bg-success': canalSeleccionado.activo,
+                              'bg-secondary': !canalSeleccionado.activo
+                            }">
+                        {{ canalSeleccionado.activo ? 'ACTIVO' : 'INACTIVO' }}
+                      </span>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h5 class="mb-0">{{ canalSeleccionado.name }}</h5>
+                      <small class="text-muted">Tipo: {{ canalSeleccionado.tipo }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid de Bodegas -->
+          <div *ngIf="canalSeleccionado" class="row">
+            <!-- Bodegas asignadas al canal -->
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0">
+                    <i class="fa fa-check-circle text-success me-2"></i>Bodegas Asignadas
+                    <span class="badge bg-primary ms-2">{{ bodegasAsignadas.length }}</span>
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div *ngIf="cargandoBodegas" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando bodegas asignadas...</p>
+                  </div>
+                  
+                  <div *ngIf="!cargandoBodegas && bodegasAsignadas.length === 0" 
+                       class="alert alert-info text-center">
+                    <i class="fa fa-info-circle fa-2x mb-2"></i>
+                    <p>No hay bodegas asignadas a este canal.</p>
+                  </div>
+                  
+                  <div *ngIf="!cargandoBodegas && bodegasAsignadas.length > 0" 
+                       class="bodega-list overflow-auto" style="max-height: 400px;">
+                    <div *ngFor="let bodega of bodegasAsignadas" 
+                         class="bodega-item p-3 mb-2 border rounded bg-light">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 class="mb-0">{{ bodega.nombre }}</h6>
+                          <small>
+                            <span class="text-muted">Código: {{ bodega.idBodega }}</span>
+                            <span class="badge bg-info text-dark ms-2">{{ bodega.tipo }}</span>
+                          </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                (click)="removerBodega(bodega)"
+                                title="Remover bodega del canal">
+                          <i class="fa fa-minus-circle"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Bodegas disponibles para asignar -->
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0">
+                    <i class="fa fa-warehouse text-primary me-2"></i>Bodegas Disponibles
+                    <span class="badge bg-secondary ms-2">{{ bodegasDisponibles.length }}</span>
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div *ngIf="cargandoBodegas" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando bodegas disponibles...</p>
+                  </div>
+                  
+                  <div *ngIf="!cargandoBodegas && bodegasDisponibles.length === 0" 
+                       class="alert alert-info text-center">
+                    <i class="fa fa-info-circle fa-2x mb-2"></i>
+                    <p>No hay bodegas disponibles para asignar.</p>
+                  </div>
+                  
+                  <div *ngIf="!cargandoBodegas && bodegasDisponibles.length > 0" 
+                       class="bodega-list overflow-auto" style="max-height: 400px;">
+                    <div *ngFor="let bodega of bodegasDisponibles" 
+                         class="bodega-item p-3 mb-2 border rounded bg-light"
+                         [ngClass]="{'bodega-asignada': bodega.asignada}"
+                         [title]="bodega.asignada ? 'Esta bodega ya está asignada' : ''">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 class="mb-0">{{ bodega.nombre }}</h6>
+                          <small>
+                            <span class="text-muted">Código: {{ bodega.idBodega }}</span>
+                            <span class="badge bg-info text-dark ms-2">{{ bodega.tipo }}</span>
+                          </small>
+                        </div>
+                        <button *ngIf="!bodega.asignada"
+                                class="btn btn-sm btn-outline-success" 
+                                (click)="asignarBodega(bodega)"
+                                [disabled]="cargandoBodegas"
+                                title="Asignar bodega al canal">
+                          <i class="fa fa-plus-circle"></i>
+                        </button>
+                        <span *ngIf="bodega.asignada" class="badge-asignada">Asignada</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Mensaje cuando no hay canal seleccionado -->
+          <div *ngIf="!canalSeleccionado && !cargando" class="row mt-4">
+            <div class="col-12 text-center">
+              <div class="alert alert-warning">
+                <i class="fa fa-exclamation-triangle fa-2x mb-3"></i>
+                <h5>Seleccione un canal de venta</h5>
+                <p>Para gestionar las bodegas asignadas, primero debe seleccionar un canal de venta activo.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

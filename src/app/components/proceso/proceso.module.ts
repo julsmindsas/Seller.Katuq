@@ -13,6 +13,7 @@ import { VariablesComponent } from './variables/variables.component';
 import { CrearVariablesComponent } from './variables/crear-variables/crear-variables.component';
 import { CanalesComponent } from './canales/canales.component';
 import { CrearCanalesComponent } from './canales/crear-canales/crear-canales.component';
+import { BodegasPorCanalComponent } from './bodegas-por-canal/bodegas-por-canal.component';
 import { TableModule } from 'primeng/table';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -35,7 +36,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     VariablesComponent, 
     CrearVariablesComponent,
     CanalesComponent,
-    CrearCanalesComponent
+    CrearCanalesComponent,
+    BodegasPorCanalComponent
   ]
 })
 export class ProcesoModule { }
