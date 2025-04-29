@@ -259,7 +259,7 @@ export class NavService implements OnDestroy {
 				{ path: 'proceso/canales', title: 'Canales de Venta', type: 'link' },
 				{ path: 'inventario/inventario-catalogo', title: 'Inventario por Bodega', type: 'link' },
 				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link' },
-				{ path: 'inventario/recepcion-mercancia', title: 'Recepción Mercancía', type: 'link' },
+				{ path: 'inventario/recepcion-mercancia', title: 'Ajustes de Inventario', type: 'link' },
 				{ path: 'inventario/traslados', title: 'Traslados entre Bodegas', type: 'link' },
 				{ path: 'inventario/historial-movimientos', title: 'Historial Movimientos', type: 'link' }
 			]
