@@ -1370,8 +1370,7 @@
 
 					<div class="row">
 						<div class="col-sm-6">
-							<button *ngIf="mostrarCrear" class="btn btn-lg btn-primary"
-								(click)="guardarProductos()">Guardar</button>
+							<button *ngIf="mostrarCrear" class="btn btn-lg btn-primary" (click)="guardarProductos()" [disabled]="uploadingImages">Guardar</button>
 							<button class="btn btn-lg btn-primary" (click)="viewProduct()">Vista
 								Previa</button>
 

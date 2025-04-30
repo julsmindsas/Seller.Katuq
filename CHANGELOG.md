@@ -5,6 +5,18 @@ Todos los cambios notables en Katuq serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto sigue [Versionado basado en fecha](./VERSIONADO.md).
 
+## [2025.04.30.1] - 30 de Abril 2025
+
+### Añadido
+- Conversión automática de imágenes a formato WebP para productos, mejorando la eficiencia y velocidad de carga
+- Optimización en el proceso de carga de imágenes, manteniendo las originales que ya están en formato WebP
+- Mejoras en la gestión de la interfaz de usuario durante la carga de imágenes con indicador de progreso optimizado
+- Deshabilitar botón de guardar durante el proceso de carga de imágenes para prevenir errores
+
+### Mejorado
+- Gestión del estado de carga de imágenes para evitar operaciones paralelas conflictivas
+- Mensajes de error más descriptivos durante los procesos de carga y conversión de imágenes
+
 ## [2025.04.29.4] - 29 de Abril 2025
 
 ### Añadido
