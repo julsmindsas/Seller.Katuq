@@ -10,6 +10,7 @@ import {
   ChangeDetectorRef,
   SimpleChanges,
   OnChanges,
+  OnDestroy,
 } from "@angular/core";
 import {
   FormGroup,
@@ -28,7 +29,7 @@ import {
 import Swal from "sweetalert2";
 
 import { AngularFireStorage } from "@angular/fire/compat/storage";
-import { Observable } from "rxjs";
+import { Observable, Subscription } from "rxjs";
 import { parse, stringify } from "flatted";
 import { TreeNode } from "primeng/api";
 import { Router } from "@angular/router";
@@ -51,7 +52,7 @@ import { error } from "console";
   templateUrl: "./crear-productos.component.html",
   styleUrls: ["./crear-productos.component.scss"],
 })
-export class CrearProductosComponent implements OnInit, OnChanges {
+export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild("opcionSeleccionada") opcionSeleccionada: ElementRef;
   @ViewChild("referencia") referencia: ElementRef;
   @ViewChild("codigoBarra") codigoBarra: ElementRef;
@@ -129,6 +130,7 @@ export class CrearProductosComponent implements OnInit, OnChanges {
   kaiProductPrompt: any;
   uploadingImages: boolean = false;
   saving: boolean = false;
+  private subs = new Subscription();
 
   getNameControl(control) {
     return control.value.nameMP;
@@ -285,63 +287,67 @@ export class CrearProductosComponent implements OnInit, OnChanges {
 
     this.identificacion.controls["referencia"].disable();
     this.identificacion.controls["codigoBarras"].disable();
-    this.identificacion.get("tipoReferencia").valueChanges.subscribe((tipo) => {
-      if (tipo == "propio") {
-        if (sessionStorage.getItem("infoForms") == null) {
-          this.identificacion.controls["referencia"].disable();
-          this.identificacion.controls["referencia"].setValue(
-            this.ultimasLetras +
-              "-" +
-              (this.totalProducts + 1).toString().padStart(6, "0"),
-          );
-          this.generarCodigoBarras();
-        } else {
-          this.identificacion.controls["referencia"].disable();
-          const referencia = this.edit.identificacion?.referencia
-            ? this.edit.identificacion?.referencia
-            : this.ultimasLetras +
-              "-" +
-              (this.totalProducts + 1).toString().padStart(6, "0");
-          this.identificacion.controls["referencia"].setValue(referencia);
-          this.generarCodigoBarras();
-        }
-      } else {
-        if (this.edit.identificacion?.referencia) {
-          this.identificacion.controls["referencia"].setValue(
-            this.edit.identificacion?.referencia,
-          );
-        } else {
-          this.identificacion.controls["referencia"].setValue("");
-        }
-        this.identificacion.controls["referencia"].enable();
-      }
-    });
-
-    this.identificacion.get("tipoProducto").valueChanges.subscribe((tipo) => {
-      if (tipo == "propio") {
-        if (sessionStorage.getItem("infoForms") == null) {
-          this.identificacion.controls["codigoBarras"].disable();
-          if (this.identificacion.controls["codigoBarras"].value == "") {
-            this.identificacion.controls["codigoBarras"].setValue(
+    this.subs.add(
+      this.identificacion.get("tipoReferencia").valueChanges.subscribe((tipo) => {
+        if (tipo == "propio") {
+          if (sessionStorage.getItem("infoForms") == null) {
+            this.identificacion.controls["referencia"].disable();
+            this.identificacion.controls["referencia"].setValue(
               this.ultimasLetras +
                 "-" +
                 (this.totalProducts + 1).toString().padStart(6, "0"),
             );
+            this.generarCodigoBarras();
+          } else {
+            this.identificacion.controls["referencia"].disable();
+            const referencia = this.edit.identificacion?.referencia
+              ? this.edit.identificacion?.referencia
+              : this.ultimasLetras +
+                "-" +
+                (this.totalProducts + 1).toString().padStart(6, "0");
+            this.identificacion.controls["referencia"].setValue(referencia);
+            this.generarCodigoBarras();
           }
-          this.generarCodigoBarras();
         } else {
-          this.identificacion.controls["codigoBarras"].disable();
-          this.identificacion.controls["codigoBarras"].setValue(
-            this.edit.identificacion?.referencia,
-          );
+          if (this.edit.identificacion?.referencia) {
+            this.identificacion.controls["referencia"].setValue(
+              this.edit.identificacion?.referencia,
+            );
+          } else {
+            this.identificacion.controls["referencia"].setValue("");
+          }
+          this.identificacion.controls["referencia"].enable();
+        }
+      })
+    );
+
+    this.subs.add(
+      this.identificacion.get("tipoProducto").valueChanges.subscribe((tipo) => {
+        if (tipo == "propio") {
+          if (sessionStorage.getItem("infoForms") == null) {
+            this.identificacion.controls["codigoBarras"].disable();
+            if (this.identificacion.controls["codigoBarras"].value == "") {
+              this.identificacion.controls["codigoBarras"].setValue(
+                this.ultimasLetras +
+                  "-" +
+                  (this.totalProducts + 1).toString().padStart(6, "0"),
+              );
+            }
+            this.generarCodigoBarras();
+          } else {
+            this.identificacion.controls["codigoBarras"].disable();
+            this.identificacion.controls["codigoBarras"].setValue(
+              this.edit.identificacion?.referencia,
+            );
+            this.generarCodigoBarras();
+          }
+        } else {
+          this.identificacion.controls["codigoBarras"].setValue("");
+          this.identificacion.controls["codigoBarras"].enable();
           this.generarCodigoBarras();
         }
-      } else {
-        this.identificacion.controls["codigoBarras"].setValue("");
-        this.identificacion.controls["codigoBarras"].enable();
-        this.generarCodigoBarras();
-      }
-    });
+      })
+    );
 
     this.categoriasForm = this.fb.group({
       categorias: ["", Validators.required],
@@ -377,95 +383,71 @@ export class CrearProductosComponent implements OnInit, OnChanges {
       configProcesoComercialActivo: [false, [Validators.required]] // Nuevo campo para guardar el estado de activación
     });
 
-    this.precio
-      .get("precioUnitarioSinIva")
-      .valueChanges.subscribe((precioUnitarioSinIva) => {
-        let calculo = 0;
-        if (precioUnitarioSinIva) {
-          let precioIva = this.precio.get("precioUnitarioIva").value;
-          if (isNaN(precioUnitarioSinIva)) {
-            precioUnitarioSinIva = precioUnitarioSinIva
-              .replace(",", "")
-              .replace(".", "");
-            precioUnitarioSinIva = parseFloat(precioUnitarioSinIva);
+    this.subs.add(
+      this.precio
+        .get("precioUnitarioSinIva")
+        .valueChanges.subscribe((precioUnitarioSinIva) => {
+          let calculo = 0;
+          if (precioUnitarioSinIva) {
+            let precioIva = this.precio.get("precioUnitarioIva").value;
+            if (isNaN(precioUnitarioSinIva)) {
+              precioUnitarioSinIva = precioUnitarioSinIva
+                .replace(",", "")
+                .replace(".", "");
+              precioUnitarioSinIva = parseFloat(precioUnitarioSinIva);
+            } else {
+              precioUnitarioSinIva = parseFloat(precioUnitarioSinIva);
+              precioIva = parseFloat(precioIva);
+            }
+            calculo = precioUnitarioSinIva * (precioIva / 100);
+            this.precio.get("valorIva").setValue(calculo);
+            this.precio
+              .get("precioUnitarioConIva")
+              .setValue(calculo + precioUnitarioSinIva);
           } else {
-            precioUnitarioSinIva = parseFloat(precioUnitarioSinIva);
-            precioIva = parseFloat(precioIva);
+            this.precio.get("valorIva").setValue("0");
+            this.precio.get("precioUnitarioConIva").setValue("0");
           }
-          calculo = precioUnitarioSinIva * (precioIva / 100);
+
+          if (!this.preciosPorVolumen) {
+            this.preciosPorVolumen = this.precio.get(
+              "preciosVolumen",
+            ) as FormArray;
+          }
+
+          if (this.preciosPorVolumen.length == 0) {
+            var newItem = this.crearPreciosPorVolumen();
+            newItem.get("numeroUnidadesInicial").setValue(1);
+            newItem.get("numeroUnidadesInicial").disable();
+            newItem.get("numeroUnidadesLimite").setValue(1);
+            newItem.get("valorIVAPorVolumen").setValue(0);
+            newItem
+              .get("valorUnitarioPorVolumenSinIVA")
+              .setValue(calculo + precioUnitarioSinIva);
+            newItem
+              .get("valorUnitarioPorVolumenConIVA")
+              .setValue(calculo + precioUnitarioSinIva);
+            this.preciosPorVolumen.push(newItem);
+          } else {
+            this.preciosPorVolumen.controls[0]
+              .get("valorUnitarioPorVolumenSinIVA")
+              .setValue(precioUnitarioSinIva);
+          }
+        })
+    );
+
+    this.subs.add(
+      this.precio.get("precioUnitarioIva").valueChanges.subscribe((precioIva) => {
+        if (precioIva) {
+          const unitPrice = this.precio.get("precioUnitarioSinIva").value;
+          const calculo = unitPrice * (precioIva / 100);
           this.precio.get("valorIva").setValue(calculo);
-          this.precio
-            .get("precioUnitarioConIva")
-            .setValue(calculo + precioUnitarioSinIva);
+          this.precio.get("precioUnitarioConIva").setValue(calculo + unitPrice);
         } else {
-          this.precio.get("valorIva").setValue("0");
-          this.precio.get("precioUnitarioConIva").setValue("0");
+          this.precio.get("valorIva").setValue("");
         }
-
-        if (!this.preciosPorVolumen) {
-          this.preciosPorVolumen = this.precio.get(
-            "preciosVolumen",
-          ) as FormArray;
-        }
-
-        if (this.preciosPorVolumen.length == 0) {
-          var newItem = this.crearPreciosPorVolumen();
-          newItem.get("numeroUnidadesInicial").setValue(1);
-          newItem.get("numeroUnidadesInicial").disable();
-          newItem.get("numeroUnidadesLimite").setValue(1);
-          newItem.get("valorIVAPorVolumen").setValue(0);
-          newItem
-            .get("valorUnitarioPorVolumenSinIVA")
-            .setValue(calculo + precioUnitarioSinIva);
-          newItem
-            .get("valorUnitarioPorVolumenConIVA")
-            .setValue(calculo + precioUnitarioSinIva);
-          this.preciosPorVolumen.push(newItem);
-        } else {
-          this.preciosPorVolumen.controls[0]
-            .get("valorUnitarioPorVolumenSinIVA")
-            .setValue(precioUnitarioSinIva);
-        }
-      });
-
-    this.precio.get("precioUnitarioIva").valueChanges.subscribe((precioIva) => {
-      if (precioIva) {
-        const unitPrice = this.precio.get("precioUnitarioSinIva").value;
-        const calculo = unitPrice * (precioIva / 100);
-        this.precio.get("valorIva").setValue(calculo);
-        this.precio.get("precioUnitarioConIva").setValue(calculo + unitPrice);
-      } else {
-        this.precio.get("valorIva").setValue("");
-      }
-    });
-
-    this.precio
-      .get("precioUnitarioSinIva")
-      .valueChanges.subscribe((precioUnitarioSinIva) => {
-        precioUnitarioSinIva = parseFloat(precioUnitarioSinIva);
-        if (precioUnitarioSinIva) {
-          const precioIva = this.precio.get("precioUnitarioIva").value;
-          const calculo = precioUnitarioSinIva * (precioIva / 100);
-          this.precio.get("valorIva").setValue(calculo);
-          this.precio
-            .get("precioUnitarioConIva")
-            .setValue(calculo + precioUnitarioSinIva);
-        } else {
-          this.precio.get("valorIva").setValue("0");
-          this.precio.get("precioUnitarioConIva").setValue("0");
-        }
-      });
-
-    this.precio.get("precioUnitarioIva").valueChanges.subscribe((precioIva) => {
-      if (precioIva) {
-        const unitPrice = this.precio.get("precioUnitarioSinIva").value;
-        const calculo = unitPrice * (precioIva / 100);
-        this.precio.get("valorIva").setValue(calculo);
-        this.precio.get("precioUnitarioConIva").setValue(calculo + unitPrice);
-      } else {
-        this.precio.get("valorIva").setValue("");
-      }
-    });
+      })
+    );
 
     this.marketplace = this.fb.group({
       campos: new FormArray([]),
@@ -615,7 +597,7 @@ export class CrearProductosComponent implements OnInit, OnChanges {
   }
 
   async uploadImgAndSave() {
-    if (this.carrouselImg.length < 0) {
+    if (this.carrouselImg.length <= 0) {
       return;
     }
     this.uploadingImages = true;
@@ -1309,7 +1291,7 @@ export class CrearProductosComponent implements OnInit, OnChanges {
       error(error) {
         // Revertir estado para permitir reintento
         context.saving = false;
-        contexts.mostrarCrear = true;
+        context.mostrarCrear = true;
         console.error(error);
         Swal.fire({
           title: "Error guardando!",
@@ -1531,7 +1513,7 @@ export class CrearProductosComponent implements OnInit, OnChanges {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
-      this.file$ = Observable.create((observer) => {
+      this.file$ = new Observable((observer) => {
         observer.next(reader.result);
         observer.complete();
       });
@@ -2051,5 +2033,9 @@ export class CrearProductosComponent implements OnInit, OnChanges {
 
   eliminarEtiqueta(index: number) {
     this.etiquetas.splice(index, 1);
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
   }
 }
