@@ -51,10 +51,10 @@ export interface Pedido {
 
 export interface Channel {
     id?: string;
-    nombre?: string;
+    name?: string;
     tipo?: string;
-    estado?: string;
-    fechaCreacion?: string;
+    activo?: boolean;
+    createdAt?: string;
 }
 
 export interface Pago {

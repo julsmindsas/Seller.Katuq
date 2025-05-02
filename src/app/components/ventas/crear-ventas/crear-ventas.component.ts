@@ -248,11 +248,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       facturacion: null,
       envio: null,
       estadoPago: EstadoPago.Pendiente,
-      estadoProceso: EstadoProceso.SinProducir,
-      typeOrder: "E-commerce",
-      channel: {
-        nombre: "Venta Asistida"
-      }
+      estadoProceso: EstadoProceso.SinProducir
     }
 
     this.newPedido();
@@ -1214,6 +1210,13 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   comprarYPagar(event: Pedido) {
 
     this.pedidoGral = event;
+    this.pedidoGral.typeOrder = "E-commerce";
+    this.pedidoGral.channel = {
+      name: "Venta Asistida",
+      tipo: "E-commerce",
+      activo: true,
+      createdAt: new Date().toISOString()
+    }
     console.log(this.pedidoGral);
     const context = this;
 
@@ -1442,7 +1445,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         this.showSteper = false;
 
         const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
-        
+
 
         context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
           next: (res: any) => {
