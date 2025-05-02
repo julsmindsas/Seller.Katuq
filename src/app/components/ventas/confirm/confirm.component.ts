@@ -1,9 +1,10 @@
 import { Component, Input, OnInit,Renderer2,ViewChild,ElementRef } from '@angular/core';
 import { Pedido } from '../modelo/pedido';
-import { PaymentService } from 'src/app/shared/services/ventas/payment.service';
-import { VentasService } from 'src/app/shared/services/ventas/ventas.service';
+import { PaymentService } from '../../../shared/services/ventas/payment.service';
+import { VentasService } from '../../../shared/services/ventas/ventas.service';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
+import { SafeHtml } from '@angular/platform-browser';
 @Component({
   selector: 'app-confirm',
   templateUrl: './confirm.component.html',
@@ -14,7 +15,7 @@ export class ConfirmComponent implements OnInit {
   // recibir el pedido mediante input
   @Input() pedido: Pedido;
   @ViewChild('contentToPrint', { static: true }) contentToPrint: ElementRef;
-  htmlContent: string;
+  htmlContent: SafeHtml | null = null;
   constructor( private renderer: Renderer2,private router: Router,public paymentService: PaymentService,private ventasService: VentasService) {
 
   }

@@ -4,6 +4,7 @@ import { PaymentService } from 'src/app/shared/services/ventas/payment.service';
 import { VentasService } from 'src/app/shared/services/ventas/ventas.service';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
+import { SafeHtml } from '@angular/platform-browser';
 @Component({
   selector: 'app-confirm',
   templateUrl: './pos-confirm.component.html',
@@ -14,7 +15,7 @@ export class POSConfirmComponent implements OnInit {
   // recibir el pedido mediante input
   @Input() pedido: POSPedido;
   @ViewChild('contentToPrint', { static: true }) contentToPrint: ElementRef;
-  htmlContent: string;
+  htmlContent: SafeHtml | null = null;
   constructor(private renderer: Renderer2, private router: Router, public paymentService: PaymentService, private ventasService: VentasService) {
 
   }

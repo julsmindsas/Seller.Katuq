@@ -174,7 +174,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
 
 
   getAllFilters() {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
 
     forkJoin([
       this.maestroService.getFormaEntrega(),
@@ -329,7 +329,8 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
    * @param producto Producto a comprar
    */
   comprarProducto(producto: Producto) {
-    if (producto.procesoComercial?.configProcesoComercialActivo) {
+    // if (producto.procesoComercial?.configProcesoComercialActivo) {
+    if(true) {
       // Abrir modal de configuración
       this.configurarProducto(producto);
     } else {

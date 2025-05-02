@@ -61,7 +61,7 @@
                 <td *ngIf="!isMobile">{{ row?.emailContactoGeneral }}</td>
                 <td *ngIf="!isMobile">{{ row?.pais }}</td>
                 <td *ngIf="!isMobile">
-                  <p-checkbox [binary]="true" [(ngModel)]="row.activo" disabled></p-checkbox>
+                  <p-checkbox [binary]="true" [ngModel]="row.activo ?? false" disabled></p-checkbox>
                 </td>
                 <td>
                   <i placement="top" ngbTooltip="{{'Edit' | translate}}"

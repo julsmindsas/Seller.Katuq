@@ -319,7 +319,7 @@ export class PosCheckoutComponent {
           context.pedido.nroPedido = ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0');
         }
         context.pedido.asesorAsignado = (localStorage.getItem('user') ?? '') as unknown as UserLite;
-        const htmlSanizado = context.paymentService.getHtmlPOSContent(context.pedido);
+        const htmlSanizado = context.paymentService.getHtmlContent(context.pedido);
         // Cambiar estado de productos que no se producen
         context.pedido.carrito?.forEach((x: any) => {
           if (!x.producto?.crearProducto?.paraProduccion) {

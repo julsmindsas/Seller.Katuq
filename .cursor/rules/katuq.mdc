@@ -1,9 +1,9 @@
 ---
-description: agente
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
-# Instrucciones para GitHub Copilot - Proyecto Katuq Seller
+# Instrucciones para Cursor - Proyecto Katuq Seller
 
 Este documento proporciona instrucciones y contexto a GitHub Copilot para mejorar la asistencia de código inteligente en el proyecto Katuq Seller.
 
@@ -345,5 +345,7 @@ src/
 ```
 
 > Esta estructura define la organización principal del código fuente y facilita la escalabilidad y mantenibilidad del proyecto.
+
+
 
 ---

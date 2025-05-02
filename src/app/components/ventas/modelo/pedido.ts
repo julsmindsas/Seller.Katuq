@@ -12,6 +12,7 @@ export interface Pedido {
     _id?: string,
     fechaHoraEmpacado?: string
     porceDescuento?: number;
+    typeOrder?: string;
     nroPedido?: string,
     empacador?: string,
     referencia: string,
@@ -45,7 +46,17 @@ export interface Pedido {
     PagosAsentados?: Pago[],
     validacion?: boolean,
     pagoInformation?: PagoInformation,
+    channel?: Channel
 }
+
+export interface Channel {
+    id?: string;
+    nombre?: string;
+    tipo?: string;
+    estado?: string;
+    fechaCreacion?: string;
+}
+
 export interface Pago {
     fecha?: string;
     formaPago?: string;
