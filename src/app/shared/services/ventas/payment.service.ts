@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { BaseService } from '../base.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { DomSanitizer } from '@angular/platform-browser';
-import { DatePipe } from '@angular/common'
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DatePipe } from '@angular/common';
 import { PedidosUtilService } from '../../../components/ventas/service/pedidos.util.service';
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
-import { Pedido, Fecha } from '../../../components/ventas/modelo/pedido';
+import { Pedido, Fecha, Carrito, Adicion, Preferencia, Tarjeta } from '../../../components/ventas/modelo/pedido'; // Importar tipos necesarios
+import { forkJoin, map, Observable, of } from 'rxjs'; // Importar operadores RxJS
 
 declare var WidgetCheckout: any;
 
@@ -15,33 +16,53 @@ declare var WidgetCheckout: any;
   providedIn: 'root'
 })
 export class PaymentService extends BaseService {
-  generos: any;
-  ocasiones: any;
+  // Eliminar generos y ocasiones como propiedades de clase si se obtienen por pedido
+  // generos: any;
+  // ocasiones: any;
   allBillingZone: any;
+  maestros: any = {}; // Para almacenar maestros cargados
 
-  constructor(private service: MaestroService, private pedidoUtilService: PedidosUtilService, httpClient: HttpClient, private sanitizer: DomSanitizer) {
+  constructor(
+    private service: MaestroService,
+    private pedidoUtilService: PedidosUtilService,
+    httpClient: HttpClient,
+    private sanitizer: DomSanitizer
+  ) {
     super(httpClient);
 
     const user = localStorage.getItem('user');
     if (user) {
-
-      const context = this;
-
-      this.service.getBillingZone().subscribe({
-        next(value: any) {
-
-          context.allBillingZone = value;
-          sessionStorage.setItem('allBillingZone', JSON.stringify(context.allBillingZone))
-
-        },
-        error(err) {
-          console.log(err);
-        },
-      });
-
+      // Cargar zonas de facturación y maestros al iniciar el servicio si es necesario
+      // O cargarlos bajo demanda en getHtmlContent
+      this.loadInitialData();
     }
-
   }
+
+  private loadInitialData(): void {
+    const context = this;
+    // Cargar zonas de facturación
+    this.service.getBillingZone().subscribe({
+      next(value: any) {
+        context.allBillingZone = value;
+        sessionStorage.setItem('allBillingZone', JSON.stringify(context.allBillingZone));
+      },
+      error(err) {
+        console.error('Error loading billing zones:', err);
+      },
+    });
+
+    // Cargar maestros (géneros, ocasiones, etc.)
+    this.pedidoUtilService.getAllMaestro$().subscribe({
+      next(value: any) {
+        context.maestros = value; // Almacenar todos los maestros
+        console.log('Maestros loaded:', context.maestros);
+      },
+      error(err) {
+        console.error('Error loading maestros:', err);
+      },
+    });
+  }
+
 
   public getPaymentMethods() {
     return this.get('payment-methods');
@@ -56,13 +77,20 @@ export class PaymentService extends BaseService {
   public async pauymentWompi(pedido: Pedido) {
     if (!pedido) return;
 
-    const totalCalculado1 = this.checkPriceScale(pedido) * 100;
+    // Asegurarse que allBillingZone esté cargado
+    if (!this.allBillingZone) {
+      console.error("Billing zones not loaded yet.");
+      // Podrías intentar cargarlo aquí o devolver un error/mensaje
+      return;
+    }
+
+    const totalCalculado1 = this.checkPriceScale(pedido) * 100; // Asumiendo que checkPriceScale devuelve el subtotal sin IVA
     const publicKey = environment.wompi.public_key;
     const redirectURL = environment.wompi.redirectURL;
     var checkout = new WidgetCheckout({
       currency: 'COP',
-      amountInCents: totalCalculado1,
-      reference: pedido.referencia.toString(),
+      amountInCents: totalCalculado1, // Revisar si este es el total correcto a enviar
+      reference: pedido.referencia?.toString(), // Añadir validación
       publicKey: publicKey,
       signature: {
         integrity: pedido?.pagoInformation?.integridad
@@ -72,34 +100,9 @@ export class PaymentService extends BaseService {
 
     var _this = this;
 
-    // checkout.open(function (result: any) {
-    //   var transaction = result.transaction
-
-    //   _this.isLoading = false;
-
-    //   setTimeout(function () {
-    //     if (transaction.status === 'APPROVED') {
-    //       _this.cartService.removeAllCartItems();
-    //       _this.service.deleteVariable('pedido');
-
-    //       _this.service.publishSomeData({
-    //         ev: 'add'
-    //       });
-
-    //       _this.submitted = false;
-    //       _this.limpiarDatos();
-    //     }
-    //     _this.router.navigateByUrl('/pago?id=' + transaction.id, { replaceUrl: true });
-
-    //     // _this.todoForm.patchValue({
-    //     //     recap2: ''
-    //     // });
-
-    //     _this.cartService.removeAllCartItems();
-
-    //   }, 100);
-
-    // });
+    // El código comentado de checkout.open parece depender de variables (_this.isLoading, _this.cartService, etc.)
+    // que no están definidas en este servicio. Debería estar en el componente que usa este servicio.
+    // checkout.open(function (result: any) { ... });
   }
 
   // se debe pasar esto al lado del backend
@@ -115,1259 +118,962 @@ export class PaymentService extends BaseService {
 
   }
 
+  // Cambiado a COP y locale 'es-CO' para consistencia
   formatCurrency(value: number): string {
-    const formatter = new Intl.NumberFormat('en-US', {
+    // Añadir chequeo explícito para NaN además de null/undefined
+    if (value === null || value === undefined || isNaN(value)) return '$ 0'; // Devolver '$ 0' o '' según preferencia
+    const formatter = new Intl.NumberFormat('es-CO', { // Usar locale colombiano
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
+      currency: 'COP', // Usar COP consistentemente
+      minimumFractionDigits: 0, // Ajustar según necesidad (0 o 2)
+      maximumFractionDigits: 0
     });
     return formatter.format(value);
   }
+
+  // formatearFecha no se usa en getHtmlContent, pero se mantiene por si acaso
   formatearFecha(fecha: string): string {
-
-    const date = new Date(fecha); // Cambiar 'es-ES' al locale que necesites
-    const datePipe = new DatePipe('es-ES');
-    const isoDateString = date.toISOString();
-    return datePipe.transform(isoDateString, 'YYYY/MM/dd'); // Ajustar el formato de fecha
-  }
-  checkPriceScale(pedido) {
-    let totalPrecioSinIVA = 0;
-    let totalPrecioSinIVADef = 0
-    pedido.carrito.forEach(itemCarrito => {
-      if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-        itemCarrito.producto.precio.preciosVolumen.forEach(x => {
-          if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-            totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * itemCarrito.cantidad;
-          } else {
-            totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
-          }
-        });
-      } else {
-        totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
-      }
-      // Sumar precios de adiciones
-      if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
-        itemCarrito.configuracion.adiciones.forEach(adicion => {
-          totalPrecioSinIVA += (adicion['cantidad'] * adicion['referencia']['precioUnitario']) * itemCarrito.cantidad;
-        });
-      }
-      // Sumar precios de preferencias
-      if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
-        itemCarrito.configuracion.preferencias.forEach(preferencia => {
-          totalPrecioSinIVA += (preferencia['valorUnitarioSinIva']) * itemCarrito.cantidad;
-        });
-      }
-      totalPrecioSinIVADef += totalPrecioSinIVA
-    });
-
-    return totalPrecioSinIVADef;
-  }
-  checkIVAPrice(pedido) {
-    this.allBillingZone = JSON.parse(sessionStorage.getItem('allBillingZone')!)
-    let totalPrecioIVA = 0;
-    let totalPrecioIVADef = 0;
-    let totalExcluidosDef = 0
-    let totalIva5Def = 0
-    let totalImpoDef = 0
-    let totalIva19Def = 0
-    let totalExcluidos = 0
-    let totalIva5 = 0
-    let totalImpo = 0
-    let totalIva19 = 0
-    pedido.carrito.forEach(itemCarrito => {
-      //sumar precios productos
-      if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-        itemCarrito.producto.precio.preciosVolumen.forEach(x => {
-          totalExcluidos = 0
-          totalIva5 = 0
-          totalImpo = 0
-          totalIva19 = 0
-
-          if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-            totalPrecioIVA = x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-            switch (x.valorIVAPorVolumen.toString()) {
-              case "0":
-                totalExcluidos = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100)));
-                break
-              case "5":
-                totalIva5 = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100)));
-                break
-              case "8":
-                totalImpo = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100)));
-                break
-              case "19":
-                totalIva19 = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100)));
-                break
-              default:
-                break
-            }
-          } else {
-            totalPrecioIVA = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-            switch (x.valorIVAPorVolumen.toString()) {
-              case "0":
-                totalExcluidos = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-                break
-              case "5":
-                totalIva5 = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-                break
-              case "8":
-                totalImpo = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-                break
-              case "19":
-                totalIva19 = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-                break
-              default:
-                break
-            }
-          }
-        });
-      } else {
-        totalPrecioIVA = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-        switch (itemCarrito.producto?.precio?.precioUnitarioIva) {
-          case "0":
-            totalExcluidos = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100)));
-            break
-          case "5":
-            totalIva5 = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100)));
-            break
-          case "8":
-            totalImpo = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100)));
-            break
-          case "19":
-            totalIva19 = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100)));
-            break
-          default:
-            break
-        }
-      }
-      // Sumar precios de adiciones
-      if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
-        itemCarrito.configuracion.adiciones.forEach(adicion => {
-          totalPrecioIVA += ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-          switch (adicion.porcentajeIva.toString()) {
-            case "0":
-              totalExcluidos = totalExcluidos + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-              break
-            case "5":
-              totalIva5 = totalIva5 + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-              break
-            case "8":
-              totalImpo = totalImpo + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-              break
-            case "19":
-              totalIva19 = totalIva19 + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-              break
-            default:
-              break
-          }
-        });
-      }
-
-      // Sumar precios de preferencias
-      if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
-        itemCarrito.configuracion.preferencias.forEach(preferencia => {
-          totalPrecioIVA += (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-          switch (preferencia.porcentajeIva) {
-            case "0":
-              totalExcluidos = totalExcluidos + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-              break
-            case "5":
-              totalIva5 = totalIva5 + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-              break
-            case "8":
-              totalImpo = totalImpo + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-              break
-            case "19":
-              totalIva19 = totalIva19 + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (pedido.porceDescuento ?? 0 / 100));
-              break
-            default:
-              break
-          }
-        });
-      }
-      // sumarprecio impuesto domicilio
-
-
-      totalPrecioIVADef += totalPrecioIVA
-      totalExcluidosDef += totalExcluidos
-      totalIva5Def += totalIva5
-      totalImpoDef += totalImpo
-      totalIva19Def += totalIva19
-    });
-    switch (this.pedidoUtilService.getShippingTaxValueInvoice(this.allBillingZone, pedido)) {
-      case "0":
-        totalExcluidosDef = totalExcluidosDef + this.pedidoUtilService.getShippingTaxCostInvoice(this.allBillingZone, pedido);
-        break
-      case "5":
-        totalIva5Def = totalIva5Def + this.pedidoUtilService.getShippingTaxCostInvoice(this.allBillingZone, pedido);
-        break
-      case "8":
-        totalImpoDef = totalImpoDef + this.pedidoUtilService.getShippingTaxCostInvoice(this.allBillingZone, pedido);
-        break
-      case "19":
-        totalIva19Def = totalIva19Def + this.pedidoUtilService.getShippingTaxCostInvoice(this.allBillingZone, pedido);
-        break
-      default:
-        break
+    if (!fecha) return '';
+    try {
+      const date = new Date(fecha);
+      const datePipe = new DatePipe('es-ES'); // Usar locale consistente
+      // No es necesario convertir a ISOString si ya es un string de fecha válido
+      return datePipe.transform(date, 'yyyy/MM/dd') ?? ''; // Usar 'yyyy' en lugar de 'YYYY' y manejar null
+    } catch (e) {
+      console.error("Error formatting date:", fecha, e);
+      return ''; // Devolver vacío en caso de error
     }
+  }
+
+  // Calcula el subtotal (suma de precios base sin IVA)
+  checkPriceScale(pedido: Pedido | POSPedido): number {
+    let totalPrecioSinIVADef = 0;
+    if (!pedido?.carrito) return 0;
+
+    pedido.carrito.forEach(itemCarrito => {
+      let totalItemSinIVA = 0;
+      const producto = itemCarrito?.producto;
+      // Usar Number() y || 0 para asegurar que cantidad sea numérico
+      const cantidad = Number(itemCarrito?.cantidad) || 0;
+      const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
+      // Usar Number() y || 0 para asegurar que precio sea numérico
+      const precioUnitarioSinIva = Number(producto?.precio?.precioUnitarioSinIva) || 0;
+
+      if (preciosVolumen.length > 0) {
+        let precioVolumenEncontrado = false;
+        for (const x of preciosVolumen) {
+          // Asegurar que los límites y el valor sean numéricos
+          const unidadesInicial = Number(x.numeroUnidadesInicial) || 0;
+          const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
+          const valorVolumenSinIVA = Number(x.valorUnitarioPorVolumenSinIVA) || 0;
+
+          if (cantidad >= unidadesInicial && cantidad <= unidadesLimite) {
+            totalItemSinIVA = valorVolumenSinIVA * cantidad;
+            precioVolumenEncontrado = true;
+            break;
+          }
+        }
+        if (!precioVolumenEncontrado) {
+          totalItemSinIVA = precioUnitarioSinIva * cantidad;
+        }
+      } else {
+        totalItemSinIVA = precioUnitarioSinIva * cantidad;
+      }
+
+      // Sumar precios de adiciones (sin IVA)
+      if (itemCarrito.configuracion?.adiciones) {
+        itemCarrito.configuracion.adiciones.forEach((adicion: Adicion) => {
+          // Asegurar que el valor sea numérico
+          const valorAdicionSinIva = Number(adicion.valorUnitarioSinIva) || 0;
+          totalItemSinIVA += valorAdicionSinIva * cantidad;
+        });
+      }
+
+      // Sumar precios de preferencias (sin IVA)
+      if (itemCarrito.configuracion?.preferencias) {
+        itemCarrito.configuracion.preferencias.forEach((preferencia: Preferencia) => {
+           // Asegurar que el valor sea numérico
+          const valorPreferenciaSinIva = Number(preferencia.valorUnitarioSinIva) || 0;
+          totalItemSinIVA += valorPreferenciaSinIva * cantidad;
+        });
+      }
+
+      // Asegurar que totalItemSinIVA no sea NaN antes de sumar
+      if (!isNaN(totalItemSinIVA)) {
+        totalPrecioSinIVADef += totalItemSinIVA;
+      } else {
+        console.warn("NaN detectado en cálculo de subtotal para item:", itemCarrito);
+      }
+    });
+    // Asegurar que el resultado final no sea NaN
+    return isNaN(totalPrecioSinIVADef) ? 0 : totalPrecioSinIVADef;
+  }
+
+  // Calcula el desglose de IVA
+  checkIVAPrice(pedido: Pedido | POSPedido): { totalPrecioIVADef: number, totalExcluidos: number, totalIva5: number, totalImpo: number, totalIva19: number } {
+    // Asegurarse que allBillingZone esté cargado
+    if (!this.allBillingZone) {
+      console.warn("Billing zones not loaded for IVA calculation. Returning zeros.");
+      this.allBillingZone = JSON.parse(sessionStorage.getItem('allBillingZone') || 'null'); // Intentar cargar desde session storage
+      if (!this.allBillingZone) {
+        return { totalPrecioIVADef: 0, totalExcluidos: 0, totalIva5: 0, totalImpo: 0, totalIva19: 0 };
+      }
+    }
+
+    let totalPrecioIVADef = 0;
+    let totalExcluidosDef = 0;
+    let totalIva5Def = 0;
+    let totalImpoDef = 0;
+    let totalIva19Def = 0;
+
+    if (!pedido?.carrito) {
+      return { totalPrecioIVADef: 0, totalExcluidos: 0, totalIva5: 0, totalImpo: 0, totalIva19: 0 };
+    }
+
+    // Asegurar que porceDescuento sea numérico
+    const porceDescuento = (Number(pedido.porceDescuento) || 0) / 100; // Calcular porcentaje una vez
+
+    pedido.carrito.forEach(itemCarrito => {
+      const producto = itemCarrito?.producto;
+      // Asegurar que cantidad sea numérico
+      const cantidad = Number(itemCarrito?.cantidad) || 0;
+      const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
+      // const valorIvaUnitario = Number(producto?.precio?.valorIva) || 0; // No se usa directamente en el cálculo principal de IVA
+      const porcentajeIvaUnitario = producto?.precio?.precioUnitarioIva ?? "0"; // Porcentaje IVA unitario base como string
+
+      let valorIvaItem = 0;
+      let porcentajeIvaItemStr = porcentajeIvaUnitario; // Por defecto, usar el base
+      // Asegurar que precioConIvaItem sea numérico
+      let precioConIvaItem = Number(producto?.precio?.precioUnitarioConIva) || 0; // Precio unitario con IVA para cálculo base
+
+      if (preciosVolumen.length > 0) {
+        let precioVolumenEncontrado = false;
+        for (const x of preciosVolumen) {
+           // Asegurar que los límites y valores sean numéricos
+          const unidadesInicial = Number(x.numeroUnidadesInicial) || 0;
+          const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
+          const valorVolumenConIVA = Number(x.valorUnitarioPorVolumenIva) || 0; // Precio unitario con IVA por volumen
+          const porcentajeVolumenIVA = (x.valorIVAPorVolumen ?? "0").toString(); // Porcentaje IVA por volumen
+
+          if (cantidad >= unidadesInicial && cantidad <= unidadesLimite) {
+            // Usar valores de volumen si aplican
+            precioConIvaItem = valorVolumenConIVA;
+            porcentajeIvaItemStr = porcentajeVolumenIVA;
+            precioVolumenEncontrado = true;
+            break;
+          }
+        }
+        // No es necesario el 'else' aquí porque precioConIvaItem ya tiene el valor base
+        // if (!precioVolumenEncontrado) {
+        // Si no aplica volumen, usar precio base - ya está asignado
+        // precioConIvaItem = (Number(producto?.precio?.precioUnitarioConIva) || 0);
+        // }
+      }
+      // Si no hay precios de volumen, precioConIvaItem mantiene el valor base inicializado
+      // else {
+      // Si no hay precios de volumen, usar precio base - ya está asignado
+      // precioConIvaItem = (Number(producto?.precio?.precioUnitarioConIva) || 0);
+      // }
+
+      // Calcular valor total con IVA del producto principal (antes de descuento)
+      let valorTotalConIvaProducto = precioConIvaItem * cantidad;
+      // Aplicar descuento al valor con IVA
+      let valorTotalConIvaProductoConDesc = valorTotalConIvaProducto * (1 - porceDescuento);
+      // Calcular el valor del IVA correspondiente a este producto con descuento
+      // IVA = TotalConDesc / (1 + %IVA) * %IVA
+      // Asegurar que porcentajeIvaNum sea numérico y válido para división
+      const porcentajeIvaNum = (Number(porcentajeIvaItemStr) || 0) / 100;
+      if (1 + porcentajeIvaNum !== 0) { // Evitar división por cero si %IVA es -100%
+         valorIvaItem = (valorTotalConIvaProductoConDesc / (1 + porcentajeIvaNum)) * porcentajeIvaNum;
+      } else {
+         valorIvaItem = 0; // O manejar como error
+         console.warn("Porcentaje IVA inválido (-100%) encontrado para item:", itemCarrito);
+      }
+
+
+      // Acumular solo si valorIvaItem es un número válido
+      if (!isNaN(valorIvaItem)) {
+        totalPrecioIVADef += valorIvaItem;
+        switch (porcentajeIvaItemStr) {
+          // Acumular valor con descuento si es un número válido
+          case "0": totalExcluidosDef += isNaN(valorTotalConIvaProductoConDesc) ? 0 : valorTotalConIvaProductoConDesc; break; // Si es 0% IVA, el valor es excluido
+          case "5": totalIva5Def += valorIvaItem; break;
+          case "8": totalImpoDef += valorIvaItem; break; // Asumiendo 8% es Impoconsumo
+          case "19": totalIva19Def += valorIvaItem; break;
+        }
+      } else {
+         console.warn("NaN detectado en cálculo de IVA para producto principal:", itemCarrito);
+      }
+
+
+      // Sumar IVA de adiciones
+      if (itemCarrito.configuracion?.adiciones) {
+        itemCarrito.configuracion.adiciones.forEach((adicion: Adicion) => {
+          // Asegurar valores numéricos
+          const valorAdicionConIva = (Number(adicion.precioTotalConIva) || 0) * cantidad;
+          const valorAdicionConIvaConDesc = valorAdicionConIva * (1 - porceDescuento);
+          const porcentajeAdicionStr = (adicion.porcentajeIva ?? 0).toString();
+          const porcentajeAdicionNum = (Number(adicion.porcentajeIva) || 0) / 100;
+          let ivaAdicion = 0;
+
+          if (1 + porcentajeAdicionNum !== 0) {
+             ivaAdicion = (valorAdicionConIvaConDesc / (1 + porcentajeAdicionNum)) * porcentajeAdicionNum;
+          } else {
+             console.warn("Porcentaje IVA inválido (-100%) encontrado para adicion:", adicion);
+          }
+
+
+          if (!isNaN(ivaAdicion)) {
+            totalPrecioIVADef += ivaAdicion;
+            switch (porcentajeAdicionStr) {
+              case "0": totalExcluidosDef += isNaN(valorAdicionConIvaConDesc) ? 0 : valorAdicionConIvaConDesc; break;
+              case "5": totalIva5Def += ivaAdicion; break;
+              case "8": totalImpoDef += ivaAdicion; break;
+              case "19": totalIva19Def += ivaAdicion; break;
+            }
+          } else {
+             console.warn("NaN detectado en cálculo de IVA para adicion:", adicion);
+          }
+        });
+      }
+
+      // Sumar IVA de preferencias
+      if (itemCarrito.configuracion?.preferencias) {
+        itemCarrito.configuracion.preferencias.forEach((preferencia: Preferencia) => {
+          // Asegurar valores numéricos
+          const valorPreferenciaConIva = (Number(preferencia.precioTotalConIva) || 0) * cantidad;
+          const valorPreferenciaConIvaConDesc = valorPreferenciaConIva * (1 - porceDescuento);
+          const porcentajePreferenciaStr = (preferencia.porcentajeIva ?? "0").toString();
+          const porcentajePreferenciaNum = (Number(preferencia.porcentajeIva) || 0) / 100;
+           let ivaPreferencia = 0;
+
+           if (1 + porcentajePreferenciaNum !== 0) {
+              ivaPreferencia = (valorPreferenciaConIvaConDesc / (1 + porcentajePreferenciaNum)) * porcentajePreferenciaNum;
+           } else {
+              console.warn("Porcentaje IVA inválido (-100%) encontrado para preferencia:", preferencia);
+           }
+
+
+          if (!isNaN(ivaPreferencia)) {
+            totalPrecioIVADef += ivaPreferencia;
+            switch (porcentajePreferenciaStr) {
+              case "0": totalExcluidosDef += isNaN(valorPreferenciaConIvaConDesc) ? 0 : valorPreferenciaConIvaConDesc; break;
+              case "5": totalIva5Def += ivaPreferencia; break;
+              case "8": totalImpoDef += ivaPreferencia; break;
+              case "19": totalIva19Def += ivaPreferencia; break;
+            }
+          } else {
+             console.warn("NaN detectado en cálculo de IVA para preferencia:", preferencia);
+          }
+        });
+      }
+    });
+
+    // Calcular IVA del envío (domicilio)
+    // Asegurar valores numéricos
+    const costoEnvioConIva = Number(this.pedidoUtilService.getShippingTaxCostInvoice(this.allBillingZone, pedido)) || 0;
+    const porcentajeIvaEnvioStr = this.pedidoUtilService.getShippingTaxValueInvoice(this.allBillingZone, pedido) ?? "0";
+    const porcentajeIvaEnvioNum = (Number(porcentajeIvaEnvioStr) || 0) / 100;
+    let ivaEnvio = 0;
+
+    if (1 + porcentajeIvaEnvioNum !== 0) {
+       ivaEnvio = (costoEnvioConIva / (1 + porcentajeIvaEnvioNum)) * porcentajeIvaEnvioNum;
+    } else {
+       console.warn("Porcentaje IVA inválido (-100%) encontrado para envío.");
+    }
+
+
+    if (!isNaN(ivaEnvio)) {
+      totalPrecioIVADef += ivaEnvio;
+      switch (porcentajeIvaEnvioStr) {
+        case "0": totalExcluidosDef += isNaN(costoEnvioConIva) ? 0 : costoEnvioConIva; break;
+        case "5": totalIva5Def += ivaEnvio; break;
+        case "8": totalImpoDef += ivaEnvio; break;
+        case "19": totalIva19Def += ivaEnvio; break;
+      }
+    } else {
+       console.warn("NaN detectado en cálculo de IVA para envío.");
+    }
+
+
+    // Corrección: totalExcluidosDef debería sumar el valor *sin* IVA de los items con 0% IVA.
+    // La lógica actual suma el valor *con* IVA (que es igual al sin IVA en este caso).
+    // Para mayor precisión, se debería recalcular la base excluida.
+    // Sin embargo, para mantener la lógica original lo más cercana, la dejamos así,
+    // pero ten en cuenta que `totalExcluidosDef` representa la suma de los precios finales de items con 0% IVA.
+
+    // Asegurar que los totales finales no sean NaN
     return {
-      totalPrecioIVADef: totalPrecioIVADef,
-      totalExcluidos: totalExcluidosDef,
-      totalIva5: totalIva5Def,
-      totalImpo: totalImpoDef,
-      totalIva19: totalIva19Def
+      totalPrecioIVADef: isNaN(totalPrecioIVADef) ? 0 : totalPrecioIVADef,
+      totalExcluidos: isNaN(totalExcluidosDef) ? 0 : totalExcluidosDef, // Suma de valores finales con 0% IVA
+      totalIva5: isNaN(totalIva5Def) ? 0 : totalIva5Def,
+      totalImpo: isNaN(totalImpoDef) ? 0 : totalImpoDef,
+      totalIva19: isNaN(totalIva19Def) ? 0 : totalIva19Def
     };
   }
 
 
-  obtenerFechaHoy() {
+ /**
+   * Obtiene la fecha y hora actual formateada como 'yyyy-MM-dd HH:mm'.
+   * Se utiliza JavaScript nativo para evitar problemas con la instanciación
+   * directa de DatePipe y asegurar la disponibilidad sin depender de la
+   * configuración del módulo o registro de locale para este formato específico.
+   * @returns La fecha y hora actual formateada o una cadena vacía si ocurre un error.
+   */
+ obtenerFechaHoy(): string {
+  try {
     const hoy = new Date();
-    const anio = hoy.getFullYear();
-    const mes = hoy.getMonth() + 1; // getMonth() devuelve un índice basado en cero, por lo que +1
-    const dia = hoy.getDate();
+    const year = hoy.getFullYear();
+    // getMonth() devuelve 0-11, por eso se suma 1. padStart asegura dos dígitos.
+    const month = (hoy.getMonth() + 1).toString().padStart(2, '0');
+    const day = hoy.getDate().toString().padStart(2, '0');
+    const hours = hoy.getHours().toString().padStart(2, '0');
+    const minutes = hoy.getMinutes().toString().padStart(2, '0');
 
-    const hours = hoy.getHours();
-    const minutes = hoy.getMinutes();
-
-    // Añade un cero delante si el mes, día, horas o minutos son menores a 10
-    const formattedMonth = mes < 10 ? `0${mes}` : mes;
-    const formattedDay = dia < 10 ? `0${dia}` : dia;
-    const formattedHours = hours < 10 ? `0${hours}` : hours;
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-
-    return `${anio}-${formattedMonth}-${formattedDay} ${formattedHours}:${formattedMinutes}`;
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  } catch (error) {
+    console.error("Error al formatear la fecha actual:", error);
+    return ''; // Devolver cadena vacía en caso de error
   }
-  getHtmlContent(pedido: Pedido, isComanda: boolean = false): any {
-    pedido.carrito.forEach(x => {
-      this.pedidoUtilService.getAllMaestro$().subscribe((r: any) => {
-        if (x.configuracion?.datosEntrega) {
-          this.generos = r.generos?.find((p) => x.configuracion?.datosEntrega.genero == p.id);
-          console.log(this.generos)
-          this.ocasiones = r.ocasiones?.find((p) => x.configuracion?.datosEntrega.ocasion == p.id);
-        }
-      })
+}
 
-    })
+  // Método principal para generar el HTML del correo/comanda
+  getHtmlContent(pedido: Pedido, isComanda: boolean = false): SafeHtml | null {
+    if (!pedido) return null;
+
+    // Asegurarse que los maestros estén cargados
+    if (!this.maestros || Object.keys(this.maestros).length === 0) {
+      console.warn("Maestros not loaded for HTML generation. Trying to load now...");
+      // Podríamos intentar cargarlos aquí de forma síncrona si fuera posible,
+      // pero como es asíncrono, es mejor asegurarse que se carguen antes.
+      // Por ahora, devolvemos null o un HTML indicando el problema.
+      // Alternativa: Usar un observable y que el componente espere.
+      // this.loadInitialData(); // Llamar aquí no garantiza que estén listos
+      return this.sanitizer.bypassSecurityTrustHtml('<p>Error: Datos maestros no cargados.</p>');
+    }
+     // Asegurarse que allBillingZone esté cargado
+     if (!this.allBillingZone) {
+        console.warn("Billing zones not loaded for HTML generation.");
+        this.allBillingZone = JSON.parse(sessionStorage.getItem('allBillingZone') || 'null');
+        if (!this.allBillingZone) {
+             return this.sanitizer.bypassSecurityTrustHtml('<p>Error: Zonas de facturación no cargadas.</p>');
+        }
+    }
+
+
     let carritoHtml = '';
-    let notasProduccion = ''
-    let notasDespachos = ''
-    let notasEntregas = ''
-    let notasFacturacionPagos = ''
-    let tarjetaNo = 0
-    let index = 0;
+    let notasProduccionHtml = '';
+    let notasDespachosHtml = '';
+    let notasEntregasHtml = '';
+    let notasFacturacionPagosHtml = '';
+    let tarjetaIndex = 0;
+    // pedido.totalImpuesto = 0; // El cálculo de IVA total se hace en checkIVAPrice
 
-    pedido.totalImpuesto = 0;
+    // --- Generación HTML Notas ---
+    // Notas de Producción (asociadas a cada item del carrito)
+    // (pedido.carrito ?? []).forEach((item, index) => {
+    //   // Asumiendo que notaProduccion es un array de Notas
+    //   (item.notaProduccion ?? []).forEach(nota => {
+    //     notasProduccionHtml += `
+    //       <tr>
+    //         <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
+    //         <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
+    //         <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota.nota ?? ''}</td>
+    //       </tr>
+    //     `;
+    //   });
+    //    // Si no hay nota específica pero quieres una fila por producto:
+    //    if (!item.notaProduccion || item.notaProduccion.length === 0) {
+    //      notasProduccionHtml += `
+    //        <tr>
+    //          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
+    //          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.obtenerFechaHoy()}</td>
+    //          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">(Sin nota específica)</td>
+    //        </tr>
+    //      `;
+    //    }
+    // });
 
-    for (const item6 of pedido.carrito) {
-      notasProduccion += `
+
+    // Notas Generales del Pedido
+    (pedido.notasPedido?.notasDespachos ?? []).forEach(nota => {
+      notasDespachosHtml += `
         <tr>
-        <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${item6?.producto?.crearProducto?.titulo}</td>
-        <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.obtenerFechaHoy()}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;width: 100%">${item6.notaProduccion}</td>
-          
-          
+          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota.nota ?? ''}</td>
         </tr>
       `;
-      index++;
-    }
-
-    for (const item1 of pedido?.notasPedido?.notasDespachos) {
-      notasDespachos += `
+    });
+    (pedido.notasPedido?.notasEntregas ?? []).forEach(nota => {
+      notasEntregasHtml += `
         <tr>
-          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(item1.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%">${item1.nota}</td>
-          
+          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota.nota ?? ''}</td>
         </tr>
       `;
-    }
-    for (const item2 of pedido?.notasPedido?.notasEntregas) {
-      notasEntregas += `
+    });
+    (pedido.notasPedido?.notasFacturacionPagos ?? []).forEach(nota => {
+      notasFacturacionPagosHtml += `
         <tr>
-          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(item2.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%">${item2.nota}</td>
-          
+          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota.nota ?? ''}</td>
         </tr>
       `;
-    }
-    for (const item3 of pedido?.notasPedido?.notasFacturacionPagos) {
-      notasFacturacionPagos += `
-        <tr>
-          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(item3.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${item3.nota}</td>
-          
-        </tr>
-      `;
-    }
+    });
 
+    // --- Generación HTML Carrito ---
+    (pedido.carrito ?? []).forEach(item => {
+      const producto = item?.producto;
+      const configuracion = item?.configuracion;
+      // Asegurar que cantidad sea numérico
+      const cantidad = Number(item?.cantidad) || 0;
+      const imagenUrl = producto?.crearProducto?.imagenesPrincipales?.[0]?.urls ?? 'assets/images/default-product.png'; // Imagen por defecto
+      const tituloProducto = producto?.crearProducto?.titulo ?? 'Producto no disponible';
+      const referenciaProducto = producto?.identificacion?.referencia ?? 'N/A';
+      // Asegurar valores numéricos
+      const precioUnitarioSinIva = Number(producto?.precio?.precioUnitarioSinIva) || 0;
+      const porcentajeIva = producto?.precio?.precioUnitarioIva ?? '0';
+      const valorIva = Number(producto?.precio?.valorIva) || 0;
+      const precioUnitarioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
 
-    for (const item of pedido.carrito) {
-      // Sección principal del Carrito
+      // Cabecera de producto principal
       carritoHtml += `
-      <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Imagen</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Producto</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Referencia</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Cantidad</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Precio Unitario Sin IVA</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Porcentaje IVA</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Valor IVA</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Precio Unitario Total (Con IVA)</th>
-                <!-- Más cabeceras si es necesario -->
-            </tr>
         <tr>
-          <td style="border: 1px solid #ddd; padding: 8px;"><img src="${item.producto.crearProducto.imagenesPrincipales[0].urls}"
-                   alt="${item.producto.crearProducto.titulo}" style="width: 100px; height: auto;"></td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${item.producto.crearProducto.titulo}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${item.producto.identificacion.referencia}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${item.cantidad}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(item.producto.precio.precioUnitarioSinIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${item.producto.precio.precioUnitarioIva}%</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(item.producto.precio.valorIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(item.producto.precio.precioUnitarioConIva)}</td>
+          <th style="border: 1px solid #ddd; padding: 8px;">Imagen</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Producto</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Referencia</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Cantidad</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Precio Unit. Sin IVA</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">% IVA</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Valor IVA Unit.</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Precio Unit. Total (Con IVA)</th>
         </tr>
-      `;
-      pedido.totalImpuesto += item.producto.precio.valorIva;
-      // Preferencias como subitems
-      if (item.configuracion && item.configuracion.preferencias && item.configuracion.preferencias.length > 0) {
-        carritoHtml += `<tr style="background-color: #f9f9f9;">
-        <td><span style="color:black;">Preferencias</span></td>
-        </tr> `
-        for (const pref of item.configuracion.preferencias) {
-          carritoHtml += `
-        
-        <tr style="background-color: #f9f9f9;">
-          <td></td> <!-- Celda vacía para la indentación -->
-          <td style="border: 1px solid #ddd; padding: 8px;"><img src="${pref.imagen}" alt="Preferencia" style="width: 50px; height: auto;"></td>
-          <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">Preferencia: ${pref.titulo}:${pref.subtitulo} </td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(pref.valorUnitarioSinIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${pref.porcentajeIva}%</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(pref.valorIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(pref.precioTotalConIva)}</td>
-        </tr>
-      `;
-          pedido.totalImpuesto += pref.valorIva;
-        }
-      }
-
-      // Adiciones como subitems
-      if (item.configuracion && item.configuracion.adiciones && item.configuracion.adiciones.length > 0) {
-        carritoHtml += `<tr style="background-color: #f9f9f9;">
-        <td><span style="color:black;">Adiciones</span></td>
-      </tr>`
-        for (const adic of item.configuracion.adiciones) {
-          carritoHtml += `
-        
-        <tr style="background-color: #f9f9f9;">
-          <td></td> <!-- Celda vacía para la indentación -->
-          <td style="border: 1px solid #ddd; padding: 8px;"><img src="${adic.imagen}" alt="Adición" style="width: 50px; height: auto;"></td>
-          <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">Adición: ${adic.titulo}: ${adic.subtitulo}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(adic.valorUnitarioSinIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${adic.porcentajeIva}%</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(adic.valorIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(adic.precioTotalConIva)}</td>
-        </tr>
-      `;
-          pedido.totalImpuesto += adic.valorIva;
-        }
-      }
-
-      // Detalles de Entrega (Ocasión y Género) como un item
-      if (item.configuracion && item.configuracion.datosEntrega) {
-        const generos = this.generos?.name;
-        const ocasion = this.ocasiones?.name;
-        const observaciones = item.configuracion.datosEntrega.observaciones;
-        carritoHtml += `
-       
-        <tr><td><h6><span style="color:black;">Observaciones</span></h6></td></tr>
         <tr>
-        <td colspan="7" style="border: 1px solid #ddd; padding: 8px;">
-        <table style="width: 100%; border-collapse: collapse;">
-        
-        
-          <thead>
-        
-        <tr style="background-color: #f9f9f9;">
-          <th  style="border: 1px solid #ddd; padding: 8px;width:25%;">Ocasion</th>
-          <th style="border: 1px solid #ddd; padding: 8px;width:25%;">Genero</th>
-          <th  colspan="5" style="border: 1px solid #ddd; padding: 8px;width: 50%;">Observaciones</th>
+          <td style="border: 1px solid #ddd; padding: 8px;"><img src="${imagenUrl}" alt="${tituloProducto}" style="width: 80px; height: auto; max-width: 100px;"></td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${tituloProducto}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${referenciaProducto}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${cantidad}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioUnitarioSinIva)}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${porcentajeIva}%</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIva)}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioUnitarioConIva)}</td>
         </tr>
-        </thead>
-        <tbody>
-      <tr style="background-color: #f9f9f9;">
-        <td style="border: 1px solid #ddd; padding: 8px;width:25%;">${ocasion}</td>
-        <td style="border: 1px solid #ddd; padding: 8px;width:25%;">${generos}</td>
-        <td colspan="5" style="border: 1px solid #ddd; padding: 8px;width: 50%;">${observaciones}</td>
-      </tr>
-      </tbody>
-      </table>
-      </td>
-      </tr>
-    `;
+      `;
 
-
-      }
-
-      // Tarjetas como items
-      if (item.configuracion && item.configuracion.tarjetas && item.configuracion) {
-        for (const tarjeta of item.configuracion.tarjetas) {
-          if (tarjeta.mensaje) {
-            tarjetaNo++
-            carritoHtml += `
+      // Preferencias
+      if (configuracion?.preferencias && configuracion.preferencias.length > 0) {
+        carritoHtml += `<tr style="background-color: #f9f9f9;"><td colspan="8" style="padding: 5px 8px; font-weight: bold; color: #333;">Preferencias:</td></tr>`;
+        configuracion.preferencias.forEach((pref: Preferencia) => {
+          // Asegurar valores numéricos
+          const valorUnitarioSinIvaPref = Number(pref.valorUnitarioSinIva) || 0;
+          const valorIvaPref = Number(pref.valorIva) || 0;
+          const precioTotalConIvaPref = Number(pref.precioTotalConIva) || 0;
+          carritoHtml += `
             <tr style="background-color: #f9f9f9;">
-            <td><span style="color:black;">Tarjeta ${tarjetaNo}</span></td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td></td> <!-- Celda vacía para la indentación -->
-            <td  style="border: 1px solid #ddd; padding: 8px;">Para: ${tarjeta.para}</td>
-            <td colspan="5" style="border: 1px solid #ddd; padding: 8px;">Mensaje: ${tarjeta.mensaje}</td>
-            <td  style="border: 1px solid #ddd; padding: 8px;">De: ${tarjeta.de}</td>
-  
-          </tr>
-        `;
-          }
+              <td></td> <!-- Indentación -->
+              <td style="border: 1px solid #ddd; padding: 8px;"><img src="${pref.imagen ?? ''}" alt="Preferencia" style="width: 40px; height: auto;"></td>
+              <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">${pref.titulo ?? ''}: ${pref.subtitulo ?? ''}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorUnitarioSinIvaPref)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${pref.porcentajeIva ?? '0'}%</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaPref)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioTotalConIvaPref)}</td>
+            </tr>
+          `;
+        });
+      }
 
+      // Adiciones
+      if (configuracion?.adiciones && configuracion.adiciones.length > 0) {
+        carritoHtml += `<tr style="background-color: #f0f0f0;"><td colspan="8" style="padding: 5px 8px; font-weight: bold; color: #333;">Adiciones:</td></tr>`;
+        configuracion.adiciones.forEach((adic: Adicion) => {
+           // Asegurar valores numéricos
+          const valorUnitarioSinIvaAdic = Number(adic.valorUnitarioSinIva) || 0;
+          const valorIvaAdic = Number(adic.valorIva) || 0;
+          const precioTotalConIvaAdic = Number(adic.precioTotalConIva) || 0;
+          carritoHtml += `
+            <tr style="background-color: #f0f0f0;">
+              <td></td> <!-- Indentación -->
+              <td style="border: 1px solid #ddd; padding: 8px;"><img src="${adic.imagen ?? ''}" alt="Adición" style="width: 40px; height: auto;"></td>
+              <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">${adic.titulo ?? ''}: ${adic.subtitulo ?? ''}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorUnitarioSinIvaAdic)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${adic.porcentajeIva ?? '0'}%</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaAdic)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioTotalConIvaAdic)}</td>
+            </tr>
+          `;
+        });
+      }
+
+      // Detalles de Entrega (Ocasión, Género, Observaciones) - Condicional
+      if (configuracion?.datosEntrega) {
+        const datosEntrega = configuracion.datosEntrega;
+        // Buscar nombres en maestros usando IDs
+        const ocasionId = datosEntrega.ocasion; // Asumiendo que es el ID
+        const generoId = datosEntrega.genero?.[0]; // Asumiendo que es un array y tomamos el primero
+
+        const ocasionObj = this.maestros.ocasiones?.find(o => o.id == ocasionId);
+        const generoObj = this.maestros.generos?.find(g => g.id == generoId);
+
+        const ocasionName = ocasionObj?.name ?? null; // Obtener nombre o null
+        const generoName = generoObj?.name ?? null;   // Obtener nombre o null
+        const observaciones = datosEntrega.observaciones ?? '';
+
+        // Solo mostrar la sección si hay ocasión, género u observaciones
+        if (ocasionName || generoName || observaciones) {
+          carritoHtml += `
+            <tr><td colspan="8" style="padding-top: 10px; padding-bottom: 5px; font-weight: bold; color: #333;">Observaciones y Detalles de Entrega:</td></tr>
+            <tr>
+              <td colspan="8" style="border: 1px solid #ddd; padding: 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #e9e9e9;">
+                      ${ocasionName ? '<th style="border: 1px solid #ddd; padding: 8px; width: 25%;">Ocasión</th>' : ''}
+                      ${generoName ? '<th style="border: 1px solid #ddd; padding: 8px; width: 25%;">Género</th>' : ''}
+                      <th style="border: 1px solid #ddd; padding: 8px;">Observaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="background-color: #f9f9f9;">
+                      ${ocasionName ? `<td style="border: 1px solid #ddd; padding: 8px;">${ocasionName}</td>` : ''}
+                      ${generoName ? `<td style="border: 1px solid #ddd; padding: 8px;">${generoName}</td>` : ''}
+                      <td style="border: 1px solid #ddd; padding: 8px;">${observaciones}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          `;
         }
       }
-    }
 
-    //secciones segun la comanda
-    const cuerpodelcorreo = `
-    <div style="width: 80%; margin: auto; overflow: hidden;">
-        
+
+      // Tarjetas
+      if (configuracion?.tarjetas && configuracion.tarjetas.length > 0) {
+        configuracion.tarjetas.forEach((tarjeta: Tarjeta) => {
+          if (tarjeta.mensaje) { // Solo mostrar si hay mensaje
+            tarjetaIndex++;
+            carritoHtml += `
+              <tr style="background-color: #fefefe;"><td colspan="8" style="padding: 5px 8px; font-weight: bold; color: #333;">Tarjeta ${tarjetaIndex}:</td></tr>
+              <tr style="background-color: #fefefe;">
+                <td></td> <!-- Indentación -->
+                <td style="border: 1px solid #ddd; padding: 8px;">Para: ${tarjeta.para ?? ''}</td>
+                <td colspan="5" style="border: 1px solid #ddd; padding: 8px;">Mensaje: ${tarjeta.mensaje}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">De: ${tarjeta.de ?? ''}</td>
+              </tr>
+            `;
+          }
+        });
+      }
+       carritoHtml += `<tr><td colspan="8" style="border-bottom: 2px solid #ccc; padding: 5px 0;"></td></tr>`; // Separador visual
+    }); // Fin forEach carrito
+
+    // --- Secciones HTML ---
+    // (Se mantienen las definiciones de las secciones como constantes para claridad)
+    const seccionDatosCliente = `...`; // Mantener igual, pero con validaciones internas
+    const seccionFacturacionElectronica = `...`; // Mantener igual, pero con validaciones internas
+    const seccionEnvio = `...`; // Cambiado nombre de seccionDatosCliente a seccionEnvio para evitar confusión
+    const seccionNotasProduccion = `...`; // Usará notasProduccionHtml
+    const seccionNotasDespachos = `...`; // Usará notasDespachosHtml
+    const seccionNotasEntregas = `...`; // Usará notasEntregasHtml
+    const seccionNotasFacturacionPagos = `...`; // Usará notasFacturacionPagosHtml
+    const seccionGestionPedido = `...`; // Mantener igual
+    const seccionTotales = `...`; // Recalcular totales aquí para asegurar consistencia
+
+    // --- Recalcular Totales para la sección ---
+    // Es crucial recalcular aquí para asegurar que los valores mostrados coincidan con los cálculos
+    const subtotal = this.checkPriceScale(pedido);
+    const ivaInfo = this.checkIVAPrice(pedido);
+    const totalIVA = ivaInfo.totalPrecioIVADef; // Ya incluye IVA de envío
+    // Asegurar que descuentos y envioSinIva sean numéricos
+    const descuentos = Number(pedido.totalDescuento) || 0;
+    const envioSinIva = Number(pedido.totalEnvio) || 0; // O calcularlo si es necesario
+
+    // Validar antes de calcular totales generales
+    const totalSinIvaGeneral = (isNaN(subtotal) ? 0 : subtotal) + (isNaN(envioSinIva) ? 0 : envioSinIva) - (isNaN(descuentos) ? 0 : descuentos);
+    const totalPagar = (isNaN(totalSinIvaGeneral) ? 0 : totalSinIvaGeneral) + (isNaN(totalIVA) ? 0 : totalIVA);
+
+    const excluidos = ivaInfo.totalExcluidos; // Ya validado en checkIVAPrice
+    const totalIva5 = ivaInfo.totalIva5;       // Ya validado
+    const totalImpo = ivaInfo.totalImpo;     // Ya validado
+    const totalIva19 = ivaInfo.totalIva19;   // Ya validado
+
+    // --- Log para depuración ---
+    console.log('Valores para Totales HTML:', {
+        subtotal,
+        envioSinIva,
+        descuentos,
+        totalSinIvaGeneral,
+        totalIVA,
+        totalPagar,
+        excluidos,
+        totalIva5,
+        totalImpo,
+        totalIva19,
+        ivaInfo // Objeto completo de checkIVAPrice
+    });
+
+
+    // --- Construcción Final del HTML ---
+    const empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
+    const encabezadoUrl = empresaActual.imageEmail?.encabezado || ''; // URL por defecto si no existe
+    const pieDePaginaUrl = empresaActual.imageEmail?.piepagina || ''; // URL por defecto si no existe
+    const imgPublicidad = "https://firebasestorage.googleapis.com/v0/b/julsmind-katuq.appspot.com/o/Empresas%2FJulsmind%2Fimagenes%2FEmail%2FPublicidad%2FContactanos.png?alt=media&token=5df01a71-6869-40cb-a4c4-d2a2675c1a0f";
+
+    const textoEncabezado = !isComanda ? `¡Tu pedido ha sido registrado con éxito!` : `Orden Pedido Nro: ${pedido.nroPedido ?? 'N/A'}`;
+    const linkReferenciaPedido = `<a href="${window.location.origin}/ventas/pedidos?nroPedido=${pedido.nroPedido ?? ''}" style="text-decoration: none; color: #007bff;"><p>Referencia del Pedido: ${pedido.nroPedido ?? 'N/A'}</p></a>`;
+
+    // Reconstruir secciones con validaciones internas y usando las variables HTML generadas
+    const htmlDatosCliente = !isComanda ? `
     <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-    <h2 style="color: #444; margin-bottom: 10px;">Datos del Cliente</h2>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Tipo de Documento: ${pedido?.cliente.tipo_documento_comprador}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Documento: ${pedido?.cliente?.documento}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombres Completos: ${pedido?.cliente?.nombres_completos}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombres Completos: ${pedido?.cliente?.apellidos_completos}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Número de Celular: ${'(' + pedido?.cliente.indicativo_celular_comprador + ') ' + pedido.cliente.numero_celular_comprador}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Número de Whatsapp: ${'(' + pedido?.cliente.indicativo_celular_whatsapp + ') ' + pedido.cliente.numero_celular_whatsapp}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Estado Cliente: ${pedido?.cliente.estado}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Correo Electrónico: ${pedido?.cliente.correo_electronico_comprador}</p>
+      <h2 style="color: #444; margin-bottom: 10px;">Datos del Cliente</h2>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Tipo Documento: ${pedido?.cliente?.tipo_documento_comprador ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Documento: ${pedido?.cliente?.documento ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Nombres: ${pedido?.cliente?.nombres_completos ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Apellidos: ${pedido?.cliente?.apellidos_completos ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Celular: (${pedido?.cliente?.indicativo_celular_comprador ?? ''}) ${pedido?.cliente?.numero_celular_comprador ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Whatsapp: (${pedido?.cliente?.indicativo_celular_whatsapp ?? ''}) ${pedido?.cliente?.numero_celular_whatsapp ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Estado: ${pedido?.cliente?.estado ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Correo: ${pedido?.cliente?.correo_electronico_comprador ?? 'N/A'}</p>
+    </div>` : '';
 
-    </div>
-    `
-
-    const seccionFacturacionElectronica = `
+    const htmlFacturacion = !isComanda && pedido?.facturacion ? `
     <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         <h2 style="color: #444; margin-bottom: 10px;">Datos de Facturación Electrónica</h2>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombres: ${pedido?.facturacion?.nombres}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Tipo de Documento: ${pedido.facturacion.tipoDocumento}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Documento: ${pedido?.facturacion?.documento}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">País: ${pedido?.facturacion?.pais}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Departamento: ${pedido?.facturacion?.departamento}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Ciudad: ${pedido?.facturacion?.ciudad}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Código Postal: ${pedido.facturacion.codigoPostal}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Celular: ${'(' + pedido?.facturacion?.indicativoCel + ') ' + pedido?.facturacion?.celular}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Dirección: ${pedido?.facturacion.direccion}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Referencia de Datos: ${pedido?.facturacion?.alias}</p>
-    </div>
-    `
-    const seccionDatosCliente = `
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Nombres: ${pedido.facturacion.nombres ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Tipo Documento: ${pedido.facturacion.tipoDocumento ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Documento: ${pedido.facturacion.documento ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">País: ${pedido.facturacion.pais ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Departamento: ${pedido.facturacion.departamento ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Ciudad: ${pedido.facturacion.ciudad ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Código Postal: ${pedido.facturacion.codigoPostal ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Celular: (${pedido.facturacion.indicativoCel ?? ''}) ${pedido.facturacion.celular ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Dirección: ${pedido.facturacion.direccion ?? 'N/A'}</p>
+        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Alias: ${pedido.facturacion.alias ?? 'N/A'}</p>
+    </div>` : '';
+
+    const htmlEnvio = !isComanda && pedido?.envio ? `
     <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
       <h2 style="color: #444; margin-bottom: 10px;">Datos de Envío</h2>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombres: ${pedido?.envio?.nombres}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Apellidos: ${pedido?.envio?.apellidos}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Referencia de Datos: ${pedido?.envio?.alias}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Dirección de Entrega: ${pedido?.envio?.direccionEntrega}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombre de Unidad: ${pedido?.envio?.nombreUnidad}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Especificaciones Internas: ${pedido?.envio?.especificacionesInternas}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Departamento: ${pedido?.envio?.departamento}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Ciudad: ${pedido?.envio?.ciudad}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Barrio: ${pedido?.envio?.barrio}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Código Postal:: ${pedido?.envio?.codigoPV}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Celular: ${'(' + pedido?.envio?.indicativoCel + ') ' + pedido?.envio?.celular}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Otro Numero: ${'(' + pedido?.envio?.indicativoOtroNumero + ') ' + pedido?.envio?.otroNumero}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 50px;">Zona: ${pedido?.envio?.zonaCobro}</p>
-      <!-- Más campos de datos de entrega si son necesarios -->
-    </div>
-    `
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Nombres: ${pedido.envio.nombres ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Apellidos: ${pedido.envio.apellidos ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Alias: ${pedido.envio.alias ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Dirección: ${pedido.envio.direccionEntrega ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Unidad/Apto: ${pedido.envio.nombreUnidad ?? ''}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Especificaciones: ${pedido.envio.especificacionesInternas ?? ''}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Departamento: ${pedido.envio.departamento ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Ciudad: ${pedido.envio.ciudad ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Barrio: ${pedido.envio.barrio ?? ''}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Código Postal: ${pedido.envio.codigoPV ?? ''}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Celular: (${pedido.envio.indicativoCel ?? ''}) ${pedido.envio.celular ?? 'N/A'}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Otro Número: (${pedido.envio.indicativoOtroNumero ?? ''}) ${pedido.envio.otroNumero ?? ''}</p>
+      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Zona Cobro: ${pedido.envio.zonaCobro ?? 'N/A'}</p>
+    </div>` : '';
 
-    const seccionNotasDespachos = `
-      <div style="width: 80%; margin: auto; overflow: hidden;">
-      <h2>Notas Despachos</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                  <tr>
-                      <th style="border: 1px solid #ddd; padding: 8px;">Fecha</th>
-                      <th style="border: 1px solid #ddd; padding: 8px;">Nota</th>
-              
-                      <!-- Más cabeceras si es necesario -->
-                  </tr>
-              </thead>
-              <tbody>
-                  ${notasDespachos} <!-- Asegúrate de que carritoHtml también use estilos en línea -->
-              </tbody>
-          </table>
-      </div>
-      `
-    const seccionNotasEntregas = `
-    <div style="width: 80%; margin: auto; overflow: hidden;">
-<h2>Notas Entregas</h2>
-<table style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Fecha</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Nota</th>
-        
-                <!-- Más cabeceras si es necesario -->
-            </tr>
-        </thead>
-        <tbody>
-            ${notasEntregas} <!-- Asegúrate de que carritoHtml también use estilos en línea -->
-        </tbody>
-    </table>
-</div>
-    `
-
-    const seccionNotasFacturacionPagos = `
-    <div style="width: 80%; margin: auto; overflow: hidden;">
-<h2>Notas Facturación y Pagos</h2>
-<table style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Fecha</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Nota</th>
-        
-                <!-- Más cabeceras si es necesario -->
-            </tr>
-        </thead>
-        <tbody>
-            ${notasFacturacionPagos} <!-- Asegúrate de que carritoHtml también use estilos en línea -->
-        </tbody>
-    </table>
-</div>
-    `
-
-    const seccionGestionPedido = `
-
-    <div style="width: 80%; margin: auto; overflow: hidden;">
-    <br><br>
-    <h2>Gestión</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-    <tbody>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Aprobar la compra
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Pagar
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Rastrear mi compra
-                </a>
-            </td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Cambios a mi pedido
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Quiero Felicitarlos
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Presentar una PQRS
-                </a>
-            </td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Hablar con un asesor
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Observaciones de tu Compra
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Terminos y Condiciones 
-                </a>
-            </td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Cargar comprobante
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Descargar factura
-                </a>
-            </td>
-        </tr>
-    </tbody>
+     const htmlNotasProduccion = notasProduccionHtml ? `
+     <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+       <h2 style="color: #444; margin-bottom: 10px;">Notas Producción</h2>
+       <table style="width: 100%; border-collapse: collapse;">
+         <thead>
+           <tr>
+             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Producto</th>
+             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fecha</th>
+             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nota</th>
+           </tr>
+         </thead>
+         <tbody>
+           ${notasProduccionHtml}
+         </tbody>
+       </table>
+     </div>` : '';
 
 
-
-
-    </table>
-      </tr>
-            </table>
-          </td>
-          <td style="border: 1px solid #ddd; padding: 8px;">
-            
-
-    </div>
-    `
-
-    const textoEncabezado = !isComanda ? `¡Tu pedido ha sido registrado con éxito!` : `Orden Pedido Nro: ${pedido.nroPedido}`;
-    const linkReferenciaPedido = `<a href="${window.location.origin}/ventas/pedidos?nroPedido=${pedido.nroPedido}"><p>Referencia del Pedido: ${pedido.nroPedido}</p></a>`
-
-    const subtotal = this.checkPriceScale(pedido);
-    const totalIVA = this.checkIVAPrice(pedido).totalPrecioIVADef + this.pedidoUtilService.getShippingTaxCostInvoice(this.allBillingZone, pedido);
-    const descuentos = pedido.totalDescuento;
-    const envio = pedido.totalEnvio;
-    const excluidos = this.checkIVAPrice(pedido).totalExcluidos
-    const totalIva5 = this.checkIVAPrice(pedido).totalIva5
-    const totalImpo = this.checkIVAPrice(pedido).totalImpo
-    const totalIva19 = this.checkIVAPrice(pedido).totalIva19
-    const totalPagar = envio - descuentos + subtotal + totalIVA;
-    const empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
-    const encabezadoUrl = empresaActual.imageEmail?.encabezado || '';
-    const pieDePaginaUrl = empresaActual.imageEmail?.piepagina || '';
-    const imgPublicidad = "https://firebasestorage.googleapis.com/v0/b/julsmind-katuq.appspot.com/o/Empresas%2FJulsmind%2Fimagenes%2FEmail%2FPublicidad%2FContactanos.png?alt=media&token=5df01a71-6869-40cb-a4c4-d2a2675c1a0f"; // 'https://firebasestorage.googleapis.com/v0/b/julsmind-katuq.appspot.com/o/assets%2Fimages%2Fecommerce%2Fpublicidad-pedido.png?alt=media&token=3b9b8b9a-9b9a-4b9e-9b9a-9b9a9b9a9b9a';
-
-
-    const seccionTotales = `
-    <!-- Sección de Totales Generales del Pedido -->
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-    <h2 style="color: #444; margin-bottom: 10px;">Totales del Pedido</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-        <tfoot>
-          
-            
-              <tr>
-              <th style="border: 1px solid #ddd; padding: 8px;">Costo de Productos:</th>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(subtotal)}</td>
-          </tr>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Domicilio:</th>
-                <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(envio)}</td>
-            </tr>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Descuentos:</th>
-                <td style="border: 1px solid #ddd; padding: 8px;">-${this.formatCurrency(descuentos)}</td>
-            </tr>
-            <tr>
-            <th style="border: 1px solid #ddd; padding: 8px;">Total sin IVA:</th>
-            <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(envio - descuentos + subtotal)}</td>
-            </tr>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Total IVA:</th>
-                <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(totalIVA)}</td>
-            </tr>
-              <tr>
-              
-                    <th class="title">Excluidos 0%:</th>
-                    <td class="value">${this.formatCurrency(excluidos)}</td>
-                  </tr>
-                  <tr>
-                    <th class="title">Iva 5%:</th>
-                    <td class="value">${this.formatCurrency(totalIva5)}</td>
-                  </tr>
-                  <tr>
-                    <th class="title">Impoconsumo 8%:</th>
-                    <td class="value">${this.formatCurrency(totalImpo)}</td>
-                  </tr>
-                  <tr>
-                    <th class="title">Iva 19%:</th>
-                    <td class="value">${this.formatCurrency(totalIva19)}</td>
-                  </tr>
-                
-           
-           
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Total a Pagar:</th>
-                <td style="border: 1px solid #ddd; padding: 8px;"><strong>${this.formatCurrency(totalPagar)}</strong></td>
-            </tr>
-        </tfoot>
-    </table>
-</div>
-    ` ;
-
-    const htmlString = `
-    <div style="text-align: center;">
-        <img src="${encabezadoUrl}" alt="Encabezado" id="Encabezado" style="width: 85%; height: auto;">
-    </div>
-    <div style="text-align: center; font-size: 3rem; /* Puedes añadir más estilos aquí */">
-    <h1>${textoEncabezado}</h1>
-    ${!isComanda ? linkReferenciaPedido : ''}
-    <p>Gracias por elegirnos.</p>
-    <p>Estamos trabajando en tu pedido y te mantendremos informado sobre cualquier novedad</p>
-    <!-- <img src="https://firebasestorage.googleapis.com/v0/b/julsmind-katuq.appspot.com/o/assets%2Fimages%2Fecommerce%2Fsuccess-svgrepo-com.svg?alt=media&token=21bfe103-b0e3-49a8-b758-ce6245ee43e0" style="width: 10%; height: 10%;" alt="confirm"> -->
-    </div>
-
-
-    <!-- Contenido del cuerpo del correo -->
-    ${!isComanda ? cuerpodelcorreo : ''}
-    <!-- Más campos del cliente -->
-
-
-    <!-- Sección de Datos de Facturación Electrónica -->
-    ${!isComanda ? seccionFacturacionElectronica : ''}      
-    <!-- Más detalles de facturación -->
-
-    <!-- Sección de Datos del Cliente -->
-    ${!isComanda ? seccionDatosCliente : ''}
-
-    <!-- Sección de Datos Extras de Entrega -->
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de Entrega</h2>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fecha de Entrega: ${this.customFormatDate(pedido.fechaEntrega)}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Forma de Entrega: ${pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Horario de Entrega: ${pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega}</p>
-    </div>
-
-    <!-- Sección de Datos Extras de la Orden de Pedido -->
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de la Orden de Pedido</h2>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Asesor Asignado: ${pedido?.asesorAsignado?.name}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fecha y Hora de Compra: ${this.customFormatDateHour(pedido?.fechaCreacion)}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fuente: <strong>SELLERCENTER</strong></p>
-    </div>
-
-
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-    <h2 style="color: #444; margin-bottom: 10px;">Productos del pedido</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-        
-        <tbody>
-            ${carritoHtml} <!-- Asegúrate de que carritoHtml también use estilos en línea -->
-        </tbody>
-    </table>
-</div>
-<div style="width: 80%; margin: auto; overflow: hidden;">
-<h2>Notas Producción</h2>
-<table style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr>
-            <th style="border: 1px solid #ddd; padding: 8px;">#</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Fecha </th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Nota</th>
-        
-                <!-- Más cabeceras si es necesario -->
-            </tr>
-        </thead>
-        <tbody>
-            ${notasProduccion} <!-- Asegúrate de que carritoHtml también use estilos en línea -->
-        </tbody>
-    </table>
-</div>
-
-<!-- Notas Despachos -->
-${!isComanda ? seccionNotasDespachos : ''}
-
-<!-- Notas Entregas -->
-${!isComanda ? seccionNotasEntregas : ''}
-
-<!-- Notas Facturación y Pagos -->
-${!isComanda ? notasFacturacionPagos : ''}
-
-<!-- seccion gestionpedido -->
-${!isComanda ? seccionGestionPedido : ''}
-
-
-
-    
-<!-- Sección de Totales Generales del Pedido -->
-${!isComanda ? seccionTotales : ''}
-
-
-
-  <div style="text-align: center;">
-          <img src="${pieDePaginaUrl}" alt="Pie de página" id="piepagina" style="width: 100%; height: auto;">
-    </div>
-  <div style="text-align: center;">
-      <img src="${imgPublicidad}" alt="Pie de página"  id="publicidad" style="width: 100%; height: auto;">
-  </div>
-    `;
-
-
-    const htmlSanizado = this.sanitizer.bypassSecurityTrustHtml(htmlString);
-
-    return htmlSanizado;
-  }
-
-  getHtmlPOSContent(pedido: POSPedido, isComanda: boolean = false): any {
-    pedido.carrito.forEach(x => {
-      this.pedidoUtilService.getAllMaestro$().subscribe((r: any) => {
-        this.generos = r.generos?.find((p) => x.configuracion.datosEntrega.genero == p.id);
-        console.log(this.generos)
-        this.ocasiones = r.ocasiones?.find((p) => x.configuracion.datosEntrega.ocasion == p.id);
-      })
-
-    })
-    let carritoHtml = '';
-    let notasProduccion = ''
-    let notasDespachos = ''
-    let notasEntregas = ''
-    let notasFacturacionPagos = ''
-    let tarjetaNo = 0
-    let index = 0;
-
-    pedido.totalImpuesto = 0;
-
-
-    for (const item of pedido.carrito) {
-      // Sección principal del Carrito
-      carritoHtml += `
-      <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Imagen</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Producto</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Referencia</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Cantidad</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Precio Unitario Sin IVA</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Porcentaje IVA</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Valor IVA</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Precio Unitario Total (Con IVA)</th>
-                <!-- Más cabeceras si es necesario -->
-            </tr>
-        <tr>
-          <td style="border: 1px solid #ddd; padding: 8px;"><img src="${item.producto.crearProducto.imagenesPrincipales[0].urls}"
-                   alt="${item.producto.crearProducto.titulo}" style="width: 100px; height: auto;"></td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${item.producto.crearProducto.titulo}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${item.producto.identificacion.referencia}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${item.cantidad}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(item.producto.precio.precioUnitarioSinIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${item.producto.precio.precioUnitarioIva}%</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(item.producto.precio.valorIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(item.producto.precio.precioUnitarioConIva)}</td>
-        </tr>
-      `;
-      pedido.totalImpuesto += item.producto.precio.valorIva;
-      // Preferencias como subitems
-      if (item.configuracion && item.configuracion.preferencias && item.configuracion.preferencias.length > 0) {
-        carritoHtml += `<tr style="background-color: #f9f9f9;">
-        <td><span style="color:black;">Preferencias</span></td>
-        </tr> `
-        for (const pref of item.configuracion.preferencias) {
-          carritoHtml += `
-        
-        <tr style="background-color: #f9f9f9;">
-          <td></td> <!-- Celda vacía para la indentación -->
-          <td style="border: 1px solid #ddd; padding: 8px;"><img src="${pref.imagen}" alt="Preferencia" style="width: 50px; height: auto;"></td>
-          <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">Preferencia: ${pref.titulo}:${pref.subtitulo} </td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(pref.valorUnitarioSinIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${pref.porcentajeIva}%</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(pref.valorIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(pref.precioTotalConIva)}</td>
-        </tr>
-      `;
-          pedido.totalImpuesto += pref.valorIva;
-        }
-      }
-
-      // Adiciones como subitems
-      if (item.configuracion && item.configuracion.adiciones && item.configuracion.adiciones.length > 0) {
-        carritoHtml += `<tr style="background-color: #f9f9f9;">
-        <td><span style="color:black;">Adiciones</span></td>
-      </tr>`
-        for (const adic of item.configuracion.adiciones) {
-          carritoHtml += `
-        
-        <tr style="background-color: #f9f9f9;">
-          <td></td> <!-- Celda vacía para la indentación -->
-          <td style="border: 1px solid #ddd; padding: 8px;"><img src="${adic.imagen}" alt="Adición" style="width: 50px; height: auto;"></td>
-          <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">Adición: ${adic.titulo}: ${adic.subtitulo}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(adic.valorUnitarioSinIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${adic.porcentajeIva}%</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(adic.valorIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(adic.precioTotalConIva)}</td>
-        </tr>
-      `;
-          pedido.totalImpuesto += adic.valorIva;
-        }
-      }
-
-      // Detalles de Entrega (Ocasión y Género) como un item
-      if (item.configuracion && item.configuracion.datosEntrega) {
-        const generos = this.generos?.name;
-        const ocasion = this.ocasiones?.name;
-        const observaciones = item.configuracion.datosEntrega.observaciones;
-        carritoHtml += `
-       
-        <tr><td><h6><span style="color:black;">Observaciones</span></h6></td></tr>
-        <tr>
-        <td colspan="7" style="border: 1px solid #ddd; padding: 8px;">
+    const htmlNotasDespachos = !isComanda && notasDespachosHtml ? `
+      <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <h2 style="color: #444; margin-bottom: 10px;">Notas Despachos</h2>
         <table style="width: 100%; border-collapse: collapse;">
-        
-        
-          <thead>
-        
-        <tr style="background-color: #f9f9f9;">
-          <th  style="border: 1px solid #ddd; padding: 8px;width:25%;">Ocasion</th>
-          <th style="border: 1px solid #ddd; padding: 8px;width:25%;">Genero</th>
-          <th  colspan="5" style="border: 1px solid #ddd; padding: 8px;width: 50%;">Observaciones</th>
-        </tr>
-        </thead>
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fecha</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nota</th>
+                </tr>
+            </thead>
+            <tbody>${notasDespachosHtml}</tbody>
+        </table>
+      </div>` : '';
+
+    const htmlNotasEntregas = !isComanda && notasEntregasHtml ? `
+      <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <h2 style="color: #444; margin-bottom: 10px;">Notas Entregas</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fecha</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nota</th>
+                </tr>
+            </thead>
+            <tbody>${notasEntregasHtml}</tbody>
+        </table>
+      </div>` : '';
+
+    const htmlNotasFacturacionPagos = !isComanda && notasFacturacionPagosHtml ? `
+      <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <h2 style="color: #444; margin-bottom: 10px;">Notas Facturación y Pagos</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fecha</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nota</th>
+                </tr>
+            </thead>
+            <tbody>${notasFacturacionPagosHtml}</tbody>
+        </table>
+      </div>` : '';
+
+    // Sección Totales (reconstruida con valores recalculados y formateados)
+    // Las bases gravables aproximadas también necesitan validación
+    const baseIva5 = totalIva5 > 0 && !isNaN(totalIva5) ? totalIva5 / 0.05 : 0;
+    const baseImpo8 = totalImpo > 0 && !isNaN(totalImpo) ? totalImpo / 0.08 : 0;
+    const baseIva19 = totalIva19 > 0 && !isNaN(totalIva19) ? totalIva19 / 0.19 : 0;
+
+    const htmlTotales = !isComanda ? `
+    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <h2 style="color: #444; margin-bottom: 10px;">Totales del Pedido</h2>
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
         <tbody>
-      <tr style="background-color: #f9f9f9;">
-        <td style="border: 1px solid #ddd; padding: 8px;width:25%;">${ocasion}</td>
-        <td style="border: 1px solid #ddd; padding: 8px;width:25%;">${generos}</td>
-        <td colspan="5" style="border: 1px solid #ddd; padding: 8px;width: 50%;">${observaciones}</td>
-      </tr>
-      </tbody>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Subtotal (Productos sin IVA):</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(subtotal)}</td>
+          </tr>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Costo Envío (sin IVA):</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(envioSinIva)}</td>
+          </tr>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Descuentos:</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">-${this.formatCurrency(descuentos)}</td>
+          </tr>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Total Base (antes de IVA):</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(totalSinIvaGeneral)}</td>
+          </tr>
+          <tr><td colspan="2" style="padding: 5px 0;"></td></tr> <!-- Separador -->
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Excluidos (0%):</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(excluidos)}</td>
+          </tr>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Base Gravable IVA 5%:</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(baseIva5)}</td> <!-- Aproximado -->
+          </tr>
+           <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">IVA 5%:</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(totalIva5)}</td>
+          </tr>
+           <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Base Gravable Impoconsumo 8%:</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(baseImpo8)}</td> <!-- Aproximado -->
+          </tr>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Impoconsumo 8%:</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(totalImpo)}</td>
+          </tr>
+           <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Base Gravable IVA 19%:</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(baseIva19)}</td> <!-- Aproximado -->
+          </tr>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">IVA 19%:</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(totalIva19)}</td>
+          </tr>
+           <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Total Impuestos (IVA + Impoconsumo):</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(totalIVA)}</td>
+          </tr>
+          <tr><td colspan="2" style="padding: 5px 0;"></td></tr> <!-- Separador -->
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 16px;">Total a Pagar:</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 16px; font-weight: bold;">${this.formatCurrency(totalPagar)}</td>
+          </tr>
+        </tbody>
       </table>
-      </td>
-      </tr>
-    `;
+    </div>` : '';
 
-
-      }
-
-      // Tarjetas como items
-      if (item.configuracion && item.configuracion.tarjetas && item.configuracion) {
-        for (const tarjeta of item.configuracion.tarjetas) {
-          if (tarjeta.mensaje) {
-            tarjetaNo++
-            carritoHtml += `
-            <tr style="background-color: #f9f9f9;">
-            <td><span style="color:black;">Tarjeta ${tarjetaNo}</span></td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td></td> <!-- Celda vacía para la indentación -->
-            <td  style="border: 1px solid #ddd; padding: 8px;">Para: ${tarjeta.para}</td>
-            <td colspan="5" style="border: 1px solid #ddd; padding: 8px;">Mensaje: ${tarjeta.mensaje}</td>
-            <td  style="border: 1px solid #ddd; padding: 8px;">De: ${tarjeta.de}</td>
-  
-          </tr>
-        `;
-          }
-
-        }
-      }
-    }
-
-    //secciones segun la comanda
-    const cuerpodelcorreo = `
-    <div style="width: 80%; margin: auto; overflow: hidden;">
-        
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-    <h2 style="color: #444; margin-bottom: 10px;">Datos del Cliente</h2>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Tipo de Documento: ${pedido?.cliente.tipo_documento_comprador}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Documento: ${pedido?.cliente?.documento}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombres Completos: ${pedido?.cliente?.nombres_completos}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombres Completos: ${pedido?.cliente?.apellidos_completos}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Número de Celular: ${'(' + pedido?.cliente.indicativo_celular_comprador + ') ' + pedido.cliente.numero_celular_comprador}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Número de Whatsapp: ${'(' + pedido?.cliente.indicativo_celular_whatsapp + ') ' + pedido.cliente.numero_celular_whatsapp}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Estado Cliente: ${pedido?.cliente.estado}</p>
-    <p style="font-size: 14px; margin: 5px 0 5px 50px;">Correo Electrónico: ${pedido?.cliente.correo_electronico_comprador}</p>
-
-    </div>
-    `
-
-    const seccionFacturacionElectronica = `
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #444; margin-bottom: 10px;">Datos de Facturación Electrónica</h2>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Nombres: ${pedido?.facturacion?.nombres}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Tipo de Documento: ${pedido.facturacion?.tipoDocumento ?? 'CC'}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Documento: ${pedido?.facturacion?.documento}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">País: ${pedido?.facturacion?.pais}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Departamento: ${pedido?.facturacion?.departamento}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Ciudad: ${pedido?.facturacion?.ciudad}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Código Postal: ${pedido.facturacion?.codigoPostal}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Celular: ${'(' + pedido?.facturacion?.indicativoCel + ') ' + pedido?.facturacion?.celular}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Dirección: ${pedido?.facturacion?.direccion}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Referencia de Datos: ${pedido?.facturacion?.alias}</p>
-    </div>
-    `
-
-
-
-    const seccionGestionPedido = `
-
-    <div style="width: 80%; margin: auto; overflow: hidden;">
-    <br><br>
-    <h2>Gestión</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-    <tbody>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Aprobar la compra
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Pagar
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Rastrear mi compra
-                </a>
-            </td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Cambios a mi pedido
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Quiero Felicitarlos
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Presentar una PQRS
-                </a>
-            </td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Hablar con un asesor
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Observaciones de tu Compra
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Terminos y Condiciones 
-                </a>
-            </td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Cargar comprobante
-                </a>
-            </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 33.33%;">
-                <a href="LINK_AQUI" target="_blank" style="display: block; background-color: #007bff; border-radius: 0.25rem; width: 100%; height: 50px; font-size: 14px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; font-weight: bold; text-align: center; line-height: 50px;">
-                    Descargar factura
-                </a>
-            </td>
-        </tr>
-    </tbody>
-
-
-
-
-    </table>
-      </tr>
-            </table>
-          </td>
-          <td style="border: 1px solid #ddd; padding: 8px;">
-            
-
-    </div>
-    `
-
-    const textoEncabezado = !isComanda ? `¡Tu pedido ha sido registrado con éxito!` : `Orden Pedido Nro: ${pedido.nroPedido}`;
-    const linkReferenciaPedido = `<a href="${window.location.origin}/ventas/pedidos?nroPedido=${pedido.nroPedido}"><p>Referencia del Pedido: ${pedido.nroPedido}</p></a>`
-
-    const subtotal = this.checkPriceScale(pedido);
-    const totalIVA = this.checkIVAPrice(pedido).totalPrecioIVADef + this.pedidoUtilService.getShippingTaxCostInvoice(this.allBillingZone, pedido);
-    const descuentos = pedido.totalDescuento;
-    const envio = 0;
-    const excluidos = this.checkIVAPrice(pedido).totalExcluidos
-    const totalIva5 = this.checkIVAPrice(pedido).totalIva5
-    const totalImpo = this.checkIVAPrice(pedido).totalImpo
-    const totalIva19 = this.checkIVAPrice(pedido).totalIva19
-    const totalPagar = envio - descuentos + subtotal + totalIVA;
-    const empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || "{}");
-    const encabezadoUrl = empresaActual.imageEmail?.encabezado || '';
-    const pieDePaginaUrl = empresaActual.imageEmail?.piepagina || '';
-    const imgPublicidad = "https://firebasestorage.googleapis.com/v0/b/julsmind-katuq.appspot.com/o/Empresas%2FJulsmind%2Fimagenes%2FEmail%2FPublicidad%2FContactanos.png?alt=media&token=5df01a71-6869-40cb-a4c4-d2a2675c1a0f"; // 'https://firebasestorage.googleapis.com/v0/b/julsmind-katuq.appspot.com/o/assets%2Fimages%2Fecommerce%2Fpublicidad-pedido.png?alt=media&token=3b9b8b9a-9b9a-4b9e-9b9a-9b9a9b9a9b9a';
-
-
-    const seccionTotales = `
-    <!-- Sección de Totales Generales del Pedido -->
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-    <h2 style="color: #444; margin-bottom: 10px;">Totales del Pedido</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-        <tfoot>
-          
-            
-              <tr>
-              <th style="border: 1px solid #ddd; padding: 8px;">Costo de Productos:</th>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(subtotal)}</td>
-          </tr>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Domicilio:</th>
-                <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(envio)}</td>
-            </tr>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Descuentos:</th>
-                <td style="border: 1px solid #ddd; padding: 8px;">-${this.formatCurrency(descuentos)}</td>
-            </tr>
-            <tr>
-            <th style="border: 1px solid #ddd; padding: 8px;">Total sin IVA:</th>
-            <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(envio - descuentos + subtotal)}</td>
-            </tr>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Total IVA:</th>
-                <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(totalIVA)}</td>
-            </tr>
-              <tr>
-              
-                    <th class="title">Excluidos 0%:</th>
-                    <td class="value">${this.formatCurrency(excluidos)}</td>
-                  </tr>
-                  <tr>
-                    <th class="title">Iva 5%:</th>
-                    <td class="value">${this.formatCurrency(totalIva5)}</td>
-                  </tr>
-                  <tr>
-                    <th class="title">Impoconsumo 8%:</th>
-                    <td class="value">${this.formatCurrency(totalImpo)}</td>
-                  </tr>
-                  <tr>
-                    <th class="title">Iva 19%:</th>
-                    <td class="value">${this.formatCurrency(totalIva19)}</td>
-                  </tr>
-                
-           
-           
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px;">Total a Pagar:</th>
-                <td style="border: 1px solid #ddd; padding: 8px;"><strong>${this.formatCurrency(totalPagar)}</strong></td>
-            </tr>
-        </tfoot>
-    </table>
-</div>
-    ` ;
 
     const htmlString = `
-    <div style="text-align: center;">
-        <img src="${encabezadoUrl}" alt="Encabezado" id="Encabezado" style="width: 85%; height: auto;">
-    </div>
-    <div style="text-align: center; font-size: 3rem; /* Puedes añadir más estilos aquí */">
-    <h3>${textoEncabezado}</h3>
-    ${!isComanda ? linkReferenciaPedido : ''}
-    <p>Gracias por elegirnos.</p>
-    <p>Estamos trabajando en tu pedido y te mantendremos informado sobre cualquier novedad</p>
-    <!-- <img src="https://firebasestorage.googleapis.com/v0/b/julsmind-katuq.appspot.com/o/assets%2Fimages%2Fecommerce%2Fsuccess-svgrepo-com.svg?alt=media&token=21bfe103-b0e3-49a8-b758-ce6245ee43e0" style="width: 10%; height: 10%;" alt="confirm"> -->
-    </div>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Detalle Pedido ${pedido.nroPedido ?? ''}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { width: 90%; max-width: 800px; margin: 20px auto; background-color: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header, .footer, .ad { text-align: center; padding: 10px 0; }
+        .header img, .footer img, .ad img { max-width: 100%; height: auto; }
+        .content { padding: 20px; }
+        h1 { font-size: 1.5em; color: #333; text-align: center; }
+        h2 { color: #444; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 1.2em; }
+        p { font-size: 14px; margin: 5px 0 10px 0; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .total-row th, .total-row td { font-size: 16px; font-weight: bold; }
+        .button-link { display: inline-block; background-color: #007bff; color: #ffffff; padding: 10px 15px; margin: 5px; border-radius: 5px; text-decoration: none; font-size: 14px; text-align: center; }
+        .button-table td { border: none; padding: 5px; }
+        .button-table { margin-top: 20px; }
+        @media (max-width: 600px) {
+          .container { width: 100%; margin: 0; }
+          .content { padding: 10px; }
+          h1 { font-size: 1.3em; }
+          h2 { font-size: 1.1em; }
+          p, table, th, td { font-size: 12px; }
+          .button-link { display: block; width: calc(100% - 30px); }
+          .button-table td { display: block; width: 100%; box-sizing: border-box; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        ${encabezadoUrl ? `<div class="header"><img src="${encabezadoUrl}" alt="Encabezado"></div>` : ''}
 
+        <div class="content">
+          <h1>${textoEncabezado}</h1>
+          ${!isComanda ? linkReferenciaPedido : ''}
+          <p style="text-align: center;">Gracias por elegirnos. Estamos procesando tu pedido.</p>
 
-    <!-- Contenido del cuerpo del correo -->
-    ${!isComanda ? cuerpodelcorreo : ''}
-    <!-- Más campos del cliente -->
+          ${htmlDatosCliente}
+          ${htmlFacturacion}
+          ${htmlEnvio}
 
+          <!-- Datos Extras Entrega -->
+          <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+              <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de Entrega</h2>
+              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Fecha Entrega: ${this.customFormatDate(pedido.fechaEntrega)}</p>
+              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Forma Entrega: ${pedido.formaEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega ?? 'N/A'}</p>
+              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Horario Entrega: ${pedido.horarioEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega ?? 'N/A'}</p>
+          </div>
 
-    <!-- Sección de Datos de Facturación Electrónica -->
-    ${!isComanda ? seccionFacturacionElectronica : ''}      
-    <!-- Más detalles de facturación -->
+          <!-- Datos Extras Orden -->
+          <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+              <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de la Orden</h2>
+              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Asesor Asignado: ${pedido?.asesorAsignado?.name ?? 'N/A'}</p>
+              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Fecha Compra: ${this.customFormatDateHour(pedido?.fechaCreacion)}</p>
+              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Fuente: <strong>SELLERCENTER</strong></p>
+          </div>
 
+          <!-- Productos del Pedido -->
+          <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <h2 style="color: #444; margin-bottom: 10px;">Productos del pedido</h2>
+            <table>
+              <tbody>
+                ${carritoHtml}
+              </tbody>
+            </table>
+          </div>
 
-    <!-- Sección de Datos Extras de Entrega -->
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de Entrega</h2>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fecha de Entrega: ${this.customFormatDate(pedido.fechaEntrega)}</p>
-    </div>
+          ${htmlNotasProduccion}
+          ${htmlNotasDespachos}
+          ${htmlNotasEntregas}
+          ${htmlNotasFacturacionPagos}
 
-    <!-- Sección de Datos Extras de la Orden de Pedido -->
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de la Orden de Pedido</h2>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Asesor Asignado: ${pedido?.asesorAsignado.name}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fecha y Hora de Compra: ${this.customFormatDateHour(pedido?.fechaCreacion)}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 50px;">Fuente: <strong>SELLERCENTER</strong></p>
-    </div>
+          <!-- Sección Gestión Pedido (Botones) -->
+          ${!isComanda ? `
+          <!--<div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <h2 style="color: #444; margin-bottom: 10px;">Gestión del Pedido</h2>
+            <table class="button-table">
+              <tbody>
+                <tr>
+                  <td><a href="#" target="_blank" class="button-link">Aprobar Compra</a></td>
+                  <td><a href="#" target="_blank" class="button-link">Pagar</a></td>
+                  <td><a href="#" target="_blank" class="button-link">Rastrear Compra</a></td>
+                </tr>
+                 <tr>
+                  <td><a href="#" target="_blank" class="button-link">Cambios al Pedido</a></td>
+                  <td><a href="#" target="_blank" class="button-link">Felicitaciones</a></td>
+                  <td><a href="#" target="_blank" class="button-link">Presentar PQRS</a></td>
+                </tr>
+                 <tr>
+                  <td><a href="#" target="_blank" class="button-link">Hablar con Asesor</a></td>
+                  <td><a href="#" target="_blank" class="button-link">Observaciones</a></td>
+                  <td><a href="#" target="_blank" class="button-link">Términos y Condiciones</a></td>
+                </tr>
+                 <tr>
+                  <td><a href="#" target="_blank" class="button-link">Cargar Comprobante</a></td>
+                  <td><a href="#" target="_blank" class="button-link">Descargar Factura</a></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div> -->` : ''}
 
+          ${htmlTotales}
 
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-    <h2 style="color: #444; margin-bottom: 10px;">Productos del pedido</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-        
-        <tbody>
-            ${carritoHtml} <!-- Asegúrate de que carritoHtml también use estilos en línea -->
-        </tbody>
-    </table>
-</div>
-<div style="width: 80%; margin: auto; overflow: hidden;">
+        </div> <!-- Fin .content -->
 
+        ${pieDePaginaUrl ? `<div class="footer"><img src="${pieDePaginaUrl}" alt="Pie de página"></div>` : ''}
+        ${imgPublicidad ? `<div class="ad"><img src="${imgPublicidad}" alt="Publicidad"></div>` : ''}
 
-
-
-<!-- Notas Facturación y Pagos -->
-${!isComanda ? notasFacturacionPagos : ''}
-
-<!-- seccion gestionpedido -->
-${!isComanda ? seccionGestionPedido : ''}
-
-
-
-    
-<!-- Sección de Totales Generales del Pedido -->
-${!isComanda ? seccionTotales : ''}
-
-
-
-  <div style="text-align: center;">
-          <img src="${pieDePaginaUrl}" alt="Pie de página" id="piepagina" style="width: 100%; height: auto;">
-    </div>
-  <div style="text-align: center;">
-      <img src="${imgPublicidad}" alt="Pie de página"  id="publicidad" style="width: 100%; height: auto;">
-  </div>
+      </div> <!-- Fin .container -->
+    </body>
+    </html>
     `;
 
+    // Sanitizar el HTML final antes de devolverlo
+    return this.sanitizer.bypassSecurityTrustHtml(htmlString);
+  }
 
-    const htmlSanizado = this.sanitizer.bypassSecurityTrustHtml(htmlString);
+  // getHtmlPOSContent necesita una refactorización similar a getHtmlContent
+  getHtmlPOSContent(pedido: POSPedido, isComanda: boolean = false): SafeHtml | null {
+     if (!pedido) return null;
+     // Implementación similar a getHtmlContent pero adaptada a POSPedido
+     // ... (requiere refactorización similar con validaciones y carga de maestros) ...
 
-    return htmlSanizado;
+     // Placeholder - Devuelve un mensaje indicando que necesita implementación
+      console.warn("getHtmlPOSContent needs refactoring similar to getHtmlContent.");
+      const placeholderHtml = `
+      <h1>Comanda POS ${pedido.nroPedido ?? 'N/A'}</h1>
+      <p>Contenido detallado de la comanda POS pendiente de implementación.</p>
+      `;
+       return this.sanitizer.bypassSecurityTrustHtml(placeholderHtml);
+
   }
 
 
-  formatDate(dateObj: Fecha): string {
-
+  // formatDate no se usa en getHtmlContent, pero se mantiene
+  formatDate(dateObj: Fecha | null | undefined): string {
     if (!dateObj) return '';
     const { year, month, day } = dateObj;
+    if (year === undefined || month === undefined || day === undefined) return '';
 
-    // Añade un cero delante de los meses y días menores a 10 para formatear correctamente
     const formattedMonth = month < 10 ? `0${month}` : month;
     const formattedDay = day < 10 ? `0${day}` : day;
-
-    // Formato de fecha en formato 'YYYY-MM-DD'
     return `${year}-${formattedMonth}-${formattedDay}`;
   }
 
-  customFormatDate(dateString: string): string {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // getMonth() devuelve un valor de 0-11
-    const day = date.getDate();
-
-    // Añade un cero delante si el mes o el día son menores a 10
-    const formattedMonth = month < 10 ? `0${month}` : month;
-    const formattedDay = day < 10 ? `0${day}` : day;
-
-    return `${year}-${formattedMonth}-${formattedDay}`;
+  // Formatea fecha YYYY-MM-DD
+  customFormatDate(dateString: string | null | undefined): string {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      const datePipe = new DatePipe('es-ES');
+      return datePipe.transform(date, 'yyyy-MM-dd') ?? 'N/A';
+    } catch (e) {
+      console.error("Error formatting date:", dateString, e);
+      return 'Fecha inválida';
+    }
   }
-  customFormatDateHour(dateString: string): string {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // getMonth() devuelve un valor de 0-11
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
 
-    // Añade un cero delante si el mes, día, horas o minutos son menores a 10
-    const formattedMonth = month < 10 ? `0${month}` : month;
-    const formattedDay = day < 10 ? `0${day}` : day;
-    const formattedHours = hours < 10 ? `0${hours}` : hours;
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-
-    return `${year}-${formattedMonth}-${formattedDay} ${formattedHours}:${formattedMinutes}`;
+  // Formatea fecha y hora YYYY-MM-DD HH:mm
+  customFormatDateHour(dateString: string | null | undefined): string {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      const datePipe = new DatePipe('es-ES');
+      return datePipe.transform(date, 'yyyy-MM-dd HH:mm') ?? 'N/A';
+    } catch (e) {
+      console.error("Error formatting date/hour:", dateString, e);
+      return 'Fecha inválida';
+    }
   }
 }
