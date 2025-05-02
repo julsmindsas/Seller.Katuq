@@ -237,7 +237,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     // });
 
     this.maxDate = new Date();
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
     console.log("empresa", this.empresaActual);
     this.pedidoGral = {
       referencia: "",
@@ -248,7 +248,11 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       facturacion: null,
       envio: null,
       estadoPago: EstadoPago.Pendiente,
-      estadoProceso: EstadoProceso.SinProducir
+      estadoProceso: EstadoProceso.SinProducir,
+      typeOrder: "E-commerce",
+      channel: {
+        nombre: "Venta Asistida"
+      }
     }
 
     this.newPedido();
@@ -1438,6 +1442,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         this.showSteper = false;
 
         const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
+        
 
         context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
           next: (res: any) => {
