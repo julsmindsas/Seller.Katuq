@@ -74,51 +74,7 @@
           <!-- Grid de Bodegas -->
           <div *ngIf="canalSeleccionado" class="row">
             <!-- Bodegas asignadas al canal -->
-            <div class="col-md-6">
-              <div class="card h-100">
-                <div class="card-header bg-light">
-                  <h5 class="mb-0">
-                    <i class="fa fa-check-circle text-success me-2"></i>Bodegas Asignadas
-                    <span class="badge bg-primary ms-2">{{ bodegasAsignadas.length }}</span>
-                  </h5>
-                </div>
-                <div class="card-body">
-                  <div *ngIf="cargandoBodegas" class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                      <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2">Cargando bodegas asignadas...</p>
-                  </div>
-                  
-                  <div *ngIf="!cargandoBodegas && bodegasAsignadas.length === 0" 
-                       class="alert alert-info text-center">
-                    <i class="fa fa-info-circle fa-2x mb-2"></i>
-                    <p>No hay bodegas asignadas a este canal.</p>
-                  </div>
-                  
-                  <div *ngIf="!cargandoBodegas && bodegasAsignadas.length > 0" 
-                       class="bodega-list overflow-auto" style="max-height: 400px;">
-                    <div *ngFor="let bodega of bodegasAsignadas" 
-                         class="bodega-item p-3 mb-2 border rounded bg-light">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                          <h6 class="mb-0">{{ bodega.nombre }}</h6>
-                          <small>
-                            <span class="text-muted">Código: {{ bodega.idBodega }}</span>
-                            <span class="badge bg-info text-dark ms-2">{{ bodega.tipo }}</span>
-                          </small>
-                        </div>
-                        <button class="btn btn-sm btn-outline-danger" 
-                                (click)="removerBodega(bodega)"
-                                title="Remover bodega del canal">
-                          <i class="fa fa-minus-circle"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            
             
             <!-- Bodegas disponibles para asignar -->
             <div class="col-md-6">
@@ -165,6 +121,51 @@
                           <i class="fa fa-plus-circle"></i>
                         </button>
                         <span *ngIf="bodega.asignada" class="badge-asignada">Asignada</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0">
+                    <i class="fa fa-check-circle text-success me-2"></i>Bodegas Asignadas
+                    <span class="badge bg-primary ms-2">{{ bodegasAsignadas.length }}</span>
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div *ngIf="cargandoBodegas" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando bodegas asignadas...</p>
+                  </div>
+                  
+                  <div *ngIf="!cargandoBodegas && bodegasAsignadas.length === 0" 
+                       class="alert alert-info text-center">
+                    <i class="fa fa-info-circle fa-2x mb-2"></i>
+                    <p>No hay bodegas asignadas a este canal.</p>
+                  </div>
+                  
+                  <div *ngIf="!cargandoBodegas && bodegasAsignadas.length > 0" 
+                       class="bodega-list overflow-auto" style="max-height: 400px;">
+                    <div *ngFor="let bodega of bodegasAsignadas" 
+                         class="bodega-item p-3 mb-2 border rounded bg-light">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 class="mb-0">{{ bodega.nombre }}</h6>
+                          <small>
+                            <span class="text-muted">Código: {{ bodega.idBodega }}</span>
+                            <span class="badge bg-info text-dark ms-2">{{ bodega.tipo }}</span>
+                          </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                (click)="removerBodega(bodega)"
+                                title="Remover bodega del canal">
+                          <i class="fa fa-minus-circle"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
