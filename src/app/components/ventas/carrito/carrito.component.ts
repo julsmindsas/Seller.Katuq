@@ -1,179 +1,192 @@
-import {   Component, Input, OnInit } from "@angular/core";
+import { Component, Input, OnInit } from "@angular/core";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
 import { VentasService } from "src/app/shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
 import { Pedido } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";
+
 @Component({
   selector: "app-carrito",
   templateUrl: "./carrito.component.html",
   styleUrls: ["./carrito.component.scss"],
 })
 export class CarritoComponent implements OnInit {
-
-  productos: any;
-  cupon: any;
-  valorDescuento: any = 0;
-  porcentajeDescuento: any = 0;
+  productos: any[] = [];
+  cupon: string = '';
+  valorDescuento: number = 0;
+  porcentajeDescuento: number = 0;
+  rangoPreciosActual1: any = null;
+  precioproducto: number = 0;
+  preciosAdiciones: number = 0;
+  preciosPreferencias: number = 0;
 
   @Input()
   public pedido: Pedido;
-  rangoPreciosActual1: any;
-  precioproducto: any;
-  preciosAdiciones: any;
-  preciosPreferencias: any;
 
-  constructor(private carsingleton: CartSingletonService, private service: VentasService, private toastrService: ToastrService) { }
-  
+  constructor(
+    private carsingleton: CartSingletonService,
+    private service: VentasService,
+    private toastrService: ToastrService
+  ) {}
+
   ngOnInit(): void {
     this.refreshCartWithProducts();
   }
 
   refreshCartWithProducts(): void {
-    // this.carsingleton.setProductInCart();
     this.carsingleton.productInCartChanges$.subscribe((data) => {
-      this.productos = data;
-      this.productos = [...this.productos];
+      this.productos = Array.isArray(data) ? [...data] : [];
     });
   }
-  
 
-  removeThisProduct(producto: any) {
+  removeThisProduct(producto: any): void {
+    if (!producto) return;
     this.carsingleton.removeProduct(producto);
-    // this.refreshCartWithProducts();
-  }
-  getTotalProductPriceInCart() {
-    let total = 0;
-    this.productos.forEach((producto: any) => {
-      const preciosAdiciones = producto.configuracion.adiciones.reduce((acumulador1, producto) => {
-        return acumulador1 + (producto.referencia.precioTotal * producto.cantidad);
-      }, 0);
-      const preciosPreferencias = producto.configuracion.preferencias.reduce((acumulador2, producto) => {
-        return acumulador2 + producto.precioTotalConIva;
-      }, 0);
-      let precioproducto = producto.producto?.precio?.precioUnitarioConIva;
-      if (producto.producto.precio.preciosVolumen.length > 0 ) {
-        const rangoActual = producto.producto.precio.preciosVolumen.find(x =>
-          parseInt(producto.cantidad) >= x.numeroUnidadesInicial && parseInt(producto.cantidad) <= x.numeroUnidadesLimite
-        );
-        if (rangoActual) {
-          precioproducto = rangoActual.valorUnitarioPorVolumenConIVA;
-        }
-      }
-      total += (precioproducto + preciosAdiciones + preciosPreferencias) * producto.cantidad;
-    });
-
-    return total;
   }
 
-  checkPriceScale(itemCarrito: any) {
-    if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-      const rangoActual = itemCarrito.producto.precio.preciosVolumen.find(x =>
-        parseInt(itemCarrito.cantidad) >= x.numeroUnidadesInicial && parseInt(itemCarrito.cantidad) <= x.numeroUnidadesLimite
-      );
-      if (rangoActual) {
-        return rangoActual.valorUnitarioPorVolumenConIVA;
-      }
+  private calculateAdicionesPrice(adiciones: any[]): number {
+    if (!adiciones || !Array.isArray(adiciones)) return 0;
+    return adiciones.reduce((total, adicion) => {
+      const precio = adicion?.referencia?.precioTotal || 0;
+      const cantidad = adicion?.cantidad || 0;
+      return total + (precio * cantidad);
+    }, 0);
+  }
+
+  private calculatePreferenciasPrice(preferencias: any[]): number {
+    if (!preferencias || !Array.isArray(preferencias)) return 0;
+    return preferencias.reduce((total, preferencia) => {
+      const precio = preferencia?.precioTotalConIva || 0;
+      return total + precio;
+    }, 0);
+  }
+
+  private getProductPriceWithScale(producto: any): number {
+    if (!producto?.producto?.precio) return 0;
+    
+    const preciosVolumen = producto.producto.precio.preciosVolumen;
+    if (!preciosVolumen || preciosVolumen.length === 0) {
+      return producto.producto.precio.precioUnitarioConIva || 0;
     }
-    return itemCarrito.producto?.precio?.precioUnitarioConIva;
+
+    const cantidad = parseInt(producto.cantidad);
+    const rangoActual = preciosVolumen.find(x =>
+      cantidad >= x.numeroUnidadesInicial && cantidad <= x.numeroUnidadesLimite
+    );
+
+    return rangoActual?.valorUnitarioPorVolumenConIVA || producto.producto.precio.precioUnitarioConIva || 0;
   }
 
-  checkAditionPrice(item){
-    return item.configuracion?.adiciones.some(adicion => adicion.precioTotalConIva !== 0)
-  }
-  checkPreferencePrice(item){
-    return item.configuracion?.preferencias.some(adicion => adicion.precioTotalConIva !== 0)
-  }
-  getTotalProductPriceWithDescountInCart() {
-    let total = 0;
-    this.productos.forEach((producto: any) => {
-      this.preciosAdiciones = producto.configuracion.adiciones.reduce((acumulador1, producto) => {
-        return acumulador1 + (producto.referencia.precioTotal * producto.cantidad);
-      }, 0);
-      this.preciosPreferencias = producto.configuracion.preferencias.reduce((acumulador2, producto) => {
-        return acumulador2 + producto.precioTotalConIva;
-      }, 0);
-      if (producto.producto.precio.preciosVolumen.length > 0) {
-        producto.producto.precio.preciosVolumen.map(x => {
-          if (parseInt(producto.cantidad) >= x.numeroUnidadesInicial && parseInt(producto.cantidad) <= x.numeroUnidadesLimite) {
-            this.precioproducto = x.valorUnitarioPorVolumenConIVA
+  getTotalProductPriceInCart(): number {
+    if (!this.productos || this.productos.length === 0) return 0;
 
-          }else{
-            this.precioproducto = producto.producto?.precio?.precioUnitarioConIva
-          }
-        })
-      } else {
-        this.precioproducto = producto.producto?.precio?.precioUnitarioConIva
-      }
-      total += (this.precioproducto + this.preciosAdiciones + this.preciosPreferencias) * producto.cantidad;
-    });
+    return this.productos.reduce((total, producto) => {
+      const precioBase = this.getProductPriceWithScale(producto);
+      const precioAdiciones = this.calculateAdicionesPrice(producto.configuracion?.adiciones);
+      const precioPreferencias = this.calculatePreferenciasPrice(producto.configuracion?.preferencias);
+      const cantidad = parseInt(producto.cantidad) || 0;
 
+      return total + ((precioBase + precioAdiciones + precioPreferencias) * cantidad);
+    }, 0);
+  }
+
+  checkPriceScale(itemCarrito: any): number {
+    if (!itemCarrito?.producto?.precio) return 0;
+    return this.getProductPriceWithScale(itemCarrito);
+  }
+
+  checkAditionPrice(item: any): boolean {
+    if (!item?.configuracion?.adiciones) return false;
+    return item.configuracion.adiciones.some(adicion => 
+      adicion?.referencia?.precioTotal > 0
+    );
+  }
+
+  checkPreferencePrice(item: any): boolean {
+    if (!item?.configuracion?.preferencias) return false;
+    return item.configuracion.preferencias.some(preferencia => 
+      preferencia?.precioTotalConIva > 0
+    );
+  }
+
+  getTotalProductPriceWithDescountInCart(): number {
+    const total = this.getTotalProductPriceInCart();
     return total - this.valorDescuento;
   }
 
-  menosCantidad(itemCarrito: any) {
-    if (itemCarrito.cantidad > itemCarrito?.producto?.disponibilidad?.cantidadMinVenta) {
+  menosCantidad(itemCarrito: any): void {
+    if (!itemCarrito || !itemCarrito.producto?.disponibilidad) return;
+
+    const cantidadMinima = itemCarrito.producto.disponibilidad.cantidadMinVenta || 1;
+    if (itemCarrito.cantidad > cantidadMinima) {
       itemCarrito.cantidad--;
-      localStorage.setItem("carrito", JSON.stringify(this.productos));
-      // this.carsingleton.setProductInCart();
-
-      this.refreshCartWithProducts();
-      const rangoActual = itemCarrito.producto.precio.preciosVolumen.find(x =>
-        itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite
-      );
-      if (rangoActual.numeroUnidadesInicial && this.rangoPreciosActual1?.numeroUnidadesInicial != rangoActual.numeroUnidadesInicial) {
-        this.toastrService.show('<p class="mb-0 mt-1">Cambio Rango de precio!</p>', '', { closeButton: true, enableHtml: true, positionClass: 'toast-bottom-right', timeOut: 1000 });
-
-        // Actualizar el rango de precios actual
-        this.rangoPreciosActual1 = rangoActual;
-      }
-
-     
-
-
+      this.updateCartAndCheckPriceScale(itemCarrito);
     }
   }
-  
-  masCantidad(producto: any) {
-    producto.cantidad++;
-    localStorage.setItem("carrito", JSON.stringify(this.productos));
-    // this.carsingleton.setProductInCart();
-    this.refreshCartWithProducts();
-    const rangoActual = producto.producto.precio.preciosVolumen.find(x =>
-      producto.cantidad >= x.numeroUnidadesInicial && producto.cantidad <= x.numeroUnidadesLimite
-    );
-    if (rangoActual.numeroUnidadesInicial && this.rangoPreciosActual1?.numeroUnidadesInicial !== rangoActual.numeroUnidadesInicial) {
-      this.toastrService.show('<p class="mb-0 mt-1">Cambio rango de precio!</p>', '', { closeButton: true, enableHtml: true, positionClass: 'toast-bottom-right', timeOut: 1000 });
 
-      // Actualizar el rango de precios actual
+  masCantidad(itemCarrito: any): void {
+    if (!itemCarrito) return;
+    itemCarrito.cantidad++;
+    this.updateCartAndCheckPriceScale(itemCarrito);
+  }
+
+  private updateCartAndCheckPriceScale(itemCarrito: any): void {
+    localStorage.setItem("carrito", JSON.stringify(this.productos));
+    this.refreshCartWithProducts();
+
+    const rangoActual = this.getCurrentPriceRange(itemCarrito);
+    if (rangoActual?.numeroUnidadesInicial && 
+        this.rangoPreciosActual1?.numeroUnidadesInicial !== rangoActual.numeroUnidadesInicial) {
+      this.toastrService.show(
+        '<p class="mb-0 mt-1">Cambio de rango de precio!</p>',
+        '',
+        { closeButton: true, enableHtml: true, positionClass: 'toast-bottom-right', timeOut: 1000 }
+      );
       this.rangoPreciosActual1 = rangoActual;
     }
   }
 
-  async validarCuponYAplica() {
-    const context = this
+  private getCurrentPriceRange(itemCarrito: any): any {
+    if (!itemCarrito?.producto?.precio?.preciosVolumen) return null;
+    return itemCarrito.producto.precio.preciosVolumen.find(x =>
+      parseInt(itemCarrito.cantidad) >= x.numeroUnidadesInicial && 
+      parseInt(itemCarrito.cantidad) <= x.numeroUnidadesLimite
+    );
+  }
+
+  async validarCuponYAplica(): Promise<void> {
+    if (!this.cupon) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Por favor ingrese un código de cupón',
+      });
+      return;
+    }
+
     this.service.validateCupon({ code: this.cupon }).subscribe({
-      next(value) {
-        if (value.lenght == 0) {
+      next: (value) => {
+        if (!value || value.length === 0) {
           Swal.fire({
             icon: 'error',
-            title: 'Oops...',
-            text: 'Cupon no valido',
-          })
+            title: 'Error',
+            text: 'Cupón no válido',
+          });
           return;
         }
 
-        context.valorDescuento = 0;
-        context.porcentajeDescuento = parseInt(value[0]?.valor);
-        context.pedido.porceDescuento = context.porcentajeDescuento;
-        context.valorDescuento = context.getTotalProductPriceInCart() * context.porcentajeDescuento / 100;
+        this.valorDescuento = 0;
+        this.porcentajeDescuento = parseInt(value[0]?.valor) || 0;
+        this.pedido.porceDescuento = this.porcentajeDescuento;
+        this.valorDescuento = (this.getTotalProductPriceInCart() * this.porcentajeDescuento) / 100;
       },
-      error(err) {
+      error: (err) => {
         Swal.fire({
-
-        })
+          icon: 'error',
+          title: 'Error',
+          text: 'Ocurrió un error al validar el cupón',
+        });
       },
-    })
+    });
   }
-
 }

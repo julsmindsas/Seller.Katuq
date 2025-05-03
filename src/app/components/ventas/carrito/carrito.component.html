@@ -1,159 +1,207 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-sm-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 translate="Carrito">Carrito</h5>
+      <div class="card cart-card">
+        <div class="card-header cart-header">
+          <div class="d-flex align-items-center">
+            <i class="pi pi-shopping-cart me-3"></i>
+            <h5 class="mb-0 cart-title">
+              <span translate="Carrito">Mi Carrito de Compras</span>
+            </h5>
+          </div>
         </div>
         <div class="card-body">
           <div class="row">
-            <div class="order-history table-responsive wishlist">
-              <table class="table table-bordered">
-
+            <div class="order-history table-responsive">
+              <table class="table table-hover">
                 <tbody>
-                  <tr *ngIf="productos.length === 0">
-                    <td colspan="6" class="text-center" translate="No hay productos en el carrito">No hay productos en
-                      el carrito</td>
+                  <tr *ngIf="productos.length === 0" class="text-center empty-cart">
+                    <td colspan="6" class="py-5">
+                      <i class="pi pi-shopping-cart" style="font-size: 3rem"></i>
+                      <h5 class="text-muted mb-3" translate="No hay productos en el carrito">Tu carrito está vacío</h5>
+                      <p class="text-muted mb-0">Agrega productos para comenzar tu compra</p>
+                    </td>
                   </tr>
                   <ng-container *ngFor="let itemCarrito of productos">
-                    <tr>
-                      <th translate="Producto">Producto</th>
-                      <th translate="Nombre Producto">Nombre Producto</th>
-                      <th translate="Precio">Precio</th>
-                      <th translate="Cantidad">Cantidad</th>
-                      <th translate="Accion">Acción</th>
-                      <th translate="Total">Total</th>
+                    <tr class="product-header">
+                      <th class="text-center" translate="Producto"></th>
+                      <th class="text-center" translate="Detalles"></th>
+                      <th class="text-center" translate="Precio"></th>
+                      <th class="text-center" translate="Cantidad"></th>
+                      <th class="text-center" translate="Accion"></th>
+                      <th class="text-center" translate="Subtotal"></th>
                     </tr>
-                    <tr>
-                      <td>
-                        <img class="img-fluid img-40"
-                          *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
-                          [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
-                          [alt]="itemCarrito?.producto?.crearProducto?.titulo" appImageOptimizer [quality]="0.3"
-                          [width]="50" [height]="50" [lazy]="true" loading="lazy" priority>
-
-                        <img class="img-fluid img-40"
-                          *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length == 0" src=""
-                          alt="{{ itemCarrito?.producto?.crearProducto.titulo }}" width="100" height="100">
-                      </td>
-                      <td>
-                        <div class="product-name"> {{
-                          itemCarrito?.producto?.crearProducto?.titulo }}
-                        </div>
-                      </td>
-                      <td>{{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</td>
-                      <td>
-                        <div class="qty-box">
-                          <div class="input-group"><span class="input-group-prepend">
-                              <button class="btn quantity-left-minus" type="button" data-type="minus"
-                                (click)="menosCantidad(itemCarrito)"><svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                  height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                  stroke-linecap="round" stroke-linejoin="round" class="feather feather-minus">
-                                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg></button></span>
-                            <input #cantidad class="form-control input-number" type="text" name="quantity" id="quantity"
-                              min="{{itemCarrito?.producto?.disponibilidad?.cantidadMinVenta}}" max="100"
-                              value="{{itemCarrito?.cantidad}}" data-original-title="" title=""><span
-                              class="input-group-prepend">
-                              <button class="btn quantity-right-plus" type="button" data-type="plus"
-                                (click)="masCantidad(itemCarrito)"><svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                  height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                  stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus">
-                                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg></button></span>
+                    <tr class="product-row">
+                      <td class="align-middle">
+                        <div class="product-image-container">
+                          <img class="img-fluid rounded"
+                            *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
+                            [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                            [alt]="itemCarrito?.producto?.crearProducto?.titulo" 
+                            appImageOptimizer 
+                            [quality]="0.3"
+                            [width]="80" 
+                            [height]="80" 
+                            [lazy]="true" 
+                            loading="lazy" 
+                            priority>
+                          <div class="no-image-placeholder" *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length == 0">
+                            <i class="pi pi-box" style="font-size: 2rem"></i>
                           </div>
                         </div>
                       </td>
-                      <td>
-                        <i class="fa fa-trash-o" style="cursor: pointer;" title="Eliminar"
-                          (click)="removeThisProduct(itemCarrito)"></i>
+                      <td class="align-middle">
+                        <div class="product-details">
+                          <h6 class="product-name mb-1">{{ itemCarrito?.producto?.crearProducto?.titulo }}</h6>
+                          <small class="text-muted">SKU: {{itemCarrito?.producto?.sku || 'N/A'}}</small>
+                        </div>
                       </td>
-                      <td>{{ checkPriceScale(itemCarrito) *
-                        (itemCarrito?.cantidad) | currency:'USD':'symbol':'1.0-0' }}</td>
+                      <td class="align-middle text-center">
+                        <span class="price-value">{{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</span>
+                      </td>
+                      <td class="align-middle">
+                        <div class="qty-box">
+                          <div class="input-group">
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    (click)="menosCantidad(itemCarrito)"
+                                    [disabled]="itemCarrito.cantidad <= itemCarrito?.producto?.disponibilidad?.cantidadMinVenta">
+                              <i class="pi pi-minus"></i>
+                            </button>
+                            <input class="form-control text-center" 
+                                   type="text" 
+                                   [value]="itemCarrito.cantidad"
+                                   readonly>
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    (click)="masCantidad(itemCarrito)">
+                              <i class="pi pi-plus"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="align-middle text-center">
+                        <button class="btn btn-outline-danger btn-sm" 
+                                (click)="removeThisProduct(itemCarrito)"
+                                title="Eliminar del carrito">
+                          <i class="pi pi-trash"></i>
+                        </button>
+                      </td>
+                      <td class="align-middle text-center">
+                        <span class="total-value">
+                          {{ checkPriceScale(itemCarrito) * (itemCarrito?.cantidad) | currency:'USD':'symbol':'1.0-0' }}
+                        </span>
+                      </td>
                     </tr>
 
                     <ng-container *ngIf="itemCarrito.configuracion.adiciones.length > 0">
-                      <tr *ngIf="checkAditionPrice(itemCarrito)">
-                        <span translate="Adiciones" style="color:black;">Adiciones</span>
+                      <tr *ngIf="checkAditionPrice(itemCarrito)" class="addition-header">
+                        <td colspan="6" class="bg-light">
+                          <div class="d-flex align-items-center">
+                            <i class="pi pi-plus-circle me-2 text-primary"></i>
+                            <span class="fw-bold" translate="Adiciones"></span>
+                          </div>
+                        </td>
                       </tr>
-                      <tr *ngFor="let item of itemCarrito?.configuracion?.adiciones">
+                      <tr *ngFor="let item of itemCarrito?.configuracion?.adiciones" class="addition-row">
                         <td></td>
                         <td>{{item.titulo}}</td>
-                        <td>{{item.referencia.precioTotal | currency:'USD':'symbol':'1.0-0'}}</td>
-                        <td>{{item.cantidad * itemCarrito?.cantidad}}</td>
+                        <td class="text-center">{{item.referencia.precioTotal | currency:'USD':'symbol':'1.0-0'}}</td>
+                        <td class="text-center">{{item.cantidad * itemCarrito?.cantidad}}</td>
                         <td></td>
-                        <td>{{item.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0'}}</td>
+                        <td class="text-center">{{item.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0'}}</td>
                       </tr>
                     </ng-container>
+
                     <ng-container *ngIf="itemCarrito.configuracion.preferencias.length > 0">
-                      <tr *ngIf="checkPreferencePrice(itemCarrito)"><span translate="Preferencias"
-                          style="color:black;">Preferencias</span></tr>
-                      <tr *ngFor="let itempref of itemCarrito?.configuracion?.preferencias">
+                      <tr *ngIf="checkPreferencePrice(itemCarrito)" class="preference-header">
+                        <td colspan="6" class="bg-light">
+                          <div class="d-flex align-items-center">
+                            <i class="pi pi-star me-2 text-warning"></i>
+                            <span class="fw-bold" translate="Preferencias"></span>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr *ngFor="let itempref of itemCarrito?.configuracion?.preferencias" class="preference-row">
                         <ng-container *ngIf="itempref.precioTotalConIva !== 0">
                           <td></td>
                           <td>{{itempref.titulo}}</td>
-                          <td>{{itempref.precioTotalConIva | currency:'USD':'symbol':'1.0-0'}}</td>
-                          <td>{{itempref.cantidad * itemCarrito?.cantidad}}</td>
+                          <td class="text-center">{{itempref.precioTotalConIva | currency:'USD':'symbol':'1.0-0'}}</td>
+                          <td class="text-center">{{itempref.cantidad * itemCarrito?.cantidad}}</td>
                           <td></td>
-                          <td>{{itempref.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0'}}
-                          </td>
+                          <td class="text-center">{{itempref.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0'}}</td>
                         </ng-container>
-
                       </tr>
                     </ng-container>
                   </ng-container>
-                  <tr>
-                    <td colspan="2">
-                      <div class="input-group">
-                        <input class="form-control mr-2" maxlength="10" [(ngModel)]="cupon" type="text"
-                          placeholder="{{ 'Ingresa codigo de cupón' | translate }}"><a class="btn btn-primary"
-                          (click)="validarCuponYAplica()" translate="Aplicar">Aplicar</a>
+
+                  <tr class="summary-row">
+                    <td colspan="6">
+                      <div class="coupon-section">
+                        <div class="input-group">
+                          <span class="input-group-text">
+                            <i class="pi pi-ticket"></i>
+                          </span>
+                          <input class="form-control" 
+                                 maxlength="10" 
+                                 [(ngModel)]="cupon" 
+                                 type="text"
+                                 placeholder="{{ 'Ingresa tu código de cupón' | translate }}"
+                                 [class.is-invalid]="!cupon">
+                          <button class="btn btn-primary" 
+                                  (click)="validarCuponYAplica()"
+                                  [disabled]="!cupon">
+                            <i class="pi pi-check me-2"></i>
+                            <span translate="Aplicar"></span>
+                          </button>
+                        </div>
                       </div>
                     </td>
-                    <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600"
-                          translate="Porcentaje descuento aplicable :">Porcentaje descuento aplicable :</span></h6>
-                    </td>
-                    <td>{{porcentajeDescuento}}%</td>
-                    <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Total sin descuento :">Total sin
-                          descuento :</span></h6>
-                    </td>
-                    <td><span>{{getTotalProductPriceInCart() |currency:'USD':'symbol':'1.0-0'}} </span></td>
                   </tr>
-                  <tr>
-                    <td colspan="4">
+
+                  <tr class="total-row">
+                    <td colspan="4"></td>
+                    <td class="text-end">
+                      <span class="fw-bold" translate="Subtotal"></span>
                     </td>
-                    <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Descuento :">Descuento :</span></h6>
-                    </td>
-                    <td><span>{{ valorDescuento |currency:'USD':'symbol':'1.0-0'}} </span></td>
-                  </tr>
-                  <tr>
-                    <td colspan="4">
-                    </td>
-                    <td class="total-amount">
-                      <h6 class="m-0 text-right"><span class="f-w-600" translate="Total con descuento :">Total con
-                          descuento :</span></h6>
-                    </td>
-                    <td><span>{{ getTotalProductPriceWithDescountInCart() |currency:'USD':'symbol':'1.0-0'}} </span>
+                    <td class="text-center">
+                      <span class="fw-bold">{{getTotalProductPriceInCart() | currency:'USD':'symbol':'1.0-0'}}</span>
                     </td>
                   </tr>
-                  <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td><span><label translate="Estos valores incluyen impuestos, no incluye envío.">Estos valores
-                          incluyen impuestos, no incluye envío.</label></span></td>
+
+                  <tr class="discount-row">
+                    <td colspan="4"></td>
+                    <td class="text-end">
+                      <span class="fw-bold text-success" translate="Descuento"></span>
+                    </td>
+                    <td class="text-center">
+                      <span class="text-success">{{ valorDescuento | currency:'USD':'symbol':'1.0-0'}}</span>
+                    </td>
+                  </tr>
+
+                  <tr class="final-total-row">
+                    <td colspan="4"></td>
+                    <td class="text-end">
+                      <span class="fw-bold" translate="Total"></span>
+                    </td>
+                    <td class="text-center">
+                      <span class="fw-bold text-primary total-amount">{{ getTotalProductPriceWithDescountInCart() | currency:'USD':'symbol':'1.0-0'}}</span>
+                    </td>
+                  </tr>
+
+                  <tr class="tax-info-row">
+                    <td colspan="6" class="text-end">
+                      <small class="text-muted">
+                        <i class="pi pi-info-circle me-1"></i>
+                        <span translate="TaxInfo">Precios incluyen IVA. Costos de envío se calcularán al finalizar la compra.</span>
+                      </small>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
-        <!-- Container-fluid Ends-->
       </div>
     </div>
   </div>
