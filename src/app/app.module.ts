@@ -47,6 +47,7 @@ import { VoiceInteractionModule } from './shared/components/voice-interaction/vo
 // Importar servicios
 import { AnalyticsService } from './services/analytics.service';
 import { CompaniesService } from './services/companies.service';
+import { GeocodingService } from './shared/services/geocoding.service';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, "./assets/i18n/", ".json");
@@ -110,7 +111,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     { provide: HTTP_INTERCEPTORS, useClass: HttpInterceptor2, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: LoaderInterceptor, multi: true },
     AnalyticsService,
-    CompaniesService
+    CompaniesService,
+    GeocodingService
     // {
     //   provide: ErrorHandler,
     //   useClass: GlobalErrorHandlerService,

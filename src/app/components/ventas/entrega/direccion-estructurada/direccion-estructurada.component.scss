@@ -1,0 +1,209 @@
+/* Estilos para el modal y el formulario con labels */
+.modal-body {
+  padding: 1.25rem;
+}
+
+/* Estilos para el formulario con labels */
+.labeled-form {
+  .form-label {
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    color: #495057;
+    
+    &.small {
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-bottom: 0.2rem;
+    }
+  }
+  
+  .form-control, .form-select {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    height: 38px; /* Altura fija para todos los controles */
+    
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+      border-color: #86b7fe;
+    }
+  }
+
+  /* Estilo específico para selects */
+  .form-select {
+    appearance: auto; /* Mantener la apariencia nativa del select */
+    padding-right: 2rem; /* Espacio para la flecha desplegable */
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+  }
+  
+  .input-group {
+    .input-group-text {
+      background-color: #f8f9fa;
+      border-color: #ced4da;
+      color: #495057;
+      height: 38px; /* Misma altura que los controles */
+      display: flex;
+      align-items: center;
+    }
+  }
+  
+  /* Espaciado en filas */
+  .row.g-2 {
+    --bs-gutter-x: 0.75rem;
+    
+    > [class*="col-"] {
+      padding-right: calc(var(--bs-gutter-x) * 0.5);
+      padding-left: calc(var(--bs-gutter-x) * 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Asegurar que los campos estén alineados horizontalmente */
+    .form-control, .form-select, .input-group {
+      margin-top: auto; /* Empujar los controles hacia abajo */
+    }
+  }
+}
+
+/* Estilos para la vista previa de dirección */
+.alert-info {
+  background-color: #f1f8ff;
+  border-color: #dceaff;
+  color: #0058ad;
+  
+  strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #004b93;
+  }
+}
+
+/* Estilos especiales para la alerta de dirección que se está editando */
+.modal-body > .alert-info {
+  border-left: 4px solid #17a2b8;
+  font-size: 0.9rem;
+  
+  strong {
+    color: #0c5460;
+  }
+}
+
+/* Vista previa de la dirección */
+.direccion-preview {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  border: 1px solid #e9ecef;
+  
+  strong {
+    display: block;
+    color: #495057;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    margin-bottom: 0;
+    font-size: 1rem;
+    word-break: break-word;
+    line-height: 1.5;
+  }
+}
+
+/* Contenedor del mapa */
+.map-container {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 400px;
+  
+  &:focus-within {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+}
+
+/* Instrucciones del mapa */
+.map-instructions {
+  .alert-warning {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    
+    i {
+      color: #856404;
+    }
+    
+    strong {
+      color: #856404;
+    }
+    
+    .fw-bold {
+      color: #664d03;
+    }
+  }
+}
+
+/* Botones del footer */
+.modal-footer {
+  .btn {
+    padding: 0.375rem 1rem;
+    border-radius: 4px;
+  }
+  
+  .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    
+    &:hover:not(:disabled) {
+      background-color: #0b5ed7;
+      border-color: #0a58ca;
+    }
+  }
+  
+  .btn-outline-secondary {
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+}
+
+/* Estilos para mensajes del sistema */
+.text-info {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+  color: #0dcaf0;
+}
+
+.text-danger {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Estilos para pantallas pequeñas */
+@media (max-width: 767.98px) {
+  .col-md-5, .col-md-7 {
+    margin-bottom: 2rem;
+  }
+  
+  .map-container {
+    height: 300px;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .labeled-form {
+    .mb-3 {
+      margin-bottom: 1.25rem !important;
+    }
+  }
+} 
