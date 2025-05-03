@@ -1,0 +1,40 @@
+/* Estilos para campos interactivos */
+.input-group {
+  .form-control[readonly] {
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    
+    &:hover {
+      background-color: #e9ecef;
+      border-color: #6ec0d4;
+    }
+    
+    &::placeholder {
+      color: #6c757d;
+      font-style: italic;
+    }
+  }
+  
+  .input-group-text {
+    background-color: #e9ecef;
+    color: #6ec0d4;
+    border-color: #ced4da;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  &:hover .input-group-text {
+    background-color: #6ec0d4;
+    color: white;
+    border-color: #6ec0d4;
+  }
+}
+
+/* Añadir una animación sutil al icono de mapa */
+.fa-map-marker {
+  transition: transform 0.2s ease-in-out;
+}
+
+.input-group:hover .fa-map-marker {
+  transform: scale(1.2);
+} 

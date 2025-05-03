@@ -6,6 +6,8 @@ import { InfoIndicativos } from "../../../../Mock/indicativosPais";
 import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { DireccionEstructuradaComponent } from './direccion-estructurada/direccion-estructurada.component';
+
 @Component({
     selector: 'pedido-entrega',
     templateUrl: 'pedido-entrega.component.html'
@@ -77,6 +79,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     //ouput override pedido emiter
     @Output() overridePedido = new EventEmitter<Pedido>();
 
+    latitud: string;
+    longitud: string;
 
     constructor(private inforPaises: InfoPaises, private modalService: NgbModal, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
 
@@ -231,6 +235,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
             zonaCobro: this.zona_cobro,
             valorZonaCobro: this.valor_zona_cobro,
             codigoPV: this.codigo_postal_entrega,
+            latitud: this.latitud,
+            longitud: this.longitud
         };
         this.datosEntregas.push(datosEntreg);
 
@@ -262,7 +268,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
             this.service.editClient(this.formulario.value).subscribe((r) => {
 
                 this.datosEntregas = this.datosEntregas.filter((x) => {
-                    return x.ciudad == this.pedidoGral.envio.ciudad
+                    return x.ciudad == (this.pedidoGral?.envio?.ciudad || '');
                 });
 
                 if (this.datosEntregas.length == 0) {
@@ -270,7 +276,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
                     //informar al usuario que no se encontraron datos de entrega para la ciudad seleccionada
                     Swal.fire({
                         title: "Advertencia!",
-                        text: "Se guardo éxito, pero recuerda que debes tener una dirección de entrega para la ciudad seleccionada (" + this.pedidoGral.envio?.ciudad + ") y posiblemente la que se creo no se vea reflejada en la lista de direcciones de entrega.",
+                        text: "Se guardo éxito, pero recuerda que debes tener una dirección de entrega para la ciudad seleccionada (" + (this.pedidoGral?.envio?.ciudad || 'seleccionada') + ") y posiblemente la que se creo no se vea reflejada en la lista de direcciones de entrega.",
                         icon: "warning",
                         confirmButtonText: "Ok",
                     });
@@ -537,6 +543,11 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.idBillingZone(this.datosEntregas[index]);
         // this.zona_cobro = this.datosEntregas[index].zonaCobro
         this.codigo_postal_entrega = this.datosEntregas[index].codigoPV;
+        
+        // Cargar coordenadas si existen
+        this.latitud = this.datosEntregas[index].latitud || '';
+        this.longitud = this.datosEntregas[index].longitud || '';
+        
         this.modalService.open(modal, { size: "lg" }).result.then(
             () => {
                 this.limpiarVariables();
@@ -563,6 +574,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.zona_cobro = "";
         this.valor_zona_cobro = "";
         this.codigo_postal_entrega = "";
+        this.latitud = "";
+        this.longitud = "";
         this.facturacionElectronica = false;
         this.alias_facturacion = "";
         this.razon_social = "";
@@ -576,5 +589,47 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.departamento = "";
         this.ciudad_municipio = "";
         this.codigo_postal = "";
+    }
+
+    // Agregar nuevo método para abrir el modal de dirección estructurada
+    abrirModalDireccion() {
+        const modalRef = this.modalService.open(DireccionEstructuradaComponent, {
+            size: 'xl',
+            backdrop: 'static',
+            keyboard: false
+        });
+        
+        // Pasar la dirección y ciudad actuales al componente del modal
+        modalRef.componentInstance.direccionActual = this.direccion_entrega || '';
+        modalRef.componentInstance.ciudadActual = this.ciudad_municipio_entrega || '';
+        
+        // Suscribirse al resultado del modal
+        modalRef.result.then(
+            (resultado) => {
+                // Cuando el modal se cierra con éxito, actualizar la dirección y las coordenadas
+                if (typeof resultado === 'object') {
+                    this.direccion_entrega = resultado.direccion;
+                    
+                    // Guardar las coordenadas si existen
+                    if (resultado.coordenadas) {
+                        // Extraer latitud y longitud del string formato "lat, lng"
+                        const coords = resultado.coordenadas.split(',').map(coord => coord.trim());
+                        
+                        // Si se reciben coordenadas, actualizar los campos de latitud y longitud 
+                        // que se usarán al crear o editar la dirección de entrega
+                        if (coords.length === 2) {
+                            this.latitud = coords[0];
+                            this.longitud = coords[1];
+                        }
+                    }
+                } else {
+                    this.direccion_entrega = resultado;
+                }
+            },
+            (reason) => {
+                // Cuando el modal se cierra por descarte
+                console.log('Modal cerrado sin aplicar cambios:', reason);
+            }
+        );
     }
 }

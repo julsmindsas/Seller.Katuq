@@ -138,9 +138,7 @@
       <div class="col-sm-3">
         <select autocomplete="on" [(ngModel)]="indicativo_celular_entrega2" class="form-control select-default"
           id="validationCustom01" type="number" required="">
-          <option disabled selected>
-            Indicativo Celular
-          </option>
+          <option disabled selected>Indicativo Celular</option>
           <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
             {{ item.nombre }} (+{{ item.phone_code }})
           </option>
@@ -150,7 +148,15 @@
         <input class="form-control" type="text" id="otro_numero_entrega" [(ngModel)]="otro_numero_entrega" />
       </div>
       <div class="col-sm-6">
-        <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" />
+        <div class="input-group">
+          <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" 
+                 placeholder="Haz clic para crear una dirección estructurada" (click)="abrirModalDireccion()" readonly />
+          <div class="input-group-append">
+            <span class="input-group-text bg-light">
+              <i class="fa fa-map-marker"></i>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="row">
@@ -329,7 +335,15 @@
         <input class="form-control" type="text" id="otro_numero_entrega" [(ngModel)]="otro_numero_entrega" />
       </div>
       <div class="col-sm-6">
-        <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" />
+        <div class="input-group">
+          <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" 
+                 placeholder="Haz clic para crear una dirección estructurada" (click)="abrirModalDireccion()" readonly />
+          <div class="input-group-append">
+            <span class="input-group-text bg-light">
+              <i class="fa fa-map-marker"></i>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="row">

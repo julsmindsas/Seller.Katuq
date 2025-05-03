@@ -201,6 +201,8 @@ export interface Envio {
     codigoPV: string;
     nombreUnidad: string;
     zonaCobro: string;
+    latitud?: string;
+    longitud?: string;
 }
 
 
