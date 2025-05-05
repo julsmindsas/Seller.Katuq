@@ -311,7 +311,7 @@ export class PosCheckoutComponent {
     this.pedido = pedido as unknown as POSPedido;
     this.pedido.typeOrder = 'POS';
     const context = this;
-    context.ventasService.validateNroPedido(context.pedido.nroPedido).subscribe({
+    context.ventasService.validateNroPedido(context.pedido.nroPedido!).subscribe({
       next: (res: any) => {
         if (res.nextConsecutive !== -1) {
           const texto = context.pedido.company?.toString() || '';

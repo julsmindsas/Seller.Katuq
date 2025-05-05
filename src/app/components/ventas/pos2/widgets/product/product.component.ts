@@ -115,9 +115,12 @@ export class ProductComponent implements OnInit {
   /**
    * Normaliza texto eliminando acentos y convirtiéndolo a minúsculas
    */
-  private normalizeText(text: string | undefined | null): string {
-    if (!text) return '';
-    return text.toLowerCase()
+  private normalizeText(input: string | object | undefined | null): string {
+    if (input === undefined || input === null) return '';
+    // Convert object to string if necessary
+    const text = typeof input === 'object' ? JSON.stringify(input) : input.toString();
+    return text.replace(/<[^>]*>/g, '')
+      .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
   }
@@ -133,8 +136,8 @@ export class ProductComponent implements OnInit {
         const searchFields = [
           this.normalizeText(product.crearProducto?.titulo),
           this.normalizeText(product.crearProducto?.descripcion),
-          this.normalizeText(product.identificacion.referencia),
-          this.normalizeText(product.identificacion.codigoBarras)
+          this.normalizeText(product.identificacion?.referencia),
+          this.normalizeText(product.exposicion?.etiquetas.join(', ')),
         ];
         // Comprueba si todos los términos de búsqueda coinciden en al menos uno de los campos
         return searchTerms.every(term =>
