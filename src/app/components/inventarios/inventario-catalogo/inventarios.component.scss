@@ -538,3 +538,641 @@ $border-radius: 8px;
         background: #f8f9fa;
     }
 }
+
+/* Estilos para la barra de filtros superior */
+.filter-container {
+  background-color: #fbfbfb;
+  
+  .input-group {
+    width: 100%;
+    max-width: 450px;
+    
+    .input-group-text {
+      border: none;
+    }
+    
+    input.form-control {
+      border-left: none;
+      box-shadow: none;
+      border-color: #ced4da;
+      
+      &:focus {
+        border-color: #86b7fe;
+      }
+      
+      &:disabled {
+        background-color: #f8f9fa;
+      }
+    }
+  }
+
+  .gap-2 {
+    gap: 0.5rem !important;
+  }
+  
+  .btn {
+    transition: all 0.2s;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* Estilos para los encabezados de tabla y filtros */
+
+:host ::ng-deep {
+  /* Estilos para encabezados de tabla */
+  .p-datatable .p-datatable-thead > tr > th {
+    padding: 0.75rem 0.5rem;
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-color: #e9ecef;
+    text-align: left;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  /* Estilos para iconos de ordenamiento */
+  .p-sortable-column {
+    .p-sortable-column-icon {
+      font-size: 0.85rem;
+      margin-left: 0.25rem;
+    }
+    .p-sortable-column-badge {
+      margin-left: 0.25rem;
+    }
+    &:hover {
+      background-color: #f1f1f1;
+    }
+    &.p-highlight {
+      background-color: #f0f7ff;
+    }
+  }
+
+  /* Estilos para filtros de columna */
+  .p-column-filter {
+    width: 100%;
+    .p-column-filter-menu-button {
+      width: 1.8rem;
+      height: 1.8rem;
+      border-radius: 3px;
+      margin-left: 0.25rem;
+      &:hover {
+        background-color: #e9ecef;
+      }
+      .p-column-filter-menu-button-icon {
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  /* Estilos para el contenedor del filtro */
+  .p-column-filter-overlay {
+    min-width: 200px;
+    border-radius: 6px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+
+  /* Estilo para el botón de filtro activo */
+  .p-column-filter-menu-button.p-column-filter-menu-button-active {
+    background-color: #e3f2fd;
+    color: #0d6efd;
+  }
+}
+
+/* Estilos para separar el texto del encabezado y los iconos */
+th span.d-block {
+  padding: 0.25rem 0;
+}
+
+/* Ajustes para el espaciado en el encabezado de cantidad que está centrado */
+th.text-center .d-flex.align-items-center.justify-content-center {
+  display: inline-flex !important;
+}
+
+/* Estilos generales para la tabla */
+:host ::ng-deep .p-datatable {
+  .p-datatable-wrapper {
+    border-radius: 0.25rem;
+    overflow: hidden;
+  }
+  
+  .p-datatable-tbody > tr {
+    transition: background-color 0.2s;
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+}
+
+/* Estilos para los badges */
+.badge {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Estilos para la imagen del producto */
+.img-thumbnail {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilos para la sección de filtros mejorada */
+.filtros-externos {
+  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  
+  h5 {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+    
+    i {
+      color: #2196F3;
+    }
+  }
+  
+  .form-label {
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .form-control, .form-select {
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background-color: #ffffff;
+    
+    &:focus {
+      border-color: #2196F3;
+      box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.15);
+    }
+    
+    &:disabled {
+      background-color: #f8f9fa;
+      opacity: 0.65;
+    }
+  }
+
+  .input-group {
+    .input-group-text {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-top-left-radius: 6px;
+      border-bottom-left-radius: 6px;
+    }
+    
+    .form-control {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      
+      &:focus {
+        border-color: #86b7fe;
+        box-shadow: none;
+      }
+    }
+  }
+  
+  .btn {
+    border-radius: 6px;
+    padding: 0.375rem 0.75rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+  
+  .gap-1 {
+    gap: 0.25rem;
+  }
+  
+  .gap-2 {
+    gap: 0.5rem;
+  }
+  
+  .row.g-3 {
+    --bs-gutter-y: 0.75rem; // Espaciado vertical dentro de la fila
+  }
+
+  .form-select-sm {
+    height: calc(1.5em + 0.5rem + 2px);  /* Asegurar la misma altura que los inputs */
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    padding-left: 0.5rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 16px 12px;
+  }
+  
+  /* Alineación específica para el contenedor del select de cantidad */
+  [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+    
+    .form-label {
+      margin-bottom: 0.25rem;
+    }
+    
+    /* Hacer que los inputs y selects ocupen la misma altura disponible */
+    .form-control-sm, .form-select-sm {
+      flex: 1;
+      min-height: 31px; /* Altura fija mínima para todos los inputs */
+    }
+  }
+  
+  /* Asegurar que todos los controles de formulario dentro de la misma fila tengan la misma altura visual */
+  .row.g-3 {
+    align-items: stretch;
+    
+    /* Asegurar que el div de cantidad tenga el mismo alto que los demás */
+    & > div {
+      display: flex;
+      flex-direction: column;
+      
+      /* El contenedor de los controles dentro del div ocupa todo el espacio disponible */
+      .d-flex {
+        flex: 1;
+      }
+    }
+  }
+}
+
+/* Mejoras de responsive para filtros */
+@media (max-width: 768px) {
+  .filtros-externos {
+    .row.g-3 > div {
+      margin-bottom: 0.5rem;
+    }
+    
+    .btn {
+      font-size: 0.75rem;
+    }
+    
+    .d-flex.gap-2 {
+      flex-wrap: wrap;
+      justify-content: flex-start !important;
+      
+      .btn {
+        flex: 1 0 auto;
+        text-align: center;
+      }
+    }
+  }
+}
+
+/* Estilos para la tabla y sus elementos */
+:host ::ng-deep {
+  /* Estilos para encabezados de tabla */
+  .p-datatable .p-datatable-thead > tr > th {
+    padding: 0.75rem 0.5rem;
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-color: #e9ecef;
+    text-align: left;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  /* Estilos para filas con stock bajo */
+  .p-datatable .p-datatable-tbody > tr.bg-light-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+  }
+
+  /* Estilos para el pie de tabla */
+  .p-datatable .p-datatable-footer {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 0.75rem;
+    border-top: 1px solid #e9ecef;
+  }
+
+  /* Estilos generales para la tabla */
+  .p-datatable {
+    .p-datatable-wrapper {
+      border-radius: 0.25rem;
+      overflow: hidden;
+    }
+    
+    .p-datatable-tbody > tr {
+      transition: background-color 0.2s;
+      &:hover {
+        background-color: #f8f9fa;
+      }
+      
+      > td {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+/* Estilos para los badges */
+.badge {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  
+  &.bg-primary {
+    background-color: #2196F3 !important;
+  }
+  
+  &.bg-success {
+    background-color: #4CAF50 !important;
+  }
+  
+  &.bg-warning {
+    background-color: #FFC107 !important;
+  }
+  
+  &.bg-danger {
+    background-color: #F44336 !important;
+  }
+  
+  &.bg-dark {
+    background-color: #343a40 !important;
+    font-weight: 600;
+  }
+}
+
+/* Estilos para la imagen del producto */
+.img-thumbnail {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+  }
+}
+
+/* Estilos específicos para el wrapper de los inputs y selects */
+.input-wrapper, .select-wrapper {
+  position: relative;
+  display: flex;
+  flex: 1;
+  
+  .form-control-sm, .form-select-sm {
+    flex: 1;
+    width: 100%;
+    height: 31px; /* Altura fija común para todos los controles */
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+}
+
+/* Estilos para la sección de totales de inventario */
+.totales-inventario {
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .badge {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    
+    &.bg-dark {
+      background-color: #343a40 !important;
+    }
+    
+    &.bg-primary {
+      background-color: #2196F3 !important;
+    }
+  }
+  
+  .text-primary {
+    color: #2196F3 !important;
+  }
+  
+  .text-muted {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* Ajustes responsive para la sección de totales */
+@media (max-width: 768px) {
+  .totales-inventario {
+    .d-flex {
+      flex-direction: column;
+      gap: 1rem !important;
+      
+      &.gap-4 > div {
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+}
+
+/* Estilos para el paginador */
+:host ::ng-deep .p-datatable {
+  /* Asegurar que el paginador esté bien separado de la tabla */
+  .p-paginator {
+    border-top: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding: 0.75rem;
+    margin-top: 0.5rem; /* Espacio adicional después de la última fila */
+    
+    .p-paginator-pages .p-paginator-page {
+      &.p-highlight {
+        background-color: #2196F3;
+        border-color: #2196F3;
+        color: #fff;
+      }
+    }
+    
+    button {
+      margin: 0 0.2rem;
+      min-width: 2.25rem;
+      height: 2.25rem;
+      
+      &:focus {
+        box-shadow: none;
+      }
+      
+      &:hover:not(.p-disabled) {
+        background-color: #e9ecef;
+      }
+    }
+  }
+  
+  /* Asegurar que haya suficiente espacio para evitar superposiciones */
+  .p-datatable-wrapper {
+    margin-bottom: 3rem; /* Espacio adicional para el paginador */
+  }
+  
+  /* Eliminar el footer interno si existe para evitar duplicación */
+  .p-datatable-footer {
+    display: none;
+  }
+}
+
+/* Estilos para el contenedor de tabla con scroll */
+.table-container {
+  /* Ocupar al menos un 50% de altura de la ventana */
+  height: auto;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  /* Estilos para el scrollbar personalizado */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+}
+
+/* Estilos específicos para la tabla con scroll */
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-wrapper {
+      overflow: auto;
+      margin-bottom: 0; /* Quitar margen bottom que habíamos añadido antes */
+    }
+    
+    /* Estilos para columnas congeladas */
+    .p-datatable-frozen-view {
+      background-color: #fff;
+      border-right: 1px solid #e9ecef;
+      box-shadow: 5px 0 8px rgba(0, 0, 0, 0.05);
+      z-index: 1;
+    }
+    
+    /* Mejorar la apariencia del scrollbar */
+    .p-datatable-scrollable-body {
+      scrollbar-width: thin;
+      scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+    
+    /* Ajustes para encabezados congelados */
+    th, td {
+      &[frozen] {
+        background-color: #fff;
+        z-index: 1;
+      }
+    }
+    
+    /* Ajustes para que se vea bien en el hover */
+    .p-datatable-tbody > tr:hover {
+      > td[frozen] {
+        background-color: #f8f9fa;
+      }
+    }
+    
+    /* Estilos para las celdas */
+    .p-datatable-tbody > tr > td {
+      padding: 0.75rem 0.5rem;
+      transition: background-color 0.2s;
+      word-break: break-word;
+      
+      &.text-center {
+        text-align: center;
+      }
+      
+      &.text-end {
+        text-align: right;
+      }
+    }
+    
+    /* Ajustes para el encabezado */
+    .p-datatable-thead > tr > th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    
+    /* Ajustes para el paginador */
+    .p-paginator {
+      margin-top: 0;
+      border-top: none;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+  }
+}
+
+/* Ajustes responsive */
+@media screen and (max-width: 768px) {
+  .table-container {
+    border-radius: 6px;
+  }
+  
+  :host ::ng-deep .p-datatable {
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td {
+      padding: 0.5rem 0.4rem;
+    }
+  }
+}

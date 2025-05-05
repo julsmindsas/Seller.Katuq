@@ -1,4 +1,4 @@
-import { Component, OnInit, TemplateRef } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
@@ -9,6 +9,14 @@ import { MovimientoInventario } from '../model/movimientoinventario'
 import * as XLSX from 'xlsx';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
+import { Table } from 'primeng/table';
+
+// Tipo extendido para productos con información de inventario
+interface ProductoInventario extends Producto {
+  cantidad?: number;
+  bodegaId?: string;
+  bodegaNombre?: string;
+}
 
 interface PageReference {
   firstDocId: string | null;
@@ -21,9 +29,10 @@ interface PageReference {
   styleUrls: ['./inventarios.component.scss']
 })
 export class InventarioCatalogoComponent implements OnInit {
+  @ViewChild('dt') dt: Table; // Referencia a la tabla PrimeNG
 
   cargando = false;
-  rows: Producto[] = [];
+  rows: ProductoInventario[] = [];
 
   // Paginación
   pageSize = 10;
@@ -50,11 +59,11 @@ export class InventarioCatalogoComponent implements OnInit {
   isMobile = false;
   empresaActual: any;
   ultimasLetras: any;
-  bodegasActivasMarketPlaces: any;
+  bodegasActivasMarketPlaces: any[] = [];
 
   // Movimientos
   movimiento: { [key: string]: number } = {};
-  selectedRow: Producto;
+  selectedRow: ProductoInventario;
   inventarioPorMarketplace: any = {};
   pageSizeMovimientos = 10;
   currentPageMovimientos = 1;
@@ -64,7 +73,28 @@ export class InventarioCatalogoComponent implements OnInit {
   // Manejo de bodegas 
   bodegas: any[] = [];
   bodegaSeleccionada: any = null;
-  productosSinFiltro: Producto[] = []; // Para guardar todos los productos sin filtrar
+  productosSinFiltro: ProductoInventario[] = []; // Para guardar todos los productos sin filtrar
+
+  // Filtros globales
+  globalFilterValue: string = '';
+
+  // Nueva propiedad para almacenar los datos filtrados
+  rowsFiltradas: any[] = [];
+  
+  // Control de los filtros
+  filtroGlobal: string = '';
+  filtros = {
+      referencia: '',
+      nombre: '',
+      cantidadTipo: '',  // 'agotados', 'bajos', 'disponibles'
+      precioMin: null,
+      precioMax: null,
+      valorTotalMin: null,
+      valorTotalMax: null
+  };
+  
+  // Control del ordenamiento
+  ordenamiento: string = 'nombreAsc';
 
   constructor(
     private service: MaestroService,
@@ -83,359 +113,173 @@ export class InventarioCatalogoComponent implements OnInit {
     // Suponemos que no tenemos referencias para la página 1 todavía
     this.pageReferences[this.currentPage] = { firstDocId: null, lastDocId: null };
 
-    // Cargar las bodegas usando el servicio compartido
+    // Cargar solo las bodegas inicialmente, no los productos
     this.cargarBodegas();
 
-    // Cargar los productos
-    this.cargarDatos();
-
-    // Suscribirse a cambios en la bodega seleccionada
-    this.bodegaService.getBodegaSeleccionada().subscribe(bodega => {
-      if (bodega !== this.bodegaSeleccionada) {
-        this.bodegaSeleccionada = bodega;
-        this.filtrarProductosPorBodega();
-      }
-    });
+    // Inicializar rows como un array vacío
+    this.rows = [];
+    this.productosSinFiltro = [];
   }
 
   cargarBodegas() {
-    this.bodegaService.getBodegas().subscribe(bodegas => {
-      this.bodegas = bodegas;
+    this.cargando = true;
+    this.bodegaService.getBodegas().subscribe({
+      next: (bodegas) => {
+        this.bodegas = bodegas;
+        this.cargando = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar bodegas:', error);
+        this.cargando = false;
+      }
     });
   }
 
-  cargarDatos() {
-    this.cargando = true;
-
-    // Determinar si avanzamos o retrocedemos
-    // Si isForward = true, usaremos lastDocId de la página anterior
-    // Si isForward = false, usaremos firstDocId de la página actual
-    let lastDocToSend = null;
-    let firstDocToSend = null;
-
-    if (this.currentPage > 1 && this.isForward) {
-      // Si vamos hacia adelante, tomamos el lastDocId de la página anterior
-      const previousPage = this.currentPage - 1;
-      lastDocToSend = this.pageReferences[previousPage]?.lastDocId || null;
-    }
-
-    if (!this.isForward && this.currentPage >= 1) {
-      // Si retrocedemos, tomamos el firstDocId de la página actual (la que estamos dejando)
-      // Para retroceder a la página anterior (por ejemplo, de 3 a 2),
-      // usamos el firstDocId de la página 3.
-      // Ojo: Esto implica que ya visitaste la página actual antes y tienes su firstDocId.
-      const currentPageRef = this.pageReferences[this.currentPage];
-      firstDocToSend = currentPageRef?.firstDocId || null;
-      lastDocToSend = currentPageRef?.lastDocId || null;
-    }
-
-    this.service.getAllProductsInventariablesPagination(this.pageSize, this.currentPage, lastDocToSend, firstDocToSend)
-      .subscribe({
-        next: (response: any) => {
-          this.rows = response.products;
-          this.productosSinFiltro = [...this.rows]; // Guardamos una copia sin filtrar
-          this.totalItems = response.pagination.totalItems;
-          this.totalPages = response.pagination.totalPages;
-          this.cargando = false;
-
-          // Guardamos las referencias de la página actual
-          this.pageReferences[this.currentPage] = {
-            firstDocId: response.pagination.firstDocId,
-            lastDocId: response.pagination.lastDocId
-          };
-
-          // Actualizamos las variables locales
-          this.lastDocId = response.pagination.lastDocId;
-          this.firstDocId = response.pagination.firstDocId;
-
-          // Si hay una bodega seleccionada, filtramos los productos
-          this.filtrarProductosPorBodega();
-        },
-        error: (err) => {
-          console.error("Error al cargar datos:", err);
-          this.cargando = false;
-        }
-      });
-  }
-
-  // Método para aplicar el filtro de bodega a los productos
-  filtrarProductosPorBodega() {
-    if (!this.bodegaSeleccionada) {
-      this.rows = [...this.productosSinFiltro]; // Si no hay bodega seleccionada, mostramos todos
+  obtenerProductosPorBodega(bodegaId: string) {
+    // Si no hay bodega seleccionada, no hacer nada
+    if (!bodegaId) {
+      this.rows = [];
+      this.rowsFiltradas = [];
+      this.productosSinFiltro = [];
       return;
     }
 
-    this.rows = this.productosSinFiltro.filter(producto =>
-      producto.bodegaId === this.bodegaSeleccionada.idBodega
-    );
-  }
-
-  // Método para cambiar la bodega seleccionada
-  cambiarBodegaSeleccionada(bodega: any) {
-    this.bodegaService.seleccionarBodega(bodega);
-  }
-
-  onPageChange(event: any) {
-    const newPageSize = event.rows;
-    const newCurrentPage = Math.floor(event.first / event.rows) + 1;
-
-    if (newPageSize !== this.pageSize || newCurrentPage !== this.currentPage) {
-      // Determinar dirección:
-      // Si la nueva página es mayor que la actual, vamos hacia adelante
-      // Si la nueva página es menor, retrocedemos
-      this.isForward = newCurrentPage > this.currentPage;
-
-      // Actualizar currentPage y pageSize
-      this.pageSize = newPageSize;
-      this.currentPage = newCurrentPage;
-
-      // Si no tenemos referencias para esta página (no visitada antes),
-      // inicializamos en null
-      if (!this.pageReferences[this.currentPage]) {
-        this.pageReferences[this.currentPage] = { firstDocId: null, lastDocId: null };
-      }
-
-      this.cargando = true;
-      this.cargarDatos();
-    }
-  }
-
-  crearProducto() {
-    sessionStorage.removeItem('infoForms');
-    this.router.navigateByUrl('productos/crearProductos');
-  }
-
-  editarProducto(row) {
-    this.service.editProductByReference(row).subscribe({
-      next: () => {
-        Swal.fire({
-          title: 'Producto editado',
-          text: 'El producto se ha editado correctamente',
-          icon: 'success'
-        });
+    this.cargando = true;
+    this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe({
+      next: (r: any) => {
+        if (Array.isArray(r.productos) && r.productos.length > 0) {
+          this.rows = r.productos.map(itemInventario => ({
+            id: itemInventario.productoId,
+            ...itemInventario.producto,
+            cantidad: itemInventario.cantidad,
+            bodegaId: itemInventario.bodegaId,
+            bodegaNombre: itemInventario.bodega.nombre,
+          }));
+          this.productosSinFiltro = [...this.rows];
+          this.rowsFiltradas = [...this.rows]; // Inicializar la lista filtrada
+          this.totalItems = this.rows.length;
+        } else {
+          this.rows = [];
+          this.rowsFiltradas = [];
+          this.productosSinFiltro = [];
+          this.totalItems = 0;
+        }
+        this.cargando = false;
       },
-      error: (err) => {
-        console.error(err);
+      error: (error) => {
+        console.error('Error al obtener productos por bodega:', error);
+        this.cargando = false;
+        this.rows = [];
+        this.rowsFiltradas = [];
+        this.productosSinFiltro = [];
+        this.totalItems = 0;
       }
     });
   }
+
+  onPageChange(event: any) {
+    this.pageSize = event.rows;
+    this.currentPage = Math.floor(event.first / event.rows) + 1;
+  }
+
+  // Métodos de filtrado local
 
   updateFilter(event: any) {
     const input = (event.target as HTMLInputElement).value.toLowerCase();
     // Solo ejecutar si es Enter y al menos 3 chars
     if (event.key !== 'Enter' || input.length < 3) return;
 
-    this.cargando = true;
-    const context = this;
-    this.service.getProductsBySearch(input, this.pageSize, this.currentPage, this.lastDocId).subscribe({
-      next(response: any) {
-        context.rows = response.products;
-        context.totalItems = response.pagination.totalItems;
-        context.totalPages = response.pagination.totalPages;
-        context.cargando = false;
-        context.lastDocId = response.pagination.lastDocId;
-        context.firstDocId = response.pagination.firstDocId;
-
-        // Guardar refs de la página actual después de una búsqueda
-        context.pageReferences[context.currentPage] = {
-          firstDocId: context.firstDocId,
-          lastDocId: context.lastDocId
-        };
-      },
-      error(err) {
-        console.error(err);
-        context.cargando = false;
-      }
-    });
-  }
-
-  viewProduct(row) {
-    const config: NgbModalOptions = {
-      backdrop: "static",
-      size: 'xl',
-      keyboard: true,
-      centered: true,
-      animation: true,
-      fullscreen: true,
-      scrollable: true,
-      windowClass: 'modal-fullscreen'
+    // Si tenemos una bodega seleccionada, buscamos solo en esa bodega
+    if (this.bodegaSeleccionada?.idBodega) {
+      this.cargando = true;
+      // Filtrar los datos que ya tenemos
+      const filteredRows = this.productosSinFiltro.filter(producto => 
+        producto.crearProducto?.titulo?.toLowerCase().includes(input) || 
+        producto.identificacion?.referencia?.toLowerCase().includes(input)
+      );
+      this.rows = filteredRows;
+      this.totalItems = filteredRows.length;
+      this.cargando = false;
     }
-    const modalRef = this.modalService.open(ProductDetailsComponent, config);
-    modalRef.componentInstance.producto = row;
-    modalRef.componentInstance.isView = true;
   }
 
-  eliminarProducto(row) {
-    const generalContext = this;
-    Swal.fire({
-      title: '¿Está seguro de eliminar el producto?',
-      text: 'Esta acción no se puede revertir',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        if (Array.isArray(row.crearProducto.imagenesPrincipales) && row.crearProducto.imagenesPrincipales?.length > 0) {
-          // si tienes un service para imagenes
-          // this.imageService.eliminarImagen(row.crearProducto.imagenesPrincipales[0].path);
-        }
-        generalContext.service.deleteProducto(row).subscribe({
-          next() {
-            generalContext.cargarDatos();
-            Swal.fire({
-              title: 'Producto eliminado',
-              text: 'El producto se ha eliminado correctamente',
-              icon: 'success'
-            });
-          },
-          error() {
-            Swal.fire({
-              title: 'Error',
-              text: 'No se ha podido eliminar el producto',
-              icon: 'error'
-            });
-          }
-        })
-      }
-    });
-  }
-
-  actualizarInventarioTemp(key: string | number, value: number) {
-    this.inventarioPorMarketplace[key] = value;
-  }
-
-  guardarInventario() {
-    let totalInventario = 0;
-    const movimientos: MovimientoInventario[] = [];
-
-    Object.keys(this.inventarioPorMarketplace).forEach(key => {
-      const cantidad = parseInt(this.inventarioPorMarketplace[key]) || 0;
-      totalInventario += cantidad;
-      if (cantidad) {
-        const movimiento: MovimientoInventario = {
-          productId: this.selectedRow.cd,
-          productRef: "N/A",
-          cantidadCambio: cantidad,
-          clienteDocumento: "N/A",
-          tipoMovimiento: cantidad > 0 ? "in" : "out",
-          origenMovimiento: "InventarioCatalogo",
-          fecha: new Date().toISOString(),
-          ordenId: "N/A",
-          usuario: "sistema",
-          company: "N/A",
-          canal: key.toString(),
-          ubicacion: 'Principal'
-        };
-        movimientos.push(movimiento);
-      }
-    });
-
-    this.selectedRow.disponibilidad.cantidadDisponible =
-      parseInt(this.selectedRow.disponibilidad.cantidadDisponible.toString()) + totalInventario;
-    this.editarProducto(this.selectedRow);
-    this.guardarMovimientoInventario(movimientos);
-  }
-
-  guardarMovimientoInventario(movimientos: MovimientoInventario[]) {
-    const context = this;
-    this.service.guardarMovimientoInventario({ movimientosInventario: movimientos }).subscribe({
-      next() {
-        Swal.fire({
-          title: 'Movimientos de inventario generado',
-          text: 'Movimientos de inventario generado exitosamente',
-          icon: 'success'
-        });
-      },
-      error(err) {
-        console.error(err);
-        Swal.fire({
-          title: 'Error',
-          text: 'Movimientos de inventario con errores',
-          icon: 'error'
-        });
-      },
-      complete() {
-        context.modalService.dismissAll();
-      }
-    })
-  }
-
-  getMovimientosInventarioByProduct(row: any, content: TemplateRef<any>) {
-    this.selectedRow = row;
-    this.movimiento = {};
-    const context = this;
-    this.service.getMovimientosInventarioByProduct(row, this.pageSizeMovimientos, this.currentPageMovimientos, this.lastDocIdMovimientos)
-      .subscribe({
-        next(value) {
-          context.movimiento = value.inventoryMovements;
-          context.lastDocIdMovimientos = value.pagination.lastDocId;
-          context.modalService.open(content, {
-            ariaLabelledBy: 'modal-basic-title',
-            size: 'xl'
-          });
-        },
-        error(err) {
-          console.error(err);
-        }
-      });
-  }
+  // Métodos de ordenamiento local
 
   sortByQuantity() {
-    this.cargando = true;
-    this.service.getAllProductsInventariablesPagination(this.pageSize, this.currentPage, null, null, {
-      orderBy: 'disponibilidad.cantidadDisponible',
-      orderDirection: 'asc'
-    }).subscribe(response => {
-      this.rows = response.products;
-      this.totalItems = response.pagination.totalItems;
-      this.totalPages = response.pagination.totalPages;
-      this.cargando = false;
+    this.ordenamiento = this.ordenamiento === 'cantidadDesc' ? 'cantidadAsc' : 'cantidadDesc';
+    this.aplicarOrdenamiento();
+  }
+
+  sortByName(order: 'asc' | 'desc' = 'asc') {
+    // Ordenar productos por nombre
+    this.rows = [...this.rows].sort((a, b) => {
+      const nombreA = a.crearProducto?.titulo?.toLowerCase() || '';
+      const nombreB = b.crearProducto?.titulo?.toLowerCase() || '';
+      return order === 'asc' 
+        ? nombreA.localeCompare(nombreB)
+        : nombreB.localeCompare(nombreA);
     });
   }
 
-  // Al dar clic en el botón "Filtrar Agotados"
-  filterOutOfStock() {
-    this.cargando = true;
-    this.service.getAllProductsInventariablesPagination(this.pageSize, this.currentPage, null, null, {
-      filterOutOfStock: true
-    }).subscribe(response => {
-      this.rows = response.products;
-      this.totalItems = response.pagination.totalItems;
-      this.totalPages = response.pagination.totalPages;
-      this.cargando = false;
+  sortByPrice(order: 'asc' | 'desc' = 'asc') {
+    // Ordenar productos por precio
+    this.rows = [...this.rows].sort((a, b) => {
+      const precioA = a.precio?.precioUnitarioConIva || 0;
+      const precioB = b.precio?.precioUnitarioConIva || 0;
+      return order === 'asc' 
+        ? precioA - precioB
+        : precioB - precioA;
     });
+  }
+
+  sortByReference(order: 'asc' | 'desc' = 'asc') {
+    // Ordenar productos por referencia
+    this.rows = [...this.rows].sort((a, b) => {
+      const refA = a.identificacion?.referencia?.toLowerCase() || '';
+      const refB = b.identificacion?.referencia?.toLowerCase() || '';
+      return order === 'asc' 
+        ? refA.localeCompare(refB)
+        : refB.localeCompare(refA);
+    });
+  }
+
+  // Filtrar productos agotados
+  filterOutOfStock() {
+    this.filtrarAgotados();
+  }
+
+  // Método para restablecer todos los filtros
+  resetFilters() {
+    this.limpiarFiltros();
   }
 
   exportToExcel() {
-    const worksheet = XLSX.utils.json_to_sheet(this.rows);
+    if (this.rowsFiltradas.length === 0) {
+      Swal.fire({
+        title: 'Sin datos',
+        text: 'No hay datos para exportar',
+        icon: 'warning'
+      });
+      return;
+    }
+    
+    // Crear una versión simplificada para Excel
+    const excelData = this.rowsFiltradas.map(row => {
+      return {
+        'Referencia': row.identificacion?.referencia || '',
+        'Nombre': row.crearProducto?.titulo || '',
+        'Cantidad': row.cantidad || 0,
+        'Precio Unitario': row.precio?.precioUnitarioConIva || 0,
+        'Valor Total': this.calcularValorTotal(row),
+        'Bodega': row.bodegaNombre || this.getNombreBodega(row.bodegaId || ''),
+        'Tipo Bodega': this.getTipoBodega(row.bodegaId || '')
+      };
+    });
+    
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
-    XLSX.writeFile(workbook, 'Inventario.xlsx');
-  }
-
-  openInventoryModal(row: Producto, content: TemplateRef<any>) {
-    this.selectedRow = row;
-    this.movimiento = {}; // Resetear el objeto de movimientos
-
-    // Mostrar en el modal la bodega a la que pertenece el producto
-    const bodegaDelProducto = this.bodegas.find(b => b.idBodega === row.bodegaId);
-
-    this.inventarioPorMarketplace = row.marketplace.campos.filter(c => c.activo === true).map(campo => ({
-      name: campo.nameMP,
-      cantidad: 0
-    }));
-
-    this.bodegasActivasMarketPlaces = this.selectedRow.marketplace.campos.filter(c => c.activo === true);
-
-    this.inventarioPorMarketplace['puntoDeVenta'] = 0;
-    this.inventarioPorMarketplace['sellerCenter'] = 0;
-    this.inventarioPorMarketplace['paginaWeb'] = 0;
-
-    this.modalService.open(content, {
-      ariaLabelledBy: 'modal-basic-title',
-      size: 'xl'
-    });
+    XLSX.writeFile(workbook, 'Inventario_Detallado.xlsx');
   }
 
   // Métodos auxiliares para la plantilla
@@ -501,24 +345,180 @@ export class InventarioCatalogoComponent implements OnInit {
     };
   }
 
-  obtenerProductosPorBodega(bodegaId: string) {
-    this.cargando = true;
-    this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe((r: any) => {
-      if (Array.isArray(r.productos) && r.productos.length > 0) {
-        this.rows = r.productos.map(itemInventario => ({
-          id: itemInventario.productoId,
-          ...itemInventario.producto,
-          cantidad: itemInventario.cantidad,
-          bodegaId: itemInventario.bodegaId,
-          bodegaNombre: itemInventario.bodega.nombre,
-        }));
-        this.productosSinFiltro = [...this.rows];
-      } else {
-        this.rows = [];
-        this.productosSinFiltro = [];
+  // Al obtener los productos, inicializar la lista filtrada
+  onProductsLoaded(products: any[]) {
+    this.rows = products;
+    this.rowsFiltradas = [...products]; // Inicialmente todas las filas están visibles
+    this.totalItems = products.length;
+    this.cargando = false;
+  }
+
+  // Método para aplicar el filtro global (búsqueda por texto)
+  aplicarFiltroGlobal() {
+    this.aplicarFiltros();
+  }
+
+  // Método central para aplicar todos los filtros
+  aplicarFiltros() {
+    let resultados = [...this.rows];
+    
+    // Aplicar filtro de texto global
+    if (this.filtroGlobal && this.filtroGlobal.trim() !== '') {
+      const filtro = this.filtroGlobal.trim().toLowerCase();
+      resultados = resultados.filter(producto => 
+        (producto.crearProducto?.titulo?.toLowerCase().includes(filtro) || 
+         producto.identificacion?.referencia?.toLowerCase().includes(filtro))
+      );
+    }
+    
+    // Aplicar filtro de referencia
+    if (this.filtros.referencia && this.filtros.referencia.trim() !== '') {
+      const filtro = this.filtros.referencia.trim().toLowerCase();
+      resultados = resultados.filter(producto => 
+        producto.identificacion?.referencia?.toLowerCase().includes(filtro)
+      );
+    }
+    
+    // Aplicar filtro de nombre
+    if (this.filtros.nombre && this.filtros.nombre.trim() !== '') {
+      const filtro = this.filtros.nombre.trim().toLowerCase();
+      resultados = resultados.filter(producto => 
+        producto.crearProducto?.titulo?.toLowerCase().includes(filtro)
+      );
+    }
+    
+    // Aplicar filtro por cantidad
+    if (this.filtros.cantidadTipo) {
+      switch (this.filtros.cantidadTipo) {
+        case 'agotados':
+          resultados = resultados.filter(producto => (producto.cantidad || 0) === 0);
+          break;
+        case 'bajos':
+          resultados = resultados.filter(producto => (producto.cantidad || 0) > 0 && (producto.cantidad || 0) <= 5);
+          break;
+        case 'disponibles':
+          resultados = resultados.filter(producto => (producto.cantidad || 0) > 5);
+          break;
       }
-      this.cargando = false;
-      console.log('Productos por bodega', bodegaId, r);
-    });
+    }
+    
+    // Aplicar filtros de precio unitario
+    if (this.filtros.precioMin !== null && this.filtros.precioMin !== undefined && !isNaN(Number(this.filtros.precioMin))) {
+      const precioMin = Number(this.filtros.precioMin);
+      resultados = resultados.filter(producto => 
+        (producto.precio?.precioUnitarioConIva || 0) >= precioMin
+      );
+    }
+    
+    if (this.filtros.precioMax !== null && this.filtros.precioMax !== undefined && !isNaN(Number(this.filtros.precioMax))) {
+      const precioMax = Number(this.filtros.precioMax);
+      resultados = resultados.filter(producto => 
+        (producto.precio?.precioUnitarioConIva || 0) <= precioMax
+      );
+    }
+    
+    // Aplicar filtros de valor total
+    if (this.filtros.valorTotalMin !== null && this.filtros.valorTotalMin !== undefined && !isNaN(Number(this.filtros.valorTotalMin))) {
+      const valorMin = Number(this.filtros.valorTotalMin);
+      resultados = resultados.filter(producto => 
+        this.calcularValorTotal(producto) >= valorMin
+      );
+    }
+    
+    if (this.filtros.valorTotalMax !== null && this.filtros.valorTotalMax !== undefined && !isNaN(Number(this.filtros.valorTotalMax))) {
+      const valorMax = Number(this.filtros.valorTotalMax);
+      resultados = resultados.filter(producto => 
+        this.calcularValorTotal(producto) <= valorMax
+      );
+    }
+    
+    // Aplicar ordenamiento actual
+    this.ordenarResultados(resultados);
+    
+    // Actualizar la lista filtrada
+    this.rowsFiltradas = resultados;
+  }
+  
+  // Método para aplicar ordenamiento
+  aplicarOrdenamiento() {
+    this.ordenarResultados(this.rowsFiltradas);
+  }
+  
+  // Método para ordenar resultados según el criterio seleccionado
+  ordenarResultados(resultados: any[]) {
+    switch (this.ordenamiento) {
+      case 'nombreAsc':
+        resultados.sort((a, b) => (a.crearProducto?.titulo || '').localeCompare(b.crearProducto?.titulo || ''));
+        break;
+      case 'nombreDesc':
+        resultados.sort((a, b) => (b.crearProducto?.titulo || '').localeCompare(a.crearProducto?.titulo || ''));
+        break;
+      case 'cantidadAsc':
+        resultados.sort((a, b) => (a.cantidad || 0) - (b.cantidad || 0));
+        break;
+      case 'cantidadDesc':
+        resultados.sort((a, b) => (b.cantidad || 0) - (a.cantidad || 0));
+        break;
+      case 'precioAsc':
+        resultados.sort((a, b) => (a.precio?.precioUnitarioConIva || 0) - (b.precio?.precioUnitarioConIva || 0));
+        break;
+      case 'precioDesc':
+        resultados.sort((a, b) => (b.precio?.precioUnitarioConIva || 0) - (a.precio?.precioUnitarioConIva || 0));
+        break;
+      case 'valorTotalAsc':
+        resultados.sort((a, b) => this.calcularValorTotal(a) - this.calcularValorTotal(b));
+        break;
+      case 'valorTotalDesc':
+        resultados.sort((a, b) => this.calcularValorTotal(b) - this.calcularValorTotal(a));
+        break;
+    }
+  }
+  
+  // Método para filtrar solo productos agotados
+  filtrarAgotados() {
+    this.filtros.cantidadTipo = 'agotados';
+    this.aplicarFiltros();
+  }
+  
+  // Método para limpiar todos los filtros
+  limpiarFiltros() {
+    this.filtroGlobal = '';
+    this.filtros = {
+      referencia: '',
+      nombre: '',
+      cantidadTipo: '',
+      precioMin: null,
+      precioMax: null,
+      valorTotalMin: null,
+      valorTotalMax: null
+    };
+    this.ordenamiento = 'nombreAsc';
+    this.rowsFiltradas = [...this.rows];
+    this.aplicarOrdenamiento();
+  }
+
+  /**
+   * Calcula el valor total (cantidad * precio) de un producto
+   */
+  calcularValorTotal(producto: ProductoInventario): number {
+    const cantidad = producto.cantidad || 0;
+    const precioUnitario = producto.precio?.precioUnitarioConIva || 0;
+    return cantidad * precioUnitario;
+  }
+
+  /**
+   * Calcula el total de unidades en el inventario filtrado
+   */
+  calcularTotalItems(): number {
+    return this.rowsFiltradas.reduce((total, producto) => total + (producto.cantidad || 0), 0);
+  }
+
+  /**
+   * Calcula el valor total de todo el inventario filtrado
+   */
+  calcularValorTotalInventario(): number {
+    return this.rowsFiltradas.reduce((total, producto) => {
+      return total + this.calcularValorTotal(producto);
+    }, 0);
   }
 }
