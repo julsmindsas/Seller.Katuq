@@ -3,15 +3,17 @@
         <div class="main-product-wrapper">
             <div class="product-header">
                 <h5 class="fc-primary">{{ 'Productos' | translate }}</h5>
-                <p class="f-m-light mt-1 text-gray f-w-500 fs-16">{{ 'Encuentra todos los productos disponibles.' | translate }}</p>
+                <p class="f-m-light mt-1 text-gray f-w-500 fs-16">{{ 'Encuentra todos los productos disponibles.' |
+                    translate }}</p>
             </div>
             <div class="product-body">
                 <div class="input-group product-search">
                     <span class="input-group-text">
                         <i data-feather="search" height="16" width="16" class="fc-gray"></i>
                     </span>
-                    <input class="form-control" type="text" placeholder="{{'Buscar producto...' | translate}}" list="datalistOptionsSearch"
-                        id="exampleDataList1" [(ngModel)]="searchQuery" (input)="searchStores()">
+                    <input class="form-control" type="text" placeholder="{{'Buscar producto...' | translate}}"
+                        list="datalistOptionsSearch" id="exampleDataList1" [(ngModel)]="searchQuery"
+                        (input)="searchStores()">
                     <datalist id="datalistOptionsSearch">
                         <option value="Bluetooth Calling Smartwatch"></option>
                         <option value="Microsoft Surface Laptop"></option>
@@ -23,35 +25,58 @@
         </div>
     </div>
     <div class="card-body main-our-product">
-        <div class="row g-3" >
-            <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4" *ngFor="let product of filteredProduct; track product;let i = index">
-                <div class="our-product-wrapper h-100 widget-hover">
-                    <div class="our-product-img">
-                        <img 
-                            [src]="product.crearProducto.imagenesPrincipales[0].urls" 
-                            [alt]="product.product_name" 
-                            appImageOptimizer
-                            [quality]="0.7"
-                            [width]="300"
-                            [height]="300"
-                            [lazy]="true"
-                            loading="lazy"
-                            priority>
+        <div class="row g-3">
+            <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4"
+                *ngFor="let product of filteredProduct; track product;let i = index">
+                <div class="our-product-wrapper h-100 widget-hover shadow-sm rounded">
+                    <!-- Imagen del producto con badge de disponibilidad -->
+                    <div class="our-product-img position-relative">
+                        <img [src]="product.crearProducto.imagenesPrincipales[0].urls" [alt]="product.product_name"
+                            appImageOptimizer [quality]="0.7" [width]="300" [height]="300" [lazy]="true" loading="lazy"
+                            priority class="product-image">
+                        <span class="position-absolute top-0 end-0 m-2 badge stock-badge" [ngClass]="{
+                                'bg-success': product.disponibilidad?.cantidadDisponible > 10,
+                                'bg-warning': product.disponibilidad?.cantidadDisponible > 0 && product.disponibilidad?.cantidadDisponible <= 10,
+                                'bg-danger': !product.disponibilidad?.cantidadDisponible || product.disponibilidad?.cantidadDisponible <= 0
+                              }">
+                            Disponibildad: {{ product.disponibilidad?.cantidadDisponible || 0 }}
+                        </span>
                     </div>
-                    <div class="our-product-content">
-                        <h6 class="f-14 f-w-500 pt-2 pb-1">{{ product.crearProducto.titulo }}</h6>
-                        <div>
-                            <h6 class="txt-primary">${{ product.precio.precioUnitarioConIva | number: '1.2-2' }}</h6>
-                            <div class="common-f-start">
-                                <div class="add-quantity btn border text-gray f-w-500">
+
+                    <div class="our-product-content p-3">
+                        <!-- Referencia como etiqueta pequeña -->
+                        <div class="mb-1">
+                            <small class="text-muted ref-badge">{{ product?.identificacion?.referencia }}</small>
+                        </div>
+
+                        <!-- Título del producto -->
+                        <h6 class="f-14 f-w-600 pt-1 producto-titulo text-truncate"
+                            title="{{ product.crearProducto.titulo }}">
+                            {{ product.crearProducto.titulo }}
+                        </h6>
+
+
+
+                        <!-- Contenedor para precio -->
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <h6 class="txt-primary precio-producto m-0">
+                                ${{ product.precio.precioUnitarioConIva | number: '1.2-2' }}
+                            </h6>
+                        </div>
+
+                        <!-- Controles de cantidad y botón añadir (reducidos) -->
+                        <div class="controls-container mt-2">
+                            <div class="d-flex align-items-center">
+                                <div class="add-quantity-small me-2">
                                     <i class="fa fa-minus decrement-btn icono-pos"
                                         (click)="updateQuantity(-1, product)"></i>
-                                    <input class="countdown-remove fs-14" type="text" [value]="product.cantidad">
-                                    <i class="fa fa-plus increment-btn icono-pos" (click)="updateQuantity(1, product)"></i>
+                                    <span class="cantidad-value">{{ product.cantidad }}</span>
+                                    <i class="fa fa-plus increment-btn icono-pos"
+                                        (click)="updateQuantity(1, product)"></i>
                                 </div>
-                                <div class="btn border f-w-500">
-                                    <span class="text-black fs-14" (click)="addToCart(product)">{{'Adicionar' | translate}}</span>
-                                </div>
+                                <button class="btn btn-sm btn-primary" (click)="addToCart(product)">
+                                    <i class="fa fa-cart-plus"></i>
+                                </button>
                             </div>
                         </div>
                     </div>

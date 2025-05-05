@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
-import { VentasService } from "src/app/shared/services/ventas/ventas.service";
+import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
 import { Pedido } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";

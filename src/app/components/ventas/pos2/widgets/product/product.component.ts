@@ -54,11 +54,18 @@ export class ProductComponent implements OnInit {
   obtenerProductosPorBodega(bodegaId: string) {
     this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe((r: any) => {
       if (Array.isArray(r.productos) && r.productos.length > 0) {
-        this.products = r.productos.map(itemInventario => ({
-          id: itemInventario.productoId,
-          ...itemInventario.producto,
-          cantidad: 1
-        }));
+        this.products = r.productos.map(itemInventario => {
+          return {
+            ...itemInventario,
+            ...itemInventario.producto,
+            disponibilidad: {
+              ...itemInventario.producto.disponibilidad,
+              cantidadDisponible: itemInventario.cantidad,
+            },
+            cantidad: 1, // Se asegura de que el producto tenga una cantidad inicial de 1
+            // Se asegura de que el producto tenga una cantidad inicial de 1
+          };
+        });
         this.filteredProduct = this.products;
       } else {
         this.products = [];
@@ -93,13 +100,37 @@ export class ProductComponent implements OnInit {
     this.filterDetails();
   }
 
-  filterDetails() {
-    this.filteredProduct = this.products.filter(product => {
-      const matchesSearch = this.filter.search
-        ? product.crearProducto?.titulo.toLowerCase().includes(this.filter.search)
-        : true;
+  /**
+   * Normaliza texto eliminando acentos y convirtiéndolo a minúsculas
+   */
+  private normalizeText(text: string | undefined | null): string {
+    if (!text) return '';
+    return text.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
 
-      return matchesSearch;
+  filterDetails() {
+    if (!this.filter.search || this.filter.search === '') {
+      this.filteredProduct = [...this.products];
+      return;
+    }
+
+    const searchTerms = this.normalizeText(this.filter.search).split(' ');
+    
+    this.filteredProduct = this.products.filter(product => {
+      // Campos a buscar
+      const searchFields = [
+        this.normalizeText(product.crearProducto?.titulo),
+        this.normalizeText(product.crearProducto?.descripcion),
+        this.normalizeText(product.identificacion.referencia),
+        this.normalizeText(product.identificacion.codigoBarras)
+      ];
+      
+      // Comprueba si todos los términos de búsqueda coinciden en al menos uno de los campos
+      return searchTerms.every(term => 
+        searchFields.some(field => field && field.includes(term))
+      );
     });
   }
 

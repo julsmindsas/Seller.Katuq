@@ -24,13 +24,49 @@
     gap: 4px;
 }
 
+.product-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    object-position: center;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
 
 // Dashboard-8
 .our-product-wrapper {
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+    }
+
     .our-product-content {
         .add-quantity {
             padding: 4px 8px;
             gap: 8px;
+        }
+
+        .producto-titulo {
+            line-height: 1.4;
+            margin-bottom: 6px;
+            min-height: 20px;
+        }
+
+        .precio-producto {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .descripcion-producto {
+            min-height: 40px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
         }
     }
 }
@@ -110,6 +146,36 @@
     }
 }
 
+.ref-badge {
+    background-color: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.add-quantity {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+
+    i {
+        cursor: pointer;
+        padding: 0 8px;
+
+        &:hover {
+            color: var(--theme-deafult);
+        }
+    }
+
+    input {
+        width: 30px;
+        border: none;
+        background: transparent;
+        padding: 0;
+        text-align: center;
+    }
+}
 
 @media (max-width:1290px) {
     .our-product-wrapper {
@@ -120,7 +186,6 @@
         }
     }
 }
-
 
 // ********************** CARD
 
@@ -175,7 +240,7 @@
 
 .card>.list-group:last-child {
     border-bottom-width: 0;
-    border-bottom-right-radius: var(--bs-card-inner-border-radius);
+    border-bottom-right-radius: var (--bs-card-inner-border-radius);
     border-bottom-left-radius: var(--bs-card-inner-border-radius)
 }
 
@@ -314,6 +379,43 @@
     .card-group>.card:not(:first-child) .card-img-bottom,.card-group>.card:not(:first-child) .card-footer {
         border-bottom-left-radius: 0
     }
+}
+
+.stock-badge {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+}
+
+.add-quantity-small {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 2px 6px;
+  
+  .decrement-btn, .increment-btn {
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0 4px;
+    
+    &:hover {
+      color: var(--theme-deafult);
+    }
+  }
+  
+  .cantidad-value {
+    font-size: 0.8rem;
+    margin: 0 4px;
+    min-width: 14px;
+    text-align: center;
+  }
+}
+
+.controls-container {
+  button.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
 }
 
 
