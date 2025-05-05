@@ -25,16 +25,18 @@
         </div>
     </div>
     <div class="card-body main-our-product">
+        <!-- Productos Paginados -->
         <div class="row g-3">
             <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4"
-                *ngFor="let product of filteredProduct; track product;let i = index">
+                *ngFor="let product of paginatedProducts; track product;let i = index">
                 <div class="our-product-wrapper h-100 widget-hover shadow-sm rounded">
                     <!-- Imagen del producto con badge de disponibilidad -->
                     <div class="our-product-img position-relative">
                         <img [src]="product.crearProducto.imagenesPrincipales[0].urls" [alt]="product.product_name"
                             appImageOptimizer [quality]="0.7" [width]="300" [height]="300" [lazy]="true" loading="lazy"
                             priority class="product-image">
-                        <span class="position-absolute top-0 end-0 m-2 badge stock-badge" [ngClass]="{
+                        <span class="position-absolute top-0 end-0 m-2 badge stock-badge"
+                              [ngClass]="{
                                 'bg-success': product.disponibilidad?.cantidadDisponible > 10,
                                 'bg-warning': product.disponibilidad?.cantidadDisponible > 0 && product.disponibilidad?.cantidadDisponible <= 10,
                                 'bg-danger': !product.disponibilidad?.cantidadDisponible || product.disponibilidad?.cantidadDisponible <= 0
@@ -48,14 +50,12 @@
                         <div class="mb-1">
                             <small class="text-muted ref-badge">{{ product?.identificacion?.referencia }}</small>
                         </div>
-
+                        
                         <!-- Título del producto -->
-                        <h6 class="f-14 f-w-600 pt-1 producto-titulo text-truncate"
+                        <h6 class="f-14 f-w-600 pt-1 producto-titulo text-truncate" 
                             title="{{ product.crearProducto.titulo }}">
                             {{ product.crearProducto.titulo }}
                         </h6>
-
-
 
                         <!-- Contenedor para precio -->
                         <div class="d-flex justify-content-between align-items-center mt-2">
@@ -69,10 +69,10 @@
                             <div class="d-flex align-items-center">
                                 <div class="add-quantity-small me-2">
                                     <i class="fa fa-minus decrement-btn icono-pos"
-                                        (click)="updateQuantity(-1, product)"></i>
+                                       (click)="updateQuantity(-1, product)"></i>
                                     <span class="cantidad-value">{{ product.cantidad }}</span>
                                     <i class="fa fa-plus increment-btn icono-pos"
-                                        (click)="updateQuantity(1, product)"></i>
+                                       (click)="updateQuantity(1, product)"></i>
                                 </div>
                                 <button class="btn btn-sm btn-primary" (click)="addToCart(product)">
                                     <i class="fa fa-cart-plus"></i>
@@ -82,6 +82,44 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Paginación -->
+        <div class="pagination-container d-flex justify-content-center mt-4" *ngIf="totalPages > 1">
+            <nav aria-label="Navegación de productos">
+                <ul class="pagination">
+                    <!-- Botón anterior -->
+                    <li class="page-item" [ngClass]="{'disabled': currentPage === 1}">
+                        <a class="page-link" href="javascript:void(0)" aria-label="Anterior" (click)="prevPage()">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Páginas numeradas (mostrando máx. 5 páginas) -->
+                    <ng-container *ngFor="let page of pages">
+                        <li *ngIf="page >= currentPage - 2 && page <= currentPage + 2" 
+                            class="page-item" [ngClass]="{'active': page === currentPage}">
+                            <a class="page-link" href="javascript:void(0)" (click)="goToPage(page)">{{ page }}</a>
+                        </li>
+                    </ng-container>
+                    
+                    <!-- Botón siguiente -->
+                    <li class="page-item" [ngClass]="{'disabled': currentPage === totalPages}">
+                        <a class="page-link" href="javascript:void(0)" aria-label="Siguiente" (click)="nextPage()">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Mensaje de no productos -->
+        <div class="text-center py-5" *ngIf="filteredProduct.length === 0">
+            <div class="mb-3">
+                <i class="fa fa-search fa-3x text-muted"></i>
+            </div>
+            <h5 class="text-muted">{{ 'No se encontraron productos' | translate }}</h5>
+            <p>{{ 'Intenta con otra búsqueda o filtro' | translate }}</p>
         </div>
     </div>
 </div>

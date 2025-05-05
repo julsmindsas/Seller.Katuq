@@ -13,10 +13,18 @@ export class ProductComponent implements OnInit {
 
   public products: any[] = [];
   public filteredProduct: any[] = [];
+  public paginatedProducts: any[] = []; // Productos paginados para mostrar
   public searchQuery: string = '';
   public filter = {
     search: '',
   };
+
+  // Variables de paginación
+  public currentPage: number = 1;
+  public itemsPerPage: number = 12; // Productos por página
+  public totalItems: number = 0;
+  public totalPages: number = 0;
+  public pages: number[] = [];
 
   constructor(
     public cartService: CartService,
@@ -42,9 +50,11 @@ export class ProductComponent implements OnInit {
             cantidad: 1
           }));
           this.filteredProduct = this.products;
+          this.updatePagination();
         } else {
           this.products = [];
           this.filteredProduct = [];
+          this.paginatedProducts = [];
         }
         console.log("🚀 Productos generales cargados:", r)
       });
@@ -67,9 +77,11 @@ export class ProductComponent implements OnInit {
           };
         });
         this.filteredProduct = this.products;
+        this.updatePagination();
       } else {
         this.products = [];
         this.filteredProduct = [];
+        this.paginatedProducts = [];
       }
       console.log('Productos por bodega', bodegaId, r);
     });
@@ -113,25 +125,75 @@ export class ProductComponent implements OnInit {
   filterDetails() {
     if (!this.filter.search || this.filter.search === '') {
       this.filteredProduct = [...this.products];
-      return;
+    } else {
+      const searchTerms = this.normalizeText(this.filter.search).split(' ');
+
+      this.filteredProduct = this.products.filter(product => {
+        // Campos a buscar
+        const searchFields = [
+          this.normalizeText(product.crearProducto?.titulo),
+          this.normalizeText(product.crearProducto?.descripcion),
+          this.normalizeText(product.identificacion.referencia),
+          this.normalizeText(product.identificacion.codigoBarras)
+        ];
+        // Comprueba si todos los términos de búsqueda coinciden en al menos uno de los campos
+        return searchTerms.every(term =>
+          searchFields.some(field => field && field.includes(term))
+        );
+      });
     }
 
-    const searchTerms = this.normalizeText(this.filter.search).split(' ');
-    
-    this.filteredProduct = this.products.filter(product => {
-      // Campos a buscar
-      const searchFields = [
-        this.normalizeText(product.crearProducto?.titulo),
-        this.normalizeText(product.crearProducto?.descripcion),
-        this.normalizeText(product.identificacion.referencia),
-        this.normalizeText(product.identificacion.codigoBarras)
-      ];
-      
-      // Comprueba si todos los términos de búsqueda coinciden en al menos uno de los campos
-      return searchTerms.every(term => 
-        searchFields.some(field => field && field.includes(term))
-      );
-    });
+    // Reset a primera página cuando se filtra
+    this.currentPage = 1;
+    this.updatePagination();
   }
 
+  /**
+   * Actualiza la paginación y los productos a mostrar
+   */
+  updatePagination() {
+    this.totalItems = this.filteredProduct.length;
+    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+
+    // Generar array con números de página para la navegación
+    this.pages = [];
+    for (let i = 1; i <= this.totalPages; i++) {
+      this.pages.push(i);
+    }
+
+    // Calcular productos de la página actual
+    const startItem = (this.currentPage - 1) * this.itemsPerPage;
+    const endItem = Math.min(startItem + this.itemsPerPage, this.totalItems);
+    this.paginatedProducts = this.filteredProduct.slice(startItem, endItem);
+  }
+
+  /**
+   * Cambia a la página especificada
+   */
+  goToPage(page: number) {
+    if (page < 1) {
+      page = 1;
+    } else if (page > this.totalPages) {
+      page = this.totalPages;
+    }
+
+    if (this.currentPage !== page) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  /**
+   * Va a la página anterior
+   */
+  prevPage() {
+    this.goToPage(this.currentPage - 1);
+  }
+
+  /**
+   * Va a la página siguiente
+   */
+  nextPage() {
+    this.goToPage(this.currentPage + 1);
+  }
 }

@@ -418,4 +418,45 @@
   }
 }
 
+// Estilos para la paginación
+.pagination-container {
+  .pagination {
+    margin-bottom: 0;
+    
+    .page-item {
+      &.active .page-link {
+        background-color: var(--theme-deafult);
+        border-color: var(--theme-deafult);
+      }
+      
+      &.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+      }
+      
+      .page-link {
+        color: var(--theme-deafult);
+        padding: 0.5rem 0.75rem;
+        
+        &:hover {
+          background-color: rgba(var(--theme-deafult-rgb), 0.1);
+          border-color: rgba(var(--theme-deafult-rgb), 0.2);
+        }
+        
+        &:focus {
+          box-shadow: 0 0 0 0.2rem rgba(var(--theme-deafult-rgb), 0.25);
+        }
+      }
+    }
+  }
+}
+
+// Contador de resultados
+.results-counter {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
 
