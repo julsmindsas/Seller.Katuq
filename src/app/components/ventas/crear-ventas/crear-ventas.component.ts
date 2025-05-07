@@ -194,48 +194,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   ) {
     this.initForm();
 
-    // this._hotkeysService.register({
-    //   combo: 'shift+g',
-    //   handler: () => {
-    //     this.guardarPrePedido(this.pedidoGral);
-    //     console.log('Combo saved!');
-    //   },
-    //   description: 'Sends a secret message to the console.'
-    // });
-
-    // this._hotkeysService.register({
-    //   combo: 'shift+n',
-    //   handler: () => {
-    //     if (!this.pedidoSinGuardar) {
-    //       this.showPedidoConfirm = false;
-    //       this.showSteper = true;
-    //       this.newPedido();
-    //       this.wizard.goToStep(0);
-    //       console.log('Nuevo pedido');
-    //     }
-
-    //     Swal.fire({
-    //       title: 'Nuevo Pedido',
-    //       text: "¿Desea crear un nuevo pedido?, Recuerde que esto borrara el proceso que lleva actualmente",
-    //       icon: 'warning',
-    //       showCancelButton: true,
-    //       confirmButtonColor: '#3085d6',
-    //       cancelButtonColor: '#d33',
-    //       confirmButtonText: 'Nuevo',
-    //       cancelButtonText: 'Cancelar'
-    //     }).then((result) => {
-    //       if (result.isConfirmed) {
-    //         this.showPedidoConfirm = false;
-    //         this.showSteper = true;
-    //         this.newPedido();
-    //         this.wizard.goToStep(0);
-    //         console.log('Nuevo pedido');
-    //       }
-    //     })
-    //   },
-    //   description: 'Sends a secret message to the console.'
-    // });
-
     this.maxDate = new Date();
     this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
     console.log("empresa", this.empresaActual);
