@@ -22,6 +22,7 @@ import { ToastrService } from 'ngx-toastr';
 export class EcomerceProductsComponent implements OnInit, AfterViewInit {
 
   @Input() public ciudad: string;
+  @Input() public bodega: string;
   @Output() onRender = new EventEmitter<void>();
 
 
@@ -284,6 +285,8 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
     const filter = this.filterForm.value;
     filter.deliveryCity = { label: this.ciudad, value: this.ciudad };
     filter.category = stringify(filter.category);
+    filter.bodega = this.bodega;
+    filter.isChannelManual = true;
     this.ventasService.getProductsByFilter(filter).subscribe({
       next: (data) => {
         console.log(data);

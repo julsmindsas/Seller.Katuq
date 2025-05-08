@@ -4,6 +4,7 @@ import { PagoInformation } from "../../pos/pos-modelo/pedido";
 
 export interface Pedido {
     transaccionId?: any;
+    bodegaId?: string;
     entregado?: UserLite;
     transportador?: any;
     nroShippingOrder?: string;

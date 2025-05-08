@@ -25,6 +25,14 @@ export class BodegaService {
       );
   }
 
+  getBodegasByChannelName(channelName: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/channels/${channelName}/associated-bodegas-by-name`)
+      .pipe(
+        map(bodegas => bodegas.map(bodega => ({
+          ...bodega,
+        })))
+      );
+  }
   // Obtener bodegas activas
   getActiveBodegas(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/active`)

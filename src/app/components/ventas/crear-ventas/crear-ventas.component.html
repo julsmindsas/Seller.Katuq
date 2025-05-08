@@ -4,14 +4,36 @@
   <div class="row">
     <div class="col-sm-12">
       <div class="card">
-        <div class="card-header p-3">
-          <div class="row">
-            <div class="col-md-12">
-              <!-- Quitamos el asistente de voz de aquí -->
+        <div class="card-header p-2">
+          <div class="row align-items-center">
+            <div class="col-md-6">
               <p class="text-left fc-secondary fs-24 m-0 p-0"><i class="icofont icofont-money"></i>&nbsp;Crear Venta</p>
               <p class="text-left text-muted fs-18 m-0 p-0">Preventa # {{pedidoGral.nroPedido}}</p>
               <p *ngIf="pedidoGral?.cliente">Cliente: {{pedidoGral?.cliente.nombres_completos}}
                 {{pedidoGral?.cliente.apellidos_completos}}</p>
+            </div>
+            <div class="col-md-6">
+              <div class="warehouse-selector">
+                <div class="row align-items-center g-2">
+                  <div class="col-auto">
+                    <div class="select-header">
+                      <i class="fa fa-warehouse me-1"></i>
+                      <small class="warehouse-title mb-0">Seleccionar Bodega</small>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <select class="form-select form-select-sm" id="bodegaSelect" (change)="onWarehouseChange($event)">
+                      <option value="">{{ "Seleccione una bodega" }}</option>
+                      <option *ngFor="let bodega of bodegas" [value]="bodega.id">
+                        {{ bodega.nombre }} ({{ bodega.idBodega }})
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-auto" *ngIf="selectedWarehouse">
+                    <small class="selected-warehouse text-success"><strong>Bodega:</strong> {{ selectedWarehouse }}</small>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -25,24 +47,54 @@
                   <p class="text-steper">Catálogo</p>
                 </div>
               </ng-template>
-              <div class="row mt-5">
-                <div class="col-12">
-                  <label class="form-label" for="ciudad">Ubicación destino pedido</label>
-                  <select (change)="onSelectCity($event)" class="form-control">
-                    <option value="seleccione">Seleccione una ciudad</option>
-                    <option *ngFor="let ciudad of empresaActual.ciudadess.ciudadesEntrega" [value]="ciudad.value">
-                      {{ ciudad.label }}
-                    </option>
-                  </select>
+
+              <!-- Sección de selección de ubicación -->
+              <div class="selection-container mb-4" *ngIf="selectedWarehouse">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="warehouse-selector">
+                      <div class="select-header">
+                        <i class="fa fa-map-marker-alt me-2"></i>
+                        <h5 class="warehouse-title mb-2">Ubicación Destino</h5>
+                      </div>
+
+                      <div class="select-container">
+                        <select (change)="onSelectCity($event)" class="form-select">
+                          <option value="seleccione">Seleccione una ciudad</option>
+                          <option *ngFor="let ciudad of empresaActual.ciudadess.ciudadesEntrega" [value]="ciudad.value">
+                            {{ ciudad.label }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div *ngIf="selectedCity" class="selected-warehouse mt-2">
+                        <div class="alert alert-success py-2 mb-0" role="alert">
+                          <i class="fa fa-check-circle me-2"></i>
+                          <small><strong>Ciudad:</strong> {{ selectedCity }}</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="mt-5"></div>
-              <app-ecomerce-products #products></app-ecomerce-products>
 
-              <!-- Contenedor fijo para botones de navegación -->
-              <div class="wizard-footer-container d-flex flex-column flex-md-row">
+              <!-- Sección del catálogo -->
+              <div class="catalog-container">
+                <div class="catalog-header mb-3">
+                  <h4 class="text-primary">
+                    <i class="fa fa-shopping-basket me-2"></i>
+                    Catálogo de Productos
+                  </h4>
+                  <p class="text-muted" *ngIf="selectedWarehouse && selectedCity">
+                    Mostrando productos disponibles para {{ selectedWarehouse }} en {{ selectedCity }}
+                  </p>
+                </div>
+                <app-ecomerce-products #products></app-ecomerce-products>
+              </div>
+
+              <!-- Botones de navegación -->
+              <div class="wizard-footer-container d-flex flex-column flex-md-row mt-4">
                 <div class="wizard-nav-container">
-                  <!-- Este paso solo tiene botón "Siguiente" -->
                   <div class="spacer"></div>
                   <button class="btn btn-success wizard-nav-btn" type="button" awNextStep
                     [disabled]="!(pedidoGral?.carrito && pedidoGral.carrito.length > 0)"
