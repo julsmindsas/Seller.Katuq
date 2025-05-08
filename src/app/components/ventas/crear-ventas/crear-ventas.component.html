@@ -24,7 +24,7 @@
                   <div class="col">
                     <select class="form-select form-select-sm" id="bodegaSelect" (change)="onWarehouseChange($event)">
                       <option value="">{{ "Seleccione una bodega" }}</option>
-                      <option *ngFor="let bodega of bodegas" [value]="bodega.id">
+                      <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
                         {{ bodega.nombre }} ({{ bodega.idBodega }})
                       </option>
                     </select>

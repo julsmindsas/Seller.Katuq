@@ -1665,7 +1665,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         // Intentar recuperar la bodega guardada
         const bodegaGuardada = JSON.parse(localStorage.getItem('warehouse') || 'null');
         if (bodegaGuardada) {
-          this.onWarehouseChange({ target: { value: bodegaGuardada.id } } as any);
+          this.onWarehouseChange({ target: { value: bodegaGuardada.idBodega } } as any);
         }
       },
       error: (error) => {
@@ -1678,7 +1678,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   onWarehouseChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     const selectedId = target.value;
-    const selected = this.bodegas.find(warehouse => warehouse.id === selectedId);
+    const selected = this.bodegas.find(warehouse => warehouse.idBodega === selectedId);
 
     if (selected) {
       this.selectedWarehouse = selected.nombre;
@@ -1687,7 +1687,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
       // Actualizar el channel en el pedido
       if (this.pedidoGral) {
-        this.pedidoGral.bodegaId = selected.id;
+        this.pedidoGral.bodegaId = selected.idBodega;
       }
 
       if (this.selectedCity && this.selectedCity !== 'seleccione') {
