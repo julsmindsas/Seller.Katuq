@@ -106,8 +106,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
         unitPriceSinIVA = productoPrecio.precioUnitarioSinIva || 0;
       }
     } else {
-      // No volume prices defined, use base price
-      unitPriceSinIVA = productoPrecio?.precioUnitarioSinIva || 0;
+      totalPrecioSinIVA = (item.producto?.precio?.precioUnitarioSinIva) * item.cantidad;
     }
     totalPrecioSinIVA = unitPriceSinIVA * itemCarrito.cantidad;
     // Sumar precios de adiciones
