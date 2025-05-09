@@ -228,7 +228,6 @@ export class PosCheckoutComponent {
         this.pedido.pagoRecibido = result.amountReceived;
         this.pedido.cambioEntregado = result.change;
         this.comprarYPagar();
-        this.limpiarCarroYCliente();
       },
       (reason: any) => {
         console.log('Modal cerrado por:', reason);
@@ -334,7 +333,9 @@ export class PosCheckoutComponent {
         });
         context.ventasService.createOrder({ order: context.pedido, emailHtml: htmlSanizado }).subscribe({
           next: (res: any) => {
-            context.cartService.clearCart();
+            // context.cartService.clearCart();
+            context.limpiarCarroYCliente();
+
             if (context.pedido.generarFacturaElectronica) {
               const orderSiigo = context.facturacionElectronicaService.transformarPedidoCompletoParaCrearUsuarioDesdeLaVenta(context.pedido);
               context.pedido = res.order;
