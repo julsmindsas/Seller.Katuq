@@ -26,10 +26,10 @@ export class InventarioService {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
-    
+
     return this.http.post(url, { movimientos }, { headers });
   }
-  
+
   /**
    * Ingresa productos al inventario
    * @param bodegaId ID de la bodega
@@ -37,16 +37,17 @@ export class InventarioService {
    * @param tipoMovimiento Tipo de movimiento de inventario
    * @returns Observable con el resultado de la operación
    */
-  ingresarProductos(bodegaId: string, productos: any[], tipoMovimiento: TipoMovimientoInventario): Observable<any> {
+  ingresarProductos(bodegaId: string, productos: any[], tipoMovimiento: TipoMovimientoInventario, observaciones: string): Observable<any> {
     const url = `${this.apiUrl}/inventory/ingresar-multiples`;
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
-    
-    return this.http.post(url, { 
-      bodegaId, 
-      productos, 
-      tipoMovimiento 
+
+    return this.http.post(url, {
+      bodegaId,
+      productos,
+      tipoMovimiento,
+      observaciones
     }, { headers });
   }
 
@@ -57,7 +58,7 @@ export class InventarioService {
    */
   obtenerHistorialMovimientos(productId: string): Observable<MovimientoInventario[]> {
     const url = `${this.apiUrl}/inventory/movimientos/${productId}`;
-    
+
     return this.http.get<MovimientoInventario[]>(url);
   }
 
@@ -68,7 +69,7 @@ export class InventarioService {
    */
   obtenerMovimientosPorBodega(bodegaId: string): Observable<MovimientoInventario[]> {
     const url = `${this.apiUrl}/inventory/movimientos/bodega/${bodegaId}`;
-    
+
     return this.http.get<MovimientoInventario[]>(url);
   }
 
@@ -79,7 +80,7 @@ export class InventarioService {
    */
   obtenerInventarioPorBodega(bodegaId: string): Observable<any> {
     const url = `${this.apiUrl}/inventory/bodega/${bodegaId}`;
-    
+
     return this.http.get<any>(url);
   }
 

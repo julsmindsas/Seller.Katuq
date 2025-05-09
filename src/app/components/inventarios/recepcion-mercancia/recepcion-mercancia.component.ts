@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
@@ -20,6 +20,7 @@ interface ProductoRecepcion {
   styleUrls: ['./recepcion-mercancia.component.scss']
 })
 export class RecepcionMercanciaComponent implements OnInit {
+  @ViewChild('busquedaProductoInput') busquedaProductoInputEl: ElementRef;
   bodegas: any[] = [];
   productoForm: FormGroup;
   productos: ProductoRecepcion[] = [];
@@ -60,7 +61,8 @@ export class RecepcionMercanciaComponent implements OnInit {
     this.productoForm = this.fb.group({
       bodegaSeleccionada: ['', Validators.required],
       tipoMovimiento: ['INGRESO_COMPRA', Validators.required],
-      busquedaProducto: ['']
+      busquedaProducto: [''],
+      observaciones: [''] // Nuevo campo para observaciones
     });
 
     // Generar dinámicamente las opciones para el select
@@ -186,6 +188,7 @@ export class RecepcionMercanciaComponent implements OnInit {
     this.guardandoRecepcion = true;
     const bodegaSeleccionada = this.productoForm.get('bodegaSeleccionada')?.value;
     const tipoMovimiento = this.productoForm.get('tipoMovimiento')?.value;
+    const observaciones = this.productoForm.get('observaciones')?.value; // Obtener valor de observaciones
     
     // Preparar los datos para enviar a la API
     const productosParaEnviar = this.productos.map(item => {
@@ -197,13 +200,14 @@ export class RecepcionMercanciaComponent implements OnInit {
     });
 
     // Llamar al servicio para guardar los productos ingresados
-    this.inventarioService.ingresarProductos(bodegaSeleccionada.idBodega, productosParaEnviar, tipoMovimiento).subscribe({
+    this.inventarioService.ingresarProductos(bodegaSeleccionada.idBodega, productosParaEnviar, tipoMovimiento, observaciones).subscribe({ // Enviar observaciones
       next: (response) => {
         this.toastr.success('Recepción de mercancía guardada con éxito', 'Guardado');
         
         // Reiniciar formulario y lista de productos
         this.productoForm.reset({
-          tipoMovimiento: TipoMovimientoInventario.INGRESO_COMPRA
+          tipoMovimiento: TipoMovimientoInventario.INGRESO_COMPRA,
+          observaciones: '' // Reiniciar observaciones
         });
         this.productos = [];
         this.guardandoRecepcion = false;
@@ -220,6 +224,14 @@ export class RecepcionMercanciaComponent implements OnInit {
   onKeyDown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       this.buscarProducto();
+      // Limpiar el input y hacer focus después de un breve instante para asegurar que la búsqueda se procese
+      // y el DOM se actualice si es necesario antes de re-enfocar.
+      setTimeout(() => {
+        this.busquedaInput = '';
+        if (this.busquedaProductoInputEl) {
+          this.busquedaProductoInputEl.nativeElement.focus();
+        }
+      }, 0);
       event.preventDefault();
     }
   }

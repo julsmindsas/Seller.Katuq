@@ -55,6 +55,11 @@
                                 {{ "Por favor seleccione un tipo de movimiento" | translate }}
                             </div>
                         </div>
+
+                        <div class="form-group mt-3">
+                            <label for="observaciones">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" formControlName="observaciones" rows="3"></textarea>
+                        </div>
                     </form>
 
                     <!-- Fila nueva para la búsqueda de producto -->
@@ -70,7 +75,8 @@
                                     id="busquedaProducto" 
                                     placeholder="{{ 'ID, referencia o nombre...' | translate }}"
                                     (keydown)="onKeyDown($event)"
-                                    [disabled]="buscandoProducto">
+                                    [disabled]="buscandoProducto"
+                                    #busquedaProductoInput>
                                 <button class="btn btn-primary btn-sm" type="button" (click)="buscarProducto()" [disabled]="buscandoProducto">
                                     <i class="icofont icofont-search"></i>
                                     <span class="d-none d-sm-inline ms-1">{{ "Buscar" | translate }}</span>
