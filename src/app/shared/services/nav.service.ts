@@ -281,9 +281,9 @@ export class NavService implements OnDestroy {
 			]
 		},
 
-		{ headTitle1: 'Inteligencia de Negocios', isOnlySuperAdministrador: true },
+		{ headTitle1: 'Inteligencia de Negocios', isOnlySuperAdministrador: false },
 		{
-			title: 'Indicadores KPI', icon: 'trending-up', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
+			title: 'Indicadores KPI', icon: 'trending-up', type: 'sub', active: false, isOnlySuperAdministrador: false, children: [
 				{ path: 'dashboards', title: 'Dashboard Gerencial', type: 'link' }
 			]
 		},
@@ -302,10 +302,10 @@ export class NavService implements OnDestroy {
 			]
 		},
 
-		{ headTitle1: 'Configuración Plataforma', isOnlySuperAdministrador: true },
+		{ headTitle1: 'Configuración Plataforma', isOnlySuperAdministrador: false },
 		{
-			title: 'Gestión General', icon: 'settings', type: 'sub', active: false, isOnlySuperAdministrador: true, children: [
-				{ path: 'superadmin/clientes', title: 'Gestión Clientes Plataforma', type: 'link', isOnlySuperAdministrador: true },
+			title: 'Gestión General', icon: 'settings', type: 'sub', active: false, isOnlySuperAdministrador: false, children: [
+				{ path: 'superadmin/clientes', title: 'Gestión Clientes Plataforma', type: 'link', isOnlySuperAdministrador: false },
 				{ path: 'notificaciones', title: 'Notificaciones Globales', type: 'link' },
 				{ path: 'integrations', title: 'Integraciones Globales', type: 'link' },
 				{ path: 'extras/formasPago', title: 'Formas de Pago Globales', type: 'link' }

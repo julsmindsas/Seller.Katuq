@@ -92,18 +92,24 @@ export class CheckOutComponent implements OnInit, OnChanges {
     let totalPrecioSinIVA = 0;
     let totalPrecioSinIVADef = 0;
 
-    if (item.producto.precio.preciosVolumen.length > 0) {
-      item.producto.precio.preciosVolumen.map(x => {
-        if (item.cantidad >= x.numeroUnidadesInicial && item.cantidad <= x.numeroUnidadesLimite) {
-          totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * item.cantidad;
-        } else {
-          totalPrecioSinIVA = (item.producto?.precio?.precioUnitarioSinIva) * item.cantidad;
-        }
+    let unitPriceSinIVA: number;
+    const productoPrecio = itemCarrito.producto?.precio;
 
-      });
+    if (productoPrecio && productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
+      const rangoActual = productoPrecio.preciosVolumen.find(pv =>
+        itemCarrito.cantidad >= pv.numeroUnidadesInicial && itemCarrito.cantidad <= pv.numeroUnidadesLimite
+      );
+      if (rangoActual) {
+        unitPriceSinIVA = rangoActual.valorUnitarioPorVolumenSinIVA;
+      } else {
+        // Fallback to base price if no volume tier matches but preciosVolumen array exists
+        unitPriceSinIVA = productoPrecio.precioUnitarioSinIva || 0;
+      }
     } else {
-      totalPrecioSinIVA = (item.producto?.precio?.precioUnitarioSinIva) * item.cantidad;
+      // No volume prices defined, use base price
+      unitPriceSinIVA = productoPrecio?.precioUnitarioSinIva || 0;
     }
+    totalPrecioSinIVA = unitPriceSinIVA * itemCarrito.cantidad;
     // Sumar precios de adiciones
     if (item.configuracion && item.configuracion.adiciones) {
       item.configuracion.adiciones.forEach(adicion => {

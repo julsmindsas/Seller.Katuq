@@ -15,6 +15,7 @@ export class ProductComponent implements OnInit {
   public filteredProduct: any[] = [];
   public paginatedProducts: any[] = []; // Productos paginados para mostrar
   public searchQuery: string = '';
+  public isBarcodeMode: boolean = false; // Nueva propiedad para el modo código de barras
   public filter = {
     search: '',
   };
@@ -110,6 +111,23 @@ export class ProductComponent implements OnInit {
   searchStores() {
     this.filter['search'] = this.searchQuery.toLowerCase();
     this.filterDetails();
+  }
+
+  onSearchEnter(): void {
+    if (this.isBarcodeMode && this.searchQuery.trim() !== '') {
+      const firstMatch = this.filteredProduct.find(p => 
+        (p.identificacion?.codigoBarras && p.identificacion.codigoBarras.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+        (p.crearProducto?.titulo && p.crearProducto.titulo.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+        (p.identificacion?.referencia && p.identificacion.referencia.toLowerCase().includes(this.searchQuery.toLowerCase()))
+      );
+      if (firstMatch) {
+        this.addToCart(firstMatch);
+        this.searchQuery = ''; // Limpiar búsqueda después de agregar
+        this.searchStores(); // Actualizar lista de productos
+      }
+    } else {
+      this.searchStores(); // Comportamiento normal si no está en modo código de barras
+    }
   }
 
   /**
