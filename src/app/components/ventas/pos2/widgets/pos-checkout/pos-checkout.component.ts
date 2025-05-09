@@ -154,17 +154,17 @@ export class PosCheckoutComponent {
       this.showAlert('Error', 'No hay cliente seleccionado para editar');
       return;
     }
-    
-    const modalRef = this.modal.open(CrearClienteModalComponent, { 
-      centered: true, 
-      size: 'xl', 
-      modalDialogClass: 'create-customers custom-input' 
+
+    const modalRef = this.modal.open(CrearClienteModalComponent, {
+      centered: true,
+      size: 'xl',
+      modalDialogClass: 'create-customers custom-input'
     });
-    
+
     // Pasar los datos del cliente al modal y establecer que es edición
     modalRef.componentInstance.clienteData = this.datosCliente;
     modalRef.componentInstance.isEdit = true;
-    
+
     // Manejar el cierre del modal
     modalRef.result.then(
       (result) => {
@@ -176,7 +176,7 @@ export class PosCheckoutComponent {
             icon: 'success',
             confirmButtonText: 'Ok'
           });
-          
+
           // Intentar recargar los datos del cliente si es posible
           if (this.clienteBuscar && this.clienteBuscar.nativeElement) {
             const docValue = this.clienteBuscar.nativeElement.value;
@@ -187,7 +187,7 @@ export class PosCheckoutComponent {
           }
         }
       },
-      () => {}
+      () => { }
     );
   }
 
@@ -249,11 +249,11 @@ export class PosCheckoutComponent {
   }
 
   getPedido(): POSPedido {
-    const company = JSON.parse(localStorage.getItem('company') || '{}').nomComercial || '';
+    const company = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial || '';
     const texto = company.toString() || '';
     const ultimasLetras = texto.substring(texto.length - 3);
     const pedido: POSPedido = {
-      referencia: `POS-${new Date().getTime()}`,
+      referencia: ultimasLetras + '-' + new Date().getTime().toString().padStart(6, '0'),
       nroPedido: ultimasLetras + '-' + new Date().getTime().toString().padStart(6, '0'),
       bodegaId: this.warehouse?.idBodega || '',
       company: this.datosCliente?.company || '',
@@ -318,7 +318,13 @@ export class PosCheckoutComponent {
           const ultimasLetras = texto.substring(texto.length - 3);
           context.pedido.nroPedido = ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0');
         }
-        context.pedido.asesorAsignado = (localStorage.getItem('user') ?? '') as unknown as UserLite;
+        const user = (JSON.parse(localStorage.getItem('user') ?? '{}')) as unknown as UserLite;
+        const userLite: UserLite = {
+          name: user.name,
+          email: user.email,
+          nit: user.nit
+        }
+        context.pedido.asesorAsignado = userLite;
         const htmlSanizado = context.paymentService.getHtmlContent(context.pedido);
         // Cambiar estado de productos que no se producen
         context.pedido.carrito?.forEach((x: any) => {
@@ -368,7 +374,7 @@ export class PosCheckoutComponent {
             } else {
               context.showPedidoConfirm = true;
               context.showSteper = false;
-              context.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = context.pedido;
+              context.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = res.order;
               Swal.fire({
                 title: 'Pedido creado!',
                 text: 'Pedido creado con exito',
