@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CartService } from '../../../../../shared/services/cart.service';
 import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
 import { InventarioService } from '../../../../../shared/services/inventarios/inventario.service';
@@ -10,6 +10,7 @@ import { ImageOptimizerDirective } from '../../../../../shared/directives/image-
   styleUrls: ['./product.component.scss'],
 })
 export class ProductComponent implements OnInit {
+  @ViewChild('searchInputElement') searchInput: ElementRef | undefined;
 
   public products: any[] = [];
   public filteredProduct: any[] = [];
@@ -35,6 +36,11 @@ export class ProductComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Recuperar el estado de isBarcodeMode desde localStorage
+    const storedBarcodeMode = localStorage.getItem('isBarcodeMode');
+    if (storedBarcodeMode) {
+      this.isBarcodeMode = JSON.parse(storedBarcodeMode);
+    }
     // this.obtenerProductos(); // Carga inicial sin bodega específica
   }
 
@@ -110,24 +116,85 @@ export class ProductComponent implements OnInit {
 
   searchStores() {
     this.filter['search'] = this.searchQuery.toLowerCase();
+    // reemplazar la comilla simple por un guion - 
+    this.filter['search'] = this.filter['search'].replace(/'/g, '-');
+
     this.filterDetails();
   }
 
   onSearchEnter(): void {
-    if (this.isBarcodeMode && this.searchQuery.trim() !== '') {
-      const firstMatch = this.filteredProduct.find(p => 
-        (p.identificacion?.codigoBarras && p.identificacion.codigoBarras.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
-        (p.crearProducto?.titulo && p.crearProducto.titulo.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
-        (p.identificacion?.referencia && p.identificacion.referencia.toLowerCase().includes(this.searchQuery.toLowerCase()))
+    const trimmedQueryRaw = this.searchQuery.trim();
+    // Reemplazar la comilla simple por un guion -
+    this.searchQuery = trimmedQueryRaw.replace(/'/g, '-');
+    const trimmedQuery = this.searchQuery.trim();
+    const lowerCaseTrimmedQuery = trimmedQuery.toLowerCase();
+
+    if (this.isBarcodeMode && trimmedQuery !== '') {
+      let firstMatch: any | undefined = undefined;
+
+      // Intento 1: Coincidencia directa (o contenida) del código de barras (sin normalizar query aún, solo lowercase)
+      // Busca en la lista completa de productos (this.products)
+      firstMatch = this.products.find(p =>
+        p.identificacion?.codigoBarras &&
+        p.identificacion.codigoBarras.toLowerCase().includes(lowerCaseTrimmedQuery)
       );
+
+      // Intento 2: Coincidencia del código de barras normalizado con el query normalizado
+      // Busca en la lista completa de productos (this.products)
+      if (!firstMatch) {
+        const normalizedQuery = this.normalizeText(lowerCaseTrimmedQuery.replace(/'/g, '-'));
+        if (normalizedQuery) { // Asegurarse de que la consulta normalizada no esté vacía
+          firstMatch = this.products.find(p =>
+            p.identificacion?.codigoBarras &&
+            this.normalizeText(p.identificacion.codigoBarras).includes(normalizedQuery)
+          );
+        }
+      }
+
+      // Intento 3: Si no hay coincidencia por código de barras, usar lógica de filterDetails en this.products
+      // Busca en la lista completa de productos (this.products)
+      if (!firstMatch) {
+        const preparedQueryForFilterDetails = lowerCaseTrimmedQuery.replace(/'/g, '-');
+        const searchTerms = this.normalizeText(preparedQueryForFilterDetails).split(' ').filter(term => term.length > 0);
+
+        if (searchTerms.length > 0) {
+          firstMatch = this.products.find(product => {
+            const searchFields = [
+              this.normalizeText(product.crearProducto?.titulo),
+              this.normalizeText(product.crearProducto?.descripcion),
+              this.normalizeText(product.identificacion?.referencia),
+              product.exposicion?.etiquetas ? this.normalizeText(product.exposicion.etiquetas.join(', ')) : '',
+              product.identificacion?.codigoBarras ? this.normalizeText(product.identificacion.codigoBarras) : ''
+            ].filter(Boolean);
+
+            return searchTerms.every(term =>
+              searchFields.some(field => field && field.includes(term))
+            );
+          });
+        }
+      }
+
       if (firstMatch) {
         this.addToCart(firstMatch);
-        this.searchQuery = ''; // Limpiar búsqueda después de agregar
-        this.searchStores(); // Actualizar lista de productos
+        this.searchQuery = '';
+        this.searchStores();
+        if (this.searchInput && this.searchInput.nativeElement) {
+          this.searchInput.nativeElement.focus();
+        }
+      } else {
+        // Si no se encuentra ninguna coincidencia en modo código de barras,
+        // searchStores utilizará el searchQuery actual para filtrar la lista (probablemente mostrando "no encontrado").
+        this.searchStores();
       }
-    } else {
-      this.searchStores(); // Comportamiento normal si no está en modo código de barras
+
+    } else { // Si no es modo barcode, o el query está vacío
+      this.searchStores(); // Comportamiento normal de filtrar la lista
     }
+  }
+
+  // Nueva función para manejar el cambio del checkbox y guardar en localStorage
+  onBarcodeModeChange(): void {
+    localStorage.setItem('isBarcodeMode', JSON.stringify(this.isBarcodeMode));
   }
 
   /**

@@ -11,18 +11,18 @@
                     <span class="input-group-text">
                         <i data-feather="search" height="16" width="16" class="fc-gray"></i>
                     </span>
-                    <input class="form-control" type="text" placeholder="{{'Buscar producto...' | translate}}"
+                    <input class="form-control" autocomplete="off" type="text" placeholder="{{'Buscar producto...' | translate}}" #searchInputElement
                         list="datalistOptionsSearch" id="exampleDataList1" [(ngModel)]="searchQuery"
                         (input)="searchStores()" (keyup.enter)="onSearchEnter()">
-                    <datalist id="datalistOptionsSearch">
+                    <!-- <datalist id="datalistOptionsSearch">
                         <option value="Bluetooth Calling Smartwatch"></option>
                         <option value="Microsoft Surface Laptop"></option>
                         <option value="Gaming Over Ear Headphone"></option>
                         <option value="Apple iPhone 14 Plus"></option>
-                    </datalist>
+                    </datalist> -->
                 </div>
                 <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="barcodeModeCheck" [(ngModel)]="isBarcodeMode">
+                    <input class="form-check-input" type="checkbox" id="barcodeModeCheck" [(ngModel)]="isBarcodeMode" (change)="onBarcodeModeChange()">
                     <label class="form-check-label" for="barcodeModeCheck">
                         {{ 'Modo código de barras' | translate }}
                     </label>

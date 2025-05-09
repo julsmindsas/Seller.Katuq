@@ -88,226 +88,196 @@ export class CheckOutComponent implements OnInit, OnChanges {
       this.pedidoUtilService.pedido = this.pedido;
     }
   }
-  checkPriceScaleProd(item) {
-    let totalPrecioSinIVA = 0;
-    let totalPrecioSinIVADef = 0;
 
-    let unitPriceSinIVA: number;
-    const productoPrecio = itemCarrito.producto?.precio;
+  private getUnitPriceSinIVAWithScale(item: any): number {
+    const productoPrecio = item?.producto?.precio;
+    if (!productoPrecio) return 0;
 
-    if (productoPrecio && productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
+    if (productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
+      const cantidad = parseInt(item.cantidad?.toString() || '0');
       const rangoActual = productoPrecio.preciosVolumen.find(pv =>
-        itemCarrito.cantidad >= pv.numeroUnidadesInicial && itemCarrito.cantidad <= pv.numeroUnidadesLimite
+        cantidad >= pv.numeroUnidadesInicial && cantidad <= pv.numeroUnidadesLimite
       );
       if (rangoActual) {
-        unitPriceSinIVA = rangoActual.valorUnitarioPorVolumenSinIVA;
+        return rangoActual.valorUnitarioPorVolumenSinIVA || 0;
       } else {
-        // Fallback to base price if no volume tier matches but preciosVolumen array exists
-        unitPriceSinIVA = productoPrecio.precioUnitarioSinIva || 0;
+        return productoPrecio.precioUnitarioSinIva || 0;
       }
     } else {
-      totalPrecioSinIVA = (item.producto?.precio?.precioUnitarioSinIva) * item.cantidad;
+      return productoPrecio.precioUnitarioSinIva || 0;
     }
-    totalPrecioSinIVA = unitPriceSinIVA * itemCarrito.cantidad;
-    // Sumar precios de adiciones
-    if (item.configuracion && item.configuracion.adiciones) {
-      item.configuracion.adiciones.forEach(adicion => {
-        totalPrecioSinIVA += (adicion['cantidad'] * adicion['referencia']['precioUnitario']) * item.cantidad;
-      });
-    }
-
-    // Sumar precios de preferencias
-    if (item.configuracion && item.configuracion.preferencias) {
-      item.configuracion.preferencias.forEach(preferencia => {
-        totalPrecioSinIVA += (preferencia['valorUnitarioSinIva']) * item.cantidad;
-      });
-    }
-    totalPrecioSinIVADef += totalPrecioSinIVA
-
-
-    return totalPrecioSinIVADef;
   }
-  checkPriceScale() {
-    let totalPrecioSinIVA = 0;
-    let totalPrecioSinIVADef = 0;
-    this.pedido.carrito.map(itemCarrito => {
-      if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-        itemCarrito.producto.precio.preciosVolumen.map(x => {
-          if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-            totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * itemCarrito.cantidad;
-          } else {
-            totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
-          }
 
-        });
-      } else {
-        totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
-      }
-      // Sumar precios de adiciones
-      if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
-        itemCarrito.configuracion.adiciones.forEach(adicion => {
-          totalPrecioSinIVA += (adicion['cantidad'] * adicion['referencia']['precioUnitario']) * itemCarrito.cantidad;
-        });
-      }
+  checkPriceScaleProd(item: any): number {
+    if (!item || !item.producto || !item.producto.precio) {
+      return 0;
+    }
 
-      // Sumar precios de preferencias
-      if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
-        itemCarrito.configuracion.preferencias.forEach(preferencia => {
-          totalPrecioSinIVA += (preferencia['valorUnitarioSinIva']) * itemCarrito.cantidad;
-        });
-      }
-      totalPrecioSinIVADef += totalPrecioSinIVA
+    const cantidad = parseInt(item.cantidad?.toString() || '0');
+    if (cantidad === 0) {
+      return 0;
+    }
+
+    const unitPriceSinIVA = this.getUnitPriceSinIVAWithScale(item);
+    let totalItemSinIVA = unitPriceSinIVA * cantidad;
+
+    if (item.configuracion && item.configuracion.adiciones) {
+      let totalAdicionesSinIVA = 0;
+      item.configuracion.adiciones.forEach(adicion => {
+        const precioAdicionUnitarioSinIVA = adicion?.referencia?.precioUnitario || 0;
+        const cantidadAdicion = parseInt(adicion?.cantidad?.toString() || '0');
+        totalAdicionesSinIVA += cantidadAdicion * precioAdicionUnitarioSinIVA;
+      });
+      totalItemSinIVA += totalAdicionesSinIVA * cantidad; 
+    }
+
+    if (item.configuracion && item.configuracion.preferencias) {
+      let totalPreferenciasSinIVA = 0;
+      item.configuracion.preferencias.forEach(preferencia => {
+        totalPreferenciasSinIVA += preferencia?.valorUnitarioSinIva || 0;
+      });
+      totalItemSinIVA += totalPreferenciasSinIVA * cantidad; 
+    }
+
+    return totalItemSinIVA;
+  }
+
+  checkPriceScale(): number {
+    if (!this.pedido || !this.pedido.carrito) {
+      return 0;
+    }
+
+    let totalPedidoSinIVA = 0;
+    this.pedido.carrito.forEach(itemCarrito => {
+      totalPedidoSinIVA += this.checkPriceScaleProd(itemCarrito);
     });
 
-    return totalPrecioSinIVADef;
+    return totalPedidoSinIVA;
   }
   checkIVAPrice() {
     let totalPrecioIVA = 0;
     let totalPrecioIVADef = 0;
-    let totalExcluidosDef = 0
-    let totalIva5Def = 0
-    let totalImpoDef = 0
-    let totalIva19Def = 0
-    let totalExcluidos = 0
-    let totalIva5 = 0
-    let totalImpo = 0
-    let totalIva19 = 0
-    this.pedido.carrito.forEach(itemCarrito => {
-      //sumar precios productos
-      if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-        itemCarrito.producto.precio.preciosVolumen.forEach(x => {
-          totalExcluidos = 0
-          totalIva5 = 0
-          totalImpo = 0
-          totalIva19 = 0
+    let totalExcluidosDef = 0;
+    let totalIva5Def = 0;
+    let totalImpoDef = 0;
+    let totalIva19Def = 0;
+    let totalExcluidos = 0;
+    let totalIva5 = 0;
+    let totalImpo = 0;
+    let totalIva19 = 0;
 
-          if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-            totalPrecioIVA = x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-            switch (x.valorIVAPorVolumen.toString()) {
-              case "0":
-                totalExcluidos = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
-                break
-              case "5":
-                totalIva5 = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
-                break
-              case "8":
-                totalImpo = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
-                break
-              case "19":
-                totalIva19 = (x.valorUnitarioPorVolumenIva * itemCarrito.cantidad - ((x.valorUnitarioPorVolumenIva * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
-                break
-              default:
-                break
-            }
-          } else {
-            totalPrecioIVA = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-            switch (x.valorIVAPorVolumen.toString()) {
-              case "0":
-                totalExcluidos = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-                break
-              case "5":
-                totalIva5 = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-                break
-              case "8":
-                totalImpo = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-                break
-              case "19":
-                totalIva19 = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-                break
-              default:
-                break
-            }
+    if (!this.pedido || !this.pedido.carrito) {
+      return {
+        totalPrecioIVADef: 0,
+        totalExcluidos: 0,
+        totalIva5: 0,
+        totalImpo: 0,
+        totalIva19: 0
+      };
+    }
+
+    this.pedido.carrito.forEach(itemCarrito => {
+      totalExcluidos = 0;
+      totalIva5 = 0;
+      totalImpo = 0;
+      totalIva19 = 0;
+      totalPrecioIVA = 0; 
+
+      const cantidadItem = parseInt(itemCarrito?.cantidad?.toString() || '0');
+      if (cantidadItem === 0) return; 
+
+      const productoPrecio = itemCarrito?.producto?.precio;
+      const porceDescuento = (this.pedido?.porceDescuento ?? 0) / 100;
+
+      if (productoPrecio && productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
+        const rangoActual = productoPrecio.preciosVolumen.find(pv =>
+          cantidadItem >= pv.numeroUnidadesInicial && cantidadItem <= pv.numeroUnidadesLimite
+        );
+
+        if (rangoActual) {
+          const valorUnitarioConIVA = rangoActual.valorUnitarioPorVolumenIva || 0;
+          const valorIVAPorVolumen = rangoActual.valorIVAPorVolumen?.toString();
+          const precioItemConDescuento = (valorUnitarioConIVA * cantidadItem) * (1 - porceDescuento);
+          totalPrecioIVA += precioItemConDescuento; 
+
+          switch (valorIVAPorVolumen) {
+            case "0": totalExcluidos += precioItemConDescuento; break;
+            case "5": totalIva5 += precioItemConDescuento; break;
+            case "8": totalImpo += precioItemConDescuento; break;
+            case "19": totalIva19 += precioItemConDescuento; break;
           }
-        });
-      } else {
-        totalPrecioIVA = ((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-        switch (itemCarrito.producto?.precio?.precioUnitarioIva) {
-          case "0":
-            totalExcluidos = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
-            break
-          case "5":
-            totalIva5 = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
-            break
-          case "8":
-            totalImpo = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
-            break
-          case "19":
-            totalIva19 = (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) - (((itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100)));
-            break
-          default:
-            break
+        } else {
+          const valorUnitarioConIVA = productoPrecio.valorIva || 0; 
+          const valorIVABase = productoPrecio.precioUnitarioIva?.toString(); 
+          const precioItemConDescuento = (valorUnitarioConIVA * cantidadItem) * (1 - porceDescuento);
+          totalPrecioIVA += precioItemConDescuento;
+          switch (valorIVABase) {
+            case "0": totalExcluidos += precioItemConDescuento; break;
+            case "5": totalIva5 += precioItemConDescuento; break;
+            case "8": totalImpo += precioItemConDescuento; break;
+            case "19": totalIva19 += precioItemConDescuento; break;
+          }
+        }
+      } else if (productoPrecio) {
+        const valorUnitarioConIVA = productoPrecio.valorIva || 0; 
+        const valorIVABase = productoPrecio.precioUnitarioIva?.toString(); 
+        const precioItemConDescuento = (valorUnitarioConIVA * cantidadItem) * (1 - porceDescuento);
+        totalPrecioIVA += precioItemConDescuento;
+        switch (valorIVABase) {
+          case "0": totalExcluidos += precioItemConDescuento; break;
+          case "5": totalIva5 += precioItemConDescuento; break;
+          case "8": totalImpo += precioItemConDescuento; break;
+          case "19": totalIva19 += precioItemConDescuento; break;
         }
       }
-      // Sumar precios de adiciones
-      if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
+
+      if (itemCarrito?.configuracion?.adiciones) {
         itemCarrito.configuracion.adiciones.forEach(adicion => {
-          totalPrecioIVA += ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-          switch (adicion.porcentajeIva.toString()) {
-            case "0":
-              totalExcluidos = totalExcluidos + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-              break
-            case "5":
-              totalIva5 = totalIva5 + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-              break
-            case "8":
-              totalImpo = totalImpo + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-              break
-            case "19":
-              totalIva19 = totalIva19 + ((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) - (((adicion['cantidad'] * adicion['referencia']['precioIva']) * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-              break
-            default:
-              break
+          const cantidadAdicion = parseInt(adicion['cantidad']?.toString() || '0');
+          const precioIvaAdicion = adicion['referencia']?.['precioIva'] || 0;
+          const valorAdicionConIVA = (cantidadAdicion * precioIvaAdicion * cantidadItem) * (1 - porceDescuento);
+          totalPrecioIVA += valorAdicionConIVA;
+          switch (adicion['porcentajeIva']?.toString()) {
+            case "0": totalExcluidos += valorAdicionConIVA; break;
+            case "5": totalIva5 += valorAdicionConIVA; break;
+            case "8": totalImpo += valorAdicionConIVA; break;
+            case "19": totalIva19 += valorAdicionConIVA; break;
           }
         });
       }
 
-      // Sumar precios de preferencias
-      if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
+      if (itemCarrito?.configuracion?.preferencias) {
         itemCarrito.configuracion.preferencias.forEach(preferencia => {
-          totalPrecioIVA += (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-          switch (preferencia.porcentajeIva) {
-            case "0":
-              totalExcluidos = totalExcluidos + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-              break
-            case "5":
-              totalIva5 = totalIva5 + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-              break
-            case "8":
-              totalImpo = totalImpo + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-              break
-            case "19":
-              totalIva19 = totalIva19 + (preferencia['valorIva'] * itemCarrito.cantidad) - ((preferencia['valorIva'] * itemCarrito.cantidad) * (this.pedido.porceDescuento ?? 0 / 100));
-              break
-            default:
-              break
+          const valorIvaPreferencia = preferencia?.valorIva || 0;
+          const valorPreferenciaConIVA = (valorIvaPreferencia * cantidadItem) * (1 - porceDescuento);
+          totalPrecioIVA += valorPreferenciaConIVA; 
+          switch (preferencia?.porcentajeIva?.toString()) { 
+            case "0": totalExcluidos += valorPreferenciaConIVA; break;
+            case "5": totalIva5 += valorPreferenciaConIVA; break;
+            case "8": totalImpo += valorPreferenciaConIVA; break;
+            case "19": totalIva19 += valorPreferenciaConIVA; break;
           }
         });
       }
-      // sumarprecio impuesto domicilio
 
-
-      totalPrecioIVADef += totalPrecioIVA
-      totalExcluidosDef += totalExcluidos
-      totalIva5Def += totalIva5
-      totalImpoDef += totalImpo
-      totalIva19Def += totalIva19
+      totalPrecioIVADef += totalPrecioIVA;
+      totalExcluidosDef += totalExcluidos;
+      totalIva5Def += totalIva5;
+      totalImpoDef += totalImpo;
+      totalIva19Def += totalIva19;
     });
-    switch (this.pedidoUtilService.getShippingTaxValue(this.allBillingZone)) {
-      case "0":
-        totalExcluidosDef = totalExcluidosDef + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
-        break
-      case "5":
-        totalIva5Def = totalIva5Def + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
-        break
-      case "8":
-        totalImpoDef = totalImpoDef + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
-        break
-      case "19":
-        totalIva19Def = totalIva19Def + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone);
-        break
-      default:
-        break
+
+    const shippingTaxCost = this.pedidoUtilService.getShippingTaxCost(this.allBillingZone) || 0;
+    const shippingTaxValue = this.pedidoUtilService.getShippingTaxValue(this.allBillingZone)?.toString();
+
+    switch (shippingTaxValue) {
+      case "0": totalExcluidosDef += shippingTaxCost; break;
+      case "5": totalIva5Def += shippingTaxCost; break;
+      case "8": totalImpoDef += shippingTaxCost; break;
+      case "19": totalIva19Def += shippingTaxCost; break;
     }
+    totalPrecioIVADef += shippingTaxCost; 
+
     return {
       totalPrecioIVADef: totalPrecioIVADef,
       totalExcluidos: totalExcluidosDef,
@@ -319,31 +289,66 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
   async gotToPaymentOrder() {
 
+    if (!this.pedido) {
+      console.error("Pedido no inicializado en gotToPaymentOrder");
+      return; 
+    }
+
     this.pedidoUtilService.pedido = this.pedido;
     this.pedido.totalDescuento = this.pedidoUtilService.getDiscount();
     this.pedido.totalEnvio = this.pedidoUtilService.getShippingCost(this.allBillingZone);
-    this.pedido.totalImpuesto = this.pedidoUtilService.checkIVAPrice() + this.pedidoUtilService.getShippingTaxCost(this.allBillingZone)
-    this.pedido.totalPedidoSinDescuento = this.pedidoUtilService.getSubtotal();
-    this.pedido.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(this.pedido.totalEnvio) + this.pedidoUtilService.checkIVAPrice();
+
+    const ivaBreakdown = this.checkIVAPrice(); 
+    this.pedido.totalImpuesto = ivaBreakdown.totalPrecioIVADef; 
+
+    this.pedido.totalPedidoSinDescuento = this.checkPriceScale(); 
+
+    this.pedido.totalPedididoConDescuento = this.pedido.totalPedidoSinDescuento + this.pedido.totalImpuesto + this.pedido.totalEnvio - this.pedido.totalDescuento;
+
     let opcionSeleccionadaId = this.form.value.opcionSeleccionada;
     let opcionSeleccionada = this.formasPago.filter(formaPago => formaPago.id === opcionSeleccionadaId);
 
-    // Ahora opcionSeleccionada[0].nombre tiene el nombre correspondiente al id
-    this.pedido.formaDePago = opcionSeleccionada[0].nombre;
-    this.pedido.cuponAplicado = '';
+    if (opcionSeleccionada && opcionSeleccionada.length > 0) {
+      this.pedido.formaDePago = opcionSeleccionada[0].nombre;
+    } else {
+      this.pedido.formaDePago = 'N/A'; 
+    }
+    this.pedido.cuponAplicado = ''; 
 
     const userString = localStorage.getItem('user');
-    const user = JSON.parse(userString) as UserLogged;
-    const userLite: UserLite = {
-      name: user.name,
-      email: user.email,
-      nit: user.nit
+    if (userString) {
+      const user = JSON.parse(userString) as UserLogged;
+      const userLite: UserLite = {
+        name: user.name,
+        email: user.email,
+        nit: user.nit
+      };
+      this.pedido.asesorAsignado = userLite;
+    } else {
+      console.warn('Usuario no encontrado en localStorage');
     }
-    this.pedido.asesorAsignado = userLite;
+
     this.pedido.fechaCreacion = new Date().toISOString();
-    this.pedido.fechaEntrega = new Date(this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.year, this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.month == 0 ? 0 : this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.month - 1, this.pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega.day).toISOString();
-    this.pedido.horarioEntrega = this.pedido.carrito[0].configuracion.datosEntrega.horarioEntrega;
-    this.pedido.formaEntrega = this.pedido.carrito[0].configuracion.datosEntrega.formaEntrega;
+
+    const firstCartItemConfig = this.pedido?.carrito?.[0]?.configuracion?.datosEntrega;
+    if (firstCartItemConfig?.fechaEntrega) {
+      const { year, month, day } = firstCartItemConfig.fechaEntrega;
+      this.pedido.fechaEntrega = new Date(year, month === 0 ? 0 : month - 1, day).toISOString();
+    } else {
+      this.pedido.fechaEntrega = new Date().toISOString(); 
+    }
+
+    if (firstCartItemConfig?.horarioEntrega) {
+      this.pedido.horarioEntrega = firstCartItemConfig.horarioEntrega;
+    } else {
+      this.pedido.horarioEntrega = 'N/A'; 
+    }
+
+    if (firstCartItemConfig?.formaEntrega) {
+      this.pedido.formaEntrega = firstCartItemConfig.formaEntrega;
+    } else {
+      this.pedido.formaEntrega = 'N/A'; 
+    }
 
     this.comprarYPagar.emit(this.pedido);
 
