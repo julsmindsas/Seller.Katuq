@@ -3,6 +3,7 @@ import { CartService } from '../../../../../shared/services/cart.service';
 import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
 import { InventarioService } from '../../../../../shared/services/inventarios/inventario.service';
 import { ImageOptimizerDirective } from '../../../../../shared/directives/image-optimizer.directive';
+import { ImageCacheService } from '../../../../../shared/services/image-cache.service';
 
 @Component({
   selector: 'app-product',
@@ -17,6 +18,8 @@ export class ProductComponent implements OnInit {
   public paginatedProducts: any[] = []; // Productos paginados para mostrar
   public searchQuery: string = '';
   public isBarcodeMode: boolean = false; // Nueva propiedad para el modo código de barras
+  public imageLoaded: { [key: string]: boolean } = {};
+  public defaultImage: string = 'assets/images/placeholder.png'; // Añade una imagen por defecto
   public filter = {
     search: '',
   };
@@ -31,7 +34,8 @@ export class ProductComponent implements OnInit {
   constructor(
     public cartService: CartService,
     private maestroService: MaestroService,
-    private inventarioService: InventarioService
+    private inventarioService: InventarioService,
+    private imageCacheService: ImageCacheService
   ) {
   }
 
@@ -41,23 +45,111 @@ export class ProductComponent implements OnInit {
     if (storedBarcodeMode) {
       this.isBarcodeMode = JSON.parse(storedBarcodeMode);
     }
-    // this.obtenerProductos(); // Carga inicial sin bodega específica
+    // Limpiar caché antiguo al iniciar
+    this.imageCacheService.clearCache();
+  }
+
+  async handleImageLoad(event: any, productId: string) {
+    const img = event.target as HTMLImageElement;
+    this.imageLoaded[productId] = true;
+
+    // Convertir la imagen a dataURL y guardar en caché
+    try {
+      const startTime = performance.now();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.4); // Comprimir a JPEG con 40% de calidad
+        await this.imageCacheService.cacheImage(img.src, dataUrl);
+        
+        // Métricas de rendimiento
+        const endTime = performance.now();
+        const originalSize = this.getImageSize(img.src);
+        const compressedSize = this.getDataUrlSize(dataUrl);
+        const compressionRatio = ((originalSize - compressedSize) / originalSize * 100).toFixed(2);
+        
+        console.log('Métricas de imagen:', {
+          productId,
+          loadTime: `${(endTime - startTime).toFixed(2)}ms`,
+          originalSize: this.formatBytes(originalSize),
+          compressedSize: this.formatBytes(compressedSize),
+          compressionRatio: `${compressionRatio}%`,
+          dimensions: `${img.naturalWidth}x${img.naturalHeight}`
+        });
+      }
+    } catch (error) {
+      console.error('Error al cachear imagen:', error);
+    }
+  }
+
+  private getImageSize(url: string): number {
+    // Estimación aproximada del tamaño de la imagen original
+    const xhr = new XMLHttpRequest();
+    xhr.open('HEAD', url, false);
+    xhr.send();
+    return parseInt(xhr.getResponseHeader('Content-Length') || '0', 10);
+  }
+
+  private getDataUrlSize(dataUrl: string): number {
+    const base64 = dataUrl.split(',')[1];
+    const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+    return Math.ceil((base64.length * 3) / 4) - padding;
+  }
+
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  async handleImageError(event: any) {
+    event.target.src = this.defaultImage;
+  }
+
+  async precargarImagenes(productos: any[]) {
+    for (const producto of productos) {
+      if (producto.crearProducto?.imagenesPrincipales?.[0]?.urls) {
+        const url = producto.crearProducto.imagenesPrincipales[0].urls;
+        try {
+          // Intentar obtener del caché
+          const cachedDataUrl = await this.imageCacheService.getCachedImage(url);
+          if (cachedDataUrl) {
+            // Si está en caché, precargar
+            const img = new Image();
+            img.src = cachedDataUrl;
+            img.onload = () => {
+              this.imageLoaded[producto._id] = true;
+            };
+          }
+        } catch (error) {
+          console.error('Error al precargar imagen:', error);
+        }
+      }
+    }
   }
 
   obtenerProductos(bodegaId?: string) {
     if (bodegaId) {
       this.obtenerProductosPorBodega(bodegaId);
     } else {
-      this.maestroService.getAllProductsPagination(100, 1).subscribe((r: any) => {
+      this.maestroService.getAllProductsPagination(100, 1).subscribe(async (r: any) => {
         if (r.products && (r.products as any[]).length > 0) {
           const productosPorEmpresa = r.products;
           let data = productosPorEmpresa;
           this.products = data.map(product => ({
             ...product,
-            cantidad: 1
+            cantidad: 1,
+            imageLoaded: false
           }));
           this.filteredProduct = this.products;
           this.updatePagination();
+          // Precargar imágenes de la primera página
+          await this.precargarImagenes(this.paginatedProducts);
         } else {
           this.products = [];
           this.filteredProduct = [];
@@ -69,7 +161,7 @@ export class ProductComponent implements OnInit {
   }
 
   obtenerProductosPorBodega(bodegaId: string) {
-    this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe((r: any) => {
+    this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe(async (r: any) => {
       if (Array.isArray(r.productos) && r.productos.length > 0) {
         this.products = r.productos.map(itemInventario => {
           return {
@@ -79,12 +171,14 @@ export class ProductComponent implements OnInit {
               ...itemInventario.producto.disponibilidad,
               cantidadDisponible: itemInventario.cantidad,
             },
-            cantidad: 1, // Se asegura de que el producto tenga una cantidad inicial de 1
-            // Se asegura de que el producto tenga una cantidad inicial de 1
+            cantidad: 1,
+            imageLoaded: false
           };
         });
         this.filteredProduct = this.products;
         this.updatePagination();
+        // Precargar imágenes de la primera página
+        await this.precargarImagenes(this.paginatedProducts);
       } else {
         this.products = [];
         this.filteredProduct = [];
@@ -95,7 +189,18 @@ export class ProductComponent implements OnInit {
   }
 
   updateQuantity(value: number, product: any) {
-    const stockDisponible = product.disponibilidad?.cantidadDisponible ?? Infinity;
+    // Si el producto no es inventariable, permitir cualquier cantidad
+    if (!product.disponibilidad?.inventariable) {
+      if (value === 1) {
+        product.cantidad += 1;
+      } else if (value === -1 && product.cantidad > 1) {
+        product.cantidad -= 1;
+      }
+      return;
+    }
+
+    // Si es inventariable, validar stock
+    const stockDisponible = product.disponibilidad?.cantidadDisponible ?? 0;
 
     if (value === 1 && product.cantidad < stockDisponible) {
       product.cantidad += 1;
@@ -107,11 +212,19 @@ export class ProductComponent implements OnInit {
   }
 
   addToCart(product: any) {
-    const updatedProduct: any = {
-      ...product,
-      cantidad: product.cantidad
-    };
-    this.cartService.posAddToCart(updatedProduct);
+    // Si el producto no es inventariable, agregar directamente al carrito
+    if (!product.disponibilidad?.inventariable) {
+      this.cartService.posAddToCart(product);
+      return;
+    }
+
+    // Si es inventariable, validar stock
+    const stockDisponible = product.disponibilidad?.cantidadDisponible ?? 0;
+    if (stockDisponible >= product.cantidad) {
+      this.cartService.posAddToCart(product);
+    } else {
+      console.warn(`No hay suficiente stock para ${product.crearProducto?.titulo}. Disponible: ${stockDisponible}`);
+    }
   }
 
   searchStores() {

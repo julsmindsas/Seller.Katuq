@@ -29,11 +29,12 @@
                         <div class="col-md-6">
                             <div class="d-flex justify-content-md-end mt-3 mt-md-0">
                                 <div class="form-group flex-grow-1 me-3" style="max-width: 300px;">
-                                    <select class="form-select" [(ngModel)]="bodegaSeleccionada" 
+                                    <select class="form-select" [(ngModel)]="bodegaSeleccionada"
                                         (change)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)"
                                         [ngbTooltip]="'Selecciona una bodega para ver su inventario' | translate"
                                         placement="auto">
-                                        <option [ngValue]="null" disabled selected>{{ 'Selecciona una bodega' | translate }}</option>
+                                        <option [ngValue]="null" disabled selected>{{ 'Selecciona una bodega' |
+                                            translate }}</option>
                                         <option *ngFor="let bodega of bodegas" [ngValue]="bodega">
                                             {{ bodega.nombre }}
                                             <small class="text-muted">({{ bodega.tipo }})</small>
@@ -56,17 +57,16 @@
                                     {{ 'Filtros y ordenamiento' | translate }}
                                 </h5>
                             </div>
-                            
+
                             <!-- Barra de búsqueda global -->
                             <div class="col-md-12 mb-4">
                                 <div class="input-group">
                                     <span class="input-group-text bg-primary text-white">
                                         <i class="fa fa-search"></i>
                                     </span>
-                                    <input type="text" class="form-control" 
-                                        placeholder="{{ 'Buscar por nombre o referencia...' | translate }}" 
-                                        [(ngModel)]="filtroGlobal"
-                                        (input)="aplicarFiltroGlobal()"
+                                    <input type="text" class="form-control"
+                                        placeholder="{{ 'Buscar por nombre o referencia...' | translate }}"
+                                        [(ngModel)]="filtroGlobal" (input)="aplicarFiltroGlobal()"
                                         [disabled]="!bodegaSeleccionada || rows.length === 0" />
                                 </div>
                             </div>
@@ -78,83 +78,78 @@
                                     <div class="col-md-2">
                                         <label class="form-label small fw-bold">{{ 'Referencia' | translate }}</label>
                                         <div class="input-wrapper">
-                                            <input type="text" class="form-control form-control-sm" 
-                                                placeholder="{{ 'Filtrar...' | translate }}" 
-                                                [(ngModel)]="filtros.referencia"
-                                                (input)="aplicarFiltros()"
+                                            <input type="text" class="form-control form-control-sm"
+                                                placeholder="{{ 'Filtrar...' | translate }}"
+                                                [(ngModel)]="filtros.referencia" (input)="aplicarFiltros()"
                                                 [disabled]="!bodegaSeleccionada || rows.length === 0" />
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Filtro por Nombre -->
                                     <div class="col-md-3">
                                         <label class="form-label small fw-bold">{{ 'Nombre' | translate }}</label>
                                         <div class="input-wrapper">
-                                            <input type="text" class="form-control form-control-sm" 
-                                                placeholder="{{ 'Filtrar...' | translate }}" 
-                                                [(ngModel)]="filtros.nombre"
-                                                (input)="aplicarFiltros()"
+                                            <input type="text" class="form-control form-control-sm"
+                                                placeholder="{{ 'Filtrar...' | translate }}"
+                                                [(ngModel)]="filtros.nombre" (input)="aplicarFiltros()"
                                                 [disabled]="!bodegaSeleccionada || rows.length === 0" />
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Filtro por Cantidad -->
                                     <div class="col-md-2">
                                         <label class="form-label small fw-bold">{{ 'Cantidad' | translate }}</label>
                                         <div class="select-wrapper">
-                                            <select class="form-select form-select-sm" 
-                                                [(ngModel)]="filtros.cantidadTipo" 
-                                                (change)="aplicarFiltros()"
+                                            <select class="form-select form-select-sm"
+                                                [(ngModel)]="filtros.cantidadTipo" (change)="aplicarFiltros()"
                                                 [disabled]="!bodegaSeleccionada || rows.length === 0">
                                                 <option value="">{{ 'Todos' | translate }}</option>
                                                 <option value="agotados">{{ 'Agotados (0)' | translate }}</option>
                                                 <option value="bajos">{{ 'Stock bajo (≤ 5)' | translate }}</option>
-                                                <option value="disponibles">{{ 'Disponibles (> 5)' | translate }}</option>
+                                                <option value="disponibles">{{ 'Disponibles (> 5)' | translate }}
+                                                </option>
                                             </select>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Filtro por Precio Unitario -->
                                     <div class="col-md-2">
                                         <label class="form-label small fw-bold">{{ 'Precio' | translate }}</label>
                                         <div class="d-flex gap-1">
-                                            <input type="number" class="form-control form-control-sm" 
-                                                placeholder="{{ 'Mín.' | translate }}" 
-                                                [(ngModel)]="filtros.precioMin"
+                                            <input type="number" class="form-control form-control-sm"
+                                                placeholder="{{ 'Mín.' | translate }}" [(ngModel)]="filtros.precioMin"
                                                 (input)="aplicarFiltros()"
                                                 [disabled]="!bodegaSeleccionada || rows.length === 0" />
-                                            <input type="number" class="form-control form-control-sm" 
-                                                placeholder="{{ 'Máx.' | translate }}" 
-                                                [(ngModel)]="filtros.precioMax"
+                                            <input type="number" class="form-control form-control-sm"
+                                                placeholder="{{ 'Máx.' | translate }}" [(ngModel)]="filtros.precioMax"
                                                 (input)="aplicarFiltros()"
                                                 [disabled]="!bodegaSeleccionada || rows.length === 0" />
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Filtro por Valor Total -->
                                     <div class="col-md-3">
                                         <label class="form-label small fw-bold">{{ 'Valor total' | translate }}</label>
                                         <div class="d-flex gap-1">
-                                            <input type="number" class="form-control form-control-sm" 
-                                                placeholder="{{ 'Mín.' | translate }}" 
-                                                [(ngModel)]="filtros.valorTotalMin"
-                                                (input)="aplicarFiltros()"
+                                            <input type="number" class="form-control form-control-sm"
+                                                placeholder="{{ 'Mín.' | translate }}"
+                                                [(ngModel)]="filtros.valorTotalMin" (input)="aplicarFiltros()"
                                                 [disabled]="!bodegaSeleccionada || rows.length === 0" />
-                                            <input type="number" class="form-control form-control-sm" 
-                                                placeholder="{{ 'Máx.' | translate }}" 
-                                                [(ngModel)]="filtros.valorTotalMax"
-                                                (input)="aplicarFiltros()"
+                                            <input type="number" class="form-control form-control-sm"
+                                                placeholder="{{ 'Máx.' | translate }}"
+                                                [(ngModel)]="filtros.valorTotalMax" (input)="aplicarFiltros()"
                                                 [disabled]="!bodegaSeleccionada || rows.length === 0" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Ordenamiento -->
                             <div class="col-md-9 mb-3">
                                 <label class="form-label small fw-bold">{{ 'Ordenar por' | translate }}</label>
                                 <div class="d-flex gap-2">
-                                    <select class="form-select form-select-sm" [(ngModel)]="ordenamiento" (change)="aplicarOrdenamiento()"
+                                    <select class="form-select form-select-sm" [(ngModel)]="ordenamiento"
+                                        (change)="aplicarOrdenamiento()"
                                         [disabled]="!bodegaSeleccionada || rows.length === 0">
                                         <option value="nombreAsc">{{ 'Nombre (A-Z)' | translate }}</option>
                                         <option value="nombreDesc">{{ 'Nombre (Z-A)' | translate }}</option>
@@ -167,12 +162,11 @@
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <!-- Botones de acción -->
                             <div class="col-md-3 mb-3 d-flex align-items-end">
                                 <div class="d-flex gap-2 w-100 justify-content-end">
-                                    <button class="btn btn-outline-secondary btn-sm" 
-                                        (click)="limpiarFiltros()"
+                                    <button class="btn btn-outline-secondary btn-sm" (click)="limpiarFiltros()"
                                         [disabled]="!bodegaSeleccionada || rows.length === 0"
                                         [ngbTooltip]="'Limpiar todos los filtros' | translate">
                                         <i class="fa fa-refresh me-1"></i>
@@ -185,14 +179,13 @@
 
                     <!-- Tabla de productos con configuración de scroll mejorada -->
                     <div class="table-container">
-                        <p-table #dt [value]="rowsFiltradas" 
-                            [paginator]="true" [rows]="pageSize" [totalRecords]="rowsFiltradas.length"
+                        <p-table #dt [value]="rowsFiltradas" [paginator]="true" [rows]="pageSize"
+                            [totalRecords]="rowsFiltradas.length"
                             styleClass="p-datatable-customers p-datatable-striped p-datatable-gridlines"
-                            [responsive]="true" [loading]="cargando"
-                            [paginatorPosition]="'bottom'" [showFirstLastIcon]="true"
-                            [rowsPerPageOptions]="[10,20,50]"
-                            [scrollable]="true" scrollHeight="50vh" scrollDirection="both">
-                            
+                            [responsive]="true" [loading]="cargando" [paginatorPosition]="'bottom'"
+                            [showFirstLastIcon]="true" [rowsPerPageOptions]="[10,20,50]" [scrollable]="true"
+                            scrollHeight="50vh" scrollDirection="both">
+
                             <!-- Encabezados sin filtros con configuración freeze para scroll horizontal -->
                             <ng-template pTemplate="header">
                                 <tr>
@@ -225,12 +218,11 @@
                                 <tr [ngClass]="{'bg-light-warning': row.cantidad <= 5}">
                                     <td style="width: 80px; min-width: 80px;" class="text-center" [frozen]="true">
                                         <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
-                                            [src]="row.crearProducto.imagenesPrincipales[0].urls" 
-                                            [alt]="row.crearProducto?.titulo"
-                                            class="img-thumbnail"
+                                            [src]="row.crearProducto.imagenesPrincipales[0].urls"
+                                            [alt]="row.crearProducto?.titulo" class="img-thumbnail"
                                             style="width: 50px; height: 50px; object-fit: cover;"
                                             [ngbTooltip]="row.crearProducto?.titulo">
-                                        <i *ngIf="!row.crearProducto?.imagenesPrincipales?.length" 
+                                        <i *ngIf="!row.crearProducto?.imagenesPrincipales?.length"
                                             class="fa fa-image text-muted fa-2x"></i>
                                     </td>
                                     <td style="width: 120px; min-width: 120px;" [frozen]="true">
@@ -244,8 +236,11 @@
                                             'bg-danger': row.cantidad === 0,
                                             'bg-warning text-dark': row.cantidad > 0 && row.cantidad <= 5,
                                             'bg-success': row.cantidad > 5
-                                        }">
+                                        }" *ngIf="row.disponibilidad?.inventariable">
                                             {{ row.cantidad }}
+                                        </span>
+                                        <span class="badge bg-danger" *ngIf="!row.disponibilidad?.inventariable">
+                                            {{ 'No inventariable' | translate }}
                                         </span>
                                     </td>
                                     <td style="width: 130px; min-width: 130px;" class="text-end">
@@ -262,7 +257,8 @@
                                                 'fa-building text-primary': row.bodegaNombre && getTipoBodega(row.bodegaId) === 'Física',
                                                 'fa-globe text-info': row.bodegaNombre && getTipoBodega(row.bodegaId) === 'Transaccional'
                                             }" [ngbTooltip]="getTipoBodega(row.bodegaId)"></i>
-                                            <span class="ms-2">{{ row.bodegaNombre || getNombreBodega(row.bodegaId) }}</span>
+                                            <span class="ms-2">{{ row.bodegaNombre || getNombreBodega(row.bodegaId)
+                                                }}</span>
                                         </div>
                                     </td>
                                 </tr>
@@ -275,23 +271,25 @@
                                         <div class="text-center p-5">
                                             <i class="fa fa-warehouse fa-3x text-muted mb-3"></i>
                                             <h5 class="mb-3">
-                                                {{ (bodegaSeleccionada ? 
-                                                    (rowsFiltradas.length === 0 && rows.length > 0 ? 'No hay productos que coincidan con los filtros' : 'No hay productos disponibles') : 
-                                                    'No hay productos para mostrar') | translate }}
+                                                {{ (bodegaSeleccionada ?
+                                                (rowsFiltradas.length === 0 && rows.length > 0 ? 'No hay productos que
+                                                coincidan con los filtros' : 'No hay productos disponibles') :
+                                                'No hay productos para mostrar') | translate }}
                                             </h5>
                                             <p class="text-muted">
-                                                {{ bodegaSeleccionada ? 
-                                                    (rowsFiltradas.length === 0 && rows.length > 0 ? 
-                                                        'Prueba con otros criterios de filtro' : 
-                                                        ('No hay productos en la bodega ' + bodegaSeleccionada.nombre)) : 
-                                                    'Por favor, selecciona una bodega específica para ver su inventario' | translate }}
+                                                {{ bodegaSeleccionada ?
+                                                (rowsFiltradas.length === 0 && rows.length > 0 ?
+                                                'Prueba con otros criterios de filtro' :
+                                                ('No hay productos en la bodega ' + bodegaSeleccionada.nombre)) :
+                                                'Por favor, selecciona una bodega específica para ver su inventario' |
+                                                translate }}
                                             </p>
-                                            <button *ngIf="rowsFiltradas.length === 0 && rows.length > 0" class="btn btn-outline-secondary mt-2"
-                                                (click)="limpiarFiltros()">
+                                            <button *ngIf="rowsFiltradas.length === 0 && rows.length > 0"
+                                                class="btn btn-outline-secondary mt-2" (click)="limpiarFiltros()">
                                                 <i class="fa fa-refresh me-1"></i>
                                                 {{ 'Limpiar filtros' | translate }}
                                             </button>
-                                            <button *ngIf="!bodegaSeleccionada" class="btn btn-primary mt-3" 
+                                            <button *ngIf="!bodegaSeleccionada" class="btn btn-primary mt-3"
                                                 [disabled]="bodegas.length === 0"
                                                 (click)="$event.preventDefault(); document.querySelector('.form-select').focus()">
                                                 <i class="fa fa-warehouse me-1"></i>
@@ -318,7 +316,8 @@
                                     </span>
                                 </div>
                                 <div class="text-center">
-                                    <span class="d-block text-muted small">{{ 'Valor total inventario' | translate }}</span>
+                                    <span class="d-block text-muted small">{{ 'Valor total inventario' | translate
+                                        }}</span>
                                     <span class="badge bg-primary py-2 px-3">
                                         ${{ calcularValorTotalInventario() | number:'1.0-0' }}
                                     </span>
@@ -344,7 +343,7 @@
                             </span>
                             <span>{{ 'productos' | translate }}</span>
                             <span *ngIf="bodegaSeleccionada" class="ms-2">
-                                {{ 'en' | translate }} 
+                                {{ 'en' | translate }}
                                 <strong class="text-primary ms-1">{{ bodegaSeleccionada.nombre }}</strong>
                             </span>
                             <span *ngIf="rowsFiltradas.length !== rows.length" class="ms-2">

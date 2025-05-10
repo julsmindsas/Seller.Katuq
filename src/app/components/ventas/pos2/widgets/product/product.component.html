@@ -38,16 +38,23 @@
                 <div class="our-product-wrapper h-100 widget-hover shadow-sm rounded">
                     <!-- Imagen del producto con badge de disponibilidad -->
                     <div class="our-product-img position-relative">
+                        <div class="image-placeholder" *ngIf="!imageLoaded[product._id]">
+                            <i class="fa fa-spinner fa-spin"></i>
+                        </div>
                         <img [src]="product.crearProducto.imagenesPrincipales[0].urls" [alt]="product.product_name"
                             appImageOptimizer [quality]="0.2" [width]="300" [height]="300" [lazy]="true" loading="lazy"
-                            priority class="product-image">
+                            priority class="product-image" [class.loaded]="imageLoaded[product._id]"
+                            (load)="handleImageLoad($event, product._id)" (error)="handleImageError($event)">
                         <span class="position-absolute top-0 end-0 m-2 badge stock-badge"
                               [ngClass]="{
-                                'bg-success': product.disponibilidad?.cantidadDisponible > 10,
-                                'bg-warning': product.disponibilidad?.cantidadDisponible > 0 && product.disponibilidad?.cantidadDisponible <= 10,
-                                'bg-danger': !product.disponibilidad?.cantidadDisponible || product.disponibilidad?.cantidadDisponible <= 0
+                                'bg-success': product.disponibilidad?.inventariable && product.disponibilidad?.cantidadDisponible > 10,
+                                'bg-warning': product.disponibilidad?.inventariable && product.disponibilidad?.cantidadDisponible > 0 && product.disponibilidad?.cantidadDisponible <= 10,
+                                'bg-danger': product.disponibilidad?.inventariable && (!product.disponibilidad?.cantidadDisponible || product.disponibilidad?.cantidadDisponible <= 0),
+                                'bg-info': !product.disponibilidad?.inventariable
                               }">
-                            Disponibildad: {{ product.disponibilidad?.cantidadDisponible || 0 }}
+                            {{ product.disponibilidad?.inventariable ? 
+                               'Disponibilidad: ' + (product.disponibilidad?.cantidadDisponible || 0) : 
+                               'No inventariable' }}
                         </span>
                     </div>
 

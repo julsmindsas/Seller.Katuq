@@ -80,19 +80,19 @@ export class InventarioCatalogoComponent implements OnInit {
 
   // Nueva propiedad para almacenar los datos filtrados
   rowsFiltradas: any[] = [];
-  
+
   // Control de los filtros
   filtroGlobal: string = '';
   filtros = {
-      referencia: '',
-      nombre: '',
-      cantidadTipo: '',  // 'agotados', 'bajos', 'disponibles'
-      precioMin: null,
-      precioMax: null,
-      valorTotalMin: null,
-      valorTotalMax: null
+    referencia: '',
+    nombre: '',
+    cantidadTipo: '',  // 'agotados', 'bajos', 'disponibles'
+    precioMin: null,
+    precioMax: null,
+    valorTotalMin: null,
+    valorTotalMax: null
   };
-  
+
   // Control del ordenamiento
   ordenamiento: string = 'nombreAsc';
 
@@ -193,8 +193,8 @@ export class InventarioCatalogoComponent implements OnInit {
     if (this.bodegaSeleccionada?.idBodega) {
       this.cargando = true;
       // Filtrar los datos que ya tenemos
-      const filteredRows = this.productosSinFiltro.filter(producto => 
-        producto.crearProducto?.titulo?.toLowerCase().includes(input) || 
+      const filteredRows = this.productosSinFiltro.filter(producto =>
+        producto.crearProducto?.titulo?.toLowerCase().includes(input) ||
         producto.identificacion?.referencia?.toLowerCase().includes(input)
       );
       this.rows = filteredRows;
@@ -215,7 +215,7 @@ export class InventarioCatalogoComponent implements OnInit {
     this.rows = [...this.rows].sort((a, b) => {
       const nombreA = a.crearProducto?.titulo?.toLowerCase() || '';
       const nombreB = b.crearProducto?.titulo?.toLowerCase() || '';
-      return order === 'asc' 
+      return order === 'asc'
         ? nombreA.localeCompare(nombreB)
         : nombreB.localeCompare(nombreA);
     });
@@ -226,7 +226,7 @@ export class InventarioCatalogoComponent implements OnInit {
     this.rows = [...this.rows].sort((a, b) => {
       const precioA = a.precio?.precioUnitarioConIva || 0;
       const precioB = b.precio?.precioUnitarioConIva || 0;
-      return order === 'asc' 
+      return order === 'asc'
         ? precioA - precioB
         : precioB - precioA;
     });
@@ -237,7 +237,7 @@ export class InventarioCatalogoComponent implements OnInit {
     this.rows = [...this.rows].sort((a, b) => {
       const refA = a.identificacion?.referencia?.toLowerCase() || '';
       const refB = b.identificacion?.referencia?.toLowerCase() || '';
-      return order === 'asc' 
+      return order === 'asc'
         ? refA.localeCompare(refB)
         : refB.localeCompare(refA);
     });
@@ -262,7 +262,7 @@ export class InventarioCatalogoComponent implements OnInit {
       });
       return;
     }
-    
+
     // Crear una versión simplificada para Excel
     const excelData = this.rowsFiltradas.map(row => {
       return {
@@ -275,7 +275,7 @@ export class InventarioCatalogoComponent implements OnInit {
         'Tipo Bodega': this.getTipoBodega(row.bodegaId || '')
       };
     });
-    
+
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
@@ -361,32 +361,32 @@ export class InventarioCatalogoComponent implements OnInit {
   // Método central para aplicar todos los filtros
   aplicarFiltros() {
     let resultados = [...this.rows];
-    
+
     // Aplicar filtro de texto global
     if (this.filtroGlobal && this.filtroGlobal.trim() !== '') {
       const filtro = this.filtroGlobal.trim().toLowerCase();
-      resultados = resultados.filter(producto => 
-        (producto.crearProducto?.titulo?.toLowerCase().includes(filtro) || 
-         producto.identificacion?.referencia?.toLowerCase().includes(filtro))
+      resultados = resultados.filter(producto =>
+      (producto.crearProducto?.titulo?.toLowerCase().includes(filtro) ||
+        producto.identificacion?.referencia?.toLowerCase().includes(filtro))
       );
     }
-    
+
     // Aplicar filtro de referencia
     if (this.filtros.referencia && this.filtros.referencia.trim() !== '') {
       const filtro = this.filtros.referencia.trim().toLowerCase();
-      resultados = resultados.filter(producto => 
+      resultados = resultados.filter(producto =>
         producto.identificacion?.referencia?.toLowerCase().includes(filtro)
       );
     }
-    
+
     // Aplicar filtro de nombre
     if (this.filtros.nombre && this.filtros.nombre.trim() !== '') {
       const filtro = this.filtros.nombre.trim().toLowerCase();
-      resultados = resultados.filter(producto => 
+      resultados = resultados.filter(producto =>
         producto.crearProducto?.titulo?.toLowerCase().includes(filtro)
       );
     }
-    
+
     // Aplicar filtro por cantidad
     if (this.filtros.cantidadTipo) {
       switch (this.filtros.cantidadTipo) {
@@ -401,49 +401,49 @@ export class InventarioCatalogoComponent implements OnInit {
           break;
       }
     }
-    
+
     // Aplicar filtros de precio unitario
     if (this.filtros.precioMin !== null && this.filtros.precioMin !== undefined && !isNaN(Number(this.filtros.precioMin))) {
       const precioMin = Number(this.filtros.precioMin);
-      resultados = resultados.filter(producto => 
+      resultados = resultados.filter(producto =>
         (producto.precio?.precioUnitarioConIva || 0) >= precioMin
       );
     }
-    
+
     if (this.filtros.precioMax !== null && this.filtros.precioMax !== undefined && !isNaN(Number(this.filtros.precioMax))) {
       const precioMax = Number(this.filtros.precioMax);
-      resultados = resultados.filter(producto => 
+      resultados = resultados.filter(producto =>
         (producto.precio?.precioUnitarioConIva || 0) <= precioMax
       );
     }
-    
+
     // Aplicar filtros de valor total
     if (this.filtros.valorTotalMin !== null && this.filtros.valorTotalMin !== undefined && !isNaN(Number(this.filtros.valorTotalMin))) {
       const valorMin = Number(this.filtros.valorTotalMin);
-      resultados = resultados.filter(producto => 
+      resultados = resultados.filter(producto =>
         this.calcularValorTotal(producto) >= valorMin
       );
     }
-    
+
     if (this.filtros.valorTotalMax !== null && this.filtros.valorTotalMax !== undefined && !isNaN(Number(this.filtros.valorTotalMax))) {
       const valorMax = Number(this.filtros.valorTotalMax);
-      resultados = resultados.filter(producto => 
+      resultados = resultados.filter(producto =>
         this.calcularValorTotal(producto) <= valorMax
       );
     }
-    
+
     // Aplicar ordenamiento actual
     this.ordenarResultados(resultados);
-    
+
     // Actualizar la lista filtrada
     this.rowsFiltradas = resultados;
   }
-  
+
   // Método para aplicar ordenamiento
   aplicarOrdenamiento() {
     this.ordenarResultados(this.rowsFiltradas);
   }
-  
+
   // Método para ordenar resultados según el criterio seleccionado
   ordenarResultados(resultados: any[]) {
     switch (this.ordenamiento) {
@@ -473,13 +473,13 @@ export class InventarioCatalogoComponent implements OnInit {
         break;
     }
   }
-  
+
   // Método para filtrar solo productos agotados
   filtrarAgotados() {
     this.filtros.cantidadTipo = 'agotados';
     this.aplicarFiltros();
   }
-  
+
   // Método para limpiar todos los filtros
   limpiarFiltros() {
     this.filtroGlobal = '';
@@ -503,7 +503,12 @@ export class InventarioCatalogoComponent implements OnInit {
   calcularValorTotal(producto: ProductoInventario): number {
     const cantidad = producto.cantidad || 0;
     const precioUnitario = producto.precio?.precioUnitarioConIva || 0;
-    return cantidad * precioUnitario;
+    //validar si el producto es inventariable
+    if (producto.disponibilidad?.inventariable) {
+      return cantidad * precioUnitario;
+    } else {
+      return 0;
+    }
   }
 
   /**
@@ -518,7 +523,11 @@ export class InventarioCatalogoComponent implements OnInit {
    */
   calcularValorTotalInventario(): number {
     return this.rowsFiltradas.reduce((total, producto) => {
-      return total + this.calcularValorTotal(producto);
+      if (producto.disponibilidad?.inventariable) {
+        return total + this.calcularValorTotal(producto);
+      } else {
+        return total;
+      }
     }, 0);
   }
 }

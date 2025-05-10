@@ -266,6 +266,12 @@ export class NavService implements OnDestroy {
 			]
 		},
 		{
+			title: 'Picking y Packing', icon: 'box', type: 'sub', active: false, children: [
+				{ path: 'picking-packing/picking', title: 'Órdenes de Picking', type: 'link' },
+				{ path: 'picking-packing/packing', title: 'Órdenes de Packing', type: 'link' }
+			]
+		},
+		{
 			title: 'Plan de Producción', icon: 'archive', type: 'sub', active: false, children: [
 				{ path: 'produccion/dashboard', title: 'Dashboard Producción', type: 'link' }
 			]

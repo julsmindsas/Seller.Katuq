@@ -119,6 +119,11 @@ export const content: Routes = [
     canActivate: [AuthGuard] // Agregar el guard
   },
   {
+    path: 'picking-packing',
+    loadChildren: () => import('../../components/picking-packing/picking-packing.module').then(m => m.PickingPackingModule),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'soporte',
     loadChildren: () => import('../../components/soporte/soporte.module').then(m => m.SoporteModule),
     canActivate: [AuthGuard] // Agregar el guard

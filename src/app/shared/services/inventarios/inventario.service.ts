@@ -79,7 +79,7 @@ export class InventarioService {
    * @returns Observable con el inventario actual
    */
   obtenerInventarioPorBodega(bodegaId: string): Observable<any> {
-    const url = `${this.apiUrl}/inventory/bodega/${bodegaId}`;
+    const url = `${this.apiUrl}/inventory/bodega/${bodegaId}?loadAll=true`;
 
     return this.http.get<any>(url);
   }
