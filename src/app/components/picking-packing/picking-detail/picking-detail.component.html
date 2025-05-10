@@ -1,0 +1,148 @@
+<div class="container-fluid" *ngIf="!loading && order">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h4 class="card-title">Detalle de Orden de Picking</h4>
+          <div>
+            <button pButton 
+              icon="pi pi-arrow-left" 
+              label="Volver" 
+              class="p-button-secondary mr-2"
+              (click)="goBack()">
+            </button>
+            <p-dropdown [options]="[
+              {label: 'Pendiente', value: 'pending'},
+              {label: 'En Progreso', value: 'in_progress'},
+              {label: 'Completado', value: 'completed'},
+              {label: 'Cancelado', value: 'cancelled'}
+            ]" 
+            [(ngModel)]="order.status"
+            (onChange)="updateOrderStatus($event.value)"
+            [disabled]="order.status === 'completed' || order.status === 'cancelled'">
+            </p-dropdown>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h5>Información de la Orden</h5>
+              <table class="table">
+                <tr>
+                  <th>ID Orden:</th>
+                  <td>{{order.orderId}}</td>
+                </tr>
+                <tr>
+                  <th>Estado:</th>
+                  <td>
+                    <span class="badge" [ngClass]="getStatusClass(order.status)">
+                      {{order.status | titlecase}}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Asignado a:</th>
+                  <td>{{order.assignedTo || 'No asignado'}}</td>
+                </tr>
+                <tr>
+                  <th>Fecha Creación:</th>
+                  <td>{{order.createdAt | date:'short'}}</td>
+                </tr>
+                <tr>
+                  <th>Fecha Actualización:</th>
+                  <td>{{order.updatedAt | date:'short'}}</td>
+                </tr>
+                <tr *ngIf="order.completedAt">
+                  <th>Fecha Completado:</th>
+                  <td>{{order.completedAt | date:'short'}}</td>
+                </tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h5>Notas</h5>
+              <div class="notes-container">
+                {{order.notes || 'Sin notas'}}
+              </div>
+            </div>
+          </div>
+
+          <h5>Items a Picking</h5>
+          <p-table [value]="order.items" 
+                  [paginator]="true" 
+                  [rows]="10"
+                  [showCurrentPageReport]="true"
+                  currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} items">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Producto</th>
+                <th>Ubicación</th>
+                <th>Cantidad</th>
+                <th>Cantidad Picked</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item>
+              <tr>
+                <td>
+                  <div *ngIf="productDetails.get(item.productId)">
+                    {{productDetails.get(item.productId).name}}
+                    <small class="text-muted d-block">{{item.productId}}</small>
+                  </div>
+                  <div *ngIf="!productDetails.get(item.productId)">
+                    {{item.productId}}
+                  </div>
+                </td>
+                <td>{{item.location}}</td>
+                <td>{{item.quantity}}</td>
+                <td>{{item.pickedQuantity || 0}}</td>
+                <td>
+                  <span class="badge" [ngClass]="getStatusClass(item.status)">
+                    {{item.status | titlecase}}
+                  </span>
+                </td>
+                <td>
+                  <div class="btn-group" *ngIf="order.status !== 'completed' && order.status !== 'cancelled'">
+                    <button pButton 
+                      icon="pi pi-check" 
+                      class="p-button-rounded p-button-success mr-2"
+                      (click)="updateItemStatus(item, 'picked')"
+                      pTooltip="Marcar como picked"
+                      [disabled]="item.status === 'picked'">
+                    </button>
+                    <button pButton 
+                      icon="pi pi-times" 
+                      class="p-button-rounded p-button-danger"
+                      (click)="updateItemStatus(item, 'missing')"
+                      pTooltip="Marcar como faltante"
+                      [disabled]="item.status === 'missing'">
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid" *ngIf="loading">
+  <div class="row">
+    <div class="col-12 text-center">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+      <p>Cargando orden...</p>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid" *ngIf="!loading && error">
+  <div class="row">
+    <div class="col-12">
+      <div class="alert alert-danger">
+        {{error}}
+      </div>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,100 @@
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="card-title">Detalle de Orden de Packing</h2>
+      <button pButton type="button" icon="pi pi-arrow-left" label="Volver" class="p-button-rounded p-button-secondary" (click)="goBack()"></button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <p-progressSpinner *ngIf="loading"></p-progressSpinner>
+
+    <p-message *ngIf="error" severity="error" [text]="error"></p-message>
+
+    <div *ngIf="order && !loading" class="order-details">
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h3>Información de la Orden</h3>
+          <p><strong>ID de Orden:</strong> {{order.id}}</p>
+          <p><strong>ID de Picking:</strong> {{order.pickingId}}</p>
+          <p><strong>Estado:</strong> <span [class]="'badge ' + getStatusClass(order.status)">{{order.status}}</span></p>
+          <p><strong>Asignado a:</strong> {{order.assignedTo}}</p>
+          <p><strong>Fecha de creación:</strong> {{order.createdAt | date:'medium'}}</p>
+          <p><strong>Última actualización:</strong> {{order.updatedAt | date:'medium'}}</p>
+        </div>
+        <div class="col-md-6">
+          <h3>Acciones</h3>
+          <div class="d-flex gap-2">
+            <button pButton type="button" 
+                    [label]="order.status === 'completed' ? 'Marcar como Pendiente' : 'Completar Orden'"
+                    [class]="'p-button-' + (order.status === 'completed' ? 'warning' : 'success')"
+                    (click)="updateOrderStatus(order.status === 'completed' ? 'pending' : 'completed')">
+            </button>
+            <button pButton type="button" 
+                    label="Generar Etiqueta de Envío"
+                    class="p-button-info"
+                    (click)="generateShippingLabel()"
+                    [disabled]="order.status !== 'completed'">
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="items-section">
+        <h3>Productos a Empacar</h3>
+        <p-table [value]="order.items" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Empacado</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td>
+                <div *ngIf="productDetails.get(item.productId)">
+                  {{productDetails.get(item.productId).nombre}}
+                  <small class="text-muted d-block">SKU: {{productDetails.get(item.productId).sku}}</small>
+                </div>
+              </td>
+              <td>{{item.quantity}}</td>
+              <td>{{item.packedQuantity || 0}}</td>
+              <td>
+                <span [class]="'badge ' + getStatusClass(item.status)">{{item.status}}</span>
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button pButton type="button" 
+                          icon="pi pi-check" 
+                          class="p-button-rounded p-button-success"
+                          (click)="updateItemStatus(item, 'packed')"
+                          [disabled]="item.status === 'packed'">
+                  </button>
+                  <button pButton type="button" 
+                          icon="pi pi-times" 
+                          class="p-button-rounded p-button-danger"
+                          (click)="updateItemStatus(item, 'missing')"
+                          [disabled]="item.status === 'missing'">
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center">No hay productos para empacar</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="notes-section mt-4">
+        <h3>Notas</h3>
+        <p-textarea [rows]="3" [autoResize]="true" [(ngModel)]="order.notes" placeholder="Agregar notas..."></p-textarea>
+      </div>
+    </div>
+  </div>
+</div> 

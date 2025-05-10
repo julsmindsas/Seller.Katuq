@@ -1,0 +1,89 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Órdenes de Picking</h4>
+          <div class="filters mt-3">
+            <div class="row">
+              <div class="col-md-3">
+                <p-dropdown [options]="[
+                  {label: 'Todos', value: ''},
+                  {label: 'Pendiente', value: 'pending'},
+                  {label: 'En Progreso', value: 'in_progress'},
+                  {label: 'Completado', value: 'completed'},
+                  {label: 'Cancelado', value: 'cancelled'}
+                ]" [(ngModel)]="filters.status" 
+                placeholder="Filtrar por estado"
+                (onChange)="onFilterChange()">
+                </p-dropdown>
+              </div>
+              <div class="col-md-3">
+                <p-calendar [(ngModel)]="filters.dateFrom" 
+                  [showIcon]="true"
+                  placeholder="Fecha desde"
+                  (onSelect)="onFilterChange()">
+                </p-calendar>
+              </div>
+              <div class="col-md-3">
+                <p-calendar [(ngModel)]="filters.dateTo" 
+                  [showIcon]="true"
+                  placeholder="Fecha hasta"
+                  (onSelect)="onFilterChange()">
+                </p-calendar>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <p-table [value]="pickingOrders" 
+                  [loading]="loading"
+                  [paginator]="true" 
+                  [rows]="10"
+                  [showCurrentPageReport]="true"
+                  currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} órdenes"
+                  [rowsPerPageOptions]="[10,25,50]">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>ID Orden</th>
+                <th>Estado</th>
+                <th>Asignado a</th>
+                <th>Fecha Creación</th>
+                <th>Fecha Actualización</th>
+                <th>Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-order>
+              <tr>
+                <td>{{order.orderId}}</td>
+                <td>
+                  <span class="badge" [ngClass]="getStatusClass(order.status)">
+                    {{order.status | titlecase}}
+                  </span>
+                </td>
+                <td>{{order.assignedTo || 'No asignado'}}</td>
+                <td>{{order.createdAt | date:'short'}}</td>
+                <td>{{order.updatedAt | date:'short'}}</td>
+                <td>
+                  <button pButton 
+                    icon="pi pi-eye" 
+                    class="p-button-rounded p-button-info mr-2"
+                    (click)="viewOrder(order.id)"
+                    pTooltip="Ver detalles">
+                  </button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center">
+                  No hay órdenes de picking disponibles
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
