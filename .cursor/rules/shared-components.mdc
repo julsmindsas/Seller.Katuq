@@ -1,0 +1,108 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Componentes Compartidos para Ventas e Inventarios
+
+## Componentes de UI
+
+### Tablas
+- `shared/components/tables/data-table/`
+  - Tabla genérica para listados
+  - Soporte para paginación
+  - Ordenamiento
+  - Filtros
+  - Acciones personalizadas
+
+### Formularios
+- `shared/components/forms/`
+  - `product-form/`: Formulario de productos
+  - `sale-form/`: Formulario de ventas
+  - `customer-form/`: Formulario de clientes
+  - `inventory-movement-form/`: Formulario de movimientos
+
+### Selectores
+- `shared/components/selectors/`
+  - `product-selector/`: Selector de productos
+  - `customer-selector/`: Selector de clientes
+  - `category-selector/`: Selector de categorías
+
+### Modales
+- `shared/components/modals/`
+  - `confirmation-modal/`: Modal de confirmación
+  - `detail-modal/`: Modal de detalles
+  - `form-modal/`: Modal con formulario
+
+## Directivas
+
+### Validaciones
+- `shared/directives/`
+  - `stock-validator/`: Valida disponibilidad de stock
+  - `price-validator/`: Valida precios
+  - `quantity-validator/`: Valida cantidades
+
+### Formateo
+- `shared/directives/`
+  - `currency-format/`: Formatea moneda
+  - `date-format/`: Formatea fechas
+  - `number-format/`: Formatea números
+
+## Pipes
+
+### Transformación de Datos
+- `shared/pipes/`
+  - `currency.pipe.ts`: Formatea moneda
+  - `date.pipe.ts`: Formatea fechas
+  - `stock-status.pipe.ts`: Estado del stock
+  - `sale-status.pipe.ts`: Estado de la venta
+
+## Servicios Compartidos
+
+### Utilidades
+- `shared/services/`
+  - `notification.service.ts`: Servicio de notificaciones
+  - `print.service.ts`: Servicio de impresión
+  - `export.service.ts`: Servicio de exportación
+
+### Guards
+- `shared/guards/`
+  - `stock.guard.ts`: Verifica stock
+  - `sale.guard.ts`: Verifica venta
+  - `inventory.guard.ts`: Verifica inventario
+
+## Interfaces Compartidas
+
+### Tipos Comunes
+```typescript
+interface Pagination {
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+interface Filter {
+  field: string;
+  value: any;
+  operator: string;
+}
+
+interface Sort {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+```
+
+## Estilos Compartidos
+
+### Temas
+- `shared/styles/`
+  - `variables.scss`: Variables globales
+  - `mixins.scss`: Mixins comunes
+  - `themes/`: Temas de la aplicación
+
+### Componentes
+- `shared/styles/components/`
+  - `tables.scss`: Estilos de tablas
+  - `forms.scss`: Estilos de formularios
+  - `modals.scss`: Estilos de modales

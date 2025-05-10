@@ -1,0 +1,29 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Flujo de Trabajo de Desarrollo
+
+## Estructura de Características
+- Cada característica debe tener su propio módulo
+- Los componentes específicos de la característica deben estar en su propio directorio
+- Los servicios específicos de la característica deben estar en el directorio de servicios
+
+## Desarrollo de Componentes
+1. Crear el componente en el directorio apropiado
+2. Implementar la lógica en el archivo .ts
+3. Crear la plantilla HTML
+4. Añadir estilos SCSS
+5. Registrar el componente en el módulo correspondiente
+
+## Servicios
+- Los servicios deben ser proporcionados a nivel de módulo cuando sea posible
+- Usar inyección de dependencias para los servicios
+- Implementar interfaces para los servicios cuando sea necesario
+
+## Testing
+- Crear archivos de prueba para cada componente y servicio
+- Seguir el patrón de nombrado: `nombre.spec.ts`
+- Usar TestBed para pruebas de componentes
+- Implementar pruebas unitarias y de integración

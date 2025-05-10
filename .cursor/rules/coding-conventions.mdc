@@ -1,0 +1,28 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Convenciones de Código
+
+## Estructura de Archivos
+- Los componentes deben seguir el patrón: `nombre.component.ts|html|scss`
+- Los servicios deben seguir el patrón: `nombre.service.ts`
+- Los modelos deben seguir el patrón: `nombre.model.ts`
+- Los pipes deben seguir el patrón: `nombre.pipe.ts`
+
+## Nombrado
+- Usar PascalCase para nombres de clases, componentes y servicios
+- Usar camelCase para nombres de variables y métodos
+- Usar kebab-case para nombres de archivos y rutas
+
+## Estilos
+- Los estilos globales están en [src/styles.scss](mdc:src/styles.scss)
+- Los estilos específicos de componentes deben estar en archivos .scss separados
+- Seguir la metodología BEM para nombres de clases CSS
+
+## Angular
+- Usar decoradores de Angular (@Component, @Injectable, etc.)
+- Implementar OnInit, OnDestroy cuando sea necesario
+- Usar servicios para la lógica de negocio
+- Mantener los componentes lo más simples posible

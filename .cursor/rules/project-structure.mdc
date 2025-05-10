@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Estructura del Proyecto Seller.Katuq
+
+## Estructura Principal
+- El punto de entrada principal es [src/main.ts](mdc:src/main.ts)
+- La configuración de la aplicación está en [src/app/app.module.ts](mdc:src/app/app.module.ts)
+- Los estilos globales están en [src/styles.scss](mdc:src/styles.scss)
+
+## Componentes y Módulos
+- Los componentes principales están en `src/app/components/`
+- Los servicios están en `src/app/services/`
+- Las páginas están en `src/app/pages/`
+- Los pipes personalizados están en `src/app/pipes/`
+- Los componentes compartidos están en `src/app/shared/`
+
+## Características
+- Autenticación: `src/app/auth/`
+- Página de bienvenida: `src/app/welcome/`
+
+## Recursos
+- Los assets estáticos están en `src/assets/`
+- Los modelos de datos están en `src/models/`
+- Los servicios externos están en `src/services/`

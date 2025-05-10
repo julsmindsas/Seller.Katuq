@@ -1,0 +1,136 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Gestión de Ventas e Inventarios
+
+## Estructura de Módulos
+
+### Ventas
+- Ubicación: `src/app/pages/sales/`
+- Componentes principales:
+  - `sales-list/`: Lista de ventas
+  - `sales-detail/`: Detalle de venta individual
+  - `sales-create/`: Creación de nueva venta
+  - `sales-edit/`: Edición de venta existente
+
+### Inventario
+- Ubicación: `src/app/pages/inventory/`
+- Componentes principales:
+  - `inventory-list/`: Lista de productos
+  - `inventory-detail/`: Detalle de producto
+  - `inventory-create/`: Creación de nuevo producto
+  - `inventory-edit/`: Edición de producto
+  - `inventory-movement/`: Registro de movimientos
+
+## Modelos de Datos
+
+### Venta
+```typescript
+interface Sale {
+  id: string;
+  date: Date;
+  customer: Customer;
+  items: SaleItem[];
+  total: number;
+  status: SaleStatus;
+  paymentMethod: PaymentMethod;
+}
+
+interface SaleItem {
+  product: Product;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
+```
+
+### Inventario
+```typescript
+interface Product {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  category: Category;
+  price: number;
+  stock: number;
+  minStock: number;
+  maxStock: number;
+  unit: string;
+}
+
+interface InventoryMovement {
+  id: string;
+  date: Date;
+  product: Product;
+  type: MovementType;
+  quantity: number;
+  reference: string;
+  notes: string;
+}
+```
+
+## Servicios
+
+### Servicio de Ventas
+- `sales.service.ts`: Gestión de operaciones de venta
+  - Crear venta
+  - Actualizar venta
+  - Cancelar venta
+  - Obtener historial
+  - Generar reportes
+
+### Servicio de Inventario
+- `inventory.service.ts`: Gestión de inventario
+  - Actualizar stock
+  - Registrar movimientos
+  - Verificar niveles mínimos
+  - Generar alertas
+  - Obtener reportes
+
+## Flujos de Trabajo
+
+### Proceso de Venta
+1. Selección de productos
+2. Validación de stock
+3. Cálculo de totales
+4. Registro de pago
+5. Actualización de inventario
+6. Generación de comprobante
+
+### Gestión de Inventario
+1. Registro de entrada/salida
+2. Actualización de stock
+3. Verificación de niveles
+4. Generación de alertas
+5. Reportes de movimiento
+
+## Validaciones Importantes
+
+### Ventas
+- Verificar stock disponible
+- Validar precios y descuentos
+- Comprobar datos del cliente
+- Validar método de pago
+
+### Inventario
+- Control de stock mínimo/máximo
+- Validación de cantidades
+- Verificación de códigos únicos
+- Control de fechas de vencimiento
+
+## Reportes y Estadísticas
+
+### Ventas
+- Reporte diario/mensual
+- Productos más vendidos
+- Clientes frecuentes
+- Métodos de pago
+
+### Inventario
+- Nivel de stock actual
+- Movimientos por período
+- Productos con bajo stock
+- Rotación de inventario
