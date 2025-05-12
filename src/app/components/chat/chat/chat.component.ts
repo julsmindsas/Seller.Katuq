@@ -30,7 +30,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   @ViewChild('chatHistoryContainer') private chatHistoryContainer: ElementRef;
   @Input() isFloating: boolean = false;
   private shouldScrollToBottom: boolean = true;
-  private userHasScrolled: boolean = false;
+  public userHasScrolled: boolean = false;
   private scrollThreshold: number = 100; // Para determinar cercanía al final del chat
 
   public openTab : string = "call";
@@ -307,5 +307,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   // Manejar cuando el componente se destruye
   ngOnDestroy() {
     // Limpiar cualquier suscripción o temporizador pendiente
+  }
+
+  /**
+   * Maneja el click en el botón 'Ir al final'.
+   */
+  public onScrollToBottom(): void {
+    this.userHasScrolled = false;
+    this.shouldScrollToBottom = true;
+    this.scrollToBottom();
   }
 }

@@ -43,7 +43,7 @@
 
       <!-- Mensajes del asistente -->
       <div class="message-row assistant-message" *ngIf="chat.sender !== profile.id" [@messageAnimation]>
-        <div class="avatar-container small">
+        <div class="avatar-container small" *ngIf="i === 0 || chats?.message[i-1]?.sender !== chat.sender">
           <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
         </div>
         <div class="message-bubble">
@@ -73,6 +73,11 @@
       </div>
     </div>
   </section>
+
+  <!-- Botón para ir al final del chat -->
+  <button class="scroll-to-bottom-btn" *ngIf="userHasScrolled" (click)="onScrollToBottom()" aria-label="Ir al final del chat">
+    <i class="fa fa-chevron-down"></i>
+  </button>
 
   <!-- Pie de Página - Área de Entrada (fija) -->
   <footer class="input-area">

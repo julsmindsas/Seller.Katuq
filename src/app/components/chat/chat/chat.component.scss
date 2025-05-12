@@ -1,40 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 /* Variables de diseño Modernas */
 :root {
-  /* Paleta Principal (Azul moderno) */
-  --chat-primary: #007AFF; // Azul iOS
-  --chat-primary-light: #E5F2FF;
-  --chat-primary-dark: #0056b3;
+  /* Paleta moderno índigo */
+  --chat-primary: #6366F1;
+  --chat-primary-light: #E0E7FF;
+  --chat-primary-dark: #4338CA;
 
   /* Colores Neutros */
-  --bg-light: #FFFFFF;
-  --bg-medium-light: #F8F9FA; // Fondo sutilmente gris
-  --bg-dark: #1C1C1E; // Gris oscuro iOS
-  --bg-medium-dark: #2C2C2E;
+  --bg-light: #F9FAFB;
+  --bg-medium-light: #E5E7EB;
+  --bg-dark: #1F2937;
+  --bg-medium-dark: #374151;
 
   /* Texto */
-  --text-light: #1D1D1F; // Casi negro
-  --text-secondary-light: #6E6E73;
-  --text-dark: #F5F5F7; // Casi blanco
-  --text-secondary-dark: #8E8E93;
+  --text-light: #111827;
+  --text-secondary-light: #6B7280;
+  --text-dark: #F9FAFB;
+  --text-secondary-dark: #D1D5DB;
 
   /* Bordes */
-  --border-light: #E5E5EA;
-  --border-dark: #3A3A3C;
+  --border-light: #E5E7EB;
+  --border-dark: #4B5563;
 
   /* Burbujas */
-  --user-bubble-light: var(--chat-primary);
-  --user-text-light: #FFFFFF;
-  --assistant-bubble-light: #E5E5EA; // Gris claro
-  --assistant-text-light: var(--text-light);
+  --assistant-bubble-light: #FFFFFF;
+  --assistant-text-light: #111827;
+  --user-bubble-light: var(--chat-primary-light);
+  --user-text-light: var(--chat-primary-dark);
 
   --user-bubble-dark: var(--chat-primary);
   --user-text-dark: #FFFFFF;
-  --assistant-bubble-dark: #3A3A3C; // Gris oscuro
+  --assistant-bubble-dark: #374151;
   --assistant-text-dark: var(--text-dark);
 
   /* Input */
-  --input-bg-light: var(--bg-medium-light);
-  --input-bg-dark: var(--bg-medium-dark);
+  --input-bg-light: #FFFFFF;
+  --input-bg-dark: #374151;
 
   /* Espaciados */
   --spacing-xs: 4px;
@@ -45,12 +47,12 @@
   --spacing-xxl: 24px;
 
   /* Bordes */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 18px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
 
   /* Tipografía */
-  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-size-base: 15px;
   --font-size-small: 13px;
   --font-size-tiny: 11px;
@@ -60,20 +62,23 @@
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  min-height: 0;
   width: 100%;
   background-color: var(--bg-light);
   color: var(--text-light);
-  border-radius: var(--radius-md); // Usar variable
-  border: 1px solid var(--border-light);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08); // Sombra más suave
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   position: relative;
   font-family: var(--font-family-sans);
   font-size: var(--font-size-base);
   transition: background-color 0.3s ease, border-color 0.3s ease; // Añadir transición de borde
-  // Considerar un fondo global ligeramente texturizado si se desea
-  // background-image: url('assets/images/subtle-pattern.png'); 
+  max-width: 800px;
+  margin: 0 auto;
+  background: #F7F7F8;
 }
 
 .chat-container.dark-mode {
@@ -142,8 +147,9 @@ header.chat-header {
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-sm) var(--spacing-lg); // Ajustar padding
-  background: linear-gradient(to bottom, var(--bg-light) 0%, var(--bg-medium-light) 100%); // Gradiente sutil
-  border-bottom: 1px solid var(--border-light); // Mantener borde inferior
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: none;
 
   .header-content {
     display: flex;
@@ -251,8 +257,9 @@ header.chat-header {
 }
 
 /* Área de mensajes */
-section.messages-area { // Usar selector de elemento semántico
+section.messages-area {
   flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-sm); // Más padding arriba y a los lados
@@ -261,29 +268,37 @@ section.messages-area { // Usar selector de elemento semántico
   gap: var(--spacing-sm); // Reducir espacio entre filas de mensajes
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  background-color: var(--bg-medium-light); // Fondo ligeramente distinto para contraste
+  background-color: transparent;
   // Añadir un pequeño padding-top para separar del header
   padding-top: var(--spacing-md);
+  background: transparent;
 
   // Scrollbar más sutil
   &::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
   }
   &::-webkit-scrollbar-track {
-    background-color: transparent;
+    background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.15);
-    border-radius: 5px;
-    &:hover { background-color: rgba(0, 0, 0, 0.25); }
+    background: var(--chat-primary);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.2);
+    }
   }
 
   // Scrollbar modo oscuro
   .dark-mode & {
     background-color: var(--bg-medium-dark);
     &::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.15);
-      &:hover { background-color: rgba(255, 255, 255, 0.25); }
+      background: rgba(255, 255, 255, 0.1);
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
     }
   }
 }
@@ -291,22 +306,62 @@ section.messages-area { // Usar selector de elemento semántico
 /* Estilos de filas de mensajes */
 .message-row {
   display: flex;
-  gap: var(--spacing-sm); // Espacio entre avatar y burbuja
+  gap: var(--spacing-sm);
   max-width: 100%;
+  margin-bottom: var(--spacing-md);
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
 
   &.user-message {
     justify-content: flex-end;
     align-items: flex-end;
+    margin-left: 20%;
+
+    .message-bubble {
+      border-bottom-right-radius: var(--radius-sm);
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        right: -8px;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-primary-dark) 100%);
+        clip-path: polygon(0 0, 100% 100%, 0 100%);
+        border-bottom-right-radius: var(--radius-sm);
+      }
+    }
   }
+
   &.assistant-message {
     justify-content: flex-start;
     align-items: flex-end;
+    margin-right: 20%;
+
+    .message-bubble {
+      border-bottom-left-radius: var(--radius-sm);
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        left: -8px;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        background: var(--assistant-bubble-light);
+        clip-path: polygon(0 100%, 100% 100%, 100% 0);
+        border-bottom-left-radius: var(--radius-sm);
+      }
+    }
   }
 }
 
 /* Contenedor pequeño de avatar (para asistente) */
 .avatar-container.small {
-  width: 32px; // Ajustar tamaño
+  width: 32px;
   height: 32px;
   border-radius: 50%;
   overflow: hidden;
@@ -315,8 +370,15 @@ section.messages-area { // Usar selector de elemento semántico
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  align-self: flex-end; // Alinear al final de la fila
-  margin-bottom: var(--spacing-xs); // Pequeño margen inferior
+  align-self: flex-end;
+  margin-bottom: var(--spacing-xs);
+  border: 2px solid var(--bg-light);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
 
   .avatar-img {
     width: 100%;
@@ -327,69 +389,62 @@ section.messages-area { // Usar selector de elemento semántico
 
 /* Burbujas de mensaje */
 .message-bubble {
-  padding: var(--spacing-sm) var(--spacing-md); // Ajustar padding
-  border-radius: var(--radius-lg); // Más redondeado
-  max-width: 75%; // Ligeramente más estrecho
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: 6px;
+  max-width: 75%;
+  box-shadow: none;
+  transition: all 0.2s ease;
   position: relative;
-  font-size: var(--font-size-base);
-  line-height: 1.45;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  word-break: break-word;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  line-height: 1.5;
+  margin: var(--spacing-sm) 0;
+  background: var(--assistant-bubble-light);
+  color: var(--assistant-text-light);
+  border: 1px solid var(--border-light);
+
   &:hover {
-     // transform: translateY(-1px); // Ligero levantamiento al hacer hover (opcional)
-     // box-shadow: 0 3px 5px rgba(0,0,0,0.08);
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
   }
 
-  /* Eliminar las colas (::after) */
-  &::after { content: none; }
-
-  /* Burbujas de usuario */
-  .user-message .message-bubble {
-    // Usar la variable predefinida --chat-primary-dark en lugar de darken()
-    background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-primary-dark) 100%);
-    color: var(--user-text-light);
-    border-bottom-right-radius: var(--radius-sm); // Esquina inferior derecha menos redondeada
+  .user-message & {
+    background: var(--user-bubble-light) !important;
+    color: var(--user-text-light) !important;
+    border-color: var(--border-light) !important;
     align-self: flex-end;
   }
 
-  /* Burbujas del asistente */
   .assistant-message & {
-    background-color: var(--assistant-bubble-light);
-    color: var(--assistant-text-light);
-    border-bottom-left-radius: var(--radius-sm); // Esquina inferior izquierda menos redondeada
     align-self: flex-start;
   }
 
-  /* Texto del mensaje */
   .message-text {
     margin: 0;
+    font-size: var(--font-size-base);
+    word-wrap: break-word;
+    white-space: pre-wrap;
   }
 
-  /* Hora del mensaje */
   .message-time {
     display: block;
-    font-size: var(--font-size-tiny); // Usar variable
+    font-size: var(--font-size-tiny);
     margin-top: var(--spacing-xs);
-    color: var(--text-secondary-light);
+    opacity: 0.7;
     text-align: right;
-    opacity: 0.6; // Hacer aún más sutil
-    font-size: 10px; // Ligeramente más pequeño
-
-    .user-message & {
-      color: rgba(255, 255, 255, 0.7);
-    }
-    .assistant-message & {
-       text-align: left; // Alinear a la izquierda para asistente
-    }
+    font-weight: 500;
   }
 
   /* Imagen en el mensaje */
   .message-image {
     margin-top: var(--spacing-sm);
     max-width: 100%;
-    border-radius: var(--radius-md); // Redondeado consistente
+    border-radius: var(--radius-md);
     display: block;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.02);
+    }
   }
   
   /* Contenido HTML formateado */
@@ -484,17 +539,15 @@ footer.input-area { // Usar selector de elemento semántico
   flex: 1;
   background-color: var(--input-bg-light);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg); // Más redondeado
-  padding: var(--spacing-xs) var(--spacing-sm); // Ajustar padding interno
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  border-radius: 999px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: all 0.3s ease;
   min-height: 44px; // Altura mínima consistente
   position: relative; // Para posicionar elementos internos si es necesario
 
   &:focus-within {
-    border-color: var(--chat-primary); 
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1); // Sombra de foco sutil
-    background-color: var(--bg-light); // Asegurar fondo claro al enfocar
-    // border-width: 1.5px; // Borde ligeramente más grueso al enfocar (opcional)
+    border-color: var(--chat-primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
   
   .dark-mode &:focus-within {
@@ -527,12 +580,15 @@ footer.input-area { // Usar selector de elemento semántico
   &::-webkit-scrollbar {
       width: 4px;
   }
+  &::-webkit-scrollbar-track {
+      background: transparent;
+  }
   &::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.1);
+      background: rgba(0, 0, 0, 0.1);
       border-radius: 4px;
   }
   .dark-mode &::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -548,7 +604,7 @@ footer.input-area { // Usar selector de elemento semántico
   height: 36px;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-size: 20px; // Tamaño icono
 
   &:hover {
@@ -592,4 +648,141 @@ footer.input-area { // Usar selector de elemento semántico
 @keyframes bounce {
   0%, 80%, 100% { transform: scale(0); }
   40% { transform: scale(1.0); }
+}
+
+/* Mejoras en los botones */
+.action-button, .emoji-button, .send-button {
+  transition: all 0.3s ease;
+  
+  &:hover:not(.disabled) {
+    transform: scale(1.05);
+  }
+}
+
+.send-button:not(.disabled) {
+  border-radius: 999px;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  background: linear-gradient(135deg, var(--chat-primary), var(--chat-primary-dark));
+  box-shadow: 0 4px 12px rgba(16, 163, 127, 0.24);
+  color: white;
+}
+.send-button:hover:not(.disabled) {
+  filter: brightness(1.1);
+}
+
+/* Animaciones para los mensajes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilo para mensajes consecutivos del mismo remitente */
+.message-row + .message-row {
+  margin-top: var(--spacing-xs);
+  
+  &.user-message {
+    margin-left: 25%;
+  }
+  
+  &.assistant-message {
+    margin-right: 25%;
+  }
+}
+
+/* Estilo para el primer mensaje después de un cambio de remitente */
+.message-row:not(.user-message) + .message-row.user-message,
+.message-row:not(.assistant-message) + .message-row.assistant-message {
+  margin-top: var(--spacing-lg);
+}
+
+/* Ajustes para modo oscuro */
+.dark-mode {
+  .message-bubble {
+    .assistant-message & {
+      background-color: var(--assistant-bubble-dark);
+      color: var(--assistant-text-dark);
+      
+      &::after {
+        background: var(--assistant-bubble-dark);
+      }
+    }
+  }
+
+  .avatar-container.small {
+    border-color: var(--bg-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Botón flotante para ir al final del chat */
+.scroll-to-bottom-btn {
+  position: absolute;
+  bottom: calc(var(--spacing-lg) + 56px);
+  right: var(--spacing-lg);
+  width: 40px;
+  height: 40px;
+  background: var(--chat-primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+  z-index: 20;
+
+  &:hover {
+    transform: scale(1.1);
+    background: var(--chat-primary-dark);
+  }
+}
+
+/* Mostrar timestamp solo al hover de la burbuja */
+.message-time {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message-bubble:hover .message-time {
+  opacity: 1;
+}
+
+/* Animación de parpadeo suave en burbujas */
+@keyframes blinkFade {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.92; }
+}
+
+/* Aplicar parpadeo suave a las burbujas */
+.message-bubble {
+  animation: blinkFade 6s ease-in-out infinite;
+}
+
+/* Ajuste general de fuente */
+.chat-container, .chat-container * {
+  font-family: var(--font-family-sans) !important;
+}
+
+/* Aplicar fuente principal a todos excepto iconos */
+.chat-container, .chat-container *:not(.fa) {
+  font-family: var(--font-family-sans) !important;
+}
+
+/* Restaurar fuente de iconos FontAwesome */
+.chat-container .fa {
+  font-family: FontAwesome !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
 }
