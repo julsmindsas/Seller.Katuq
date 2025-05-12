@@ -1,0 +1,95 @@
+<div class="card cart-summary-sticky">
+  <div class="card-header card-no-border p-3">
+    <div class="header-top">
+      <h5 class="m-0">{{ 'Resumen de la compra' | translate }}</h5>
+    </div>
+  </div>
+  <div class="card-body pt-0 order-details p-3">
+    <!-- Lista de productos -->
+    <div class="order-quantity p-b-10 border-bottom">
+      <div class="custom-scrollbar cart-items-container">
+        <div *ngIf="cartService.posCartItems && cartService.posCartItems.length">
+          <div *ngFor="let item of cartService.posCartItems; track item">
+            <div class="order-details-wrapper">
+              <div class="left-details">
+                <div class="order-img widget-hover">
+                  <img [src]="item.crearProducto.imagenesPrincipales[0].urls" [alt]="item.product_name">
+                </div>
+              </div>
+              <div class="category-details">
+                <div class="order-details-right">
+                  <h6 class="f-14 f-w-500 mb-2">{{ item.crearProducto.titulo }}</h6>
+                  <div class="last-order-detail">
+                    <h6 class="txt-primary">${{ item.precio.precioUnitarioConIva | number:'1.2-2' }}</h6>
+                    <a href="javascript:void(0)">
+                      <i class="fa fa-trash trash-remove" (click)="cartService.posRemoveCartItem(item)"></i>
+                    </a>
+                  </div>
+                </div>
+                <div class="right-details mb-2">
+                  <div class="touchspin-wrapper">
+                    <button class="decrement-touchspin btn-touchspin">
+                      <i class="fa fa-minus icono-pos" (click)="cartService.updatePOSQuantity(-1, item)"></i>
+                    </button>
+                    <span class="input-touchspin fs-14 fc-gray" type="text">{{item.cantidad}}</span>
+                    <button class="increment-touchspin btn-touchspin">
+                      <i class="fa fa-plus icono-pos" (click)="cartService.updatePOSQuantity(1, item)"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Carrito vacío -->
+        <div *ngIf="!(cartService.posCartItems && cartService.posCartItems.length)" class="empty-cart">
+          <div class="empty-cart-wrapper">
+            <div class="empty-cart-content">
+              <img src="assets/images/order-trash.gif" alt="order-trash">
+            </div>
+            <h6 class="text-gray">{{ 'Tu carrito está vacío' | translate }}</h6>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Cupón de descuento -->
+      <div class="coupon-code">
+        <div class="input-group common-search">
+          <span class="input-group-text">
+            <i class="fa fa-ticket" aria-hidden="true"></i>
+          </span>
+          <input class="form-control" type="text" [(ngModel)]="couponCode"
+            placeholder="{{'Código del cupón...' | translate }}"
+            aria-label="Enter Code" aria-describedby="button-addon2">
+          <button class="btn bc-primary fc-white" id="button-addon2" type="button"
+            (click)="applyCoupon()">{{'Aplicar' | translate }}</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Resumen de totales -->
+    <div class="total-item mt-3">
+      <div class="item-number">
+        <span class="text-gray">{{ 'Cantidad' | translate}}</span>
+        <span>{{cartService.posCartItems.length}} (Items)</span>
+      </div>
+      <div class="item-number">
+        <span class="text-gray">{{ 'Descuento' | translate }}</span>
+        <span>$0.00</span>
+      </div>
+      <div class="item-number">
+        <span class="text-gray">{{ 'Cupón de descuento' | translate }}</span>
+        <span>$0.00</span>
+      </div>
+      <div class="item-number border-bottom">
+        <span class="text-gray">Subtotal</span>
+        <span>{{ cartService.getPOSSubTotal() }}</span>
+      </div>
+      <div class="item-number pt-3 pb-0">
+        <span class="f-w-600">Total</span>
+        <h6 class="f-w-600 txt-primary">{{ cartService.getPOSSubTotal() }}</h6>
+      </div>
+    </div>
+  </div>
+</div> 

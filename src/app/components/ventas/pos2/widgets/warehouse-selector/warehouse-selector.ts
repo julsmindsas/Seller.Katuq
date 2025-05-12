@@ -1,5 +1,5 @@
 // warehouse-selector.component.ts
-import { Component, ElementRef, ViewChild, Output, EventEmitter, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, Output, EventEmitter, AfterViewInit, OnInit } from '@angular/core';
 import { DataStoreService } from '../../../../../shared/services/dataStoreService'
 import { BodegaService } from '../../../../../shared/services/bodegas/bodega.service';
 import { ToastrService } from 'ngx-toastr';
@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
     templateUrl: './warehouse-selector.html',
     styleUrls: ['./warehouse-selector.scss']
 })
-export class WarehouseSelectorComponent implements AfterViewInit {
+export class WarehouseSelectorComponent implements OnInit, AfterViewInit {
     @ViewChild('ware', { static: false }) ware: ElementRef
     @Output() warehouseChange = new EventEmitter<void>();
 
@@ -32,43 +32,71 @@ export class WarehouseSelectorComponent implements AfterViewInit {
     }
 
     ngOnInit() {
-
         this.cargarBodegas();
 
-        this.bodega = JSON.parse(localStorage.getItem('warehousePOS')!);
-
-        if (this.bodega) {
-            this.selectedWarehouse = this.bodega.nombre;
-            // El acceso a this.ware se maneja en ngAfterViewInit
+        try {
+            const warehouseStr = localStorage.getItem('warehousePOS');
+            if (warehouseStr) {
+                this.bodega = JSON.parse(warehouseStr);
+                if (this.bodega && this.bodega.nombre) {
+                    this.selectedWarehouse = this.bodega.nombre;
+                    console.log('Bodega inicializada desde localStorage:', this.bodega);
+                }
+            } else {
+                console.log('No hay bodega en localStorage');
+            }
+        } catch (error) {
+            console.error('Error al cargar bodega del localStorage:', error);
         }
     }
 
     ngAfterViewInit() {
         // Espera a que las bodegas se carguen y la vista esté inicializada
-        if (this.bodega && this.ware && this.bodegas.length > 0) {
-            // Verifica si la bodega seleccionada existe en la lista de bodegas
-            const bodegaExists = this.bodegas.some(b => b.idBodega === this.bodega.idBodega);
-            if (bodegaExists) {
-                this.ware.nativeElement.value = this.bodega.idBodega;
-            } else {
-                console.warn('La bodega almacenada no se encontró en la lista actual.');
-                // Opcionalmente, limpia la selección si la bodega no es válida
-                this.selectedWarehouse = '';
-                localStorage.removeItem('warehousePOS');
-                this.dataStore.remove('warehousePOS');
-            }
-        } else if (this.bodega && this.ware) {
-            // Si las bodegas aún no se han cargado, intenta establecer el valor más tarde
-            // Esto podría necesitar una lógica más robusta si la carga es muy lenta
-            setTimeout(() => {
-                if (this.bodega && this.ware && this.bodegas.length > 0) {
-                    const bodegaExists = this.bodegas.some(b => b.idBodega === this.bodega.idBodega);
-                    if (bodegaExists) {
-                        this.ware.nativeElement.value = this.bodega.idBodega;
-                    }
-                }
-            }, 500); // Espera un poco más
+        setTimeout(() => {
+            this.actualizarSeleccionBodega();
+        }, 500);
+    }
+
+    // Método centralizado para actualizar la selección de bodega
+    private actualizarSeleccionBodega() {
+        if (!this.ware || !this.bodegas.length) {
+            console.log('No se puede actualizar la selección: el elemento select o las bodegas no están disponibles');
+            return;
         }
+
+        if (!this.bodega) {
+            console.log('No hay bodega guardada para seleccionar');
+            return;
+        }
+
+        console.log('Intentando establecer bodega en el elemento select:', this.bodega);
+        
+        // Verificar si la bodega tiene idBodega
+        if (this.bodega.idBodega) {
+            // Buscar la bodega en la lista por idBodega
+            const index = this.bodegas.findIndex(b => b.idBodega === this.bodega.idBodega);
+            if (index >= 0) {
+                console.log('Bodega encontrada en la lista, seleccionando por idBodega:', this.bodega.idBodega);
+                this.ware.nativeElement.value = this.bodegas[index].id || this.bodegas[index].idBodega;
+                return;
+            }
+        }
+        
+        // Si no se encontró por idBodega, intentar por id
+        if (this.bodega.id) {
+            const index = this.bodegas.findIndex(b => b.id === this.bodega.id);
+            if (index >= 0) {
+                console.log('Bodega encontrada en la lista, seleccionando por id:', this.bodega.id);
+                this.ware.nativeElement.value = this.bodega.id;
+                return;
+            }
+        }
+        
+        console.warn('No se pudo encontrar la bodega guardada en la lista de bodegas disponibles');
+        // Limpiar selección si la bodega no se encuentra
+        this.selectedWarehouse = '';
+        localStorage.removeItem('warehousePOS');
+        this.dataStore.remove('warehousePOS');
     }
 
     cargarBodegas() {
@@ -77,9 +105,12 @@ export class WarehouseSelectorComponent implements AfterViewInit {
             next: (bodegas) => {
                 this.bodegas = bodegas;
                 this.cargando = false;
-                // Llama a ngAfterViewInit de nuevo o a una función específica
-                // para establecer el valor después de cargar las bodegas
-                this.setInitialWarehouseValue();
+                console.log('Bodegas cargadas:', this.bodegas);
+                
+                // Actualizar la selección después de cargar las bodegas
+                setTimeout(() => {
+                    this.actualizarSeleccionBodega();
+                }, 100);
             },
             error: (error) => {
                 console.error('Error al cargar bodegas:', error);
@@ -89,54 +120,66 @@ export class WarehouseSelectorComponent implements AfterViewInit {
         });
     }
 
-    // Nueva función para establecer el valor inicial después de cargar bodegas
-    setInitialWarehouseValue() {
-        if (this.bodega && this.ware && this.bodegas.length > 0) {
-            const bodegaExists = this.bodegas.some(b => b.idBodega === this.bodega.idBodega);
-            if (bodegaExists) {
-                this.ware.nativeElement.value = this.bodega.idBodega;
-            } else {
-                console.warn('La bodega almacenada no se encontró en la lista actual (después de cargar).');
-                // Opcionalmente, limpia la selección si la bodega no es válida
-                this.selectedWarehouse = '';
-                localStorage.removeItem('warehousePOS');
-                this.dataStore.remove('warehousePOS');
-            }
-        }
-    }
-
     // Función para manejar la selección de una bodega
     onWarehouseChange(event: Event): void {
-
         let total = this.cartService.getPOSSubTotal();
-
-        let total1: number = parseFloat(total?.replace('$','')!);
+        let total1: number = parseFloat(total?.replace('$','') || '0');
 
         if (total1 > 0) {
             Swal.fire({
                 title: 'Cambio bodega.',
-                text: 'No se puede cambiar de bodega si hayh productos selecciolnados en el carrito.',
+                text: 'No se puede cambiar de bodega si hay productos seleccionados en el carrito.',
                 icon: 'error',
                 confirmButtonText: 'Ok',
             });
-            this.ware.nativeElement.selected = '';
+            // Restaurar la selección anterior
+            this.actualizarSeleccionBodega();
             return;
         }
 
         const target = event.target as HTMLSelectElement;
         const selectedId = target.value;
-        // Asegúrate de comparar con id
-        const selected = this.bodegas.find(warehouse => warehouse.id === selectedId);
+        
+        if (!selectedId) {
+            console.log('No se seleccionó ninguna bodega');
+            this.selectedWarehouse = '';
+            localStorage.removeItem('warehousePOS');
+            this.dataStore.remove('warehousePOS');
+            this.warehouseChange.emit();
+            return;
+        }
+        
+        console.log('Bodega seleccionada, id:', selectedId);
+        
+        // Buscar la bodega seleccionada en la lista
+        const selected = this.bodegas.find(warehouse => 
+            warehouse.id === selectedId || warehouse.idBodega === selectedId
+        );
 
         if (selected) {
+            console.log('Bodega encontrada en la lista:', selected);
             this.selectedWarehouse = selected.nombre;
+            
+            // Asegurarse de que el objeto tenga idBodega para validaciones
+            if (!selected.idBodega && selected.id) {
+                selected.idBodega = selected.id;
+            }
+            
+            // Guardar en localStorage y dataStore
             localStorage.setItem('warehousePOS', JSON.stringify(selected));
-            this.dataStore.set('warehousePOS', this.selectedWarehouse);
+            console.log('Bodega guardada en localStorage:', selected);
+            
+            this.dataStore.set('warehousePOS', selected);
+            this.bodega = selected;
         } else {
+            console.warn('No se encontró la bodega seleccionada en la lista');
             this.selectedWarehouse = '';
-            this.dataStore.remove('warehousePOS');
             localStorage.removeItem('warehousePOS');
+            this.dataStore.remove('warehousePOS');
+            this.bodega = null;
         }
+        
+        // Notificar el cambio
         this.warehouseChange.emit();
     }
 }

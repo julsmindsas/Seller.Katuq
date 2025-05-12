@@ -1,436 +1,62 @@
-// import { CommonModule } from '@angular/common';
-import { Component, ElementRef, ViewChild } from '@angular/core';
-// import { RouterModule } from '@angular/router';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import Swal from 'sweetalert2';
-
-import { CreateCustomerModalComponent } from '../create-customer-modal/create-customer-modal.component';
-import { checkoutMethod } from '../../../../../../assets/data/pos';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { PosCheckoutService } from '../../../../../shared/services/ventas/pos-checkout.service';
 import { CartService } from '../../../../../shared/services/cart.service';
-import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
-import { PaymentModalComponent } from '../payment-modal.ts/payment-modal';
-import { CrearClienteModalComponent } from '../../../clientes/crear-cliente-modal/crear-cliente-modal.component';
-import { CashPaymentComponent } from '../cash-payment/cash-payment';
-import { CardPaymentComponent } from '../card-payment/card-payment';
-import { EWalletPaymentComponent } from '../ewallet-payment/ewallet-payment';
-import { POSPedido } from '../../../../pos/pos-modelo/pedido';
-import { VentasService } from '../../../../../shared/services/ventas/ventas.service';
-import { PaymentService } from '../../../../../shared/services/ventas/payment.service';
-import { FacturaTirillaComponent } from '../../../../pos/factura-tirilla/factura-tirilla.component';
-import { FacturacionIntegracionService } from '../../../../../shared/services/integraciones/facturas/facturacion.service';
-import { Pedido, EstadoProceso, EstadoPago } from '../../../modelo/pedido';
-import { UserLite } from '../../../../../shared/models/User/UserLite';
-// import { DataStoreService } from '../../../../../shared/services/dataStoreService'
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-pos-checkout',
   templateUrl: './pos-checkout.component.html',
   styleUrls: ['./pos-checkout.component.scss']
 })
-
-export class PosCheckoutComponent {
-  @ViewChild('clienteBuscar') clienteBuscar: ElementRef;
-
-  public checkoutMethod1 = checkoutMethod;
-  datosCliente: any = '';
-  isModalOpen = false;
-  selectedPaymentType = '';
-  method = '';
-  pedido: POSPedido;
+export class PosCheckoutComponent implements OnInit, OnDestroy {
+  // Banderas de control
   showPedidoConfirm: boolean = false;
   showSteper: boolean = true;
-  warehouse: any;
+  
+  // Datos del checkout
+  warehouse: any = null;
+  
+  // Suscripciones
+  private subscriptions: Subscription[] = [];
 
   constructor(
     public cartService: CartService,
-    private modal: NgbModal,
-    private service: MaestroService,
-    public ventasService: VentasService,
-    public paymentService: PaymentService,
-    public facturacionElectronicaService: FacturacionIntegracionService
-  ) {
-    const nombre: string = this.checkoutMethod1[0].title;
-    this.pedido = this.getPedido();
-  }
+    public checkoutService: PosCheckoutService
+  ) { }
 
-  // Helper para mostrar alertas
-  private showAlert(title: string, text: string, icon: any = 'warning') {
-    Swal.fire({
-      title,
-      text,
-      icon,
-      confirmButtonText: 'Ok'
-    });
-  }
-
-  // Validación centralizada
-  private validateCheckout(requireWarehouse: boolean = false): boolean {
-    if (!this.datosCliente) {
-      this.showAlert('Cliente!', 'Debes buscar o crear un cliente');
-      return false;
-    }
-    const total = this.cartService.getPOSSubTotal();
-    const valor = parseFloat(total?.replace('$', '') || '0');
-    if (valor === 0) {
-      this.showAlert('Productos!', 'Debes adicionar productos para la venta');
-      return false;
-    }
-    if (requireWarehouse) {
-      this.warehouse = JSON.parse(localStorage.getItem('warehousePOS') || '{}');
-      if (!this.warehouse) {
-        this.showAlert('Bodega!', 'Debes seleccionar una bodega');
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private limpiarCarroYCliente() {
-    try {
-      this.cartService.clearCart();
-    } catch { }
-    try {
-      this.limpiar();
-    } catch { }
-  }
-
-  openModalPayment(): void {
-    if (!this.validateCheckout(false)) return;
-    if (!this.method) {
-      this.showAlert('Método de pago!', 'Debes seleccionar un método de pago');
-      return;
-    }
-    this.selectedPaymentType = this.method;
-    const modalRef = this.modal.open(PaymentModalComponent, {
-      centered: true,
-      size: 'xl'
-    });
-    modalRef.componentInstance.paymentType = this.selectedPaymentType;
-    modalRef.componentInstance.title = 'Método de Pago: ' + this.selectedPaymentType;
-    modalRef.result.then(
-      (result: any) => {
-        if (result !== 'Pagado') return;
-        console.log('Pagado con éxito:', result);
-        // Tareas: guardar pedido, descontar inventario, limpiar carro y cliente
-        this.pedido.pagoRecibido = result.amountReceived;
-        this.pedido.cambioEntregado = result.change;
-        this.pedido.estadoPago = EstadoPago.Aprobado;
-        this.pedido.estadoProceso = EstadoProceso.Entregado;
-        this.pedido.formaEntrega = this.selectedPaymentType;
-        this.pedido.formaDePago = this.selectedPaymentType;
-        this.pedido.nroFactura = this.pedido.nroPedido;
-        this.pedido.pdfUrlInvoice = '';
-
-
-        this.comprarYPagar();
-        this.limpiarCarroYCliente();
-      },
-      (reason: any) => {
-        console.log('Modal cerrado por:', reason);
-      }
-    );
-  }
-
-  validaciones() {
-    // Obsoleto: usar validateCheckout(true)
-    return this.validateCheckout(true);
-  }
-
-  selectMethod(method: string) {
-    this.method = method;
-  }
-
-  closeModalPayment(): void {
-    // this.isModalOpen = false;
-  }
-
-  openModal() {
-    this.modal.open(CrearClienteModalComponent, { centered: true, size: 'xl', modalDialogClass: 'create-customers custom-input' });
-  }
-
-  editarCliente() {
-    // Verificar que tenemos datos de cliente válidos
-    if (!this.datosCliente) {
-      this.showAlert('Error', 'No hay cliente seleccionado para editar');
-      return;
-    }
-
-    const modalRef = this.modal.open(CrearClienteModalComponent, {
-      centered: true,
-      size: 'xl',
-      modalDialogClass: 'create-customers custom-input'
-    });
-
-    // Pasar los datos del cliente al modal y establecer que es edición
-    modalRef.componentInstance.clienteData = this.datosCliente;
-    modalRef.componentInstance.isEdit = true;
-
-    // Manejar el cierre del modal
-    modalRef.result.then(
-      (result) => {
-        if (result === 'success') {
-          // Mostrar mensaje de éxito
-          Swal.fire({
-            title: 'Cliente actualizado',
-            text: 'Los datos del cliente han sido actualizados correctamente',
-            icon: 'success',
-            confirmButtonText: 'Ok'
-          });
-
-          // Intentar recargar los datos del cliente si es posible
-          if (this.clienteBuscar && this.clienteBuscar.nativeElement) {
-            const docValue = this.clienteBuscar.nativeElement.value;
-            // Solo si hay un valor en el input
-            if (docValue) {
-              this.buscar();
-            }
-          }
-        }
-      },
-      () => { }
-    );
-  }
-
-  limpiar() {
-    this.datosCliente = '';
-    if (this.clienteBuscar) {
-      this.clienteBuscar.nativeElement.value = '';
-    }
-  }
-
-  buscar() {
-    if (!this.clienteBuscar?.nativeElement.value) return;
-    const data = { documento: this.clienteBuscar.nativeElement.value };
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      if (!res.company) {
-        this.showAlert('No encontrado!', 'No se encuentra el documento. Si desea crearlo llene los datos a continuacion');
-      } else {
-        try {
-          this.datosCliente = res;
-        } catch (error) {
-          console.log(error);
-        }
-      }
-    });
-  }
-
-  openCashModal() {
-    this.method = 'Efectivo';
-    if (!this.validateCheckout(true)) return;
-    let res = this.modal.open(CashPaymentComponent, { size: 'md' });
-    const total = this.cartService.getPOSSubTotal();
-    const valor = parseFloat(total?.replace('$', '') || '0');
-    res.componentInstance.totalAmount = valor;
-    res.result.then(
-      (result: any) => {
-        // if (result !== 'Pagado') return;
-        console.log('Pagado con éxito:', result);
-        this.pedido.pagoRecibido = result.amountReceived;
-        this.pedido.cambioEntregado = result.change;
-        this.comprarYPagar();
-      },
-      (reason: any) => {
-        console.log('Modal cerrado por:', reason);
-      }
-    );
-  }
-
-  openCardModal() {
-    this.method = 'Métodos Electrónicos';
-    if (!this.validateCheckout(true)) return;
+  ngOnInit(): void {
+    // Verificar si hay bodega en localStorage al iniciar
+    this.checkWarehouseFromStorage();
     
-    // Abrir modal de selección de métodos electrónicos
-    const modalRef = this.modal.open(CardPaymentComponent, { 
-      size: 'lg',
-      centered: true,
-      backdrop: 'static'
-    });
-    
-    // Escuchar la selección del método de pago
-    modalRef.result.then(
-      (result: any) => {
-        if (result && result.paymentMethod) {
-          console.log('Método seleccionado:', result.paymentMethod);
-          this.method = result.paymentMethod;
-          // Aquí se puede abrir un modal específico según el método seleccionado
-          // o procesar el pago directamente
-          this.comprarYPagar();
-        }
-      },
-      (reason: any) => {
-        console.log('Modal cerrado por:', reason);
-      }
+    // Suscribirse a cambios en la bodega
+    this.subscriptions.push(
+      this.checkoutService.warehouse$.subscribe(warehouse => {
+        this.warehouse = warehouse;
+        console.log('PosCheckoutComponent - Bodega actualizada:', warehouse);
+      })
     );
   }
-
-  openEWalletModal() {
-    this.method = 'E-Wallet';
-    if (!this.validateCheckout(true)) return;
-    this.modal.open(EWalletPaymentComponent, { size: 'md' });
+  
+  ngOnDestroy(): void {
+    // Desuscribirse al destruir el componente
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
-
-  getPedido(): POSPedido {
-    const company = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial || '';
-    const texto = company.toString() || '';
-    const ultimasLetras = texto.substring(texto.length - 3);
-    const pedido: POSPedido = {
-      referencia: ultimasLetras + '-' + new Date().getTime().toString().padStart(6, '0'),
-      nroPedido: ultimasLetras + '-' + new Date().getTime().toString().padStart(6, '0'),
-      bodegaId: this.warehouse?.idBodega || '',
-      company: this.datosCliente?.company || '',
-      cliente: {
-        estado: this.datosCliente?.estado || '',
-        tipo_documento_comprador: this.datosCliente?.tipo_documento_comprador || '',
-        correo_electronico_comprador: this.datosCliente?.correo_electronico_comprador || '',
-        documento: this.datosCliente?.documento || '',
-        indicativo_celular_comprador: this.datosCliente?.indicativo_celular_comprador || '',
-        numero_celular_comprador: this.datosCliente?.numero_celular_comprador || '',
-        nombres_completos: this.datosCliente?.nombres_completos || '',
-        numero_celular_whatsapp: this.datosCliente?.numero_celular_whatsapp || '',
-        apellidos_completos: this.datosCliente?.apellidos_completos || '',
-        indicativo_celular_whatsapp: this.datosCliente?.indicativo_celular_whatsapp || '',
-        datosFacturacionElectronica: this.datosCliente?.datosFacturacionElectronica,
-        datosEntrega: this.datosCliente?.datosEntrega,
-        notas: this.datosCliente?.notas
-      },
-      carrito: this.cartService.posCartItems.map(item => ({
-        producto: item,
-        cantidad: item.cantidad,
-        estadoProcesoProducto: EstadoProceso.SinProducir
-      })),
-      formaDePago: this.method,
-      estadoProceso: EstadoProceso.SinProducir,
-      estadoPago: EstadoPago.Aprobado,
-      fechaCreacion: new Date().toISOString(),
-      formaEntrega: "RECOGE",
-      fechaEntrega: new Date().toISOString(),
-      horarioEntrega: "08:00 - 18:00",
-      subtotal: parseFloat(this.cartService.getPOSSubTotal()?.replace('$', '') || '0'),
-      totalPedidoSinDescuento: parseFloat(this.cartService.getPOSSubTotal()?.replace('$', '') || '0'),
-      totalPedididoConDescuento: parseFloat(this.cartService.getPOSSubTotal()?.replace('$', '') || '0'),
-      totalEnvio: 0,
-      totalImpuesto: 0,
-      totalDescuento: 0,
-      anticipo: 0,
-      faltaPorPagar: 0,
-
-    };
-
-    return pedido;
-  }
-
-  // Adaptación de comprarYPagar desde pos-crear-ventas.component.ts
-  comprarYPagar() {
-    const pedido = this.getPedido();
-    this.pedido.estadoPago = EstadoPago.Aprobado;
-    this.pedido.estadoProceso = EstadoProceso.Entregado;
-    this.pedido.formaEntrega = this.method;
-    this.pedido.formaDePago = this.method;
-    this.pedido.nroFactura = this.pedido.nroPedido;
-    this.pedido.pdfUrlInvoice = '';
-
-    this.pedido = pedido as unknown as POSPedido;
-    this.pedido.typeOrder = 'POS';
-    const context = this;
-    context.ventasService.validateNroPedido(context.pedido.nroPedido!).subscribe({
-      next: (res: any) => {
-        if (res.nextConsecutive !== -1) {
-          const texto = context.pedido.company?.toString() || '';
-          const ultimasLetras = texto.substring(texto.length - 3);
-          context.pedido.nroPedido = ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0');
+  
+  /**
+   * Verifica si hay una bodega en localStorage y la carga
+   */
+  private checkWarehouseFromStorage(): void {
+    try {
+      const warehouseStr = localStorage.getItem('warehousePOS');
+      if (warehouseStr) {
+        const warehouse = JSON.parse(warehouseStr);
+        if (warehouse && warehouse.idBodega) {
+          console.log('PosCheckoutComponent - Bodega encontrada en localStorage:', warehouse);
+          this.checkoutService.warehouse$.next(warehouse);
         }
-        const user = (JSON.parse(localStorage.getItem('user') ?? '{}')) as unknown as UserLite;
-        const userLite: UserLite = {
-          name: user.name,
-          email: user.email,
-          nit: user.nit
-        }
-        context.pedido.asesorAsignado = userLite;
-        const htmlSanizado = context.paymentService.getHtmlContent(context.pedido);
-        // Cambiar estado de productos que no se producen
-        context.pedido.carrito?.forEach((x: any) => {
-          if (!x.producto?.crearProducto?.paraProduccion) {
-            x.estadoProcesoProducto = 'ParaDespachar';
-          }
-        });
-        context.ventasService.createOrder({ order: context.pedido, emailHtml: htmlSanizado }).subscribe({
-          next: (res: any) => {
-            // context.cartService.clearCart();
-            context.limpiarCarroYCliente();
-
-            if (context.pedido.generarFacturaElectronica) {
-              const orderSiigo = context.facturacionElectronicaService.transformarPedidoCompletoParaCrearUsuarioDesdeLaVenta(context.pedido);
-              context.pedido = res.order;
-              context.facturacionElectronicaService.createFacturaSiigo(orderSiigo).subscribe({
-                next: (value: any) => {
-                  if (value.isSuccess) {
-                    context.showPedidoConfirm = true;
-                    context.showSteper = false;
-                    Swal.fire({
-                      title: 'Pedido creado!',
-                      text: `Pedido creado con exito y factura ${value.result.name} creada`,
-                      icon: 'success',
-                      confirmButtonText: 'Ok',
-                    });
-                    context.pedido.nroFactura = value.result.name;
-                    context.pedido.pdfUrlInvoice = value.result.public_url;
-                    context.ventasService.editOrder(context.pedido).subscribe();
-                    context.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = context.pedido;
-                  } else {
-                    Swal.fire({
-                      title: 'Error al crear el pedido y generar el pedido',
-                      text: value.result.error[0].message,
-                      icon: 'error',
-                      confirmButtonText: 'Ok',
-                    });
-                  }
-                },
-                error: (err: any) => {
-                  Swal.fire({
-                    title: 'Error!',
-                    text: 'Error al crear el pedido y generar el pedido',
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                  });
-                }
-              });
-            } else {
-              context.showPedidoConfirm = true;
-              context.showSteper = false;
-              context.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = res.order;
-              Swal.fire({
-                title: 'Pedido creado!',
-                text: 'Pedido creado con exito',
-                icon: 'success',
-                confirmButtonText: 'Ok',
-              });
-            }
-          },
-          error: (err: any) => {
-            Swal.fire({
-              title: 'Error!',
-              text: 'Error al crear el pedido: ' + (err.error?.msg || ''),
-              icon: 'error',
-              confirmButtonText: 'Ok',
-            });
-          }
-        });
-      },
-      error: (err) => {
-        Swal.fire({
-          title: 'Error!',
-          text: 'Error al validar el número de pedido',
-          icon: 'error',
-          confirmButtonText: 'Ok',
-        });
-      },
-    });
+      }
+    } catch (error) {
+      console.error('Error al verificar bodega en localStorage:', error);
+    }
   }
-  // getPedido(): Pedido {
-
-  //   const pedido: Pedido = {
-  //   }
-  //   return pedido;  
-  // }
-
 }

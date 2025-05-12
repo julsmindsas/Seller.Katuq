@@ -3,6 +3,10 @@ import { UserLite } from "../../../shared/models/User/UserLite";
 import { PagoInformation } from "../../pos/pos-modelo/pedido";
 
 export interface Pedido {
+    generarFacturaElectronica?: any;
+    pdfUrlInvoice?: string;
+    pagoRecibido?: any;
+    cambioEntregado?: any;
     transaccionId?: any;
     bodegaId?: string;
     entregado?: UserLite;

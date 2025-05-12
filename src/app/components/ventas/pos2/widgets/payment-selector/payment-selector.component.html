@@ -1,0 +1,27 @@
+<div class="card payment-methods-sticky">
+  <div class="card-header card-no-border p-3">
+    <div class="header-top">
+      <h5 class="m-0">{{ 'Método de pago' | translate }}</h5>
+    </div>
+  </div>
+  <div class="card-body pt-0 order-details p-3">
+    <div class="payment-options">
+      <div class="icons">
+        <button (click)="handleCashPayment()" class="icon" [class.selected]="selectedMethod === 'Efectivo'">
+          <img src="assets/images/dashboard-8/payment-option/cash.svg" alt="Efectivo" />
+          <span>Efectivo</span>
+        </button>
+        
+        <button (click)="handleCardPayment()" class="icon" [class.selected]="selectedMethod === 'Métodos Electrónicos'">
+          <img src="assets/images/dashboard-8/payment-option/card.svg" alt="Métodos Electrónicos" />
+          <span>Métodos Electrónicos</span>
+        </button>
+        
+        <button (click)="handleEWalletPayment()" class="icon" [class.selected]="selectedMethod === 'E-Wallet'">
+          <img src="assets/images/dashboard-8/payment-option/wallet.svg" alt="E-wallet" />
+          <span>E-wallet</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 

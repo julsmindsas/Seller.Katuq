@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '../../../app/shared/shared.module';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
@@ -49,6 +49,10 @@ import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer
 import { CashClosingComponent } from './pos2/widgets/cash-closing/cash-closing.component';
 import { CashClosingHistoryComponent } from './pos2/widgets/cash-closing-history/cash-closing-history.component';
 import { DireccionEstructuradaComponent } from './entrega/direccion-estructurada/direccion-estructurada.component';
+import { CustomerSectionComponent } from './pos2/widgets/customer-section/customer-section.component';
+import { CartSummaryComponent } from './pos2/widgets/cart-summary/cart-summary.component';
+import { PaymentSelectorComponent } from './pos2/widgets/payment-selector/payment-selector.component';
+import { PosCheckoutService, POS_CHECKOUT_SERVICE } from '../../shared/services/ventas/pos-checkout.service';
 
 @NgModule({
   imports: [
@@ -102,7 +106,10 @@ import { DireccionEstructuradaComponent } from './entrega/direccion-estructurada
     WarehouseSelectorComponent,
     CashClosingComponent,
     CashClosingHistoryComponent,
-    DireccionEstructuradaComponent
+    DireccionEstructuradaComponent,
+    CustomerSectionComponent,
+    CartSummaryComponent,
+    PaymentSelectorComponent
   ],
   exports: [
     CrearVentasComponent,
@@ -120,7 +127,12 @@ import { DireccionEstructuradaComponent } from './entrega/direccion-estructurada
     ModalGalleryService, 
     NgxHotkeysService, 
     PedidosUtilService,
-    ImageOptimizerDirective
+    ImageOptimizerDirective,
+    { 
+      provide: POS_CHECKOUT_SERVICE, 
+      useFactory: (injector: Injector) => injector.get(PosCheckoutService), 
+      deps: [Injector] 
+    }
   ]
 })
 export class VentasModule { }

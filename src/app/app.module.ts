@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { ErrorHandler, NgModule } from '@angular/core';
+import { ErrorHandler, NgModule, Injector } from '@angular/core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HTTP_INTERCEPTORS, HttpClient, HttpClientModule } from '@angular/common/http';
@@ -48,6 +48,7 @@ import { VoiceInteractionModule } from './shared/components/voice-interaction/vo
 import { AnalyticsService } from './services/analytics.service';
 import { CompaniesService } from './services/companies.service';
 import { GeocodingService } from './shared/services/geocoding.service';
+import { PosCheckoutService, POS_CHECKOUT_SERVICE } from './shared/services/ventas/pos-checkout.service';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, "./assets/i18n/", ".json");
@@ -112,7 +113,12 @@ export function HttpLoaderFactory(http: HttpClient) {
     { provide: HTTP_INTERCEPTORS, useClass: LoaderInterceptor, multi: true },
     AnalyticsService,
     CompaniesService,
-    GeocodingService
+    GeocodingService,
+    { 
+      provide: POS_CHECKOUT_SERVICE, 
+      useFactory: (injector: Injector) => injector.get(PosCheckoutService), 
+      deps: [Injector] 
+    }
     // {
     //   provide: ErrorHandler,
     //   useClass: GlobalErrorHandlerService,

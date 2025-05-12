@@ -49,3 +49,17 @@
     margin-top: 10px;
     font-size: 14px;
   }
+
+.pos-checkout-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+@media screen and (max-width: 768px) {
+  .pos-checkout-container {
+    flex-direction: column;
+  }
+}
