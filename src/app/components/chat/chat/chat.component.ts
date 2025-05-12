@@ -13,14 +13,20 @@ import { trigger, style, animate, transition, state } from '@angular/animations'
     trigger('messageAnimation', [
       state('void', style({
         opacity: 0,
-        transform: 'translateY(10px)'
+        transform: 'translateY(20px) scale(0.95)'
       })),
       state('*', style({
         opacity: 1,
-        transform: 'translateY(0)'
+        transform: 'translateY(0) scale(1)'
       })),
       transition(':enter', [
-        animate('200ms ease-out')
+        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)')
+      ]),
+      transition(':leave', [
+        animate('200ms cubic-bezier(0.4, 0, 0.2, 1)', style({
+          opacity: 0,
+          transform: 'translateY(-10px) scale(0.95)'
+        }))
       ])
     ])
   ]
