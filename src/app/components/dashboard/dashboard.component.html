@@ -1,196 +1,129 @@
 <!-- <app-breadcrumb [title]="'Dashboard'" [items]="['Inicio']" [active_item]="'Dashboard'"></app-breadcrumb> -->
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12 p-2">
-            <br />
-            <div class="card">
-                <div class="row mt-1 mb-3 p-3">
-                    <div class="col-4 p-l-5">
-                        <p class="text-left fw-bold fc-secondary fs-24 m-0 p-0">{{ 'Panel de Control' | translate }}</p>
-                        <p class="text-left text-muted fs-18 m-0 p-0">
-                            {{ 'Visualiza las métricas clave de ventas y rendimiento.' | translate }}
-                        </p>
-                    </div>
-                    <div class="col-8">
-                        <div class="d-flex justify-content-end align-items-right flex-wrap gap-3 rounded w-100">
-                            <div class="date-control">
-                                <label for="fechaInicial" class="fw-bold text-muted fs-16">{{ 'Fecha Inicial' |
-                                    translate }}</label>
-                                <input type="date" id="fechaInicial" class="form-control fs-16"
-                                    [(ngModel)]="fechaInicial" (change)="firstEvent($event.target.value)" />
+        <div class="col-sm-12">
+            <div class="card dashboard-card">
+                <!-- Header Section -->
+                <div class="dashboard-header p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <h2 class="dashboard-title mb-2">
+                                <i class="fas fa-chart-line me-2"></i>
+                                {{ 'Panel de Control' | translate }}
+                            </h2>
+                            <p class="text-muted mb-0">
+                                {{ 'Visualiza las métricas clave de ventas y rendimiento.' | translate }}
+                            </p>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="d-flex justify-content-end align-items-center flex-wrap gap-3">
+                                <div class="date-control-group">
+                                    <div class="date-control">
+                                        <label for="fechaInicial" class="form-label">
+                                            <i class="far fa-calendar-alt me-1"></i>
+                                            {{ 'Fecha Inicial' | translate }}
+                                        </label>
+                                        <input type="date" id="fechaInicial" class="form-control"
+                                            [(ngModel)]="fechaInicial" (change)="firstEvent($event.target.value)" />
+                                    </div>
+                                    <div class="date-control">
+                                        <label for="fechaFinal" class="form-label">
+                                            <i class="far fa-calendar-alt me-1"></i>
+                                            {{ 'Fecha Final' | translate }}
+                                        </label>
+                                        <input type="date" id="fechaFinal" class="form-control"
+                                            [(ngModel)]="fechaFinal" (change)="secondEvent($event.target.value)" />
+                                    </div>
+                                </div>
+                                <div class="button-group">
+                                    <button class="btn btn-primary" (click)="cargarDatos()">
+                                        <i class="fas fa-filter me-1"></i>
+                                        {{ 'Filtrar' | translate }}
+                                    </button>
+                                    <button class="btn btn-outline-primary" (click)="cargarDatosMesActual()">
+                                        <i class="fas fa-calendar-day me-1"></i>
+                                        {{ 'Mes actual' | translate }}
+                                    </button>
+                                    <button class="btn btn-outline-primary" (click)="cargarDatosMesAnterior()">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        {{ 'Mes anterior' | translate }}
+                                    </button>
+                                </div>
                             </div>
-                            <div class="date-control">
-                                <label for="fechaFinal" class="fw-bold text-muted fs-16">{{ 'Fecha Final' | translate
-                                    }}</label>
-                                <input type="date" id="fechaFinal" class="form-control fs-16" [(ngModel)]="fechaFinal"
-                                    (change)="secondEvent($event.target.value)" />
-                            </div>
-                            <button class="btn btn-primary fs-18 mt-3 mr-1 pull-right" (click)="cargarDatos()">
-                                {{ 'Filtrar' | translate }}
-                            </button>
-                            <button class="btn btn-primary fs-18 mt-3 mr-1 pull-right" (click)="cargarDatosMesActual()">
-                                {{ 'Mes actual' | translate }}
-                            </button>
-                            <button class="btn btn-primary fs-18 mt-3 mr-1 pull-right"
-                                (click)="cargarDatosMesAnterior()">
-                                {{ 'Mes anterior' | translate }}
-                            </button>
                         </div>
                     </div>
                 </div>
-                <div class="container-fluid">
-                    <!-- Ventas del Mes, Top Productos -->
-                    <div class="row col-12 p-3">
 
-                        <div class="col-sm-6">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-header bc-secondary text-white py-3">
-                                    <h6 class="mb-0 text-center">{{ 'Ventas del Mes' | translate }}</h6>
+                <!-- Charts Section -->
+                <div class="dashboard-content p-4">
+                    <div class="row g-4">
+                        <!-- Ventas del Mes -->
+                        <div class="col-md-6">
+                            <div class="card chart-card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        {{ 'Ventas del Mes' | translate }}
+                                    </h5>
                                 </div>
-                                <div class="card-body p-3">
+                                <div class="card-body">
                                     <div id="chart3" class="apex-chart"></div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-sm-6">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-header bc-primary">
-                                    <h6 class="mb-0 text-center">{{ 'Análisis de K.A.I.' | translate }}</h6>
+                        <!-- Análisis K.A.I. -->
+                        <div class="col-md-6">
+                            <div class="card chart-card h-100">
+                                <div class="card-header bg-secondary text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-robot me-2"></i>
+                                        {{ 'Análisis de K.A.I.' | translate }}
+                                    </h5>
                                 </div>
-                                <div class="card-body p-3">
-                                    <div class="">
-                                        <button class="btn fc-white bc-secondary"
-                                            (click)="analizar('VentasMes')">Analizar</button>
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <button class="btn btn-secondary" (click)="analizar('VentasMes')">
+                                            <i class="fas fa-magic me-1"></i>
+                                            Analizar
+                                        </button>
                                     </div>
-                                    <div *ngIf="ventasMesCheck">
-                                        <div class="p-3 fc-primary fs-16 cajaResultado" [innerHtml]="ventasRes"></div>
+                                    <div *ngIf="ventasMesCheck" class="analysis-result">
+                                        <div class="p-3 bg-light rounded" [innerHtml]="ventasRes"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                    </div>
-                    <div class="row p-3">
-                        <div class="col-sm-4">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-header bc-secondary text-white py-3">
-                                    <h6 class="mb-0 text-center">{{ 'Top 10 Menos Vendidos' | translate }}</h6>
+                        <!-- Top Products -->
+                        <div class="col-md-6">
+                            <div class="card chart-card h-100">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-arrow-down me-2"></i>
+                                        {{ 'Top 10 Menos Vendidos' | translate }}
+                                    </h5>
                                 </div>
-                                <div class="card-body p-3">
+                                <div class="card-body">
                                     <div id="chart1" class="apex-chart"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-4">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-header bc-tertiary text-white py-3">
-                                    <h6 class="mb-0 text-center">{{ 'Top 10 Más Vendidos' | translate }}</h6>
+
+                        <div class="col-md-6">
+                            <div class="card chart-card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-arrow-up me-2"></i>
+                                        {{ 'Top 10 Más Vendidos' | translate }}
+                                    </h5>
                                 </div>
-                                <div class="card-body p-3">
+                                <div class="card-body">
                                     <div id="chart2" class="apex-chart"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <br />
-                    <!-- Administración -->
-                    <!-- <div class="row">
-        <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header gradient-primary text-white py-3">
-                    <h6 class="mb-0 text-center">{{ 'Costos vs Ganancias' | translate }}</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="chart-costos-ganancias" class="apex-chart"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header gradient-secondary text-white py-3">
-                    <h6 class="mb-0 text-center">{{ 'Conversión de Clientes' | translate }}</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="chart-conversion-clientes" class="apex-chart"></div>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
-                    <!-- Producción -->
-                    <!-- <div class="row">
-        <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header gradient-primary text-white py-3">
-                    <h6 class="mb-0 text-center">{{ 'Uso de Materiales' | translate }}</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="chart-uso-materiales" class="apex-chart"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header gradient-success text-white py-3">
-                    <h6 class="mb-0 text-center">{{ 'Eficiencia de Producción' | translate }}</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="chart-eficiencia-produccion" class="apex-chart"></div>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
-                    <!-- Logística -->
-                    <!-- <div class="row">
-        <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header gradient-primary text-white py-3">
-                    <h6 class="mb-0 text-center">
-                        {{ 'Tiempo Promedio de Despacho' | translate }}
-                    </h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="chart-tiempo-despacho" class="apex-chart"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header gradient-secondary text-white py-3">
-                    <h6 class="mb-0 text-center">{{ 'Entregas Fallidas' | translate }}</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="chart-entregas-fallidas" class="apex-chart"></div>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
-                    <!-- Mensajeros -->
-                    <!-- <div class="row">
-        <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header gradient-primary text-white py-3">
-                    <h6 class="mb-0 text-center">{{ 'Ranking de Mensajeros' | translate }}</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="chart-ranking-mensajeros" class="apex-chart"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header gradient-secondary text-white py-3">
-                    <h6 class="mb-0 text-center">{{ 'Rutas Frecuentes' | translate }}</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="chart-rutas-frecuentes" class="apex-chart"></div>
-                </div>
-            </div>
-        </div>
-    </div> -->
                 </div>
             </div>
         </div>

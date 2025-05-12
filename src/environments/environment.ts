@@ -5,7 +5,7 @@
 
 export const environment = {
   production: true,
-  version: "2025.05.09.5 - 9 de Mayo 2025 (Beta)",
+  version: "2025.05.10.1 - 10 de Mayo 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -20,9 +20,9 @@ export const environment = {
   // urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
   // urlApi: "http://localhost:3400", // API Local,
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app',
-  urlApi: "http://localhost:3300", // API Local,
+  // urlApi: "http://localhost:3300", // API Local,
   //   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app',
-    // urlApi: "https://api.katuq.com", // API AWS
+    urlApi: "https://api.katuq.com", // API AWS
   wompi: {
     prod_intrity: "test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD",
     public_key_test: "pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy",

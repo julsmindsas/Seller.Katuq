@@ -31,7 +31,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.fechaFinal = new Date().toISOString().split('T')[0];
   }
   ngAfterViewInit(): void {
-    this.renderAdditionalCharts();
+    // Ya no necesitamos renderAdditionalCharts
   }
 
   ngOnInit(): void {
@@ -208,123 +208,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         this.chartVentasMes = null;
       }
     }
-  }
-
-  renderAdditionalCharts(): void {
-    // Gráfico de Costos vs Ganancias
-    const mockCostosGanancias = {
-      costos: [1000, 2000, 1500, 3000, 2500],
-      ganancias: [2000, 3000, 2500, 4000, 3500],
-      meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo']
-    };
-
-    new ApexCharts(document.querySelector('#chart-costos-ganancias'), {
-      chart: { type: 'bar', height: 200 },
-      series: [
-        { name: 'Costos', data: mockCostosGanancias.costos },
-        { name: 'Ganancias', data: mockCostosGanancias.ganancias }
-      ],
-      xaxis: { categories: mockCostosGanancias.meses },
-      colors: ['#ff4560', '#00e396']
-    }).render();
-
-    // Gráfico de Tasa de Conversión
-    const mockConversion = {
-      conversionRate: [10, 12, 15, 13, 14],
-      meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo']
-    };
-
-    new ApexCharts(document.querySelector('#chart-conversion-clientes'), {
-      chart: { type: 'line', height: 200 },
-      series: [
-        { name: 'Tasa de Conversión', data: mockConversion.conversionRate }
-      ],
-      xaxis: { categories: mockConversion.meses },
-      colors: ['#775dd0']
-    }).render();
-
-    // Gráfico de Uso de Materiales
-    const mockUsoMateriales = {
-      materiales: ['Masapan', 'Azucar', 'Vino', 'Arequipe', 'Bicarbonato'],
-      uso: [120, 80, 150, 100, 90]
-    };
-
-    new ApexCharts(document.querySelector('#chart-uso-materiales'), {
-      chart: { type: 'pie', height: 200 },
-      series: mockUsoMateriales.uso,
-      labels: mockUsoMateriales.materiales
-    }).render();
-
-    // Gráfico de Eficiencia de Producción
-    const mockEficienciaProduccion = {
-      lineas: ['Línea 1', 'Línea 2', 'Línea 3', 'Línea 4'],
-      eficiencia: [85, 90, 80, 95]
-    };
-
-    new ApexCharts(document.querySelector('#chart-eficiencia-produccion'), {
-      chart: { type: 'radar', height: 200 },
-      series: [
-        { name: 'Eficiencia (%)', data: mockEficienciaProduccion.eficiencia }
-      ],
-      xaxis: { categories: mockEficienciaProduccion.lineas }
-    }).render();
-
-    // Gráfico de Tiempo Promedio de Despacho
-    const mockTiempoDespacho = {
-      semanas: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-      tiempoPromedio: [30, 25, 20, 35]
-    };
-
-    new ApexCharts(document.querySelector('#chart-tiempo-despacho'), {
-      chart: { type: 'bar', height: 200 },
-      series: [
-        { name: 'Tiempo Promedio (min)', data: mockTiempoDespacho.tiempoPromedio }
-      ],
-      xaxis: { categories: mockTiempoDespacho.semanas },
-      colors: ['#008ffb']
-    }).render();
-
-    // Gráfico de Entregas Fallidas
-    const mockEntregasFallidas = {
-      semanas: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-      entregasFallidas: [2, 5, 3, 4]
-    };
-
-    new ApexCharts(document.querySelector('#chart-entregas-fallidas'), {
-      chart: { type: 'bar', height: 200 },
-      series: [
-        { name: 'Entregas Fallidas', data: mockEntregasFallidas.entregasFallidas }
-      ],
-      xaxis: { categories: mockEntregasFallidas.semanas },
-      colors: ['#feb019']
-    }).render();
-
-    // Gráfico de Ranking de Mensajeros
-    const mockRankingMensajeros = {
-      mensajeros: ['Juan', 'María', 'Pedro', 'Ana'],
-      entregas: [50, 45, 40, 60]
-    };
-
-    new ApexCharts(document.querySelector('#chart-ranking-mensajeros'), {
-      chart: { type: 'bar', height: 200 },
-      series: [
-        { name: 'Entregas', data: mockRankingMensajeros.entregas }
-      ],
-      xaxis: { categories: mockRankingMensajeros.mensajeros },
-      colors: ['#00e396']
-    }).render();
-
-    // Gráfico de Rutas Frecuentes
-    const mockRutasFrecuentes = {
-      rutas: ['Ruta 1', 'Ruta 2', 'Ruta 3', 'Ruta 4'],
-      frecuencia: [20, 15, 25, 10]
-    };
-
-    new ApexCharts(document.querySelector('#chart-rutas-frecuentes'), {
-      chart: { type: 'donut', height: 200 },
-      series: mockRutasFrecuentes.frecuencia,
-      labels: mockRutasFrecuentes.rutas
-    }).render();
   }
 
   // DMG

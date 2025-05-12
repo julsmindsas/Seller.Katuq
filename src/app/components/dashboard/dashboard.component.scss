@@ -177,4 +177,154 @@ button {
   font-size: 16px !important;
 }
 
+.dashboard-card {
+    border: none;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.dashboard-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.dashboard-title {
+    color: #2c3e50;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.date-control-group {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.date-control {
+    min-width: 200px;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.chart-card {
+    border: none;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    transition: transform 0.2s ease-in-out;
+
+    &:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-header {
+        border-radius: 10px 10px 0 0;
+        padding: 1rem;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+}
+
+.analysis-result {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+// Colores de los encabezados
+.bg-primary {
+    background-color: #4e73df !important;
+}
+
+.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+.bg-success {
+    background-color: #1cc88a !important;
+}
+
+.bg-danger {
+    background-color: #e74a3b !important;
+}
+
+// Estilos para los botones
+.btn {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: 5px;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+}
+
+.btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+
+    &:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+    }
+}
+
+.btn-outline-primary {
+    color: #4e73df;
+    border-color: #4e73df;
+
+    &:hover {
+        background-color: #4e73df;
+        color: white;
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .date-control-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .date-control {
+        width: 100%;
+    }
+
+    .button-group {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .dashboard-header {
+        .row {
+            flex-direction: column;
+        }
+
+        .col-md-4, .col-md-8 {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+    }
+}
+
 
