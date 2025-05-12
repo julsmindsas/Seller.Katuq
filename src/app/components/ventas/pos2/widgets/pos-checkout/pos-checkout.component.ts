@@ -236,9 +236,31 @@ export class PosCheckoutComponent {
   }
 
   openCardModal() {
-    this.method = 'Tarjeta';
+    this.method = 'Métodos Electrónicos';
     if (!this.validateCheckout(true)) return;
-    this.modal.open(CardPaymentComponent, { size: 'md' });
+    
+    // Abrir modal de selección de métodos electrónicos
+    const modalRef = this.modal.open(CardPaymentComponent, { 
+      size: 'lg',
+      centered: true,
+      backdrop: 'static'
+    });
+    
+    // Escuchar la selección del método de pago
+    modalRef.result.then(
+      (result: any) => {
+        if (result && result.paymentMethod) {
+          console.log('Método seleccionado:', result.paymentMethod);
+          this.method = result.paymentMethod;
+          // Aquí se puede abrir un modal específico según el método seleccionado
+          // o procesar el pago directamente
+          this.comprarYPagar();
+        }
+      },
+      (reason: any) => {
+        console.log('Modal cerrado por:', reason);
+      }
+    );
   }
 
   openEWalletModal() {
@@ -302,8 +324,8 @@ export class PosCheckoutComponent {
     const pedido = this.getPedido();
     this.pedido.estadoPago = EstadoPago.Aprobado;
     this.pedido.estadoProceso = EstadoProceso.Entregado;
-    this.pedido.formaEntrega = this.selectedPaymentType;
-    this.pedido.formaDePago = this.selectedPaymentType;
+    this.pedido.formaEntrega = this.method;
+    this.pedido.formaDePago = this.method;
     this.pedido.nroFactura = this.pedido.nroPedido;
     this.pedido.pdfUrlInvoice = '';
 

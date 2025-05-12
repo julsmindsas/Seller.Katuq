@@ -1,19 +1,74 @@
 <!-- card-payment.component.html -->
 <div class="modal-header">
-    <h4 class="modal-title">Pago con Tarjeta</h4>
-    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+  <h4 class="modal-title">Seleccione un Método de Pago Electrónico</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <div class="payment-methods-container">
+    <!-- Tarjetas de crédito/débito -->
+    <div class="payment-category">
+      <h5><i class="fa fa-credit-card"></i> Tarjetas de Crédito/Débito</h5>
+      <div class="payment-options-grid">
+        <div class="payment-option" (click)="selectPaymentMethod('Tarjeta de Crédito')">
+          <div class="payment-option-icon">
+            <img src="assets/images/payment/credit-card.svg" alt="Tarjeta de Crédito">
+          </div>
+          <div class="payment-option-name">Tarjeta de Crédito</div>
+        </div>
+        <div class="payment-option" (click)="selectPaymentMethod('Tarjeta de Débito')">
+          <div class="payment-option-icon">
+            <img src="assets/images/payment/debit-card.svg" alt="Tarjeta de Débito">
+          </div>
+          <div class="payment-option-name">Tarjeta de Débito</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pasarelas de pago -->
+    <div class="payment-category">
+      <h5><i class="fa fa-globe"></i> Pasarelas de Pago</h5>
+      <div class="payment-options-grid">
+        <div class="payment-option" (click)="selectPaymentMethod('Wompi')">
+          <div class="payment-option-icon">
+            <img src="assets/images/payment/wompi.svg" alt="Wompi">
+          </div>
+          <div class="payment-option-name">Wompi</div>
+        </div>
+        <div class="payment-option" (click)="selectPaymentMethod('ePayco')">
+          <div class="payment-option-icon">
+            <img src="assets/images/payment/epayco.svg" alt="ePayco">
+          </div>
+          <div class="payment-option-name">ePayco</div>
+        </div>
+        <div class="payment-option" (click)="selectPaymentMethod('PayPal')">
+          <div class="payment-option-icon">
+            <img src="assets/images/payment/paypal.svg" alt="PayPal">
+          </div>
+          <div class="payment-option-name">PayPal</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transferencias bancarias -->
+    <div class="payment-category">
+      <h5><i class="fa fa-university"></i> Transferencias Bancarias</h5>
+      <div class="payment-options-grid">
+        <div class="payment-option" (click)="selectPaymentMethod('PSE')">
+          <div class="payment-option-icon">
+            <img src="assets/images/payment/pse.svg" alt="PSE">
+          </div>
+          <div class="payment-option-name">PSE</div>
+        </div>
+        <div class="payment-option" (click)="selectPaymentMethod('Transferencia Bancaria')">
+          <div class="payment-option-icon">
+            <img src="assets/images/payment/bank-transfer.svg" alt="Transferencia Bancaria">
+          </div>
+          <div class="payment-option-name">Transferencia Bancaria</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="modal-body">
-    <label for="cardNumber">Número de Tarjeta:</label>
-    <input type="text" id="cardNumber" [(ngModel)]="cardNumber" class="form-control" />
-  
-    <label for="expiryDate">Fecha de Vencimiento:</label>
-    <input type="text" id="expiryDate" [(ngModel)]="expiryDate" class="form-control" />
-  
-    <label for="cvv">CVV:</label>
-    <input type="text" id="cvv" [(ngModel)]="cvv" class="form-control" />
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
-    <button type="button" class="btn btn-primary" (click)="confirmPayment()">Confirmar Pago</button>
-  </div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+</div>
