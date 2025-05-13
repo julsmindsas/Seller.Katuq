@@ -149,8 +149,11 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     }
 
     const user: any = localStorage.getItem('user');
-    if (user.company) {
+    if (user?.company) {
       this.isLoggedIn = true;
+    }
+    else {
+      this.isLoggedIn = false;
     }
 
     // Verificar nuevamente si existe sesión activa para habilitar el chat

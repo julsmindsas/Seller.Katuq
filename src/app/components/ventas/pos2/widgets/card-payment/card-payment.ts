@@ -46,6 +46,9 @@ export class CardPaymentComponent {
 
         // Clave pública de Wompi (debería venir de environment)
         const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';
+        const wompiProdPublicKey = 'pub_prod_cN70rb6aXdHMiBWj9fwY26Xyh1Oz5PUf';
+
+
 
         // Usar el número de pedido como referencia
         const reference = pedido.nroPedido || `order-${new Date().getTime()}`;
@@ -58,13 +61,17 @@ export class CardPaymentComponent {
           email: pedido.cliente?.correo_electronico_comprador || ''
         };
 
+        const redirectUrl = window.location.origin + '/payment-callback';
+
+       
+
         // Inicializar el widget de Wompi
         const checkout = new window['WidgetCheckout']({
           currency: 'COP',
           amountInCents: amountInCents,
           reference: reference,
-          publicKey: wompiPublicKey,
-          redirectUrl: 'http://localhost:4200/payment-callback', // Debería venir de environment
+          publicKey: wompiProdPublicKey,
+          redirectUrl: redirectUrl, // Debería venir de environment
           taxInCents: {
             vat: Math.round((pedido?.totalImpuesto ?? 0) * 100),
             consumption: 0

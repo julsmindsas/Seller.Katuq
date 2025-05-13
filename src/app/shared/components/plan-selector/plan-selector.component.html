@@ -23,6 +23,9 @@
             <div *ngIf="plan.subtitle" class="plan-subtitle">
               {{plan.subtitle}}
             </div>
+            <div *ngIf="plan.isPromo" class="promo-ribbon">
+              <span>¡Oferta Limitada!</span>
+            </div>
           </div>
           
           <ul class="plan-features">
@@ -67,24 +70,30 @@
               <div class="escalamiento-cell">1.99% x T.E</div>
             </div>
           </div>
+          <div class="escalamiento-note">
+            T.E = Transacción Exitosa
+          </div>
         </div>
         
         <div class="beneficios-section">
-          <div class="beneficio-item">
-            <i class="fas fa-headset"></i>
-            <p>Asistencia y Soporte 24/7<br>Configuraciones abiertas</p>
-          </div>
-          <div class="beneficio-item">
-            <i class="fas fa-users"></i>
-            <p>Usuarios ilimitados<br>Seguridad y roles ilimitados</p>
-          </div>
-          <div class="beneficio-item">
-            <i class="fas fa-clipboard-list"></i>
-            <p>Creación de pedidos, clientes y<br>productos ilimitados</p>
-          </div>
-          <div class="beneficio-item">
-            <i class="fas fa-chart-bar"></i>
-            <p>Dashboards para ver, entender<br>y descargar tus cifras</p>
+          <h5>TODOS LOS PLANES INCLUYEN</h5>
+          <div class="beneficio-items">
+            <div class="beneficio-item">
+              <i class="fas fa-headset"></i>
+              <p>Asistencia y Soporte 24/7<br>Configuraciones abiertas</p>
+            </div>
+            <div class="beneficio-item">
+              <i class="fas fa-users"></i>
+              <p>Usuarios ilimitados<br>Seguridad y roles ilimitados</p>
+            </div>
+            <div class="beneficio-item">
+              <i class="fas fa-clipboard-list"></i>
+              <p>Creación de pedidos, clientes y<br>productos ilimitados</p>
+            </div>
+            <div class="beneficio-item">
+              <i class="fas fa-chart-bar"></i>
+              <p>Dashboards para ver, entender<br>y descargar tus cifras</p>
+            </div>
           </div>
         </div>
       </div>

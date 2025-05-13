@@ -73,8 +73,8 @@
   /* Contenedor de planes */
   .plans-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
     padding: 20px 0;
   }
   
@@ -93,8 +93,8 @@
   /* Estilos de cada plan */
   .plan-option {
     border: 1px solid #eaeaea;
-    border-radius: 10px;
-    padding: 15px;
+    border-radius: 12px;
+    padding: 20px;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -104,8 +104,8 @@
   }
   
   .plan-option:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   }
   
   .plan-option.highlight {
@@ -116,6 +116,7 @@
   .plan-option.selected {
     background: rgba(153, 50, 204, 0.05);
     border-color: #9932CC;
+    box-shadow: 0 8px 24px rgba(153, 50, 204, 0.15);
   }
   
   /* Badge de promoción para Early Adopter */
@@ -123,30 +124,50 @@
   .plan-option.isPromo::before {
     content: "PROMOCIÓN";
     position: absolute;
-    top: -10px;
-    right: -10px;
+    top: -12px;
+    right: -12px;
     background: linear-gradient(135deg, #FF4E50, #FC913A);
     color: white;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transform: rotate(10deg);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: rotate(5deg);
     z-index: 1;
   }
   
   /* Estilo especial para el plan Early Adopter */
   .plan-option.isPromo {
     background: linear-gradient(145deg, #fff, #FFF9F0);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     border: 2px solid #FC913A;
     overflow: hidden;
+  }
+  
+  .plan-option.isPromo::after {
+    content: "";
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 100px;
+    height: 100px;
+    background: rgba(252, 145, 58, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+  }
+  
+  .plan-option.isPromo .plan-header h5 {
+    color: #FF4E50;
+    font-size: 1.4rem;
   }
   
   .plan-option.isPromo .plan-price .amount {
     color: #FF4E50;
     font-weight: 700;
+    background: -webkit-linear-gradient(#FF4E50, #FC913A);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   
   /* Header del plan */
@@ -276,30 +297,84 @@
     cursor: not-allowed;
   }
   
+  /* Ribbon promocional */
+  .promo-ribbon {
+    position: relative;
+    margin: 15px -20px 15px;
+    padding: 6px;
+    background: linear-gradient(135deg, #FF4E50, #FC913A);
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .promo-ribbon:before,
+  .promo-ribbon:after {
+    content: "";
+    position: absolute;
+    display: block;
+    bottom: -10px;
+    border: 5px solid;
+    z-index: -1;
+  }
+  
+  .promo-ribbon:before {
+    left: 0;
+    border-color: #b73c3f transparent transparent #b73c3f;
+  }
+  
+  .promo-ribbon:after {
+    right: 0;
+    border-color: #b73c3f #b73c3f transparent transparent;
+  }
+  
   /* Sección de información adicional */
   .plan-info {
-    padding: 20px 0;
+    padding: 30px 0;
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    margin-top: 20px;
   }
   
   /* Escalonamiento de precios */
   .escalamiento-section {
-    margin-bottom: 30px;
+    margin-bottom: 40px;
+    padding: 0 20px;
   }
   
   .escalamiento-section h5 {
     color: #333;
     font-size: 1.2rem;
     font-weight: 600;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     text-align: center;
     text-transform: uppercase;
+    position: relative;
+    padding-bottom: 10px;
+  }
+  
+  .escalamiento-section h5:after {
+    content: "";
+    position: absolute;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(to right, #9932CC, #4555D1);
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
   }
   
   .escalamiento-grid {
     display: table;
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   }
   
   .escalamiento-row {
@@ -307,34 +382,71 @@
   }
   
   .escalamiento-row.header {
-    background-color: #F8F4FF;
+    background-color: #9932CC;
     font-weight: 600;
+    color: white;
   }
   
   .escalamiento-cell {
     display: table-cell;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #eaeaea;
     text-align: center;
     font-size: 0.9rem;
+    vertical-align: middle;
+  }
+  
+  .escalamiento-note {
+    font-size: 0.8rem;
+    color: #666;
+    text-align: right;
+    margin-top: 5px;
+    font-style: italic;
   }
   
   /* Sección de beneficios */
   .beneficios-section {
+    padding: 0 20px;
+  }
+  
+  .beneficios-section h5 {
+    color: #333;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+    text-transform: uppercase;
+    position: relative;
+    padding-bottom: 10px;
+  }
+  
+  .beneficios-section h5:after {
+    content: "";
+    position: absolute;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(to right, #9932CC, #4555D1);
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
+  }
+  
+  .beneficio-items {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
+    gap: 20px;
     margin-top: 20px;
   }
   
   @media (max-width: 768px) {
-    .beneficios-section {
+    .beneficio-items {
       grid-template-columns: repeat(2, 1fr);
     }
   }
   
   @media (max-width: 576px) {
-    .beneficios-section {
+    .beneficio-items {
       grid-template-columns: 1fr;
     }
   }
@@ -344,18 +456,27 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 15px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+  
+  .beneficio-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   }
   
   .beneficio-item i {
-    font-size: 1.5rem;
+    font-size: 2rem;
     color: #9932CC;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
   }
   
   .beneficio-item p {
-    font-size: 0.85rem;
-    color: #666;
-    line-height: 1.4;
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.5;
     margin: 0;
   }

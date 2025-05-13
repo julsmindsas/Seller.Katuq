@@ -24,11 +24,18 @@ export class PlanSelectorComponent {
         'Integraciones Comunes: Sin costo adicional',
         'Notificaciones avanzadas: Incluido en el plan',
         'KAI (Creación de producto y Asistente): Incluido en el plan',
-        'Rango de ventas: 10M - 200M'
+        'Rango de ventas: 10M - 200M',
+        'Oferta limitada para comercios seleccionados'
       ],
       isHighlighted: true,
       showPorcentaje: false,
-      isPromo: true
+      isPromo: true,
+      promoDetails: {
+        duration: '12 meses',
+        firstPeriod: '6 meses gratis',
+        secondPeriod: '6 meses con 60% de descuento',
+        conditions: 'Para comercios seleccionados'
+      }
     },
     {
       id: 'plan1',
