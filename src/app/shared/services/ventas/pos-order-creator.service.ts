@@ -100,6 +100,17 @@ export class PosOrderCreatorService {
           const ultimasLetras = texto.substring(texto.length - 3);
           pedido.nroPedido = ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0');
         }
+
+        //asentar el pago
+        pedido.PagosAsentados = [{
+          fechaHoraAprobacionRechazo: new Date().toISOString(),
+          numeroPedido: pedido.nroPedido,
+          estadoVerificacion: pedido.estadoPago,
+          formaPago:  pedido.formaDePago,
+          valorRegistrado: pedido.totalPedididoConDescuento || 0
+        }];
+
+        pedido.fechaEntrega = new Date().toISOString();
         
         // Asignar asesor
         this.assignUserToOrder(pedido);

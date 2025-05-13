@@ -254,14 +254,14 @@ export class PosCheckoutService {
           phoneNumberPrefix: pedido.cliente?.indicativo_celular_comprador || '57',
           email: pedido.cliente?.correo_electronico_comprador || ''
         };
-        
+        const redirectUrl = window.location.origin + '/payment-callback';
         // Inicializar el widget de Wompi
         const checkout = new window['WidgetCheckout']({
           currency: 'COP',
           amountInCents: amountInCents,
           reference: reference,
           publicKey: wompiPublicKey,
-          redirectUrl: 'http://localhost:4200/payment-callback', // Debería venir de environment
+          redirectUrl: redirectUrl, // Debería venir de environment
           taxInCents: {
             vat: Math.round((pedido?.totalImpuesto ?? 0) * 100),
             consumption: 0
