@@ -2,7 +2,7 @@
     <div class="modal-overlay" (click)="close()"></div>
     <div class="modal-container no-scroll">
       <div class="modal-header">
-        <h4>Cambiar tu plan</h4>
+        <h4>Selecciona tu plan</h4>
         <button class="close-btn" (click)="close()">
           <i class="fas fa-times"></i>
         </button>
@@ -11,21 +11,18 @@
       <div class="plans-grid">
         <div *ngFor="let plan of plans" 
              class="plan-option"
-             [class.highlight]="plan.id === 'completo'"
-             [class.selected]="selectedPlan === plan.id">
+             [class.highlight]="plan.isHighlighted"
+             [class.selected]="selectedPlan === plan.id"
+             [class.isPromo]="plan.isPromo">
           
-          <div class="plan-badge" [ngClass]="{
-            'basic-badge': plan.id === 'basico',
-            'complete-badge': plan.id === 'completo',
-            'enterprise-badge': plan.id === 'empresarial'
-          }">
-            <i class="fas" [ngClass]="plan.icon"></i>
-          </div>
-          
-          <h5>{{plan.name}}</h5>
-          <div class="plan-price">
-            <span class="amount">{{plan.price}}</span>
-            <span class="period">/mes</span>
+          <div class="plan-header">
+            <h5>{{plan.name}}</h5>
+            <div class="plan-price">
+              <span class="amount">{{plan.price}}</span>
+            </div>
+            <div *ngIf="plan.subtitle" class="plan-subtitle">
+              {{plan.subtitle}}
+            </div>
           </div>
           
           <ul class="plan-features">
@@ -35,7 +32,7 @@
           </ul>
           
           <button class="select-btn" (click)="selectPlan(plan.id)">
-            {{selectedPlan === plan.id ? (plan.id === 'completo' ? 'Plan Actual' : 'Seleccionado') : 'Seleccionar'}}
+            {{selectedPlan === plan.id ? 'Seleccionado' : 'Seleccionar'}}
           </button>
         </div>
       </div>
@@ -43,8 +40,53 @@
       <div class="modal-footer">
         <button class="cancel-btn" (click)="close()">Cancelar</button>
         <button class="confirm-btn" (click)="confirmSelection()" [disabled]="!selectedPlan">
-          Confirmar Cambio
+          Confirmar Selección
         </button>
+      </div>
+      
+      <div class="plan-info">
+        <div class="escalamiento-section">
+          <h5>ESCALONAMIENTO DE PRECIOS</h5>
+          <div class="escalamiento-grid">
+            <div class="escalamiento-row header">
+              <div class="escalamiento-cell">Ventas</div>
+              <div class="escalamiento-cell">Plan #1</div>
+              <div class="escalamiento-cell">Plan #2</div>
+              <div class="escalamiento-cell">Plan #3</div>
+            </div>
+            <div class="escalamiento-row">
+              <div class="escalamiento-cell">60M - 150M</div>
+              <div class="escalamiento-cell">150 USD</div>
+              <div class="escalamiento-cell">90 USD + 0.8% T.E</div>
+              <div class="escalamiento-cell">2.49% x T.E</div>
+            </div>
+            <div class="escalamiento-row">
+              <div class="escalamiento-cell">150M - ></div>
+              <div class="escalamiento-cell">230 USD</div>
+              <div class="escalamiento-cell">137 USD + 0.8% T.E</div>
+              <div class="escalamiento-cell">1.99% x T.E</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="beneficios-section">
+          <div class="beneficio-item">
+            <i class="fas fa-headset"></i>
+            <p>Asistencia y Soporte 24/7<br>Configuraciones abiertas</p>
+          </div>
+          <div class="beneficio-item">
+            <i class="fas fa-users"></i>
+            <p>Usuarios ilimitados<br>Seguridad y roles ilimitados</p>
+          </div>
+          <div class="beneficio-item">
+            <i class="fas fa-clipboard-list"></i>
+            <p>Creación de pedidos, clientes y<br>productos ilimitados</p>
+          </div>
+          <div class="beneficio-item">
+            <i class="fas fa-chart-bar"></i>
+            <p>Dashboards para ver, entender<br>y descargar tus cifras</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>

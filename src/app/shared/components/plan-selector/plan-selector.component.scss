@@ -26,7 +26,9 @@
     background: white;
     border-radius: 12px;
     width: 90%;
-    max-width: 900px;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     animation: modalFadeIn 0.3s ease;
     padding: 20px;
@@ -49,8 +51,9 @@
   .modal-header h4 {
     margin: 0;
     color: #5e5873;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 600;
+    text-transform: uppercase;
   }
   
   .close-btn {
@@ -70,20 +73,34 @@
   /* Contenedor de planes */
   .plans-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
     padding: 20px 0;
+  }
+  
+  @media (max-width: 992px) {
+    .plans-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .plans-grid {
+      grid-template-columns: 1fr;
+    }
   }
   
   /* Estilos de cada plan */
   .plan-option {
     border: 1px solid #eaeaea;
     border-radius: 10px;
-    padding: 20px;
+    padding: 15px;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     height: 100%;
+    background-color: #f8f8f8;
+    position: relative; /* Para posicionar elementos de promoción */
   }
   
   .plan-option:hover {
@@ -92,64 +109,83 @@
   }
   
   .plan-option.highlight {
-    border: 2px solid #7367F0;
+    border: 2px solid #9932CC;
+    background-color: #F8F4FF;
   }
   
   .plan-option.selected {
-    background: rgba(115, 103, 240, 0.05);
-    border-color: #7367F0;
+    background: rgba(153, 50, 204, 0.05);
+    border-color: #9932CC;
   }
   
-  /* Badge del plan */
-  .plan-badge {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 15px;
-    font-size: 1.2rem;
+  /* Badge de promoción para Early Adopter */
+  .plan-option[class*="isPromo"]::before,
+  .plan-option.isPromo::before {
+    content: "PROMOCIÓN";
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: linear-gradient(135deg, #FF4E50, #FC913A);
     color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transform: rotate(10deg);
+    z-index: 1;
   }
   
-  .basic-badge {
-    background: linear-gradient(135deg, #28C76F 0%, #5DF0A5 100%);
+  /* Estilo especial para el plan Early Adopter */
+  .plan-option.isPromo {
+    background: linear-gradient(145deg, #fff, #FFF9F0);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    border: 2px solid #FC913A;
+    overflow: hidden;
   }
   
-  .complete-badge {
-    background: linear-gradient(135deg, #7367F0 0%, #9E95F5 100%);
+  .plan-option.isPromo .plan-price .amount {
+    color: #FF4E50;
+    font-weight: 700;
   }
   
-  .enterprise-badge {
-    background: linear-gradient(135deg, #FF9F43 0%, #FFC085 100%);
-  }
-  
-  /* Contenido del plan */
-  .plan-option h5 {
-    margin: 0 0 15px 0;
-    color: #5e5873;
-    font-size: 1.1rem;
-    font-weight: 600;
+  /* Header del plan */
+  .plan-header {
     text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .plan-option h5 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  
+  .plan-option.highlight h5 {
+    color: #9932CC;
   }
   
   .plan-price {
-    margin-bottom: 15px;
-    text-align: center;
+    margin-bottom: 10px;
   }
   
   .plan-price .amount {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #5e5873;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
   }
   
-  .plan-price .period {
-    color: #b9b9c3;
-    font-size: 0.9rem;
+  .plan-subtitle {
+    font-size: 0.85rem;
+    color: #9932CC;
+    font-weight: 600;
+    margin-top: 5px;
+    text-transform: uppercase;
   }
   
+  /* Lista de características */
   .plan-features {
     list-style: none;
     padding: 0;
@@ -158,9 +194,9 @@
   }
   
   .plan-features li {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-size: 0.85rem;
-    color: #5e5873;
+    color: #666;
     display: flex;
     align-items: flex-start;
     line-height: 1.4;
@@ -168,7 +204,7 @@
   
   .plan-features i {
     margin-right: 8px;
-    color: #7367F0;
+    color: #9932CC;
     font-size: 0.8rem;
     margin-top: 3px;
   }
@@ -179,8 +215,8 @@
     padding: 10px;
     border: none;
     border-radius: 6px;
-    background: rgba(115, 103, 240, 0.1);
-    color: #7367F0;
+    background: rgba(153, 50, 204, 0.1);
+    color: #9932CC;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -188,18 +224,19 @@
   }
   
   .select-btn:hover {
-    background: rgba(115, 103, 240, 0.2);
+    background: rgba(153, 50, 204, 0.2);
   }
   
   .plan-option.selected .select-btn {
-    background: #7367F0;
+    background: #9932CC;
     color: white;
   }
   
   /* Pie del modal */
   .modal-footer {
-    padding: 20px 0 0 0;
+    padding: 20px 0;
     border-top: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -211,48 +248,114 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 0.9rem;
   }
   
   .cancel-btn {
-    background: #f0f0f0;
-    color: #5e5873;
-    border: none;
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    color: #666;
   }
   
   .cancel-btn:hover {
-    background: #e0e0e0;
+    background: #eee;
   }
   
   .confirm-btn {
-    background: #7367F0;
+    background: #9932CC;
+    border: 1px solid #9932CC;
     color: white;
-    border: none;
   }
   
   .confirm-btn:hover {
-    background: #5d50d6;
+    background: #8A2BE2;
   }
   
   .confirm-btn:disabled {
-    background: #b9b9c3;
+    background: #cccccc;
+    border-color: #cccccc;
     cursor: not-allowed;
   }
   
-  /* Responsive */
+  /* Sección de información adicional */
+  .plan-info {
+    padding: 20px 0;
+  }
+  
+  /* Escalonamiento de precios */
+  .escalamiento-section {
+    margin-bottom: 30px;
+  }
+  
+  .escalamiento-section h5 {
+    color: #333;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  
+  .escalamiento-grid {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .escalamiento-row {
+    display: table-row;
+  }
+  
+  .escalamiento-row.header {
+    background-color: #F8F4FF;
+    font-weight: 600;
+  }
+  
+  .escalamiento-cell {
+    display: table-cell;
+    padding: 10px;
+    border: 1px solid #eaeaea;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  
+  /* Sección de beneficios */
+  .beneficios-section {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
   @media (max-width: 768px) {
-    .plans-grid {
+    .beneficios-section {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .beneficios-section {
       grid-template-columns: 1fr;
     }
-    
-    .modal-container {
-      width: 95%;
-      max-width: 95%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    
-    .plan-option {
-      height: auto;
-    }
+  }
+  
+  .beneficio-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+  }
+  
+  .beneficio-item i {
+    font-size: 1.5rem;
+    color: #9932CC;
+    margin-bottom: 10px;
+  }
+  
+  .beneficio-item p {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.4;
+    margin: 0;
   }
