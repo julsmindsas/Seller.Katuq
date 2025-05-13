@@ -1,0 +1,58 @@
+// Estilos para imágenes con fallback
+.image-fallback {
+    opacity: 0.9;
+    filter: grayscale(0.5);
+    object-fit: contain !important;
+    background-color: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    padding: 10px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        opacity: 1;
+        filter: grayscale(0.2);
+    }
+}
+
+// Badge para indicar cuando una imagen no está disponible
+.image-error-badge {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    z-index: 10;
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Animación de pulso para imágenes en carga
+@keyframes pulse-loading {
+    0% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.4;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.image-loading {
+    animation: pulse-loading 1.5s infinite;
+    background-color: #f0f0f0;
+}
+
+// Imagen de preview mientras se carga la original
+.image-preview {
+    filter: blur(5px);
+    transition: filter 0.3s ease;
+    
+    &.loaded {
+        filter: blur(0);
+    }
+} 

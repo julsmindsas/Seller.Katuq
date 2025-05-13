@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
-import { EstadoPago, EstadoProceso } from '../../../components/ventas/modelo/pedido';
+import { EstadoPago, EstadoProceso, Pedido } from '../../../components/ventas/modelo/pedido';
 import { CartService } from '../cart.service';
 import { VentasService } from './ventas.service';
 import { PaymentService } from './payment.service';
@@ -26,13 +26,13 @@ export class PosOrderCreatorService {
   /**
    * Crea un objeto pedido a partir de los datos básicos
    */
-  createPedidoObject(customer: any, paymentMethod: string, warehouse: any): POSPedido {
+  createPedidoObject(customer: any, paymentMethod: string, warehouse: any): Pedido {
     const company = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial || '';
     const texto = company.toString() || '';
     const ultimasLetras = texto.substring(texto.length - 3);
     
     // Crear el pedido básico
-    const pedido: POSPedido = {
+    const pedido: Pedido = {
       referencia: ultimasLetras + '-' + new Date().getTime().toString().padStart(6, '0'),
       nroPedido: ultimasLetras + '-' + new Date().getTime().toString().padStart(6, '0'),
       bodegaId: warehouse?.idBodega || '',
@@ -45,7 +45,7 @@ export class PosOrderCreatorService {
       })),
       formaDePago: paymentMethod,
       estadoProceso: EstadoProceso.SinProducir,
-      estadoPago: EstadoPago.Aprobado,
+      estadoPago: EstadoPago.PreAprobado,
       fechaCreacion: new Date().toISOString(),
       formaEntrega: "RECOGE",
       fechaEntrega: new Date().toISOString(),
@@ -90,7 +90,7 @@ export class PosOrderCreatorService {
   /**
    * Guarda el pedido en el sistema y procesa la facturación si es necesario
    */
-  savePedido(pedido: POSPedido): void {
+  savePedido(pedido: Pedido): void {
     // Validar número de pedido
     this.ventasService.validateNroPedido(pedido.nroPedido!).subscribe({
       next: (res: any) => {
@@ -136,7 +136,7 @@ export class PosOrderCreatorService {
   /**
    * Asigna el usuario actual como asesor del pedido
    */
-  private assignUserToOrder(pedido: POSPedido): void {
+  public assignUserToOrder(pedido: Pedido): void {
     const user = (JSON.parse(localStorage.getItem('user') ?? '{}')) as unknown as UserLite;
     const userLite: UserLite = {
       name: user.name,
@@ -149,7 +149,7 @@ export class PosOrderCreatorService {
   /**
    * Actualiza los estados de los productos según si requieren producción o no
    */
-  private updateProductStates(pedido: POSPedido): void {
+  private updateProductStates(pedido: Pedido): void {
     pedido.carrito?.forEach((x: any) => {
       if (!x.producto?.crearProducto?.paraProduccion) {
         x.estadoProcesoProducto = 'ParaDespachar';
@@ -160,7 +160,7 @@ export class PosOrderCreatorService {
   /**
    * Procesa la factura electrónica
    */
-  private processElectronicInvoice(originalPedido: POSPedido, savedPedido: any): void {
+  private processElectronicInvoice(originalPedido: Pedido, savedPedido: any): void {
     const orderSiigo = this.facturacionElectronicaService.transformarPedidoCompletoParaCrearUsuarioDesdeLaVenta(originalPedido);
     
     this.facturacionElectronicaService.createFacturaSiigo(orderSiigo).subscribe({
@@ -190,7 +190,7 @@ export class PosOrderCreatorService {
   /**
    * Maneja un pedido creado exitosamente (sin factura electrónica)
    */
-  private handleSuccessfulOrder(order: any): void {
+  public handleSuccessfulOrder(order: any): void {
     // Mostrar la factura/tirilla
     this.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = order;
     

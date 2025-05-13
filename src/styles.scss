@@ -168,3 +168,25 @@ body {
 ::ng-deep ng2-reporting-footer {
     display: none;
 }
+
+/* Estilos para imágenes con directiva appSafeImage */
+img[appSafeImage] {
+  transition: opacity 0.3s ease, filter 0.3s ease;
+  
+  &.image-loading {
+    opacity: 0;
+  }
+  
+  &.image-loaded {
+    opacity: 1;
+  }
+  
+  &.image-fallback {
+    opacity: 0.9;
+    filter: grayscale(0.5);
+    object-fit: contain !important;
+    background-color: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    padding: 10px;
+  }
+}

@@ -4,6 +4,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { CarouselModule } from 'primeng/carousel';
+import { HttpClientModule } from '@angular/common/http';
 
 import { DragulaModule } from 'ng2-dragula';
 import { TranslateModule } from '@ngx-translate/core';
@@ -32,6 +33,8 @@ import { OnlyAlphabetsDirective } from './directives/only-alphabets.directive';
 import { OnlyNumbersDirective } from './directives/only-numbers.directive';
 import { ShowOptionsDirective } from './directives/show-options.directive';
 import { RoleBasedVisibilityDirective } from './directives/role-based-visibility.directive';
+import { ImageFallbackDirective } from './directives/image-fallback.directive';
+import { SafeImageDirective } from './directives/safe-image.directive';
 // Services
 import { LayoutService } from './services/layout.service';
 import { NavService } from './services/nav.service';
@@ -40,6 +43,7 @@ import { CompanyInformationComponent } from './components/header/elements/compan
 import { SecurityService } from './services/security/security.service';
 import { KatuqIntelligenceComponent } from './components/katuq-intelligence/katuq-intelligence.component';
 import { ImagenService } from './utils/image.service';
+import { ImageProxyService } from './services/image-proxy.service';
 import { FacturacionIntegracionService } from './services/integraciones/facturas/facturacion.service'
 import { BlankComponent } from './components/layout/blank/blank.component';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
@@ -63,6 +67,8 @@ import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos
     OnlyAlphabetsDirective,
     OnlyNumbersDirective,
     RoleBasedVisibilityDirective,
+    ImageFallbackDirective,
+    SafeImageDirective,
     LoaderComponent,
     TapToTopComponent,
     SearchComponent,
@@ -89,6 +95,7 @@ import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos
     FormsModule,
     ReactiveFormsModule,
     NgbModule,
+    HttpClientModule,
     DragulaModule.forRoot(),
     TranslateModule,
     CarouselModule
@@ -99,6 +106,7 @@ import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos
     NgpThemeService,
     SecurityService,
     ImagenService,
+    ImageProxyService,
     FacturacionIntegracionService,
     KatuqIntelligenceService,
     POSPedidosUtilService
@@ -116,6 +124,8 @@ import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos
     OnlyAlphabetsDirective,
     OnlyNumbersDirective,
     RoleBasedVisibilityDirective,
+    ImageFallbackDirective,
+    SafeImageDirective,
     ImagesManagerComponent,
     KatuqIntelligenceComponent,
     SharedChangePasswordComponent,

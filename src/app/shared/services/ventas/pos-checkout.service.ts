@@ -1,6 +1,6 @@
 import { Injectable, InjectionToken } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { CardPaymentComponent } from '../../../components/ventas/pos2/widgets/card-payment/card-payment';
@@ -10,7 +10,7 @@ import { CartService } from '../cart.service';
 import { PosValidationService } from './pos-validation.service';
 import { PosOrderCreatorService } from './pos-order-creator.service';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
-import { EstadoPago, EstadoProceso } from '../../../components/ventas/modelo/pedido';
+import { EstadoPago, EstadoProceso, Pedido } from '../../../components/ventas/modelo/pedido';
 
 // Crear un token para PosCheckoutService
 export const POS_CHECKOUT_SERVICE = new InjectionToken<PosCheckoutService>('PosCheckoutService');
@@ -25,12 +25,15 @@ export class PosCheckoutService {
   customer$ = new BehaviorSubject<any>(null);
   paymentMethod$ = new BehaviorSubject<string>('');
   warehouse$ = new BehaviorSubject<any>(null);
-  pedido$ = new BehaviorSubject<POSPedido | null>(null);
+  pedido$ = new BehaviorSubject<Pedido | null>(null);
+  
+  // Observable para manejar solicitudes de pago con Wompi
+  wompiPaymentRequested$ = new Subject<{pedido: any, options?: any}>();
   
   constructor(
     private modal: NgbModal,
     private validationService: PosValidationService,
-    private orderCreatorService: PosOrderCreatorService,
+    public orderCreatorService: PosOrderCreatorService,
     private cartService: CartService
   ) {
     // Cargar la bodega desde localStorage al iniciar
@@ -146,7 +149,14 @@ export class PosCheckoutService {
       (result: any) => {
         if (result && result.paymentMethod) {
           this.setPaymentMethod(result.paymentMethod);
-          this.processPurchase({});
+          
+          // Si se seleccionó Wompi, iniciar flujo especial
+          if (result.useWompiIntegration) {
+            this.processPurchaseWithWompi(result.paymentMethod);
+          } else {
+            // Para otros métodos, usar el flujo normal
+            this.processPurchase({});
+          }
         }
       },
       () => {}
@@ -197,6 +207,116 @@ export class PosCheckoutService {
     
     // Guardar el pedido
     this.orderCreatorService.savePedido(pedido);
+  }
+  
+  /**
+   * Procesa una compra usando Wompi como método de pago
+   */
+  processPurchaseWithWompi(paymentMethod: string): void {
+    const customer = this.customer$.getValue();
+    const warehouse = this.warehouse$.getValue();
+    
+    // Crear el pedido con estado pendiente
+    const pedido = this.orderCreatorService.createPedidoObject(customer, paymentMethod, warehouse);
+    
+    // Establecer estado inicial como pendiente
+    pedido.estadoPago = EstadoPago.Pendiente;
+    pedido.formaEntrega = paymentMethod;
+    pedido.formaDePago = paymentMethod;
+    this.orderCreatorService.assignUserToOrder(pedido);
+    
+    // Actualizar el Observable del pedido
+   // this.pedido$.next(pedido);
+    
+    // Emitir evento para procesar pago Wompi
+    this.wompiPaymentRequested$.next({ pedido });
+  }
+  
+  /**
+   * Inicia el pago con Wompi
+   */
+  iniciarPagoConWompi(pedido: Pedido): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      try {
+        // Configuración del widget de Wompi
+        const amountInCents = Math.round((pedido?.totalPedididoConDescuento ?? 0) * 100);
+        
+        // Clave pública de Wompi (debería venir de environment)
+        const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';
+        
+        // Usar el número de pedido como referencia
+        const reference = pedido.nroPedido || `order-${new Date().getTime()}`;
+        
+        // Configurar datos del cliente para el formulario de pago
+        const customerData = {
+          fullName: pedido.cliente?.nombres_completos || '',
+          phoneNumber: pedido.cliente?.numero_celular_comprador || '',
+          phoneNumberPrefix: pedido.cliente?.indicativo_celular_comprador || '57',
+          email: pedido.cliente?.correo_electronico_comprador || ''
+        };
+        
+        // Inicializar el widget de Wompi
+        const checkout = new window['WidgetCheckout']({
+          currency: 'COP',
+          amountInCents: amountInCents,
+          reference: reference,
+          publicKey: wompiPublicKey,
+          redirectUrl: 'http://localhost:4200/payment-callback', // Debería venir de environment
+          taxInCents: {
+            vat: Math.round((pedido?.totalImpuesto ?? 0) * 100),
+            consumption: 0
+          },
+          signature: {
+            integrity: pedido?.pagoInformation?.integridad || '',
+          },
+          customerData: customerData,
+        });
+        
+        // Abrir el widget y manejar la respuesta
+        checkout.open((result) => {
+          const { transaction } = result;
+          pedido = this.pedido$.getValue() as Pedido;
+          if (transaction.status === 'APPROVED') {
+            // Almacenar los datos de la transacción en el pedido
+            pedido.transaccionId = transaction.id;
+            pedido.estadoPago = EstadoPago.Aprobado;
+            pedido.PagosAsentados = [{
+              fechaHoraAprobacionRechazo: new Date().toISOString(),
+              numeroPedido: reference,
+              numeroComprobante: transaction.id,
+              estadoVerificacion: 'Aprobado',
+              formaPago: 'Wompi',
+              valorRegistrado: pedido.totalPedididoConDescuento || 0
+            }];
+
+            if (pedido.pagoInformation) {
+              pedido.pagoInformation.estado = 'Aprobado';
+              pedido.pagoInformation.fecha = new Date().toISOString();
+              pedido.pagoInformation.hora = new Date().toISOString();
+            }
+            
+            // Actualizar el pedido en el Observable
+            this.pedido$.next(pedido);
+            
+            resolve(true); // Pago exitoso
+          } else {
+            pedido.estadoPago = EstadoPago.Rechazado;
+            
+            // Actualizar el pedido en el Observable
+            this.pedido$.next(pedido);
+            
+            resolve(false); // Pago rechazado
+          }
+        }, (error) => {
+          console.error('Error en el widget de Wompi:', error);
+          reject(error);
+        });
+        
+      } catch (error) {
+        console.error('Error al inicializar el widget de Wompi:', error);
+        reject(error);
+      }
+    });
   }
   
   /**

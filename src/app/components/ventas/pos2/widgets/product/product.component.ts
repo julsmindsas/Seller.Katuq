@@ -19,7 +19,7 @@ export class ProductComponent implements OnInit {
   public searchQuery: string = '';
   public isBarcodeMode: boolean = false; // Nueva propiedad para el modo código de barras
   public imageLoaded: { [key: string]: boolean } = {};
-  public defaultImage: string = 'assets/images/placeholder.png'; // Añade una imagen por defecto
+  public defaultImage: string = 'assets/images/placeholders/product-not-found.svg'; // Añade una imagen por defecto
   public filter = {
     search: '',
   };
