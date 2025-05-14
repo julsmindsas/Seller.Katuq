@@ -1,120 +1,621 @@
 .cash-closing-container {
-  padding: 20px;
-  
-  .card {
-    max-width: 600px;
-    margin: 0 auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    
+  padding: 1rem;
+
+  .main-card {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 10px;
+    background-color: #fff;
+    overflow: hidden;
+
     .card-header {
       background-color: #f8f9fa;
-      padding: 15px 20px;
-      
+      border-bottom: 1px solid #e9ecef;
+      padding: 1rem 1.5rem;
+
       h4 {
         margin: 0;
-        color: #333;
+        color: #2c3e50;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        
+        i {
+          color: #3498db;
+        }
+      }
+
+      .header-actions {
+        .btn {
+          font-weight: 500;
+          
+          i {
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+  }
+
+  // Pasos del cierre
+  .steps-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      text-align: center;
+      position: relative;
+      
+      .step-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+      }
+      
+      .step-content {
+        h6 {
+          margin: 0;
+          color: #6c757d;
+          font-weight: 600;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+        }
+        
+        p {
+          margin: 5px 0 0;
+          font-size: 0.8rem;
+          color: #adb5bd;
+          transition: all 0.3s ease;
+        }
+      }
+      
+      &.active {
+        .step-number {
+          background-color: #3498db;
+          color: white;
+        }
+        
+        .step-content {
+          h6 {
+            color: #3498db;
+          }
+          
+          p {
+            color: #6c757d;
+          }
+        }
+      }
+      
+      &.completed {
+        .step-number {
+          background-color: #2ecc71;
+          color: white;
+        }
+        
+        .step-content {
+          h6 {
+            color: #2ecc71;
+          }
+        }
+      }
+      
+      &.disabled {
+        .step-number {
+          background-color: #f8f9fa;
+          color: #ced4da;
+        }
+        
+        .step-content {
+          h6 {
+            color: #ced4da;
+          }
+          
+          p {
+            color: #e9ecef;
+          }
+        }
       }
     }
     
-    .card-body {
-      padding: 20px;
+    .step-connector {
+      height: 2px;
+      background-color: #e9ecef;
+      flex: 1;
+      margin: 0 10px;
+      margin-bottom: 20px;
+    }
+  }
+
+  // Paneles
+  .panel-container {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: white;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    .panel-header {
+      background-color: #f8f9fa;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e9ecef;
       
-      .form-group {
-        margin-bottom: 20px;
-        
-        label {
-          font-weight: 500;
-          margin-bottom: 8px;
-          display: block;
-        }
-        
-        input, textarea {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          
-          &:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-          }
-        }
-      }
-
-      .informe-preview {
-        margin: 20px 0;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-
-        h5 {
-          margin-bottom: 15px;
-          color: #333;
-          font-weight: 600;
-        }
-
-        .informe-item {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 10px;
-          padding: 5px 0;
-          border-bottom: 1px solid #eee;
-
-          &.total {
-            font-weight: 600;
-            border-bottom: 2px solid #ddd;
-            margin-top: 10px;
-            padding-top: 10px;
-          }
-
-          &.diferencia {
-            font-weight: 600;
-            margin-top: 10px;
-            padding-top: 10px;
-
-            &.positivo {
-              color: #28a745;
-            }
-
-            &.negativo {
-              color: #dc3545;
-            }
-          }
-        }
-      }
-      
-      .button-group {
+      h5 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1rem;
         display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
+        align-items: center;
         
-        button {
-          padding: 8px 20px;
-          border-radius: 4px;
-          font-weight: 500;
+        i {
+          color: #3498db;
+        }
+      }
+    }
+    
+    .panel-body {
+      padding: 1.25rem;
+    }
+  }
+
+  // Summary Cards
+  .summary-card {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    height: 100%;
+    
+    h6 {
+      color: #2c3e50;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      
+      i {
+        color: #3498db;
+      }
+    }
+    
+    .card-divider {
+      height: 1px;
+      background-color: #e9ecef;
+      margin-bottom: 0.75rem;
+    }
+    
+    .informe-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      span {
+        color: #6c757d;
+      }
+      
+      strong {
+        color: #2c3e50;
+      }
+      
+      &.total {
+        font-weight: 600;
+        color: #2c3e50;
+        border-top: 2px solid #e9ecef;
+        border-bottom: none;
+        padding-top: 0.75rem;
+        margin-top: 0.5rem;
+        
+        span, strong {
+          color: #2c3e50;
+          font-size: 1.05rem;
+        }
+      }
+      
+      &.diferencia {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e9ecef;
+        
+        &.positivo {
+          strong {
+            color: #2ecc71;
+          }
+        }
+        
+        &.negativo {
+          strong {
+            color: #e74c3c;
+          }
+        }
+      }
+    }
+  }
+
+  // Productos
+  .productos-section {
+    h6 {
+      display: flex;
+      align-items: center;
+      color: #2c3e50;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #e9ecef;
+      
+      i {
+        color: #3498db;
+      }
+    }
+    
+    .table-responsive {
+      margin-bottom: 1rem;
+      
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.9rem;
+        
+        th {
+          background-color: #f8f9fa;
+          color: #2c3e50;
+          font-weight: 600;
+          border-bottom: 2px solid #e9ecef;
+        }
+        
+        td, th {
+          padding: 0.6rem;
+          vertical-align: middle;
+        }
+        
+        tbody tr {
+          &:hover {
+            background-color: #f8f9fa;
+          }
+        }
+        
+        tfoot tr {
+          background-color: #f8f9fa;
+          font-weight: 600;
           
-          &.btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
+          td {
+            border-top: 2px solid #e9ecef;
+          }
+        }
+      }
+    }
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+
+  .input-group {
+    .input-group-text {
+      background-color: #f8f9fa;
+      border-right: none;
+      color: #6c757d;
+    }
+
+    .form-control {
+      border-left: none;
+      
+      &:focus {
+        box-shadow: none;
+        border-color: #ced4da;
+      }
+    }
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+
+    .btn {
+      padding: 0.5rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+// Estilos para la impresión
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+  
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    font-family: Arial, sans-serif;
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  body * {
+    visibility: hidden;
+    color: black !important;
+  }
+  
+  #imprimible, #imprimible * {
+    visibility: visible;
+  }
+  
+  #imprimible {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 !important;
+    margin: 0 !important;
+    
+    // Ocultar elementos no necesarios para impresión
+    button, .steps-container, .panel-header, form > .button-group, 
+    .btn, .header-actions, .cierre-form, i {
+      display: none !important;
+    }
+    
+    // Encabezado de impresión
+    .print-header {
+      display: block !important;
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      
+      h3 {
+        font-size: 24pt;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      
+      p {
+        font-size: 12pt;
+        margin: 4px 0;
+      }
+    }
+    
+    // Contenido principal
+    .panel-container {
+      border: none !important;
+      margin-bottom: 30px !important;
+      box-shadow: none !important;
+      
+      .panel-body {
+        padding: 0 !important;
+      }
+    }
+    
+    // Formato de secciones
+    .row {
+      display: block !important;
+      page-break-inside: avoid;
+      margin-bottom: 30px;
+    }
+    
+    .col-md-5, .col-md-7 {
+      width: 100% !important;
+      max-width: 100% !important;
+      flex: none !important;
+      margin-bottom: 20px;
+    }
+    
+    // Tarjetas de resumen
+    .summary-card {
+      background-color: transparent !important;
+      padding: 0 !important;
+      margin-bottom: 30px;
+      border: 1px solid #000;
+      padding: 15px !important;
+      
+      h6 {
+        font-size: 16pt;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #000;
+        padding-bottom: 5px;
+        text-transform: uppercase;
+        
+        &::before {
+          content: '■ ';
+        }
+      }
+      
+      .card-divider {
+        display: none;
+      }
+      
+      .informe-item {
+        margin-bottom: 8px;
+        padding: 5px 0;
+        border-bottom: 1px dotted #000 !important;
+        font-size: 12pt;
+        display: flex;
+        justify-content: space-between;
+        
+        &.total {
+          margin-top: 15px;
+          border-top: 2px solid #000 !important;
+          border-bottom: none !important;
+          padding-top: 10px;
+          font-weight: bold;
+          font-size: 14pt;
+        }
+        
+        &.diferencia {
+          font-weight: bold;
+          border-top: 1px solid #000 !important;
+          margin-top: 10px;
+          padding-top: 10px;
+          
+          &.positivo strong, &.negativo strong {
+            color: black !important;
+          }
+        }
+        
+        span, strong {
+          color: black !important;
+        }
+      }
+    }
+    
+    // Sección de productos
+    .productos-section {
+      margin-top: 30px;
+      page-break-before: always;
+      
+      h6 {
+        font-size: 16pt;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        border-bottom: 2px solid #000;
+        padding-bottom: 5px;
+        
+        &::before {
+          content: '■ ';
+        }
+      }
+      
+      .table-responsive {
+        overflow: visible !important;
+        margin-bottom: 20px;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        page-break-inside: auto;
+        
+        th, td {
+          border: 1px solid #000 !important;
+          padding: 8px !important;
+          text-align: left;
+          font-size: 11pt;
+        }
+        
+        th {
+          background-color: #f0f0f0 !important;
+          color: black !important;
+          font-weight: bold;
+          text-transform: uppercase;
+        }
+        
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+        
+        thead {
+          display: table-header-group;
+        }
+        
+        tfoot {
+          display: table-footer-group;
+          
+          tr {
+            background-color: #f0f0f0 !important;
+            font-weight: bold;
             
-            &:hover {
-              background-color: #0069d9;
-              border-color: #0062cc;
+            td {
+              border-top: 2px solid #000 !important;
             }
           }
+        }
+        
+        tbody {
+          tr:nth-child(even) {
+            background-color: #f9f9f9 !important;
+          }
+        }
+      }
+    }
+    
+    // Pie de página
+    &::after {
+      content: "DOCUMENTO DE CIERRE DE CAJA • PÁGINA " counter(page) " DE " counter(pages);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 9pt;
+      padding: 10px 0;
+      border-top: 1px solid #000;
+    }
+    
+    // Firmas y observaciones
+    .print-footer {
+      display: block !important;
+      margin-top: 50px;
+      
+      .print-signatures {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 80px;
+        margin-bottom: 50px;
+        
+        .signature-line {
+          text-align: center;
+          width: 40%;
           
-          &.btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
+          p {
+            margin: 0;
             
-            &:hover {
-              background-color: #5a6268;
-              border-color: #545b62;
+            &:first-child {
+              margin-bottom: 5px;
+            }
+            
+            &:last-child {
+              font-weight: bold;
+              font-size: 11pt;
             }
           }
+        }
+      }
+      
+      .print-notes {
+        margin-top: 30px;
+        border-top: 1px solid #000;
+        padding-top: 10px;
+        
+        p {
+          font-size: 11pt;
+          margin: 0;
+          white-space: pre-line;
         }
       }
     }

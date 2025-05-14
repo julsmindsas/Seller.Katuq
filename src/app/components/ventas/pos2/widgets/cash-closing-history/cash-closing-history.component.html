@@ -1,16 +1,62 @@
 <div class="cash-closing-history">
-  <div class="modal-header">
+  <div class="modal-header d-print-none">
     <h4 class="modal-title">Historial de Cierres de Caja</h4>
-    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss()">
-      <span aria-hidden="true">&times;</span>
-    </button>
+    <div>
+      <button type="button" class="btn btn-outline-primary me-2" (click)="imprimirHistorial()">
+        <i class="bi bi-printer"></i> Imprimir
+      </button>
+      <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+    </div>
+  </div>
+
+  <!-- Selector de rango de fechas -->
+  <div class="fecha-selector d-print-none p-3 bg-light rounded mb-3">
+    <form [formGroup]="filtroForm" class="row align-items-end">
+      <div class="col-md-5 mb-2 mb-md-0">
+        <label for="fechaInicio" class="form-label">Fecha Inicio</label>
+        <div class="input-group">
+          <input 
+            id="fechaInicio" 
+            class="form-control" 
+            placeholder="yyyy-mm-dd"
+            formControlName="fechaInicio"
+            ngbDatepicker 
+            #dpInicio="ngbDatepicker"
+          >
+          <button class="btn btn-outline-secondary calendar-icon" type="button" (click)="dpInicio.toggle()">
+            <i class="bi bi-calendar"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-md-5 mb-2 mb-md-0">
+        <label for="fechaFin" class="form-label">Fecha Fin</label>
+        <div class="input-group">
+          <input 
+            id="fechaFin" 
+            class="form-control" 
+            placeholder="yyyy-mm-dd"
+            formControlName="fechaFin"
+            ngbDatepicker 
+            #dpFin="ngbDatepicker"
+          >
+          <button class="btn btn-outline-secondary calendar-icon" type="button" (click)="dpFin.toggle()">
+            <i class="bi bi-calendar"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-md-2 mb-2 mb-md-0 text-end">
+        <button type="button" class="btn btn-primary w-100" (click)="buscarHistorial()">
+          <i class="bi bi-search"></i> Buscar
+        </button>
+      </div>
+    </form>
   </div>
 
   <div class="modal-body" *ngIf="!loading">
-    <div *ngIf="historyData" class="history-content">
+    <div *ngIf="historyData" class="history-content print-section">
       <!-- Encabezado con Rango de Fechas y Compañía -->
       <div class="header-section mb-4 p-3 bg-light rounded">
-        <h2 class="text-center text-primary mb-2">{{ historyData.company }}</h2>
+        <h2 class="text-center company-title">{{ historyData.company }}</h2>
         <p class="text-center text-muted">
           <strong>Periodo del Informe:</strong> {{ formatShortDate(historyData.fechaInicio) }} - {{ formatShortDate(historyData.fechaFin) }}
         </p>
@@ -22,36 +68,36 @@
           <h3 class="mb-0">Resumen General del Periodo</h3>
         </div>
         <div class="card-body">
-          <div class="row text-center">
-            <div class="col-md-4 mb-3">
-              <span class="d-block text-muted">Total Días</span>
-              <strong class="d-block fs-5">{{ formatNumber(historyData.resumenGeneral.totalDias) }}</strong>
+          <div class="row text-center stats-container">
+            <div class="col-md-4 mb-3 stat-item">
+              <span class="d-block text-muted stat-label">Total Días</span>
+              <strong class="d-block fs-5 stat-value">{{ formatNumber(historyData.resumenGeneral.totalDias) }}</strong>
             </div>
-            <div class="col-md-4 mb-3">
-              <span class="d-block text-muted">Total Ventas</span>
-              <strong class="d-block fs-5 text-success">{{ formatCurrency(historyData.resumenGeneral.totalVentas) }}</strong>
+            <div class="col-md-4 mb-3 stat-item">
+              <span class="d-block text-muted stat-label">Total Ventas</span>
+              <strong class="d-block fs-5 text-success stat-value">{{ formatCurrency(historyData.resumenGeneral.totalVentas) }}</strong>
             </div>
-            <div class="col-md-4 mb-3">
-              <span class="d-block text-muted">Promedio Diario</span>
-              <strong class="d-block fs-5">{{ formatCurrency(historyData.resumenGeneral.promedioDiario) }}</strong>
-            </div>
-          </div>
-          <hr>
-          <div class="row text-center">
-            <div class="col-md-4 mb-3">
-              <span class="d-block text-muted">Total Efectivo</span>
-              <strong class="d-block fs-5">{{ formatCurrency(historyData.resumenGeneral.totalEfectivo) }}</strong>
-            </div>
-            <div class="col-md-4 mb-3">
-              <span class="d-block text-muted">Total Tarjeta</span>
-              <strong class="d-block fs-5">{{ formatCurrency(historyData.resumenGeneral.totalTarjeta) }}</strong>
-            </div>
-            <div class="col-md-4 mb-3">
-              <span class="d-block text-muted">Total Transferencia</span>
-              <strong class="d-block fs-5">{{ formatCurrency(historyData.resumenGeneral.totalTransferencia) }}</strong>
+            <div class="col-md-4 mb-3 stat-item">
+              <span class="d-block text-muted stat-label">Promedio Diario</span>
+              <strong class="d-block fs-5 stat-value">{{ formatCurrency(historyData.resumenGeneral.promedioDiario) }}</strong>
             </div>
           </div>
-          <div class="mt-2">
+          <hr class="divider">
+          
+          <!-- Formas de pago dinámicas -->
+          <div class="row text-center payment-methods">
+            <div class="col-md-3 col-6 mb-3" *ngFor="let formaPago of getFormasPagoArray(historyData.resumenGeneral.formasPago)">
+              <div class="payment-method">
+                <span class="d-block text-muted">
+                  <i [class]="'bi ' + formaPago.icono + ' me-2 ' + formaPago.clase"></i>
+                  {{ formaPago.nombre }}
+                </span>
+                <strong class="d-block fs-5">{{ formatCurrency(formaPago.total) }}</strong>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-3 users-section">
             <span class="text-muted">Usuarios que realizaron cierre:</span>
             <strong class="ms-2">{{ historyData.resumenGeneral.usuariosCierre.join(', ') || 'Ninguno' }}</strong>
           </div>
@@ -59,81 +105,181 @@
       </div>
 
       <!-- Historial Detallado por Día/Cierre -->
-      <h3 class="mb-3">Historial de Cierres</h3>
+      <h3 class="section-title mb-3">Historial de Cierres</h3>
       <div *ngIf="historyData.historial && historyData.historial.length > 0; else noHistory">
-        <div class="accordion" id="historyAccordion">
-          <div class="accordion-item" *ngFor="let item of historyData.historial; let i = index">
-            <h2 class="accordion-header" [id]="'heading' + i">
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" [attr.data-bs-target]="'#collapse' + i" aria-expanded="true" [attr.aria-controls]="'collapse' + i">
-                <strong>{{ formatShortDate(item.fecha) }}</strong> - {{ item.usuarioCierre }} - Ventas: {{ formatCurrency(item.totalVentas) }}
-              </button>
-            </h2>
-            <div [id]="'collapse' + i" class="accordion-collapse collapse" [attr.aria-labelledby]="'heading' + i" data-bs-parent="#historyAccordion">
-              <div class="accordion-body">
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <p><strong>Efectivo Inicial:</strong> {{ formatCurrency(item.efectivoInicial) }}</p>
-                    <p><strong>Efectivo Final:</strong> {{ formatCurrency(item.efectivoFinal) }}</p>
+        <div class="closing-list">
+          <div class="closing-item mb-4" *ngFor="let item of historyData.historial; let i = index">
+            <div class="card border-0 shadow-sm">
+              <!-- Encabezado del cierre -->
+              <div class="card-header closing-header">
+                <div class="row align-items-center">
+                  <div class="col-md-4">
+                    <div class="closing-date">
+                      <i class="bi bi-calendar-check me-2"></i>
+                      <span>{{ formatShortDate(item.fecha) }}</span>
+                    </div>
                   </div>
-                  <div class="col-md-6">
-                    <p><strong>Observaciones:</strong> {{ item.observaciones || 'Ninguna' }}</p>
-                     <p><strong>Informe:</strong> {{ item.informe || 'No disponible' }}</p> <!-- Si existe -->
+                  <div class="col-md-4 text-center">
+                    <div class="closing-user">
+                      <i class="bi bi-person me-2"></i>
+                      <span>{{ item.usuarioCierre }}</span>
+                    </div>
+                  </div>
+                  <div class="col-md-4 text-end">
+                    <div class="closing-total text-success">
+                      <span>Total: {{ formatCurrency(item.totalVentas) }}</span>
+                      <i class="bi bi-graph-up-arrow ms-2"></i>
+                    </div>
                   </div>
                 </div>
-                <h5>Detalle de Ventas del Cierre</h5>
-                <div class="row text-center mb-3">
-                   <div class="col-4"><strong>Efectivo:</strong> {{ formatCurrency(item.totalEfectivo) }}</div>
-                   <div class="col-4"><strong>Tarjeta:</strong> {{ formatCurrency(item.totalTarjeta) }}</div>
-                   <div class="col-4"><strong>Transferencia:</strong> {{ formatCurrency(item.totalTransferencia) }}</div>
+              </div>
+              
+              <!-- Cuerpo del cierre -->
+              <div class="card-body closing-body">
+                <!-- Información General -->
+                <div class="card mb-3 general-info-card">
+                  <div class="card-header bg-light">
+                    <h5 class="mb-0 section-subtitle">Información General</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <table class="table table-info-detail mb-0">
+                          <tbody>
+                            <tr>
+                              <th scope="row">Efectivo Inicial</th>
+                              <td>{{ formatCurrency(item.efectivoInicial) }}</td>
+                            </tr>
+                            <tr>
+                              <th scope="row">Efectivo Final</th>
+                              <td>{{ formatCurrency(item.efectivoFinal) }}</td>
+                            </tr>
+                            <tr>
+                              <th scope="row">Diferencia</th>
+                              <td>{{ formatCurrency(item.efectivoFinal - item.efectivoInicial) }}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="observation-box p-2 h-100">
+                          <h6 class="mb-2"><i class="bi bi-chat-left-text me-2"></i>Observaciones:</h6>
+                          <p class="mb-0">{{ item.observaciones || 'Sin observaciones registradas' }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                 <div class="row text-center mb-3">
-                   <div class="col-4"><strong>Pedidos:</strong> {{ formatNumber(item.cantidadPedidos) }}</div>
-                   <div class="col-4"><strong>Productos:</strong> {{ formatNumber(item.cantidadProductos) }}</div>
-                   <div class="col-4"><strong>Descuentos:</strong> {{ formatCurrency(item.totalDescuentos) }}</div>
+                
+                <!-- Resumen de Ventas -->
+                <div class="card mb-3 sales-summary-card">
+                  <div class="card-header bg-light">
+                    <h5 class="mb-0 section-subtitle">Resumen de Ventas</h5>
+                  </div>
+                  <div class="card-body">
+                    <!-- Formas de pago dinámicas -->
+                    <div class="row text-center payment-totals">
+                      <div class="col-md-3 col-6 mb-3" *ngFor="let formaPago of getFormasPagoArray(item.formasPago)">
+                        <div class="payment-total-item">
+                          <i [class]="'bi ' + formaPago.icono + ' me-2 ' + formaPago.clase"></i>
+                          <span class="d-block payment-method-label">{{ formaPago.nombre }}</span>
+                          <strong class="d-block payment-amount">{{ formatCurrency(formaPago.total) }}</strong>
+                        </div>
+                      </div>
+                      <div class="col-md-3 col-6 mb-3">
+                        <div class="payment-total-item">
+                          <i class="bi bi-tags me-2 text-danger"></i>
+                          <span class="d-block payment-method-label">Descuentos</span>
+                          <strong class="d-block payment-amount">{{ formatCurrency(item.totalDescuentos) }}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="row mt-3 counts-row">
+                      <div class="col-md-4">
+                        <div class="count-box">
+                          <span class="count-label">Total Pedidos</span>
+                          <span class="count-value">{{ formatNumber(item.cantidadPedidos) }}</span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="count-box">
+                          <span class="count-label">Total Productos</span>
+                          <span class="count-value">{{ formatNumber(item.cantidadProductos) }}</span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="count-box">
+                          <span class="count-label">Total Impuestos</span>
+                          <span class="count-value">{{ formatCurrency(item.totalImpuestos) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <h5>Pedidos Incluidos en este Cierre ({{ item.pedidos.length }})</h5>
-                <div *ngIf="item.pedidos && item.pedidos.length > 0; else noPedidos" class="table-responsive">
-                  <table class="table table-sm table-striped table-hover">
-                    <thead class="table-light">
-                      <tr>
-                        <th># Pedido</th>
-                        <th>Forma Pago</th>
-                        <th>Total</th>
-                        <th>Fecha Creación</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let pedido of item.pedidos">
-                        <td>{{ pedido.nroPedido }}</td>
-                        <td>{{ pedido.formaDePago }}</td>
-                        <td>{{ formatCurrency(pedido.total) }}</td>
-                        <td>{{ formatDate(pedido.fechaCreacion) }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                
+                <!-- Pedidos del Cierre -->
+                <div class="card orders-card">
+                  <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 section-subtitle">Pedidos del Cierre</h5>
+                    <span class="badge bg-primary rounded-pill">{{ item.pedidos?.length || 0 }}</span>
+                  </div>
+                  <div class="card-body">
+                    <div *ngIf="item.pedidos && item.pedidos.length > 0; else noPedidos" class="table-responsive orders-table">
+                      <table class="table table-sm table-striped table-hover">
+                        <thead class="table-light">
+                          <tr>
+                            <th># Pedido</th>
+                            <th>Forma Pago</th>
+                            <th>Total</th>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let pedido of item.pedidos">
+                            <td><span class="badge bg-light text-dark">{{ pedido.nroPedido }}</span></td>
+                            <td>
+                              <span [ngClass]="getClaseFormaPago(pedido.formaDePago)">
+                                <i [ngClass]="'bi ' + getIconoFormaPago(pedido.formaDePago)" class="me-1"></i>
+                                {{ capitalizarPrimeraLetra(pedido.formaDePago) }}
+                              </span>
+                            </td>
+                            <td>{{ formatCurrency(pedido.total) }}</td>
+                            <td>{{ formatDate(pedido.fechaCreacion) }}</td>
+                            <td>{{ pedido.usuario }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <ng-template #noPedidos>
+                      <div class="alert alert-info no-orders text-center">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No hay pedidos registrados para este cierre.
+                      </div>
+                    </ng-template>
+                  </div>
                 </div>
-                <ng-template #noPedidos>
-                  <p class="text-muted fst-italic">No hay pedidos registrados para este cierre.</p>
-                </ng-template>
               </div>
             </div>
           </div>
         </div>
       </div>
       <ng-template #noHistory>
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-info no-data" role="alert">
+          <i class="bi bi-exclamation-circle me-2"></i>
           No se encontraron registros de cierres de caja para el periodo seleccionado.
         </div>
       </ng-template>
 
     </div>
-    <div *ngIf="!historyData && !loading" class="alert alert-warning" role="alert">
+    <div *ngIf="!historyData && !loading" class="alert alert-warning no-data" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
       No hay datos disponibles para mostrar.
     </div>
   </div>
 
-  <div class="modal-footer">
+  <div class="modal-footer d-print-none">
     <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cerrar</button>
   </div>
 </div>

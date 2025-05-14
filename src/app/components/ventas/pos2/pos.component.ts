@@ -44,7 +44,7 @@ export class PosComponent implements AfterViewInit { // Implementar AfterViewIni
   openCashClosingModal() {
     this.modal.open(CashClosingComponent, {
       centered: true,
-      size: 'lg',
+      size: 'xl',
       backdrop: 'static',
       keyboard: false
     });

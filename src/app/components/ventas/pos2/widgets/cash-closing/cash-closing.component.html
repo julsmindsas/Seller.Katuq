@@ -1,57 +1,203 @@
 <div class="cash-closing-container">
-  <div class="card">
-    <div class="card-header">
-      <h4>Cierre de Caja</h4>
+  <div class="card main-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h4><i class="bi bi-cash-stack me-2"></i>Cierre de Caja</h4>
+      <div class="header-actions" *ngIf="informe.totalVentas > 0">
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="imprimir()">
+          <i class="bi bi-printer me-1"></i> Imprimir
+        </button>
+      </div>
     </div>
     <div class="card-body">
-      <form (ngSubmit)="calcularInforme()">
-        <div class="form-group">
-          <label for="fechaCierre">Fecha de Cierre</label>
-          <input type="date" class="form-control" id="fechaCierre" [(ngModel)]="fechaCierre" name="fechaCierre">
+      <!-- Pasos del cierre -->
+      <div class="steps-container mb-4">
+        <div class="step" [ngClass]="{'active': !mostrarBotonCompletar, 'completed': mostrarBotonCompletar}">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h6>Seleccionar período</h6>
+            <p>Elija el rango de fechas para el cierre</p>
+          </div>
         </div>
-        
-        <div class="form-group">
-          <label for="efectivoInicial">Efectivo Inicial</label>
-          <input type="number" class="form-control" id="efectivoInicial" [(ngModel)]="efectivoInicial" name="efectivoInicial">
+        <div class="step-connector"></div>
+        <div class="step" [ngClass]="{'active': mostrarBotonCompletar && !cierreFinalizado, 'disabled': !mostrarBotonCompletar, 'completed': cierreFinalizado}">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h6>Completar datos</h6>
+            <p>Ingrese saldos y observaciones</p>
+          </div>
         </div>
-        
-        <div class="form-group">
-          <label for="efectivoFinal">Efectivo Final</label>
-          <input type="number" class="form-control" id="efectivoFinal" [(ngModel)]="efectivoFinal" name="efectivoFinal" required>
+        <div class="step-connector"></div>
+        <div class="step" [ngClass]="{'disabled': !cierreFinalizado, 'active': cierreFinalizado}">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h6>Finalizar</h6>
+            <p>Cierre completado</p>
+          </div>
         </div>
-        
-        <div class="form-group">
-          <label for="observaciones">Observaciones</label>
-          <textarea class="form-control" id="observaciones" [(ngModel)]="observaciones" name="observaciones" rows="3"></textarea>
+      </div>
+
+      <form (ngSubmit)="calcularInforme()" id="cierreForm">
+        <!-- Panel de selección de fechas -->
+        <div class="panel-container mb-4">
+          <div class="panel-header">
+            <h5><i class="bi bi-calendar-range me-2"></i>Período de Cierre</h5>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="fechaCierre" class="form-label">Fecha Inicio</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+                    <input type="date" class="form-control" id="fechaCierre" [(ngModel)]="fechaCierre" name="fechaCierre">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="fechaFin" class="form-label">Fecha Fin</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+                    <input type="date" class="form-control" id="fechaFin" [(ngModel)]="fechaFin" name="fechaFin">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="button-action text-end mt-2" *ngIf="!mostrarBotonCompletar">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-calculator me-2"></i>Calcular Resumen
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div class="informe-preview" *ngIf="informe.totalVentas > 0">
-          <h5>Resumen de Ventas</h5>
-          <div class="informe-item">
-            <span>Ventas en Efectivo:</span>
-            <strong>${{informe.ventasEfectivo | number:'1.2-2'}}</strong>
+        <!-- Resumen de ventas -->
+        <div class="panel-container mb-4" *ngIf="informe.totalVentas > 0" id="imprimible">
+          <!-- Encabezado para impresión -->
+          <div class="print-header d-none">
+            <h3>CIERRE DE CAJA</h3>
+            <p>Empresa: <strong>{{empresa}}</strong></p>
+            <p>Período: <strong>{{fechaFormateada(fechaCierre)}} al {{fechaFormateada(fechaFin)}}</strong></p>
+            <p>Fecha de emisión: <strong>{{fechaActualFormateada()}}</strong></p>
           </div>
-          <div class="informe-item">
-            <span>Ventas con Tarjeta:</span>
-            <strong>${{informe.ventasTarjeta | number:'1.2-2'}}</strong>
+          
+          <div class="panel-header">
+            <h5><i class="bi bi-graph-up me-2"></i>Resumen de Ventas</h5>
           </div>
-          <div class="informe-item">
-            <span>Ventas E-Wallet:</span>
-            <strong>${{informe.ventasEwallet | number:'1.2-2'}}</strong>
-          </div>
-          <div class="informe-item total">
-            <span>Total Ventas:</span>
-            <strong>${{informe.totalVentas | number:'1.2-2'}}</strong>
-          </div>
-          <div class="informe-item diferencia" [ngClass]="{'positivo': informe.diferencia >= 0, 'negativo': informe.diferencia < 0}">
-            <span>Diferencia en Efectivo:</span>
-            <strong>${{informe.diferencia | number:'1.2-2'}}</strong>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-5">
+                <div class="summary-card">
+                  <h6><i class="bi bi-credit-card me-2"></i>Formas de pago</h6>
+                  <div class="card-divider"></div>
+                  <div class="informe-item" *ngFor="let formaPago of formasPago">
+                    <span>{{formaPago.nombre}}:</span>
+                    <strong>${{formaPago.total | number:'1.2-2'}}</strong>
+                  </div>
+                  <div class="informe-item total">
+                    <span>Total Ventas:</span>
+                    <strong>${{informe.totalVentas | number:'1.2-2'}}</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-7" *ngIf="mostrarBotonCompletar">
+                <div class="summary-card">
+                  <h6><i class="bi bi-cash me-2"></i>Datos del Cierre</h6>
+                  <div class="card-divider"></div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group mb-3">
+                        <label class="form-label">Saldo Inicial</label>
+                        <div class="input-group">
+                          <span class="input-group-text">$</span>
+                          <input type="number" class="form-control" [(ngModel)]="efectivoInicial" name="efectivoInicial" step="0.01">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group mb-3">
+                        <label class="form-label">Saldo Final</label>
+                        <div class="input-group">
+                          <span class="input-group-text">$</span>
+                          <input type="number" class="form-control" [(ngModel)]="efectivoFinal" name="efectivoFinal" step="0.01" required>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group mb-3">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-control" [(ngModel)]="observaciones" name="observaciones" rows="3" placeholder="Ingrese observaciones relevantes del cierre..."></textarea>
+                  </div>
+                  <div class="informe-item diferencia" [ngClass]="{'positivo': informe.diferencia >= 0, 'negativo': informe.diferencia < 0}" *ngIf="efectivoFinal">
+                    <span>Diferencia en Efectivo:</span>
+                    <strong>${{calcularDiferencia() | number:'1.2-2'}}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="productos-section mt-4">
+              <h6><i class="bi bi-box-seam me-2"></i>Productos Vendidos ({{informe.totalProductos}})</h6>
+              <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th class="text-center">Cantidad</th>
+                      <th class="text-end">Precio Unit.</th>
+                      <th class="text-end">Total</th>
+                      <th>Pedido</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let producto of productosVendidos">
+                      <td>{{producto.nombre}}</td>
+                      <td class="text-center">{{producto.cantidad}}</td>
+                      <td class="text-end">${{producto.precioUnitario | number:'1.2-2'}}</td>
+                      <td class="text-end">${{producto.total | number:'1.2-2'}}</td>
+                      <td>{{producto.numeroPedido}}</td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="1"><strong>Total Productos:</strong></td>
+                      <td class="text-center"><strong>{{informe.totalProductos}}</strong></td>
+                      <td colspan="1"></td>
+                      <td class="text-end"><strong>${{calcularTotalProductos() | number:'1.2-2'}}</strong></td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Información adicional para impresión -->
+            <div class="print-footer d-none">
+              <div class="print-signatures">
+                <div class="signature-line">
+                  <p>__________________________________</p>
+                  <p>Responsable de Caja</p>
+                </div>
+                <div class="signature-line">
+                  <p>__________________________________</p>
+                  <p>Supervisor</p>
+                </div>
+              </div>
+              <div class="print-notes">
+                <p><strong>Observaciones:</strong> {{observaciones || 'Sin observaciones'}}</p>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div class="button-group">
-          <button type="button" class="btn btn-secondary" (click)="modal.dismissAll()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Realizar Cierre</button>
+        <div class="button-group mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="modal.dismissAll()">
+            <i class="bi bi-x-circle me-2"></i>Cancelar
+          </button>
+          <button type="button" class="btn btn-success" *ngIf="mostrarBotonCompletar" (click)="completarCierre()">
+            <i class="bi bi-check-circle me-2"></i>Completar Cierre
+          </button>
         </div>
       </form>
     </div>
