@@ -1,9 +1,15 @@
+<!-- Overlay móvil para oscurecer la pantalla cuando el menú está abierto -->
+<div class="sidebar-overlay" [class.show]="!collapseMenu" (click)="sidebarToggle()"></div>
+
+<!-- Área de deslizamiento para mostrar menú en móviles -->
+<div class="sidebar-swipe-area" *ngIf="collapseMenu"></div>
+
 <!-- Page Sidebar Start-->
 <div class="logo-wrapper">
   <a routerLink='/welcome'>
-    <img class="img-fluid for-light sizeLogoKatuq" src="assets/images/logo/Katuq/katuq_dark.svg" alt="">
+    <img class="img-fluid for-light sizeLogoKatuq" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Logo Katuq">
     <!-- <img class="img-fluid for-dark" src="assets/images/logo/Katuq/katuq_completo_morado.svg" alt=""> -->
-    <img class="img-fluid for-dark sizeLogoKatuq" src="assets/images/logo/Katuq/katuq-dark.png" alt=""
+    <img class="img-fluid for-dark sizeLogoKatuq" src="assets/images/logo/Katuq/katuq-dark.png" alt="Logo Katuq Dark"
       style="padding-top:5px; max-width: 135px; margin:auto;">
 
     <p style="text-align: center; padding: 0px; margin: 0px; color:black">
@@ -12,33 +18,120 @@
     </p>
   </a>
 
-  <div class="back-btn" (click)="sidebarToggle()">
-    <i class="fa fa-angle-left"></i>
-  </div>
-  <div class="toggle-sidebar" (click)="sidebarToggle()">
-    <app-feather-icons [icon]="'grid'" class="status_toggle middle sidebar-toggle"></app-feather-icons>
+  <div class="sidebar-controls" role="group" aria-label="Controles del menú">
+    <div class="collapse-btn" (click)="sidebarToggle()" 
+         role="button" tabindex="0" 
+         [attr.aria-label]="collapseMenu ? 'Expandir menú' : 'Contraer menú'" 
+         [ngClass]="{'collapsed': collapseMenu}"
+         (keydown.enter)="sidebarToggle()" 
+         (keydown.space)="sidebarToggle()">
+      <i class="fa" [ngClass]="collapseMenu ? 'fa-angle-right' : 'fa-angle-left'"></i>
+      <span class="collapse-text" [class.visually-hidden]="collapseMenu">Contraer</span>
+    </div>
+    <div class="compact-btn" (click)="toggleCompactMode()" 
+         role="button" tabindex="0" 
+         [attr.aria-label]="isCompactMode ? 'Expandir menú' : 'Modo compacto'" 
+         (keydown.enter)="toggleCompactMode()" 
+         (keydown.space)="toggleCompactMode()">
+      <i class="fa" [ngClass]="isCompactMode ? 'fa-expand' : 'fa-compress'"></i>
+    </div>
   </div>
 </div>
 
 <div class="logo-icon-wrapper">
-  <a href="javascript:void(0)" title="">
-    <img class="img-fluid text-center" style="width: 50px; height: auto;" src="assets/images/logo/Katuq/katuq_logo_solo.svg" alt="">
+  <a href="javascript:void(0)" title="Katuq">
+    <img class="img-fluid text-center" style="width: 50px; height: auto;" src="assets/images/logo/Katuq/katuq_logo_solo.svg" alt="Logo Katuq">
   </a>
 </div>
 
-<nav class="sidebar-main">
+<!-- Búsqueda del menú -->
+<div class="sidebar-search" [class.active]="isSearchFocused" role="search">
+  <div class="search-container">
+    <div class="search-icon" aria-hidden="true">
+      <app-feather-icons [icon]="'search'"></app-feather-icons>
+    </div>
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm" 
+      (input)="searchMenu()" 
+      (focus)="isSearchFocused = true" 
+      (blur)="isSearchFocused = false"
+      placeholder="Buscar en el menú..." 
+      class="search-input"
+      aria-label="Buscar en el menú"
+    >
+    <div class="clear-icon" *ngIf="searchTerm" 
+         (click)="searchTerm = ''; searchResults = []; isSearchActive = false"
+         role="button" tabindex="0" 
+         aria-label="Limpiar búsqueda"
+         (keydown.enter)="searchTerm = ''; searchResults = []; isSearchActive = false" 
+         (keydown.space)="searchTerm = ''; searchResults = []; isSearchActive = false">
+      <app-feather-icons [icon]="'x'"></app-feather-icons>
+    </div>
+  </div>
+  
+  <!-- Resultados de búsqueda -->
+  <div class="search-results" *ngIf="isSearchActive && searchResults.length > 0" 
+       role="listbox" aria-label="Resultados de búsqueda">
+    <ul>
+      <li *ngFor="let result of searchResults; let i = index" role="option">
+        <a [routerLink]="!result.type ? null : [result.path]" 
+           (click)="isSearchActive = false; searchTerm = ''"
+           tabindex="0" 
+           [attr.aria-label]="'Ir a ' + (result.title | translate)">
+          <app-feather-icons [icon]="result.icon || 'list'" aria-hidden="true"></app-feather-icons>
+          <span>{{result.title | translate}}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="search-no-results" *ngIf="isSearchActive && searchResults.length === 0 && searchTerm" 
+       role="status" aria-live="polite">
+    <p>No se encontraron resultados para "{{searchTerm}}"</p>
+  </div>
+</div>
+
+<nav class="sidebar-main" [ngClass]="{'compact-mode': isCompactMode, 'show': !collapseMenu}" role="navigation" aria-label="Menú principal">
   <!-- <div class="left-arrow" id="left-arrow" [class.d-none]="leftArrowNone" (click)="scrollToLeft()">
     <app-feather-icons [icon]="'arrow-left'"></app-feather-icons>
   </div> -->
   <div id="sidebar-menu" style="margin-bottom: 150px;"
-    [ngStyle]="{ marginLeft : this.layout.config.settings.layout == 'Rome' || 'Singapore' || 'Barcelona' ? margin + 'px' : '0px'}">
+    [ngStyle]="{ marginLeft: this.layout.config.settings.layout == 'Rome' || 'Singapore' || 'Barcelona' ? margin + 'px' : '0px'}">
+    
+    <!-- Accesos rápidos / Favoritos -->
+    <div class="favorites-section" *ngIf="favoriteItems.length > 0" role="region" aria-labelledby="favorites-heading">
+      <div class="favorites-header" id="favorites-heading">
+        <app-feather-icons [icon]="'star'" class="star-icon" aria-hidden="true"></app-feather-icons>
+        <span>Favoritos</span>
+      </div>
+      <ul class="favorites-list">
+        <li *ngFor="let favorite of favoriteItems">
+          <a [routerLink]="!favorite.type ? null : [favorite.path]" class="favorite-item"
+             tabindex="0" [attr.aria-label]="'Acceso rápido a ' + (favorite.title | translate)">
+            <app-feather-icons [icon]="favorite.icon || 'bookmark'" aria-hidden="true"></app-feather-icons>
+            <span>{{favorite.title | translate}}</span>
+            <button class="remove-favorite" 
+                    (click)="toggleFavorite(favorite, $event)" 
+                    title="Quitar de favoritos"
+                    aria-label="Quitar de favoritos">
+              <app-feather-icons [icon]="'x'" aria-hidden="true"></app-feather-icons>
+            </button>
+          </a>
+        </li>
+      </ul>
+    </div>
+    
     <ul class="sidebar-links custom-scrollbar custom-sidebar-katuq"
-      style="margin-bottom: 10px; height: calc(100vh - 150px); padding-bottom: 50px;">
+      style="margin-bottom: 10px; height: calc(100vh - 200px); padding-bottom: 50px;">
       <li class="back-btn">
         <a href="javascript:void(0)">
-          <img class="img-fluid " src="assets/images/logo/Katuq/katuq-logo-solo (1).png" alt="">
+          <img class="img-fluid " src="assets/images/logo/Katuq/katuq-logo-solo (1).png" alt="Logo Katuq mini">
         </a>
-        <div class="mobile-back text-end" (click)="sidebarToggle()">
+        <div class="mobile-back text-end" (click)="sidebarToggle()" 
+             role="button" tabindex="0" 
+             aria-label="Volver"
+             (keydown.enter)="sidebarToggle()" 
+             (keydown.space)="sidebarToggle()">
           <span>Back</span>
           <i class="fa fa-angle-right ps-2" aria-hidden="true"></i>
         </div>
@@ -50,19 +143,31 @@
       <ng-container *ngFor="let section of sections; let sectionIndex = index">
 
         <!-- Renderizar el encabezado de la sección si tiene título -->
-        <li class="sidebar-main-title collapsible-header" *ngIf="section.isHeaderSection" (click)="toggleSection(section)">
+        <li class="sidebar-main-title collapsible-header" 
+            *ngIf="section.isHeaderSection" 
+            (click)="toggleSection(section)"
+            [ngClass]="{'expanded': !section.collapsed}"
+            role="button" 
+            tabindex="0"
+            [attr.aria-expanded]="!section.collapsed"
+            [attr.aria-controls]="'section-content-' + sectionIndex"
+            (keydown.enter)="toggleSection(section)" 
+            (keydown.space)="toggleSection(section)">
           <div>
             <h6 class="lan-1">
-              <app-feather-icons [icon]="getSectionIcon(section.title)" class="section-icon"></app-feather-icons>
-              <span class="sidebar-link sidebar-title collap" >{{ section.title | translate }}</span>
-              <i class="fa chevron" [ngClass]="section.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
+              <app-feather-icons [icon]="getSectionIcon(section.title)" class="section-icon" aria-hidden="true"></app-feather-icons>
+              <span class="sidebar-link sidebar-title collap" [class.visually-hidden]="isCompactMode">{{ section.title | translate }}</span>
+              <i class="fa chevron" [ngClass]="section.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'" [class.visually-hidden]="isCompactMode" aria-hidden="true"></i>
             </h6>
             <!-- <p class="lan-2">{{menuItem.headTitle2 | translate}}</p> -->
           </div>
         </li>
 
         <!-- Renderizar los items de la sección (si no está colapsada) -->
-        <ng-container *ngIf="!section.collapsed">
+        <ng-container *ngIf="!section.collapsed || isCompactMode" 
+                     [id]="'section-content-' + sectionIndex" 
+                     role="group" 
+                     [attr.aria-labelledby]="'section-heading-' + sectionIndex">
           <li class="sidebar-list" *ngFor="let menuItem of section.items" 
               [ngClass]="{active: menuItem.active}">
 
@@ -73,49 +178,129 @@
               *ngIf="menuItem.badgeType && menuItem.badgeValue">{{menuItem.badgeValue}}</label>
 
             <!-- Submenú -->
-            <a href="javascript:void(0)" class="sidebar-link sidebar-title" [class.link-nav]="!menuItem.children"
-              [ngClass]="{active: menuItem.active}" *ngIf="menuItem.type === 'sub'" (click)="toggletNavActive(menuItem)">
-              <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
-              <div class="according-menu">
-                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
+            <a href="javascript:void(0)" class="sidebar-link sidebar-title" 
+               [class.link-nav]="!menuItem.children"
+               [ngClass]="{active: menuItem.active}" 
+               *ngIf="menuItem.type === 'sub'" 
+               (click)="toggletNavActive(menuItem)"
+               role="button"
+               tabindex="0"
+               [attr.aria-expanded]="menuItem.active"
+               [attr.aria-controls]="'submenu-' + menuItem.title?.toLowerCase().replace(' ', '-')"
+               (keydown.enter)="toggletNavActive(menuItem)" 
+               (keydown.space)="toggletNavActive(menuItem)">
+              <app-feather-icons [icon]="menuItem.icon" aria-hidden="true"></app-feather-icons>
+              <span [class.visually-hidden]="isCompactMode">{{menuItem.title | translate}}</span>
+              
+              <!-- Tooltip para modo compacto -->
+              <div class="tooltip-sidebar" *ngIf="isCompactMode">{{menuItem.title | translate}}</div>
+              
+              <div class="according-menu" [class.visually-hidden]="isCompactMode">
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" aria-hidden="true"></i>
               </div>
+              <!-- Botón de favoritos -->
+              <button class="favorite-toggle" 
+                      (click)="toggleFavorite(menuItem, $event)" 
+                      [attr.aria-label]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+                      [attr.title]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+                      [class.active]="isFavorite(menuItem)">
+                <i class="fa fa-star" aria-hidden="true"></i>
+              </button>
             </a>
+            
             <!-- Link -->
-            <a [routerLink]="!menuItem.type ? null : [menuItem.path]" routerLinkActive="active"
-              class="sidebar-link sidebar-title" [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
-              *ngIf="menuItem.type === 'link'">
-              <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
-               <!-- No mostramos el ángulo aquí si es un enlace directo sin hijos -->
-               <div class="according-menu">
-                 <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
-               </div>
+            <a [routerLink]="!menuItem.type ? null : [menuItem.path]" 
+               routerLinkActive="active"
+               class="sidebar-link sidebar-title" 
+               [class.link-nav]="!menuItem.children" 
+               [ngClass]="{active: menuItem.active}"
+               *ngIf="menuItem.type === 'link'"
+               tabindex="0"
+               [attr.aria-label]="menuItem.title | translate">
+              <app-feather-icons [icon]="menuItem.icon" aria-hidden="true"></app-feather-icons>
+              <span [class.visually-hidden]="isCompactMode">{{menuItem.title | translate}}</span>
+              
+              <!-- Tooltip para modo compacto -->
+              <div class="tooltip-sidebar" *ngIf="isCompactMode">{{menuItem.title | translate}}</div>
+              
+              <div class="according-menu" [class.visually-hidden]="isCompactMode">
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" aria-hidden="true"></i>
+              </div>
+              <!-- Botón de favoritos -->
+              <button class="favorite-toggle" 
+                      (click)="toggleFavorite(menuItem, $event)" 
+                      [attr.aria-label]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+                      [attr.title]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+                      [class.active]="isFavorite(menuItem)">
+                <i class="fa fa-star" aria-hidden="true"></i>
+              </button>
             </a>
+            
             <!-- External Link -->
-            <a href="{{ !menuItem.type ? null : menuItem.path }}" class="sidebar-link sidebar-title"
-              [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
-              *ngIf="menuItem.type === 'extLink'">
-               <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
-                <div class="according-menu">
-                  <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
-                </div>
+            <a href="{{ !menuItem.type ? null : menuItem.path }}" 
+               class="sidebar-link sidebar-title"
+               [class.link-nav]="!menuItem.children" 
+               [ngClass]="{active: menuItem.active}"
+               *ngIf="menuItem.type === 'extLink'"
+               tabindex="0"
+               [attr.aria-label]="getExtLinkLabel(menuItem.title | translate)">
+              <app-feather-icons [icon]="menuItem.icon" aria-hidden="true"></app-feather-icons>
+              <span [class.visually-hidden]="isCompactMode">{{menuItem.title | translate}}</span>
+              
+              <!-- Tooltip para modo compacto -->
+              <div class="tooltip-sidebar" *ngIf="isCompactMode">{{menuItem.title | translate}}</div>
+              
+              <div class="according-menu" [class.visually-hidden]="isCompactMode">
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" aria-hidden="true"></i>
+              </div>
+              <!-- Botón de favoritos -->
+              <button class="favorite-toggle" 
+                      (click)="toggleFavorite(menuItem, $event)" 
+                      [attr.aria-label]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+                      [attr.title]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+                      [class.active]="isFavorite(menuItem)">
+                <i class="fa fa-star" aria-hidden="true"></i>
+              </button>
             </a>
+            
             <!-- External Tab Link -->
-            <a href="{{ !menuItem.type ? null : menuItem.path }}" target="_blank" class="sidebar-link sidebar-title"
-              [class.link-nav]="!menuItem.children" [ngClass]="{active: menuItem.active}"
-              *ngIf="menuItem.type === 'extTabLink'">
-               <app-feather-icons [icon]="menuItem.icon"></app-feather-icons><span>{{menuItem.title | translate}}</span>
-                <div class="according-menu">
-                  <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children"></i>
-                </div>
+            <a href="{{ !menuItem.type ? null : menuItem.path }}" 
+               target="_blank" 
+               class="sidebar-link sidebar-title"
+               [class.link-nav]="!menuItem.children" 
+               [ngClass]="{active: menuItem.active}"
+               *ngIf="menuItem.type === 'extTabLink'"
+               tabindex="0"
+               [attr.aria-label]="getNewWindowLabel(menuItem.title | translate)">
+              <app-feather-icons [icon]="menuItem.icon" aria-hidden="true"></app-feather-icons>
+              <span [class.visually-hidden]="isCompactMode">{{menuItem.title | translate}}</span>
+              
+              <!-- Tooltip para modo compacto -->
+              <div class="tooltip-sidebar" *ngIf="isCompactMode">{{menuItem.title | translate}}</div>
+              
+              <div class="according-menu" [class.visually-hidden]="isCompactMode">
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" aria-hidden="true"></i>
+              </div>
+              <!-- Botón de favoritos -->
+              <button class="favorite-toggle" 
+                      (click)="toggleFavorite(menuItem, $event)" 
+                      [attr.aria-label]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+                      [attr.title]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+                      [class.active]="isFavorite(menuItem)">
+                <i class="fa fa-star" aria-hidden="true"></i>
+              </button>
             </a>
 
             <!-- 2nd Level Menu (Submenú desplegable) -->
             <ul class="sidebar-submenu"
+                [id]="'submenu-' + menuItem.title?.toLowerCase().replace(' ', '-')"
                 [ngClass]="{'menu-open': menuItem.active, 'menu-close': !menuItem.active }"
                 *ngIf="menuItem.children"
                 [style.max-height]="menuItem.active ? '1000px' : '0'"
                 style="overflow: hidden; transition: max-height 0.3s ease-in-out;"
-                (click)="$event.stopPropagation()">
+                (click)="$event.stopPropagation()"
+                role="group"
+                [attr.aria-label]="'Submenú de ' + (menuItem.title | translate)">
               <li *ngFor="let childrenItem of menuItem.children" [ngClass]="{active: childrenItem.active}">
                 <!-- Sub -->
                 <a class="submenu-title" href="javascript:void(0)" *ngIf="childrenItem.type === 'sub'"
@@ -195,73 +380,82 @@
 
     <!-- Card Balanceada -->
     <div class="plan-card-container" id="plan-card-container" *appRoleBasedVisibility="['Katuq', 'Administrador']"
-         style="border-radius: 4px; border: 0.5px solid #bebebe; margin: 5px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" 
          [class.collapsed]="collapseMenu">
       <!-- Cabecera siempre visible con botón de toggle -->
-      <div style="padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; background-color: #f9f9f9; border-bottom: 0.5px solid #e0e0e0;">
-        <div style="display: flex; align-items: center; flex-grow: 1; justify-content: space-between;">
-          <div style="display: flex; align-items: center;">
-            <small style="font-weight: 500; font-size: 12px;">Mi plan</small>
-            <div class="plan-tag" style="margin-left: 6px;">
-              <span style="font-size: 12px;">{{currentPlan.type}}</span>
-            </div>
-          </div>
-          
-          <!-- Saldo visible cuando está colapsado -->
-          <div *ngIf="isPlanCardCollapsed" style="display: flex; align-items: center; margin-right: 8px;">
-            <i class="fa fa-wallet" style="margin-right: 4px; font-size: 11px;"></i>
-            <span style="font-size: 12px;">${{currentPlan.walletBalance.toFixed(2)}}</span>
-          </div>
+      <div class="plan-card-header">
+        <div class="plan-title">
+          <i class="fa fa-crown"></i>
+          <small>Mi Plan</small>
+          <div class="plan-badge">{{currentPlan.type}}</div>
         </div>
         
-        <!-- Botón con mejor visibilidad, más pequeño y alineado -->
-        <button (click)="togglePlanCard()" style="width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #eaeaea; border: none; cursor: pointer; transition: all 0.2s; padding: 0; flex-shrink: 0;">
-          <i class="fa" [ngClass]="isPlanCardCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'" style="font-size: 10px;"></i>
+        <!-- Saldo visible cuando está colapsado -->
+        <div *ngIf="isPlanCardCollapsed" class="plan-balance">
+          <i class="fa fa-wallet"></i>
+          <span>${{currentPlan.walletBalance.toFixed(2)}}</span>
+        </div>
+        
+        <!-- Botón con mejor visibilidad -->
+        <button (click)="togglePlanCard()" class="toggle-plan-btn" [class.expanded]="!isPlanCardCollapsed">
+          <i class="fa" [ngClass]="isPlanCardCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
         </button>
       </div>
       
       <!-- Contenido colapsable -->
       <div class="plan-card-content" 
-           [style.max-height]="isPlanCardCollapsed ? '0' : '260px'"
-           [style.opacity]="isPlanCardCollapsed ? '0' : '1'"
-           [style.padding]="isPlanCardCollapsed ? '0 8px' : '8px'" 
-           style="transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease; overflow: hidden;">
+           [class.collapsed]="isPlanCardCollapsed">
         
+        <!-- Tarjeta moderna tipo crédito -->
         <div class="credit-card">
-          <!-- Parte superior: chip + tipo plan -->
-          <div class="card-top">
+          <!-- Parte superior con logo y tipo de plan -->
+          <div class="card-header-section">
             <div class="card-chip"></div>
-            <div class="plan-tag inside-card">{{currentPlan.type}}</div>
+            <div class="plan-badge premium">{{currentPlan.type}}</div>
           </div>
 
-          <!-- Saldo -->
-          <div class="card-balance">
-            <span class="currency">$</span>
-            <span class="amount">{{currentPlan.walletBalance.toFixed(2)}}</span>
+          <!-- Saldo principal -->
+          <div class="card-balance-section">
+            <div class="balance-label">Saldo Disponible</div>
+            <div class="balance-amount">
+              <span class="currency">$</span>
+              <span class="amount">{{currentPlan.walletBalance.toFixed(2)}}</span>
+            </div>
           </div>
 
           <!-- Información adicional -->
-          <div class="card-info">
-            <div class="expires">
-              <small>Vence</small>
-              <span>{{currentPlan.renewalDate}}</span>
+          <div class="card-details-section">
+            <div class="detail-item">
+              <div class="detail-label">Vencimiento</div>
+              <div class="detail-value">{{currentPlan.renewalDate}}</div>
             </div>
-            <div class="usage">
-              <small>Uso</small>
-              <span>{{currentPlan.progress}}%</span>
+            <div class="detail-item">
+              <div class="detail-label">Consumo</div>
+              <div class="detail-value">{{currentPlan.progress}}%</div>
             </div>
           </div>
 
-          <!-- Barra de progreso -->
-          <div class="usage-bar white-version">
-            <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
+          <!-- Barra de progreso con etiqueta -->
+          <div class="usage-bar-container">
+            <div class="usage-bar">
+              <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
+            </div>
+            <div class="days-left">
+              <i class="fa fa-calendar-day"></i>
+              <span>{{getDaysLeft()}} días restantes</span>
+            </div>
           </div>
 
-          <!-- Botón -->
-          <button class="action-btn inside-card" (click)="openPlanModal(); $event.stopPropagation();">
-            <i class="fas fa-credit-card"></i>
-            <span>Cambiar Plan</span>
-          </button>
+          <!-- Acciones -->
+          <div class="card-actions">
+            <button class="action-btn upgrade" (click)="openPlanModal(); $event.stopPropagation();">
+              <i class="fa fa-arrow-circle-up"></i>
+              <span>Mejorar Plan</span>
+            </button>
+            <button class="action-btn view-details">
+              <i class="fa fa-info-circle"></i>
+              <span>Ver Detalles</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -275,6 +469,7 @@
 </nav>
 <app-plan-selector 
   *ngIf="showPlanModal"
+  [empresaData]="companyInformation"
   (closed)="closePlanModal()" 
   (planSelected)="onPlanSelected($event)">
 </app-plan-selector>

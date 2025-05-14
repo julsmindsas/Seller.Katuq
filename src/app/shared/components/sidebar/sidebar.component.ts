@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, HostListener, OnInit } from '@angular/core';
+import { Component, ViewEncapsulation, HostListener, OnInit, ElementRef, Renderer2 } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Menu, NavService } from '../../services/nav.service';
 import { LayoutService } from '../../services/layout.service';
@@ -9,7 +9,7 @@ import { CompanyInformation } from '../../models/User/CompanyInformation';
 // import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
 
 // Nueva interfaz para las secciones
-interface SidebarSection {
+export interface SidebarSection {
   title: string | null;
   items: Menu[];
   collapsed: boolean;
@@ -45,7 +45,20 @@ export class SidebarComponent implements OnInit {
   public isCollapsed: boolean = false;
   public collapseMenu: boolean = false;
   public isPlanCardCollapsed: boolean = false;
-
+  
+  // Nuevas propiedades
+  public isCompactMode: boolean = false;
+  public searchTerm: string = '';
+  public searchResults: Menu[] = [];
+  public isSearchActive: boolean = false;
+  public favoriteItems: Menu[] = [];
+  public isSearchFocused: boolean = false;
+  
+  // Variables para control de gestos en móviles
+  private touchStartX: number = 0;
+  private touchEndX: number = 0;
+  private swipeThreshold: number = 50;
+  
   // Nueva propiedad para las secciones colapsables
   public sections: SidebarSection[] = [];
 
@@ -53,7 +66,9 @@ export class SidebarComponent implements OnInit {
     private router: Router,
     public navServices: NavService,
     public layout: LayoutService,
-    private securityService: SecurityService
+    private securityService: SecurityService,
+    private renderer: Renderer2,
+    private elementRef: ElementRef
   ) {
     this.navServices.items.subscribe(menuItems => {
       this.processMenuItems(menuItems); // Procesar items para crear secciones
@@ -87,6 +102,11 @@ export class SidebarComponent implements OnInit {
           // Usamos los items originales actualizados de NavService para reprocesar
           this.processMenuItems(originalMenuItems);
           this.collapseMenu = this.navServices.collapseSidebar;
+          
+          // En móviles, cerrar el menú después de navegar
+          if (window.innerWidth < 992) {
+            this.collapseMenu = true;
+          }
         }
       });
     });
@@ -105,77 +125,148 @@ export class SidebarComponent implements OnInit {
     if (savedState) {
       this.isPlanCardCollapsed = savedState === 'true';
     }
-
-     // Ya procesamos los items en el constructor y aplicamos el estado guardado ahí
-     // Si navServices.items emite después de ngOnInit, processMenuItems se llamará de nuevo
-     // y aplicará el estado guardado.
+    
+    // Cargar preferencia de modo compacto
+    const compactMode = localStorage.getItem('sidebarCompactMode');
+    if (compactMode) {
+      this.isCompactMode = compactMode === 'true';
+      if (this.isCompactMode) {
+        document.body.classList.add('sidebar-compact-mode');
+      }
+    }
+    
+    // Cargar favoritos
+    this.loadFavoriteItems();
+    
+    // Configurar eventos táctiles para dispositivos móviles
+    this.setupMobileGestures();
   }
-
-  // Nueva función para procesar los items del menú en secciones
-  private processMenuItems(menuItems: Menu[]): void {
-    const sections: SidebarSection[] = [];
-    let currentSection: SidebarSection | null = null;
-
-    menuItems.forEach(item => {
-       // Si item es null (puede pasar por el filtrado en NavService), saltarlo
-       if (!item) return;
-
-      if (item.headTitle1) {
-        // Si la sección anterior existe, es de tipo header y no tiene items, la eliminamos antes de crear la nueva.
-        if (currentSection && currentSection.isHeaderSection && currentSection.items.length === 0) {
-          sections.pop();
-        }
-        // Es un encabezado, crea una nueva sección
-        currentSection = {
-          title: item.headTitle1,
-          items: [],
-          collapsed: true, // <--- Cambiado a true para que inicien colapsadas
-          isHeaderSection: true
-        };
-        sections.push(currentSection);
-      } else if (item.headTitle2) {
-        // Ignorar headTitle2 o manejar como necesites. No afecta a currentSection aquí.
-      } else {
-        // Es un item normal
-        if (!currentSection) {
-          // Items antes del primer header, crea una sección inicial sin título
-          // Esta sección usualmente no será colapsable visualmente, pero mantenemos la consistencia
-          currentSection = { title: null, items: [], collapsed: true, isHeaderSection: false }; 
-          sections.push(currentSection);
-        }
-         // Asegurarse de que currentSection no es null antes de añadir items
-         // y que el item no es un headTitle (aunque ya filtrado arriba, doble check)
-         if (currentSection && !item.headTitle1 && !item.headTitle2) {
-             currentSection.items.push(item);
-         }
+  
+  // Configurar eventos táctiles para móviles
+  private setupMobileGestures(): void {
+    // Solo necesitamos registrar eventos tactiles en móviles
+    if (window.innerWidth >= 992) {
+      return;
+    }
+    
+    // Añadir listeners para eventos táctiles
+    document.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
+    document.addEventListener('touchend', this.handleTouchEnd.bind(this), false);
+    
+    // Configurar funcionalidad para overlay
+    this.renderer.listen('window', 'resize', () => {
+      if (window.innerWidth >= 992) {
+        this.collapseMenu = true; // Cerrar menú al redimensionar a escritorio
+        document.body.style.overflow = ''; // Restablecer overflow
       }
     });
-
-    // Revisar la última sección creada: si es de tipo header y no tiene items, eliminarla.
-    if (currentSection && currentSection.isHeaderSection && currentSection.items.length === 0) {
-       sections.pop();
+  }
+  
+  // Manejar inicio de toque
+  private handleTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.touches[0].clientX;
+  }
+  
+  // Manejar fin de toque y detectar deslizamiento
+  private handleTouchEnd(event: TouchEvent): void {
+    this.touchEndX = event.changedTouches[0].clientX;
+    this.handleSwipe();
+  }
+  
+  // Detectar tipo de deslizamiento y actuar en consecuencia
+  private handleSwipe(): void {
+    const distance = this.touchEndX - this.touchStartX;
+    
+    // Si estamos en móvil y el swipe es suficientemente largo
+    if (window.innerWidth < 992 && Math.abs(distance) > this.swipeThreshold) {
+      if (distance > 0 && this.collapseMenu) {
+        // Deslizamiento de izquierda a derecha (abrir menú)
+        this.collapseMenu = false;
+        document.body.style.overflow = 'hidden'; // Evitar scroll del body
+      } else if (distance < 0 && !this.collapseMenu) {
+        // Deslizamiento de derecha a izquierda (cerrar menú)
+        this.collapseMenu = true;
+        document.body.style.overflow = ''; // Restaurar scroll del body
+      }
     }
-
-    // Recuperar estado colapsado (esta parte sobrescribe el 'true' por defecto si hay estado guardado)
+  }
+  
+  // Nueva función para procesar los items del menú en secciones
+  private processMenuItems(menuItems: Menu[]): void {
+    // Limpiar las secciones existentes
+    this.sections = [];
+    
+    // Variables para seguimiento de la sección actual
+    let currentTitle: string | null = null;
+    let currentItems: Menu[] = [];
+    let isHeaderSection = false;
+    
+    // Recorrer cada ítem
+    menuItems.forEach(item => {
+      // Ignorar items nulos
+      if (!item) return;
+      
+      // Si es un encabezado, crear nueva sección con el encabezado anterior (si existe)
+      if (item.headTitle1) {
+        // Si ya hay una sección en curso, guardarla (si tiene items)
+        if (currentItems.length > 0) {
+          this.sections.push({
+            title: currentTitle,
+            items: [...currentItems],
+            collapsed: true,
+            isHeaderSection
+          });
+          
+          // Reiniciar los items
+          currentItems = [];
+        }
+        
+        // Actualizar variables para la nueva sección
+        currentTitle = item.headTitle1;
+        isHeaderSection = true;
+      } 
+      // Si es un ítem normal (no headTitle)
+      else if (!item.headTitle1 && !item.headTitle2) {
+        // Si aún no hay sección, crear una sin título
+        if (currentTitle === null && currentItems.length === 0) {
+          isHeaderSection = false;
+        }
+        
+        // Añadir el ítem a la sección actual
+        currentItems.push(item);
+      }
+      // Ignorar headTitle2 u otros tipos
+    });
+    
+    // No olvidar añadir la última sección si tiene items
+    if (currentItems.length > 0) {
+      this.sections.push({
+        title: currentTitle,
+        items: [...currentItems],
+        collapsed: true,
+        isHeaderSection
+      });
+    }
+    
+    // Recuperar estado colapsado de localStorage
     const savedSectionsState = localStorage.getItem('sidebarSectionsState');
     let collapsedStates: { [title: string]: boolean } = {};
+    
     if (savedSectionsState) {
       try {
         collapsedStates = JSON.parse(savedSectionsState);
+        
+        // Aplicar estados guardados a las secciones
+        this.sections.forEach(section => {
+          if (section.title && collapsedStates[section.title] !== undefined) {
+            section.collapsed = collapsedStates[section.title];
+          }
+        });
       } catch (e) {
         console.error("Error loading sidebar sections state:", e);
         localStorage.removeItem('sidebarSectionsState');
       }
     }
-    sections.forEach(section => {
-      // Solo sobrescribir si existe un estado guardado para esta sección
-      if (section.title && collapsedStates[section.title] !== undefined) {
-        section.collapsed = collapsedStates[section.title];
-      } 
-      // Si no tiene título o no hay estado guardado, se queda con el valor por defecto (true)
-    });
-
-    this.sections = sections;
   }
 
   // Nueva función para colapsar/expandir secciones
@@ -276,8 +367,31 @@ export class SidebarComponent implements OnInit {
     } catch { return 0; }
   }
 
-  onPlanSelected(planId: string) {
-    this.currentPlan.type = this.getPlanName(planId);
+  onPlanSelected(planData: any) {
+    // Actualizar el plan actual con los nuevos datos
+    if (planData && planData.nombrePlan) {
+      this.currentPlan.type = planData.nombrePlan;
+      
+      // Guardar actualización en sessionStorage
+      try {
+        const currentCompanyStr = sessionStorage.getItem('currentCompany');
+        if (currentCompanyStr) {
+          const currentCompany = JSON.parse(currentCompanyStr);
+          if (currentCompany && currentCompany.plan) {
+            // Actualizar los datos del plan
+            currentCompany.plan.nombre = planData.nombrePlan;
+            currentCompany.plan.planPago = planData.planPago;
+            currentCompany.plan.tipoPrecio = planData.tipoPrecio;
+            
+            // Guardar en sessionStorage
+            sessionStorage.setItem('currentCompany', JSON.stringify(currentCompany));
+          }
+        }
+      } catch (error) {
+        console.error('Error al actualizar plan en sessionStorage:', error);
+      }
+    }
+    
     this.closePlanModal();
   }
 
@@ -378,6 +492,32 @@ export class SidebarComponent implements OnInit {
     localStorage.setItem('planCardCollapsed', this.isPlanCardCollapsed ? 'true' : 'false');
   }
 
+  // Método para calcular días restantes hasta la renovación
+  getDaysLeft(): number {
+    try {
+      if (!this.currentPlan || !this.currentPlan.renewalDate) {
+        return 0;
+      }
+      
+      // Parsear la fecha de renovación (formato DD/MM/YYYY)
+      const parts = this.currentPlan.renewalDate.split('/');
+      if (parts.length !== 3) return 0;
+      
+      const renewalDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      const today = new Date();
+      
+      // Calcular diferencia en días
+      const diffTime = renewalDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      // Retornar 0 si es negativo (vencido)
+      return diffDays > 0 ? diffDays : 0;
+    } catch (e) {
+      console.error('Error al calcular días restantes:', e);
+      return 0;
+    }
+  }
+
   getSectionIcon(sectionTitle: string): string {
     const iconMap: { [key: string]: string } = {
       'Gestión Comercial': 'shopping-cart',
@@ -388,5 +528,120 @@ export class SidebarComponent implements OnInit {
       'Configuración Plataforma': 'tool'
     };
     return iconMap[sectionTitle] || 'folder';
+  }
+
+  // Método para alternar modo compacto
+  toggleCompactMode(): void {
+    this.isCompactMode = !this.isCompactMode;
+    localStorage.setItem('sidebarCompactMode', this.isCompactMode.toString());
+    
+    if (this.isCompactMode) {
+      document.body.classList.add('sidebar-compact-mode');
+    } else {
+      document.body.classList.remove('sidebar-compact-mode');
+    }
+  }
+  
+  // Método para crear etiqueta para enlaces externos
+  getExtLinkLabel(title: string): string {
+    return `${title} (enlace externo)`;
+  }
+
+  // Método para crear etiqueta para enlaces que abren en nueva ventana
+  getNewWindowLabel(title: string): string {
+    return `${title} (se abre en nueva ventana)`;
+  }
+
+  // Método para buscar en el menú
+  searchMenu(): void {
+    this.isSearchActive = this.searchTerm.length > 0;
+    
+    if (!this.isSearchActive) {
+      this.searchResults = [];
+      return;
+    }
+    
+    const term = this.searchTerm.toLowerCase();
+    this.searchResults = this.getAllMenuItems().filter(item => {
+      return item.title?.toLowerCase().includes(term);
+    });
+  }
+  
+  // Obtener todos los items de menú para la búsqueda
+  private getAllMenuItems(): Menu[] {
+    const allItems: Menu[] = [];
+    
+    const processItem = (item: Menu) => {
+      allItems.push(item);
+      
+      if (item.children) {
+        item.children.forEach(child => processItem(child));
+      }
+    };
+    
+    const originalItems = this.navServices.getMenuItems();
+    originalItems.forEach(item => {
+      if (!item.headTitle1 && !item.headTitle2) {
+        processItem(item);
+      }
+    });
+    
+    return allItems;
+  }
+  
+  // Método para agregar/quitar de favoritos
+  toggleFavorite(item: Menu, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    
+    const index = this.favoriteItems.findIndex(fav => 
+      fav.path === item.path && fav.title === item.title
+    );
+    
+    if (index > -1) {
+      this.favoriteItems.splice(index, 1);
+    } else {
+      // Limitar a 5 favoritos
+      if (this.favoriteItems.length >= 5) {
+        this.favoriteItems.pop();
+      }
+      this.favoriteItems.unshift(item);
+    }
+    
+    this.saveFavoriteItems();
+  }
+  
+  // Comprobar si un item está en favoritos
+  isFavorite(item: Menu): boolean {
+    return this.favoriteItems.some(fav => 
+      fav.path === item.path && fav.title === item.title
+    );
+  }
+  
+  // Guardar favoritos en localStorage
+  private saveFavoriteItems(): void {
+    const favoritesToSave = this.favoriteItems.map(item => ({
+      title: item.title,
+      path: item.path,
+      icon: item.icon,
+      type: item.type
+    }));
+    
+    localStorage.setItem('sidebarFavoriteItems', JSON.stringify(favoritesToSave));
+  }
+  
+  // Cargar favoritos desde localStorage
+  private loadFavoriteItems(): void {
+    const savedFavorites = localStorage.getItem('sidebarFavoriteItems');
+    if (savedFavorites) {
+      try {
+        this.favoriteItems = JSON.parse(savedFavorites);
+      } catch(e) {
+        console.error('Error loading favorite items:', e);
+        this.favoriteItems = [];
+      }
+    }
   }
 }
