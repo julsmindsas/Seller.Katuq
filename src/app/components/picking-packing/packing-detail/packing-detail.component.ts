@@ -1,10 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PickingPackingService, PackingOrder, PackingItem } from '../../../shared/services/picking-packing/picking-packing.service';
-import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
-
-type PackingItemStatus = 'pending' | 'packed' | 'missing';
-type PackingOrderStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+import { PickingPackingService } from '../../../shared/services/picking-packig/picking-packing.service';
+import { PackingResponse, PackingRequest, PackingCompletarRequest, InformacionEmbalaje } from '../models/packing.model';
 
 @Component({
   selector: 'app-packing-detail',
@@ -12,119 +10,159 @@ type PackingOrderStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
   styleUrls: ['./packing-detail.component.scss']
 })
 export class PackingDetailComponent implements OnInit {
-  order: PackingOrder | null = null;
-  loading = false;
-  error = '';
-  productDetails: Map<string, any> = new Map();
-
+  packingId: string = '';
+  ordenId: string = '';
+  isNuevo: boolean = false;
+  packing: PackingResponse | null = null;
+  packingForm: FormGroup;
+  embalajeForm: FormGroup;
+  loading: boolean = false;
+  submitting: boolean = false;
+  
+  // Para nuevo packing
+  bodegasDisponibles: any[] = [];
+  ordenesPendientes: any[] = [];
+  
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private pickingPackingService: PickingPackingService,
-    private inventarioService: InventarioService
-  ) { }
-
-  ngOnInit(): void {
-    const orderId = this.route.snapshot.paramMap.get('id');
-    if (orderId) {
-      this.loadOrder(orderId);
-    }
-  }
-
-  loadOrder(orderId: string): void {
-    this.loading = true;
-    this.pickingPackingService.getPackingOrder(orderId)
-      .subscribe({
-        next: (order) => {
-          this.order = order;
-          this.loadProductDetails(order.items);
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error loading packing order:', error);
-          this.error = 'Error al cargar la orden de packing';
-          this.loading = false;
-        }
-      });
-  }
-
-  loadProductDetails(items: PackingItem[]): void {
-    items.forEach(item => {
-      this.inventarioService.getProductos()
-        .subscribe({
-          next: (products) => {
-            const product = products.find(p => p.id === item.productId);
-            if (product) {
-              this.productDetails.set(item.productId, product);
-            }
-          },
-          error: (error) => {
-            console.error('Error loading product details:', error);
-          }
-        });
+    private fb: FormBuilder,
+    private packingService: PickingPackingService
+  ) {
+    this.packingForm = this.fb.group({
+      ordenId: ['', Validators.required],
+      bodegaId: ['', Validators.required]
+    });
+    
+    this.embalajeForm = this.fb.group({
+      tipo: ['', Validators.required],
+      alto: [null],
+      ancho: [null],
+      largo: [null],
+      peso: [null, Validators.required],
+      cantidadPaquetes: [1, [Validators.required, Validators.min(1)]],
+      observaciones: ['']
     });
   }
 
-  updateItemStatus(item: PackingItem, status: PackingItemStatus): void {
-    if (!this.order) return;
-
-    this.pickingPackingService.updatePackingItemStatus(this.order.id, item.productId, status)
-      .subscribe({
-        next: () => {
-          item.status = status;
-          if (status === 'packed') {
-            item.packedQuantity = item.quantity;
-          }
-        },
-        error: (error) => {
-          console.error('Error updating item status:', error);
-        }
-      });
+  ngOnInit(): void {
+    this.route.params.subscribe(params => {
+      this.packingId = params['id'];
+      
+      if (this.packingId === 'nuevo') {
+        this.isNuevo = true;
+        this.cargarDatosIniciales();
+      } else {
+        this.cargarDetallePacking();
+      }
+    });
   }
 
-  updateOrderStatus(status: PackingOrderStatus): void {
-    if (!this.order) return;
-
-    this.pickingPackingService.updatePackingOrder(this.order.id, { status })
-      .subscribe({
-        next: (updatedOrder) => {
-          this.order = updatedOrder;
-        },
-        error: (error) => {
-          console.error('Error updating order status:', error);
-        }
+  cargarDatosIniciales(): void {
+    this.loading = true;
+    
+    // Cargar bodegas disponibles
+    this.packingService.getBodegasDisponibles().subscribe(bodegas => {
+      this.bodegasDisponibles = bodegas;
+      
+      // Cargar órdenes pendientes
+      this.packingService.getOrdenesPendientes().subscribe(ordenes => {
+        this.ordenesPendientes = ordenes;
+        this.loading = false;
       });
+    });
   }
 
-  generateShippingLabel(): void {
-    if (!this.order) return;
-
-    this.pickingPackingService.generateShippingLabel(this.order.id)
-      .subscribe({
-        next: (response) => {
-          // Aquí podrías manejar la respuesta del servidor, por ejemplo, descargar la etiqueta
-          console.log('Shipping label generated:', response);
-        },
-        error: (error) => {
-          console.error('Error generating shipping label:', error);
+  cargarDetallePacking(): void {
+    this.loading = true;
+    this.packingService.getEstadoPacking(this.packingId).subscribe({
+      next: (data) => {
+        this.packing = data;
+        this.ordenId = data.ordenId;
+        this.loading = false;
+        
+        // Si hay información de embalaje, cargar en el formulario
+        if (data.informacionEmbalaje) {
+          this.embalajeForm.patchValue({
+            tipo: data.informacionEmbalaje.tipo,
+            peso: data.informacionEmbalaje.peso,
+            cantidadPaquetes: data.informacionEmbalaje.cantidadPaquetes,
+            observaciones: data.informacionEmbalaje.observaciones || '',
+            ...data.informacionEmbalaje.dimensiones
+          });
         }
-      });
+      },
+      error: (error) => {
+        console.error('Error al cargar packing:', error);
+        this.loading = false;
+      }
+    });
   }
 
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'pending':
-        return 'badge-warning';
-      case 'packed':
-        return 'badge-success';
-      case 'missing':
-        return 'badge-danger';
-      default:
-        return 'badge-secondary';
+  iniciarPacking(): void {
+    if (this.packingForm.invalid) {
+      this.packingForm.markAllAsTouched();
+      return;
     }
+
+    this.submitting = true;
+    const data: PackingRequest = {
+      ordenId: this.packingForm.get('ordenId')?.value,
+      bodegaId: this.packingForm.get('bodegaId')?.value
+    };
+
+    this.packingService.iniciarPacking(data).subscribe({
+      next: (response) => {
+        this.submitting = false;
+        this.router.navigate(['/picking-packing/packing', response._id]);
+      },
+      error: (error) => {
+        console.error('Error al iniciar packing:', error);
+        this.submitting = false;
+      }
+    });
   }
 
-  goBack(): void {
+  completarPacking(): void {
+    if (!this.packing || !this.packing._id || this.embalajeForm.invalid) {
+      this.embalajeForm.markAllAsTouched();
+      return;
+    }
+    
+    this.submitting = true;
+    
+    // Construir objeto de información de embalaje
+    const formValues = this.embalajeForm.value;
+    const informacionEmbalaje: InformacionEmbalaje = {
+      tipo: formValues.tipo,
+      peso: formValues.peso,
+      cantidadPaquetes: formValues.cantidadPaquetes,
+      observaciones: formValues.observaciones,
+      dimensiones: {
+        alto: formValues.alto,
+        ancho: formValues.ancho,
+        largo: formValues.largo
+      }
+    };
+    
+    const data: PackingCompletarRequest = {
+      packingId: this.packing._id,
+      informacionEmbalaje: informacionEmbalaje
+    };
+
+    this.packingService.completarPacking(data).subscribe({
+      next: () => {
+        this.submitting = false;
+        this.cargarDetallePacking();
+      },
+      error: (error) => {
+        console.error('Error al completar packing:', error);
+        this.submitting = false;
+      }
+    });
+  }
+
+  volverALista(): void {
     this.router.navigate(['/picking-packing/packing']);
   }
 } 

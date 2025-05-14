@@ -1,99 +1,240 @@
-<div class="card">
-  <div class="card-header">
-    <div class="d-flex justify-content-between align-items-center">
-      <h2 class="card-title">Detalle de Orden de Packing</h2>
-      <button pButton type="button" icon="pi pi-arrow-left" label="Volver" class="p-button-rounded p-button-secondary" (click)="goBack()"></button>
+<div class="container-fluid">
+  <div class="row mb-3">
+    <div class="col-12">
+      <button pButton type="button" icon="pi pi-arrow-left" label="Volver" 
+              class="p-button-secondary" (click)="volverALista()"></button>
     </div>
   </div>
 
-  <div class="card-body">
-    <p-progressSpinner *ngIf="loading"></p-progressSpinner>
+  <div *ngIf="loading" class="row">
+    <div class="col-12 text-center">
+      <p-progressSpinner></p-progressSpinner>
+      <p>Cargando información...</p>
+    </div>
+  </div>
 
-    <p-message *ngIf="error" severity="error" [text]="error"></p-message>
-
-    <div *ngIf="order && !loading" class="order-details">
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <h3>Información de la Orden</h3>
-          <p><strong>ID de Orden:</strong> {{order.id}}</p>
-          <p><strong>ID de Picking:</strong> {{order.pickingId}}</p>
-          <p><strong>Estado:</strong> <span [class]="'badge ' + getStatusClass(order.status)">{{order.status}}</span></p>
-          <p><strong>Asignado a:</strong> {{order.assignedTo}}</p>
-          <p><strong>Fecha de creación:</strong> {{order.createdAt | date:'medium'}}</p>
-          <p><strong>Última actualización:</strong> {{order.updatedAt | date:'medium'}}</p>
+  <!-- Formulario para nuevo packing -->
+  <div *ngIf="isNuevo && !loading" class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title">Iniciar Nuevo Packing</h5>
         </div>
-        <div class="col-md-6">
-          <h3>Acciones</h3>
-          <div class="d-flex gap-2">
-            <button pButton type="button" 
-                    [label]="order.status === 'completed' ? 'Marcar como Pendiente' : 'Completar Orden'"
-                    [class]="'p-button-' + (order.status === 'completed' ? 'warning' : 'success')"
-                    (click)="updateOrderStatus(order.status === 'completed' ? 'pending' : 'completed')">
-            </button>
-            <button pButton type="button" 
-                    label="Generar Etiqueta de Envío"
-                    class="p-button-info"
-                    (click)="generateShippingLabel()"
-                    [disabled]="order.status !== 'completed'">
-            </button>
+        <div class="card-body">
+          <form [formGroup]="packingForm" (ngSubmit)="iniciarPacking()">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <span class="p-float-label">
+                  <select id="ordenId" pInputText formControlName="ordenId" class="form-control w-100">
+                    <option value="">Seleccione una orden</option>
+                    <option *ngFor="let orden of ordenesPendientes" [value]="orden.id">
+                      {{ orden.id }} - {{ orden.cliente }}
+                    </option>
+                  </select>
+                  <label for="ordenId">ID de Orden *</label>
+                </span>
+                <small class="p-error" *ngIf="packingForm.get('ordenId')?.invalid && packingForm.get('ordenId')?.touched">
+                  El ID de orden es requerido
+                </small>
+              </div>
+              <div class="col-md-6">
+                <span class="p-float-label">
+                  <select id="bodegaId" formControlName="bodegaId" class="form-control w-100">
+                    <option value="">Seleccione una bodega</option>
+                    <option *ngFor="let bodega of bodegasDisponibles" [value]="bodega.id">
+                      {{ bodega.nombre }}
+                    </option>
+                  </select>
+                  <label for="bodegaId">Bodega *</label>
+                </span>
+                <small class="p-error" *ngIf="packingForm.get('bodegaId')?.invalid && packingForm.get('bodegaId')?.touched">
+                  La bodega es requerida
+                </small>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12 text-end">
+                <button pButton type="submit" label="Iniciar Packing" 
+                        [disabled]="packingForm.invalid || submitting"
+                        [loading]="submitting" class="p-button-primary"></button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle de packing existente -->
+  <div *ngIf="!isNuevo && !loading && packing" class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title">Packing ID: {{ packing._id }}</h5>
+            <span class="badge" [ngClass]="{
+              'bg-warning': packing.estado === 'pendiente',
+              'bg-primary': packing.estado === 'en_proceso',
+              'bg-success': packing.estado === 'completado'
+            }">
+              {{ packing.estado | titlecase }}
+            </span>
           </div>
         </div>
-      </div>
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <p><strong>Orden ID:</strong> {{ packing.ordenId }}</p>
+            </div>
+            <div class="col-md-4">
+              <p><strong>Bodega:</strong> {{ packing.bodegaId }}</p>
+            </div>
+            <div class="col-md-4">
+              <p><strong>Picking ID:</strong> {{ packing.pickingId || 'N/A' }}</p>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <p><strong>Fecha de Inicio:</strong> {{ packing.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            <div class="col-md-4">
+              <p><strong>Fecha de Completado:</strong> {{ packing.fechaCompletado | date:'dd/MM/yyyy HH:mm' || 'Pendiente' }}</p>
+            </div>
+            <div class="col-md-4">
+              <p><strong>Usuario Asignado:</strong> {{ packing.usuarioAsignado || 'No asignado' }}</p>
+            </div>
+          </div>
 
-      <div class="items-section">
-        <h3>Productos a Empacar</h3>
-        <p-table [value]="order.items" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Producto</th>
-              <th>Cantidad</th>
-              <th>Empacado</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-item>
-            <tr>
-              <td>
-                <div *ngIf="productDetails.get(item.productId)">
-                  {{productDetails.get(item.productId).nombre}}
-                  <small class="text-muted d-block">SKU: {{productDetails.get(item.productId).sku}}</small>
+          <!-- Formulario para completar packing -->
+          <div *ngIf="packing.estado !== 'completado'" class="row mt-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header">
+                  <h6 class="card-title">Información de Embalaje</h6>
                 </div>
-              </td>
-              <td>{{item.quantity}}</td>
-              <td>{{item.packedQuantity || 0}}</td>
-              <td>
-                <span [class]="'badge ' + getStatusClass(item.status)">{{item.status}}</span>
-              </td>
-              <td>
-                <div class="d-flex gap-2">
-                  <button pButton type="button" 
-                          icon="pi pi-check" 
-                          class="p-button-rounded p-button-success"
-                          (click)="updateItemStatus(item, 'packed')"
-                          [disabled]="item.status === 'packed'">
-                  </button>
-                  <button pButton type="button" 
-                          icon="pi pi-times" 
-                          class="p-button-rounded p-button-danger"
-                          (click)="updateItemStatus(item, 'missing')"
-                          [disabled]="item.status === 'missing'">
-                  </button>
+                <div class="card-body">
+                  <form [formGroup]="embalajeForm" (ngSubmit)="completarPacking()">
+                    <div class="row mb-3">
+                      <div class="col-md-4">
+                        <span class="p-float-label">
+                          <select id="tipo" formControlName="tipo" class="form-control w-100">
+                            <option value="">Seleccione un tipo</option>
+                            <option value="caja">Caja</option>
+                            <option value="sobre">Sobre</option>
+                            <option value="bolsa">Bolsa</option>
+                            <option value="otro">Otro</option>
+                          </select>
+                          <label for="tipo">Tipo de Embalaje *</label>
+                        </span>
+                        <small class="p-error" *ngIf="embalajeForm.get('tipo')?.invalid && embalajeForm.get('tipo')?.touched">
+                          El tipo de embalaje es requerido
+                        </small>
+                      </div>
+                      <div class="col-md-4">
+                        <span class="p-float-label">
+                          <input id="peso" type="number" pInputText formControlName="peso" class="w-100">
+                          <label for="peso">Peso (kg) *</label>
+                        </span>
+                        <small class="p-error" *ngIf="embalajeForm.get('peso')?.invalid && embalajeForm.get('peso')?.touched">
+                          El peso es requerido
+                        </small>
+                      </div>
+                      <div class="col-md-4">
+                        <span class="p-float-label">
+                          <input id="cantidadPaquetes" type="number" pInputText formControlName="cantidadPaquetes" class="w-100" min="1">
+                          <label for="cantidadPaquetes">Cantidad de Paquetes *</label>
+                        </span>
+                        <small class="p-error" *ngIf="embalajeForm.get('cantidadPaquetes')?.invalid && embalajeForm.get('cantidadPaquetes')?.touched">
+                          La cantidad debe ser al menos 1
+                        </small>
+                      </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                      <div class="col-md-4">
+                        <span class="p-float-label">
+                          <input id="alto" type="number" pInputText formControlName="alto" class="w-100">
+                          <label for="alto">Alto (cm)</label>
+                        </span>
+                      </div>
+                      <div class="col-md-4">
+                        <span class="p-float-label">
+                          <input id="ancho" type="number" pInputText formControlName="ancho" class="w-100">
+                          <label for="ancho">Ancho (cm)</label>
+                        </span>
+                      </div>
+                      <div class="col-md-4">
+                        <span class="p-float-label">
+                          <input id="largo" type="number" pInputText formControlName="largo" class="w-100">
+                          <label for="largo">Largo (cm)</label>
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                      <div class="col-12">
+                        <span class="p-float-label">
+                          <textarea id="observaciones" pInputTextarea formControlName="observaciones" rows="3" class="w-100"></textarea>
+                          <label for="observaciones">Observaciones</label>
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div class="row">
+                      <div class="col-md-12 text-end">
+                        <button pButton type="submit" label="Completar Packing" icon="pi pi-check"
+                                [disabled]="embalajeForm.invalid || submitting"
+                                [loading]="submitting" class="p-button-success"></button>
+                      </div>
+                    </div>
+                  </form>
                 </div>
-              </td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="5" class="text-center">No hay productos para empacar</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-
-      <div class="notes-section mt-4">
-        <h3>Notas</h3>
-        <p-textarea [rows]="3" [autoResize]="true" [(ngModel)]="order.notes" placeholder="Agregar notas..."></p-textarea>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Información de embalaje completado -->
+          <div *ngIf="packing.estado === 'completado' && packing.informacionEmbalaje" class="row mt-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header">
+                  <h6 class="card-title">Información de Embalaje</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4">
+                      <p><strong>Tipo de Embalaje:</strong> {{ packing.informacionEmbalaje.tipo | titlecase }}</p>
+                    </div>
+                    <div class="col-md-4">
+                      <p><strong>Peso:</strong> {{ packing.informacionEmbalaje.peso }} kg</p>
+                    </div>
+                    <div class="col-md-4">
+                      <p><strong>Cantidad de Paquetes:</strong> {{ packing.informacionEmbalaje.cantidadPaquetes }}</p>
+                    </div>
+                  </div>
+                  
+                  <div class="row" *ngIf="packing.informacionEmbalaje.dimensiones">
+                    <div class="col-md-12">
+                      <p><strong>Dimensiones:</strong> 
+                        {{ packing.informacionEmbalaje.dimensiones.alto || 'N/A' }} x 
+                        {{ packing.informacionEmbalaje.dimensiones.ancho || 'N/A' }} x 
+                        {{ packing.informacionEmbalaje.dimensiones.largo || 'N/A' }} cm
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="row" *ngIf="packing.informacionEmbalaje.observaciones">
+                    <div class="col-md-12">
+                      <p><strong>Observaciones:</strong> {{ packing.informacionEmbalaje.observaciones }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

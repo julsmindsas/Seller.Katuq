@@ -176,7 +176,7 @@ export class CarritoComponent implements OnInit {
         }
 
         this.valorDescuento = 0;
-        this.porcentajeDescuento = parseInt(value[0]?.valor) || 0;
+        this.porcentajeDescuento = parseFloat(value[0]?.valor) || 0;
         this.pedido.porceDescuento = this.porcentajeDescuento;
         this.valorDescuento = (this.getTotalProductPriceInCart() * this.porcentajeDescuento) / 100;
       },

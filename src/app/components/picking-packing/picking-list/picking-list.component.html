@@ -1,89 +1,176 @@
 <div class="container-fluid">
-  <div class="row">
+  <div class="row mb-4">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h4 class="card-title">Órdenes de Picking</h4>
-          <div class="filters mt-3">
-            <div class="row">
-              <div class="col-md-3">
-                <p-dropdown [options]="[
-                  {label: 'Todos', value: ''},
-                  {label: 'Pendiente', value: 'pending'},
-                  {label: 'En Progreso', value: 'in_progress'},
-                  {label: 'Completado', value: 'completed'},
-                  {label: 'Cancelado', value: 'cancelled'}
-                ]" [(ngModel)]="filters.status" 
-                placeholder="Filtrar por estado"
-                (onChange)="onFilterChange()">
-                </p-dropdown>
-              </div>
-              <div class="col-md-3">
-                <p-calendar [(ngModel)]="filters.dateFrom" 
-                  [showIcon]="true"
-                  placeholder="Fecha desde"
-                  (onSelect)="onFilterChange()">
-                </p-calendar>
-              </div>
-              <div class="col-md-3">
-                <p-calendar [(ngModel)]="filters.dateTo" 
-                  [showIcon]="true"
-                  placeholder="Fecha hasta"
-                  (onSelect)="onFilterChange()">
-                </p-calendar>
-              </div>
-            </div>
-          </div>
+          <h5 class="card-title">Gestión de Picking</h5>
+          <button pButton type="button" icon="pi pi-plus" label="Nuevo Picking" class="p-button-primary"
+            (click)="iniciarNuevoPicking()"></button>
         </div>
         <div class="card-body">
-          <p-table [value]="pickingOrders" 
-                  [loading]="loading"
-                  [paginator]="true" 
-                  [rows]="10"
-                  [showCurrentPageReport]="true"
-                  currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} órdenes"
-                  [rowsPerPageOptions]="[10,25,50]">
+          <form [formGroup]="filtroForm" (ngSubmit)="aplicarFiltros()">
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <span class="p-float-label">
+                  <input id="nroPedido" type="text" pInputText formControlName="nroPedido" class="w-100">
+                  <label for="nroPedido">Número de Pedido</label>
+                </span>
+              </div>
+              <div class="col-md-3">
+                <span class="p-float-label">
+                  <p-dropdown id="estado" formControlName="estado" [options]="[
+                    {label: 'Todos', value: ''},
+                    {label: 'Pendiente', value: 'pendiente'},
+                    {label: 'En Proceso', value: 'en_proceso'},
+                    {label: 'Completado', value: 'completado'}
+                  ]" optionLabel="label" optionValue="value" class="w-100"></p-dropdown>
+                  <label for="estado">Estado</label>
+                </span>
+              </div>
+              <div class="col-md-3">
+                <span class="p-float-label">
+                  <p-calendar id="fechaDesde" formControlName="fechaDesde" [showIcon]="true" dateFormat="dd/mm/yy"
+                    class="w-100"></p-calendar>
+                  <label for="fechaDesde">Fecha Desde</label>
+                </span>
+              </div>
+              <div class="col-md-3">
+                <span class="p-float-label">
+                  <p-calendar id="fechaHasta" formControlName="fechaHasta" [showIcon]="true" dateFormat="dd/mm/yy"
+                    class="w-100"></p-calendar>
+                  <label for="fechaHasta">Fecha Hasta</label>
+                </span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12 text-end">
+                <button pButton type="button" label="Limpiar" class="p-button-secondary mr-2"
+                  (click)="limpiarFiltros()"></button>
+                <button pButton type="submit" label="Filtrar" class="p-button-primary"></button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pedidos pendientes de picking -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title">Pedidos Pendientes de Picking</h5>
+        </div>
+        <div class="card-body">
+          <p-table [value]="ordenesPendientes" [loading]="loading"
+            styleClass="p-datatable-gridlines p-datatable-striped" responsiveLayout="scroll">
             <ng-template pTemplate="header">
               <tr>
-                <th>ID Orden</th>
-                <th>Estado</th>
-                <th>Asignado a</th>
+                <th>Nro. Pedido</th>
+                <th>Cliente</th>
                 <th>Fecha Creación</th>
-                <th>Fecha Actualización</th>
+                <th>Estado</th>
+                <th>Total</th>
                 <th>Acciones</th>
               </tr>
             </ng-template>
-            <ng-template pTemplate="body" let-order>
+            <ng-template pTemplate="body" let-orden>
               <tr>
-                <td>{{order.orderId}}</td>
+                <td>{{ orden.nroPedido }}</td>
+                <td>{{ orden.cliente?.nombres_completos }}</td>
+                <td>{{ orden.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td>
-                  <span class="badge" [ngClass]="getStatusClass(order.status)">
-                    {{order.status | titlecase}}
-                  </span>
+                  <!-- <span class="badge" [ngClass]="{
+                    'bg-warning': orden.estadoProceso === 'pendiente',
+                    'bg-primary': orden.estadoProceso === 'picking' || orden.estadoProceso === 'packing',
+                    'bg-success': orden.estadoProceso === 'enviado' || orden.estadoProceso === 'entregado',
+                    'bg-danger': orden.estadoProceso === 'cancelado'
+                  }">
+                   
+                  </span> -->
+                  {{ orden?.estadoProceso }}
                 </td>
-                <td>{{order.assignedTo || 'No asignado'}}</td>
-                <td>{{order.createdAt | date:'short'}}</td>
-                <td>{{order.updatedAt | date:'short'}}</td>
+                <td>{{ orden.total | currency }}</td>
                 <td>
-                  <button pButton 
-                    icon="pi pi-eye" 
-                    class="p-button-rounded p-button-info mr-2"
-                    (click)="viewOrder(order.id)"
-                    pTooltip="Ver detalles">
-                  </button>
+                  <button pButton type="button" icon="pi pi-eye" class="p-button-rounded p-button-info p-button-sm mr-2"
+                    (click)="verDetallePedido(orden)" pTooltip="Ver Detalle"></button>
+                  <button pButton type="button" icon="pi pi-cart-plus"
+                    class="p-button-rounded p-button-success p-button-sm" *ngIf="orden.estadoProceso === 'pendiente'"
+                    (click)="iniciarNuevoPicking()" pTooltip="Iniciar Picking"></button>
                 </td>
               </tr>
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
                 <td colspan="6" class="text-center">
-                  No hay órdenes de picking disponibles
+                  No hay pedidos pendientes disponibles.
                 </td>
               </tr>
             </ng-template>
           </p-table>
+          <p-paginator [rows]="10" [totalRecords]="ordenesPendientes.length"
+            [rowsPerPageOptions]="[5,10,25,50]"></p-paginator>
         </div>
       </div>
     </div>
   </div>
-</div> 
+
+  <!-- Pickings en proceso o completados -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title">Pickings en Proceso o Completados</h5>
+        </div>
+        <div class="card-body">
+          <p-table [value]="pickingList" [loading]="loading" styleClass="p-datatable-gridlines p-datatable-striped"
+            responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>ID</th>
+                <th>Orden ID</th>
+                <th>Bodega</th>
+                <th>Estado</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Completado</th>
+                <th>Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-picking>
+              <tr>
+                <td>{{ picking._id }}</td>
+                <td>{{ picking.ordenId }}</td>
+                <td>{{ picking.bodegaId }}</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'bg-warning': picking.estado === 'pendiente',
+                    'bg-primary': picking.estado === 'en_proceso',
+                    'bg-success': picking.estado === 'completado'
+                  }">
+                    {{ picking.estado | titlecase }}
+                  </span>
+                </td>
+                <td>{{ picking.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ picking.fechaCompletado | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <button pButton type="button" icon="pi pi-eye" class="p-button-rounded p-button-info p-button-sm mr-2"
+                    (click)="verDetalle(picking)" pTooltip="Ver Detalle"></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="text-center">
+                  No hay registros de picking disponibles.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          <p-paginator [rows]="10" [totalRecords]="pickingList.length"
+            [rowsPerPageOptions]="[5,10,25,50]"></p-paginator>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

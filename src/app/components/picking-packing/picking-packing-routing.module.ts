@@ -10,6 +10,8 @@ const routes: Routes = [
     path: 'picking',
     children: [
       { path: '', component: PickingListComponent },
+      { path: 'nuevo', component: PickingDetailComponent },
+      { path: 'orden/:id', component: PickingDetailComponent },
       { path: ':id', component: PickingDetailComponent }
     ]
   },
@@ -17,6 +19,8 @@ const routes: Routes = [
     path: 'packing',
     children: [
       { path: '', component: PackingListComponent },
+      { path: 'nuevo', component: PackingDetailComponent },
+      { path: 'orden/:id', component: PackingDetailComponent },
       { path: ':id', component: PackingDetailComponent }
     ]
   }

@@ -8,14 +8,20 @@ import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputTextareaModule } from 'primeng/inputtextarea';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TooltipModule } from 'primeng/tooltip';
 
 // Componentes
 import { PickingListComponent } from './picking-list/picking-list.component';
 import { PickingDetailComponent } from './picking-detail/picking-detail.component';
 import { PackingListComponent } from './packing-list/packing-list.component';
 import { PackingDetailComponent } from './packing-detail/packing-detail.component';
+
+// Servicios
+import { PickingPackingService } from '../../shared/services/picking-packig/picking-packing.service';
 
 @NgModule({
   imports: [
@@ -29,8 +35,11 @@ import { PackingDetailComponent } from './packing-detail/packing-detail.componen
     DropdownModule,
     ButtonModule,
     InputTextModule,
+    InputTextareaModule,
     TableModule,
-    PaginatorModule
+    PaginatorModule,
+    ProgressSpinnerModule,
+    TooltipModule
   ],
   declarations: [
     PickingListComponent,
@@ -38,6 +47,13 @@ import { PackingDetailComponent } from './packing-detail/packing-detail.componen
     PackingListComponent,
     PackingDetailComponent
   ],
-  providers: []
+  exports: [
+    PickingListComponent,
+    PickingDetailComponent,
+    PackingListComponent,
+    PackingDetailComponent
+  ],
+  providers: [
+  ]
 })
 export class PickingPackingModule { } 

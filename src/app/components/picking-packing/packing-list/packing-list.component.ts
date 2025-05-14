@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { PickingPackingService, PackingOrder } from '../../../shared/services/picking-packing/picking-packing.service';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
+import { PickingPackingService } from '../../../shared/services/picking-packig/picking-packing.service';
+import { PackingResponse } from '../models/packing.model';
 
 @Component({
   selector: 'app-packing-list',
@@ -8,58 +10,48 @@ import { Router } from '@angular/router';
   styleUrls: ['./packing-list.component.scss']
 })
 export class PackingListComponent implements OnInit {
-  packingOrders: PackingOrder[] = [];
+  packingList: PackingResponse[] = [];
+  filtroForm: FormGroup;
   loading = false;
-  filters = {
-    status: '',
-    dateFrom: null,
-    dateTo: null
-  };
-
+  
   constructor(
-    private pickingPackingService: PickingPackingService,
+    private packingService: PickingPackingService,
+    private fb: FormBuilder,
     private router: Router
-  ) { }
+  ) {
+    this.filtroForm = this.fb.group({
+      ordenId: [''],
+      estado: [''],
+      fechaDesde: [null],
+      fechaHasta: [null]
+    });
+  }
 
   ngOnInit(): void {
-    this.loadPackingOrders();
+    this.cargarPackings();
   }
 
-  loadPackingOrders(): void {
+  cargarPackings(): void {
     this.loading = true;
-    this.pickingPackingService.getPackingOrders(this.filters)
-      .subscribe({
-        next: (orders) => {
-          this.packingOrders = orders;
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error loading packing orders:', error);
-          this.loading = false;
-        }
-      });
+    // Aquí normalmente harías una llamada para obtener todos los packings
+    // Como no tenemos un endpoint específico, podríamos implementar esto cuando esté disponible
+    this.loading = false;
   }
 
-  onFilterChange(): void {
-    this.loadPackingOrders();
+  verDetalle(packing: PackingResponse): void {
+    this.router.navigate(['/picking-packing/packing', packing._id]);
   }
 
-  viewOrder(orderId: string): void {
-    this.router.navigate(['/picking-packing/packing', orderId]);
+  iniciarNuevoPacking(): void {
+    this.router.navigate(['/picking-packing/packing/nuevo']);
   }
 
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'pending':
-        return 'badge-warning';
-      case 'in_progress':
-        return 'badge-info';
-      case 'completed':
-        return 'badge-success';
-      case 'cancelled':
-        return 'badge-danger';
-      default:
-        return 'badge-secondary';
-    }
+  aplicarFiltros(): void {
+    this.cargarPackings();
+  }
+
+  limpiarFiltros(): void {
+    this.filtroForm.reset();
+    this.cargarPackings();
   }
 } 
