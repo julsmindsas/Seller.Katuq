@@ -20,6 +20,7 @@ import { ToastModule } from 'primeng/toast';
 import { TreeSelectModule } from 'primeng/treeselect';
 import { VentasRoutingModule } from '../ventas/ventas-routing.module';
 import { LogisticaService } from '../../shared/services/despachos/logistica.services';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   imports: [
@@ -38,6 +39,7 @@ import { LogisticaService } from '../../shared/services/despachos/logistica.serv
     SliderModule,
     GalleryModule,
     FormsModule,
+    HttpClientModule,
     CalendarModule,
     FormsModule,
     NgxHotkeysModule.forRoot(),

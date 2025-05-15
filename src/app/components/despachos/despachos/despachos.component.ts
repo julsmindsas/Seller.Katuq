@@ -1,11 +1,11 @@
 import { Component, ElementRef, OnInit, TemplateRef, ViewChild } from '@angular/core';
-import { VentasService } from 'src/app/shared/services/ventas/ventas.service';
+import { VentasService } from '../../../shared/services/ventas/ventas.service';
 import { Carrito, Cliente, EstadoPago, EstadoProceso, EstadoProcesoFiltros, Pedido } from '../../ventas/modelo/pedido';
 import { Table } from 'primeng/table';
-import { PaymentService } from 'src/app/shared/services/ventas/payment.service';
+import { PaymentService } from '../../../shared/services/ventas/payment.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { jsPDF } from 'jspdf';
-import { ServiciosService } from 'src/app/shared/services/servicios.service';
+import { ServiciosService } from '../../../shared/services/servicios.service';
 import 'bootstrap';
 import html2canvas from 'html2canvas';
 import { ClientesComponent } from '../../ventas/clientes/clientes.component';
@@ -13,11 +13,11 @@ import Swal from 'sweetalert2';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PedidoEntregaComponent } from '../../ventas/entrega/pedido-entrega.component';
 import { PedidosUtilService } from '../../ventas/service/pedidos.util.service';
-import { UserLogged } from 'src/app/shared/models/User/UserLogged';
-import { UserLite } from 'src/app/shared/models/User/UserLite';
+import { UserLogged } from '../../../shared/models/User/UserLogged';
+import { UserLite } from '../../../shared/models/User/UserLite';
 
 import 'jspdf-autotable';
-import { LogisticaService } from 'src/app/shared/services/despachos/logistica.services';
+import { LogisticaServiceV2 } from '../../../shared/services/despachos/logistica.service.v2';
 import { FilterService } from 'primeng/api';
 import html2pdf from 'html2pdf.js';
 
@@ -71,10 +71,11 @@ export class DespachosComponent implements OnInit {
 
   constructor(private ventasService: VentasService,
     private service: ServiciosService,
-    private logisticaService: LogisticaService,
+    private logisticaService: LogisticaServiceV2,
     private paymentService: PaymentService,
     private filterService: FilterService,
-    private modalService: NgbModal, private formBuilder: FormBuilder, private pedidoUtilService: PedidosUtilService) {
+    private modalService: NgbModal,
+     private formBuilder: FormBuilder, private pedidoUtilService: PedidosUtilService) {
     const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
     this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
     this.fechaInicial.setHours(0, 0, 0, 0);
@@ -96,8 +97,64 @@ export class DespachosComponent implements OnInit {
     this.initForms();
   }
 
+  refrescarDatos() {
+    const filter = {
+      fechaInicial: this.fechaInicial,
+      fechaFinal: this.fechaFinal,
+      company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial,
+      estadoProceso: [EstadoProceso.Rechazado, EstadoProceso.ParaDespachar, EstadoProceso.ProducidoTotalmente, EstadoProceso.SinProducir, EstadoProceso.Producido, EstadoProceso.Entregado, EstadoProceso.Despachado, EstadoProceso.Empacado],
+      estadosPago: [EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente, EstadoPago.Pospendiente],
+      tipoFecha: 'fechaEntrega'
+    }
 
+    this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
+      this.orders = data;
+      this.orders.forEach(order => {
+        if (order.fechaCreacion) {
+          order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
+        }
+        order.anticipo = order.anticipo ?? 0;
+        order.faltaPorPagar = (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
+      });
+      this.loading = false;
+    });
 
+    this.logisticaService.getTransportadores().subscribe((data) => {
+      this.vendors = data;
+    });
+  }
+
+  calculateValorBruto(): number {
+    return this.orders.reduce((acc, pedido) => acc + (pedido.totalPedidoSinDescuento ?? 0), 0);
+  }
+
+  calculateDescuento(): number {
+    return this.orders.reduce((acc, pedido) => acc + (pedido.totalDescuento ?? 0), 0);
+  }
+
+  calculateTotal(): number {
+    return this.orders.reduce((acc, pedido) => acc + (pedido.totalPedididoConDescuento ?? 0), 0);
+  }
+
+  calculateFaltaPorPagar(): number {
+    return this.orders.reduce((acc, pedido) => acc + (pedido.faltaPorPagar ?? 0), 0);
+  }
+
+  calculateTotalEnvio(): number {
+    return this.orders.reduce((acc, pedido) => acc + (pedido.totalEnvio ?? 0), 0);
+  }
+
+  calculateAnticipo(): number {
+    return this.orders.reduce((acc, pedido) => acc + (pedido.anticipo ?? 0), 0);
+  }
+
+  calculateSubtotal(): number {
+    return this.orders.reduce((acc, pedido) => acc + (pedido.totalPedidoSinDescuento ?? 0), 0);
+  }
+
+  calculateTotalImpuestos(): number {
+    return this.orders.reduce((acc, pedido) => acc + (pedido.totalImpuesto ?? 0), 0);
+  }
 
   imprimirOrdenConHtml2Pdf() {
     const totalPendiente = this.pedidosSeleccionados.reduce(
@@ -256,35 +313,6 @@ export class DespachosComponent implements OnInit {
         document.body.removeChild(element);
       });
   }
-  refrescarDatos() {
-
-    const filter = {
-      fechaInicial: this.fechaInicial,
-      fechaFinal: this.fechaFinal,
-      company: JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial,
-      estadoProceso: [EstadoProceso.Rechazado, EstadoProceso.ParaDespachar, EstadoProceso.ProducidoTotalmente, EstadoProceso.SinProducir, EstadoProceso.Producido, EstadoProceso.Entregado, EstadoProceso.Despachado, EstadoProceso.Empacado],
-      estadosPago: [EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente, EstadoPago.Pospendiente],
-      tipoFecha: 'fechaEntrega'
-    }
-    this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
-      this.orders = data;
-
-      this.orders.forEach(order => {
-
-        order.fechaCreacion = new Date(new Date(order.fechaCreacion).setUTCHours(0, 0, 0, 0)).toISOString();
-        if (order.anticipo == null || order.anticipo == undefined) {
-          order.anticipo = 0
-        }
-        order.faltaPorPagar = order.totalPedididoConDescuento - order.anticipo
-      })
-      this.loading = false;
-    });
-
-    this.logisticaService.getTransportadores().subscribe((data) => {
-      this.vendors = data;
-    });
-
-  }
 
   private registerCustomFilters() {
     this.filterService.register('horarioEntregaCustom', (value, filter): boolean => {
@@ -383,54 +411,23 @@ export class DespachosComponent implements OnInit {
     });
   }
 
-  calculateValorBruto() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalPedidoSinDescuento, 0);
-  }
-
-  calculateDescuento() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalDescuento, 0);
-  }
-
-  calculateTotal() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalPedididoConDescuento, 0);
-  }
-
-  calculateFaltaPorPagar() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.faltaPorPagar, 0);
-  }
-
-  calculateTotalEnvio() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalEnvio, 0);
-  }
-
-  calculateAnticipo() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.anticipo, 0);
-  }
-
-  calculateSubtotal() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalPedidoSinDescuento, 0);
-  }
-
-  calculateTotalImpuestos() {
-    return this.orders.reduce((acc, pedido) => acc + pedido.totalImpuesto, 0);
-  }
-
-
-  editDatosClientes(content, order: Pedido) {
-    this.clienteSeleccionado = order.cliente;
-    this.modalService.open(content, {
-      size: 'xl',
-      scrollable: true,
-      centered: true,
-      fullscreen: false,
-      ariaLabelledBy: 'modal-basic-title'
-    }).result.then((result) => {
-      this.editOrder(order);
-    }, (reason) => {
-      if (reason !== 'Cross click') {
+  editDatosClientes(content: any, order: Pedido) {
+    if (order.cliente) {
+      this.clienteSeleccionado = order.cliente;
+      this.modalService.open(content, {
+        size: 'xl',
+        scrollable: true,
+        centered: true,
+        fullscreen: false,
+        ariaLabelledBy: 'modal-basic-title'
+      }).result.then((result) => {
         this.editOrder(order);
-      }
-    });
+      }, (reason) => {
+        if (reason !== 'Cross click') {
+          this.editOrder(order);
+        }
+      });
+    }
   }
 
 
@@ -459,12 +456,17 @@ export class DespachosComponent implements OnInit {
 
 
   editOrder(order: Pedido) {
-    if (order.carrito.length > 0) {
-      let fechaEntrega = order.carrito[0].configuracion?.datosEntrega?.fechaEntrega;
-      let horarioEntrega = order.carrito[0].configuracion?.datosEntrega?.horarioEntrega;
-      order.fechaEntrega = new Date(fechaEntrega.year, fechaEntrega.month, fechaEntrega.day).toISOString();
-      order.horarioEntrega = horarioEntrega;
+    if (order.carrito?.length > 0) {
+      const firstItem = order.carrito[0];
+      const datosEntrega = firstItem.configuracion?.datosEntrega;
+      
+      if (datosEntrega?.fechaEntrega) {
+        const { year, month, day } = datosEntrega.fechaEntrega;
+        order.fechaEntrega = new Date(year, month - 1, day).toISOString();
+        order.horarioEntrega = datosEntrega.horarioEntrega;
+      }
     }
+    
     this.ventasService.editOrder(order).subscribe((data) => {
       this.refrescarDatos();
       Swal.fire({
@@ -475,42 +477,52 @@ export class DespachosComponent implements OnInit {
       });
     });
   }
-  cambiarEstado(order: Pedido, estado) {
-    const userLite: UserLite = JSON.parse(localStorage.getItem('user')) as UserLite;
-    if (estado == 1) {
-      order.estadoProceso = EstadoProceso.Empacado;
-      order.fechaHoraEmpacado = new Date().toISOString();
-      order.empacador = userLite.name
-    } else if (estado == 2) {
-      order.estadoProceso = EstadoProceso.ProducidoTotalmente
-      order.fechaHoraEmpacado = null
-      order.empacador = null
-      order.shippingOrder = null
-      order.nroShippingOrder = null
-      order.despachador = null
-      order.fechaYHorarioDespachado = null
-      order.transportador = null
-    } else if (estado == 3) {
-      order.estadoProceso = EstadoProceso.Empacado
-      order.shippingOrder = null
-      order.nroShippingOrder = null
-      order.despachador = null
-      order.fechaYHorarioDespachado = null
-      order.transportador = null
-    } else if (estado == 4) {
-      order.estadoProceso = EstadoProceso.Despachado
-      order.fechaYHorarioDespachado = new Date().toISOString()
-      order.despachador = userLite
-      order.transportador = userLite.name
-      order.nroShippingOrder = "00"
-      order.shippingOrder = "00"
+  cambiarEstado(order: Pedido, estado: number) {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+
+    const userLite: UserLite = JSON.parse(userStr);
+    
+    switch(estado) {
+      case 1:
+        order.estadoProceso = EstadoProceso.Empacado;
+        order.fechaHoraEmpacado = new Date().toISOString();
+        order.empacador = userLite.name;
+        break;
+      case 2:
+        order.estadoProceso = EstadoProceso.ProducidoTotalmente;
+        order.fechaHoraEmpacado = undefined;
+        order.empacador = undefined;
+        order.shippingOrder = undefined;
+        order.nroShippingOrder = undefined;
+        order.despachador = undefined;
+        order.fechaYHorarioDespachado = undefined;
+        order.transportador = undefined;
+        break;
+      case 3:
+        order.estadoProceso = EstadoProceso.Empacado;
+        order.shippingOrder = undefined;
+        order.nroShippingOrder = undefined;
+        order.despachador = undefined;
+        order.fechaYHorarioDespachado = undefined;
+        order.transportador = undefined;
+        break;
+      case 4:
+        order.estadoProceso = EstadoProceso.Despachado;
+        order.fechaYHorarioDespachado = new Date().toISOString();
+        order.despachador = userLite;
+        order.transportador = userLite.name;
+        order.nroShippingOrder = "00";
+        order.shippingOrder = "00";
+        break;
+      case 5:
+        order.estadoProceso = EstadoProceso.Entregado;
+        order.despachador = userLite;
+        order.entregado = userLite;
+        order.fechaYHorarioDespachado = new Date().toISOString();
+        break;
     }
-    else if (estado == 5) {
-      order.estadoProceso = EstadoProceso.Entregado
-      order.despachador = userLite
-      order.entregado = userLite;
-      order.fechaYHorarioDespachado = new Date().toString();
-    }
+
     this.ventasService.editOrder(order).subscribe((data) => {
       this.refrescarDatos();
       Swal.fire({

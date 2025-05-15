@@ -52,6 +52,8 @@ import { NgpThemeService } from './services/ngtheme.service';
 import { KatuqIntelligenceService } from './katuqintelligence/katuq-intelligence.service';
 import { PlanSelectorComponent } from './components/plan-selector/plan-selector.component';
 import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos.util.service';
+import { BaseService } from './services/base.service';
+import { CacheService } from './services/cache/cache.service';
 
 @NgModule({
   declarations: [
@@ -109,7 +111,9 @@ import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos
     ImageProxyService,
     FacturacionIntegracionService,
     KatuqIntelligenceService,
-    POSPedidosUtilService
+    POSPedidosUtilService,
+    BaseService,
+    CacheService
   ],
   exports: [
     NgbModule,
