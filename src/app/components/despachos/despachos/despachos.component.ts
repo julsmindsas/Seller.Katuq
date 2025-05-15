@@ -21,6 +21,12 @@ import { LogisticaServiceV2 } from '../../../shared/services/despachos/logistica
 import { FilterService } from 'primeng/api';
 import html2pdf from 'html2pdf.js';
 
+interface ColumnDefinition {
+  field: string;
+  header: string;
+  visible: boolean;
+}
+
 @Component({
   selector: 'app-list-despachos',
   templateUrl: './despachos.component.html',
@@ -68,6 +74,36 @@ export class DespachosComponent implements OnInit {
   todasLasTarjetas: any[] = [];
   tienetarjetas: boolean = true;
   detallePedidoEntregado: any;
+  
+  // Definiciones para la gestión de columnas
+  displayedColumns: ColumnDefinition[] = [
+    { field: 'detalles', header: 'Detalles', visible: true },
+    { field: 'opciones', header: 'Opciones', visible: true },
+    { field: 'nroPedido', header: 'Número de Pedido', visible: true },
+    { field: 'nroFactura', header: 'Número de Factura', visible: true },
+    { field: 'shippingOrder', header: 'Número orden de envío', visible: true },
+    { field: 'estadoPago', header: 'Estado de Pago', visible: true },
+    { field: 'estadoProceso', header: 'Estado de Proceso', visible: true },
+    { field: 'cliente', header: 'Cliente', visible: true },
+    { field: 'totalEnvio', header: 'Domicilio', visible: true },
+    { field: 'faltaPorPagar', header: 'Falta por Pagar', visible: true },
+    { field: 'fechaCreacion', header: 'Fecha de Compra', visible: true },
+    { field: 'ciudad', header: 'Ciudad', visible: true },
+    { field: 'zonaCobro', header: 'Zona de Entrega', visible: true },
+    { field: 'observaciones', header: 'Observaciones de Entrega', visible: false },
+    { field: 'fechaEntrega', header: 'Fecha de Entrega', visible: true },
+    { field: 'formaEntrega', header: 'Forma de Entrega', visible: true },
+    { field: 'horarioEntrega', header: 'Horario de Entrega', visible: true },
+    { field: 'fechaHoraEmpacado', header: 'Fecha y Horario de Empacado', visible: false },
+    { field: 'fechaYHorarioDespachado', header: 'Fecha y Horario de Despachado', visible: false },
+    { field: 'asesorAsignado', header: 'Vendedor', visible: false },
+    { field: 'empacador', header: 'Empacador', visible: false },
+    { field: 'despachador', header: 'Despachador', visible: false },
+    { field: 'transportador', header: 'Transportador', visible: false },
+    { field: 'entregado', header: 'Entregado', visible: false }
+  ];
+  
+  selectedColumns: ColumnDefinition[] = [];
 
   constructor(private ventasService: VentasService,
     private service: ServiciosService,
@@ -82,6 +118,16 @@ export class DespachosComponent implements OnInit {
     this.fechaFinal = new Date(new Date().getTime() + unaSemana);
     this.fechaFinal.setHours(23, 59, 59, 999);
     this.registerCustomFilters();
+    
+    // Guardar configuración de columnas en localStorage si existe
+    const savedColumns = localStorage.getItem('despachosColumns');
+    if (savedColumns) {
+      try {
+        this.displayedColumns = JSON.parse(savedColumns);
+      } catch (e) {
+        console.error('Error parsing saved columns configuration', e);
+      }
+    }
   }
 
   ngOnInit(): void {
@@ -93,6 +139,8 @@ export class DespachosComponent implements OnInit {
       { id: 3, nombre: 'Anulado' },
       { id: 4, nombre: 'Devuelto' }
     ];
+    // Inicializar las columnas seleccionadas al cargar
+    this.selectedColumns = this.displayedColumns.filter(col => col.visible);
     this.refrescarDatos();
     this.initForms();
   }
@@ -1437,6 +1485,83 @@ export class DespachosComponent implements OnInit {
       , (reason) => {
         console.log(reason);
       });
+  }
+
+  // Método para verificar si una columna está seleccionada
+  isColumnVisible(field: string): boolean {
+    return this.selectedColumns.some(col => col.field === field);
+  }
+
+  // Método para abrir la imagen a tamaño completo
+  openFullImage(imageUrl: string): void {
+    Swal.fire({
+      imageUrl: imageUrl,
+      imageAlt: 'Imagen de evidencia',
+      showCloseButton: true,
+      showConfirmButton: false,
+      width: '80%',
+      padding: '1rem',
+      background: '#fff',
+      imageWidth: 'auto',
+      imageHeight: 'auto',
+      customClass: {
+        image: 'img-fluid',
+        popup: 'swal2-popup-fullscreen'
+      }
+    });
+  }
+
+  // Método para actualizar la visibilidad de las columnas cuando el usuario cambia la selección
+  onColumnSelectionChange(): void {
+    // Actualizar la propiedad visible en displayedColumns basado en selectedColumns
+    this.displayedColumns.forEach(col => {
+      col.visible = this.selectedColumns.some(selected => selected.field === col.field);
+    });
+    
+    // Guardar la configuración en localStorage
+    localStorage.setItem('despachosColumns', JSON.stringify(this.displayedColumns));
+  }
+  
+  // Método para restaurar las columnas a la configuración por defecto
+  resetColumnConfig(): void {
+    this.displayedColumns = [
+      { field: 'detalles', header: 'Detalles', visible: true },
+      { field: 'opciones', header: 'Opciones', visible: true },
+      { field: 'nroPedido', header: 'Número de Pedido', visible: true },
+      { field: 'nroFactura', header: 'Número de Factura', visible: true },
+      { field: 'shippingOrder', header: 'Número orden de envío', visible: true },
+      { field: 'estadoPago', header: 'Estado de Pago', visible: true },
+      { field: 'estadoProceso', header: 'Estado de Proceso', visible: true },
+      { field: 'cliente', header: 'Cliente', visible: true },
+      { field: 'totalEnvio', header: 'Domicilio', visible: true },
+      { field: 'faltaPorPagar', header: 'Falta por Pagar', visible: true },
+      { field: 'fechaCreacion', header: 'Fecha de Compra', visible: true },
+      { field: 'ciudad', header: 'Ciudad', visible: true },
+      { field: 'zonaCobro', header: 'Zona de Entrega', visible: true },
+      { field: 'observaciones', header: 'Observaciones de Entrega', visible: false },
+      { field: 'fechaEntrega', header: 'Fecha de Entrega', visible: true },
+      { field: 'formaEntrega', header: 'Forma de Entrega', visible: true },
+      { field: 'horarioEntrega', header: 'Horario de Entrega', visible: true },
+      { field: 'fechaHoraEmpacado', header: 'Fecha y Horario de Empacado', visible: false },
+      { field: 'fechaYHorarioDespachado', header: 'Fecha y Horario de Despachado', visible: false },
+      { field: 'asesorAsignado', header: 'Vendedor', visible: false },
+      { field: 'empacador', header: 'Empacador', visible: false },
+      { field: 'despachador', header: 'Despachador', visible: false },
+      { field: 'transportador', header: 'Transportador', visible: false },
+      { field: 'entregado', header: 'Entregado', visible: false }
+    ];
+    this.selectedColumns = this.displayedColumns.filter(col => col.visible);
+    localStorage.setItem('despachosColumns', JSON.stringify(this.displayedColumns));
+  }
+
+  // Método para contar cuántas columnas son visibles actualmente
+  getVisibleColumnsCount(): number {
+    return this.selectedColumns.length;
+  }
+  
+  // Método para obtener un arreglo con los campos de columnas visibles en orden
+  getVisibleColumnFields(): string[] {
+    return this.selectedColumns.map(col => col.field);
   }
 }
 

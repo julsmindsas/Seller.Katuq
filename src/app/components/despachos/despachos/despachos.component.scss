@@ -427,3 +427,277 @@
   z-index: 1050 !important;
   /* Ajusta el valor según corresponda */
 }
+
+// Estilos para mejorar la UX del panel de despachos
+
+// Variables de colores
+$primary-color: #2196f3;
+$secondary-color: #6c757d;
+$success-color: #4caf50;
+$warning-color: #ff9800;
+$danger-color: #f44336;
+$info-color: #00bcd4;
+$light-color: #f8f9fa;
+$dark-color: #343a40;
+$border-color: #dee2e6;
+$hover-color: #e9ecef;
+
+// Estilos para las tarjetas
+.card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 6px;
+  
+  &:hover {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  }
+}
+
+// Estilos para las tablas
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-header {
+      background-color: $light-color;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      border: 1px solid $border-color;
+    }
+    
+    .p-datatable-thead > tr > th {
+      background-color: $light-color;
+      color: $dark-color;
+      padding: 0.75rem 0.5rem;
+      border: 1px solid $border-color;
+      font-weight: 600;
+      
+      &:first-child {
+        border-top-left-radius: 4px;
+      }
+      
+      &:last-child {
+        border-top-right-radius: 4px;
+      }
+    }
+    
+    .p-datatable-tbody > tr {
+      transition: background-color 0.2s;
+      
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.02);
+      }
+      
+      &:hover {
+        background-color: $hover-color;
+      }
+      
+      > td {
+        padding: 0.5rem;
+        border: 1px solid $border-color;
+        
+        .p-button.p-button-text {
+          color: $dark-color;
+          
+          &:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+          }
+        }
+      }
+    }
+    
+    .p-paginator {
+      background-color: $light-color;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+      border: 1px solid $border-color;
+    }
+  }
+  
+  // Estilos para los íconos de acciones
+  .p-button.p-button-rounded.p-button-text {
+    width: 2rem;
+    height: 2rem;
+    
+    &.p-button-sm {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+  
+  // Estilos para los selectores y calendarios
+  .p-calendar .p-inputtext, 
+  .p-multiselect .p-multiselect-label {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+// Estilos para filas alternadas
+.table-row-odd {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+// Estilos para los badges
+.badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: 4px;
+  
+  &.bg-success {
+    background-color: $success-color !important;
+  }
+  
+  &.bg-warning {
+    background-color: $warning-color !important;
+    color: white;
+  }
+  
+  &.bg-danger {
+    background-color: $danger-color !important;
+  }
+  
+  &.bg-info {
+    background-color: $info-color !important;
+    color: white;
+  }
+  
+  &.bg-primary {
+    background-color: $primary-color !important;
+  }
+  
+  &.bg-secondary {
+    background-color: $secondary-color !important;
+  }
+}
+
+// Estilos para los botones de acción agrupados
+.btn-group {
+  display: inline-flex;
+  vertical-align: middle;
+  
+  .p-button {
+    margin-right: 0 !important;
+    border-radius: 0;
+    
+    &:first-child {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+    }
+    
+    &:last-child {
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
+  }
+}
+
+// Optimizaciones para espacios
+.me-1 {
+  margin-right: 0.25rem !important;
+}
+
+.me-2 {
+  margin-right: 0.5rem !important;
+}
+
+.ms-1 {
+  margin-left: 0.25rem !important;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.p-2 {
+  padding: 0.5rem !important;
+}
+
+.py-2 {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.w-100 {
+  width: 100% !important;
+}
+
+.text-nowrap {
+  white-space: nowrap !important;
+}
+
+.text-end {
+  text-align: right !important;
+}
+
+.fw-bold {
+  font-weight: 700 !important;
+}
+
+.text-secondary {
+  color: $secondary-color !important;
+}
+
+// Estilos específicos para modales
+.modal-header {
+  background-color: $light-color;
+  border-bottom: 1px solid $border-color;
+  
+  .modal-title {
+    font-weight: 600;
+    color: $dark-color;
+  }
+}
+
+.modal-footer {
+  background-color: $light-color;
+  border-top: 1px solid $border-color;
+}
+
+// Clases de utilidad para flex
+.d-flex {
+  display: flex !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.justify-content-start {
+  justify-content: flex-start !important;
+}
+
+.flex-wrap {
+  flex-wrap: wrap !important;
+}
+
+// Estilo para tarjetas de información
+.info-card {
+  border-radius: 4px;
+  padding: 0.5rem;
+  background-color: $light-color;
+  border: 1px solid $border-color;
+  margin-bottom: 0.5rem;
+  
+  .info-card-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: $dark-color;
+  }
+  
+  .info-card-content {
+    color: $secondary-color;
+  }
+}
