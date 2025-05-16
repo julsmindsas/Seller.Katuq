@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '../../shared/shared.module';
-
 import { DespachosRoutingModule } from './despachos-routing.module';
 import { DespachosComponent } from './despachos/despachos.component';
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -21,6 +20,22 @@ import { TreeSelectModule } from 'primeng/treeselect';
 import { VentasRoutingModule } from '../ventas/ventas-routing.module';
 import { LogisticaService } from '../../shared/services/despachos/logistica.services';
 import { HttpClientModule } from '@angular/common/http';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { DropdownModule } from 'primeng/dropdown';
+import { RippleModule } from 'primeng/ripple';
+import { RouterModule } from '@angular/router';
+
+// Componentes
+import { TablaPedidosComponent } from './components/tabla-pedidos/tabla-pedidos.component';
+import { DetalleEntregaComponent } from './components/detalle-entrega/detalle-entrega.component';
+import { TransportadoresComponent } from './components/transportadores/transportadores.component';
+import { GenerarOrdenComponent } from './components/generar-orden/generar-orden.component';
+import { OrdenesDespachoComponent } from './components/ordenes-despacho/ordenes-despacho.component';
+import { ImprimirPdfComponent } from './components/imprimir-pdf/imprimir-pdf.component';
+
+// Pipes
+import { TotalValorACobrarPipe } from './pipes/total-valor-cobrar.pipe';
 
 @NgModule({
   imports: [
@@ -29,9 +44,6 @@ import { HttpClientModule } from '@angular/common/http';
     SharedModule,
     DespachosRoutingModule,
     NgSelectModule,
-    CommonModule,
-    SharedModule,
-    VentasRoutingModule,
     NgxDatatableModule,
     TabViewModule,
     ArchwizardModule,
@@ -41,15 +53,28 @@ import { HttpClientModule } from '@angular/common/http';
     FormsModule,
     HttpClientModule,
     CalendarModule,
-    FormsModule,
-    NgxHotkeysModule.forRoot(),
-    NgxStarRatingModule,
     TableModule,
     MultiSelectModule,
-    ToastModule
+    ToastModule,
+    ButtonModule,
+    TooltipModule,
+    DropdownModule,
+    RippleModule,
+    RouterModule,
+    NgxHotkeysModule.forRoot(),
+    NgxStarRatingModule
   ],
   providers: [LogisticaService],
-  declarations: [DespachosComponent]
+  declarations: [
+    DespachosComponent,
+    TablaPedidosComponent,
+    DetalleEntregaComponent,
+    TransportadoresComponent,
+    GenerarOrdenComponent,
+    OrdenesDespachoComponent,
+    ImprimirPdfComponent,
+    TotalValorACobrarPipe
+  ]
 })
 export class DespachosModule { }
 

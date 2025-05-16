@@ -1,0 +1,200 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ isEditMode ? ('Editar Orden de Envío: ' + nroShippingOrder) : ('Generar Orden de Envío' | translate) }}</h4>
+  <button type="button" class="close" aria-label="Close" (click)="closeModal()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <form [formGroup]="ordenEnvioForm">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">{{ 'Información de Envío' | translate }}</h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="fechaEnvio" class="form-label">{{ 'Fecha de Envío' | translate }}</label>
+              <div class="input-group">
+                <input type="date" 
+                  id="fechaEnvio" 
+                  formControlName="fechaEnvio"
+                  class="form-control form-control-sm"
+                  [ngClass]="{'is-invalid': ordenEnvioForm.get('fechaEnvio')?.invalid && ordenEnvioForm.get('fechaEnvio')?.touched}"
+                  (change)="actualizarPedidosDisponibles()">
+                <span class="input-group-text">
+                  <i class="pi pi-calendar"></i>
+                </span>
+              </div>
+              <div class="text-muted small" *ngIf="ordenEnvioForm.get('fechaEnvio')?.value">
+                Fecha seleccionada: {{ ordenEnvioForm.get('fechaEnvio')?.value | date:'dd/MM/yyyy' }}
+              </div>
+              <div *ngIf="ordenEnvioForm.get('fechaEnvio')?.invalid && ordenEnvioForm.get('fechaEnvio')?.touched" 
+                class="text-danger small">
+                {{ 'La fecha de envío es requerida' | translate }}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="metodoEnvio" class="form-label">{{ 'Método de Envío' | translate }}</label>
+              <select id="metodoEnvio" formControlName="metodoEnvio" class="form-select form-select-sm">
+                <option value="">{{ 'Seleccione un método' | translate }}</option>
+                <option value="mensajeroPropio">{{ 'Mensajero Propio' | translate }}</option>
+                <option value="transportadora">{{ 'Transportadora' | translate }}</option>
+              </select>
+              <div *ngIf="ordenEnvioForm.get('metodoEnvio')?.invalid && ordenEnvioForm.get('metodoEnvio')?.touched" 
+                class="text-danger small">
+                {{ 'El método de envío es requerido' | translate }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selección de pedidos disponibles -->
+    <div class="card mb-3" *ngIf="metodoEnvio && ordenEnvioForm.get('fechaEnvio')?.valid">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title m-0">{{ 'Pedidos Disponibles' | translate }}</h5>
+          
+          <!-- Selector de columnas -->
+          <div class="d-flex align-items-center gap-2">
+            <label class="me-2 text-nowrap">{{ 'Columnas:' | translate }}</label>
+            <p-multiSelect [options]="displayedColumns" [(ngModel)]="selectedColumns" 
+              optionLabel="header" [style]="{'width':'200px'}" 
+              defaultLabel="Seleccionar columnas" 
+              [ngModelOptions]="{standalone: true}"
+              (onChange)="onColumnSelectionChange()"></p-multiSelect>
+          </div>
+        </div>
+        
+        <div class="alert alert-info" *ngIf="pedidosDisponibles.length === 0">
+          {{ 'No hay pedidos disponibles para esta fecha y método de envío' | translate }}
+        </div>
+
+        <div class="table-responsive" *ngIf="pedidosDisponibles.length > 0">
+          <p-table [value]="pedidosDisponibles" 
+                  styleClass="p-datatable-sm" 
+                  [paginator]="pedidosDisponibles.length > 10" 
+                  [rows]="10" 
+                  [rowsPerPageOptions]="[5,10,25,50]"
+                  [showCurrentPageReport]="true"
+                  currentPageReportTemplate="{first} - {last} de {totalRecords} pedidos"
+                  [tableStyle]="{'min-width': '100%'}">
+            
+            <ng-template pTemplate="header">
+              <tr>
+                <ng-container *ngFor="let col of selectedColumns">
+                  <th *ngIf="col.field !== 'accion'">{{ col.header | translate }}</th>
+                </ng-container>
+                <th *ngIf="isActionColumnVisible()">
+                  {{ 'Acción' | translate }}
+                </th>
+              </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="body" let-pedido>
+              <tr>
+                <ng-container *ngFor="let col of selectedColumns">
+                  <td *ngIf="col.field !== 'accion'">
+                    <ng-container [ngSwitch]="col.field">
+                      <ng-container *ngSwitchCase="'faltaPorPagar'">
+                        {{ getNestedProperty(pedido, col.field) | currency }}
+                      </ng-container>
+                      <ng-container *ngSwitchDefault>
+                        {{ getNestedProperty(pedido, col.field) }}
+                      </ng-container>
+                    </ng-container>
+                  </td>
+                </ng-container>
+                <td *ngIf="isActionColumnVisible()">
+                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="agregarPedido(pedido)">
+                    <i class="pi pi-plus"></i> {{ 'Agregar' | translate }}
+                  </button>
+                </td>
+              </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td [attr.colspan]="selectedColumns.length" class="text-center">
+                  {{ 'No hay pedidos disponibles' | translate }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pedidos seleccionados -->
+    <div class="card mb-3" *ngIf="pedidosSeleccionados.length > 0">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title m-0">{{ 'Pedidos Seleccionados' | translate }}</h5>
+          <span class="badge bg-primary">{{ pedidosSeleccionados.length }}</span>
+        </div>
+        
+        <div class="table-responsive">
+          <p-table [value]="pedidosSeleccionados" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>{{ 'Nro. Pedido' | translate }}</th>
+                <th>{{ 'Cliente' | translate }}</th>
+                <th>{{ 'Ciudad' | translate }}</th>
+                <th>{{ 'Valor a Cobrar' | translate }}</th>
+                <th>{{ 'Acción' | translate }}</th>
+              </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="body" let-pedido>
+              <tr>
+                <td>{{ pedido.nroPedido }}</td>
+                <td>{{ getNestedProperty(pedido, 'cliente') }}</td>
+                <td>{{ getNestedProperty(pedido, 'ciudad') }}</td>
+                <td>{{ pedido.faltaPorPagar | currency }}</td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-outline-danger" (click)="retirarPedido(pedido)">
+                    <i class="pi pi-trash"></i> {{ 'Retirar' | translate }}
+                  </button>
+                </td>
+              </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="footer">
+              <tr>
+                <td colspan="3" class="text-end"><strong>{{ 'Total a Cobrar:' | translate }}</strong></td>
+                <td>{{ pedidosSeleccionados | totalValorACobrar | currency }}</td>
+                <td></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="closeModal()">
+    {{ 'Cancelar' | translate }}
+  </button>
+  
+  <button type="button" class="btn btn-primary" 
+    [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0"
+    (click)="guardarOrden()">
+    {{ 'Guardar Orden' | translate }}
+  </button>
+  
+  <button type="button" class="btn btn-success" 
+    *ngIf="nroShippingOrder"
+    (click)="imprimirOrden()">
+    <i class="pi pi-print me-1"></i>{{ 'Imprimir' | translate }}
+  </button>
+  
+  <button type="button" class="btn btn-warning" 
+    *ngIf="nroShippingOrder && metodoEnvio === 'mensajeroPropio'"
+    (click)="despacharOrden()">
+    <i class="pi pi-send me-1"></i>{{ 'Despachar' | translate }}
+  </button>
+</div> 

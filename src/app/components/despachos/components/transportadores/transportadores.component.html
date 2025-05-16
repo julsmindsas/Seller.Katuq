@@ -1,0 +1,185 @@
+<div class="modal-header">
+    <h4 class="modal-title">{{ 'Lista de Transportadores' | translate }}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="closeModal()">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="modal-body">
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ editMode ? ('Editar Transportador' | translate) : ('Crear Transportador' | translate) }}</h5>
+            <form [formGroup]="transportadorForm" (ngSubmit)="onSubmit()">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="nombres">{{ 'Nombres' | translate }}</label>
+                            <input type="text" class="form-control" id="nombres" formControlName="nombres" required>
+                            <div *ngIf="transportadorForm.get('nombres').invalid && transportadorForm.get('nombres').touched" class="text-danger">
+                                {{ 'El nombre es requerido' | translate }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="apellidos">{{ 'Apellidos' | translate }}</label>
+                            <input type="text" class="form-control" id="apellidos" formControlName="apellidos" required>
+                            <div *ngIf="transportadorForm.get('apellidos').invalid && transportadorForm.get('apellidos').touched" class="text-danger">
+                                {{ 'El apellido es requerido' | translate }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cedula">{{ 'Cédula' | translate }}</label>
+                            <input type="text" class="form-control" id="cedula" formControlName="cedula" required>
+                            <div *ngIf="transportadorForm.get('cedula').invalid && transportadorForm.get('cedula').touched" class="text-danger">
+                                {{ 'La cédula es requerida' | translate }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="telefono">{{ 'Teléfono' | translate }}</label>
+                            <input type="text" class="form-control" id="telefono" formControlName="telefono" required>
+                            <div *ngIf="transportadorForm.get('telefono').invalid && transportadorForm.get('telefono').touched" class="text-danger">
+                                {{ 'El teléfono es requerido' | translate }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="whatsapp">{{ 'WhatsApp' | translate }}</label>
+                            <input type="text" class="form-control" id="whatsapp" formControlName="whatsapp">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="correo">{{ 'Correo' | translate }}</label>
+                            <input type="email" class="form-control" id="correo" formControlName="correo" required>
+                            <div *ngIf="transportadorForm.get('correo').invalid && transportadorForm.get('correo').touched" class="text-danger">
+                                <span *ngIf="transportadorForm.get('correo').errors?.required">{{ 'El correo es requerido' | translate }}</span>
+                                <span *ngIf="transportadorForm.get('correo').errors?.email">{{ 'Formato de correo inválido' | translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="fechaNacimiento">{{ 'Fecha de Nacimiento' | translate }}</label>
+                            <input type="date" class="form-control" id="fechaNacimiento" formControlName="fechaNacimiento"
+                                required>
+                            <div *ngIf="transportadorForm.get('fechaNacimiento').invalid && transportadorForm.get('fechaNacimiento').touched" class="text-danger">
+                                {{ 'La fecha de nacimiento es requerida' | translate }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="eps">{{ 'EPS' | translate }}</label>
+                            <input type="text" class="form-control" id="eps" formControlName="eps">
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="arl">{{ 'ARL' | translate }}</label>
+                            <input type="text" class="form-control" id="arl" formControlName="arl">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="marcaMoto">{{ 'Marca de la Moto' | translate }}</label>
+                            <input type="text" class="form-control" id="marcaMoto" formControlName="marcaMoto">
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="lineaMoto">{{ 'Línea de la Moto' | translate }}</label>
+                            <input type="text" class="form-control" id="lineaMoto" formControlName="lineaMoto">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="modeloMoto">{{ 'Modelo de la Moto' | translate }}</label>
+                            <input type="text" class="form-control" id="modeloMoto" formControlName="modeloMoto">
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="placaMoto">{{ 'Placa de la Moto' | translate }}</label>
+                            <input type="text" class="form-control" id="placaMoto" formControlName="placa">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="pwd">{{ 'Contraseña' | translate }}</label>
+                            <input type="password" class="form-control" id="pwd" formControlName="pwd" required>
+                            <div *ngIf="transportadorForm.get('pwd').invalid && transportadorForm.get('pwd').touched" class="text-danger">
+                                {{ 'La contraseña es requerida' | translate }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-end">
+                    <button type="button" class="btn btn-secondary me-2" (click)="resetForm()">{{ 'Limpiar' | translate }}</button>
+                    <button type="submit" class="btn btn-primary">{{ editMode ? ('Actualizar' | translate) : ('Guardar' | translate) }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ 'Transportadores Registrados' | translate }}</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{ 'Cédula' | translate }}</th>
+                            <th scope="col">{{ 'Nombres' | translate }}</th>
+                            <th scope="col">{{ 'Apellidos' | translate }}</th>
+                            <th scope="col">{{ 'Teléfono' | translate }}</th>
+                            <th scope="col">{{ 'WhatsApp' | translate }}</th>
+                            <th scope="col">{{ 'Acciones' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let vendor of vendors">
+                            <td>{{vendor.cedula}}</td>
+                            <td>{{vendor.nombres}}</td>
+                            <td>{{vendor.apellidos}}</td>
+                            <td>{{vendor.telefono}}</td>
+                            <td>{{vendor.whatsapp}}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="editTransporter(vendor)">
+                                        <i class="pi pi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteTransporter(vendor)">
+                                        <i class="pi pi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr *ngIf="!vendors || vendors.length === 0">
+                            <td colspan="6" class="text-center">{{ 'No hay transportadores registrados' | translate }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="closeModal()">{{ 'Cerrar' | translate }}</button>
+</div> 

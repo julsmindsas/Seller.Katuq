@@ -1,0 +1,170 @@
+// Variables
+$primary-color: #2196F3;
+$success-color: #66BB6A;
+$warning-color: #FFA726;
+$danger-color: #FF5252;
+$info-color: #42A5F5;
+$secondary-color: #78909C;
+$border-radius: 8px;
+
+// Estilos para la tabla
+:host ::ng-deep .p-datatable {
+  .p-datatable-header {
+    padding: 0.5rem;
+    background-color: white;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .p-datatable-thead > tr > th {
+    background-color: #fafafa;
+    font-size: 0.85rem;
+    padding: 0.75rem 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+    white-space: nowrap;
+    
+    .p-column-filter {
+      margin-left: 0.5rem;
+    }
+  }
+  
+  .p-datatable-tbody > tr {
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: rgba($primary-color, 0.04) !important;
+    }
+    
+    &.table-row-odd {
+      background-color: #fafafa;
+    }
+    
+    td {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #f2f2f2;
+      
+      .badge {
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: normal;
+        border-radius: 20px;
+      }
+      
+      .p-button-text {
+        padding: 0.4rem;
+        
+        &:focus {
+          box-shadow: none;
+        }
+      }
+    }
+  }
+  
+  .p-row-toggler {
+    &.p-link:focus {
+      box-shadow: none;
+    }
+  }
+  
+  .p-rowexpansion-content {
+    background-color: #f9f9f9;
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.05);
+    
+    .p-datatable {
+      box-shadow: none;
+      
+      .p-datatable-thead > tr > th {
+        background-color: #f2f2f2;
+        font-size: 0.8rem;
+        padding: 0.5rem;
+      }
+      
+      .p-datatable-tbody > tr > td {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+      }
+    }
+  }
+}
+
+// Estilos para colores de badges
+:host ::ng-deep .badge {
+  &.bg-success {
+    background-color: $success-color !important;
+  }
+  
+  &.bg-warning {
+    background-color: $warning-color !important;
+  }
+  
+  &.bg-danger {
+    background-color: $danger-color !important;
+  }
+  
+  &.bg-info {
+    background-color: $info-color !important;
+  }
+  
+  &.bg-secondary {
+    background-color: $secondary-color !important;
+  }
+  
+  &.bg-primary {
+    background-color: $primary-color !important;
+  }
+}
+
+// Estilos para botones de filtros
+:host ::ng-deep .p-column-filter-menu-button, 
+:host ::ng-deep .p-column-filter-clear-button {
+  width: 1.5rem;
+  height: 1.5rem;
+  
+  .pi {
+    font-size: 0.75rem;
+  }
+}
+
+// Estilos para paginador
+:host ::ng-deep .p-paginator {
+  .p-paginator-pages .p-paginator-page {
+    min-width: 2rem;
+    height: 2rem;
+  }
+  
+  .p-paginator-first, 
+  .p-paginator-prev, 
+  .p-paginator-next, 
+  .p-paginator-last {
+    min-width: 2rem;
+    height: 2rem;
+  }
+}
+
+// Estilo para controles en cabecera
+:host ::ng-deep .p-multiselect-panel .p-multiselect-items .p-multiselect-item {
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+}
+
+// Clase para los botones de acción
+.action-buttons-wrapper {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+// Estilo para tarjetas en visualización de observaciones
+.pedido-envio .card {
+  transition: all 0.2s ease;
+  border: 1px solid #eee;
+  
+  &:hover {
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  }
+  
+  strong {
+    color: $secondary-color;
+    margin-right: 0.25rem;
+  }
+} 

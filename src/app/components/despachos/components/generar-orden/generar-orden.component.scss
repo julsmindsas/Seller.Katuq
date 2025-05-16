@@ -1,0 +1,298 @@
+// Variables
+$primary-color: #2196f3;
+$secondary-color: #6c757d;
+$success-color: #4caf50;
+$warning-color: #ff9800;
+$danger-color: #f44336;
+$light-color: #f8f9fa;
+
+// Estilos para la modal
+.modal-header {
+  background-color: $light-color;
+  border-bottom: 2px solid darken($light-color, 5%);
+  padding: 0.75rem 1rem;
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #444;
+}
+
+.modal-footer {
+  background-color: $light-color;
+  border-top: 1px solid darken($light-color, 5%);
+  padding: 0.75rem 1rem;
+}
+
+// Estilos para las cards
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 6px;
+  overflow: hidden;
+  border: none;
+  
+  &:hover {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  }
+  
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: #495057;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+// Estilos para formularios
+.form-group {
+  margin-bottom: 1.25rem;
+  
+  label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #495057;
+  }
+  
+  .form-select, .form-control {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+    }
+    
+    &.is-invalid {
+      border-color: $danger-color;
+    }
+  }
+  
+  .text-danger {
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+  }
+}
+
+// Estilos para tablas
+.table {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  
+  th {
+    font-weight: 600;
+    background-color: $light-color;
+  }
+  
+  td, th {
+    padding: 0.75rem;
+    vertical-align: middle;
+  }
+  
+  tbody tr {
+    transition: background-color 0.2s;
+  }
+  
+  tfoot {
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+}
+
+.table-responsive {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+// Estilos para alertas
+.alert {
+  border-radius: 4px;
+  padding: 0.75rem 1.25rem;
+  
+  &.alert-info {
+    background-color: rgba($primary-color, 0.1);
+    border-color: rgba($primary-color, 0.2);
+    color: darken($primary-color, 20%);
+  }
+}
+
+// Estilos para badges
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.85em;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  
+  &.bg-primary {
+    background-color: $primary-color !important;
+  }
+}
+
+// Estilos para botones
+.btn {
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  
+  &.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  &.btn-primary {
+    background-color: $primary-color;
+    border-color: $primary-color;
+    
+    &:hover {
+      background-color: darken($primary-color, 10%);
+      border-color: darken($primary-color, 10%);
+    }
+    
+    &:disabled {
+      background-color: rgba($primary-color, 0.5);
+      border-color: rgba($primary-color, 0.5);
+    }
+  }
+  
+  &.btn-secondary {
+    background-color: $secondary-color;
+    border-color: $secondary-color;
+    
+    &:hover {
+      background-color: darken($secondary-color, 10%);
+      border-color: darken($secondary-color, 10%);
+    }
+  }
+  
+  &.btn-success {
+    background-color: $success-color;
+    border-color: $success-color;
+    
+    &:hover {
+      background-color: darken($success-color, 10%);
+      border-color: darken($success-color, 10%);
+    }
+  }
+  
+  &.btn-warning {
+    background-color: $warning-color;
+    border-color: $warning-color;
+    
+    &:hover {
+      background-color: darken($warning-color, 10%);
+      border-color: darken($warning-color, 10%);
+    }
+  }
+  
+  &.btn-outline-primary {
+    color: $primary-color;
+    border-color: $primary-color;
+    
+    &:hover {
+      background-color: $primary-color;
+      color: white;
+    }
+  }
+  
+  &.btn-outline-danger {
+    color: $danger-color;
+    border-color: $danger-color;
+    
+    &:hover {
+      background-color: $danger-color;
+      color: white;
+    }
+  }
+}
+
+/* Estilos para el input de fecha */
+.input-group {
+  .form-control-sm {
+    height: 35px;
+    font-size: 0.875rem;
+  }
+  
+  .input-group-text {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    background-color: #f8f9fa;
+    border-left: none;
+  }
+  
+  i.pi-calendar {
+    font-size: 0.875rem;
+    color: #495057;
+  }
+}
+
+/* Estilos para las tablas */
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-header {
+      padding: 0.5rem;
+      background: #f8f9fa;
+    }
+    
+    .p-datatable-thead > tr > th {
+      padding: 0.5rem 0.5rem;
+      font-size: 0.875rem;
+      background: #f8f9fa;
+    }
+    
+    .p-datatable-tbody > tr > td {
+      padding: 0.4rem 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .p-paginator {
+      padding: 0.3rem;
+      .p-paginator-element {
+        min-width: 2rem;
+        height: 2rem;
+      }
+    }
+  }
+  
+  /* Ajustes del selector de columnas */
+  .p-multiselect {
+    min-width: 180px;
+    font-size: 0.875rem;
+    
+    .p-multiselect-label {
+      padding: 0.4rem 0.75rem;
+    }
+    
+    .p-multiselect-item {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+  
+  /* Ajustes para los botones */
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Ajustes generales para el modal */
+.modal-body {
+  padding: 1rem;
+}
+
+/* Clases de utilidad */
+.text-small {
+  font-size: 0.85rem;
+}
+
+.form-select-sm, .form-control-sm {
+  height: 35px;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+} 

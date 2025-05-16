@@ -1,1623 +1,260 @@
-<app-breadcrumb [title]="'Depachos' | translate" [items]="['Despachos' | translate]" [active_item]="'Despachos' | translate" class="mb-3"></app-breadcrumb>
+<app-breadcrumb [title]="'Despachos' | translate" [items]="['Despachos' | translate]" [active_item]="'Despachos' | translate" class="mb-3"></app-breadcrumb>
+
+<!-- Sección principal -->
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body pb-0">
-                    <div class="">
-                        <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50" [showCurrentPageReport]="true"
-                            [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [resizableColumns]="true"
-                            [reorderableColumns]="true" [autoLayout]="true" [scrollable]="true"
-                            [scrollHeight]="'calc(100vh - 400px)'" [paginator]="true"
-                            currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords} pedidos' | translate }}"
-                            [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadoPago']"
-                            styleClass="p-datatable-sm p-datatable-customers p-datatable-gridlines"
-                            style="font-size: 0.9em;">
+            <!-- Card principal -->
+            <div class="card shadow-sm border-0 mb-4">
+                <!-- Loader -->
+                <div class="loader-box" *ngIf="loading">
+                    <div class="loader-8"></div>
+                </div>
 
-                            <!-- CAPTION: Botones y filtros generales -->
-                            <ng-template pTemplate="caption">
-                                <div class="container-fluid p-0" style="font-size: 0.9em;">
-                                    <!-- Fila de filtros de fecha -->
-                                    <div class="card mb-2">
-                                        <div class="card-body py-2">
-                                            <div class="row align-items-center">
-                                                <div class="col-md-3 col-sm-6 mb-md-0 mb-1">
-                                                    <label for="fechaInicial" class="mb-1 fw-bold text-secondary">{{ 'F. Inicial' | translate }}</label>
-                                                    <p-calendar id="fechaInicial" [(ngModel)]="fechaInicial"
-                                                        inputId="fechaInicial" [showIcon]="true"
-                                                        styleClass="p-calendar-sm w-100"></p-calendar>
-                                                </div>
-                                                <div class="col-md-3 col-sm-6 mb-md-0 mb-1">
-                                                    <label for="fechaFinal" class="mb-1 fw-bold text-secondary">{{ 'F. Final' | translate }}</label>
-                                                    <p-calendar id="fechaFinal" [(ngModel)]="fechaFinal" inputId="fechaFinal"
-                                                        [showIcon]="true" styleClass="p-calendar-sm w-100"></p-calendar>
-                                                </div>
-                                                <div class="col-md-6 col-sm-12 d-flex align-items-end">
-                                                    <div class="btn-group w-100">
-                                                        <button pButton type="button" label="{{ 'Hoy' | translate }}" icon="pi pi-calendar"
-                                                            class="p-button-outlined p-button-sm"
-                                                            (click)="filtrarParaHoy()"></button>
-                                                        <button pButton type="button" label="{{ 'Mañana' | translate }}" icon="pi pi-calendar-plus"
-                                                            class="p-button-outlined p-button-sm"
-                                                            (click)="filtrarParaManana()"></button>
-                                                        <button pButton type="button" label="{{ 'Pasado' | translate }}" icon="pi pi-calendar-times"
-                                                            class="p-button-outlined p-button-sm"
-                                                            (click)="filtrarParaPasadoManana()"></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Fila de botones principales -->
-                                    <div class="card mb-3">
-                                        <div class="card-body p-2">
-                                            <div class="d-flex flex-wrap justify-content-between align-items-center">
-                                                <div class="d-flex mb-md-0 mb-2">
-                                                    <p-multiSelect [options]="displayedColumns" 
-                                                        [(ngModel)]="selectedColumns" 
-                                                        optionLabel="header" 
-                                                        defaultLabel="{{ 'Seleccionar columnas' | translate }}"
-                                                        selectedItemsLabel="{0} columnas seleccionadas"
-                                                        styleClass="me-2"
-                                                        (onChange)="onColumnSelectionChange()">
-                                                    </p-multiSelect>
-                                                    <button pButton pRipple type="button" icon="pi pi-refresh" 
-                                                        pTooltip="{{ 'Restaurar columnas' | translate }}"
-                                                        class="p-button-outlined p-button-sm p-button-secondary" 
-                                                        (click)="resetColumnConfig()">
-                                                    </button>
-                                                </div>
-                                                <div class="d-flex flex-wrap">
-                                                    <div class="btn-group me-2 mb-1">
-                                                        <button pButton type="button" label="{{ 'Transport.' | translate }}" icon="pi pi-truck"
-                                                            class="p-button-outlined p-button-sm"
-                                                            (click)="openModal(listarTransportadorModal)"></button>
-                                                        <button pButton type="button" label="{{ 'Despacho' | translate }}" icon="pi pi-send"
-                                                            class="p-button-outlined p-button-sm"
-                                                            (click)="openModal(generarOrdenEnvioModal)"></button>
-                                                        <button pButton type="button" label="{{ 'Órdenes' | translate }}" icon="pi pi-list"
-                                                            class="p-button-outlined p-button-sm"
-                                                            (click)="viewAllDispatchOrders()"></button>
-                                                    </div>
-                                                    <div class="btn-group mb-1">
-                                                        <button pButton type="button" label="{{ 'Buscar' | translate }}" icon="pi pi-refresh"
-                                                            class="p-button-outlined p-button-sm p-button-success"
-                                                            (click)="refrescar(dt1)"></button>
-                                                        <button pButton type="button" label="{{ 'Limpiar' | translate }}" icon="pi pi-filter-slash"
-                                                            class="p-button-outlined p-button-sm p-button-secondary"
-                                                            (click)="clear(dt1)"></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                <!-- Header del módulo -->
+                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1 fw-bold text-primary"><i class="pi pi-truck me-2"></i>{{ 'Gestión de Despachos' | translate }}</h5>
+                        <p class="text-muted small mb-0">{{ 'Administra pedidos y órdenes de envío' | translate }}</p>
+                    </div>
+                </div>
+
+                <!-- Filtros de búsqueda -->
+                <div class="card-body p-0">
+                    <div class="filtros-container bg-light p-3 border-bottom">
+                        <div class="d-flex flex-column">
+                            <!-- Encabezado de filtros -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 text-muted">
+                                    <i class="pi pi-filter text-primary me-2"></i>
+                                    <span>{{ 'Filtros de búsqueda' | translate }}</span>
+                                </h6>
+                                <div class="btn-group">
+                                    <button pButton type="button" icon="pi pi-truck" label="{{ 'Transportadores' | translate }}" 
+                                        class="p-button-outlined p-button-sm p-button-secondary"
+                                        (click)="openModal(transportadoresModal)"></button>
+                                    <button pButton type="button" icon="pi pi-send" label="{{ 'Generar Orden' | translate }}" 
+                                        class="p-button-outlined p-button-sm p-button-secondary"
+                                        (click)="openModal(generarOrdenEnvioModal)"></button>
+                                    <button pButton type="button" icon="pi pi-list" label="{{ 'Órdenes' | translate }}" 
+                                        class="p-button-outlined p-button-sm p-button-secondary"
+                                        (click)="viewAllDispatchOrders()"></button>
                                 </div>
-                            </ng-template>
-
-                            <!-- HEADER: Encabezados y filtros fusionados -->
-                            <ng-template pTemplate="header">
-                                <tr class="p-table-tr-th" style="font-size: 0.85em; background-color: #f8f9fa;">
-                                    <!-- Detalles -->
-                                    <th *ngIf="isColumnVisible('detalles')" style="min-width: 2rem;">
-                                        <div>{{ 'Detalles' | translate }}</div>
-                                    </th>
-                                    <!-- Opciones -->
-                                    <th *ngIf="isColumnVisible('opciones')" style="min-width: 7rem;">
-                                        <div>{{ 'Opciones' | translate }}</div>
-                                    </th>
-                                    <!-- Número de Pedido -->
-                                    <th *ngIf="isColumnVisible('nroPedido')">
-                                        <div>
-                                            {{ 'Número de Pedido' | translate }}
-                                            <p-columnFilter type="text" field="nroPedido"
-                                                placeholder="{{ 'Buscar número de pedido' | translate }}" matchMode="contains"
-                                                display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Número de Factura -->
-                                    <th *ngIf="isColumnVisible('nroFactura')">
-                                        <div>
-                                            {{ 'Número de Factura' | translate }}
-                                            <p-columnFilter type="text" field="nroFactura"
-                                                placeholder="{{ 'Buscar número de factura' | translate }}" matchMode="contains"
-                                                display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Número Orden de envío -->
-                                    <th *ngIf="isColumnVisible('shippingOrder')">
-                                        <div>
-                                            {{ 'Número orden de envío' | translate }}
-                                            <p-columnFilter type="text" field="shippingOrder"
-                                                placeholder="{{ 'Buscar orden de envío' | translate }}" matchMode="contains" display="menu"
-                                                [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Estado de Pago -->
-                                    <th *ngIf="isColumnVisible('estadoPago')">
-                                        <div>
-                                            {{ 'Estado de Pago' | translate }}
-                                            <p-columnFilter field="estadoPago" matchMode="in" display="menu"
-                                                [showMenu]="true">
-                                                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                                    <p-multiSelect [ngModel]="value" [options]="estadosPago"
-                                                        placeholder="{{ 'Seleccione' | translate }}" (onChange)="filter($event.value)"
-                                                        style="width:100%; font-size:0.8em;"></p-multiSelect>
-                                                </ng-template>
-                                            </p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Estado de Proceso -->
-                                    <th *ngIf="isColumnVisible('estadoProceso')">
-                                        <div>
-                                            {{ 'Estado de Proceso' | translate }}
-                                            <p-columnFilter field="estadoProceso" matchMode="in" display="menu"
-                                                [showMenu]="true">
-                                                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                                    <p-multiSelect [ngModel]="value" [options]="estadosProcesos"
-                                                        placeholder="{{ 'Seleccione' | translate }}" (onChange)="filter($event.value)"
-                                                        style="width:100%; font-size:0.8em;"></p-multiSelect>
-                                                </ng-template>
-                                            </p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Cliente -->
-                                    <th *ngIf="isColumnVisible('cliente')">
-                                        <div>
-                                            {{ 'Cliente' | translate }}
-                                            <p-columnFilter type="text" field="cliente.nombres_completos"
-                                                placeholder="{{ 'Buscar cliente' | translate }}" matchMode="contains" display="menu"
-                                                [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Domicilio -->
-                                    <th *ngIf="isColumnVisible('totalEnvio')">
-                                        <div>
-                                            {{ 'Domicilio' | translate }}
-                                            <p-columnFilter type="numeric" field="totalEnvio" placeholder="{{ 'Domicilio' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Falta por Pagar -->
-                                    <th *ngIf="isColumnVisible('faltaPorPagar')">
-                                        <div>
-                                            {{ 'Falta por Pagar' | translate }}
-                                            <p-columnFilter type="numeric" field="faltaPorPagar" placeholder="{{ 'Falta' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Fecha de Compra -->
-                                    <th *ngIf="isColumnVisible('fechaCreacion')">
-                                        <div>
-                                            {{ 'Fecha de Compra' | translate }}
-                                            <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion" type="date"
-                                                display="menu" [showMatchModes]="false" [showOperator]="false"
-                                                [showAddButton]="false" [showMenu]="true">
-                                                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                                    <p-calendar (onSelect)="filter($event)"
-                                                        dateFormat="yy-mm-dd"></p-calendar>
-                                                </ng-template>
-                                            </p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Ciudad -->
-                                    <th *ngIf="isColumnVisible('ciudad')">
-                                        <div>
-                                            {{ 'Ciudad' | translate }}
-                                            <p-columnFilter type="text" field="envio.ciudad" placeholder="{{ 'Ciudad' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Zona de Entrega -->
-                                    <th *ngIf="isColumnVisible('zonaCobro')">
-                                        <div>
-                                            {{ 'Zona de Entrega' | translate }}
-                                            <p-columnFilter type="text" field="envio.zonaCobro" placeholder="{{ 'Zona' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Observaciones de Entrega -->
-                                    <th *ngIf="isColumnVisible('observaciones')">
-                                        <div>
-                                            {{ 'Observaciones de Entrega' | translate }}
-                                            <!-- Si no requieres filtro, se deja solo el título -->
-                                        </div>
-                                    </th>
-                                    <!-- Fecha de Entrega -->
-                                    <th *ngIf="isColumnVisible('fechaEntrega')">
-                                        <div>
-                                            {{ 'Fecha de Entrega' | translate }}
-                                            <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega" type="date"
-                                                display="menu" [showMatchModes]="false" [showOperator]="false"
-                                                [showAddButton]="false" [showMenu]="true">
-                                                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                                    <p-calendar (onSelect)="filter($event)"
-                                                        dateFormat="yy-mm-dd"></p-calendar>
-                                                </ng-template>
-                                            </p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Forma de Entrega -->
-                                    <th *ngIf="isColumnVisible('formaEntrega')">
-                                        <div>
-                                            {{ 'Forma de Entrega' | translate }}
-                                            <p-columnFilter type="text" field="formaEntrega" placeholder="{{ 'Entrega' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Horario de Entrega -->
-                                    <th *ngIf="isColumnVisible('horarioEntrega')">
-                                        <div>
-                                            {{ 'Horario de Entrega' | translate }}
-                                            <p-columnFilter type="text" field="horarioEntrega" placeholder="{{ 'Horario' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Fecha y Horario de Empacado -->
-                                    <th *ngIf="isColumnVisible('fechaHoraEmpacado')">
-                                        <div>
-                                            {{ 'Fecha y Horario de Empacado' | translate }}
-                                            <p-columnFilter type="text" field="fechaHoraEmpacado" placeholder="{{ 'Empacado' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Fecha y Horario de Despachado -->
-                                    <th *ngIf="isColumnVisible('fechaYHorarioDespachado')">
-                                        <div>
-                                            {{ 'Fecha y Horario de Despachado' | translate }}
-                                            <p-columnFilter type="text" field="fechaYHorarioDespachado"
-                                                placeholder="{{ 'Despachado' | translate }}" matchMode="contains" display="menu"
-                                                [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Vendedor -->
-                                    <th *ngIf="isColumnVisible('asesorAsignado')">
-                                        <div>
-                                            {{ 'Vendedor' | translate }}
-                                            <p-columnFilter type="text" field="asesorAsignado.name"
-                                                placeholder="{{ 'Vendedor' | translate }}" matchMode="contains" display="menu"
-                                                [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Empacador -->
-                                    <th *ngIf="isColumnVisible('empacador')">
-                                        <div>
-                                            {{ 'Empacador' | translate }}
-                                            <p-columnFilter type="text" field="empacador" placeholder="{{ 'Empacador' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Despachador -->
-                                    <th *ngIf="isColumnVisible('despachador')">
-                                        <div>
-                                            {{ 'Despachador' | translate }}
-                                            <p-columnFilter type="text" field="despachador.name"
-                                                placeholder="{{ 'Despachador' | translate }}" matchMode="contains" display="menu"
-                                                [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Transportador -->
-                                    <th *ngIf="isColumnVisible('transportador')">
-                                        <div>
-                                            {{ 'Transportador' | translate }}
-                                            <p-columnFilter type="text" field="transportador"
-                                                placeholder="{{ 'Transportador' | translate }}" matchMode="contains" display="menu"
-                                                [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                    <!-- Entregado -->
-                                    <th *ngIf="isColumnVisible('entregado')">
-                                        <div>
-                                            {{ 'Entregado' | translate }}
-                                            <p-columnFilter type="text" field="entregado" placeholder="{{ 'Entregado' | translate }}"
-                                                matchMode="contains" display="menu" [showMenu]="true"></p-columnFilter>
-                                        </div>
-                                    </th>
-                                </tr>
-                            </ng-template>
-
-                            <!-- CUERPO: filas y row expansion -->
-                            <ng-template pTemplate="body" let-pedido let-expanded="expanded" let-rowIndex="rowIndex">
-                                <tr class="p-table-tr-td" [ngClass]="{'table-row-odd': rowIndex % 2 !== 0}" style="font-size: 0.85em;">
-                                    <!-- Botón para row expansion (Detalles) -->
-                                    <td *ngIf="isColumnVisible('detalles')" style="width: 5rem;">
-                                        <button type="button" pButton pRipple [pRowToggler]="pedido"
-                                            class="p-button-text p-button-rounded p-button-plain"
-                                            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
-                                    </td>
-                                    <!-- Opciones: Conserva los iconos según corresponda -->
-                                    <td *ngIf="isColumnVisible('opciones')">
-                                        <div class="d-flex justify-content-start align-items-center">
-                                            <button pButton pRipple type="button" icon="pi pi-file-pdf" 
-                                                class="p-button-rounded p-button-text p-button-sm me-1" 
-                                                pTooltip="{{ 'Imprimir Pdf' | translate }}"
-                                                (click)="pdfOrder(modalContent, pedido)"></button>
-                                            
-                                            <button pButton pRipple type="button" icon="pi pi-tag" 
-                                                *ngIf="iterarTarjetas(pedido)"
-                                                class="p-button-rounded p-button-text p-button-sm me-1" 
-                                                pTooltip="{{ 'Tarjeta' | translate }}"
-                                                (click)="verTarjetasPedido(pedido)"></button>
-                                                
-                                            <button pButton pRipple type="button" icon="pi pi-file" 
-                                                class="p-button-rounded p-button-text p-button-sm me-1" 
-                                                pTooltip="{{ 'Rótulo' | translate }}"
-                                                (click)="descargarRotulo(pedido)"></button>
-                                                
-                                            <button pButton pRipple type="button" icon="pi pi-inbox" 
-                                                *ngIf="pedido.estadoProceso != 'Empacado' && pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'"
-                                                class="p-button-rounded p-button-text p-button-sm me-1" 
-                                                pTooltip="{{ 'Empacar' | translate }}"
-                                                (click)="cambiarEstado(pedido,1)"></button>
-                                                
-                                            <button pButton pRipple type="button" icon="pi pi-box" 
-                                                *ngIf="pedido.estadoProceso == 'Empacado' && pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'"
-                                                class="p-button-rounded p-button-text p-button-sm me-1" 
-                                                pTooltip="{{ 'Desempacar' | translate }}"
-                                                (click)="cambiarEstado(pedido,2)"></button>
-                                                
-                                            <button pButton pRipple type="button" icon="pi pi-send" 
-                                                *ngIf="pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'"
-                                                class="p-button-rounded p-button-text p-button-sm me-1" 
-                                                pTooltip="{{ 'Despachar' | translate }}"
-                                                (click)="cambiarEstado(pedido,4)"></button>
-                                                
-                                            <button pButton pRipple type="button" icon="pi pi-check-circle" 
-                                                *ngIf="pedido.estadoProceso == 'Despachado'"
-                                                class="p-button-rounded p-button-text p-button-sm me-1" 
-                                                pTooltip="{{ 'Entregar' | translate }}"
-                                                (click)="cambiarEstado(pedido,5)"></button>
-                                        </div>
-                                    </td>
-                                    <!-- Resto de columnas (según encabezado) -->
-                                    <td *ngIf="isColumnVisible('nroPedido')" class="text-nowrap">{{ pedido.nroPedido }}</td>
-                                    <td *ngIf="isColumnVisible('nroFactura')" class="text-nowrap">{{ pedido?.nroFactura }}</td>
-                                    <td *ngIf="isColumnVisible('shippingOrder')" class="text-nowrap">{{ pedido?.shippingOrder }}</td>
-                                    <td *ngIf="isColumnVisible('estadoPago')">
-                                        <span [ngClass]="{
-                                            'badge bg-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
-                                            'badge bg-success': pedido?.estadoPago === 'Aprobado' || pedido?.estadoPago === 'PreAprobado',
-                                            'badge bg-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
-                                        }">{{ pedido?.estadoPago }}</span>
-                                    </td>
-                                    <td *ngIf="isColumnVisible('estadoProceso')">
-                                        <span [ngClass]="{
-                                            'badge bg-secondary': pedido?.estadoProceso === 'SinProducir',
-                                            'badge bg-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                            'badge bg-primary': pedido?.estadoProceso === 'Empacado',
-                                            'badge bg-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                            'badge bg-success': pedido?.estadoProceso === 'Entregado',
-                                            'badge bg-danger': pedido?.estadoProceso === 'Rechazado'
-                                        }">{{ pedido?.estadoProceso }}</span>
-                                    </td>
-                                    <td *ngIf="isColumnVisible('cliente')" class="text-nowrap">
-                                        <div class="d-flex align-items-center">
-                                            <span>{{ pedido.cliente?.nombres_completos }} {{ pedido.cliente?.apellidos_completos }}</span>
-                                            <button pButton pRipple type="button" icon="pi pi-info-circle" 
-                                                class="p-button-rounded p-button-text p-button-sm ms-1" 
-                                                pTooltip="{{ 'Ver notas del cliente' | translate }}"
-                                                (click)="verNotasCliente(pedido)"></button>
-                                        </div>
-                                    </td>
-                                    <td *ngIf="isColumnVisible('totalEnvio')" class="text-end text-nowrap">{{ pedido.totalEnvio | currency }}</td>
-                                    <td *ngIf="isColumnVisible('faltaPorPagar')" class="text-end text-nowrap">{{ pedido?.faltaPorPagar | currency }}</td>
-                                    <td *ngIf="isColumnVisible('fechaCreacion')" class="text-nowrap">{{ pedido.fechaCreacion | date: 'dd/MM/yyyy' }}</td>
-                                    <td *ngIf="isColumnVisible('ciudad')" class="text-nowrap">{{ pedido.envio?.ciudad }}</td>
-                                    <td *ngIf="isColumnVisible('zonaCobro')" class="text-nowrap">{{ pedido.envio?.zonaCobro }}</td>
-                                    
-                                    <td *ngIf="isColumnVisible('observaciones')">
-                                        <div class="pedido-envio" style="font-size: 0.8em;">
-                                            <ng-container
-                                                *ngIf="pedido?.envio?.nombres && pedido?.envio?.apellidos 
-                                && pedido.envio.celular && pedido.envio.direccionEntrega && pedido.envio.observaciones">
-                                                <div class="card p-2 mb-0">
-                                                    <div class="row g-1">
-                                                        <div class="col-12">
-                                                            <strong>{{ 'Nombre:' | translate }}</strong>
-                                                            {{ pedido?.envio?.nombres }} {{ pedido.envio.apellidos }}
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <strong>{{ 'Teléfono:' | translate }}</strong>
-                                                            {{ pedido.envio.celular }}
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <strong>{{ 'WhatsApp:' | translate }}</strong>
-                                                            {{ pedido.envio.celular }}
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <strong>{{ 'Dirección:' | translate }}</strong>
-                                                            {{ pedido.envio.direccionEntrega }}
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <strong>{{ 'Observaciones:' | translate }}</strong>
-                                                            {{ pedido.envio.observaciones }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </ng-container>
-                                            <ng-container
-                                                *ngIf="!pedido?.envio?.nombres || !pedido.envio.apellidos || !pedido.envio.celular || !pedido.envio.direccionEntrega || !pedido.envio.observaciones">
-                                                <strong>{{ 'No hay observaciones' | translate }}</strong>
-                                            </ng-container>
-                                        </div>
-                                    </td>
-                                    
-                                    <td *ngIf="isColumnVisible('fechaEntrega')" class="text-nowrap">
-                                        {{
-                                        convertFechaEntregaString(pedido.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega)
-                                        }}
-                                    </td>
-                                    <td *ngIf="isColumnVisible('formaEntrega')" class="text-nowrap">{{ pedido.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
-                                    <td *ngIf="isColumnVisible('horarioEntrega')" class="text-nowrap">{{ pedido.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
-                                    <td *ngIf="isColumnVisible('fechaHoraEmpacado')" class="text-nowrap">{{ pedido.fechaHoraEmpacado | date: 'dd-MM-yyyy HH:mm' }}</td>
-                                    <td *ngIf="isColumnVisible('fechaYHorarioDespachado')" class="text-nowrap">{{ pedido.fechaYHorarioDespachado | date: 'dd-MM-yyyy HH:mm' }}</td>
-                                    <td *ngIf="isColumnVisible('asesorAsignado')" class="text-nowrap">{{ pedido.asesorAsignado?.name }}</td>
-                                    <td *ngIf="isColumnVisible('empacador')" class="text-nowrap">{{ pedido.empacador }}</td>
-                                    <td *ngIf="isColumnVisible('despachador')" class="text-nowrap">{{ pedido.despachador?.name }}</td>
-                                    <td *ngIf="isColumnVisible('transportador')" class="text-nowrap">{{ pedido.transportador }}</td>
-                                    <td *ngIf="isColumnVisible('entregado')">
-                                        <button pButton type="button" label="{{ 'Ver detalles de Entrega' | translate }}"
-                                            class="p-button-outlined p-button-sm"
-                                            (click)="openModalDetalleEntrega(detallesEntrega, pedido)">
+                            </div>
+                            
+                            <!-- Filtros de fecha -->
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3 col-sm-6">
+                                    <label class="form-label small text-muted mb-1">{{ 'Desde' | translate }}</label>
+                                    <p-calendar [(ngModel)]="fechaInicial" 
+                                        [showIcon]="true"
+                                        dateFormat="dd/mm/yy"
+                                        [readonlyInput]="true"
+                                        styleClass="w-100"
+                                        [inputStyleClass]="'form-control form-control-sm rounded'"></p-calendar>
+                                </div>
+                                <div class="col-md-3 col-sm-6">
+                                    <label class="form-label small text-muted mb-1">{{ 'Hasta' | translate }}</label>
+                                    <p-calendar [(ngModel)]="fechaFinal" 
+                                        [showIcon]="true"
+                                        dateFormat="dd/mm/yy"
+                                        [readonlyInput]="true"
+                                        styleClass="w-100"
+                                        [inputStyleClass]="'form-control form-control-sm rounded'"></p-calendar>
+                                </div>
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="btn-group w-100">
+                                        <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaHoy()">
+                                            <i class="pi pi-calendar-today me-1"></i>{{ 'Hoy' | translate }}
                                         </button>
-                                    </td>
-                                </tr>
-                            </ng-template>
-
-                            <!-- EXPANSIÓN DE FILAS: Productos del carrito y configuraciones -->
-                            <ng-template pTemplate="rowexpansion" let-pedido>
-                                <tr style="width: 50%; font-size: 0.85em;">
-                                    <td colspan="5">
-                                        <div style="padding: 10px;">
-                                            <p-table [value]="pedido.carrito" dataKey="pedido.carrito">
-                                                <ng-template pTemplate="header">
-                                <tr>
-                                    <th style="width: 2rem;"></th>
-                                    <th>{{ 'Imagen' | translate }}</th>
-                                    <th>{{ 'Producto' | translate }}</th>
-                                    <th>{{ 'Cantidad' | translate }}</th>
-                                    <!-- Se pueden agregar más columnas si se requieren -->
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-item let-expanded="expanded">
-                                <tr>
-                                    <td>
-                                        <button type="button" pButton pRipple [pRowToggler]="item"
-                                            class="p-button-text p-button-rounded p-button-plain"
-                                            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
-                                    </td>
-                                    <td>
-                                        <img height="40" width="40" style="border:1px solid #ccc;"
-                                            [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
-                                            [alt]="item.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen" />
-                                    </td>
-                                    <td>{{ item.producto?.crearProducto?.titulo }}</td>
-                                    <td>{{ item.cantidad }}</td>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="rowexpansion" let-configuracion>
-                                <tr>
-                                    <td colspan="7">
-                                        <div style="padding: 10px;">
-                                            <h5>{{ 'Preferencias' | translate }}</h5>
-                                            <p-table [value]="configuracion?.configuracion?.preferencias"
-                                                dataKey="configuracion.id" style="font-size: 0.8em;">
-                                                <ng-template pTemplate="header">
-                                <tr>
-                                    <th>{{ 'Imagen' | translate }}</th>
-                                    <th>{{ 'Título' | translate }}</th>
-                                    <th>{{ 'SubTítulo' | translate }}</th>
-                                    <th>{{ 'Iva' | translate }}</th>
-                                    <th>{{ 'Total Iva' | translate }}</th>
-                                    <th>{{ 'Total sin Iva' | translate }}</th>
-                                    <th>{{ 'Cantidad' | translate }}</th>
-                                    <th>{{ 'Total con Iva' | translate }}</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-itemconf>
-                                <tr>
-                                    <td>
-                                        <img height="40" width="40" style="border:1px solid #ccc;"
-                                            [src]="itemconf.imagen" />
-                                    </td>
-                                    <td>{{ itemconf.titulo }}</td>
-                                    <td>{{ itemconf.subtitulo }}</td>
-                                    <td>{{ itemconf.porcentajeIva }}</td>
-                                    <td>{{ itemconf.valorIva | currency }}</td>
-                                    <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
-                                    <td>1</td>
-                                    <td>{{ itemconf.precioTotalConIva | currency }}</td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                        <h5 *ngIf="configuracion?.configuracion?.adiciones.length > 0">{{ 'Adiciones' | translate }}</h5>
-                        <p-table *ngIf="configuracion?.configuracion?.adiciones.length > 0"
-                            [value]="configuracion?.configuracion?.adiciones" dataKey="configuracion.id"
-                            style="font-size: 0.8em;">
-                            <ng-template pTemplate="header">
-                                <tr>
-                                    <th>{{ 'Imagen' | translate }}</th>
-                                    <th>{{ 'Título' | translate }}</th>
-                                    <th>{{ 'SubTítulo' | translate }}</th>
-                                    <th>{{ 'Iva' | translate }}</th>
-                                    <th>{{ 'Total Iva' | translate }}</th>
-                                    <th>{{ 'Total sin Iva' | translate }}</th>
-                                    <th>{{ 'Cantidad' | translate }}</th>
-                                    <th>{{ 'Total con Iva' | translate }}</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-itemconf>
-                                <tr>
-                                    <td>
-                                        <img height="40" width="40" style="border:1px solid #ccc;"
-                                            [src]="itemconf.imagen" />
-                                    </td>
-                                    <td>{{ itemconf.titulo }}</td>
-                                    <td>{{ itemconf.subtitulo }}</td>
-                                    <td>{{ itemconf.porcentajeIva }}</td>
-                                    <td>{{ itemconf.valorIva | currency }}</td>
-                                    <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
-                                    <td>1</td>
-                                    <td>{{ itemconf.precioTotalConIva | currency }}</td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-                    </td>
-                    </tr>
-                    </ng-template>
-                    <ng-template pTemplate="emptymessage">
-                        <tr>
-                            <td colspan="4">{{ 'No hay productos en el carrito para este pedido.' | translate }}</td>
-                        </tr>
-                    </ng-template>
-                    </p-table>
-                </div>
-                </td>
-                </tr>
-                </ng-template>
-
-                <!-- MENSAJE SI LA TABLA ESTÁ VACÍA -->
-                <ng-template pTemplate="emptymessage">
-                    <tr>
-                        <td colspan="19" style="font-size: 0.85em;">{{ 'Productos no encontrados.' | translate }}</td>
-                    </tr>
-                </ng-template>
-
-                <!-- FOOTER: Totales (adaptar el colspan en función del número de columnas visibles) -->
-                <ng-template pTemplate="footer">
-                    <tr style="font-size: 0.85em;" *ngIf="getVisibleColumnsCount() > 0">
-                        <!-- Footer dinámico que se adapta a las columnas visibles -->
-                        <ng-container *ngIf="getVisibleColumnsCount() === 1">
-                            <td class="text-end">{{ calculateTotalEnvio() | currency }} | {{ calculateFaltaPorPagar() | currency }}</td>
-                        </ng-container>
-                        
-                        <ng-container *ngIf="getVisibleColumnsCount() > 1">
-                            <!-- Primera celda para columna de detalles o primera columna visible -->
-                            <td *ngIf="isColumnVisible('detalles') || isColumnVisible('opciones')"></td>
-                            
-                            <!-- Generar celdas intermedias, la última tendrá los totales -->
-                            <ng-container *ngFor="let col of getVisibleColumnFields(); let i = index; let last = last">
-                                <ng-container *ngIf="i > 0 && i < getVisibleColumnsCount() - 2">
-                                    <td *ngIf="col === 'totalEnvio'" class="text-end">{{ calculateTotalEnvio() | currency }}</td>
-                                    <td *ngIf="col === 'faltaPorPagar'" class="text-end">{{ calculateFaltaPorPagar() | currency }}</td>
-                                    <td *ngIf="col !== 'totalEnvio' && col !== 'faltaPorPagar'"></td>
-                                </ng-container>
-                                
-                                <!-- Mostrar totales en la penúltima columna si no hay columnas específicas de totales -->
-                                <ng-container *ngIf="last && !isColumnVisible('totalEnvio') && !isColumnVisible('faltaPorPagar')">
-                                    <td class="text-end" [attr.colspan]="2">
-                                        <strong>{{ 'Total Envío:' | translate }}</strong> {{ calculateTotalEnvio() | currency }} | 
-                                        <strong>{{ 'Falta Por Pagar:' | translate }}</strong> {{ calculateFaltaPorPagar() | currency }}
-                                    </td>
-                                </ng-container>
-                            </ng-container>
-                            
-                            <!-- Última celda vacía o con información adicional -->
-                            <td *ngIf="getVisibleColumnsCount() > 3"></td>
-                        </ng-container>
-                    </tr>
-                </ng-template>
-
-                </p-table>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-</div>
-
-<!-- Modales -->
-<ng-template #crearTransportadorModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title">{{ 'Crear Transportador' | translate }}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <form [formGroup]="transportadorForm">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="nombres">{{ 'Nombres' | translate }}</label>
-                        <input type="text" class="form-control" id="nombres" formControlName="nombres" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="apellidos">{{ 'Apellidos' | translate }}</label>
-                        <input type="text" class="form-control" id="apellidos" formControlName="apellidos" required>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="cedula">{{ 'Cédula' | translate }}</label>
-                        <input type="text" class="form-control" id="cedula" formControlName="cedula" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="telefono">{{ 'Teléfono' | translate }}</label>
-                        <input type="text" class="form-control" id="telefono" formControlName="telefono" required>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="whatsapp">{{ 'WhatsApp' | translate }}</label>
-                        <input type="text" class="form-control" id="whatsapp" formControlName="whatsapp">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="correo">{{ 'Correo' | translate }}</label>
-                        <input type="email" class="form-control" id="correo" formControlName="correo" required>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="fechaNacimiento">{{ 'Fecha de Nacimiento' | translate }}</label>
-                        <input type="date" class="form-control" id="fechaNacimiento" formControlName="fechaNacimiento"
-                            required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="eps">{{ 'EPS' | translate }}</label>
-                        <input type="text" class="form-control" id="eps" formControlName="eps">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="arl">{{ 'ARL' | translate }}</label>
-                        <input type="text" class="form-control" id="arl" formControlName="arl">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="marcaMoto">{{ 'Marca de la Moto' | translate }}</label>
-                        <input type="text" class="form-control" id="marcaMoto" formControlName="marcaMoto">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="lineaMoto">{{ 'Línea de la Moto' | translate }}</label>
-                        <input type="text" class="form-control" id="lineaMoto" formControlName="lineaMoto">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="modeloMoto">{{ 'Modelo de la Moto' | translate }}</label>
-                        <input type="text" class="form-control" id="modeloMoto" formControlName="modeloMoto">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="placaMoto">{{ 'Placa de la Moto' | translate }}</label>
-                        <input type="text" class="form-control" id="placaMoto" formControlName="placa">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 text-right">
-                    <div class="form-group">
-                        <label for="lineaMoto">{{ 'contraseña' | translate }}</label>
-                        <input type="text" class="form-control" id="lineaMoto" formControlName="pwd">
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="modal-footer">
-        <button *ngIf="!editTransporter" type="button" class="btn btn-primary"
-            (click)="onSubmitTransportador()">{{ 'Guardar' | translate }}</button>
-        <button *ngIf="editTransporter" type="button" class="btn btn-primary"
-            (click)="onSubmitTransportador()">{{ 'Guardar' | translate }}</button>
-        <button type="button" class="btn btn-secondary" (click)="modal.dismiss('Cancelar')">{{ 'Cancelar' | translate }}</button>
-    </div>
-</ng-template>
-<ng-template #listarTransportadorModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title">{{ 'Lista de Transportadores' | translate }}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <!-- <div class="modal fade" id="transportadoresModal" tabindex="-1" aria-labelledby="transportadoresModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content"> -->
-        <button pButton label="{{ 'Crear Transportador' | translate }}" icon="pi pi-plus" class="p-button-success mr-2"
-            (click)="openModal(crearTransportadorModal)"></button>
-        <div class="modal-header">
-
-
-        </div>
-        <div class="modal-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col">{{ 'Cédula' | translate }}</th>
-                        <th scope="col">{{ 'Nombres' | translate }}</th>
-                        <th scope="col">{{ 'Apellidos' | translate }}</th>
-                        <th scope="col">{{ 'Telefono' | translate }}</th>
-                        <th scope="col">{{ 'WhatsApp' | translate }}</th>
-                        <th scope="col">{{ 'Acciones' | translate }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let vendor of vendors">
-                        <td>{{vendor.cedula}}</td>
-                        <td>{{vendor.nombres}}</td>
-                        <td>{{vendor.apellidos}}</td>
-                        <td>{{vendor.telefono}}</td>
-                        <td>{{vendor.whatsapp}}</td>
-                        <td><i (click)="openModal(crearTransportadorModal,true,vendor)" class="fa fa-pencil"></i>
-                            <i (click)=deleteTransporter(vendor) class="pi pi-trash"></i>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- </div>
-            </div>
-          </div> -->
-
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-primary" (click)="modal.dismiss('Cross click')">{{ 'Aceptar' | translate }}</button>
-
-    </div>
-</ng-template>
-
-
-<ng-template #generarOrdenEnvioModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title">{{ 'Generar Orden de Envío' | translate }}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <form [formGroup]="ordenEnvioForm">
-            <div class="form-group">
-                <label for="fechaEnvio">{{ 'Fecha' | translate }}</label>
-                <input type="date" class="form-control" id="fechaEnvio" formControlName="fechaEnvio" required>
-            </div>
-            <div class="form-group">
-                <label for="metodoEnvio">{{ 'Cómo lo vamos a enviar' | translate }}</label>
-                <select class="form-control" id="metodoEnvio" formControlName="metodoEnvio" required
-                    (change)="onMetodoEnvioChange($event)">
-                    <option value="mensajeroPropio">{{ 'Mensajero Propio' | translate }}</option>
-                    <option value="pasarelaEnvios">{{ 'Pasarela de envíos' | translate }}</option>
-                </select>
-            </div>
-            <div *ngIf="metodoEnvio === 'mensajeroPropio'">
-                <!-- <div class="row mb-2">
-                    <div class="col-12 text-right">
-                        <button pButton label="Agregar Pedido" icon="pi pi-plus" class="p-button-success mr-2"
-                            (click)="agregarPedido()"></button>
-                    </div>
-                </div> -->
-                <div>
-                    <div class="order-history table-responsive custom-datatable product-list-custom">
-                        <p-table #dt3 [value]="loadPedidosDisponibles()" dataKey="nroPedido" [rows]="10"
-                            [paginator]="true"
-                            [globalFilterFields]="['nroPedido','cliente.nombres_completos','estadoPago','estadoProceso']">
-                            <ng-template pTemplate="header">
-                                <tr>
-                                    <th>{{ 'Agregar' | translate }}</th>
-                                    <th>{{ 'Opciones' | translate }}</th>
-                                    <th>{{ 'Número de Pedido' | translate }}</th>
-                                    <th>{{ 'Orden de envio' | translate }}</th>
-                                    <th>{{ 'Cliente' | translate }}</th>
-                                    <th>{{ 'Estado de Pago' | translate }}</th>
-                                    <th>{{ 'Estado de Proceso' | translate }}</th>
-                                    <th>{{ 'Ciudad' | translate }}</th>
-                                    <th>{{ 'Zona Entrega' | translate }}</th>
-                                    <th>{{ 'Forma de Entrega' | translate }}</th>
-                                    <th>{{ 'Horario de Entrega' | translate }}</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-pedido>
-                                <tr>
-                                    <td>
-                                        <button pButton type="button" icon="pi pi-plus" class="p-button-success"
-                                            (click)="handleAgregarPedido(pedido)"></button>
-                                    </td>
-                                    <td>
-                                        <div class="row">
-                                            <div class="col-sm-2">
-
-                                                <i class="icofont icofont-file-pdf"
-                                                    (click)="pdfOrder(modalContent,pedido)"
-                                                    ngbTooltip="{{ 'Orden De Pedido' | translate }}"></i>
-                                            </div>
-                                            <div class="col-sm-2" *ngIf="iterarTarjetas(pedido)">
-                                                <i class="icon-layers" ngbTooltip="{{ 'Tarjeta' | translate }}"
-                                                    (click)="verTarjetasPedido(pedido)"></i>
-                                            </div>
-                                            <div class="col-sm-2">
-                                                <i class="icofont icofont-notepad" ngbTooltip="{{ 'Rótulo' | translate }}"
-                                                    (click)="descargarRotulo(pedido)"></i>
-                                            </div>
-                                            <div class="col-sm-2">
-                                                <i *ngIf="pedido.estadoProceso != 'Empacado'"
-                                                    class="icofont icofont-inbox" ngbTooltip="{{ 'Empacar' | translate }}"
-                                                    (click)="cambiarEstado(pedido,1)"></i>
-                                                <i *ngIf="pedido.estadoProceso == 'Empacado'"
-                                                    class="icofont icofont-box" ngbTooltip="{{ 'Desempacar' | translate }}"
-                                                    (click)="cambiarEstado(pedido,2)"></i>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>{{ pedido.nroPedido }}</td>
-                                    <td>{{ pedido.shippingOrder }}</td>
-                                    <td>{{ pedido.cliente.nombres_completos }} {{ pedido.cliente.apellidos_completos }}
-                                    </td>
-                                    <td>{{ pedido.estadoPago }}</td>
-                                    <td>{{ pedido.estadoProceso }}</td>
-                                    <td>{{ pedido.envio.ciudad }}</td>
-                                    <td>{{ pedido.envio.zonaCobro }}</td>
-                                    <td>{{ pedido.formaEntrega }}</td>
-                                    <td>{{ pedido.horarioEntrega }}</td>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="emptymessage">
-                                <tr>
-                                    <td colspan="9">{{ 'No hay pedidos disponibles.' | translate }}</td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-                </div>
-                <div class="order-history table-responsive custom-datatable product-list-custom text-small">
-                    <p-table #dt2 [value]="pedidosSeleccionados" dataKey="nroPedido" [rows]="10" [paginator]="true"
-                        [globalFilterFields]="['nroPedido','cliente.nombres_completos','estadoPago','estadoProceso']">
-                        <ng-template pTemplate="header">
-                            <tr>
-                                <th>{{ 'Opciones' | translate }}</th>
-                                <th>{{ 'Número de Pedido' | translate }}</th>
-                                <th>{{ 'Número de Factura' | translate }}</th>
-                                <th>{{ 'Cliente' | translate }}</th>
-                                <th>{{ 'Estado de Pago' | translate }}</th>
-                                <th>{{ 'Estado de Proceso' | translate }}</th>
-                                <th>{{ 'Notas Cliente' | translate }}</th>
-                                <th>{{ 'Domicilio' | translate }}</th>
-                                <th>{{ 'Falta por pagar' | translate }}</th>
-                                <th>{{ 'ciudad' | translate }}</th>
-                                <th>{{ 'Zona Entrega' | translate }}</th>
-                                <th>{{ 'Forma de entrega' | translate }}</th>
-                                <th>{{ 'Horario de entrega' | translate }}</th>
-                                <th>{{ 'Fecha y Horario de empacado' | translate }}</th>
-                                <th>{{ 'Empacador' | translate }}</th>
-                                <th>{{ 'Acciones' | translate }}</th>
-                            </tr>
-                        </ng-template>
-                        <ng-template pTemplate="body" let-pedido>
-                            <tr>
-                                <td>
-                                    <div class="row">
-                                        <div class="col-sm-2">
-
-                                            <i class="icofont icofont-file-pdf" (click)="pdfOrder(modalContent,pedido)"
-                                                ngbTooltip="{{ 'Orden De Pedido' | translate }}"></i>
-                                        </div>
-                                        <div class="col-sm-2" *ngIf="iterarTarjetas(pedido)">
-                                            <i class="icon-layers" ngbTooltip="{{ 'Tarjeta' | translate }}"
-                                                (click)="verTarjetasPedido(pedido)"></i>
-                                        </div>
-                                        <div class="col-sm-2">
-                                            <i class="icofont icofont-notepad" ngbTooltip="{{ 'Rótulo' | translate }}"
-                                                (click)="descargarRotulo(pedido)"></i>
-                                        </div>
-                                        <div class="col-sm-2">
-                                            <i *ngIf="pedido.estadoProceso != 'Empacado'" class="icofont icofont-inbox"
-                                                ngbTooltip="{{ 'Empacar' | translate }}" (click)="cambiarEstado(pedido,1)"></i>
-                                            <i *ngIf="pedido.estadoProceso == 'Empacado'" class="icofont icofont-box"
-                                                ngbTooltip="{{ 'Desempacar' | translate }}" (click)="cambiarEstado(pedido,2)"></i>
-                                        </div>
+                                        <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaManana()">
+                                            <i class="pi pi-calendar me-1"></i>{{ 'Mañana' | translate }}
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaPasadoManana()">
+                                            <i class="pi pi-calendar-plus me-1"></i>{{ 'Pasado' | translate }}
+                                        </button>
                                     </div>
-                                </td>
-                                <td>{{ pedido.nroPedido }}</td>
-                                <td></td>
-                                <td>{{ pedido.cliente.nombres_completos }} {{ pedido.cliente.apellidos_completos }}</td>
-                                <td>{{ pedido.estadoPago }}</td>
-                                <td>{{ pedido.estadoProceso }}</td>
-                                <td><i (click)="verNotasCliente(pedido)" class="icofont icofont-ui-note"
-                                        ngbTooltip="{{ 'Ver notas del cliente' | translate }}"></i></td>
-                                <td>{{ pedido.totalEnvio | currency:'USD':'symbol':'1.0-0' }}</td>
-                                <td>{{ pedido.faltaPorPagar | currency:'USD':'symbol':'1.0-0' }}</td>
+                                </div>
+                                <div class="col-md-3 col-sm-6 text-end">
+                                    <div class="btn-group w-100">
+                                        <button class="btn btn-sm btn-primary" (click)="buscarPorFechas()">
+                                            <i class="pi pi-search me-1"></i>{{ 'Buscar' | translate }}
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" (click)="clear()">
+                                            <i class="pi pi-refresh me-1"></i>{{ 'Limpiar' | translate }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                <td>{{pedido.envio.ciudad}}</td>
-                                <td>{{pedido.envio.zonaCobro}}</td>
+                    <!-- Resumen estadístico -->
+                    <div class="row g-3 p-3 mb-2">
+                        <div class="col-md-2">
+                            <div class="stat-card stat-primary">
+                                <div class="stat-icon">
+                                    <i class="pi pi-shopping-cart"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">{{ 'Total Pedidos' | translate }}</div>
+                                    <div class="stat-value">{{ orders.length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="stat-card stat-success">
+                                <div class="stat-icon">
+                                    <i class="pi pi-dollar"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">{{ 'Subtotal' | translate }}</div>
+                                    <div class="stat-value">{{ calculateSubtotal() | currency }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="stat-card stat-info">
+                                <div class="stat-icon">
+                                    <i class="pi pi-percentage"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">{{ 'Descuento' | translate }}</div>
+                                    <div class="stat-value">{{ calculateDescuento() | currency }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="stat-card stat-warning">
+                                <div class="stat-icon">
+                                    <i class="pi pi-truck"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">{{ 'Envío' | translate }}</div>
+                                    <div class="stat-value">{{ calculateTotalEnvio() | currency }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="stat-card stat-secondary">
+                                <div class="stat-icon">
+                                    <i class="pi pi-credit-card"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">{{ 'Anticipos' | translate }}</div>
+                                    <div class="stat-value">{{ calculateAnticipo() | currency }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="stat-card stat-danger">
+                                <div class="stat-icon">
+                                    <i class="pi pi-wallet"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">{{ 'Por Cobrar' | translate }}</div>
+                                    <div class="stat-value">{{ calculateFaltaPorPagar() | currency }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-
-                                <td>{{pedido.formaEntrega}}</td>
-                                <td>{{pedido.horarioEntrega}}</td>
-                                <td>{{pedido.fechaHoraEmpacado | date: 'dd-MM-yyyy HH:mm'}}</td>
-                                <td>{{pedido.empacador}}</td>
-
-                                <td>
-                                    <button pButton type="button" icon="pi pi-trash" class="p-button-danger"
-                                        (click)="retirarPedido(pedido)"></button>
-                                </td>
-                            </tr>
-                        </ng-template>
-                        <ng-template pTemplate="emptymessage">
-                            <tr>
-                                <td colspan="5">{{ 'No hay pedidos seleccionados.' | translate }}</td>
-                            </tr>
-                        </ng-template>
-                    </p-table>
-                </div>
-            </div>
-            <button type="button" (click)="onSubmitOrdenEnvio()" class="btn btn-primary mt-3">{{ 'Generar Orden' | translate }}</button>
-        </form>
-    </div>
-</ng-template>
-
-<!-- Modal Pantalla de Orden de Envío -->
-<ng-template #pantallaOrdenEnvioModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title">{{ 'Orden de despacho' | translate }} #{{nroShippingOrder}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <div class="row mb-2">
-            <div class="col-12 text-right">
-                <div>
-                    <!-- <button pButton label="Agregar más" icon="pi pi-plus" class="p-button-success mr-2"
-                    (click)="agregarPedido()"
-                    ></button> -->
-                    <button pButton label="{{ 'Consultar orden de envío' | translate }}" icon="pi pi-eye" class="p-button-info mr-2"
-                        (click)="consultarOrdenDeEnvio()"
-                        *ngIf="!nroShippingOrder && pedidosSeleccionados?.length == 0"></button>
-
-                    <button pButton label="{{ 'Despachar la orden' | translate }}" icon="pi pi-check" class="p-button-primary mr-2"
-                        (click)="despacharOrden()"
-                        *ngIf="!transportadorSeleccionado && pedidosSeleccionados?.length > 0"></button>
-
-                    <button pButton label="{{ 'Imprimir la orden de envío' | translate }}" icon="pi pi-print" class="p-button-secondary"
-                        (click)="imprimirOrden()" *ngIf="nroShippingOrder && transportadorSeleccionado"></button>
-
-                    <div class="order-history table-responsive custom-datatable product-list-custom">
-                        <p-table #dt3 [value]="loadPedidosDisponibles()" dataKey="nroPedido" [rows]="10"
-                            [paginator]="true"
-                            [globalFilterFields]="['nroPedido','cliente.nombres_completos','estadoPago','estadoProceso']">
-                            <ng-template pTemplate="header">
-                                <tr>
-                                    <th>{{ 'Agregar' | translate }}</th>
-                                    <th>{{ 'Opciones' | translate }}</th>
-                                    <th>{{ 'Número de Pedido' | translate }}</th>
-                                    <th>{{ 'Cliente' | translate }}</th>
-                                    <th>{{ 'Estado de Pago' | translate }}</th>
-                                    <th>{{ 'Estado de Proceso' | translate }}</th>
-                                    <th>{{ 'Ciudad' | translate }}</th>
-                                    <th>{{ 'Zona Entrega' | translate }}</th>
-                                    <th>{{ 'Forma de Entrega' | translate }}</th>
-                                    <th>{{ 'Horario de Entrega' | translate }}</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-pedido>
-                                <tr>
-                                    <td>
-                                        <button pButton type="button" icon="pi pi-plus" class="p-button-success"
-                                            (click)="handleAgregarPedido(pedido)"></button>
-                                    </td>
-                                    <td>
-                                        <div class="row">
-                                            <div class="col-sm-2">
-
-                                                <i class="icofont icofont-file-pdf"
-                                                    (click)="pdfOrder(modalContent,pedido)"
-                                                    ngbTooltip="{{ 'Orden De Pedido' | translate }}"></i>
-                                            </div>
-                                            <div class="col-sm-2" *ngIf="iterarTarjetas(pedido)">
-                                                <i class="icon-layers" ngbTooltip="{{ 'Tarjeta' | translate }}"
-                                                    (click)="verTarjetasPedido(pedido)"></i>
-                                            </div>
-                                            <div class="col-sm-2">
-                                                <i class="icofont icofont-notepad" ngbTooltip="{{ 'Rótulo' | translate }}"
-                                                    (click)="descargarRotulo(pedido)"></i>
-                                            </div>
-                                            <div class="col-sm-2">
-                                                <i *ngIf="pedido.estadoProceso != 'Empacado'"
-                                                    class="icofont icofont-inbox" ngbTooltip="{{ 'Empacar' | translate }}"
-                                                    (click)="cambiarEstado(pedido,1)"></i>
-                                                <i *ngIf="pedido.estadoProceso == 'Empacado'"
-                                                    class="icofont icofont-box" ngbTooltip="{{ 'Desempacar' | translate }}"
-                                                    (click)="cambiarEstado(pedido,2)"></i>
-                                            </div>
-
-
-                                        </div>
-                                    </td>
-                                    <td>{{ pedido.nroPedido }}</td>
-                                    <td>{{ pedido.cliente.nombres_completos }} {{ pedido.cliente.apellidos_completos }}
-                                    </td>
-                                    <td>{{ pedido.estadoPago }}</td>
-                                    <td>{{ pedido.estadoProceso }}</td>
-                                    <td>{{ pedido.envio.ciudad }}</td>
-                                    <td>{{ pedido.envio.zonaCobro }}</td>
-                                    <td>{{ pedido.formaEntrega }}</td>
-                                    <td>{{ pedido.horarioEntrega }}</td>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="emptymessage">
-                                <tr>
-                                    <td colspan="9">{{ 'No hay pedidos disponibles.' | translate }}</td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
+                    <!-- Tabla principal de pedidos con componente -->
+                    <div class="p-3">
+                        <app-tabla-pedidos 
+                            [orders]="orders" 
+                            [loading]="loading"
+                            [estadosProcesos]="estadosProcesos"
+                            [estadosPago]="estadosPago"
+                            (onViewDetails)="openDetalleEntrega($event)"
+                            (onPrintPdf)="pdfOrder(modalContent, $event)"
+                            (onViewTags)="verTarjetasPedido($event)"
+                            (onPrintLabel)="descargarRotulo($event)"
+                            (onChangeStatus)="cambiarEstado($event.pedido, $event.status)"
+                            (onRefreshData)="refrescar($event)"
+                            (onClearFilters)="clear($event)"
+                            (onViewNotes)="verNotasCliente($event)">
+                        </app-tabla-pedidos>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="order-history table-responsive custom-datatable product-list-custom">
-            <p-table #dt3 [value]="pedidosSeleccionados" dataKey="nroPedido" [rows]="10" [paginator]="true"
-                [globalFilterFields]="['nroPedido','cliente.nombres_completos','estadoPago','estadoProceso']">
-                <ng-template pTemplate="header">
-                    <tr>
-                        <th>{{ 'Opciones' | translate }}</th>
-                        <th>{{ 'Número de Pedido' | translate }}</th>
-                        <th>{{ 'Número de Factura' | translate }}</th>
-                        <th>{{ 'Cliente' | translate }}</th>
-                        <th>{{ 'Estado de Pago' | translate }}</th>
-                        <th>{{ 'Estado de Proceso' | translate }}</th>
-                        <th>{{ 'Notas Cliente' | translate }}</th>
-                        <th>{{ 'Domicilio' | translate }}</th>
-                        <th>{{ 'Falta por pagar' | translate }}</th>
-                        <th>{{ 'ciudad' | translate }}</th>
-                        <th>{{ 'Zona Entrega' | translate }}</th>
-                        <th>{{ 'Forma de entrega' | translate }}</th>
-                        <th>{{ 'Horario de entrega' | translate }}</th>
-                        <th>{{ 'Fecha y Horario de empacado' | translate }}</th>
-                        <th>{{ 'Empacador' | translate }}</th>
-                        <th>{{ 'Acciones' | translate }}</th>
-                    </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-pedido>
-                    <tr>
-
-                        <td>
-                            <div class="row">
-                                <div class="col-sm-2">
-
-                                    <i class="icofont icofont-file-pdf" (click)="pdfOrder(modalContent,pedido)"
-                                        ngbTooltip="{{ 'Orden De Pedido' | translate }}"></i>
-                                </div>
-                                <div class="col-sm-2" *ngIf="iterarTarjetas(pedido)">
-                                    <i class="icon-layers" ngbTooltip="{{ 'Tarjeta' | translate }}" (click)="verTarjetasPedido(pedido)"></i>
-                                </div>
-                                <div class="col-sm-2">
-                                    <i class="icofont icofont-notepad" ngbTooltip="{{ 'Rótulo' | translate }}"
-                                        (click)="descargarRotulo(pedido)"></i>
-                                </div>
-                                <div class="col-sm-2">
-                                    <i *ngIf="pedido.estadoProceso != 'Empacado'" class="icofont icofont-inbox"
-                                        ngbTooltip="{{ 'Empacar' | translate }}" (click)="cambiarEstado(pedido,1)"></i>
-                                    <i *ngIf="pedido.estadoProceso == 'Empacado'" class="icofont icofont-box"
-                                        ngbTooltip="{{ 'Desempacar' | translate }}" (click)="cambiarEstado(pedido,2)"></i>
-                                </div>
-                            </div>
-                        </td>
-                        <td>{{ pedido.nroPedido }}</td>
-                        <td></td>
-                        <td>{{ pedido.cliente.nombres_completos }} {{ pedido.cliente.apellidos_completos }}</td>
-                        <td>{{ pedido.estadoPago }}</td>
-                        <td>{{ pedido.estadoProceso }}</td>
-                        <td><i (click)="verNotasCliente(pedido)" class="icofont icofont-ui-note"
-                                ngbTooltip="{{ 'Ver notas del cliente' | translate }}"></i></td>
-                        <td>{{pedido.totalEnvio | currency:'USD':'symbol':'1.0-0' }}</td>
-                        <td>{{pedido.faltaPorPagar | currency:'USD':'symbol':'1.0-0' }}</td>
-                        <td>{{pedido.envio.ciudad}}</td>
-                        <td>{{pedido.envio.zonaCobro}}</td>
-
-
-                        <td>{{pedido.formaEntrega}}</td>
-                        <td>{{pedido.horarioEntrega}}</td>
-                        <td>{{pedido.fechaHoraEmpacado | date: 'dd-MM-yyyy HH:mm'}}</td>
-                        <td>{{pedido.empacador}}</td>
-                        <td>
-                            <button pButton type="button" icon="pi pi-trash" class="p-button-danger"
-                                (click)="retirarPedido(pedido)"></button>
-                        </td>
-                    </tr>
-                </ng-template>
-                <ng-template pTemplate="emptymessage">
-                    <tr>
-                        <td colspan="5">{{ 'No hay pedidos seleccionados.' | translate }}</td>
-                    </tr>
-                </ng-template>
-            </p-table>
-        </div>
     </div>
-    <div class="modal-footer" *ngIf="nuevaOrdenEnvio">
-        <button pButton label="{{ 'Guardar' | translate }}" icon="pi pi-plus" class="p-button-success mr-2"
-            (click)="actualizarOrdenEnvio()"></button>
-    </div>
-</ng-template>
-
-<ng-template #dispatchOrdersModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title">{{ 'Órdenes de Despacho' | translate }}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <div *ngIf="dispatchOrders && dispatchOrders.length > 0">
-            <p-table #dispatchOrdersTable [value]="dispatchOrders" dataKey="nroShippingOrder" [paginator]="true"
-                [rows]="10" [scrollable]="true" [scrollHeight]="'calc(100vh - 300px)'" [autoLayout]="true"
-                styleClass="p-datatable-sm p-datatable-customers p-datatable-gridlines" style="font-size: 0.9em;">
-                <!-- HEADER de la tabla (sin filtros) -->
-                <ng-template pTemplate="header">
-                    <tr style="font-size: 0.85em;">
-                        <th style="width: 3rem;"></th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Número de Pedido' | translate }}">{{ 'Número de Pedido' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Transportador' | translate }}">{{ 'Transportador' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Fecha Creación' | translate }}">{{ 'Fecha Creación' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Fecha y Horario de despachado' | translate }}">{{ 'Fecha y Horario de despachado' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Despachador' | translate }}">{{ 'Despachador' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Total a Cobrar' | translate }}">{{ 'Total a Cobrar' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Cantidad Pedidos' | translate }}">{{ 'Cantidad Pedidos' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Estado' | translate }}">{{ 'Estado' | translate }}</span>
-                            </div>
-                        </th>
-                        <th style="text-align: right;">{{ 'Acciones' | translate }}</th>
-                    </tr>
-                </ng-template>
-
-                <!-- CUERPO de la tabla principal -->
-                <ng-template pTemplate="body" let-order let-expanded="expanded">
-                    <tr style="font-size: 0.85em;">
-                        <!-- Botón para expandir/collapse la fila -->
-                        <td>
-                            <button pButton type="button" pRipple [pRowToggler]="order"
-                                class="p-button-text p-button-rounded p-button-plain"
-                                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
-                            </button>
-                        </td>
-                        <td>
-                            <span class="ellipsis" [title]="order.nroShippingOrder">
-                                {{ order.nroShippingOrder }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ellipsis" [title]="order.pedidos[0]?.transportador">
-                                {{ order.pedidos[0]?.transportador }}
-                            </span>
-                        </td>
-                        <td>{{ order.date_add | date:'yyyy-MM-dd HH:mm' }}</td>
-                        <td>{{ order.pedidos[0]?.fechaYHorarioDespachado | date:'yyyy-MM-dd HH:mm' }}</td>
-                        <td>
-                            <span class="ellipsis" [title]="order.pedidos[0]?.despachador?.name">
-                                {{ order.pedidos[0]?.despachador?.name }}
-                            </span>
-                        </td>
-                        <td>{{ getFaltaPorPagarSum(order) | currency }}</td>
-                        <td>{{ order.pedidos.length }}</td>
-                        <td>
-                            <span class="ellipsis" [title]="getEstadoProceso(order)">
-                                {{ getEstadoProceso(order) }}
-                            </span>
-                        </td>
-                        <td style="text-align: right;">
-                            <!-- Botones de acciones: iconos alineados a la derecha -->
-                            <button pButton type="button" icon="pi pi-eye" class="p-button-outlined p-button-sm mr-2"
-                                (click)="consultarOrden(order.nroShippingOrder)" tooltip="{{ 'Ver' | translate }}">
-                            </button>
-                            <button pButton type="button" icon="pi pi-print" class="p-button-outlined p-button-sm"
-                                (click)="imprimirOrderToAction(order.nroShippingOrder)" tooltip="{{ 'Imprimir' | translate }}">
-                            </button>
-                        </td>
-                    </tr>
-                </ng-template>
-
-                <!-- EXPANSIÓN de la fila principal: Lista de pedidos asociados -->
-                <ng-template pTemplate="rowexpansion" let-order>
-                    <tr>
-                        <td colspan="10">
-                            <div class="p-3">
-                                <p-table [value]="order.pedidos" dataKey="nroPedido" [autoLayout]="true"
-                                    styleClass="p-datatable-sm p-datatable-gridlines">
-                                    <!-- HEADER para la tabla de pedidos asociados (sin filtros) -->
-                                    <ng-template pTemplate="header">
-                    <tr>
-                        <th style="width: 3rem;"></th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Número de Pedido' | translate }}">{{ 'Número de Pedido' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Cliente' | translate }}">{{ 'Cliente' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Estado de Pago' | translate }}">{{ 'Estado de Pago' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Estado de Proceso' | translate }}">{{ 'Estado de Proceso' | translate }}</span>
-                            </div>
-                        </th>
-                    </tr>
-                </ng-template>
-                <!-- CUERPO para la tabla de pedidos asociados -->
-                <ng-template pTemplate="body" let-pedido let-expanded="expanded">
-                    <tr>
-                        <td>
-                            <button pButton type="button" pRipple [pRowToggler]="pedido"
-                                class="p-button-text p-button-rounded p-button-plain"
-                                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
-                            </button>
-                        </td>
-                        <td>
-                            <span class="ellipsis" [title]="pedido.nroPedido">
-                                {{ pedido.nroPedido }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ellipsis"
-                                [title]="pedido.cliente.nombres_completos + ' ' + pedido.cliente.apellidos_completos">
-                                {{ pedido.cliente.nombres_completos }} {{ pedido.cliente.apellidos_completos }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ellipsis" [title]="pedido.estadoPago">
-                                {{ pedido.estadoPago }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ellipsis" [title]="pedido.estadoProceso">
-                                {{ pedido.estadoProceso }}
-                            </span>
-                        </td>
-                    </tr>
-                </ng-template>
-
-                <!-- EXPANSIÓN del pedido: Productos en el carrito -->
-                <ng-template pTemplate="rowexpansion" let-pedido>
-                    <tr>
-                        <td colspan="5">
-                            <div class="p-3">
-                                <p-table [value]="pedido.carrito" dataKey="idProducto" [autoLayout]="true"
-                                    styleClass="p-datatable-sm p-datatable-gridlines">
-                                    <!-- HEADER para productos (sin filtros) -->
-                                    <ng-template pTemplate="header">
-                    <tr>
-                        <th></th>
-                        <th>
-                            <div>{{ 'Imagen' | translate }}</div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Producto' | translate }}">{{ 'Producto' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Cantidad' | translate }}">{{ 'Cantidad' | translate }}</span>
-                            </div>
-                        </th>
-                        <th>
-                            <div>
-                                <span class="ellipsis" title="{{ 'Precio' | translate }}">{{ 'Precio' | translate }}</span>
-                            </div>
-                        </th>
-                    </tr>
-                </ng-template>
-                <!-- CUERPO para productos -->
-                <ng-template pTemplate="body" let-producto>
-                    <tr>
-                        <td>
-                            <button pButton type="button" pRipple [pRowToggler]="producto"
-                                class="p-button-text p-button-rounded p-button-plain"
-                                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
-                            </button>
-                        </td>
-                        <td>
-                            <img height="50" width="50" class="shadow-4"
-                                [src]="producto.producto?.crearProducto?.imagenesPrincipales[0].urls"
-                                [alt]="producto.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen"
-                                class="img-fluid" />
-                        </td>
-                        <td>
-                            <span class="ellipsis" [title]="producto.producto?.crearProducto?.titulo">
-                                {{ producto.producto?.crearProducto?.titulo }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ellipsis" [title]="producto.cantidad">
-                                {{ producto.cantidad }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ellipsis" [title]="pedido.totalPedididoConDescuento | currency">
-                                {{ pedido.totalPedididoConDescuento | currency }}
-                            </span>
-                        </td>
-                    </tr>
-                </ng-template>
-            </p-table>
-        </div>
-        </td>
-        </tr>
-</ng-template>
-
-<!-- Mensaje si no hay pedidos asociados -->
-<ng-template pTemplate="emptymessage">
-    <tr>
-        <td colspan="5">{{ 'No hay pedidos asociados.' | translate }}</td>
-    </tr>
-</ng-template>
-</p-table>
 </div>
-</td>
-</tr>
+
+<!-- Modal de detalle de entrega -->
+<ng-template #detalleEntregaModal let-modal>
+    <app-detalle-entrega 
+        [pedido]="detallePedidoEntregado"
+        (onClose)="modal.dismiss('Cross click')"
+        (onImageClick)="openFullImage($event)">
+    </app-detalle-entrega>
 </ng-template>
 
-<!-- MENSAJE SI NO HAY Órdenes de despacho -->
-<ng-template pTemplate="emptymessage">
-    <tr>
-        <td colspan="10">{{ 'No hay órdenes de despacho.' | translate }}</td>
-    </tr>
-</ng-template>
-</p-table>
-</div>
-<div *ngIf="!dispatchOrders || dispatchOrders.length === 0">
-    {{ 'No se encontraron órdenes de despacho.' | translate }}
-</div>
-</div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.close()">{{ 'Cerrar' | translate }}</button>
-</div>
+<!-- Modal para gestión de transportadores -->
+<ng-template #transportadoresModal let-modal>
+    <app-transportadores
+        [vendors]="vendors"
+        [editMode]="editTransporter"
+        [selectedTransporter]="dataEditTransporter"
+        (onSave)="onSaveTransportador($event)"
+        (onEdit)="onEditTransportador($event)"
+        (onDelete)="deleteTransporter($event)"
+        (onClose)="modal.dismiss('Cross click')">
+    </app-transportadores>
 </ng-template>
 
+<!-- Modal de contenido para imprimir PDF -->
 <ng-template #modalContent let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">{{ 'Vista pedido para imprimir' | translate }}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <div [innerHtml]="htmlModal" #htmlPdf id="htmlPdf"></div>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">{{ 'Cerrar' | translate }}</button>
-        <button type="button" class="btn btn-outline-dark" (click)="imprimirToPdf()">{{ 'Imprimir' | translate }}</button>
-    </div>
+    <app-imprimir-pdf
+        [pedido]="pedidoSeleccionado"
+        [htmlContent]="htmlModal"
+        (onClose)="modal.dismiss('Cross click')"
+        (onPrint)="modal.close('Save click')">
+    </app-imprimir-pdf>
 </ng-template>
-<ng-template #detallesEntrega let-modal>
-    <div class="modal-header" style="background-color: #f7f3fc; border-bottom: 2px solid #d3c3f3;">
-        <h5 class="modal-title">
-            <i class="pi pi-truck me-2"></i>
-            <span>{{ 'Detalle de Entrega' | translate }}</span>
-        </h5>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <div class="container-fluid">
-            <!-- Información Principal -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="info-card">
-                        <div class="info-card-title">
-                            <i class="pi pi-hashtag me-1"></i>
-                            {{ 'Número de Pedido' | translate }}
-                        </div>
-                        <div class="info-card-content">
-                            {{ detallePedidoEntregado?.nroPedido }}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="info-card">
-                        <div class="info-card-title">
-                            <i class="pi pi-flag me-1"></i>
-                            {{ 'Estado de Entrega' | translate }}
-                        </div>
-                        <div class="info-card-content">
-                            <span [ngClass]="{
-                                'badge bg-success': detallePedidoEntregado?.estadoEntrega === 'Entregado',
-                                'badge bg-warning': detallePedidoEntregado?.estadoEntrega === 'En proceso',
-                                'badge bg-danger': detallePedidoEntregado?.estadoEntrega === 'Fallido'
-                            }">{{ detallePedidoEntregado?.estadoEntrega }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Receptor y Contacto -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="info-card">
-                        <div class="info-card-title">
-                            <i class="pi pi-user me-1"></i>
-                            {{ 'Quién Recibió' | translate }}
-                        </div>
-                        <div class="info-card-content">
-                            {{ detallePedidoEntregado?.quienRecibio || 'N/A' }}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="info-card">
-                        <div class="info-card-title">
-                            <i class="pi pi-phone me-1"></i>
-                            {{ 'Teléfono' | translate }}
-                        </div>
-                        <div class="info-card-content">
-                            {{ detallePedidoEntregado?.telefono || 'N/A' }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Transportador y Fecha -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="info-card">
-                        <div class="info-card-title">
-                            <i class="pi pi-id-card me-1"></i>
-                            {{ 'Transportador' | translate }}
-                        </div>
-                        <div class="info-card-content">
-                            {{ detallePedidoEntregado?.transportador || 'N/A' }}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="info-card">
-                        <div class="info-card-title">
-                            <i class="pi pi-calendar me-1"></i>
-                            {{ 'Fecha y Hora de Entrega' | translate }}
-                        </div>
-                        <div class="info-card-content">
-                            {{ detallePedidoEntregado?.fechaEntrega | date: 'dd/MM/yyyy HH:mm' || 'N/A' }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Evidencias -->
-            <div class="mb-3">
-                <div class="card">
-                    <div class="card-header bg-light">
-                        <i class="pi pi-camera me-1"></i>
-                        {{ 'Fotos de Evidencia' | translate }}
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-center flex-wrap mt-2">
-                            <ng-container *ngIf="isArray(detallePedidoEntregado?.fotosEvidencia); else singleImage">
-                                <div *ngFor="let image of detallePedidoEntregado?.fotosEvidencia" class="position-relative m-1">
-                                    <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" 
-                                        class="img-thumbnail" 
-                                        style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                    <a href="javascript:void(0)" class="position-absolute top-0 end-0" (click)="openFullImage(image)">
-                                        <i class="pi pi-search" style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
-                                    </a>
-                                </div>
-                            </ng-container>
-                            <ng-template #singleImage>
-                                <div *ngIf="detallePedidoEntregado?.fotoEvidencia" class="position-relative">
-                                    <img [src]="detallePedidoEntregado?.fotoEvidencia" alt="{{ 'Foto de evidencia' | translate }}" 
-                                        class="img-thumbnail"
-                                        style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                    <a href="javascript:void(0)" class="position-absolute top-0 end-0" (click)="openFullImage(detallePedidoEntregado?.fotoEvidencia)">
-                                        <i class="pi pi-search" style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
-                                    </a>
-                                </div>
-                            </ng-template>
-                            
-                            <div *ngIf="(!detallePedidoEntregado?.fotosEvidencia || detallePedidoEntregado?.fotosEvidencia.length === 0) && !detallePedidoEntregado?.fotoEvidencia" 
-                                 class="text-center text-secondary py-3">
-                                <i class="pi pi-image" style="font-size: 2rem;"></i>
-                                <p class="mt-2">{{ 'No hay imágenes disponibles' | translate }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Firma -->
-            <div class="mb-3">
-                <div class="card">
-                    <div class="card-header bg-light">
-                        <i class="pi pi-pencil me-1"></i>
-                        {{ 'Firma del Cliente' | translate }}
-                    </div>
-                    <div class="card-body text-center p-3">
-                        <img *ngIf="detallePedidoEntregado?.signatureImage" [src]="detallePedidoEntregado?.signatureImage" 
-                            alt="{{ 'Firma' | translate }}" class="img-fluid mt-2 border rounded"
-                            style="max-width: 300px; max-height: 100px;">
-                            
-                        <div *ngIf="!detallePedidoEntregado?.signatureImage" class="text-center text-secondary py-3">
-                            <i class="pi pi-file" style="font-size: 2rem;"></i>
-                            <p class="mt-2">{{ 'No hay firma disponible' | translate }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="modal.dismiss('Cross click')">
-            <i class="pi pi-times me-1"></i>
-            {{ 'Cerrar' | translate }}
-        </button>
-    </div>
+
+<!-- Modal para generar órdenes de envío -->
+<ng-template #generarOrdenEnvioModal let-modal>
+    <app-generar-orden
+        [orders]="orders"
+        [pedidosSeleccionados]="pedidosSeleccionados"
+        [nuevaOrdenEnvio]="nuevaOrdenEnvio"
+        [nroShippingOrder]="nroShippingOrder"
+        (onClose)="modal.dismiss('Cross click')"
+        (onSave)="onSubmitOrdenEnvio($event)"
+        (onAddOrder)="agregarPedido1($event)"
+        (onRemoveOrder)="retirarPedido($event)"
+        (onPrintOrder)="imprimirOrden()"
+        (onDispatchOrder)="despacharOrden()">
+    </app-generar-orden>
+</ng-template>
+
+<!-- Modal para editar órdenes de envío -->
+<ng-template #pantallaOrdenEnvioModal let-modal>
+    <app-generar-orden
+        [orders]="orders"
+        [pedidosSeleccionados]="pedidosSeleccionados"
+        [nuevaOrdenEnvio]="nuevaOrdenEnvio"
+        [nroShippingOrder]="nroShippingOrder"
+        [isEditMode]="true"
+        (onClose)="modal.dismiss('Cross click')"
+        (onSave)="onSubmitOrdenEnvio($event)"
+        (onAddOrder)="agregarPedido1($event)"
+        (onRemoveOrder)="retirarPedido($event)"
+        (onPrintOrder)="imprimirOrden()"
+        (onDispatchOrder)="despacharOrden()">
+    </app-generar-orden>
+</ng-template>
+
+<!-- Modal para visualizar órdenes de despacho -->
+<ng-template #dispatchOrdersModal let-modal>
+    <app-ordenes-despacho
+        [dispatchOrders]="dispatchOrders"
+        (onClose)="modal.dismiss('Cross click')"
+        (onPrintOrder)="imprimirOrderToAction($event)"
+        (onViewOrder)="handleOrderView($event)"
+        (onDispatchOrder)="handleOrderDispatch($event)"
+        (onDispatchPedido)="handlePedidoDispatch($event)">
+    </app-ordenes-despacho>
 </ng-template>

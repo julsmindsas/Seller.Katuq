@@ -1,0 +1,160 @@
+<div class="modal-header" style="background-color: #f7f3fc; border-bottom: 2px solid #d3c3f3;">
+    <h5 class="modal-title">
+        <i class="pi pi-truck me-2"></i>
+        <span>{{ 'Detalle de Entrega' | translate }}</span>
+    </h5>
+    <button type="button" class="close" aria-label="Close" (click)="closeModal()">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="modal-body">
+    <div class="container-fluid">
+        <!-- Información Principal -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-card-title">
+                        <i class="pi pi-hashtag me-1"></i>
+                        {{ 'Número de Pedido' | translate }}
+                    </div>
+                    <div class="info-card-content">
+                        {{ pedido?.nroPedido }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-card-title">
+                        <i class="pi pi-flag me-1"></i>
+                        {{ 'Estado de Entrega' | translate }}
+                    </div>
+                    <div class="info-card-content">
+                        <span [ngClass]="{
+                            'badge bg-success': pedido?.estadoEntrega === 'Entregado',
+                            'badge bg-warning': pedido?.estadoEntrega === 'En proceso',
+                            'badge bg-danger': pedido?.estadoEntrega === 'Fallido'
+                        }">{{ pedido?.estadoEntrega }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Receptor y Contacto -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-card-title">
+                        <i class="pi pi-user me-1"></i>
+                        {{ 'Quién Recibió' | translate }}
+                    </div>
+                    <div class="info-card-content">
+                        {{ pedido?.quienRecibio || 'N/A' }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-card-title">
+                        <i class="pi pi-phone me-1"></i>
+                        {{ 'Teléfono' | translate }}
+                    </div>
+                    <div class="info-card-content">
+                        {{ pedido?.telefono || 'N/A' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transportador y Fecha -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-card-title">
+                        <i class="pi pi-id-card me-1"></i>
+                        {{ 'Transportador' | translate }}
+                    </div>
+                    <div class="info-card-content">
+                        {{ pedido?.transportador || 'N/A' }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-card-title">
+                        <i class="pi pi-calendar me-1"></i>
+                        {{ 'Fecha y Hora de Entrega' | translate }}
+                    </div>
+                    <div class="info-card-content">
+                        {{ pedido?.fechaEntrega | date: 'dd/MM/yyyy HH:mm' || 'N/A' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Evidencias -->
+        <div class="mb-3">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <i class="pi pi-camera me-1"></i>
+                    {{ 'Fotos de Evidencia' | translate }}
+                </div>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-center flex-wrap mt-2">
+                        <ng-container *ngIf="isArray(pedido?.fotosEvidencia); else singleImage">
+                            <div *ngFor="let image of pedido?.fotosEvidencia" class="position-relative m-1">
+                                <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" 
+                                    class="img-thumbnail" 
+                                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                <a href="javascript:void(0)" class="position-absolute top-0 end-0" (click)="openFullImage(image)">
+                                    <i class="pi pi-search" style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
+                                </a>
+                            </div>
+                        </ng-container>
+                        <ng-template #singleImage>
+                            <div *ngIf="pedido?.fotoEvidencia" class="position-relative">
+                                <img [src]="pedido?.fotoEvidencia" alt="{{ 'Foto de evidencia' | translate }}" 
+                                    class="img-thumbnail"
+                                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                <a href="javascript:void(0)" class="position-absolute top-0 end-0" (click)="openFullImage(pedido?.fotoEvidencia)">
+                                    <i class="pi pi-search" style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
+                                </a>
+                            </div>
+                        </ng-template>
+                        
+                        <div *ngIf="(!pedido?.fotosEvidencia || pedido?.fotosEvidencia.length === 0) && !pedido?.fotoEvidencia" 
+                             class="text-center text-secondary py-3">
+                            <i class="pi pi-image" style="font-size: 2rem;"></i>
+                            <p class="mt-2">{{ 'No hay imágenes disponibles' | translate }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Firma -->
+        <div class="mb-3">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <i class="pi pi-pencil me-1"></i>
+                    {{ 'Firma del Cliente' | translate }}
+                </div>
+                <div class="card-body text-center p-3">
+                    <img *ngIf="pedido?.signatureImage" [src]="pedido?.signatureImage" 
+                        alt="{{ 'Firma' | translate }}" class="img-fluid mt-2 border rounded"
+                        style="max-width: 300px; max-height: 100px;">
+                        
+                    <div *ngIf="!pedido?.signatureImage" class="text-center text-secondary py-3">
+                        <i class="pi pi-file" style="font-size: 2rem;"></i>
+                        <p class="mt-2">{{ 'No hay firma disponible' | translate }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="closeModal()">
+        <i class="pi pi-times me-1"></i>
+        {{ 'Cerrar' | translate }}
+    </button>
+</div> 

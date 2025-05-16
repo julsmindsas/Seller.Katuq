@@ -1,0 +1,21 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'Vista previa de impresión' | translate }}</h4>
+  <button type="button" class="close" aria-label="Close" (click)="closeModal()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<div class="modal-body">
+  <div class="pdf-container">
+    <div class="pdf-preview" id="htmlPdf" [innerHTML]="safeHtmlContent"></div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="closeModal()">
+    {{ 'Cerrar' | translate }}
+  </button>
+  <button type="button" class="btn btn-primary" (click)="imprimirPdf()">
+    <i class="pi pi-print me-1"></i>{{ 'Imprimir PDF' | translate }}
+  </button>
+</div> 

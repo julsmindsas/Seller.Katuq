@@ -1,0 +1,143 @@
+// Variables
+$primary-color: #2196f3;
+$secondary-color: #6c757d;
+$success-color: #4caf50;
+$warning-color: #ff9800;
+$danger-color: #f44336;
+$light-color: #f8f9fa;
+
+// Estilos para la modal
+.modal-header {
+  background-color: $light-color;
+  border-bottom: 2px solid darken($light-color, 5%);
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #444;
+}
+
+.modal-body {
+  padding: 0;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.modal-footer {
+  background-color: $light-color;
+  border-top: 1px solid darken($light-color, 5%);
+}
+
+// Contenedor del PDF
+.pdf-container {
+  background-color: #ddd;
+  padding: 20px;
+  text-align: center;
+  min-height: 500px;
+  
+  .pdf-preview {
+    background-color: white;
+    margin: 0 auto;
+    padding: 20px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    max-width: 210mm;  // Tamaño de una hoja A4
+    min-height: 297mm;  // Altura de una hoja A4
+    
+    // Estilos para contenido interior
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+      
+      th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      
+      th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+      
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+    }
+    
+    p {
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+    
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  }
+}
+
+// Estilos para botones
+.btn {
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  
+  &.btn-primary {
+    background-color: $primary-color;
+    border-color: $primary-color;
+    
+    &:hover {
+      background-color: darken($primary-color, 10%);
+      border-color: darken($primary-color, 10%);
+    }
+  }
+  
+  &.btn-secondary {
+    background-color: $secondary-color;
+    border-color: $secondary-color;
+    
+    &:hover {
+      background-color: darken($secondary-color, 10%);
+      border-color: darken($secondary-color, 10%);
+    }
+  }
+}
+
+// Ajustes responsivos
+@media print {
+  .modal-header, .modal-footer, .btn, .close {
+    display: none !important;
+  }
+  
+  .modal-body {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  
+  .pdf-container {
+    padding: 0 !important;
+    background-color: transparent !important;
+    
+    .pdf-preview {
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .pdf-container {
+    padding: 10px;
+    
+    .pdf-preview {
+      padding: 10px;
+    }
+  }
+} 

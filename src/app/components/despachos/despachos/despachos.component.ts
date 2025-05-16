@@ -20,11 +20,18 @@ import 'jspdf-autotable';
 import { LogisticaServiceV2 } from '../../../shared/services/despachos/logistica.service.v2';
 import { FilterService } from 'primeng/api';
 import html2pdf from 'html2pdf.js';
+import { PedidoEntrega } from '../interfaces/pedido-entrega.interface';
+import { Router } from '@angular/router';
 
 interface ColumnDefinition {
   field: string;
   header: string;
   visible: boolean;
+}
+
+interface TarjetaInfo {
+  tarjeta: any;
+  pedido: string;
 }
 
 @Component({
@@ -37,6 +44,8 @@ export class DespachosComponent implements OnInit {
   @ViewChild('entrega', { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild('pantallaOrdenEnvioModal', { static: false }) pantallaOrdenEnvioModal: TemplateRef<any>;
   @ViewChild('dispatchOrdersModal', { static: false }) dispatchOrdersModal: TemplateRef<any>;
+  @ViewChild('detalleEntregaModal', { static: false }) detalleEntregaModal: TemplateRef<any>;
+  @ViewChild('transportadoresModal', { static: false }) transportadoresModal: TemplateRef<any>;
 
   @ViewChild('printContent', { static: false }) printContent!: ElementRef
   orders: Pedido[] = [];
@@ -71,9 +80,9 @@ export class DespachosComponent implements OnInit {
   filteredOrderNumbers: any;
   ordersByName: any;
   estadosProcesos: EstadoProcesoFiltros[];
-  todasLasTarjetas: any[] = [];
+  todasLasTarjetas: TarjetaInfo[] = [];
   tienetarjetas: boolean = true;
-  detallePedidoEntregado: any;
+  detallePedidoEntregado: PedidoEntrega;
   
   // Definiciones para la gestión de columnas
   displayedColumns: ColumnDefinition[] = [
@@ -111,7 +120,7 @@ export class DespachosComponent implements OnInit {
     private paymentService: PaymentService,
     private filterService: FilterService,
     private modalService: NgbModal,
-     private formBuilder: FormBuilder, private pedidoUtilService: PedidosUtilService) {
+     private formBuilder: FormBuilder, private pedidoUtilService: PedidosUtilService, private router: Router) {
     const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
     this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
     this.fechaInicial.setHours(0, 0, 0, 0);
@@ -275,6 +284,10 @@ export class DespachosComponent implements OnInit {
       </tbody>
     </table>
   `;
+  
+    // Obtener el nombre del despachador actual
+    const userLite = this.getCurrentUser();
+    const userName = userLite ? userLite.name : 'N/A';
 
     const content = `
     <div style="font-family: Arial, sans-serif; font-size: 12px; padding:20px; width:100%;">
@@ -313,7 +326,7 @@ export class DespachosComponent implements OnInit {
         <tr>
           <td>
             <p style="margin:0; font-size: 14px;">
-              Despachador: ${JSON.parse(localStorage.getItem('user'))?.name ?? 'N/A'}
+              Despachador: ${userName}
             </p>
           </td>
           <td>
@@ -396,20 +409,28 @@ export class DespachosComponent implements OnInit {
     });
   }
 
-  clear(table: Table) {
+  clear(table?: Table) {
     const unaSemana = 7 * 24 * 60 * 60 * 1000;
     this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
     this.fechaInicial.setHours(0, 0, 0, 0);
 
+    this.fechaFinal = new Date();
+    this.fechaFinal.setDate(this.fechaFinal.getDate() + 7); // Una semana desde hoy
     this.fechaFinal.setHours(23, 59, 59, 999);
-    this.fechaFinal = new Date(this.fechaInicial.getTime() + unaSemana);
-    this.refrescar(table);
+    
+    this.refrescarDatos();
+    
+    // Si se proporciona una tabla, limpiarla
+    if (table) {
+      table.clear();
+    }
   }
 
-  refrescar(table: Table) {
-
+  refrescar(table?: Table) {
     this.refrescarDatos();
-    table.clear();
+    if (table) {
+      table.clear();
+    }
   }
   onOrderSelect(event) {
     this.orders = [event];
@@ -485,8 +506,8 @@ export class DespachosComponent implements OnInit {
   pedidosPorPagina = 4;
 
   // Función para dividir los pedidos en grupos de 3
-  dividirPedidosEnPagina(pedidos, pedidosPorPagina) {
-    let paginas = [];
+  dividirPedidosEnPagina(pedidos: any[], pedidosPorPagina: number): any[][] {
+    let paginas: any[][] = [];
     for (let i = 0; i < pedidos.length; i += pedidosPorPagina) {
       paginas.push(pedidos.slice(i, i + pedidosPorPagina));
     }
@@ -504,7 +525,7 @@ export class DespachosComponent implements OnInit {
 
 
   editOrder(order: Pedido) {
-    if (order.carrito?.length > 0) {
+    if (order.carrito && order.carrito.length > 0) {
       const firstItem = order.carrito[0];
       const datosEntrega = firstItem.configuracion?.datosEntrega;
       
@@ -526,10 +547,11 @@ export class DespachosComponent implements OnInit {
     });
   }
   cambiarEstado(order: Pedido, estado: number) {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return;
-
-    const userLite: UserLite = JSON.parse(userStr);
+    const userLite = this.getCurrentUser();
+    if (!userLite) {
+      Swal.fire('Error', 'No se pudo obtener información del usuario', 'error');
+      return;
+    }
     
     switch(estado) {
       case 1:
@@ -587,16 +609,21 @@ export class DespachosComponent implements OnInit {
     this.pedidoUtilService.pedido = order;
     order.totalDescuento = this.pedidoUtilService.getDiscount();
     order.totalPedidoSinDescuento = this.pedidoUtilService.getSubtotal();
-    order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(order.totalEnvio);
+    const totalEnvio = order.totalEnvio || 0;
+    order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(totalEnvio);
     return order;
   }
 
   deleteProductToCart(order: Pedido, carrito: Carrito) {
-    const index = order.carrito.findIndex((carrito) => carrito.producto.identificacion.referencia === carrito.producto.identificacion.referencia);
-    if (index !== -1) {
-      order.carrito.splice(index, 1);
+    if (order.carrito) {
+      const index = order.carrito.findIndex((item) => 
+        item.producto?.identificacion?.referencia === carrito.producto?.identificacion?.referencia
+      );
+      if (index !== -1) {
+        order.carrito.splice(index, 1);
+      }
+      this.editOrder(order);
     }
-    this.editOrder(order);
   }
 
   deleteOrder(order: Pedido) {
@@ -623,7 +650,7 @@ export class DespachosComponent implements OnInit {
   }
 
   editSeller(order: Pedido) {
-    if (order.asesorAsignado.nit === '9999') {
+    if (order.asesorAsignado && order.asesorAsignado.nit === '9999') {
       Swal.fire({
         title: '¿Estás seguro?',
         text: "Estás a punto de cambiar el asesor asignado a este pedido.",
@@ -635,13 +662,12 @@ export class DespachosComponent implements OnInit {
         cancelButtonText: 'No, cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
-          const userString = localStorage.getItem('user');
-          const user = JSON.parse(userString) as UserLogged;
-          const userLite: UserLite = {
-            name: user.name,
-            email: user.email,
-            nit: user.nit
+          const userLite = this.getCurrentUser();
+          if (!userLite) {
+            Swal.fire('Error', 'No se pudo obtener información del usuario', 'error');
+            return;
           }
+          
           order.asesorAsignado = userLite;
           this.editOrder(order);
           Swal.fire(
@@ -663,13 +689,49 @@ export class DespachosComponent implements OnInit {
   }
 
   buscarPorFechas(table?: Table): void {
-    const filter = {
-      fechaInicial: this.fechaInicial,
-      fechaFinal: this.fechaFinal,
-      company: JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial
+    // Validar fechas
+    if (!this.fechaInicial || !this.fechaFinal) {
+      Swal.fire('Error', 'Por favor seleccione un rango de fechas vu00e1lido', 'error');
+      return;
     }
+
+    // Asegurar que las fechas tienen horario correcto para bu00fasqueda
+    // Asegurarse de que las fechas sean objetos Date
+    const fechaInicialBusqueda = new Date(this.fechaInicial instanceof Date ? this.fechaInicial : new Date(this.fechaInicial));
+    fechaInicialBusqueda.setHours(0, 0, 0, 0);
+    
+    const fechaFinalBusqueda = new Date(this.fechaFinal instanceof Date ? this.fechaFinal : new Date(this.fechaFinal));
+    fechaFinalBusqueda.setHours(23, 59, 59, 999);
+
+    // Validar que la fecha inicial no sea mayor que la final
+    if (fechaInicialBusqueda > fechaFinalBusqueda) {
+      Swal.fire('Error', 'La fecha inicial no puede ser mayor que la fecha final', 'error');
+      return;
+    }
+
+    // Obtener empresa actual
+    const currentCompanyStr = sessionStorage.getItem("currentCompany");
+    const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : '';
+    
+    const filter = {
+      fechaInicial: fechaInicialBusqueda,
+      fechaFinal: fechaFinalBusqueda,
+      company: companyName,
+      estadoProceso: [EstadoProceso.Rechazado, EstadoProceso.ParaDespachar, EstadoProceso.ProducidoTotalmente, EstadoProceso.SinProducir, EstadoProceso.Producido, EstadoProceso.Entregado, EstadoProceso.Despachado, EstadoProceso.Empacado],
+      estadosPago: [EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente, EstadoPago.Pospendiente],
+      tipoFecha: 'fechaEntrega'
+    }
+
+    this.loading = true;
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
       this.orders = data;
+      this.orders.forEach(order => {
+        if (order.fechaCreacion) {
+          order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
+        }
+        order.anticipo = order.anticipo ?? 0;
+        order.faltaPorPagar = (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
+      });
       this.loading = false;
     });
 
@@ -697,13 +759,12 @@ export class DespachosComponent implements OnInit {
     const fechaPasadoManana = new Date();
     fechaPasadoManana.setDate(fechaPasadoManana.getDate() + 2);
     this.fechaInicial = new Date(fechaPasadoManana.setHours(0, 0, 0, 0));
-    // this.fechaInicial.setHours(23, 59, 59, 999);
     this.fechaFinal = new Date(fechaPasadoManana.setHours(23, 59, 59, 999));
     this.refrescarDatos();
   }
 
   AsentarPago(content, order: Pedido) {
-    if (order.estadoPago === EstadoPago.Aprobado && order.faltaPorPagar <= 0) {
+    if (order.estadoPago === EstadoPago.Aprobado && (order.faltaPorPagar || 0) <= 0) {
       Swal.fire({
         title: '¡Alerta!',
         text: "Este pedido ya ha sido pagado en su totalidad.",
@@ -720,7 +781,11 @@ export class DespachosComponent implements OnInit {
       fullscreen: true,
       ariaLabelledBy: 'modal-basic-title'
     }).result.then((result) => {
-      order.PagosAsentados.push(result);
+      if (order.PagosAsentados) {
+        order.PagosAsentados.push(result);
+      } else {
+        order.PagosAsentados = [result];
+      }
       this.actualizarValoresPedido(order);
       this.editOrder(order);
     });
@@ -734,7 +799,7 @@ export class DespachosComponent implements OnInit {
   }
 
   openModal(content, edit?: boolean, item?: any) {
-    if (edit == true) {
+    if (edit === true) {
       this.editTransporter = edit
       this.dataEditTransporter = item
       this.transportadorForm.patchValue(item)
@@ -759,12 +824,50 @@ export class DespachosComponent implements OnInit {
   
   openModalDetalleEntrega(content, pedido) {
     this.detallePedidoEntregado = pedido
-    console.log(this.detallePedidoEntregado)
     this.modalRef = this.modalService.open(content, { size: 'xl', fullscreen: true });
   }
 
-
-
+  openDetalleEntrega(pedido: Pedido) {
+    this.detallePedidoEntregado = pedido;
+    this.modalService.open(this.detalleEntregaModal, { size: 'xl', fullscreen: true });
+  }
+  
+  onSaveTransportador(transportador: any) {
+    if (this.editTransporter) {
+      transportador.id = this.dataEditTransporter.id;
+      transportador.date_edit = this.dataEditTransporter.date_edit;
+    }
+    
+    this.logisticaService.createTrasportadora(transportador).subscribe(
+      response => {
+        Swal.fire('Éxito', 'Transportador guardado exitosamente', 'success');
+        this.refrescarDatos();
+        this.modalRef.dismiss();
+      },
+      error => {
+        Swal.fire('Error', 'Hubo un problema al guardar el transportador', 'error');
+      }
+    );
+  }
+  
+  imprimirToPdf() {
+    const printContent = document.getElementById('htmlPdf');
+    if (printContent) {
+      html2canvas(printContent).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+        pdf.save(`pedido-${this.pedidoSeleccionado.nroPedido}.pdf`);
+      });
+    } else {
+      console.error('No se encontró el elemento para imprimir');
+    }
+  }
 
   verNotasCliente(pedido) {
     if (!pedido.notasPedido) {
@@ -860,35 +963,34 @@ export class DespachosComponent implements OnInit {
     });
   }
   iterarTarjetas(pedido) {
-
-    const tarjetas = []
-    pedido.carrito.forEach(producto => {
-      if (producto.configuracion && producto.configuracion.tarjetas) {
-        producto.configuracion.tarjetas.map(tarj => {
-          if (tarj.de != "" || tarj.para != "" || tarj.mensaje != "") {
-            tarjetas.push(tarj)
-          }
-        })
-
-      }
-
-    });
+    const tarjetas: any[] = [];
+    if (pedido.carrito) {
+      pedido.carrito.forEach(producto => {
+        if (producto.configuracion && producto.configuracion.tarjetas) {
+          producto.configuracion.tarjetas.forEach(tarj => {
+            if (tarj.de !== "" || tarj.para !== "" || tarj.mensaje !== "") {
+              tarjetas.push(tarj);
+            }
+          });
+        }
+      });
+    }
     return tarjetas.length > 0;
   }
   verTarjetasPedido(pedido) {
     this.todasLasTarjetas = [];
 
-    pedido.carrito.forEach(producto => {
-      if (producto.configuracion && producto.configuracion.tarjetas) {
-        producto.configuracion.tarjetas.map(tarj => {
-          if (tarj.de != "" || tarj.para != "" || tarj.mensaje != "") {
-            this.todasLasTarjetas.push({ tarjeta: tarj, pedido: producto.producto.crearProducto.titulo })
-          }
-        })
-
-      }
-    });
-
+    if (pedido.carrito) {
+      pedido.carrito.forEach(producto => {
+        if (producto.configuracion && producto.configuracion.tarjetas) {
+          producto.configuracion.tarjetas.forEach(tarj => {
+            if (tarj.de !== "" || tarj.para !== "" || tarj.mensaje !== "") {
+              this.todasLasTarjetas.push({ tarjeta: tarj, pedido: producto.producto?.crearProducto?.titulo || 'Sin título' });
+            }
+          });
+        }
+      });
+    }
 
     if (this.todasLasTarjetas.length === 0) {
       Swal.fire({
@@ -1018,12 +1120,19 @@ export class DespachosComponent implements OnInit {
     Swal.fire({
       title: 'Seleccione los pedidos',
       input: 'select',
-      inputOptions: this.orders.filter(o => o.transportador == undefined && o.transportador == null && o.formaEntrega == "Envío a Domicilio").reduce((acc, pedido) => {
-        if (!this.pedidosSeleccionados.some(p => p.nroPedido === pedido.nroPedido)) {
-          acc[pedido.nroPedido] = `${pedido.nroPedido} - ${pedido.cliente.nombres_completos} - ${pedido.estadoPago}- ${pedido.estadoProceso}-${pedido.envio.ciudad}-${pedido.envio.zonaCobro}-${pedido.formaEntrega}-${pedido.envio.zonaCobro}-${pedido.horarioEntrega} `;
-        }
-        return acc;
-      }, {}),
+      inputOptions: this.orders
+        .filter(o => o.transportador == undefined && o.transportador == null && o.formaEntrega == "Envío a Domicilio")
+        .reduce((acc: Record<string, string>, pedido) => {
+          if (!this.pedidosSeleccionados.some(p => p.nroPedido === pedido.nroPedido)) {
+            const clienteNombre = pedido.cliente?.nombres_completos || 'Sin nombre';
+            const ciudad = pedido.envio?.ciudad || 'Sin ciudad';
+            const zonaCobro = pedido.envio?.zonaCobro || 'Sin zona';
+            const horario = pedido.horarioEntrega || 'Sin horario';
+            
+            acc[pedido.nroPedido || ''] = `${pedido.nroPedido} - ${clienteNombre} - ${pedido.estadoPago}- ${pedido.estadoProceso}-${ciudad}-${zonaCobro}-${pedido.formaEntrega}-${zonaCobro}-${horario} `;
+          }
+          return acc;
+        }, {}),
       showCancelButton: true,
       inputValidator: (value) => {
         if (!value) {
@@ -1033,16 +1142,6 @@ export class DespachosComponent implements OnInit {
           return 'El pedido ya ha sido agregado';
         }
         return null;
-      },
-      customClass: {
-        popup: 'swal2-custom-width'
-      },
-      didOpen: () => {
-        const popup = document.querySelector('.swal2-popup') as HTMLElement;
-        if (popup) {
-          popup.style.width = '80%';
-          popup.style.maxWidth = 'none';
-        }
       }
     }).then((result) => {
       if (result.isConfirmed) {
@@ -1087,20 +1186,23 @@ export class DespachosComponent implements OnInit {
     var fechaEnvioConvert = new Date(fechaEnvio.getFullYear(), fechaEnvio.getMonth(), fechaEnvio.getDate() + 1); // Mantener horas en 0
 
     return this.orders.filter(o => {
+      // Verificar si la fecha de entrega existe
+      if (!o.fechaEntrega) return false;
+      
       // Establecer horas, minutos y segundos a 0 para la comparación
       const fechaEntregaNormalized = new Date(new Date(o.fechaEntrega).setHours(0, 0, 0, 0)); // Normaliza a 00:00:00
       const fechaEnvioNormalized = new Date(fechaEnvioConvert.setHours(0, 0, 0, 0)); // Asegurarse de que también esté en 00:00:00
 
       return fechaEntregaNormalized.getTime() === fechaEnvioNormalized.getTime() &&
         (o.estadoProceso !== EstadoProceso.Entregado && o.estadoProceso !== EstadoProceso.Despachado) &&
-        o.formaEntrega.toLocaleUpperCase().includes('DOMICILIO');
+        (o.formaEntrega ? o.formaEntrega.toLocaleUpperCase().includes('DOMICILIO') : false);
     })
-      .reduce((acc, pedido) => {
-        if (!this.pedidosSeleccionados.some(p => p.nroPedido === pedido.nroPedido)) {
-          acc.push(pedido);
-        }
-        return acc;
-      }, []);
+    .reduce((acc: Pedido[], pedido) => {
+      if (!this.pedidosSeleccionados.some(p => p.nroPedido === pedido.nroPedido)) {
+        acc.push(pedido);
+      }
+      return acc;
+    }, []);
   }
 
 
@@ -1152,6 +1254,103 @@ export class DespachosComponent implements OnInit {
     return order.pedidos[0] && order.pedidos[0].estadoProceso === 'Despachado' ? order.pedidos[0].estadoProceso : 'Por despachar';
   }
 
+  handleOrderDispatch(order: any) {
+    // Si la orden ya tiene todos sus pedidos despachados, mostrar mensaje informativo
+    if (order.pedidos && order.pedidos.every(p => p.estadoProceso === 'Despachado')) {
+      Swal.fire('Info', 'Esta orden ya ha sido despachada completamente', 'info');
+      return;
+    }
+    
+    // Preparar pedidos para despachar (solo los que no estén despachados)
+    this.pedidosSeleccionados = order.pedidos.filter(p => p.estadoProceso !== 'Despachado');
+    this.nroShippingOrder = order.nroShippingOrder;
+    
+    // Inicializar nuevaOrdenEnvio si no existe
+    if (!this.nuevaOrdenEnvio) {
+      const currentCompanyStr = sessionStorage.getItem("currentCompany");
+      const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : '';
+      
+      this.nuevaOrdenEnvio = {
+        id: order.id || '',
+        nroShippingOrder: order.nroShippingOrder,
+        fecha: new Date().toISOString(),
+        transportador: order.transportador,
+        company: companyName,
+        pedidos: []
+      };
+    }
+    
+    // Utilizar el método existente para despachar
+    this.despacharOrden();
+  }
+  
+  handlePedidoDispatch(pedido: any) {
+    Swal.fire({
+      title: 'Asignar Transportador',
+      input: 'select',
+      inputOptions: this.vendors.reduce((acc, vendor) => {
+        acc[`${vendor.nombres} ${vendor.apellidos}-${vendor.telefono}`] = `${vendor.nombres} ${vendor.apellidos}`;
+        return acc;
+      }, {}),
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debes ingresar el nombre del transportador';
+        }
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const userLite = this.getCurrentUser();
+        if (!userLite) {
+          Swal.fire('Error', 'No se pudo obtener información del usuario', 'error');
+          return;
+        }
+        
+        // Actualizar el estado y datos del pedido
+        pedido.transportador = result.value;
+        pedido.despachador = userLite;
+        pedido.fechaYHorarioDespachado = new Date().toISOString();
+        pedido.estadoProceso = EstadoProceso.Despachado;
+        
+        // Si el pedido no tenía una orden de despacho, asignarle la nroShippingOrder "00"
+        if (!pedido.nroShippingOrder) {
+          pedido.nroShippingOrder = "00";
+          pedido.shippingOrder = "00";
+        }
+        
+        // Guardar los cambios
+        this.ventasService.editOrder(pedido).subscribe(
+          response => {
+            Swal.fire('Éxito', 'Pedido despachado exitosamente', 'success');
+            // Simplemente refrescar los datos de todas las órdenes
+            this.refrescarDatos();
+            // Cerrar y volver a abrir el diálogo
+            this.modalService.dismissAll();
+            setTimeout(() => {
+              // Volver a consultar las órdenes
+              this.logisticaService.getShippingOrders().subscribe((data: Pedido[]) => {
+                const currentCompanyStr = sessionStorage.getItem("currentCompany");
+                const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : '';
+                
+                this.dispatchOrders = data.filter(x => x.company == companyName)
+                  .sort((a, b) => {
+                    const aNum = a.nroShippingOrder ? parseInt(a.nroShippingOrder) : 0;
+                    const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
+                    return bNum - aNum;
+                  });
+                this.modalService.open(this.dispatchOrdersModal, { size: 'xl', fullscreen: true });
+              });
+            }, 500);
+          },
+          error => {
+            Swal.fire('Error', 'Hubo un problema al despachar el pedido', 'error');
+          }
+        );
+      }
+    });
+  }
+
   despacharOrden() {
     Swal.fire({
       title: 'Asignar Transportador',
@@ -1170,18 +1369,39 @@ export class DespachosComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.transportadorSeleccionado = result.value;
-        const userLite: UserLite = JSON.parse(localStorage.getItem('user')) as UserLite;
+        const userLite = this.getCurrentUser();
+        
+        if (!userLite) {
+          Swal.fire('Error', 'No se pudo obtener información del usuario', 'error');
+          return;
+        }
 
         this.pedidosSeleccionados.forEach(pedido => {
           pedido.transportador = this.transportadorSeleccionado;
-          pedido.despachador = userLite; // Puedes asignar un despachador específico aquí
+          pedido.despachador = userLite;
           pedido.fechaYHorarioDespachado = new Date().toISOString();
           pedido.estadoProceso = EstadoProceso.Despachado;
           pedido.nroShippingOrder = this.nroShippingOrder;
           pedido.shippingOrder = this.nroShippingOrder;
         });
 
+        // Asegurarse de que nuevaOrdenEnvio esté inicializado
+        if (!this.nuevaOrdenEnvio) {
+          const currentCompanyStr = sessionStorage.getItem("currentCompany");
+          const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : '';
+          
+          this.nuevaOrdenEnvio = {
+            id: '',
+            nroShippingOrder: this.nroShippingOrder,
+            fecha: new Date().toISOString(),
+            transportador: this.transportadorSeleccionado,
+            company: companyName,
+            pedidos: []
+          };
+        }
+        
         this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados;
+        this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
 
         this.logisticaService.dispatchShippingOrder(this.nuevaOrdenEnvio).subscribe(
           response => {
@@ -1191,6 +1411,7 @@ export class DespachosComponent implements OnInit {
             this.pedidosSeleccionados = [];
             this.transportadorSeleccionado = null;
             this.nroShippingOrder = null;
+            this.nuevaOrdenEnvio = null;
           },
           error => {
             Swal.fire('Error', 'Hubo un problema al despachar la orden', 'error');
@@ -1199,231 +1420,77 @@ export class DespachosComponent implements OnInit {
       }
     });
   }
-
-
-
-  onSubmitTransportador() {
-    if (this.editTransporter) {
-      if (this.transportadorForm.invalid) {
-        Swal.fire('Error', 'Verifica los datos ingresados', 'error');
-        return;
-      }
-      const nuevoTransportador = this.transportadorForm.value;
-      nuevoTransportador.id = this.dataEditTransporter.id
-      nuevoTransportador.date_edit = this.dataEditTransporter.date_edit
-      this.logisticaService.createTrasportadora(nuevoTransportador).subscribe(
-        response => {
-          Swal.fire('Éxito', 'Transportador creado exitosamente', 'success');
-          this.refrescarDatos()
-          this.modalRef.dismiss();
-        },
-        error => {
-          Swal.fire('Error', 'Hubo un problema al crear el transportador', 'error');
-        }
-      );
-    } else {
-      if (this.transportadorForm.invalid) {
-        Swal.fire('Error', 'Verifica los datos ingresados', 'error');
-        return;
-      }
-      const nuevoTransportador = this.transportadorForm.value;
-      this.logisticaService.createTrasportadora(nuevoTransportador).subscribe(
-        response => {
-          Swal.fire('Éxito', 'Transportador creado exitosamente', 'success');
-          this.refrescarDatos()
-          this.modalRef.dismiss();
-        },
-        error => {
-          Swal.fire('Error', 'Hubo un problema al crear el transportador', 'error');
-        }
-      );
+  
+  private getCurrentUser(): UserLite | null {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    
+    try {
+      return JSON.parse(userStr) as UserLite;
+    } catch (error) {
+      console.error('Error al parsear información de usuario:', error);
+      return null;
     }
   }
-  onEditTransportador() {
-    if (this.transportadorForm.invalid) {
-      Swal.fire('Error', 'Verifica los datos ingresados', 'error');
-      return;
-    }
-    const nuevoTransportador = this.transportadorForm.value;
-    this.logisticaService.createTrasportadora(nuevoTransportador).subscribe(
-      response => {
-        Swal.fire('Éxito', 'Transportador creado exitosamente', 'success');
-        this.refrescarDatos()
-        this.modalRef.dismiss();
-      },
-      error => {
-        Swal.fire('Error', 'Hubo un problema al crear el transportador', 'error');
-      }
-    );
-  }
-
-  openPantallaOrdenEnvioModal() {
-    this.modalService.open(this.pantallaOrdenEnvioModal, { size: 'lg' });
-  }
-
-  onSubmitOrdenEnvio() {
-    if (this.ordenEnvioForm.invalid || this.pedidosSeleccionados.length === 0) {
-      Swal.fire('Error', 'Debes completar el formulario y seleccionar al menos un pedido', 'error');
-      return;
-    }
-
-    this.nuevaOrdenEnvio = {
-      ...this.ordenEnvioForm.value,
-      id: '',
-      nroShippingOrder: 0,
-      pedidos: this.pedidosSeleccionados
-    };
-
-    // hacer un progreso con swal 
-    Swal.fire({
-      title: 'Cargando...',
-      html: 'Por favor espera',
-      timer: 1000, // Duración de la barra de progreso en milisegundos
-      timerProgressBar: true,
-      didOpen: () => {
-        Swal.showLoading()
-      },
-    }).then((result) => {
-      /* Si el temporizador llega a cero */
-      // if (result.dismiss === Swal.DismissReason.timer) {
-
-      this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
-        next: response => {
-          this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder
-          Swal.close();
-          this.nroShippingOrder = response.nroShippingOrder;
-          this.nuevaOrdenEnvio.id = response.id;
-          this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
-          Swal.fire('Éxito', 'Orden de envío ' + response.nroShippingOrder.toString().padStart('0', 4) + ' generada exitosamente', 'success');
-          console.log(this.nuevaOrdenEnvio)
-          this.nuevaOrdenEnvio.pedidos.map(pedidoEnOrden => {
-            this.orders.map(ordenListada => {
-              if (pedidoEnOrden.nroPedido == ordenListada.nroPedido) {
-                (ordenListada as any).nroShippingOrder = this.nuevaOrdenEnvio.nroShippingOrder
-              }
-            })
-          })
-          this.modalService.dismissAll();
-          // this.openModal(this.pantallaOrdenEnvioModal);
-        },
-        error: error => {
-          Swal.fire('Error', 'Hubo un problema al crear la orden de envío', 'error');
-        }
-      });
-      // }
-    })
-  }
-  async openOrderInputModal() {
-    const { value: orderId } = await Swal.fire({
-      title: 'Consultar Orden de Envío',
-      input: 'text',
-      inputPlaceholder: 'Ingrese el número de orden',
-      showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Debes ingresar el número de orden';
-        }
-        return null;
-      }
-    });
-
-    if (orderId) {
-      // Lógica para manejar la consulta de la orden ingresada
-      this.consultarOrden(orderId);
-    }
-  }
-  consultarOrden(orderId: any) {
-    this.logisticaService.getShippingOrder(orderId).subscribe({
-      next: response => {
-        console.log(response);
-        this.nuevaOrdenEnvio = response;
-        this.pedidosSeleccionados = response.pedidos;
-        this.transportadorSeleccionado = response.pedidos[0]?.transportador;
-        this.nroShippingOrder = response.nroShippingOrder;
-        this.openModal(this.pantallaOrdenEnvioModal, true);
-      },
-      error: error => {
-        Swal.fire('Error', 'Hubo un problema al consultar la orden de envío', 'error');
-      }
-    });
-
-  }
-
-  imprimirOrderToAction(orderId: any) {
-    this.logisticaService.getShippingOrder(orderId).subscribe({
-      next: response => {
-        console.log(response);
-        this.nuevaOrdenEnvio = response;
-        this.pedidosSeleccionados = response.pedidos;
-        this.transportadorSeleccionado = response.pedidos[0]?.transportador;
-        this.nroShippingOrder = response.nroShippingOrder;
-        // this.openModal(this.pantallaOrdenEnvioModal, true);
-        this.imprimirOrden()
-      },
-      error: error => {
-        Swal.fire('Error', 'Hubo un problema al consultar la orden de envío', 'error');
-      }
-    });
-  }
-
-  actualizarOrdenEnvio() {
-    this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
-      next: response => {
-        console.log(response);
-        Swal.fire('Éxito', 'Orden de envío ' + this.nuevaOrdenEnvio.nroShippingOrder.toString().padStart('0', 4) + ' actualizada exitosamente', 'success');
-        this.modalService.dismissAll();
-        // this.openModal(this.pantallaOrdenEnvioModal);
-      },
-      error: error => {
-        Swal.fire('Error', 'Hubo un problema al actualizar la orden de envío', 'error');
-      }
-    });
-  }
+  
   viewAllDispatchOrders() {
     // Aquí se añade la lógica para la consulta masiva de órdenes de despacho
     this.logisticaService.getShippingOrders().subscribe((data: Pedido[]) => {
-      console.log(data)
-      this.dispatchOrders = data.filter(x => {
-        return x.company == JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial
-      }
-      ).sort((a, b) => parseInt(b.nroShippingOrder) - parseInt(a.nroShippingOrder));
+      const currentCompanyStr = sessionStorage.getItem("currentCompany");
+      const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : '';
+      
+      this.dispatchOrders = data.filter(x => x.company == companyName)
+        .sort((a, b) => {
+          const aNum = a.nroShippingOrder ? parseInt(a.nroShippingOrder) : 0;
+          const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
+          return bNum - aNum;
+        });
       this.modalService.open(this.dispatchOrdersModal, { size: 'xl', fullscreen: true });
     }, (error) => {
       console.error('Error al consultar las órdenes de despacho:', error);
       this.dispatchOrders = [];
       this.modalService.open(this.dispatchOrdersModal, { size: 'xl' });
     });
-
   }
-  isArray(value: any): boolean {
-    return Array.isArray(value);
+  
+  pdfOrder(content, order: Pedido) {
+    this.pedidoSeleccionado = order;
+    this.htmlModal = this.paymentService.getHtmlContent(order);
+    this.modalService.open(content, {
+      size: 'lg',
+      scrollable: true,
+      centered: true,
+      fullscreen: true,
+      ariaLabelledBy: 'modal-basic-title'
+    }).result.then(
+      (result) => {
+        this.htmlModal = null;
+      },
+      (reason) => {
+        this.htmlModal = null;
+      }
+    );
   }
-  getFaltaPorPagarSum(order: any): number {
-    return order.pedidos.reduce((sum: number, pedido: any) => {
-      // Verifica si faltaPorPagar es un número negativo y, si es así, lo reemplaza por 0
-      const faltaPorPagar = pedido.faltaPorPagar < 0 ? 0 : pedido.faltaPorPagar || 0;
-      return sum + faltaPorPagar;
-    }, 0);
-  }
+  
   descargarRotulo(pedido: any): void {
-    this.pdfSize = '5x5'
+    this.pdfSize = '5x5';
     const size = this.pdfSize.split('x').map(Number);
     const width = size[0];
     const height = size[1];
 
     const rotuloContent = `
     <div style="font-family: Arial, sans-serif; padding: 3px; border: 2px solid #ddd;">
-      <div >
+      <div>
           <div style="margin-bottom: 2px;">
             <p style="font-size: 100px; line-height:1.2;"><strong>Número de Pedido:</strong> ${pedido.nroPedido}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Fecha Entrega:</strong> ${pedido.fechaEntrega.split('T')[0]}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Horario de Entrega:</strong> ${pedido.horarioEntrega}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Recibe:</strong> ${pedido.envio?.nombres} ${pedido.envio?.apellidos}</p>
-            <p style="font-size: 100px; line-height:1.2;">${pedido.envio?.direccionEntrega}, ${pedido.envio?.nombreUnidad}, ${pedido.envio?.especificacionesInternas}, ${pedido.envio?.observaciones}, ${pedido.envio?.zonaCobro}</p>
+            <p style="font-size: 100px; line-height:1.2;"><strong>Fecha Entrega:</strong> ${pedido.fechaEntrega ? pedido.fechaEntrega.split('T')[0] : 'N/A'}</p>
+            <p style="font-size: 100px; line-height:1.2;"><strong>Horario de Entrega:</strong> ${pedido.horarioEntrega || 'N/A'}</p>
+            <p style="font-size: 100px; line-height:1.2;"><strong>Recibe:</strong> ${pedido.envio?.nombres || ''} ${pedido.envio?.apellidos || ''}</p>
+            <p style="font-size: 100px; line-height:1.2;">${pedido.envio?.direccionEntrega || ''}, ${pedido.envio?.nombreUnidad || ''}, ${pedido.envio?.especificacionesInternas || ''}, ${pedido.envio?.observaciones || ''}, ${pedido.envio?.zonaCobro || ''}</p>
           </div>
         </div>
     </div>
-  `;
+    `;
 
     const element = document.createElement('div');
     element.innerHTML = rotuloContent;
@@ -1445,123 +1512,53 @@ export class DespachosComponent implements OnInit {
       document.body.removeChild(element);
     });
   }
-
-
-  openSwal(pedido: any): void {
-    this.pdfSize = '5x5'; // Establece el tamaño por defecto
-    Swal.fire({
-      title: 'Descargar Rótulo',
-      text: 'El tamaño del rótulo es 5px x 5px',
-      showCancelButton: true,
-      cancelButtonText: 'Cancelar',
-      confirmButtonText: 'Descargar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.descargarRotulo(pedido);
+  
+  imprimirOrderToAction(orderId: any) {
+    this.logisticaService.getShippingOrder(orderId).subscribe({
+      next: response => {
+        this.nuevaOrdenEnvio = response;
+        this.pedidosSeleccionados = response.pedidos;
+        this.transportadorSeleccionado = response.pedidos[0]?.transportador;
+        this.nroShippingOrder = response.nroShippingOrder;
+        this.imprimirOrden();
+      },
+      error: error => {
+        Swal.fire('Error', 'Hubo un problema al consultar la orden de envío', 'error');
       }
     });
   }
 
-
-  closeDialog(): void {
-    this.isDialogOpen = false;
-  }
-
-  pdfOrder(content, order: Pedido) {
-    this.pedidoSeleccionado = order;
-    this.htmlModal = this.paymentService.getHtmlContent(order);
-    // this.renderer.setProperty(this.htmlPdf.nativeElement, 'innerHTML', this.htmlModal);
-    this.modalService.open(content, {
-      size: 'lg',
-      scrollable: true,
-      centered: true,
-      fullscreen: true,
-      ariaLabelledBy: 'modal-basic-title'
+  // Manejadores para acciones desde OrdenesDespachoComponent
+  handleOrderView(orderId: string) {
+    // Consultar la orden de envío existente
+    const orderIdNumber = parseInt(orderId);
+    if (isNaN(orderIdNumber)) {
+      console.error('ID de orden inválido:', orderId);
+      Swal.fire('Error', 'ID de orden de envío inválido', 'error');
+      return;
     }
-    ).result.then((result) => {
-      console.log(result);
-      this.htmlModal = null;
-    }
-      , (reason) => {
-        console.log(reason);
-      });
-  }
-
-  // Método para verificar si una columna está seleccionada
-  isColumnVisible(field: string): boolean {
-    return this.selectedColumns.some(col => col.field === field);
-  }
-
-  // Método para abrir la imagen a tamaño completo
-  openFullImage(imageUrl: string): void {
-    Swal.fire({
-      imageUrl: imageUrl,
-      imageAlt: 'Imagen de evidencia',
-      showCloseButton: true,
-      showConfirmButton: false,
-      width: '80%',
-      padding: '1rem',
-      background: '#fff',
-      imageWidth: 'auto',
-      imageHeight: 'auto',
-      customClass: {
-        image: 'img-fluid',
-        popup: 'swal2-popup-fullscreen'
-      }
-    });
-  }
-
-  // Método para actualizar la visibilidad de las columnas cuando el usuario cambia la selección
-  onColumnSelectionChange(): void {
-    // Actualizar la propiedad visible en displayedColumns basado en selectedColumns
-    this.displayedColumns.forEach(col => {
-      col.visible = this.selectedColumns.some(selected => selected.field === col.field);
-    });
     
-    // Guardar la configuración en localStorage
-    localStorage.setItem('despachosColumns', JSON.stringify(this.displayedColumns));
-  }
-  
-  // Método para restaurar las columnas a la configuración por defecto
-  resetColumnConfig(): void {
-    this.displayedColumns = [
-      { field: 'detalles', header: 'Detalles', visible: true },
-      { field: 'opciones', header: 'Opciones', visible: true },
-      { field: 'nroPedido', header: 'Número de Pedido', visible: true },
-      { field: 'nroFactura', header: 'Número de Factura', visible: true },
-      { field: 'shippingOrder', header: 'Número orden de envío', visible: true },
-      { field: 'estadoPago', header: 'Estado de Pago', visible: true },
-      { field: 'estadoProceso', header: 'Estado de Proceso', visible: true },
-      { field: 'cliente', header: 'Cliente', visible: true },
-      { field: 'totalEnvio', header: 'Domicilio', visible: true },
-      { field: 'faltaPorPagar', header: 'Falta por Pagar', visible: true },
-      { field: 'fechaCreacion', header: 'Fecha de Compra', visible: true },
-      { field: 'ciudad', header: 'Ciudad', visible: true },
-      { field: 'zonaCobro', header: 'Zona de Entrega', visible: true },
-      { field: 'observaciones', header: 'Observaciones de Entrega', visible: false },
-      { field: 'fechaEntrega', header: 'Fecha de Entrega', visible: true },
-      { field: 'formaEntrega', header: 'Forma de Entrega', visible: true },
-      { field: 'horarioEntrega', header: 'Horario de Entrega', visible: true },
-      { field: 'fechaHoraEmpacado', header: 'Fecha y Horario de Empacado', visible: false },
-      { field: 'fechaYHorarioDespachado', header: 'Fecha y Horario de Despachado', visible: false },
-      { field: 'asesorAsignado', header: 'Vendedor', visible: false },
-      { field: 'empacador', header: 'Empacador', visible: false },
-      { field: 'despachador', header: 'Despachador', visible: false },
-      { field: 'transportador', header: 'Transportador', visible: false },
-      { field: 'entregado', header: 'Entregado', visible: false }
-    ];
-    this.selectedColumns = this.displayedColumns.filter(col => col.visible);
-    localStorage.setItem('despachosColumns', JSON.stringify(this.displayedColumns));
-  }
-
-  // Método para contar cuántas columnas son visibles actualmente
-  getVisibleColumnsCount(): number {
-    return this.selectedColumns.length;
-  }
-  
-  // Método para obtener un arreglo con los campos de columnas visibles en orden
-  getVisibleColumnFields(): string[] {
-    return this.selectedColumns.map(col => col.field);
+    this.logisticaService.getShippingOrder(orderIdNumber).subscribe({
+      next: response => {
+        // Asignar datos a las propiedades
+        this.nuevaOrdenEnvio = response;
+        this.pedidosSeleccionados = response.pedidos || [];
+        this.transportadorSeleccionado = response.transportador;
+        this.nroShippingOrder = response.nroShippingOrder;
+        
+        // Cerrar el modal de listado de órdenes
+        this.modalService.dismissAll();
+        
+        // Abrir el modal de edición de orden
+        setTimeout(() => {
+          this.openModal(this.pantallaOrdenEnvioModal, true);
+        }, 100);
+      },
+      error: error => {
+        console.error('Error al consultar la orden:', error);
+        Swal.fire('Error', 'Hubo un problema al consultar la orden de envío', 'error');
+      }
+    });
   }
 }
 
