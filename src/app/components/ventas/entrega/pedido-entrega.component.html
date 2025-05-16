@@ -2,7 +2,7 @@
   Después de crear o buscar el cliente, por favor seleccione o ingrese los datos de Entrega correspondientes.
 </div>
 <p-tabView [activeIndex]="activeIndex">
-  <p-tabPanel header="Mis Direcciones de Entrega" *ngIf="!datosEntregaNoEncontradosParaCiudadSeleccionada">
+  <p-tabPanel header="Mis Direcciones de Entrega">
     <div class="card-header">
       <h2><label for="">Datos Entrega</label></h2>
     </div>
@@ -36,47 +36,56 @@
 
       </div>
     </div>
-    <table class="table">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Referencia</th>
-          <th>Nombres/Razon Social</th>
+    <div *ngIf="datosEntregaNoEncontradosParaCiudadSeleccionada" class="alert alert-warning mb-3">
+      <i class="fa fa-exclamation-triangle me-2"></i> No hay direcciones registradas para la ciudad seleccionada. 
+      Se muestran todas las direcciones disponibles. Seleccione una o cree una nueva.
+    </div>
+    <div *ngIf="datosEntregas && datosEntregas.length > 0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Referencia</th>
+            <th>Nombres/Razon Social</th>
 
-          <th>Direccion</th>
-          <th>Opciones</th>
+            <th>Direccion</th>
+            <th>Opciones</th>
 
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of datosEntregas; let i = index">
-          <td>
-            <button class="btn btn-primary" (click)="seleccionarDireccionEntrega(i)">
-              Usar Esta Direccion
-            </button>
-          </td>
-          <td>{{ item.alias }}</td>
-          <td>{{ item.nombres }} {{ item.apellidos }}</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of datosEntregas; let i = index">
+            <td>
+              <button class="btn btn-primary" (click)="seleccionarDireccionEntrega(i)">
+                Usar Esta Direccion
+              </button>
+            </td>
+            <td>{{ item.alias }}</td>
+            <td>{{ item.nombres }} {{ item.apellidos }}</td>
 
-          <td>{{ item.direccionEntrega }}</td>
+            <td>{{ item.direccionEntrega }}</td>
 
-          <td>
-            <i placement="top" ngbTooltip="{{ 'Editar' | translate }}" style="
-                  font-size: 18px;
-                  margin-left: 10px;
-                  color: cornflowerblue;
-                  cursor: pointer;
-                " class="icofont icofont-pencil-alt-5" (click)="editarDatos(entrega, i)"></i>
-            <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}" style="
-                  font-size: 18px;
-                  margin-left: 10px;
-                  color: cornflowerblue;
-                  cursor: pointer;
-                " class="icofont icofont icofont-trash" (click)="eliminarDato1(i)"></i>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <td>
+              <i placement="top" ngbTooltip="{{ 'Editar' | translate }}" style="
+                    font-size: 18px;
+                    margin-left: 10px;
+                    color: cornflowerblue;
+                    cursor: pointer;
+                  " class="icofont icofont-pencil-alt-5" (click)="editarDatos(entrega, i)"></i>
+              <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}" style="
+                    font-size: 18px;
+                    margin-left: 10px;
+                    color: cornflowerblue;
+                    cursor: pointer;
+                  " class="icofont icofont icofont-trash" (click)="eliminarDato1(i)"></i>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div *ngIf="!datosEntregas || datosEntregas.length === 0" class="alert alert-info">
+      <i class="fa fa-info-circle me-2"></i> No hay direcciones de entrega registradas. Por favor cree una nueva dirección.
+    </div>
   </p-tabPanel>
   <p-tabPanel header="Crear Dirección de Entrega">
     <input [(ngModel)]="entregar" type="checkbox" (change)="datosEntregass($event)" />

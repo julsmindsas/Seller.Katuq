@@ -5,6 +5,8 @@ import { Producto } from '../../models/productos/Producto';
 import { Pedido } from '../../../components/ventas/modelo/pedido';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -54,19 +56,19 @@ export class VentasService extends BaseService {
     return this.post<Producto[]>('/v1/productos/all/filter', filter);
   }
 
-  getProductByNumber(numberProduct: string) {
-    return this.get<Producto[]>('/v1/productos/getByNumber/' + numberProduct);
+  getProductByNumber(productNumber: string) {
+    return this.post<any>('/v1/catalog/getProductByNumber', { productNumber });
   }
 
   validateCupon(cupon: any) {
     return this.post<any>('/v1/cupones/validatecupon', cupon);
   }
 
-  createOrder(order: any) {
-    return this.post<any>('/v1/orders/create', order);
+  createOrder(orderTemplate: any) {
+    return this.post<any>('/v1/orders/create', orderTemplate);
   }
 
-  editOrder(order: Pedido) {
+  editOrder(order: Pedido): Observable<any> {
     return this.post<any>('/v1/orders/edit', order);
   }
 
@@ -86,36 +88,32 @@ export class VentasService extends BaseService {
 
 
 
-  enviarCorreoConfirmacionPedido(orderTemplate: any) {
+  enviarCorreoConfirmacionPedido(orderTemplate: any): Observable<any> {
     return this.post<any>('/v1/orders/sendEmail', orderTemplate);
   }
 
 
   //preorders
-  savePreOrders(pedido: Pedido) {
-    let preorders: Pedido[] = JSON.parse(localStorage.getItem('preorder') ?? '[]') || [];
-    const index = preorders.findIndex(pre => pre.referencia === pedido.referencia);
-    if (index !== -1) {
-      preorders[index] = pedido;
-    } else {
-      preorders.push(pedido);
-    }
-    localStorage.setItem('preorder', JSON.stringify(preorders));
+  savePreOrders(order: Pedido) {
+    return localStorage.setItem(`preOrder_${order.nroPedido}`, JSON.stringify(order));
   }
 
   getPreOrders() {
-    return JSON.parse(localStorage.getItem('preorder') ?? '[]') || [];
-  }
-  getPreOrdersByRef(ref: string) {
-    const preorder = JSON.parse(localStorage.getItem('preorder') ?? '[]').filter((pre: any) => pre.referencia === ref)[0];
-    return preorder;
+    return Object.keys(localStorage)
+      .filter(key => key.includes('preOrder_'))
+      .map(key => {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+      }).filter(Boolean);
   }
 
-  removePreOrder(referencia: string) {
-    // let preorders = JSON.parse(localStorage.getItem('preorder'));
-    // preorders = preorders.filter((pre: any) => pre.referencia !== referencia);
-    // localStorage.setItem('preorder', JSON.stringify(preorders));
-    console.log('se intenteo remover ')
+  getPreOrder(nroPedido: string) {
+    const preOrder = localStorage.getItem(`preOrder_${nroPedido}`);
+    return preOrder ? JSON.parse(preOrder) : null;
+  }
+
+  removePreOrder(nroPedido: string) {
+    localStorage.removeItem(`preOrder_${nroPedido}`);
   }
   // fin preorders
 
@@ -139,6 +137,22 @@ export class VentasService extends BaseService {
 
   getCashClosingHistory(filter: any) {
     return this.post<any>('/v1/orders/cash-closing-history', filter);
+  }
+
+  getDatosEntregas(documento: string): Observable<any> {
+    return this.post<any>(`/v1/client/getDatosEntregas`, { documento });
+  }
+
+  getDatosFacturacion(documento: string): Observable<any> {
+    return this.post<any>(`/v1/client/getDatosFacturacion`, { documento });
+  }
+
+  findProduct(term: string) {
+    return this.post<any>('/v1/catalog/searchProduct', { term });
+  }
+
+  getOrderById(orderId: string) {
+    return this.post<any>('/v1/orders/getById', { orderId });
   }
 
 }

@@ -314,8 +314,11 @@ export class PedidosUtilService {
     }
 
     getShippingCost(allBillingZone): number {
-        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
+        if (!allBillingZone || !Array.isArray(allBillingZone)) {
+            return 0;
+        }
 
+        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
             const valorFlete = allBillingZone.filter((item => item.ciudad === this.pedido.envio?.ciudad && item.nombreZonaCobro === this.pedido.envio?.zonaCobro))
             if (valorFlete.length > 0)
                 return valorFlete[0].valorZonaCobro;
@@ -325,8 +328,11 @@ export class PedidosUtilService {
         return 0;
     }
     getShippingTaxCost(allBillingZone): number {
-        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
+        if (!allBillingZone || !Array.isArray(allBillingZone)) {
+            return 0;
+        }
 
+        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
             const valorFlete = allBillingZone.filter((item => item.ciudad === this.pedido.envio?.ciudad && item.nombreZonaCobro === this.pedido.envio?.zonaCobro))
             if (valorFlete.length > 0)
                 return valorFlete[0].impuesto;
@@ -336,8 +342,11 @@ export class PedidosUtilService {
         return 0;
     }
     getShippingTaxCostInvoice(allBillingZone, pedido): number {
-        if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
+        if (!allBillingZone || !Array.isArray(allBillingZone)) {
+            return 0;
+        }
 
+        if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
             const valorFlete = allBillingZone.filter((item => item.ciudad === pedido.envio?.ciudad && item.nombreZonaCobro === pedido.envio?.zonaCobro))
             if (valorFlete.length > 0)
                 return valorFlete[0].impuesto;
@@ -347,8 +356,11 @@ export class PedidosUtilService {
         return 0;
     }
     getShippingTaxValue(allBillingZone): string {
-        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
+        if (!allBillingZone || !Array.isArray(allBillingZone)) {
+            return "";
+        }
 
+        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
             const valorFlete = allBillingZone.filter((item => item.ciudad === this.pedido.envio?.ciudad && item.nombreZonaCobro === this.pedido.envio?.zonaCobro))
             if (valorFlete.length > 0)
                 return valorFlete[0].impuestoZonaCobro;
@@ -359,8 +371,11 @@ export class PedidosUtilService {
     }
 
     getShippingTaxValueInvoice(allBillingZone, pedido): string {
-        if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
+        if (!allBillingZone || !Array.isArray(allBillingZone)) {
+            return "";
+        }
 
+        if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
             const valorFlete = allBillingZone.filter((item => item.ciudad === pedido.envio?.ciudad && item.nombreZonaCobro === pedido.envio?.zonaCobro))
             if (valorFlete.length > 0)
                 return valorFlete[0].impuestoZonaCobro;

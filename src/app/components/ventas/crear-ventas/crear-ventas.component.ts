@@ -208,19 +208,19 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.pedidoGral = {
       referencia: "",
       company: this.empresaActual.nomComercial,
-      cliente: null,
-      notasPedido: null,
-      carrito: null,
-      facturacion: null,
-      envio: null,
+      cliente: undefined,
+      notasPedido: undefined,
+      carrito: undefined,
+      facturacion: undefined,
+      envio: undefined,
       estadoPago: EstadoPago.Pendiente,
       estadoProceso: EstadoProceso.SinProducir
     }
 
     this.newPedido();
 
-    this.pedidoPrm = this.route.snapshot.queryParamMap.get('pedido');
-    this.numberProduct = this.route.snapshot.queryParamMap.get('product');
+    this.pedidoPrm = this.route.snapshot.queryParamMap.get('pedido') || '';
+    this.numberProduct = this.route.snapshot.queryParamMap.get('product') || '';
 
     if (this.pedidoPrm) {
       this.pedidoGral = JSON.parse(this.pedidoPrm)
@@ -259,11 +259,11 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         referencia: "",
         nroPedido: ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0'),
         company: this.empresaActual.nomComercial,
-        cliente: null,
-        notasPedido: null,
-        carrito: null,
-        facturacion: null,
-        envio: null,
+        cliente: undefined,
+        notasPedido: undefined,
+        carrito: undefined,
+        facturacion: undefined,
+        envio: undefined,
         estadoPago: EstadoPago.Pendiente,
         estadoProceso: EstadoProceso.SinProducir
       };
@@ -325,23 +325,82 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     }
   }
   ngOnInit(): void {
-    const context = this;
-    this.service.getBillingZone().subscribe({
-      next(value: any) {
-        context.allBillingZone = value;
-        sessionStorage.setItem('allBillingZone', JSON.stringify(context.allBillingZone))
-
-      },
-      error(err) {
-        console.log(err);
-      },
-    })
+    // Cargar zonas de cobro
+    this.cargarZonasCobro();
     // Inicializar indicativos con valores por defecto
     this.indicativo_celular_facturacion = "57";
     this.indicativo_celular_entrega = "57";
     this.indicativo_celular_entrega2 = "57";
     this.cargarBodegas();
   }
+
+  // Método para cargar las zonas de cobro
+  cargarZonasCobro(): void {
+    // Intentar recuperar zonas de cobro de sessionStorage primero
+    const zonasGuardadas = sessionStorage.getItem('allBillingZone');
+    if (zonasGuardadas) {
+      try {
+        this.allBillingZone = JSON.parse(zonasGuardadas);
+        console.log('Zonas de cobro cargadas desde sessionStorage');
+      } catch (e) {
+        console.error('Error al parsear zonas de cobro guardadas', e);
+        this.cargarZonasCobroDesdeServicio();
+      }
+    } else {
+      this.cargarZonasCobroDesdeServicio();
+    }
+  }
+
+  // Método para cargar zonas de cobro desde el servicio
+  cargarZonasCobroDesdeServicio(): void {
+    this.service.getBillingZone().subscribe({
+      next: (zonas: any) => {
+        // Verificar y convertir la respuesta para asegurar que sea un array
+        if (zonas) {
+          // Si es un ArrayBuffer, convertirlo primero a string y luego a JSON
+          if (zonas instanceof ArrayBuffer) {
+            const decoder = new TextDecoder();
+            const jsonStr = decoder.decode(zonas);
+            try {
+              this.allBillingZone = JSON.parse(jsonStr);
+            } catch (e) {
+              console.error('Error al parsear zonas de cobro:', e);
+              this.allBillingZone = [];
+            }
+          } else if (Array.isArray(zonas)) {
+            // Si ya es un array, asignarlo directamente
+            this.allBillingZone = zonas;
+          } else if (typeof zonas === 'string') {
+            // Si es string, intentar parsearlo como JSON
+            try {
+              this.allBillingZone = JSON.parse(zonas);
+            } catch (e) {
+              console.error('Error al parsear string de zonas:', e);
+              this.allBillingZone = [];
+            }
+          } else {
+            // Si no es ninguno de los anteriores, intentar convertirlo a array
+            try {
+              this.allBillingZone = Array.isArray(zonas) ? zonas : [];
+            } catch (e) {
+              console.error('Error al procesar zonas de cobro:', e);
+              this.allBillingZone = [];
+            }
+          }
+          // Guardar en sessionStorage para acceso más rápido en el futuro
+          sessionStorage.setItem('allBillingZone', JSON.stringify(this.allBillingZone));
+          console.log('Zonas de cobro cargadas desde servicio');
+        } else {
+          this.allBillingZone = [];
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar zonas de cobro:', err);
+        this.allBillingZone = [];
+      }
+    });
+  }
+
   private initForm() {
     this.paises = this.inforPaises.paises.map((x) => {
       return x.Pais;
@@ -555,7 +614,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         if (res.length == 0) {
           // Cliente no encontrado: se muestra el formulario de creación (incluyendo facturación y entrega)
           this.formulario.controls["documento"].setValue(this.documentoBusqueda.nativeElement.value);
-          this.pedidoGral.cliente = null;
+          this.pedidoGral.cliente = undefined;
           this.encontrado = false;
           this.bloqueado = false;
           this.mostrarFormularioCliente = true; // activar formulario de creación
@@ -1081,33 +1140,39 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     if (selectedValue !== 'seleccione') {
       this.selectedCity = selectedValue;
       this.pedidoGral.envio = {
-        ...this.pedidoGral.envio,
+        ...(this.pedidoGral.envio || {}),
         ciudad: selectedValue
-      };
+      } as any; // Usar 'as any' para evitar problemas de tipo temporalmente
+      
       // Asignar la ciudad seleccionada al componente catálogo
-      this.productos.ciudad = this.pedidoGral.envio.ciudad;
-      if (this.isChannelManual && this.bodega) {
-        this.productos.bodega = this.bodega;
+      if (this.productos) {
+        this.productos.ciudad = this.pedidoGral.envio?.ciudad || this.selectedCity || '';
+        if (this.isChannelManual && this.bodega) {
+          this.productos.bodega = this.bodega;
+        }
+        // Llamar al método que recarga el catálogo filtrado según la ciudad
+        if (typeof this.productos.cargarTodo === 'function') {
+          this.productos.cargarTodo();
+        }
       }
-      // Llamar al método que recarga el catálogo filtrado según la ciudad
-      if (this.productos && typeof this.productos.cargarTodo === 'function') {
-        this.productos.cargarTodo();
-      }
-      console.log(`Ciudad seleccionada: ${this.pedidoGral.envio.ciudad}`);
+      
+      console.log(`Ciudad seleccionada: ${this.pedidoGral.envio?.ciudad}`);
 
-      this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.pedidoGral.envio.ciudad);
-      if (this.datosEntregas?.length === 0) {
-        Swal.fire({
-          title: "No encontrado!",
-          text: "No se ha encontrado la ciudad en los datos de entrega, recuerda registrarla",
-          icon: "warning",
-          confirmButtonText: "Ok",
-        });
-        this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-        this.activarDatosEntrega = true;
-      } else {
-        this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
-        this.activarDatosEntrega = false;
+      if (this.originalDataEntregas) {
+        this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.pedidoGral.envio?.ciudad) || [];
+        if (this.datosEntregas.length === 0) {
+          Swal.fire({
+            title: "No encontrado!",
+            text: "No se ha encontrado la ciudad en los datos de entrega, recuerda registrarla",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          });
+          this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+          this.activarDatosEntrega = true;
+        } else {
+          this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+          this.activarDatosEntrega = false;
+        }
       }
     } else {
       this.selectedCity = '';
@@ -1125,19 +1190,112 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.col = val;
   }
   enterStep($event: MovingDirection, index: number) {
-    switch ($event) {
-      case MovingDirection.Forwards:
-        this.reviewStepAndExecute(index);
-        break;
-      case MovingDirection.Backwards:
-        console.log(this.pedidoGral);
-        break;
-      default:
-        // this.col1 = "4";
-        // this.col2 = "6";
-        break;
+    console.log('Entrando al paso:', index);
+    
+    // Actualizar el estado en función del paso actual
+    if (index == 3) {
+      // Paso de cliente
+      if (this.pedidoGral && this.pedidoGral.cliente) {
+        this.encontrado = true;
+        
+        // Si tenemos un cliente, actualizar el formulario con sus datos
+        if (this.formulario) {
+          this.formulario.patchValue({
+            nombres_completos: this.pedidoGral.cliente.nombres_completos,
+            apellidos_completos: this.pedidoGral.cliente.apellidos_completos,
+            tipo_documento_comprador: this.pedidoGral.cliente.tipo_documento_comprador,
+            documento: this.pedidoGral.cliente.documento,
+            indicativo_celular_comprador: this.pedidoGral.cliente.indicativo_celular_comprador,
+            numero_celular_comprador: this.pedidoGral.cliente.numero_celular_comprador,
+            indicativo_celular_whatsapp: this.pedidoGral.cliente.indicativo_celular_whatsapp,
+            numero_celular_whatsapp: this.pedidoGral.cliente.numero_celular_whatsapp,
+            correo_electronico_comprador: this.pedidoGral.cliente.correo_electronico_comprador
+          });
+        }
+      }
     }
-    console.log($event);
+    
+    if (index == 4) {
+      // Paso de envío - Cargar datos de dirección del cliente
+      if (this.pedidoGral && this.pedidoGral.cliente) {
+        this.documentoBuscar = this.pedidoGral.cliente.documento;
+        
+        // Verificar si se necesitan cargar datos de entrega
+        this.service.getClientByDocument({documento: this.documentoBuscar}).subscribe({
+          next: (res: any) => {
+            if (res && res.datosEntrega && res.datosEntrega.length > 0) {
+              // Guardar todos los datos de entrega originales
+              this.originalDataEntregas = this.utils.deepClone(res.datosEntrega);
+              
+              // Si no hay ciudad seleccionada, mostrar todas las direcciones
+              if (!this.selectedCity || this.selectedCity === '') {
+                this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
+                this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+              } else {
+                // Si hay ciudad seleccionada, filtrar por esa ciudad
+                const direccionesFiltradas = this.originalDataEntregas.filter(x => x.ciudad === this.selectedCity);
+                if (direccionesFiltradas.length > 0) {
+                  this.datosEntregas = direccionesFiltradas;
+                  this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+                } else {
+                  // Si no hay direcciones para la ciudad seleccionada, mostrar todas pero indicar que no hay específicas
+                  this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
+                  this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+                }
+              }
+              this.ref.detectChanges();
+            } else {
+              this.originalDataEntregas = [];
+              this.datosEntregas = [];
+              this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+              this.ref.detectChanges();
+            }
+          },
+          error: (err) => {
+            console.error('Error al cargar datos de entrega:', err);
+            this.originalDataEntregas = [];
+            this.datosEntregas = [];
+            this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+            this.ref.detectChanges();
+          }
+        });
+      }
+    }
+    
+    if (index == 5) {
+      // Paso de facturación
+      if (this.pedidoGral && this.pedidoGral.cliente) {
+        // Intentar cargar datos de facturación si no se han cargado
+        this.documentoBuscar = this.pedidoGral.cliente.documento;
+        
+        if (!this.datosFacturacionElectronica || this.datosFacturacionElectronica.length === 0) {
+          this.ventasService.getDatosFacturacion(this.documentoBuscar).subscribe({
+            next: (res: any) => {
+              if (res && res.length > 0) {
+                this.datosFacturacionElectronica = res;
+                this.originalDataFacturacionElectronica = this.utils.deepClone(res);
+                this.ref.detectChanges();
+              }
+            },
+            error: (err) => {
+              console.error('Error al cargar datos de facturación:', err);
+            }
+          });
+        }
+      }
+      
+      // Si ya había datos previos de entrega, asegurarnos que se muestran
+      if (this.pedidoGral && this.pedidoGral.envio) {
+        this.ref.detectChanges();
+      }
+    }
+    
+    if (index == 7) {
+      this.carrito1 = localStorage.getItem('carrito');
+    }
+    
+    // Forzar la detección de cambios para actualizar la vista
+    this.ref.detectChanges();
   }
 
   @Input("icon") public icon;
@@ -1149,44 +1307,183 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
 
   private reviewStepAndExecute(index: number) {
+    console.log(`Revisando paso ${index}`);
+    
     if (index == 3) {
-      this.productos.cargarTodo();
+      // Paso del cliente - Validar que existe un cliente
+      if (!this.pedidoGral.cliente) {
+        Swal.fire({
+          title: 'Advertencia',
+          text: 'Debe seleccionar o crear un cliente para continuar',
+          icon: 'warning'
+        });
+        return;
+      }
     }
+    
+    if (index == 4) {
+      // Paso de envío - Preparar datos de envío
+      if (this.pedidoGral.cliente) {
+        // Si hay cliente, intentar cargar sus datos de envío
+        this.documentoBuscar = this.pedidoGral.cliente.documento;
+        
+        // Siempre cargar los datos de entrega actualizados para asegurar que estén disponibles
+        this.service.getClientByDocument({documento: this.documentoBuscar}).subscribe({
+          next: (res: any) => {
+            if (res && res.datosEntrega && res.datosEntrega.length > 0) {
+              // Guardar todos los datos originales primero
+              this.originalDataEntregas = this.utils.deepClone(res.datosEntrega);
+              
+              // Si no hay ciudad seleccionada, mostrar todas las direcciones
+              if (!this.selectedCity || this.selectedCity === '') {
+                this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
+                this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+              } else {
+                // Si hay ciudad seleccionada, filtrar por esa ciudad
+                const filtradas = this.originalDataEntregas.filter(x => x.ciudad === this.selectedCity);
+                if (filtradas.length > 0) {
+                  this.datosEntregas = filtradas;
+                  this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+                } else {
+                  // No hay direcciones para esta ciudad específica
+                  this.datosEntregas = this.utils.deepClone(this.originalDataEntregas); // Mostrar todas las direcciones igualmente
+                  this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+                }
+              }
+            } else {
+              this.originalDataEntregas = [];
+              this.datosEntregas = [];
+              this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+            }
+            this.ref.detectChanges();
+          },
+          error: (err) => {
+            console.error('Error al cargar datos de entrega:', err);
+            this.originalDataEntregas = [];
+            this.datosEntregas = [];
+            this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+            this.ref.detectChanges();
+          }
+        });
+      }
+    }
+    
     if (index == 5) {
-      this.carrito1 = localStorage.getItem('carrito')
+      // Paso de facturación - Preparar datos de facturación
+      if (this.pedidoGral.cliente) {
+        // Si hay cliente, intentar cargar sus datos de facturación
+        this.documentoBuscar = this.pedidoGral.cliente.documento;
+        
+        // Verificamos si ya hay datos cargados previamente
+        if (!this.datosFacturacionElectronica || this.datosFacturacionElectronica?.length === 0) {
+          this.ventasService.getDatosFacturacion(this.documentoBuscar).subscribe({
+            next: (res: any) => {
+              if (res && res.length > 0) {
+                this.datosFacturacionElectronica = res;
+              }
+            },
+            error: (err) => {
+              console.error('Error al cargar datos de facturación:', err);
+            }
+          });
+        }
+        
+        // Si no hay datos de envío, intentar usar los datos del cliente
+        if (!this.pedidoGral.envio) {
+          Swal.fire({
+            title: 'Advertencia',
+            text: 'Debe seleccionar o crear datos de envío antes de continuar',
+            icon: 'warning'
+          });
+          return;
+        }
+      }
     }
+    
     if (index == 6) {
-      this.carrito1 = JSON.parse(localStorage.getItem('carrito'))
-      if (this.carrito1[0].configuracion.datosEntrega.formaEntrega.toString().toLowerCase().includes('recoge')) {
-        this.activarEntrega = false
-        const envioRecoge = {
-          alias: 'Recoge',
-          nombres: 'N/A',
-          apellidos: 'N/A',
-          indicativoCel: 'N/A',
-          celular: 'N/A',
-          indicativoOtroNumero: 'N/A',
-          otroNumero: 'N/A',
-          direccionEntrega: 'N/A',
-          observaciones: 'N/A',
-          barrio: 'N/A',
-          nombreUnidad: 'N/A',
-          especificacionesInternas: 'N/A',
-          pais: 'N/A',
-          departamento: 'N/A',
-          ciudad: this.pedidoGral.envio.ciudad,
-          zonaCobro: 'N/A',
-          valorZonaCobro: '0',
-          codigoPV: 'N/A'
-        };
-        this.pedidoGral.envio = envioRecoge;
+      // Paso de resumen - Validar que existe información de facturación
+      if (!this.pedidoGral.facturacion) {
+        Swal.fire({
+          title: 'Advertencia',
+          text: 'Debe seleccionar o crear datos de facturación antes de continuar',
+          icon: 'warning'
+        });
+        return;
+      }
+      
+      // Cargar datos del carrito para el resumen
+      this.carrito1 = localStorage.getItem('carrito');
+      try {
+        if (this.carrito1) {
+          this.carrito1 = JSON.parse(this.carrito1);
+          
+          // Si es forma de entrega "recoge", crear datos de envío simplificados
+          if (this.carrito1[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase().includes('recoge')) {
+            this.activarEntrega = false;
+            const envioRecoge = {
+              alias: 'Recoge',
+              nombres: 'N/A',
+              apellidos: 'N/A',
+              indicativoCel: 'N/A',
+              celular: 'N/A',
+              indicativoOtroNumero: 'N/A',
+              otroNumero: 'N/A',
+              direccionEntrega: 'N/A',
+              observaciones: 'N/A',
+              barrio: 'N/A',
+              nombreUnidad: 'N/A',
+              especificacionesInternas: 'N/A',
+              pais: 'N/A',
+              departamento: 'N/A',
+              ciudad: this.pedidoGral.envio?.ciudad || this.selectedCity || 'N/A',
+              zonaCobro: 'N/A',
+              valorZonaCobro: '0',
+              codigoPV: 'N/A'
+            };
+            this.pedidoGral.envio = envioRecoge;
+          }
+        }
+      } catch (e) {
+        console.error('Error al procesar carrito:', e);
       }
     }
   }
 
-  comprarYPagar(event: Pedido) {
+  // Método para preparar el pago llamando primero al método del checkout
+  prepararPago() {
+    if (!this.resumen) {
+      console.error('Error: No se encontró la referencia al componente de checkout');
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo acceder al formulario de pago. Intente nuevamente.',
+        icon: 'error'
+      });
+      return;
+    }
 
-    this.pedidoGral = event;
+    // Llamar al método del checkout para preparar los datos del pedido
+    this.resumen.gotToPaymentOrder().then(() => {
+      console.log('Pago preparado por el componente checkout');
+      // El evento comprarYPagar será emitido por el checkout y capturado 
+      // mediante el binding (comprarYPagar)="comprarYPagar($event)" en el HTML
+    }).catch(error => {
+      console.error('Error al preparar el pago:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Ocurrió un error al preparar el pago. Verifique los datos e intente nuevamente.',
+        icon: 'error'
+      });
+    });
+  }
+
+  // Método para procesar el pago después de recibir los datos completos del checkout
+  comprarYPagar(pedidoProcesado: Pedido) {
+    console.log('Pedido recibido desde checkout:', pedidoProcesado);
+
+    // Asegurarnos de mantener la información correcta del pedido
+    this.pedidoGral = { ...pedidoProcesado };
+    
+    // Añadir información de canal y tipo de orden
     this.pedidoGral.typeOrder = "E-commerce";
     this.pedidoGral.channel = {
       name: "Venta Asistida",
@@ -1194,6 +1491,8 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       activo: true,
       createdAt: new Date().toISOString()
     }
+    
+    // Verificar que se haya seleccionado una bodega
     if (this.bodega) {
       this.pedidoGral.bodegaId = this.bodega?.idBodega;
     }
@@ -1205,9 +1504,11 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       });
       return;
     }
-    console.log(this.pedidoGral);
-    const context = this;
-
+    
+    // Log para depuración
+    console.log("Pedido final a procesar:", this.pedidoGral);
+    
+    // Actualizar estado según los productos
     this.cambiarEstadoSegunLosProductos();
 
     // Verificar la forma de pago
@@ -1223,7 +1524,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
               // El pago fue exitoso, actualizar estado del pedido
               this.actualizarEstadoPedido(this.pedidoGral.nroPedido as string, EstadoPago.Aprobado);
               this.showPedidoConfirm = true;
-              this.showSteper = false;
+              this.showSteper = true; // Mantener visible el wizard para mostrar el paso de confirmación
               this.mywizard.goToNextStep();
             } else {
               // El pago fue rechazado o cancelado
@@ -1260,205 +1561,73 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     }
   }
 
-  // Nuevo método para guardar el pedido antes de iniciar el pago con Wompi
-  private guardarPedidoParaWompi(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const context = this;
-      context.ventasService.validateNroPedido(context.pedidoGral.nroPedido as string).subscribe({
-        next: (res: any) => {
-          const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
-
-          // Guardar pedido con estado de pago pendiente
-          context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
-            next: (res: any) => {
-              const orderSiigo = context.facturacionElectronicaService.transformarPedidoLite(context.pedidoGral);
-              if (res.order.pagoInformation) {
-                context.pedidoGral = res.order;
-                context.pedidoGral = { ...context.pedidoGral };
-
-                console.log("Información de pago:", res.order.pagoInformation);
-              }
-              context.pedidoSinGuardar = false;
-              resolve(true); // Pedido guardado exitosamente
-            },
-            error: (err: any) => {
-              console.error("Error al crear el pedido:", err);
-              resolve(false); // Error al guardar el pedido
-            }
-          });
-        },
-        error: (err) => {
-          console.error("Error al validar número de pedido:", err);
-          resolve(false); // Error al validar el número de pedido
-        },
-      });
-    });
-  }
-
-  // Método modificado para actualizar el estado del pedido después del pago
-  private actualizarEstadoPedido(numeroPedido: string, estadoPago: EstadoPago): void {
-    // Verificamos si el método existe en el servicio
-    // if (typeof this.ventasService.updateOrderPaymentStatus === 'function') {
-    //   this.actualizarPedidoCompleto(numeroPedido, estadoPago);
-    //   this.ventasService.updateOrderPaymentStatus(numeroPedido, estadoPago).subscribe({
-    //     next: (res: any) => {
-    //       console.log("Estado del pedido actualizado:", estadoPago);
-    //     },
-    //     error: (err: any) => {
-    //       console.error("Error al actualizar el estado del pedido:", err);
-    //       // Plan B: Si hay error, intentamos actualizar todo el pedido
-    //       this.actualizarPedidoCompleto(numeroPedido, estadoPago);
-    //     }
-    //   });
-    // } else {
-    // Si el método no existe, usamos un enfoque alternativo
-    this.actualizarPedidoCompleto(numeroPedido, estadoPago);
-    // }
-  }
-
-  // Método alternativo para actualizar el pedido completo si el método específico no está disponible
-  private actualizarPedidoCompleto(numeroPedido: string, estadoPago: EstadoPago): void {
-    // Actualizamos el estado en el objeto pedido
-    this.pedidoGral.estadoPago = estadoPago;
-
-    // Usamos el método editOrder en lugar de updateOrder
-    this.ventasService.editOrder(this.pedidoGral).subscribe({
-      next: (res: any) => {
-        console.log("Pedido actualizado completamente con nuevo estado:", estadoPago);
-
-        // Opcionalmente, también podemos enviar el correo de confirmación si es necesario
-        const htmlSanizado = this.pyamentService.getHtmlContent(this.pedidoGral);
-        this.ventasService.enviarCorreoConfirmacionPedido({
-          order: this.pedidoGral,
-          emailHtml: htmlSanizado
-        }).subscribe({
-          next: (emailRes: any) => {
-            console.log("Correo de confirmación enviado con el nuevo estado de pago");
-          },
-          error: (emailErr: any) => {
-            console.error("Error al enviar correo de confirmación:", emailErr);
-          }
-        });
-      },
-      error: (err: any) => {
-        console.error("Error al actualizar el pedido completo:", err);
-      }
-    });
-  }
-
-  // Método modificado para iniciar el pago con Wompi (ahora solo inicia el widget, no guarda el pedido)
-  private iniciarPagoConWompi(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      try {
-        // Configuración del widget de Wompi
-        const amountInCents = Math.round((this.pedidoGral?.totalPedididoConDescuento ?? 0) * 100); // Convertir a centavos
-
-        // Asegúrate de tener estos datos disponibles en tu pedido o configuración
-        // const wompiPublicKey = environment.wompi.public_key || 'pub_test_YOUR_PUBLIC_KEY';
-        const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';  //|| 'pub_test_YOUR_PUBLIC_KEY';
-
-        // Usar el número de pedido ya asignado como referencia
-        const reference = this.pedidoGral.nroPedido || `order-${new Date().getTime()}`;
-
-        // Configurar datos del cliente para el formulario de pago
-        const customerData = {
-          fullName: this.pedidoGral.cliente?.nombres_completos || '',
-          phoneNumber: this.pedidoGral.cliente?.numero_celular_comprador || '',
-          phoneNumberPrefix: this.pedidoGral.cliente?.indicativo_celular_comprador || '57',
-          email: this.pedidoGral.cliente?.correo_electronico_comprador || ''
-        };
-
-        // Inicializar el widget de Wompi
-        const checkout = new window['WidgetCheckout']({
-          currency: 'COP',
-          amountInCents: amountInCents,
-          reference: reference,
-          publicKey: wompiPublicKey,
-          redirectUrl: 'http://localhost:4200/payment-callback',//environment.wompi.redirectURL, // URL a la que Wompi redirigirá después del pago
-          taxInCents: {
-            vat: Math.round((this.pedidoGral?.totalImpuesto ?? 0) * 100), // IVA, ajustar según necesidades
-            consumption: 0 // Impuesto al consumo, ajustar según necesidades
-          },
-          signature: {
-            integrity: this.pedidoGral?.pagoInformation?.integridad || '', // Firma de seguridad, ajustar según necesidades 
-          },
-
-          customerData: customerData,
-          // Puedes agregar más configuraciones según la documentación de Wompi
-        });
-
-        // Abrir el widget y manejar la respuesta
-        checkout.open((result) => {
-          const { transaction } = result;
-
-          if (transaction.status === 'APPROVED') {
-            // Almacenar los datos de la transacción en el pedido
-            this.pedidoGral.transaccionId = transaction.id;
-            this.pedidoGral.estadoPago = EstadoPago.Aprobado;
-            this.pedidoGral.PagosAsentados = [{
-              fechaHoraAprobacionRechazo: new Date().toISOString(),
-              numeroPedido: reference,
-              numeroComprobante: transaction.id,
-              estadoVerificacion: 'Aprobado',
-              formaPago: 'Wompi',
-              valorRegistrado: this.pedidoGral.totalPedididoConDescuento || 0
-            }];
-
-
-
-            resolve(true); // Pago exitoso
-          } else {
-            this.pedidoGral.estadoPago = EstadoPago.Rechazado;
-            // Puedes guardar más detalles sobre el rechazo si lo necesitas
-            resolve(false); // Pago rechazado
-          }
-        }, (error) => {
-          console.error('Error en el widget de Wompi:', error);
-          reject(error);
-        });
-
-      } catch (error) {
-        console.error('Error al inicializar el widget de Wompi:', error);
-        reject(error);
-      }
-    });
-  }
-
   // Método para continuar con la creación del pedido normal (no Wompi)
   private continuarCreacionPedido() {
     const context = this;
     context.ventasService.validateNroPedido(context.pedidoGral.nroPedido as string).subscribe({
       next: (res: any) => {
+        // Configurar la visualización del paso de confirmación
         this.showPedidoConfirm = true;
-        this.showSteper = false;
+        this.showSteper = true; // Mantener el wizard visible para mostrar el paso de confirmación
 
+        // Generar contenido HTML del pedido
         const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
 
-
+        // Crear el pedido en el sistema
         context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
           next: (res: any) => {
             const orderSiigo = context.facturacionElectronicaService.transformarPedidoLite(context.pedidoGral);
+            if (res.order?.pagoInformation) {
+              // Actualizar con información adicional que pueda haber agregado el backend
+              this.pedidoGral = { ...this.pedidoGral, ...res.order };
+              console.log("Información de pago actualizada:", res.order.pagoInformation);
+            }
             context.cartService.clearCart();
             context.pedidoSinGuardar = false;
+
+            // Mostrar mensaje de éxito
+            Swal.fire({
+              title: "¡Pedido creado!",
+              text: "El pedido se ha creado exitosamente",
+              icon: "success",
+              confirmButtonText: "Ok",
+            });
           },
           error: (err: any) => {
             console.error("Error al crear el pedido:", err);
+            Swal.fire({
+              title: "Error",
+              text: "No se pudo crear el pedido. Por favor intente nuevamente.",
+              icon: "error",
+              confirmButtonText: "Ok",
+            });
           }
         });
 
-        // ir al siguiente steper
+        // ir al siguiente paso (confirmación)
         this.mywizard.goToNextStep();
       },
       error: (err) => {
-        console.log(err);
+        console.error("Error al validar número de pedido:", err);
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo validar el número de pedido. Por favor intente nuevamente.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
       },
     });
   }
 
   cambiarEstadoSegunLosProductos() {
-    const siTodosSonParaProducir = this.pedidoGral?.carrito.some(x =>
-      x.producto.crearProducto.paraProduccion
-    );
+    // Verificar que el carrito existe y tiene elementos
+    if (!this.pedidoGral?.carrito || this.pedidoGral.carrito.length === 0) {
+      return; // No hay productos para procesar
+    }
+    
+    const siTodosSonParaProducir = this.pedidoGral.carrito.some(item => {
+      return item?.producto?.crearProducto?.paraProduccion;
+    });
 
     if (!siTodosSonParaProducir) {
       this.pedidoGral.estadoProceso = EstadoProceso.ParaDespachar;
@@ -1468,25 +1637,24 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   overridePedido(event: Pedido) {
     this.pedidoGral = event;
     console.log(this.pedidoGral);
-    if (this.pedidoGral.facturacion.hasOwnProperty('direccion')) {
-      if (this.pedidoGral.carrito[0]?.configuracion?.datosEntrega?.formaEntrega.toString().toLowerCase().includes("domicilio")) {
-        if (this.pedidoGral.envio.hasOwnProperty('direccionEntrega')) {
-          this.nextAvailable = true
+    
+    // Usar operadores de acceso seguro para evitar errores
+    if (this.pedidoGral?.facturacion && this.pedidoGral.facturacion.hasOwnProperty('direccion')) {
+      if (this.pedidoGral.carrito && 
+          this.pedidoGral.carrito[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase().includes("domicilio")) {
+        
+        // Verificar que existe envío y tiene dirección
+        if (this.pedidoGral.envio && this.pedidoGral.envio.hasOwnProperty('direccionEntrega')) {
+          this.nextAvailable = true;
         } else {
-          this.nextAvailable = false
+          this.nextAvailable = false;
         }
       } else {
-        this.nextAvailable = true
+        this.nextAvailable = true;
       }
-
     } else {
-      this.nextAvailable = false
+      this.nextAvailable = false;
     }
-
-
-    // this.showPedidoConfirm = true;
-    // this.showSteper = false;
-    // this.mywizard.goToNextStep();
   }
 
   onBillingSame(event: Event): void {
@@ -1718,5 +1886,152 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         this.pedidoGral.channel = undefined;
       }
     }
+  }
+
+  // Nuevo método para guardar el pedido antes de iniciar el pago con Wompi
+  private guardarPedidoParaWompi(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const context = this;
+      context.ventasService.validateNroPedido(context.pedidoGral.nroPedido as string).subscribe({
+        next: (res: any) => {
+          const htmlSanizado = context.pyamentService.getHtmlContent(context.pedidoGral);
+
+          // Guardar pedido con estado de pago pendiente
+          context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
+            next: (res: any) => {
+              const orderSiigo = context.facturacionElectronicaService.transformarPedidoLite(context.pedidoGral);
+              if (res.order.pagoInformation) {
+                context.pedidoGral = res.order;
+                context.pedidoGral = { ...context.pedidoGral };
+
+                console.log("Información de pago:", res.order.pagoInformation);
+              }
+              context.pedidoSinGuardar = false;
+              resolve(true); // Pedido guardado exitosamente
+            },
+            error: (err: any) => {
+              console.error("Error al crear el pedido:", err);
+              resolve(false); // Error al guardar el pedido
+            }
+          });
+        },
+        error: (err) => {
+          console.error("Error al validar número de pedido:", err);
+          resolve(false); // Error al validar el número de pedido
+        },
+      });
+    });
+  }
+
+  // Método modificado para actualizar el estado del pedido después del pago
+  private actualizarEstadoPedido(numeroPedido: string, estadoPago: EstadoPago): void {
+    // Si el método no existe, usamos un enfoque alternativo
+    this.actualizarPedidoCompleto(numeroPedido, estadoPago);
+  }
+
+  // Método alternativo para actualizar el pedido completo si el método específico no está disponible
+  private actualizarPedidoCompleto(numeroPedido: string, estadoPago: EstadoPago): void {
+    // Actualizamos el estado en el objeto pedido
+    this.pedidoGral.estadoPago = estadoPago;
+
+    // Usamos el método editOrder en lugar de updateOrder
+    this.ventasService.editOrder(this.pedidoGral).subscribe({
+      next: (res: any) => {
+        console.log("Pedido actualizado completamente con nuevo estado:", estadoPago);
+
+        // Opcionalmente, también podemos enviar el correo de confirmación si es necesario
+        const htmlSanizado = this.pyamentService.getHtmlContent(this.pedidoGral);
+        this.ventasService.enviarCorreoConfirmacionPedido({
+          order: this.pedidoGral,
+          emailHtml: htmlSanizado
+        }).subscribe({
+          next: (emailRes: any) => {
+            console.log("Correo de confirmación enviado con el nuevo estado de pago");
+          },
+          error: (emailErr: any) => {
+            console.error("Error al enviar correo de confirmación:", emailErr);
+          }
+        });
+      },
+      error: (err: any) => {
+        console.error("Error al actualizar el pedido completo:", err);
+      }
+    });
+  }
+
+  // Método modificado para iniciar el pago con Wompi (ahora solo inicia el widget, no guarda el pedido)
+  private iniciarPagoConWompi(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      try {
+        // Configuración del widget de Wompi
+        const amountInCents = Math.round((this.pedidoGral?.totalPedididoConDescuento ?? 0) * 100); // Convertir a centavos
+
+        // Asegúrate de tener estos datos disponibles en tu pedido o configuración
+        // const wompiPublicKey = environment.wompi.public_key || 'pub_test_YOUR_PUBLIC_KEY';
+        const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';  //|| 'pub_test_YOUR_PUBLIC_KEY';
+
+        // Usar el número de pedido ya asignado como referencia
+        const reference = this.pedidoGral?.nroPedido || `order-${new Date().getTime()}`;
+
+        // Configurar datos del cliente para el formulario de pago
+        const customerData = {
+          fullName: this.pedidoGral?.cliente?.nombres_completos || '',
+          phoneNumber: this.pedidoGral?.cliente?.numero_celular_comprador || '',
+          phoneNumberPrefix: this.pedidoGral?.cliente?.indicativo_celular_comprador || '57',
+          email: this.pedidoGral?.cliente?.correo_electronico_comprador || ''
+        };
+
+        // Inicializar el widget de Wompi
+        const checkout = new window['WidgetCheckout']({
+          currency: 'COP',
+          amountInCents: amountInCents,
+          reference: reference,
+          publicKey: wompiPublicKey,
+          redirectUrl: 'http://localhost:4200/payment-callback',//environment.wompi.redirectURL, // URL a la que Wompi redirigirá después del pago
+          taxInCents: {
+            vat: Math.round((this.pedidoGral?.totalImpuesto ?? 0) * 100), // IVA, ajustar según necesidades
+            consumption: 0 // Impuesto al consumo, ajustar según necesidades
+          },
+          signature: {
+            integrity: this.pedidoGral?.pagoInformation?.integridad || '', // Firma de seguridad, ajustar según necesidades 
+          },
+
+          customerData: customerData,
+          // Puedes agregar más configuraciones según la documentación de Wompi
+        });
+
+        // Abrir el widget y manejar la respuesta
+        checkout.open((result) => {
+          const { transaction } = result;
+
+          if (transaction.status === 'APPROVED') {
+            // Almacenar los datos de la transacción en el pedido
+            this.pedidoGral.transaccionId = transaction.id;
+            this.pedidoGral.estadoPago = EstadoPago.Aprobado;
+            this.pedidoGral.PagosAsentados = [{
+              fechaHoraAprobacionRechazo: new Date().toISOString(),
+              numeroPedido: reference,
+              numeroComprobante: transaction.id,
+              estadoVerificacion: 'Aprobado',
+              formaPago: 'Wompi',
+              valorRegistrado: this.pedidoGral.totalPedididoConDescuento || 0
+            }];
+
+            resolve(true); // Pago exitoso
+          } else {
+            this.pedidoGral.estadoPago = EstadoPago.Rechazado;
+            // Puedes guardar más detalles sobre el rechazo si lo necesitas
+            resolve(false); // Pago rechazado
+          }
+        }, (error) => {
+          console.error('Error en el widget de Wompi:', error);
+          reject(error);
+        });
+
+      } catch (error) {
+        console.error('Error al inicializar el widget de Wompi:', error);
+        reject(error);
+      }
+    });
   }
 }

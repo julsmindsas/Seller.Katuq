@@ -318,3 +318,209 @@
     }
   }
 }
+
+// Estilos generales para el wizard
+.simplified-wizard {
+  .aw-wizard-navigation-bar {
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    
+    &.horizontal {
+      ul.steps-indicator {
+        display: flex;
+        justify-content: space-between;
+        
+        li {
+          position: relative;
+          
+          &.current .step-indicator {
+            background-color: var(--primary);
+            color: white;
+          }
+          
+          &.done .step-indicator {
+            background-color: rgba(var(--bs-success-rgb), 0.2);
+            color: var(--bs-success);
+            border-color: var(--bs-success);
+          }
+          
+          .text-steper {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Mejora del diseño de los pasos
+.f1-step {
+  .f1-step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border-radius: 50%;
+    font-size: 16px;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+    
+    i {
+      color: #6c757d;
+    }
+  }
+}
+
+// Diseño de la tarjeta principal
+.card {
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  
+  .card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    
+    .fc-secondary {
+      color: var(--primary);
+      font-weight: 600;
+    }
+  }
+}
+
+// Estilos para los botones de navegación
+.wizard-footer-container {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  
+  button {
+    min-width: 140px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+// Mejoras en el selector de bodegas
+.warehouse-selector {
+  background-color: #f8f9fa;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  
+  .select-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    
+    i {
+      color: var(--primary);
+    }
+  }
+  
+  .selected-warehouse {
+    background-color: rgba(var(--bs-success-rgb), 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+  }
+}
+
+// Estilos para búsqueda de clientes
+.card.shadow-sm {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .card-header {
+    padding: 0.75rem 1rem;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 767.98px) {
+  .wizard-footer-container {
+    button {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+// Animaciones suaves
+.card,
+.btn,
+.form-control,
+.form-select {
+  transition: all 0.3s ease;
+}
+
+// Mejoras para el carrito
+app-carrito, 
+app-notas,
+app-checkout,
+app-pedido-entrega,
+app-pedido-facturacion {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+// Estado actual del wizard más destacado
+.current .f1-step-icon {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  
+  i {
+    color: white !important;
+  }
+}
+
+.current .text-steper {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+// Estados completados
+.done .f1-step-icon {
+  background-color: rgba(var(--bs-success-rgb), 0.2) !important;
+  border-color: var(--bs-success) !important;
+  
+  i {
+    color: var(--bs-success) !important;
+  }
+}
+
+// Estilo para inputs y selects que mejora la usabilidad
+.form-control,
+.form-select {
+  padding: 0.5rem 0.75rem;
+  
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+  }
+}
+
+// Mejora en los input groups
+.input-group {
+  .input-group-text {
+    background-color: #f8f9fa;
+  }
+}
+
+// Mejoras visuales para iconos
+i.fa, i.icofont {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
