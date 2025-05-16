@@ -1,8 +1,8 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body pb-0">
+            <div class="card p-0">
+                <div class="card-body pb-0 px-0">
                     <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50" [showCurrentPageReport]="true"
                         [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [resizableColumns]="true"
                         [reorderableColumns]="true" [autoLayout]="true" [scrollable]="true"
@@ -101,53 +101,59 @@
                         <ng-template pTemplate="body" let-pedido let-expanded="expanded" let-rowIndex="rowIndex">
                             <tr class="p-table-tr-td" [ngClass]="{'table-row-odd': rowIndex % 2 !== 0}" style="font-size: 0.85em;">
                                 <!-- Botón para row expansion (Detalles) -->
-                                <td *ngIf="isColumnVisible('detalles')" style="width: 5rem;">
+                                <td *ngIf="isColumnVisible('detalles')" style="width: 3rem; text-align: center;">
                                     <button type="button" pButton pRipple [pRowToggler]="pedido"
-                                        class="p-button-text p-button-rounded p-button-plain"
+                                        class="p-button-text p-button-rounded p-button-plain p-button-sm"
                                         [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
                                 </td>
-                                <!-- Opciones: Conserva los iconos según corresponda -->
-                                <td *ngIf="isColumnVisible('opciones')">
-                                    <div class="action-buttons-wrapper">
-                                        <button pButton pRipple type="button" icon="pi pi-file-pdf" 
-                                            class="p-button-rounded p-button-text p-button-sm" 
-                                            pTooltip="{{ 'Imprimir Pdf' | translate }}"
-                                            (click)="printPdf(pedido)"></button>
-                                        
-                                        <button pButton pRipple type="button" icon="pi pi-tag" 
-                                            *ngIf="hasTags(pedido)"
-                                            class="p-button-rounded p-button-text p-button-sm" 
-                                            pTooltip="{{ 'Tarjeta' | translate }}"
-                                            (click)="viewTags(pedido)"></button>
-                                                
-                                        <button pButton pRipple type="button" icon="pi pi-file" 
-                                            class="p-button-rounded p-button-text p-button-sm" 
-                                            pTooltip="{{ 'Rótulo' | translate }}"
-                                            (click)="printLabel(pedido)"></button>
-                                                
-                                        <button pButton pRipple type="button" icon="pi pi-inbox" 
-                                            *ngIf="pedido.estadoProceso != 'Empacado' && pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'"
-                                            class="p-button-rounded p-button-text p-button-sm" 
-                                            pTooltip="{{ 'Empacar' | translate }}"
-                                            (click)="changeStatus(pedido,1)"></button>
-                                                
-                                        <button pButton pRipple type="button" icon="pi pi-box" 
-                                            *ngIf="pedido.estadoProceso == 'Empacado' && pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'"
-                                            class="p-button-rounded p-button-text p-button-sm" 
-                                            pTooltip="{{ 'Desempacar' | translate }}"
-                                            (click)="changeStatus(pedido,2)"></button>
-                                                
-                                        <button pButton pRipple type="button" icon="pi pi-send" 
-                                            *ngIf="pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'"
-                                            class="p-button-rounded p-button-text p-button-sm" 
-                                            pTooltip="{{ 'Despachar' | translate }}"
-                                            (click)="changeStatus(pedido,4)"></button>
-                                                
-                                        <button pButton pRipple type="button" icon="pi pi-check-circle" 
-                                            *ngIf="pedido.estadoProceso == 'Despachado'"
-                                            class="p-button-rounded p-button-text p-button-sm" 
-                                            pTooltip="{{ 'Entregar' | translate }}"
-                                            (click)="changeStatus(pedido,5)"></button>
+                                
+                                <!-- Opciones: Implementar menú desplegable estilo list.component.html -->
+                                <td *ngIf="isColumnVisible('opciones')" style="width: 3rem; text-align: center;">
+                                    <div class="btn-actions hover-container">
+                                        <button class="btn-options" type="button">
+                                            <i class="pi pi-ellipsis-v"></i>
+                                        </button>
+
+                                        <ul class="list-actions popup">
+                                            <li (click)="printPdf(pedido)">
+                                                <i class="pi pi-file-pdf"></i>
+                                                <span>{{ 'Imprimir Pdf' | translate }}</span>
+                                            </li>
+
+                                            <li *ngIf="hasTags(pedido)" (click)="viewTags(pedido)">
+                                                <i class="pi pi-tag"></i>
+                                                <span>{{ 'Tarjeta' | translate }}</span>
+                                            </li>
+
+                                            <li (click)="printLabel(pedido)">
+                                                <i class="pi pi-file"></i>
+                                                <span>{{ 'Rótulo' | translate }}</span>
+                                            </li>
+
+                                            <li *ngIf="pedido.estadoProceso != 'Empacado' && pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'" 
+                                                (click)="changeStatus(pedido,1)">
+                                                <i class="pi pi-inbox"></i>
+                                                <span>{{ 'Empacar' | translate }}</span>
+                                            </li>
+
+                                            <li *ngIf="pedido.estadoProceso == 'Empacado' && pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'" 
+                                                (click)="changeStatus(pedido,2)">
+                                                <i class="pi pi-box"></i>
+                                                <span>{{ 'Desempacar' | translate }}</span>
+                                            </li>
+
+                                            <li *ngIf="pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'" 
+                                                (click)="changeStatus(pedido,4)">
+                                                <i class="pi pi-send"></i>
+                                                <span>{{ 'Despachar' | translate }}</span>
+                                            </li>
+
+                                            <li *ngIf="pedido.estadoProceso == 'Despachado'" 
+                                                (click)="changeStatus(pedido,5)">
+                                                <i class="pi pi-check-circle"></i>
+                                                <span>{{ 'Entregar' | translate }}</span>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </td>
                                 
@@ -156,22 +162,22 @@
                                     <ng-container *ngIf="col.field !== 'detalles' && col.field !== 'opciones' && isColumnVisible(col.field)">
                                         <!-- Estado de Pago -->
                                         <td *ngIf="col.field === 'estadoPago'">
-                                            <span [ngClass]="{
-                                                'badge bg-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
-                                                'badge bg-success': pedido?.estadoPago === 'Aprobado' || pedido?.estadoPago === 'PreAprobado',
-                                                'badge bg-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
+                                            <span class="estado-pill estado-pago" [ngClass]="{
+                                                'estado-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
+                                                'estado-success': pedido?.estadoPago === 'Aprobado' || pedido?.estadoPago === 'PreAprobado',
+                                                'estado-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                             }">{{ pedido?.estadoPago }}</span>
                                         </td>
                                         
                                         <!-- Estado de Proceso -->
                                         <td *ngIf="col.field === 'estadoProceso'">
-                                            <span [ngClass]="{
-                                                'badge bg-secondary': pedido?.estadoProceso === 'SinProducir',
-                                                'badge bg-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                                'badge bg-primary': pedido?.estadoProceso === 'Empacado',
-                                                'badge bg-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                                'badge bg-success': pedido?.estadoProceso === 'Entregado',
-                                                'badge bg-danger': pedido?.estadoProceso === 'Rechazado'
+                                            <span class="estado-pill estado-proceso" [ngClass]="{
+                                                'estado-secondary': pedido?.estadoProceso === 'SinProducir',
+                                                'estado-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                'estado-primary': pedido?.estadoProceso === 'Empacado',
+                                                'estado-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                'estado-success': pedido?.estadoProceso === 'Entregado',
+                                                'estado-danger': pedido?.estadoProceso === 'Rechazado'
                                             }">{{ pedido?.estadoProceso }}</span>
                                         </td>
                                         
@@ -250,11 +256,12 @@
                                             </div>
                                         </td>
                                         
-                                        <!-- Entregado (botón de detalles) -->
-                                        <td *ngIf="col.field === 'entregado'">
-                                            <button pButton type="button" label="{{ 'Ver detalles de Entrega' | translate }}"
+                                        <!-- Entregado (botón de detalles) - Restaurado -->
+                                        <td *ngIf="col.field === 'entregado'" class="text-center">
+                                            <button pButton type="button" icon="pi pi-info-circle" 
                                                 class="p-button-outlined p-button-sm"
                                                 (click)="viewDetails(pedido)">
+                                                {{ 'Ver detalles' | translate }}
                                             </button>
                                         </td>
                                     </ng-container>
@@ -266,24 +273,24 @@
                         <ng-template pTemplate="rowexpansion" let-pedido>
                             <tr style="font-size: 0.85em;">
                                 <td [attr.colspan]="selectedColumns.length">
-                                    <div class="p-3">
-                                        <p-table [value]="pedido.carrito" dataKey="id" styleClass="p-datatable-sm">
+                                    <div class="p-2">
+                                        <p-table [value]="pedido.carrito" dataKey="id" styleClass="p-datatable-sm expanded-table">
                                             <ng-template pTemplate="header">
                                                 <tr>
-                                                    <th>{{ 'Imagen' | translate }}</th>
+                                                    <th style="width: 60px">{{ 'Imagen' | translate }}</th>
                                                     <th>{{ 'Producto' | translate }}</th>
-                                                    <th>{{ 'Cantidad' | translate }}</th>
+                                                    <th style="width: 80px">{{ 'Cantidad' | translate }}</th>
                                                 </tr>
                                             </ng-template>
                                             <ng-template pTemplate="body" let-item>
                                                 <tr>
-                                                    <td style="width: 50px">
+                                                    <td style="width: 60px; text-align: center;">
                                                         <img style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;"
                                                             [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls"
                                                             [alt]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.nombreImagen" />
                                                     </td>
                                                     <td>{{ item.producto?.crearProducto?.titulo }}</td>
-                                                    <td>{{ item.cantidad }}</td>
+                                                    <td style="width: 80px; text-align: center;">{{ item.cantidad }}</td>
                                                 </tr>
                                             </ng-template>
                                             <ng-template pTemplate="emptymessage">

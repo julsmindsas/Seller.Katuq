@@ -1,14 +1,16 @@
 // Variables
 $primary-color: #2196F3;
-$success-color: #66BB6A;
-$warning-color: #FFA726;
-$danger-color: #FF5252;
-$info-color: #42A5F5;
+$success-color: #4CAF50;
+$warning-color: #FFC107;
+$danger-color: #F44336;
+$info-color: #03A9F4;
 $secondary-color: #78909C;
 $border-radius: 8px;
 
 // Estilos para la tabla
 :host ::ng-deep .p-datatable {
+  width: 100%;
+  
   .p-datatable-header {
     padding: 0.5rem;
     background-color: white;
@@ -43,13 +45,6 @@ $border-radius: 8px;
       font-size: 0.85rem;
       border-bottom: 1px solid #f2f2f2;
       
-      .badge {
-        padding: 0.35em 0.65em;
-        font-size: 0.75em;
-        font-weight: normal;
-        border-radius: 20px;
-      }
-      
       .p-button-text {
         padding: 0.4rem;
         
@@ -70,47 +65,92 @@ $border-radius: 8px;
     background-color: #f9f9f9;
     box-shadow: inset 0 3px 6px rgba(0,0,0,0.05);
     
-    .p-datatable {
+    .expanded-table {
       box-shadow: none;
       
       .p-datatable-thead > tr > th {
         background-color: #f2f2f2;
         font-size: 0.8rem;
-        padding: 0.5rem;
+        padding: 0.4rem 0.5rem;
       }
       
       .p-datatable-tbody > tr > td {
         font-size: 0.8rem;
-        padding: 0.5rem;
+        padding: 0.4rem 0.5rem;
       }
     }
   }
 }
 
-// Estilos para colores de badges
-:host ::ng-deep .badge {
-  &.bg-success {
-    background-color: $success-color !important;
+// Estilos para los indicadores de estado (semáforos)
+.estado-pill {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1;
+  
+  &.estado-success {
+    background-color: rgba($success-color, 0.15);
+    color: darken($success-color, 15%);
+    border: 1px solid rgba($success-color, 0.3);
   }
   
-  &.bg-warning {
-    background-color: $warning-color !important;
+  &.estado-warning {
+    background-color: rgba($warning-color, 0.15);
+    color: darken($warning-color, 25%);
+    border: 1px solid rgba($warning-color, 0.3);
   }
   
-  &.bg-danger {
-    background-color: $danger-color !important;
+  &.estado-danger {
+    background-color: rgba($danger-color, 0.15);
+    color: darken($danger-color, 10%);
+    border: 1px solid rgba($danger-color, 0.3);
   }
   
-  &.bg-info {
-    background-color: $info-color !important;
+  &.estado-info {
+    background-color: rgba($info-color, 0.15);
+    color: darken($info-color, 15%);
+    border: 1px solid rgba($info-color, 0.3);
   }
   
-  &.bg-secondary {
-    background-color: $secondary-color !important;
+  &.estado-secondary {
+    background-color: rgba($secondary-color, 0.15);
+    color: darken($secondary-color, 15%);
+    border: 1px solid rgba($secondary-color, 0.3);
   }
   
-  &.bg-primary {
-    background-color: $primary-color !important;
+  &.estado-primary {
+    background-color: rgba($primary-color, 0.15);
+    color: darken($primary-color, 15%);
+    border: 1px solid rgba($primary-color, 0.3);
+  }
+}
+
+// Estilos para el botón de opciones
+.btn-options {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #dee2e6;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+  }
+  
+  .pi {
+    font-size: 0.9rem;
+    color: #6c757d;
   }
 }
 
@@ -166,5 +206,61 @@ $border-radius: 8px;
   strong {
     color: $secondary-color;
     margin-right: 0.25rem;
+  }
+}
+
+// Estilos para el menú desplegable (tres puntos)
+.hover-container {
+  position: relative;
+  display: inline-block;
+  z-index: 10; // Asegurar que el menú aparezca por encima de otros elementos
+  
+  .list-actions {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    width: 200px;
+    background-color: #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    margin: 5px 0 0;
+    padding: 0.5rem 0;
+    list-style: none;
+    z-index: 100;
+    display: none;
+    border: 1px solid #e9ecef;
+    
+    li {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: rgba($primary-color, 0.08);
+      }
+      
+      i {
+        margin-right: 0.75rem;
+        font-size: 0.9rem;
+        width: 1.2rem;
+        text-align: center;
+        color: $secondary-color;
+      }
+      
+      span {
+        color: #212529;
+      }
+    }
+    
+    &.popup {
+      display: none;
+    }
+  }
+  
+  &:hover .list-actions, .btn-options:focus + .list-actions {
+    display: block;
   }
 } 
