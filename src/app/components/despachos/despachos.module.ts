@@ -25,6 +25,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DropdownModule } from 'primeng/dropdown';
 import { RippleModule } from 'primeng/ripple';
 import { RouterModule } from '@angular/router';
+import { DynamicDialogModule, DialogService } from 'primeng/dynamicdialog';
 
 // Componentes
 import { TablaPedidosComponent } from './components/tabla-pedidos/tabla-pedidos.component';
@@ -33,6 +34,7 @@ import { TransportadoresComponent } from './components/transportadores/transport
 import { GenerarOrdenComponent } from './components/generar-orden/generar-orden.component';
 import { OrdenesDespachoComponent } from './components/ordenes-despacho/ordenes-despacho.component';
 import { ImprimirPdfComponent } from './components/imprimir-pdf/imprimir-pdf.component';
+import { ObservacionesDetalleComponent } from './components/observaciones-detalle/observaciones-detalle.component';
 
 // Pipes
 import { TotalValorACobrarPipe } from './pipes/total-valor-cobrar.pipe';
@@ -61,10 +63,14 @@ import { TotalValorACobrarPipe } from './pipes/total-valor-cobrar.pipe';
     DropdownModule,
     RippleModule,
     RouterModule,
+    DynamicDialogModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule
   ],
-  providers: [LogisticaService],
+  providers: [
+    LogisticaService,
+    DialogService
+  ],
   declarations: [
     DespachosComponent,
     TablaPedidosComponent,
@@ -73,6 +79,7 @@ import { TotalValorACobrarPipe } from './pipes/total-valor-cobrar.pipe';
     GenerarOrdenComponent,
     OrdenesDespachoComponent,
     ImprimirPdfComponent,
+    ObservacionesDetalleComponent,
     TotalValorACobrarPipe
   ]
 })

@@ -41,9 +41,9 @@ $border-radius: 8px;
     }
     
     td {
-      padding: 0.5rem 0.75rem;
+      padding: 0.65rem 0.75rem;
       font-size: 0.85rem;
-      border-bottom: 1px solid #f2f2f2;
+      border-bottom: 1px solid #eef0f2;
       
       .p-button-text {
         padding: 0.4rem;
@@ -52,6 +52,12 @@ $border-radius: 8px;
           box-shadow: none;
         }
       }
+    }
+
+    // Estilo específico para la celda de opciones
+    td.options-cell {
+      position: relative; // Para el contexto de apilamiento del menú desplegable
+      overflow: visible !important; // Intentar que el menú no se corte
     }
   }
   
@@ -69,14 +75,17 @@ $border-radius: 8px;
       box-shadow: none;
       
       .p-datatable-thead > tr > th {
-        background-color: #f2f2f2;
+        background-color: #f8f9fa;
         font-size: 0.8rem;
-        padding: 0.4rem 0.5rem;
+        padding: 0.5rem 0.6rem;
+        color: #495057;
+        border-bottom: 1px solid #dee2e6;
       }
       
       .p-datatable-tbody > tr > td {
         font-size: 0.8rem;
-        padding: 0.4rem 0.5rem;
+        padding: 0.5rem 0.6rem;
+        border-bottom: 1px solid #f1f3f5;
       }
     }
   }
@@ -209,24 +218,63 @@ $border-radius: 8px;
   }
 }
 
+// Estilo para la celda de observaciones mejorada
+.observaciones-cell {
+  .datos-envio {
+    font-size: 0.8rem; // Un poco más pequeño para que quepa bien
+    line-height: 1.4;
+    max-width: 250px; // Limitar el ancho para evitar que se expanda demasiado
+    word-wrap: break-word; // Para que las palabras largas se rompan
+
+    .dato-item {
+      display: flex;
+      align-items: flex-start; // Alinear iconos arriba si el texto es largo
+      margin-bottom: 0.3rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .pi {
+        color: $secondary-color;
+        font-size: 0.9em; // Iconos proporcionales al texto
+        margin-top: 0.15em; // Ajuste vertical del icono
+      }
+
+      span {
+        color: #343a40; // Color de texto principal
+      }
+    }
+
+    .observacion-texto span {
+      white-space: pre-wrap; // Para que las observaciones respeten saltos de línea y se ajusten
+    }
+  }
+  
+  .text-muted.fst-italic {
+      font-size: 0.8rem;
+  }
+}
+
 // Estilos para el menú desplegable (tres puntos)
 .hover-container {
   position: relative;
   display: inline-block;
-  z-index: 10; // Asegurar que el menú aparezca por encima de otros elementos
+  z-index: 20; // Aumentado para asegurar que esté por encima de otros elementos de la celda
   
   .list-actions {
     position: absolute;
-    right: 0;
+    left: 0;
     top: 100%;
     width: 200px;
+    min-width: max-content;
     background-color: #fff;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     border-radius: 6px;
     margin: 5px 0 0;
     padding: 0.5rem 0;
     list-style: none;
-    z-index: 100;
+    z-index: 1050; // Aumentado significativamente para estar sobre otros elementos de la página
     display: none;
     border: 1px solid #e9ecef;
     

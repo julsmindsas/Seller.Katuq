@@ -108,7 +108,7 @@
                                 </td>
                                 
                                 <!-- Opciones: Implementar menú desplegable estilo list.component.html -->
-                                <td *ngIf="isColumnVisible('opciones')" style="width: 3rem; text-align: center;">
+                                <td *ngIf="isColumnVisible('opciones')" class="options-cell" style="width: 3rem; text-align: center;">
                                     <div class="btn-actions hover-container">
                                         <button class="btn-options" type="button">
                                             <i class="pi pi-ellipsis-v"></i>
@@ -219,41 +219,17 @@
                                         <td *ngIf="col.field === 'despachador'" class="text-nowrap">{{ pedido.despachador?.name }}</td>
                                         <td *ngIf="col.field === 'transportador'" class="text-nowrap">{{ pedido.transportador }}</td>
                                         
-                                        <!-- Observaciones detalladas -->
-                                        <td *ngIf="col.field === 'observaciones'">
-                                            <div class="pedido-envio" style="font-size: 0.8em;">
-                                                <ng-container
-                                                    *ngIf="pedido?.envio?.nombres && pedido?.envio?.apellidos && pedido.envio.celular && pedido.envio.direccionEntrega && pedido.envio.observaciones">
-                                                    <div class="card p-2 mb-0">
-                                                        <div class="row g-1">
-                                                            <div class="col-12">
-                                                                <strong>{{ 'Nombre:' | translate }}</strong>
-                                                                {{ pedido?.envio?.nombres }} {{ pedido.envio.apellidos }}
-                                                            </div>
-                                                            <div class="col-12">
-                                                                <strong>{{ 'Teléfono:' | translate }}</strong>
-                                                                {{ pedido.envio.celular }}
-                                                            </div>
-                                                            <div class="col-12">
-                                                                <strong>{{ 'WhatsApp:' | translate }}</strong>
-                                                                {{ pedido.envio.celular }}
-                                                            </div>
-                                                            <div class="col-12">
-                                                                <strong>{{ 'Dirección:' | translate }}</strong>
-                                                                {{ pedido.envio.direccionEntrega }}
-                                                            </div>
-                                                            <div class="col-12">
-                                                                <strong>{{ 'Observaciones:' | translate }}</strong>
-                                                                {{ pedido.envio.observaciones }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </ng-container>
-                                                <ng-container
-                                                    *ngIf="!pedido?.envio?.nombres || !pedido.envio.apellidos || !pedido.envio.celular || !pedido.envio.direccionEntrega || !pedido.envio.observaciones">
-                                                    <strong>{{ 'No hay observaciones' | translate }}</strong>
-                                                </ng-container>
-                                            </div>
+                                        <!-- Observaciones detalladas - DISEÑO COMPACTO CON MODAL TRIGGER -->
+                                        <td *ngIf="col.field === 'observaciones'" class="observaciones-cell text-center">
+                                            <button *ngIf="pedido.envio && (pedido.envio.nombres || pedido.envio.celular || pedido.envio.direccionEntrega || pedido.envio.observaciones)"
+                                                pButton pRipple type="button" icon="pi pi-info-circle"
+                                                class="p-button-rounded p-button-text p-button-sm"
+                                                (click)="viewFullObservaciones(pedido.envio)"
+                                                pTooltip="{{ 'Ver detalles de envío' | translate }}"
+                                                tooltipPosition="top">
+                                            </button>
+                                            <span *ngIf="!pedido.envio || (!pedido.envio.nombres && !pedido.envio.celular && !pedido.envio.direccionEntrega && !pedido.envio.observaciones)"
+                                                  class="text-muted fst-italic">-</span>
                                         </td>
                                         
                                         <!-- Entregado (botón de detalles) - Restaurado -->

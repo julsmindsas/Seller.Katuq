@@ -1,0 +1,55 @@
+<div class="p-4">
+    <div class="detalle-envio-header mb-4">
+        <h5 class="m-0">{{ 'Detalles de Envío' | translate }}</h5>
+    </div>
+
+    <div *ngIf="envioData" class="detalle-envio-content">
+        <div *ngIf="envioData.nombres || envioData.apellidos" class="dato-item mb-3">
+            <div class="dato-label">
+                <i class="pi pi-user me-2"></i>
+                <strong>{{ 'Nombre Completo:' | translate }}</strong>
+            </div>
+            <div class="dato-valor">
+                {{ envioData.nombres }} {{ envioData.apellidos }}
+            </div>
+        </div>
+
+        <div *ngIf="envioData.celular" class="dato-item mb-3">
+            <div class="dato-label">
+                <i class="pi pi-phone me-2"></i>
+                <strong>{{ 'Teléfono/Celular:' | translate }}</strong>
+            </div>
+            <div class="dato-valor">
+                {{ envioData.celular }}
+            </div>
+        </div>
+
+        <div *ngIf="envioData.direccionEntrega" class="dato-item mb-3">
+            <div class="dato-label">
+                <i class="pi pi-map-marker me-2"></i>
+                <strong>{{ 'Dirección de Entrega:' | translate }}</strong>
+            </div>
+            <div class="dato-valor">
+                {{ envioData.direccionEntrega }}
+            </div>
+        </div>
+
+        <div *ngIf="envioData.observaciones" class="dato-item">
+            <div class="dato-label">
+                <i class="pi pi-comment me-2"></i>
+                <strong>{{ 'Observaciones Adicionales:' | translate }}</strong>
+            </div>
+            <div class="dato-valor observacion-texto">
+                {{ envioData.observaciones }}
+            </div>
+        </div>
+
+        <div *ngIf="!envioData.nombres && !envioData.apellidos && !envioData.celular && !envioData.direccionEntrega && !envioData.observaciones">
+            <p class="text-muted">{{ 'No hay detalles de envío disponibles.' | translate }}</p>
+        </div>
+    </div>
+
+    <div class="detalle-envio-footer mt-4 text-end">
+        <button pButton pRipple type="button" label="{{ 'Cerrar' | translate }}" class="p-button-outlined p-button-sm" (click)="cerrar()"></button>
+    </div>
+</div> 

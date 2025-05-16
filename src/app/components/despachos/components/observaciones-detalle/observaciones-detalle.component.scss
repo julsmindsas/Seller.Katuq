@@ -1,0 +1,58 @@
+.detalle-envio-header {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.75rem;
+
+    h5 {
+        font-weight: 600;
+        color: #343a40;
+    }
+}
+
+.detalle-envio-content {
+    .dato-item {
+        display: flex;
+        flex-direction: column; // Apilar etiqueta y valor verticalmente
+
+        .dato-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #6c757d; // Un gris más suave para la etiqueta
+            margin-bottom: 0.25rem;
+
+            .pi {
+                font-size: 0.9rem;
+                color: #6c757d;
+            }
+        }
+
+        .dato-valor {
+            font-size: 0.9rem;
+            color: #212529;
+            padding-left: 1.75rem; // Para alinear con el texto después del icono
+            word-break: break-word; // Para que el texto largo se rompa
+        }
+
+        .observacion-texto {
+            white-space: pre-wrap; // Mantener saltos de línea en observaciones
+            background-color: #f8f9fa; // Un fondo suave para destacar observaciones
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+    }
+}
+
+.detalle-envio-footer {
+    border-top: 1px solid #dee2e6;
+    padding-top: 0.75rem;
+}
+
+// Ajustes para el diálogo en sí, si es necesario (PrimeNG maneja la mayoría)
+:host ::ng-deep .p-dialog .p-dialog-header {
+    padding: 0.75rem 1rem; 
+}
+
+:host ::ng-deep .p-dialog .p-dialog-content {
+    padding: 0; // El padding ya está en nuestro div principal
+} 

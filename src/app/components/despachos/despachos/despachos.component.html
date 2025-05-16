@@ -9,15 +9,15 @@
                 <!-- Loader -->
                 <div class="loader-box" *ngIf="loading">
                     <div class="loader-8"></div>
-                </div>
+                                        </div>
 
                 <!-- Header del módulo -->
                 <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-                    <div>
+                                        <div>
                         <h5 class="mb-1 fw-bold text-primary"><i class="pi pi-truck me-2"></i>{{ 'Gestión de Despachos' | translate }}</h5>
                         <p class="text-muted small mb-0">{{ 'Administra pedidos y órdenes de envío' | translate }}</p>
-                    </div>
-                </div>
+                                        </div>
+                                        </div>
 
                 <!-- Filtros de búsqueda -->
                 <div class="card-body p-0">
@@ -39,8 +39,8 @@
                                     <button pButton type="button" icon="pi pi-list" label="{{ 'Órdenes' | translate }}" 
                                         class="p-button-outlined p-button-sm p-button-secondary"
                                         (click)="viewAllDispatchOrders()"></button>
-                                </div>
-                            </div>
+                                            </div>
+                                            </div>
                             
                             <!-- Filtros de fecha -->
                             <div class="row g-3 align-items-end">
@@ -52,7 +52,7 @@
                                         [readonlyInput]="true"
                                         styleClass="w-100"
                                         [inputStyleClass]="'form-control form-control-sm rounded'"></p-calendar>
-                                </div>
+                    </div>
                                 <div class="col-md-3 col-sm-6">
                                     <label class="form-label small text-muted mb-1">{{ 'Hasta' | translate }}</label>
                                     <p-calendar [(ngModel)]="fechaFinal" 
@@ -61,20 +61,20 @@
                                         [readonlyInput]="true"
                                         styleClass="w-100"
                                         [inputStyleClass]="'form-control form-control-sm rounded'"></p-calendar>
-                                </div>
+                </div>
                                 <div class="col-md-3 col-sm-6">
                                     <div class="btn-group w-100">
                                         <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaHoy()">
                                             <i class="pi pi-calendar-today me-1"></i>{{ 'Hoy' | translate }}
-                                        </button>
+        </button>
                                         <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaManana()">
                                             <i class="pi pi-calendar me-1"></i>{{ 'Mañana' | translate }}
                                         </button>
                                         <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaPasadoManana()">
                                             <i class="pi pi-calendar-plus me-1"></i>{{ 'Pasado' | translate }}
-                                        </button>
-                                    </div>
-                                </div>
+        </button>
+    </div>
+        </div>
                                 <div class="col-md-3 col-sm-6 text-end">
                                     <div class="btn-group w-100">
                                         <button class="btn btn-sm btn-primary" (click)="buscarPorFechas()">
@@ -82,12 +82,12 @@
                                         </button>
                                         <button class="btn btn-sm btn-outline-secondary" (click)="clear()">
                                             <i class="pi pi-refresh me-1"></i>{{ 'Limpiar' | translate }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        </button>
+    </div>
+            </div>
+            </div>
                     </div>
+                                            </div>
 
                     <!-- Resumen estadístico -->
                     <div class="row g-3 p-3 mb-2">
@@ -95,57 +95,57 @@
                             <div class="stat-card stat-primary">
                                 <div class="stat-icon">
                                     <i class="pi pi-shopping-cart"></i>
-                                </div>
+                                        </div>
                                 <div class="stat-content">
                                     <div class="stat-label">{{ 'Total Pedidos' | translate }}</div>
                                     <div class="stat-value">{{ orders.length }}</div>
-                                </div>
-                            </div>
-                        </div>
+                                        </div>
+                                        </div>
+                                        </div>
                         <div class="col-md-2">
                             <div class="stat-card stat-success">
                                 <div class="stat-icon">
                                     <i class="pi pi-dollar"></i>
-                                </div>
+                                    </div>
                                 <div class="stat-content">
                                     <div class="stat-label">{{ 'Subtotal' | translate }}</div>
                                     <div class="stat-value">{{ calculateSubtotal() | currency }}</div>
-                                </div>
-                            </div>
-                        </div>
+                </div>
+            </div>
+    </div>
                         <div class="col-md-2">
                             <div class="stat-card stat-info">
                                 <div class="stat-icon">
                                     <i class="pi pi-percentage"></i>
-                                </div>
+    </div>
                                 <div class="stat-content">
                                     <div class="stat-label">{{ 'Descuento' | translate }}</div>
                                     <div class="stat-value">{{ calculateDescuento() | currency }}</div>
-                                </div>
-                            </div>
-                        </div>
+                                            </div>
+                                            </div>
+                                            </div>
                         <div class="col-md-2">
                             <div class="stat-card stat-warning">
                                 <div class="stat-icon">
                                     <i class="pi pi-truck"></i>
-                                </div>
+                                            </div>
                                 <div class="stat-content">
                                     <div class="stat-label">{{ 'Envío' | translate }}</div>
                                     <div class="stat-value">{{ calculateTotalEnvio() | currency }}</div>
-                                </div>
-                            </div>
-                        </div>
+                                        </div>
+                    </div>
+                </div>
                         <div class="col-md-2">
                             <div class="stat-card stat-secondary">
                                 <div class="stat-icon">
                                     <i class="pi pi-credit-card"></i>
-                                </div>
+            </div>
                                 <div class="stat-content">
                                     <div class="stat-label">{{ 'Anticipos' | translate }}</div>
                                     <div class="stat-value">{{ calculateAnticipo() | currency }}</div>
+        </div>
                                 </div>
-                            </div>
-                        </div>
+                                </div>
                         <div class="col-md-2">
                             <div class="stat-card stat-danger">
                                 <div class="stat-icon">
@@ -156,11 +156,11 @@
                                     <div class="stat-value">{{ calculateFaltaPorPagar() | currency }}</div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+        </div>
+    </div>
 
                     <!-- Tabla principal de pedidos con componente -->
-                    <div class="p-3">
+                            <div class="p-3">
                         <app-tabla-pedidos 
                             [orders]="orders" 
                             [loading]="loading"
@@ -173,14 +173,15 @@
                             (onChangeStatus)="cambiarEstado($event.pedido, $event.status)"
                             (onRefreshData)="refrescar($event)"
                             (onClearFilters)="clear($event)"
-                            (onViewNotes)="verNotasCliente($event)">
+                            (onViewNotes)="verNotasCliente($event)"
+                            (onViewFullObservaciones)="mostrarDetallesEnvio($event)">
                         </app-tabla-pedidos>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                            </div>
+                            </div>
+                            </div>
+                            </div>
+                            </div>
+                            </div>
 
 <!-- Modal de detalle de entrega -->
 <ng-template #detalleEntregaModal let-modal>
@@ -245,7 +246,7 @@
         (onPrintOrder)="imprimirOrden()"
         (onDispatchOrder)="despacharOrden()">
     </app-generar-orden>
-</ng-template>
+                        </ng-template>
 
 <!-- Modal para visualizar órdenes de despacho -->
 <ng-template #dispatchOrdersModal let-modal>

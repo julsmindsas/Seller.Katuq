@@ -15,6 +15,8 @@ import { PedidoEntregaComponent } from '../../ventas/entrega/pedido-entrega.comp
 import { PedidosUtilService } from '../../ventas/service/pedidos.util.service';
 import { UserLogged } from '../../../shared/models/User/UserLogged';
 import { UserLite } from '../../../shared/models/User/UserLite';
+import { DialogService } from 'primeng/dynamicdialog';
+import { ObservacionesDetalleComponent } from '../components/observaciones-detalle/observaciones-detalle.component';
 
 import 'jspdf-autotable';
 import { LogisticaServiceV2 } from '../../../shared/services/despachos/logistica.service.v2';
@@ -120,7 +122,8 @@ export class DespachosComponent implements OnInit {
     private paymentService: PaymentService,
     private filterService: FilterService,
     private modalService: NgbModal,
-     private formBuilder: FormBuilder, private pedidoUtilService: PedidosUtilService, private router: Router) {
+    private dialogService: DialogService,
+    private formBuilder: FormBuilder, private pedidoUtilService: PedidosUtilService, private router: Router) {
     const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
     this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
     this.fechaInicial.setHours(0, 0, 0, 0);
@@ -1558,6 +1561,22 @@ export class DespachosComponent implements OnInit {
         console.error('Error al consultar la orden:', error);
         Swal.fire('Error', 'Hubo un problema al consultar la orden de envío', 'error');
       }
+    });
+  }
+
+  mostrarDetallesEnvio(envioData: any) {
+    // Asegurarse de que envioData existe
+    if (!envioData) {
+      return;
+    }
+    
+    // Abrir el diálogo con los detalles del envío
+    this.dialogService.open(ObservacionesDetalleComponent, {
+      data: envioData,
+      header: 'Detalles de Envío',
+      width: '500px',
+      contentStyle: { 'max-height': '80vh', 'overflow': 'auto' },
+      baseZIndex: 10000
     });
   }
 }

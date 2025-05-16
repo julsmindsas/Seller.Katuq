@@ -26,6 +26,7 @@ export class TablaPedidosComponent implements OnInit {
   @Output() onRefreshData = new EventEmitter<Table>();
   @Output() onClearFilters = new EventEmitter<Table>();
   @Output() onViewNotes = new EventEmitter<Pedido>();
+  @Output() onViewFullObservaciones = new EventEmitter<any>();
   
   displayedColumns: ColumnDefinition[] = [
     { field: 'detalles', header: 'Detalles', visible: true },
@@ -210,6 +211,10 @@ export class TablaPedidosComponent implements OnInit {
   
   viewNotes(pedido: Pedido): void {
     this.onViewNotes.emit(pedido);
+  }
+  
+  viewFullObservaciones(envioData: any): void {
+    this.onViewFullObservaciones.emit(envioData);
   }
   
   // Métodos para hacer cálculos
