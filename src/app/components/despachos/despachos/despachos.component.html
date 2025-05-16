@@ -17,7 +17,44 @@
                         <h5 class="mb-1 fw-bold text-primary"><i class="pi pi-truck me-2"></i>{{ 'Gestión de Despachos' | translate }}</h5>
                         <p class="text-muted small mb-0">{{ 'Administra pedidos y órdenes de envío' | translate }}</p>
                                         </div>
+                                        
+                    <!-- Botón de recomendaciones KAI -->
+                    <button pButton type="button" icon="pi pi-brain" label="{{ 'Recomendaciones KAI' | translate }}" 
+                        class="p-button-info p-button-sm"
+                        (click)="mostrarRecomendacionesOptimizacion()"></button>
                                         </div>
+
+                <!-- Alertas de priorización -->
+                <div class="px-4 py-3 bg-light border-bottom" *ngIf="!loading && (obtenerConteoPedidosUrgentesNoDespachados() > 0 || obtenerConteoPedidosEnRiesgoNoDespachados() > 0)">
+                    <div class="d-flex flex-column">
+                        <div class="alert alert-warning mb-2" *ngIf="obtenerConteoPedidosUrgentesNoDespachados() > 0">
+                            <div class="d-flex align-items-center">
+                                <i class="pi pi-exclamation-triangle fs-4 me-3"></i>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ 'Pedidos Urgentes' | translate }}</h6>
+                                    <p class="mb-0">
+                                        {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosUrgentesNoDespachados() }}</strong> {{ 'pedidos que requieren atención inmediata' | translate }}
+                                        <span *ngIf="obtenerPrimerPedidoUrgenteNoDespachado()">
+                                            ({{ 'Más urgente' | translate }}: #{{ obtenerPrimerPedidoUrgenteNoDespachado().nroPedido }} - {{ obtenerPrimerPedidoUrgenteNoDespachado().diasRestantes }} {{ 'día(s) restante(s)' | translate }})
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mb-0" *ngIf="obtenerConteoPedidosEnRiesgoNoDespachados() > 0">
+                            <div class="d-flex align-items-center">
+                                <i class="pi pi-clock fs-4 me-3"></i>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ 'Pedidos en Riesgo' | translate }}</h6>
+                                    <p class="mb-0">
+                                        {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosEnRiesgoNoDespachados() }}</strong> {{ 'pedidos que podrían retrasarse' | translate }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Filtros de búsqueda -->
                 <div class="card-body p-0">
@@ -88,6 +125,123 @@
             </div>
                     </div>
                                             </div>
+
+                    <!-- Panel de KPI avanzados -->
+                    <div class="metrics-container p-3 mb-3 border-bottom bg-white" *ngIf="!loading">
+                        <div class="row">
+                            <div class="col-12 mb-2">
+                                <h6 class="fw-bold text-primary mb-2">
+                                    <i class="pi pi-chart-line me-2"></i>
+                                    {{ 'Métricas Avanzadas de Despacho' | translate }}
+                                </h6>
+                            </div>
+                            
+                            <!-- Sección 1: KPIs generales -->
+                            <div class="col-md-4">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title text-muted mb-3">{{ 'Estado de Pedidos' | translate }}</h6>
+                                        <div class="d-flex flex-column gap-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-danger fw-bold">{{ 'Urgentes' | translate }}</span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
+                                                        <div class="progress-bar bg-danger" [style.width.%]="(pedidosUrgentes.length / orders.length) * 100"></div>
+                                                    </div>
+                                                    <span class="text-danger">
+                                                        {{ obtenerConteoPedidosUrgentesNoDespachados() }}<span class="text-muted small">/{{ pedidosUrgentes.length }}</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-warning fw-bold">{{ 'En Riesgo' | translate }}</span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
+                                                        <div class="progress-bar bg-warning" [style.width.%]="(pedidosEnRiesgo.length / orders.length) * 100"></div>
+                                                    </div>
+                                                    <span class="text-warning">
+                                                        {{ obtenerConteoPedidosEnRiesgoNoDespachados() }}<span class="text-muted small">/{{ pedidosEnRiesgo.length }}</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-success fw-bold">{{ 'Normales' | translate }}</span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
+                                                        <div class="progress-bar bg-success" [style.width.%]="(pedidosNormales.length / orders.length) * 100"></div>
+                                                    </div>
+                                                    <span class="text-success">{{ pedidosNormales.length }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sección 2: Zonas críticas -->
+                            <div class="col-md-4">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title text-muted mb-3">{{ 'Zonas Críticas' | translate }}</h6>
+                                        <div class="d-flex flex-column gap-2">
+                                            <ng-container *ngIf="obtenerZonasCriticas().length > 0; else noZonasCriticas">
+                                                <div class="d-flex justify-content-between align-items-center" 
+                                                     *ngFor="let zona of obtenerZonasCriticas()">
+                                                    <span class="fw-bold">{{ zona.zona }}</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
+                                                            <div class="progress-bar" 
+                                                                 [ngClass]="{
+                                                                    'bg-danger': zona.porcentaje > 50,
+                                                                    'bg-warning': zona.porcentaje <= 50 && zona.porcentaje > 20,
+                                                                    'bg-success': zona.porcentaje <= 20
+                                                                 }"
+                                                                 [style.width.%]="zona.porcentaje"></div>
+                                                        </div>
+                                                        <span [ngClass]="{
+                                                            'text-danger': zona.porcentaje > 50,
+                                                            'text-warning': zona.porcentaje <= 50 && zona.porcentaje > 20,
+                                                            'text-success': zona.porcentaje <= 20
+                                                         }">{{ zona.porcentaje | number:'1.0-0' }}%</span>
+                                                    </div>
+                                                </div>
+                                            </ng-container>
+                                            <ng-template #noZonasCriticas>
+                                                <div class="text-center text-muted py-2">
+                                                    <i class="pi pi-check-circle fs-3 mb-2"></i>
+                                                    <p class="mb-0">{{ 'No hay zonas críticas actualmente' | translate }}</p>
+                                                </div>
+                                            </ng-template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sección 3: Predicción de carga -->
+                            <div class="col-md-4">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title text-muted mb-3">{{ 'Predicción de Carga (7 días)' | translate }}</h6>
+                                        <div class="d-flex flex-column gap-2">
+                                            <ng-container *ngIf="metricasLogistica?.prediccionCargaProximosDias as prediccion">
+                                                <div class="d-flex justify-content-between align-items-center" 
+                                                     *ngFor="let item of (prediccion | keyvalue)?.slice(0, 5)">
+                                                    <span class="fw-bold small">{{ item.key | date:'EEE, dd MMM' }}</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
+                                                            <div class="progress-bar bg-primary" 
+                                                                 [style.width.%]="(item.value / 10) * 100"></div>
+                                                        </div>
+                                                        <span class="text-primary">{{ item.value }}</span>
+                                                    </div>
+                                                </div>
+                                            </ng-container>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Resumen estadístico -->
                     <div class="row g-3 p-3 mb-2">

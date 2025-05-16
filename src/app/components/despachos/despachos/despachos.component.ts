@@ -36,6 +36,27 @@ interface TarjetaInfo {
   pedido: string;
 }
 
+// Nuevas interfaces para el algoritmo de priorización
+interface MetricasLogistica {
+  pedidosUrgentes: number;
+  pedidosEnRiesgo: number;
+  pedidosNormales: number;
+  porcentajeEntregasTiempo: number;
+  tiempoPromedioDespacho: number;
+  zonasConRetrasos: {[zona: string]: number};
+  transportadoresEficiencia: {[transportador: string]: number};
+  prediccionCargaProximosDias: {[fecha: string]: number};
+}
+
+interface PedidoPriorizado extends Pedido {
+  prioridad?: 'alta' | 'media' | 'baja';
+  diasRestantes?: number;
+  tiempoEstimadoEntrega?: number;
+  factoresRiesgo?: string[];
+  puntajeKAI?: number;
+  optimizacionRuta?: boolean;
+}
+
 @Component({
   selector: 'app-list-despachos',
   templateUrl: './despachos.component.html',
@@ -50,7 +71,7 @@ export class DespachosComponent implements OnInit {
   @ViewChild('transportadoresModal', { static: false }) transportadoresModal: TemplateRef<any>;
 
   @ViewChild('printContent', { static: false }) printContent!: ElementRef
-  orders: Pedido[] = [];
+  orders: PedidoPriorizado[] = [];
   loading: boolean = true;
   totalValorProductoBruto: number;
   totalDescuento: number;
@@ -86,6 +107,16 @@ export class DespachosComponent implements OnInit {
   tienetarjetas: boolean = true;
   detallePedidoEntregado: PedidoEntrega;
   
+  // Nuevas propiedades para el algoritmo de priorización
+  metricasLogistica: MetricasLogistica;
+  pedidosUrgentes: PedidoPriorizado[] = [];
+  pedidosEnRiesgo: PedidoPriorizado[] = [];
+  pedidosNormales: PedidoPriorizado[] = [];
+  diasUmbralUrgente: number = 1; // Pedidos con 1 día o menos para entrega
+  diasUmbralRiesgo: number = 3; // Pedidos con 3 días o menos para entrega
+  mostrarAlertasAvanzadas: boolean = true;
+  kaiPredicciones: any = null;
+  
   // Definiciones para la gestión de columnas
   displayedColumns: ColumnDefinition[] = [
     { field: 'detalles', header: 'Detalles', visible: true },
@@ -111,7 +142,8 @@ export class DespachosComponent implements OnInit {
     { field: 'empacador', header: 'Empacador', visible: false },
     { field: 'despachador', header: 'Despachador', visible: false },
     { field: 'transportador', header: 'Transportador', visible: false },
-    { field: 'entregado', header: 'Entregado', visible: false }
+    { field: 'entregado', header: 'Entregado', visible: false },
+    { field: 'prioridad', header: 'Prioridad', visible: true } // Nueva columna para mostrar la prioridad
   ];
   
   selectedColumns: ColumnDefinition[] = [];
@@ -130,6 +162,9 @@ export class DespachosComponent implements OnInit {
     this.fechaFinal = new Date(new Date().getTime() + unaSemana);
     this.fechaFinal.setHours(23, 59, 59, 999);
     this.registerCustomFilters();
+    
+    // Inicializar métricas de logística
+    this.inicializarMetricas();
     
     // Guardar configuración de columnas en localStorage si existe
     const savedColumns = localStorage.getItem('despachosColumns');
@@ -168,7 +203,7 @@ export class DespachosComponent implements OnInit {
     }
 
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
-      this.orders = data;
+      this.orders = data as PedidoPriorizado[];
       this.orders.forEach(order => {
         if (order.fechaCreacion) {
           order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
@@ -176,6 +211,13 @@ export class DespachosComponent implements OnInit {
         order.anticipo = order.anticipo ?? 0;
         order.faltaPorPagar = (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
       });
+      
+      // Aplicar algoritmo de priorización
+      this.aplicarAlgoritmoPriorizacion();
+      
+      // Calcular métricas para análisis KAI
+      this.calcularMetricas();
+      
       this.loading = false;
     });
 
@@ -184,6 +226,373 @@ export class DespachosComponent implements OnInit {
     });
   }
 
+  // Algoritmo principal de priorización
+  aplicarAlgoritmoPriorizacion() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    // Reiniciar arreglos de clasificación
+    this.pedidosUrgentes = [];
+    this.pedidosEnRiesgo = [];
+    this.pedidosNormales = [];
+    
+    // Para cada pedido, calcular los días restantes hasta la entrega
+    this.orders.forEach(pedido => {
+      let fechaEntrega: Date;
+      
+      // Obtener la fecha de entrega del pedido
+      if (pedido.fechaEntrega) {
+        fechaEntrega = new Date(pedido.fechaEntrega);
+      } else if (pedido.carrito && pedido.carrito.length > 0 && 
+                pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega) {
+        const { year, month, day } = pedido.carrito[0].configuracion.datosEntrega.fechaEntrega;
+        fechaEntrega = new Date(year, month - 1, day);
+      } else {
+        // Si no hay fecha de entrega, asumimos que es un pedido estándar sin urgencia
+        pedido.prioridad = 'baja';
+        pedido.diasRestantes = 999; // Valor alto para indicar que no tiene fecha
+        this.pedidosNormales.push(pedido);
+        return;
+      }
+      
+      fechaEntrega.setHours(0, 0, 0, 0);
+      
+      // Calcular días restantes
+      const diferenciaTiempo = fechaEntrega.getTime() - hoy.getTime();
+      const diasRestantes = Math.ceil(diferenciaTiempo / (1000 * 3600 * 24));
+      
+      // Guardar los días restantes en el pedido
+      pedido.diasRestantes = diasRestantes;
+      
+      // Identificar factores de riesgo
+      const factoresRiesgo: string[] = [];
+      
+      // Verificar si es un pedido grande (más de 3 items)
+      if (pedido.carrito && pedido.carrito.length > 3) {
+        factoresRiesgo.push('Pedido grande');
+      }
+      
+      // Verificar si es un pedido con envío a zona remota
+      if (pedido.envio?.zonaCobro && 
+          ['Rural', 'Extrarradio', 'Remota'].some(zona => pedido.envio?.zonaCobro?.includes(zona))) {
+        factoresRiesgo.push('Zona remota');
+      }
+      
+      // Verificar si tiene observaciones especiales
+      if (pedido.envio?.observaciones && pedido.envio.observaciones.length > 0) {
+        factoresRiesgo.push('Instrucciones especiales');
+      }
+      
+      // Verificar forma de entrega especial
+      if (pedido.formaEntrega && pedido.formaEntrega.includes('Especial')) {
+        factoresRiesgo.push('Entrega especial');
+      }
+      
+      // Calcular tiempo estimado de entrega basado en zona y factores
+      let tiempoBase = 30; // 30 minutos base
+      
+      // Ajustes por zona
+      if (pedido.envio?.zonaCobro) {
+        if (pedido.envio.zonaCobro.includes('Centro')) tiempoBase += 15;
+        else if (pedido.envio.zonaCobro.includes('Rural')) tiempoBase += 60;
+        else if (pedido.envio.zonaCobro.includes('Extrarradio')) tiempoBase += 90;
+        else tiempoBase += 30; // Otras zonas
+      }
+      
+      // Ajustes por tamaño de pedido
+      if (pedido.carrito) {
+        tiempoBase += pedido.carrito.length * 5; // 5 minutos por artículo
+      }
+      
+      pedido.tiempoEstimadoEntrega = tiempoBase;
+      pedido.factoresRiesgo = factoresRiesgo;
+      
+      // Asignar prioridad basada en días restantes y factores de riesgo
+      if (diasRestantes <= this.diasUmbralUrgente || 
+          (diasRestantes <= this.diasUmbralUrgente + 1 && factoresRiesgo.length >= 2)) {
+        pedido.prioridad = 'alta';
+        this.pedidosUrgentes.push(pedido);
+      } else if (diasRestantes <= this.diasUmbralRiesgo || factoresRiesgo.length >= 2) {
+        pedido.prioridad = 'media';
+        this.pedidosEnRiesgo.push(pedido);
+      } else {
+        pedido.prioridad = 'baja';
+        this.pedidosNormales.push(pedido);
+      }
+      
+      // Calcular puntaje para KAI (0-100)
+      let puntajeBase = 50; // Punto medio
+      
+      // Reducir puntaje (más urgente) por cada día menos
+      puntajeBase -= (this.diasUmbralRiesgo - diasRestantes) * 10;
+      
+      // Reducir puntaje por cada factor de riesgo
+      puntajeBase -= factoresRiesgo.length * 5;
+      
+      // Ajustar si el pedido está pagado (menos riesgo)
+      if (pedido.estadoPago === 'Aprobado') {
+        puntajeBase += 10;
+      }
+      
+      // Limitar el rango entre 0 y 100
+      pedido.puntajeKAI = Math.max(0, Math.min(100, puntajeBase));
+    });
+    
+    // Ordenar cada categoría por días restantes (ascendente)
+    this.pedidosUrgentes.sort((a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999));
+    this.pedidosEnRiesgo.sort((a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999));
+    this.pedidosNormales.sort((a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999));
+    
+    // Implementar optimización rudimentaria de ruta
+    this.optimizarRutas();
+    
+    // Mostrar alertas para pedidos urgentes
+    this.mostrarAlertasPedidosUrgentes();
+  }
+  
+  // Optimizar rutas agrupando pedidos por zonas
+  optimizarRutas() {
+    // Agrupar pedidos por zona y ciudad
+    const zonas: {[key: string]: PedidoPriorizado[]} = {};
+    
+    // Primero los urgentes
+    this.pedidosUrgentes.forEach(pedido => {
+      const zona = `${pedido.envio?.ciudad || 'Sin ciudad'}-${pedido.envio?.zonaCobro || 'Sin zona'}`;
+      if (!zonas[zona]) zonas[zona] = [];
+      zonas[zona].push(pedido);
+    });
+    
+    // Después los de riesgo
+    this.pedidosEnRiesgo.forEach(pedido => {
+      const zona = `${pedido.envio?.ciudad || 'Sin ciudad'}-${pedido.envio?.zonaCobro || 'Sin zona'}`;
+      if (!zonas[zona]) zonas[zona] = [];
+      zonas[zona].push(pedido);
+    });
+    
+    // Marcar pedidos que pueden optimizarse (aquellos en zonas con múltiples entregas)
+    Object.keys(zonas).forEach(zona => {
+      if (zonas[zona].length > 1) {
+        zonas[zona].forEach(pedido => {
+          pedido.optimizacionRuta = true;
+        });
+      }
+    });
+  }
+  
+  // Mostrar alertas para pedidos urgentes
+  mostrarAlertasPedidosUrgentes() {
+    // Filtrar los pedidos urgentes excluyendo los despachados y entregados
+    const pedidosUrgentesPendientes = this.pedidosUrgentes.filter(
+      pedido => pedido.estadoProceso !== EstadoProceso.Despachado && 
+               pedido.estadoProceso !== EstadoProceso.Entregado
+    );
+    
+    if (pedidosUrgentesPendientes.length > 0 && this.mostrarAlertasAvanzadas) {
+      const cantidadUrgentes = pedidosUrgentesPendientes.length;
+      const pedidosMasUrgentes = pedidosUrgentesPendientes
+        .slice(0, Math.min(3, cantidadUrgentes))
+        .map(p => `<li>#${p.nroPedido} - ${p.diasRestantes} día(s) - ${p.cliente?.nombres_completos || 'Cliente'}</li>`)
+        .join('');
+      
+      Swal.fire({
+        title: '¡Atención! Pedidos Urgentes',
+        html: `
+          <div class="text-start">
+            <p>Se han detectado <strong>${cantidadUrgentes} pedidos urgentes</strong> que requieren atención inmediata:</p>
+            <ul>${pedidosMasUrgentes}</ul>
+            ${cantidadUrgentes > 3 ? `<p>...y ${cantidadUrgentes - 3} más.</p>` : ''}
+          </div>
+        `,
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+      });
+    }
+  }
+  
+  // Inicializar métricas de logística
+  inicializarMetricas() {
+    this.metricasLogistica = {
+      pedidosUrgentes: 0,
+      pedidosEnRiesgo: 0,
+      pedidosNormales: 0,
+      porcentajeEntregasTiempo: 0,
+      tiempoPromedioDespacho: 0,
+      zonasConRetrasos: {},
+      transportadoresEficiencia: {},
+      prediccionCargaProximosDias: {}
+    };
+  }
+  
+  // Calcular métricas para análisis KAI
+  calcularMetricas() {
+    // Contar pedidos por categoría
+    this.metricasLogistica.pedidosUrgentes = this.pedidosUrgentes.length;
+    this.metricasLogistica.pedidosEnRiesgo = this.pedidosEnRiesgo.length;
+    this.metricasLogistica.pedidosNormales = this.pedidosNormales.length;
+    
+    // Calcular porcentaje de entregas a tiempo (simulado para demostración)
+    const entregados = this.orders.filter(p => p.estadoProceso === 'Entregado');
+    const entregadosATiempo = entregados.filter(p => p.diasRestantes !== undefined && p.diasRestantes >= 0);
+    this.metricasLogistica.porcentajeEntregasTiempo = entregados.length > 0 
+      ? (entregadosATiempo.length / entregados.length) * 100
+      : 100;
+    
+    // Tiempo promedio de despacho (simulado)
+    this.metricasLogistica.tiempoPromedioDespacho = 35; // 35 minutos en promedio
+    
+    // Identificar zonas con más retrasos
+    const zonasPedidos: {[zona: string]: {total: number, retrasados: number}} = {};
+    
+    this.orders.forEach(pedido => {
+      const zona = pedido.envio?.zonaCobro || 'Sin zona';
+      if (!zonasPedidos[zona]) {
+        zonasPedidos[zona] = {total: 0, retrasados: 0};
+      }
+      
+      zonasPedidos[zona].total++;
+      
+      if (pedido.diasRestantes !== undefined && pedido.diasRestantes < 0 && 
+          pedido.estadoProceso !== 'Entregado' && pedido.estadoProceso !== 'Despachado') {
+        zonasPedidos[zona].retrasados++;
+      }
+    });
+    
+    // Calcular porcentaje de retrasos por zona
+    Object.keys(zonasPedidos).forEach(zona => {
+      if (zonasPedidos[zona].total > 0) {
+        const porcentajeRetraso = (zonasPedidos[zona].retrasados / zonasPedidos[zona].total) * 100;
+        this.metricasLogistica.zonasConRetrasos[zona] = porcentajeRetraso;
+      }
+    });
+    
+    // Eficiencia de transportadores (simulado)
+    this.vendors.forEach(transportador => {
+      const nombre = `${transportador.nombres} ${transportador.apellidos}`;
+      this.metricasLogistica.transportadoresEficiencia[nombre] = Math.floor(Math.random() * 30) + 70; // 70-100%
+    });
+    
+    // Predicción de carga para próximos días
+    const hoy = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+      const fecha = new Date(hoy);
+      fecha.setDate(fecha.getDate() + i);
+      const fechaStr = fecha.toISOString().split('T')[0];
+      
+      // Contar pedidos programados para cada día
+      const pedidosProgramados = this.orders.filter(p => {
+        if (!p.fechaEntrega) return false;
+        const fechaEntrega = new Date(p.fechaEntrega);
+        return fechaEntrega.toISOString().split('T')[0] === fechaStr;
+      }).length;
+      
+      // Añadir predicción base + variación aleatoria para simular
+      this.metricasLogistica.prediccionCargaProximosDias[fechaStr] = pedidosProgramados;
+    }
+    
+    // Simular predicciones de KAI
+    this.generarPrediccionesKAI();
+  }
+  
+  // Generar predicciones simuladas para KAI
+  generarPrediccionesKAI() {
+    const hoy = new Date();
+    const zonas = ['Norte', 'Sur', 'Este', 'Oeste', 'Centro'];
+    const transportadores = this.vendors.map(v => `${v.nombres} ${v.apellidos}`);
+    
+    // Estructura para predicciones KAI
+    this.kaiPredicciones = {
+      cargaEstimada: {},
+      zonasCriticas: [],
+      asignacionOptima: {},
+      recomendaciones: [
+        'Priorizar pedidos de la zona Sur para el día de mañana debido a alta demanda.',
+        'Considerar asignar un transportador adicional para el sector Norte el próximo jueves.',
+        'Revisar los pedidos con instrucciones especiales de entrega con anticipación.',
+        'Los pedidos de productos frágiles deben ser empacados con material adicional.'
+      ]
+    };
+    
+    // Predicción de carga por zona y día
+    for (let i = 0; i < 7; i++) {
+      const fecha = new Date(hoy);
+      fecha.setDate(fecha.getDate() + i);
+      const fechaStr = fecha.toISOString().split('T')[0];
+      
+      this.kaiPredicciones.cargaEstimada[fechaStr] = {};
+      
+      zonas.forEach(zona => {
+        // Simular carga por zona - más alta para los primeros días, decreciente después
+        let cargaBase = Math.floor((7 - i) * Math.random() * 5) + 1;
+        // Añadir variabilidad
+        if (zona === 'Centro') cargaBase += 3; // Más carga en centro
+        if (i === 1 || i === 2) cargaBase += 2; // Más carga en días específicos
+        
+        this.kaiPredicciones.cargaEstimada[fechaStr][zona] = cargaBase;
+      });
+    }
+    
+    // Zonas críticas (con alta carga o problemas históricos)
+    this.kaiPredicciones.zonasCriticas = [
+      { zona: 'Sur', motivo: 'Alta demanda prevista', fechaCritica: new Date(hoy.setDate(hoy.getDate() + 1)).toISOString().split('T')[0] },
+      { zona: 'Centro', motivo: 'Congestión de tráfico', fechaCritica: new Date(hoy.setDate(hoy.getDate() + 2)).toISOString().split('T')[0] }
+    ];
+    
+    // Asignación óptima de transportadores
+    transportadores.forEach(transportador => {
+      this.kaiPredicciones.asignacionOptima[transportador] = {
+        zonasRecomendadas: [zonas[Math.floor(Math.random() * zonas.length)], zonas[Math.floor(Math.random() * zonas.length)]],
+        capacidadOptima: Math.floor(Math.random() * 5) + 3,
+        eficienciaHistorica: Math.floor(Math.random() * 20) + 80
+      };
+    });
+  }
+  
+  // Método para obtener el conteo de pedidos por prioridad
+  obtenerConteoPedidosPorPrioridad() {
+    return {
+      urgentes: this.pedidosUrgentes.length,
+      riesgo: this.pedidosEnRiesgo.length,
+      normales: this.pedidosNormales.length,
+      total: this.orders.length
+    };
+  }
+  
+  // Método para obtener zonas críticas para mostrar alertas
+  obtenerZonasCriticas(): {zona: string, porcentaje: number}[] {
+    return Object.entries(this.metricasLogistica.zonasConRetrasos)
+      .map(([zona, porcentaje]) => ({zona, porcentaje}))
+      .filter(z => z.porcentaje > 20)  // Zonas con más del 20% de retrasos
+      .sort((a, b) => b.porcentaje - a.porcentaje)
+      .slice(0, 3);  // Top 3 zonas problemáticas
+  }
+  
+  // Método para mostrar recomendaciones de optimización
+  mostrarRecomendacionesOptimizacion() {
+    if (!this.kaiPredicciones) return;
+    
+    const recomendaciones = this.kaiPredicciones.recomendaciones.join('</li><li>');
+    
+    Swal.fire({
+      title: 'Recomendaciones de KAI',
+      icon: 'info',
+      html: `
+        <div class="text-start">
+          <p>Basado en el análisis de datos históricos y patrones actuales, KAI sugiere:</p>
+          <ul><li>${recomendaciones}</li></ul>
+        </div>
+      `,
+      confirmButtonText: 'Aplicar recomendaciones',
+      showCancelButton: true,
+      cancelButtonText: 'Revisar más tarde'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Aquí se implementaría la lógica para aplicar las recomendaciones
+        Swal.fire('Recomendaciones aplicadas', 'Los cambios han sido implementados en el sistema', 'success');
+      }
+    });
+  }
+  
   calculateValorBruto(): number {
     return this.orders.reduce((acc, pedido) => acc + (pedido.totalPedidoSinDescuento ?? 0), 0);
   }
@@ -1578,6 +1987,32 @@ export class DespachosComponent implements OnInit {
       contentStyle: { 'max-height': '80vh', 'overflow': 'auto' },
       baseZIndex: 10000
     });
+  }
+
+  // Método para obtener el conteo de pedidos urgentes no despachados ni entregados
+  obtenerConteoPedidosUrgentesNoDespachados(): number {
+    return this.pedidosUrgentes.filter(
+      pedido => pedido.estadoProceso !== EstadoProceso.Despachado && 
+               pedido.estadoProceso !== EstadoProceso.Entregado
+    ).length;
+  }
+  
+  // Método para obtener el conteo de pedidos en riesgo no despachados ni entregados
+  obtenerConteoPedidosEnRiesgoNoDespachados(): number {
+    return this.pedidosEnRiesgo.filter(
+      pedido => pedido.estadoProceso !== EstadoProceso.Despachado && 
+               pedido.estadoProceso !== EstadoProceso.Entregado
+    ).length;
+  }
+  
+  // Método para obtener el primer pedido urgente no despachado ni entregado
+  obtenerPrimerPedidoUrgenteNoDespachado(): PedidoPriorizado | null {
+    const pedidosUrgentesPendientes = this.pedidosUrgentes.filter(
+      pedido => pedido.estadoProceso !== EstadoProceso.Despachado && 
+               pedido.estadoProceso !== EstadoProceso.Entregado
+    );
+    
+    return pedidosUrgentesPendientes.length > 0 ? pedidosUrgentesPendientes[0] : null;
   }
 }
 

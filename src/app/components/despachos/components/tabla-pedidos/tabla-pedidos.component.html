@@ -181,6 +181,31 @@
                                             }">{{ pedido?.estadoProceso }}</span>
                                         </td>
                                         
+                                        <!-- Prioridad - Nueva columna -->
+                                        <td *ngIf="col.field === 'prioridad'" class="text-center">
+                                            <ng-container [ngSwitch]="pedido?.prioridad">
+                                                <span *ngSwitchCase="'alta'" class="prioridad-pill prioridad-alta">
+                                                    <i class="pi pi-exclamation-circle me-1"></i>{{ 'Alta' | translate }}
+                                                    <small *ngIf="pedido?.diasRestantes !== undefined" class="ms-1">({{ pedido?.diasRestantes }} {{ 'días' | translate }})</small>
+                                                </span>
+                                                <span *ngSwitchCase="'media'" class="prioridad-pill prioridad-media">
+                                                    <i class="pi pi-clock me-1"></i>{{ 'Media' | translate }}
+                                                    <small *ngIf="pedido?.diasRestantes !== undefined" class="ms-1">({{ pedido?.diasRestantes }} {{ 'días' | translate }})</small>
+                                                </span>
+                                                <span *ngSwitchCase="'baja'" class="prioridad-pill prioridad-baja">
+                                                    <i class="pi pi-check-circle me-1"></i>{{ 'Baja' | translate }}
+                                                    <small *ngIf="pedido?.diasRestantes !== undefined" class="ms-1">({{ pedido?.diasRestantes }} {{ 'días' | translate }})</small>
+                                                </span>
+                                                <span *ngSwitchDefault>-</span>
+                                            </ng-container>
+                                            <span *ngIf="pedido?.optimizacionRuta" 
+                                                  pTooltip="{{ 'Hay múltiples entregas en esta zona' | translate }}"
+                                                  tooltipPosition="top"
+                                                  class="optimizacion-badge ms-1">
+                                                <i class="pi pi-map-marker"></i>
+                                            </span>
+                                        </td>
+                                        
                                         <!-- Cliente con notas -->
                                         <td *ngIf="col.field === 'cliente'" class="text-nowrap">
                                             <div class="d-flex align-items-center">

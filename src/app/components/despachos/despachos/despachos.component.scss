@@ -36,109 +36,101 @@ $border-radius: 8px;
   align-items: center;
   padding: 1rem;
   border-radius: 8px;
-  transition: all 0.2s ease;
-  height: 100%;
-  min-height: 80px;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.05);
-}
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background-color: #fff;
+  transition: all 0.3s ease;
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
 
-.stat-icon {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  margin-right: 12px;
-  flex-shrink: 0;
-}
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
 
-.stat-icon i {
-  font-size: 1.1rem;
-}
+    i {
+      font-size: 1.2rem;
+      color: #fff;
+    }
+  }
 
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  width: 100%;
-}
+  .stat-content {
+    flex-grow: 1;
 
-.stat-label {
-  font-size: 0.8rem;
-  color: #666;
-  margin-bottom: 0.2rem;
-  white-space: nowrap;
-}
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #6c757d;
+      margin-bottom: 0.25rem;
+    }
 
-.stat-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #333;
+    }
+  }
 
-// Colores de las cards
-.stat-primary .stat-icon {
-  background-color: rgba($primary-color, 0.1);
-  color: $primary-color;
-}
+  &.stat-primary {
+    .stat-icon {
+      background-color: #5c77ff;
+    }
+    .stat-value {
+      color: #5c77ff;
+    }
+  }
 
-.stat-primary .stat-value {
-  color: $primary-color;
-}
+  &.stat-success {
+    .stat-icon {
+      background-color: #2dce89;
+    }
+    .stat-value {
+      color: #2dce89;
+    }
+  }
 
-.stat-success .stat-icon {
-  background-color: rgba($success-color, 0.1);
-  color: $success-color;
-}
+  &.stat-info {
+    .stat-icon {
+      background-color: #11cdef;
+    }
+    .stat-value {
+      color: #11cdef;
+    }
+  }
 
-.stat-success .stat-value {
-  color: $success-color;
-}
+  &.stat-warning {
+    .stat-icon {
+      background-color: #fb6340;
+    }
+    .stat-value {
+      color: #fb6340;
+    }
+  }
 
-.stat-info .stat-icon {
-  background-color: rgba($info-color, 0.1);
-  color: $info-color;
-}
+  &.stat-danger {
+    .stat-icon {
+      background-color: #f5365c;
+    }
+    .stat-value {
+      color: #f5365c;
+    }
+  }
 
-.stat-info .stat-value {
-  color: $info-color;
-}
-
-.stat-warning .stat-icon {
-  background-color: rgba($warning-color, 0.1);
-  color: $warning-color;
-}
-
-.stat-warning .stat-value {
-  color: $warning-color;
-}
-
-.stat-danger .stat-icon {
-  background-color: rgba($danger-color, 0.1);
-  color: $danger-color;
-}
-
-.stat-danger .stat-value {
-  color: $danger-color;
-}
-
-.stat-secondary .stat-icon {
-  background-color: rgba($secondary-color, 0.1);
-  color: $secondary-color;
-}
-
-.stat-secondary .stat-value {
-  color: $secondary-color;
+  &.stat-secondary {
+    .stat-icon {
+      background-color: #6c757d;
+    }
+    .stat-value {
+      color: #6c757d;
+    }
+  }
 }
 
 // Mejorar estilos de botones
@@ -242,5 +234,250 @@ $border-radius: 8px;
   p {
     opacity: 0.8;
     margin-left: 2rem;
+  }
+}
+
+/* Estilos para el panel de métricas avanzadas */
+.metrics-container {
+  .card {
+    border: none;
+    transition: all 0.2s ease-in-out;
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    }
+  }
+  
+  .progress {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    
+    .progress-bar {
+      border-radius: 10px;
+    }
+  }
+}
+
+/* Estilos para indicadores de prioridad */
+.prioridad-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 30px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  
+  &.prioridad-alta {
+    background-color: rgba(255, 62, 62, 0.15);
+    color: #de2a2a;
+    border: 1px solid rgba(255, 62, 62, 0.3);
+  }
+  
+  &.prioridad-media {
+    background-color: rgba(255, 187, 51, 0.15);
+    color: #e09c0e;
+    border: 1px solid rgba(255, 187, 51, 0.3);
+  }
+  
+  &.prioridad-baja {
+    background-color: rgba(39, 194, 76, 0.15);
+    color: #19a03e;
+    border: 1px solid rgba(39, 194, 76, 0.3);
+  }
+}
+
+.optimizacion-badge {
+  background-color: rgba(29, 95, 255, 0.15);
+  color: #0d6efd;
+  border-radius: 50%;
+  padding: 0.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  width: 18px;
+  height: 18px;
+  cursor: help;
+}
+
+/* Estilos para estados de pedidos */
+.estado-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 30px;
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  &.estado-pago {
+    &.estado-warning {
+      background-color: rgba(255, 187, 51, 0.15);
+      color: #e09c0e;
+      border: 1px solid rgba(255, 187, 51, 0.3);
+    }
+    &.estado-success {
+      background-color: rgba(39, 194, 76, 0.15);
+      color: #19a03e;
+      border: 1px solid rgba(39, 194, 76, 0.3);
+    }
+    &.estado-danger {
+      background-color: rgba(255, 62, 62, 0.15);
+      color: #de2a2a;
+      border: 1px solid rgba(255, 62, 62, 0.3);
+    }
+  }
+
+  &.estado-proceso {
+    &.estado-secondary {
+      background-color: rgba(108, 117, 125, 0.15);
+      color: #6c757d;
+      border: 1px solid rgba(108, 117, 125, 0.3);
+    }
+    &.estado-info {
+      background-color: rgba(23, 162, 184, 0.15);
+      color: #17a2b8;
+      border: 1px solid rgba(23, 162, 184, 0.3);
+    }
+    &.estado-primary {
+      background-color: rgba(13, 110, 253, 0.15);
+      color: #0d6efd;
+      border: 1px solid rgba(13, 110, 253, 0.3);
+    }
+    &.estado-warning {
+      background-color: rgba(255, 187, 51, 0.15);
+      color: #e09c0e;
+      border: 1px solid rgba(255, 187, 51, 0.3);
+    }
+    &.estado-success {
+      background-color: rgba(39, 194, 76, 0.15);
+      color: #19a03e;
+      border: 1px solid rgba(39, 194, 76, 0.3);
+    }
+    &.estado-danger {
+      background-color: rgba(255, 62, 62, 0.15);
+      color: #de2a2a;
+      border: 1px solid rgba(255, 62, 62, 0.3);
+    }
+  }
+}
+
+/* Estilos para tablas */
+.expanded-table {
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+
+  th {
+    background-color: #eaecf0;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  tr td {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Estilos para panel más compacto */
+.p-panel .p-panel-content {
+  padding: 0.75rem !important;
+}
+
+/* Estilos para alertas de pedidos urgentes */
+.alert {
+  border-radius: 0.5rem;
+  border: none;
+  
+  &.alert-warning {
+    background-color: rgba(255, 187, 51, 0.15);
+    color: #b27b00;
+    i {
+      color: #ffc107;
+    }
+  }
+  
+  &.alert-info {
+    background-color: rgba(13, 202, 240, 0.15);
+    color: #087990;
+    i {
+      color: #0dcaf0;
+    }
+  }
+}
+
+/* Estilos para opciones de tabla */
+.options-cell {
+  .btn-actions {
+    position: relative;
+    
+    .btn-options {
+      background: transparent;
+      border: none;
+      padding: 0.25rem;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #6c757d;
+      
+      &:hover {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+      }
+    }
+    
+    .list-actions {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      border-radius: 0.375rem;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+      list-style: none;
+      padding: 0.5rem 0;
+      margin: 0;
+      min-width: 180px;
+      z-index: 1000;
+      
+      li {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        
+        i {
+          margin-right: 0.5rem;
+          width: 16px;
+          text-align: center;
+        }
+        
+        &:hover {
+          background-color: #f8f9fa;
+          color: #0d6efd;
+        }
+      }
+    }
+    
+    &:hover .list-actions {
+      display: block;
+    }
+  }
+}
+
+/* Estilos para observaciones detalladas */
+.observaciones-cell {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ajustes para responsive */
+@media (max-width: 992px) {
+  .stat-card {
+    margin-bottom: 1rem;
+  }
+  
+  .metrics-container .col-md-4 {
+    margin-bottom: 1rem;
   }
 } 
