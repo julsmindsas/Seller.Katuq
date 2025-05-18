@@ -1,0 +1,95 @@
+<!-- Venta Asistida One Page -->
+<div class="venta-asistida">
+  <!-- Sección: Selección de Cliente -->
+  <section class="venta-asistida__cliente">
+    <h2>Seleccionar Cliente</h2>
+    <p-autoComplete 
+      [(ngModel)]="clienteSeleccionado"
+      [suggestions]="clientesFiltrados"
+      (completeMethod)="buscarClientes($event)"
+      field="nombres_completos"
+      [dropdown]="true"
+      [forceSelection]="false"
+      placeholder="Buscar por nombre o documento"
+      (onSelect)="onClienteSeleccionado($event)"
+      [minLength]="2">
+      <ng-template let-cliente pTemplate="item">
+        <div>
+          <span>{{ cliente.nombres_completos }}</span>
+          <span class="ml-2 text-muted">({{ cliente.documento }})</span>
+        </div>
+      </ng-template>
+    </p-autoComplete>
+    <div *ngIf="clienteSeleccionado" class="venta-asistida__cliente-info mt-2">
+      <strong>Cliente seleccionado:</strong>
+      <div>{{ clienteSeleccionado.nombres_completos }} ({{ clienteSeleccionado.documento }})</div>
+      <div>{{ clienteSeleccionado.correo_electronico_comprador }}</div>
+      <div>{{ clienteSeleccionado.numero_celular_comprador }}</div>
+    </div>
+    <button type="button" pButton label="Crear nuevo cliente" icon="pi pi-user-plus" class="mt-2 p-button-sm p-button-outlined" (click)="abrirModalCliente()"></button>
+    <app-customer-quick-create
+      [visible]="mostrarModalCliente"
+      (clienteCreado)="onClienteCreado($event)"
+      (cerrar)="cerrarModalCliente()"
+    ></app-customer-quick-create>
+  </section>
+
+  <!-- Sección: Selección de Productos -->
+  <section class="venta-asistida__productos">
+    <app-product-grid
+      [productosCarrito]="productosCarrito"
+      [productosFiltrados]="productosFiltrados"
+      [productoSeleccionado]="productoSeleccionado"
+      [loadingProductos]="loadingProductos"
+      [errorStockProducto]="errorStockProducto"
+      (buscarProductos)="buscarProductos($event)"
+      (productoSeleccionadoChange)="onProductoSeleccionado($event)"
+      (actualizarCantidad)="actualizarCantidad($event.producto, $event.cantidad)"
+      (eliminarProductoCarrito)="eliminarProductoCarrito($event)">
+    </app-product-grid>
+  </section>
+
+  <!-- Sección: Resumen de Carrito -->
+  <section class="venta-asistida__resumen">
+    <app-cart-preview
+      [productosCarrito]="productosCarrito"
+      [subtotal]="subtotalCarrito"
+      [costoEnvio]="costoEnvio"
+      [advertenciaCobertura]="advertenciaCobertura"
+      [totalPedido]="totalPedido"
+      (limpiarCarrito)="limpiarCarrito()"
+    ></app-cart-preview>
+  </section>
+
+  <!-- Sección: Método de Pago -->
+  <section class="venta-asistida__pago">
+    <app-payment-section
+      [metodosPago]="metodosPago"
+      [metodoPagoSeleccionado]="metodoPagoSeleccionado"
+      (seleccionarMetodoPago)="seleccionarMetodoPago($event)"
+    ></app-payment-section>
+  </section>
+
+  <!-- Sección: Facturación -->
+  <section class="venta-asistida__facturacion">
+    <app-facturacion-section [facturacion]="datosFacturacion" (facturacionChange)="onFacturacionChange($event)"></app-facturacion-section>
+  </section>
+
+  <!-- Sección: Entrega -->
+  <section class="venta-asistida__entrega">
+    <app-entrega-section [entrega]="datosEntrega" (entregaChange)="onEntregaChange($event)"></app-entrega-section>
+  </section>
+
+  <!-- Sección: Confirmación -->
+  <section class="venta-asistida__confirmacion">
+    <app-confirm-section
+      [puedeConfirmarVenta]="puedeConfirmarVenta"
+      [loadingVenta]="loadingVenta"
+      [ventaExitosa]="ventaExitosa"
+      [errorVenta]="errorVenta"
+      (confirmarVenta)="confirmarVenta()"
+    ></app-confirm-section>
+  </section>
+
+  <p-toast></p-toast>
+</div> 

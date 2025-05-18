@@ -1,0 +1,25 @@
+<div class="confirm-section">
+  <h2>Confirmar y Finalizar Venta</h2>
+  <button type="button" pButton label="Confirmar Venta" icon="pi pi-check" class="p-button-lg p-button-success"
+    [disabled]="!puedeConfirmarVenta || loadingVenta" (click)="confirmarVenta.emit()">
+    <ng-container *ngIf="loadingVenta">
+      <i class="pi pi-spin pi-spinner mr-2"></i>
+      Procesando...
+    </ng-container>
+    <ng-container *ngIf="!loadingVenta">
+      Confirmar Venta
+    </ng-container>
+  </button>
+  <p *ngIf="!puedeConfirmarVenta" class="text-danger mt-2">
+    Debes seleccionar cliente, agregar productos, elegir método de pago, completar facturación y entrega, y que la zona de envío cubra la dirección.
+  </p>
+  <p *ngIf="loadingVenta" class="text-info mt-2">
+    Procesando venta, por favor espera...
+  </p>
+  <p *ngIf="ventaExitosa" class="text-success mt-2">
+    ¡Venta realizada con éxito!
+  </p>
+  <p *ngIf="errorVenta" class="text-danger mt-2">
+    {{ errorVenta }}
+  </p>
+</div> 

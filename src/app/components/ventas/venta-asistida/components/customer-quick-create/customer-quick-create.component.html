@@ -1,0 +1,30 @@
+<p-dialog header="Crear nuevo cliente" [(visible)]="visible" [modal]="true" [closable]="true" (onHide)="cerrarModal()">
+  <form [formGroup]="clienteForm" (ngSubmit)="submit()">
+    <div class="p-fluid">
+      <div class="p-field">
+        <label>Nombre completo *</label>
+        <input pInputText formControlName="nombres_completos" [ngClass]="{'ng-invalid': clienteForm.get('nombres_completos')?.invalid && clienteForm.get('nombres_completos')?.touched}">
+        <small *ngIf="clienteForm.get('nombres_completos')?.invalid && clienteForm.get('nombres_completos')?.touched" class="p-error">Obligatorio</small>
+      </div>
+      <div class="p-field">
+        <label>Documento *</label>
+        <input pInputText formControlName="documento" [ngClass]="{'ng-invalid': clienteForm.get('documento')?.invalid && clienteForm.get('documento')?.touched}">
+        <small *ngIf="clienteForm.get('documento')?.invalid && clienteForm.get('documento')?.touched" class="p-error">Obligatorio</small>
+      </div>
+      <div class="p-field">
+        <label>Celular *</label>
+        <input pInputText formControlName="numero_celular_comprador" [ngClass]="{'ng-invalid': clienteForm.get('numero_celular_comprador')?.invalid && clienteForm.get('numero_celular_comprador')?.touched}">
+        <small *ngIf="clienteForm.get('numero_celular_comprador')?.invalid && clienteForm.get('numero_celular_comprador')?.touched" class="p-error">Obligatorio</small>
+      </div>
+      <div class="p-field">
+        <label>Correo electrónico *</label>
+        <input pInputText formControlName="correo_electronico_comprador" [ngClass]="{'ng-invalid': clienteForm.get('correo_electronico_comprador')?.invalid && clienteForm.get('correo_electronico_comprador')?.touched}">
+        <small *ngIf="clienteForm.get('correo_electronico_comprador')?.invalid && clienteForm.get('correo_electronico_comprador')?.touched" class="p-error">Correo inválido</small>
+      </div>
+    </div>
+    <div class="p-d-flex p-jc-end p-mt-3">
+      <button pButton type="button" label="Cancelar" class="p-button-text p-mr-2" (click)="cerrarModal()"></button>
+      <button pButton type="submit" label="Guardar" [disabled]="clienteForm.invalid"></button>
+    </div>
+  </form>
+</p-dialog> 

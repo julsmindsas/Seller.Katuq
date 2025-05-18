@@ -6,6 +6,7 @@ import { ListOrdersComponent } from './list/list.component';
 import { ClientesListaComponent } from './clientes/lista/clientes-lista.component';
 import { CargaVentasComponent } from './carga-ventas/carga-ventas.component';
 import { PosComponent } from './pos2/pos.component';
+import { VentaAsistidaComponent } from './venta-asistida/venta-asistida.component';
 
 const routes: Routes = [
   {
@@ -31,6 +32,10 @@ const routes: Routes = [
   {
     path: 'pos2',
     component: PosComponent
+  },
+  {
+    path: 'venta-asistida',
+    component: VentaAsistidaComponent
   }
 ];
 

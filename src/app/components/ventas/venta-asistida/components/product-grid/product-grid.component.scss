@@ -1,0 +1,23 @@
+.product-grid {
+  // Estilos específicos para la sección de productos
+  .autocomplete-item {
+    padding: 0.5rem 0.25rem;
+    border-bottom: 1px solid #f0f0f0;
+    &:last-child { border-bottom: none; }
+    img { object-fit: cover; }
+    .fw-bold { font-weight: 600; }
+    .text-muted { color: #6c757d; }
+    .small { font-size: 0.85em; }
+  }
+  .p-autocomplete-panel {
+    min-width: 350px;
+  }
+  .p-table {
+    font-size: 0.95em;
+    th, td { vertical-align: middle; }
+    img { object-fit: cover; }
+  }
+  .p-inputtext {
+    border-radius: 0.25rem;
+  }
+} 

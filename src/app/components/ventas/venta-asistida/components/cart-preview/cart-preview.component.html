@@ -1,0 +1,27 @@
+<div class="cart-preview">
+  <h2>Resumen de Carrito</h2>
+  <div *ngIf="productosCarrito.length > 0; else vacio" class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div>
+        <strong>Subtotal:</strong>
+        <span>{{ subtotal | currency:'USD':'symbol':'1.0-0' }}</span>
+      </div>
+      <button type="button" pButton icon="pi pi-trash" label="Limpiar carrito" class="p-button-danger p-button-sm"
+        (click)="limpiarCarrito.emit()" [disabled]="productosCarrito.length === 0"></button>
+    </div>
+    <div *ngIf="costoEnvio > 0" class="mb-2">
+      <strong>Costo de Envío:</strong>
+      <span>{{ costoEnvio | currency:'USD':'symbol':'1.0-0' }}</span>
+    </div>
+    <div *ngIf="advertenciaCobertura" class="alert alert-warning">
+      {{ advertenciaCobertura }}
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <strong>Total Pedido:</strong>
+      <span>{{ totalPedido | currency:'USD':'symbol':'1.0-0' }}</span>
+    </div>
+  </div>
+  <ng-template #vacio>
+    <div class="alert alert-info fade-in">El carrito está vacío. Agrega productos para continuar.</div>
+  </ng-template>
+</div> 

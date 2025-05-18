@@ -1,0 +1,21 @@
+<div class="payment-section">
+  <h2>Método de Pago</h2>
+  <div *ngIf="metodosPago.length > 0; else cargando">
+    <div class="d-flex flex-wrap gap-2">
+      <button *ngFor="let metodo of metodosPago" type="button"
+        pButton
+        [label]="metodo.nombre || metodo.descripcion || metodo.tipo"
+        [class.p-button-success]="metodoPagoSeleccionado && metodoPagoSeleccionado.tipo === metodo.tipo"
+        [class.p-button-outlined]="!metodoPagoSeleccionado || metodoPagoSeleccionado.tipo !== metodo.tipo"
+        (click)="seleccionarMetodoPago.emit(metodo)">
+      </button>
+    </div>
+    <div *ngIf="metodoPagoSeleccionado" class="mt-3">
+      <strong>Método seleccionado:</strong>
+      <span>{{ metodoPagoSeleccionado.nombre || metodoPagoSeleccionado.descripcion || metodoPagoSeleccionado.tipo }}</span>
+    </div>
+  </div>
+  <ng-template #cargando>
+    <div class="alert alert-info">Cargando métodos de pago...</div>
+  </ng-template>
+</div> 

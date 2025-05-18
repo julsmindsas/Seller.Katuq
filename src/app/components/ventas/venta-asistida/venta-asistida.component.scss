@@ -1,0 +1,27 @@
+.venta-asistida {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+
+  &__cliente,
+  &__productos,
+  &__resumen,
+  &__pago,
+  &__confirmacion {
+    background: #f9f9f9;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+
+  h2 {
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+  }
+} 

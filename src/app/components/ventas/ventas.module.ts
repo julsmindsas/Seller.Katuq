@@ -53,6 +53,7 @@ import { CustomerSectionComponent } from './pos2/widgets/customer-section/custom
 import { CartSummaryComponent } from './pos2/widgets/cart-summary/cart-summary.component';
 import { PaymentSelectorComponent } from './pos2/widgets/payment-selector/payment-selector.component';
 import { PosCheckoutService, POS_CHECKOUT_SERVICE } from '../../shared/services/ventas/pos-checkout.service';
+import { VentaAsistidaModule } from './venta-asistida/venta-asistida.module';
 
 @NgModule({
   imports: [
@@ -76,7 +77,8 @@ import { PosCheckoutService, POS_CHECKOUT_SERVICE } from '../../shared/services/
     MultiSelectModule,
     ToastModule,
     HttpClientModule,
-    VoiceInteractionModule
+    VoiceInteractionModule,
+    VentaAsistidaModule
   ],
   declarations: [
     PedidoFacturacionComponent,

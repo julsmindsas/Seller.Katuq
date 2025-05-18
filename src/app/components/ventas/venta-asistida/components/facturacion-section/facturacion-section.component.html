@@ -1,0 +1,97 @@
+<div class="facturacion-section">
+  <!-- Aquí irá el formulario de facturación -->
+  <h3>Facturación</h3>
+  <form [formGroup]="facturacionForm" class="facturacion-form">
+    <div class="row">
+      <div class="col-md-6 mb-2">
+        <label>Razón Social / Nombre Completo *</label>
+        <input class="form-control" formControlName="razonSocial" [ngClass]="{'is-invalid': facturacionForm.get('razonSocial')?.invalid && facturacionForm.get('razonSocial')?.touched}">
+        <div *ngIf="facturacionForm.get('razonSocial')?.invalid && facturacionForm.get('razonSocial')?.touched" class="invalid-feedback">
+          El nombre es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-3 mb-2">
+        <label>Tipo Documento *</label>
+        <select class="form-control" formControlName="tipoDocumento" [ngClass]="{'is-invalid': facturacionForm.get('tipoDocumento')?.invalid && facturacionForm.get('tipoDocumento')?.touched}">
+          <option value="">Seleccione</option>
+          <option value="CC">Cédula</option>
+          <option value="NIT">NIT</option>
+          <option value="TI">TI</option>
+          <option value="PA">PA</option>
+        </select>
+        <div *ngIf="facturacionForm.get('tipoDocumento')?.invalid && facturacionForm.get('tipoDocumento')?.touched" class="invalid-feedback">
+          El tipo de documento es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-3 mb-2">
+        <label>Número Documento *</label>
+        <input class="form-control" formControlName="numeroDocumento" [ngClass]="{'is-invalid': facturacionForm.get('numeroDocumento')?.invalid && facturacionForm.get('numeroDocumento')?.touched}">
+        <div *ngIf="facturacionForm.get('numeroDocumento')?.invalid && facturacionForm.get('numeroDocumento')?.touched" class="invalid-feedback">
+          El número de documento es obligatorio.
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-2">
+        <label>Celular *</label>
+        <input class="form-control" formControlName="celular" [ngClass]="{'is-invalid': facturacionForm.get('celular')?.invalid && facturacionForm.get('celular')?.touched}">
+        <div *ngIf="facturacionForm.get('celular')?.invalid && facturacionForm.get('celular')?.touched" class="invalid-feedback">
+          El celular es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <label>Correo *</label>
+        <input class="form-control" formControlName="correo" [ngClass]="{'is-invalid': facturacionForm.get('correo')?.invalid && facturacionForm.get('correo')?.touched}">
+        <div *ngIf="facturacionForm.get('correo')?.invalid && facturacionForm.get('correo')?.touched" class="invalid-feedback">
+          El correo es inválido.
+        </div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <label>Dirección *</label>
+        <input class="form-control" formControlName="direccion" [ngClass]="{'is-invalid': facturacionForm.get('direccion')?.invalid && facturacionForm.get('direccion')?.touched}">
+        <div *ngIf="facturacionForm.get('direccion')?.invalid && facturacionForm.get('direccion')?.touched" class="invalid-feedback">
+          La dirección es obligatoria.
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-3 mb-2">
+        <label>País *</label>
+        <select class="form-control" formControlName="pais" (change)="onPaisChange($event.target.value)" [ngClass]="{'is-invalid': facturacionForm.get('pais')?.invalid && facturacionForm.get('pais')?.touched}">
+          <option value="">Seleccione</option>
+          <option *ngFor="let pais of paises" [value]="pais">{{ pais }}</option>
+        </select>
+        <div *ngIf="facturacionForm.get('pais')?.invalid && facturacionForm.get('pais')?.touched" class="invalid-feedback">
+          El país es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-3 mb-2">
+        <label>Departamento *</label>
+        <select class="form-control" formControlName="departamento" (change)="onDepartamentoChange($event.target.value)" [ngClass]="{'is-invalid': facturacionForm.get('departamento')?.invalid && facturacionForm.get('departamento')?.touched}">
+          <option value="">Seleccione</option>
+          <option *ngFor="let depto of departamentos" [value]="depto">{{ depto }}</option>
+        </select>
+        <div *ngIf="facturacionForm.get('departamento')?.invalid && facturacionForm.get('departamento')?.touched" class="invalid-feedback">
+          El departamento es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-3 mb-2">
+        <label>Ciudad *</label>
+        <select class="form-control" formControlName="ciudad" [ngClass]="{'is-invalid': facturacionForm.get('ciudad')?.invalid && facturacionForm.get('ciudad')?.touched}">
+          <option value="">Seleccione</option>
+          <option *ngFor="let ciudad of ciudades" [value]="ciudad">{{ ciudad }}</option>
+        </select>
+        <div *ngIf="facturacionForm.get('ciudad')?.invalid && facturacionForm.get('ciudad')?.touched" class="invalid-feedback">
+          La ciudad es obligatoria.
+        </div>
+      </div>
+      <div class="col-md-3 mb-2">
+        <label>Código Postal *</label>
+        <input class="form-control" formControlName="codigoPostal" [ngClass]="{'is-invalid': facturacionForm.get('codigoPostal')?.invalid && facturacionForm.get('codigoPostal')?.touched}">
+        <div *ngIf="facturacionForm.get('codigoPostal')?.invalid && facturacionForm.get('codigoPostal')?.touched" class="invalid-feedback">
+          El código postal es obligatorio.
+        </div>
+      </div>
+    </div>
+  </form>
+</div> 

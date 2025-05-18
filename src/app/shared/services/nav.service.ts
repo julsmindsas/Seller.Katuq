@@ -242,6 +242,7 @@ export class NavService implements OnDestroy {
 		{
 			title: 'Pedidos y Ventas', icon: 'dollar-sign', type: 'sub', active: false, children: [
 				{ path: 'ventas/crear-ventas', title: 'Crear Venta Asistida', type: 'link' },
+				{ path: 'ventas/venta-asistida', title: 'Venta Asistida Ultra', type: 'link' },
 				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas Masivas', type: 'link' },
 				{ path: 'ventas/pedidos', title: 'Lista de Pedidos', type: 'link' },
 				{ path: 'ventas/pos2', title: 'Ventas POS Avanzado', type: 'link' },

@@ -1,0 +1,97 @@
+<div class="entrega-section">
+  <!-- Aquí irá el formulario de entrega -->
+  <h3>Entrega</h3>
+  <form [formGroup]="entregaForm" class="entrega-form">
+    <div class="row">
+      <div class="col-md-4 mb-2">
+        <label>Nombres *</label>
+        <input class="form-control" formControlName="nombres" [ngClass]="{'is-invalid': entregaForm.get('nombres')?.invalid && entregaForm.get('nombres')?.touched}">
+        <div *ngIf="entregaForm.get('nombres')?.invalid && entregaForm.get('nombres')?.touched" class="invalid-feedback">
+          El nombre es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <label>Apellidos *</label>
+        <input class="form-control" formControlName="apellidos" [ngClass]="{'is-invalid': entregaForm.get('apellidos')?.invalid && entregaForm.get('apellidos')?.touched}">
+        <div *ngIf="entregaForm.get('apellidos')?.invalid && entregaForm.get('apellidos')?.touched" class="invalid-feedback">
+          Los apellidos son obligatorios.
+        </div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <label>Celular *</label>
+        <input class="form-control" formControlName="celular" [ngClass]="{'is-invalid': entregaForm.get('celular')?.invalid && entregaForm.get('celular')?.touched}">
+        <div *ngIf="entregaForm.get('celular')?.invalid && entregaForm.get('celular')?.touched" class="invalid-feedback">
+          El celular es obligatorio.
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-2">
+        <label>Dirección *</label>
+        <input class="form-control" formControlName="direccion" [ngClass]="{'is-invalid': entregaForm.get('direccion')?.invalid && entregaForm.get('direccion')?.touched}">
+        <div *ngIf="entregaForm.get('direccion')?.invalid && entregaForm.get('direccion')?.touched" class="invalid-feedback">
+          La dirección es obligatoria.
+        </div>
+      </div>
+      <div class="col-md-3 mb-2">
+        <label>Barrio *</label>
+        <input class="form-control" formControlName="barrio" [ngClass]="{'is-invalid': entregaForm.get('barrio')?.invalid && entregaForm.get('barrio')?.touched}">
+        <div *ngIf="entregaForm.get('barrio')?.invalid && entregaForm.get('barrio')?.touched" class="invalid-feedback">
+          El barrio es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-3 mb-2">
+        <label>Código Postal *</label>
+        <input class="form-control" formControlName="codigoPostal" [ngClass]="{'is-invalid': entregaForm.get('codigoPostal')?.invalid && entregaForm.get('codigoPostal')?.touched}">
+        <div *ngIf="entregaForm.get('codigoPostal')?.invalid && entregaForm.get('codigoPostal')?.touched" class="invalid-feedback">
+          El código postal es obligatorio.
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-2">
+        <label>País *</label>
+        <select class="form-control" formControlName="pais" (change)="onPaisChange($event.target.value)" [ngClass]="{'is-invalid': entregaForm.get('pais')?.invalid && entregaForm.get('pais')?.touched}">
+          <option value="">Seleccione</option>
+          <option *ngFor="let pais of paises" [value]="pais">{{ pais }}</option>
+        </select>
+        <div *ngIf="entregaForm.get('pais')?.invalid && entregaForm.get('pais')?.touched" class="invalid-feedback">
+          El país es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <label>Departamento *</label>
+        <select class="form-control" formControlName="departamento" (change)="onDepartamentoChange($event.target.value)" [ngClass]="{'is-invalid': entregaForm.get('departamento')?.invalid && entregaForm.get('departamento')?.touched}">
+          <option value="">Seleccione</option>
+          <option *ngFor="let depto of departamentos" [value]="depto">{{ depto }}</option>
+        </select>
+        <div *ngIf="entregaForm.get('departamento')?.invalid && entregaForm.get('departamento')?.touched" class="invalid-feedback">
+          El departamento es obligatorio.
+        </div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <label>Ciudad *</label>
+        <select class="form-control" formControlName="ciudad" [ngClass]="{'is-invalid': entregaForm.get('ciudad')?.invalid && entregaForm.get('ciudad')?.touched}">
+          <option value="">Seleccione</option>
+          <option *ngFor="let ciudad of ciudades" [value]="ciudad">{{ ciudad }}</option>
+        </select>
+        <div *ngIf="entregaForm.get('ciudad')?.invalid && entregaForm.get('ciudad')?.touched" class="invalid-feedback">
+          La ciudad es obligatoria.
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-2">
+        <label>Zona de Cobro/Envío *</label>
+        <select class="form-control" formControlName="zonaCobro" [ngClass]="{'is-invalid': entregaForm.get('zonaCobro')?.invalid && entregaForm.get('zonaCobro')?.touched}">
+          <option value="">Seleccione</option>
+          <option *ngFor="let zona of zonasCobro" [value]="zona.id || zona.nombre || zona.descripcion">{{ zona.nombre || zona.descripcion }}</option>
+        </select>
+        <div *ngIf="entregaForm.get('zonaCobro')?.invalid && entregaForm.get('zonaCobro')?.touched" class="invalid-feedback">
+          La zona de cobro/envío es obligatoria.
+        </div>
+      </div>
+    </div>
+  </form>
+  <!-- TODO: Integrar formulario de entrega -->
+</div> 

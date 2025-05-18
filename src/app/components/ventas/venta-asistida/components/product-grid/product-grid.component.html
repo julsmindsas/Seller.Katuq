@@ -1,0 +1,63 @@
+<div class="product-grid">
+  <h2>Seleccionar Productos</h2>
+  <p-autoComplete 
+    [(ngModel)]="productoSeleccionado"
+    [suggestions]="productosFiltrados"
+    (completeMethod)="buscarProductos.emit($event)"
+    field="crearProducto.titulo"
+    [dropdown]="true"
+    [forceSelection]="false"
+    placeholder="Buscar producto por nombre, referencia o código"
+    (onSelect)="productoSeleccionadoChange.emit($event)"
+    [minLength]="2">
+    <ng-template let-producto pTemplate="item">
+      <div class="autocomplete-item d-flex align-items-center">
+        <img *ngIf="producto.exposicion?.imagenes?.[0]" [src]="producto.exposicion.imagenes[0]" alt="img" width="40" height="40" class="mr-2 rounded shadow-sm" />
+        <div>
+          <div class="fw-bold">{{ producto.crearProducto?.titulo }}</div>
+          <div class="text-muted small">Ref: {{ producto.identificacion?.referencia }} | <span *ngIf="producto.precio">{{ producto.precio?.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0' }}</span></div>
+          <div class="small">Stock: <span [ngClass]="{'text-danger': producto.disponibilidad?.stock === 0, 'text-success': producto.disponibilidad?.stock > 0}">{{ producto.disponibilidad?.stock ?? 0 }}</span></div>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="empty">
+      <div class="text-center text-muted p-2">No se encontraron productos</div>
+    </ng-template>
+    <ng-template pTemplate="loading">
+      <i class="pi pi-spin pi-spinner"></i> Buscando productos...
+    </ng-template>
+  </p-autoComplete>
+  <div *ngIf="errorStockProducto" class="alert alert-warning mt-2">
+    {{ errorStockProducto }}
+  </div>
+  <p-table [value]="productosCarrito" class="mt-3 table-sm shadow-sm" *ngIf="productosCarrito.length > 0">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Imagen</th>
+        <th>Producto</th>
+        <th>Referencia</th>
+        <th>Precio</th>
+        <th>Cantidad</th>
+        <th>Subtotal</th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-producto>
+      <tr>
+        <td>
+          <img *ngIf="producto.exposicion?.imagenes?.[0]" [src]="producto.exposicion.imagenes[0]" alt="img" width="40" height="40" class="rounded shadow-sm" />
+        </td>
+        <td>{{ producto.crearProducto?.titulo }}</td>
+        <td>{{ producto.identificacion?.referencia }}</td>
+        <td>{{ producto.precio?.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0' }}</td>
+        <td>
+          <input type="number" min="1" [(ngModel)]="producto.cantidad" (ngModelChange)="actualizarCantidad.emit({producto: producto, cantidad: $event})" style="width:60px;">
+        </td>
+        <td>{{ (producto.precio?.precioUnitarioConIva * producto.cantidad) | currency:'USD':'symbol':'1.0-0' }}</td>
+        <td>
+          <button type="button" pButton icon="pi pi-trash" class="p-button-danger p-button-sm" (click)="eliminarProductoCarrito.emit(producto)"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div> 
