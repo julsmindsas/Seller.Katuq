@@ -118,7 +118,7 @@
                   <h5 class="mb-0"><i class="fa fa-shopping-cart me-2 text-primary"></i>Productos seleccionados</h5>
                 </div>
                 <div class="card-body p-0">
-              <app-carrito #carrito [pedido]="pedidoGral"></app-carrito>
+              <app-carrito #carrito [pedido]="pedidoGral" (notaAgregada)="onNotaAgregada($event)"></app-carrito>
                 </div>
               </div>
               
@@ -127,7 +127,7 @@
                   <h5 class="mb-0"><i class="fa fa-sticky-note me-2 text-primary"></i>Notas del pedido</h5>
                 </div>
                 <div class="card-body">
-                <app-notas #notaspedidos [pedido]="pedidoGral" [carrito]="carrito1"></app-notas>
+                <app-notas #notaspedidos [pedido]="pedidoGral" [carrito]="carrito1" (notasActualizadas)="onNotasActualizadas($event)"></app-notas>
                 </div>
               </div>
 

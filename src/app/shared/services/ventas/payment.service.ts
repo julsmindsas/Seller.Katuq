@@ -192,7 +192,7 @@ export class PaymentService extends BaseService {
       // Sumar precios de preferencias (sin IVA)
       if (itemCarrito.configuracion?.preferencias) {
         itemCarrito.configuracion.preferencias.forEach((preferencia: Preferencia) => {
-           // Asegurar que el valor sea numérico
+          // Asegurar que el valor sea numérico
           const valorPreferenciaSinIva = Number(preferencia.valorUnitarioSinIva) || 0;
           totalItemSinIVA += valorPreferenciaSinIva * cantidad;
         });
@@ -249,7 +249,7 @@ export class PaymentService extends BaseService {
       if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
         for (const x of preciosVolumen) {
-           // Asegurar que los límites y valores sean numéricos
+          // Asegurar que los límites y valores sean numéricos
           const unidadesInicial = Number(x.numeroUnidadesInicial) || 0;
           const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
           const valorVolumenConIVA = Number(x.valorUnitarioPorVolumenIva) || 0; // Precio unitario con IVA por volumen
@@ -284,10 +284,10 @@ export class PaymentService extends BaseService {
       // Asegurar que porcentajeIvaNum sea numérico y válido para división
       const porcentajeIvaNum = (Number(porcentajeIvaItemStr) || 0) / 100;
       if (1 + porcentajeIvaNum !== 0) { // Evitar división por cero si %IVA es -100%
-         valorIvaItem = (valorTotalConIvaProductoConDesc / (1 + porcentajeIvaNum)) * porcentajeIvaNum;
+        valorIvaItem = (valorTotalConIvaProductoConDesc / (1 + porcentajeIvaNum)) * porcentajeIvaNum;
       } else {
-         valorIvaItem = 0; // O manejar como error
-         console.warn("Porcentaje IVA inválido (-100%) encontrado para item:", itemCarrito);
+        valorIvaItem = 0; // O manejar como error
+        console.warn("Porcentaje IVA inválido (-100%) encontrado para item:", itemCarrito);
       }
 
 
@@ -302,7 +302,7 @@ export class PaymentService extends BaseService {
           case "19": totalIva19Def += valorIvaItem; break;
         }
       } else {
-         console.warn("NaN detectado en cálculo de IVA para producto principal:", itemCarrito);
+        console.warn("NaN detectado en cálculo de IVA para producto principal:", itemCarrito);
       }
 
 
@@ -317,9 +317,9 @@ export class PaymentService extends BaseService {
           let ivaAdicion = 0;
 
           if (1 + porcentajeAdicionNum !== 0) {
-             ivaAdicion = (valorAdicionConIvaConDesc / (1 + porcentajeAdicionNum)) * porcentajeAdicionNum;
+            ivaAdicion = (valorAdicionConIvaConDesc / (1 + porcentajeAdicionNum)) * porcentajeAdicionNum;
           } else {
-             console.warn("Porcentaje IVA inválido (-100%) encontrado para adicion:", adicion);
+            console.warn("Porcentaje IVA inválido (-100%) encontrado para adicion:", adicion);
           }
 
 
@@ -332,7 +332,7 @@ export class PaymentService extends BaseService {
               case "19": totalIva19Def += ivaAdicion; break;
             }
           } else {
-             console.warn("NaN detectado en cálculo de IVA para adicion:", adicion);
+            console.warn("NaN detectado en cálculo de IVA para adicion:", adicion);
           }
         });
       }
@@ -345,13 +345,13 @@ export class PaymentService extends BaseService {
           const valorPreferenciaConIvaConDesc = valorPreferenciaConIva * (1 - porceDescuento);
           const porcentajePreferenciaStr = (preferencia.porcentajeIva ?? "0").toString();
           const porcentajePreferenciaNum = (Number(preferencia.porcentajeIva) || 0) / 100;
-           let ivaPreferencia = 0;
+          let ivaPreferencia = 0;
 
-           if (1 + porcentajePreferenciaNum !== 0) {
-              ivaPreferencia = (valorPreferenciaConIvaConDesc / (1 + porcentajePreferenciaNum)) * porcentajePreferenciaNum;
-           } else {
-              console.warn("Porcentaje IVA inválido (-100%) encontrado para preferencia:", preferencia);
-           }
+          if (1 + porcentajePreferenciaNum !== 0) {
+            ivaPreferencia = (valorPreferenciaConIvaConDesc / (1 + porcentajePreferenciaNum)) * porcentajePreferenciaNum;
+          } else {
+            console.warn("Porcentaje IVA inválido (-100%) encontrado para preferencia:", preferencia);
+          }
 
 
           if (!isNaN(ivaPreferencia)) {
@@ -363,7 +363,7 @@ export class PaymentService extends BaseService {
               case "19": totalIva19Def += ivaPreferencia; break;
             }
           } else {
-             console.warn("NaN detectado en cálculo de IVA para preferencia:", preferencia);
+            console.warn("NaN detectado en cálculo de IVA para preferencia:", preferencia);
           }
         });
       }
@@ -377,9 +377,9 @@ export class PaymentService extends BaseService {
     let ivaEnvio = 0;
 
     if (1 + porcentajeIvaEnvioNum !== 0) {
-       ivaEnvio = (costoEnvioConIva / (1 + porcentajeIvaEnvioNum)) * porcentajeIvaEnvioNum;
+      ivaEnvio = (costoEnvioConIva / (1 + porcentajeIvaEnvioNum)) * porcentajeIvaEnvioNum;
     } else {
-       console.warn("Porcentaje IVA inválido (-100%) encontrado para envío.");
+      console.warn("Porcentaje IVA inválido (-100%) encontrado para envío.");
     }
 
 
@@ -392,7 +392,7 @@ export class PaymentService extends BaseService {
         case "19": totalIva19Def += ivaEnvio; break;
       }
     } else {
-       console.warn("NaN detectado en cálculo de IVA para envío.");
+      console.warn("NaN detectado en cálculo de IVA para envío.");
     }
 
 
@@ -413,29 +413,29 @@ export class PaymentService extends BaseService {
   }
 
 
- /**
-   * Obtiene la fecha y hora actual formateada como 'yyyy-MM-dd HH:mm'.
-   * Se utiliza JavaScript nativo para evitar problemas con la instanciación
-   * directa de DatePipe y asegurar la disponibilidad sin depender de la
-   * configuración del módulo o registro de locale para este formato específico.
-   * @returns La fecha y hora actual formateada o una cadena vacía si ocurre un error.
-   */
- obtenerFechaHoy(): string {
-  try {
-    const hoy = new Date();
-    const year = hoy.getFullYear();
-    // getMonth() devuelve 0-11, por eso se suma 1. padStart asegura dos dígitos.
-    const month = (hoy.getMonth() + 1).toString().padStart(2, '0');
-    const day = hoy.getDate().toString().padStart(2, '0');
-    const hours = hoy.getHours().toString().padStart(2, '0');
-    const minutes = hoy.getMinutes().toString().padStart(2, '0');
+  /**
+    * Obtiene la fecha y hora actual formateada como 'yyyy-MM-dd HH:mm'.
+    * Se utiliza JavaScript nativo para evitar problemas con la instanciación
+    * directa de DatePipe y asegurar la disponibilidad sin depender de la
+    * configuración del módulo o registro de locale para este formato específico.
+    * @returns La fecha y hora actual formateada o una cadena vacía si ocurre un error.
+    */
+  obtenerFechaHoy(): string {
+    try {
+      const hoy = new Date();
+      const year = hoy.getFullYear();
+      // getMonth() devuelve 0-11, por eso se suma 1. padStart asegura dos dígitos.
+      const month = (hoy.getMonth() + 1).toString().padStart(2, '0');
+      const day = hoy.getDate().toString().padStart(2, '0');
+      const hours = hoy.getHours().toString().padStart(2, '0');
+      const minutes = hoy.getMinutes().toString().padStart(2, '0');
 
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
-  } catch (error) {
-    console.error("Error al formatear la fecha actual:", error);
-    return ''; // Devolver cadena vacía en caso de error
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    } catch (error) {
+      console.error("Error al formatear la fecha actual:", error);
+      return ''; // Devolver cadena vacía en caso de error
+    }
   }
-}
 
   // Método principal para generar el HTML del correo/comanda
   getHtmlContent(pedido: Pedido, isComanda: boolean = false): SafeHtml | null {
@@ -451,13 +451,13 @@ export class PaymentService extends BaseService {
       // this.loadInitialData(); // Llamar aquí no garantiza que estén listos
       return this.sanitizer.bypassSecurityTrustHtml('<p>Error: Datos maestros no cargados.</p>');
     }
-     // Asegurarse que allBillingZone esté cargado
-     if (!this.allBillingZone) {
-        console.warn("Billing zones not loaded for HTML generation.");
-        this.allBillingZone = JSON.parse(sessionStorage.getItem('allBillingZone') || 'null');
-        if (!this.allBillingZone) {
-             return this.sanitizer.bypassSecurityTrustHtml('<p>Error: Zonas de facturación no cargadas.</p>');
-        }
+    // Asegurarse que allBillingZone esté cargado
+    if (!this.allBillingZone) {
+      console.warn("Billing zones not loaded for HTML generation.");
+      this.allBillingZone = JSON.parse(sessionStorage.getItem('allBillingZone') || 'null');
+      if (!this.allBillingZone) {
+        return this.sanitizer.bypassSecurityTrustHtml('<p>Error: Zonas de facturación no cargadas.</p>');
+      }
     }
 
 
@@ -469,30 +469,30 @@ export class PaymentService extends BaseService {
     let tarjetaIndex = 0;
     // pedido.totalImpuesto = 0; // El cálculo de IVA total se hace en checkIVAPrice
 
-    // --- Generación HTML Notas ---
-    // Notas de Producción (asociadas a cada item del carrito)
-    // (pedido.carrito ?? []).forEach((item, index) => {
-    //   // Asumiendo que notaProduccion es un array de Notas
-    //   (item.notaProduccion ?? []).forEach(nota => {
-    //     notasProduccionHtml += `
-    //       <tr>
-    //         <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
-    //         <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
-    //         <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota.nota ?? ''}</td>
-    //       </tr>
-    //     `;
-    //   });
-    //    // Si no hay nota específica pero quieres una fila por producto:
-    //    if (!item.notaProduccion || item.notaProduccion.length === 0) {
-    //      notasProduccionHtml += `
-    //        <tr>
-    //          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
-    //          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.obtenerFechaHoy()}</td>
-    //          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">(Sin nota específica)</td>
-    //        </tr>
-    //      `;
-    //    }
-    // });
+    // --- Generación HTML Notas-- -
+    //   Notas de Producción(asociadas a cada item del carrito)
+    (pedido.carrito ?? []).forEach((item, index) => {
+      // Asumiendo que notaProduccion es un array de Notas
+      (item.notaProduccion ?? []).forEach(nota => {
+        notasProduccionHtml += `
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(new Date().toISOString())}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota ?? ''}</td>
+          </tr>
+        `;
+      });
+      // Si no hay nota específica pero quieres una fila por producto:
+      if (!item.notaProduccion || item.notaProduccion.length === 0) {
+        notasProduccionHtml += `
+           <tr>
+             <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
+             <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.obtenerFechaHoy()}</td>
+             <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">(Sin nota específica)</td>
+           </tr>
+         `;
+      }
+    });
 
 
     // Notas Generales del Pedido
@@ -586,7 +586,7 @@ export class PaymentService extends BaseService {
       if (configuracion?.adiciones && configuracion.adiciones.length > 0) {
         carritoHtml += `<tr style="background-color: #f0f0f0;"><td colspan="8" style="padding: 5px 8px; font-weight: bold; color: #333;">Adiciones:</td></tr>`;
         configuracion.adiciones.forEach((adic: Adicion) => {
-           // Asegurar valores numéricos
+          // Asegurar valores numéricos
           const valorUnitarioSinIvaAdic = Number(adic.valorUnitarioSinIva) || 0;
           const valorIvaAdic = Number(adic.valorIva) || 0;
           const precioTotalConIvaAdic = Number(adic.precioTotalConIva) || 0;
@@ -664,7 +664,7 @@ export class PaymentService extends BaseService {
           }
         });
       }
-       carritoHtml += `<tr><td colspan="8" style="border-bottom: 2px solid #ccc; padding: 5px 0;"></td></tr>`; // Separador visual
+      carritoHtml += `<tr><td colspan="8" style="border-bottom: 2px solid #ccc; padding: 5px 0;"></td></tr>`; // Separador visual
     }); // Fin forEach carrito
 
     // --- Secciones HTML ---
@@ -699,17 +699,17 @@ export class PaymentService extends BaseService {
 
     // --- Log para depuración ---
     console.log('Valores para Totales HTML:', {
-        subtotal,
-        envioSinIva,
-        descuentos,
-        totalSinIvaGeneral,
-        totalIVA,
-        totalPagar,
-        excluidos,
-        totalIva5,
-        totalImpo,
-        totalIva19,
-        ivaInfo // Objeto completo de checkIVAPrice
+      subtotal,
+      envioSinIva,
+      descuentos,
+      totalSinIvaGeneral,
+      totalIVA,
+      totalPagar,
+      excluidos,
+      totalIva5,
+      totalImpo,
+      totalIva19,
+      ivaInfo // Objeto completo de checkIVAPrice
     });
 
 
@@ -769,7 +769,7 @@ export class PaymentService extends BaseService {
       <p style="font-size: 14px; margin: 5px 0 5px 20px;">Zona Cobro: ${pedido.envio.zonaCobro ?? 'N/A'}</p>
     </div>` : '';
 
-     const htmlNotasProduccion = notasProduccionHtml ? `
+    const htmlNotasProduccion = notasProduccionHtml ? `
      <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
        <h2 style="color: #444; margin-bottom: 10px;">Notas Producción</h2>
        <table style="width: 100%; border-collapse: collapse;">
@@ -1025,17 +1025,17 @@ export class PaymentService extends BaseService {
 
   // getHtmlPOSContent necesita una refactorización similar a getHtmlContent
   getHtmlPOSContent(pedido: POSPedido, isComanda: boolean = false): SafeHtml | null {
-     if (!pedido) return null;
-     // Implementación similar a getHtmlContent pero adaptada a POSPedido
-     // ... (requiere refactorización similar con validaciones y carga de maestros) ...
+    if (!pedido) return null;
+    // Implementación similar a getHtmlContent pero adaptada a POSPedido
+    // ... (requiere refactorización similar con validaciones y carga de maestros) ...
 
-     // Placeholder - Devuelve un mensaje indicando que necesita implementación
-      console.warn("getHtmlPOSContent needs refactoring similar to getHtmlContent.");
-      const placeholderHtml = `
+    // Placeholder - Devuelve un mensaje indicando que necesita implementación
+    console.warn("getHtmlPOSContent needs refactoring similar to getHtmlContent.");
+    const placeholderHtml = `
       <h1>Comanda POS ${pedido.nroPedido ?? 'N/A'}</h1>
       <p>Contenido detallado de la comanda POS pendiente de implementación.</p>
       `;
-       return this.sanitizer.bypassSecurityTrustHtml(placeholderHtml);
+    return this.sanitizer.bypassSecurityTrustHtml(placeholderHtml);
 
   }
 
@@ -1069,7 +1069,7 @@ export class PaymentService extends BaseService {
     if (!dateString) return 'N/A';
     try {
       const date = new Date(dateString);
-      const datePipe = new DatePipe('es-ES');
+      const datePipe = new DatePipe('en-US');
       return datePipe.transform(date, 'yyyy-MM-dd HH:mm') ?? 'N/A';
     } catch (e) {
       console.error("Error formatting date/hour:", dateString, e);

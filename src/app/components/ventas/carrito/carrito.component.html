@@ -81,11 +81,28 @@
                         </div>
                       </td>
                       <td class="align-middle text-center">
-                        <button class="btn btn-outline-danger btn-sm" 
-                                (click)="removeThisProduct(itemCarrito)"
-                                title="Eliminar del carrito">
-                          <i class="pi pi-trash"></i>
-                        </button>
+                        <div class="btn-group">
+                          <button class="btn btn-outline-danger btn-sm" 
+                                  (click)="removeThisProduct(itemCarrito)"
+                                  title="Eliminar del carrito">
+                            <i class="pi pi-trash"></i>
+                          </button>
+                          <button class="btn btn-outline-primary btn-sm"
+                                  (click)="agregarNotaProduccion(itemCarrito)"
+                                  title="Agregar nota de producción">
+                            <i class="pi pi-pencil"></i>
+                          </button>
+                          <button class="btn btn-outline-info btn-sm"
+                                  (click)="mostrarNotasExistentes(itemCarrito)"
+                                  [disabled]="!itemCarrito.notaProduccion || itemCarrito.notaProduccion.length === 0"
+                                  title="Ver notas de producción">
+                            <i class="pi pi-list"></i>
+                            <span *ngIf="itemCarrito.notaProduccion && itemCarrito.notaProduccion.length > 0" 
+                                  class="badge bg-danger rounded-pill ms-1">
+                              {{itemCarrito.notaProduccion.length}}
+                            </span>
+                          </button>
+                        </div>
                       </td>
                       <td class="align-middle text-center">
                         <span class="total-value">

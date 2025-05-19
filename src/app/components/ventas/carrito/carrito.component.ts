@@ -1,9 +1,10 @@
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, Input, OnInit, EventEmitter, Output } from "@angular/core";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
 import { Pedido } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";
+import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 
 @Component({
   selector: "app-carrito",
@@ -19,18 +20,31 @@ export class CarritoComponent implements OnInit {
   precioproducto: number = 0;
   preciosAdiciones: number = 0;
   preciosPreferencias: number = 0;
+  
+  // Modal para notas de producción
+  notaProduccionForm: FormGroup;
+  productoSeleccionado: any = null;
 
   @Input()
   public pedido: Pedido;
+  
+  @Output() 
+  notaAgregada = new EventEmitter<any>();
 
   constructor(
     private carsingleton: CartSingletonService,
     private service: VentasService,
-    private toastrService: ToastrService
+    private toastrService: ToastrService,
+    private formBuilder: FormBuilder
   ) {}
 
   ngOnInit(): void {
     this.refreshCartWithProducts();
+    
+    // Inicializar formulario de notas
+    this.notaProduccionForm = this.formBuilder.group({
+      nota: ['', Validators.required]
+    });
   }
 
   refreshCartWithProducts(): void {
@@ -42,6 +56,62 @@ export class CarritoComponent implements OnInit {
   removeThisProduct(producto: any): void {
     if (!producto) return;
     this.carsingleton.removeProduct(producto);
+  }
+  
+  agregarNotaProduccion(producto: any): void {
+    this.productoSeleccionado = producto;
+    
+    // Mostrar Sweet Alert con campo de texto para la nota
+    Swal.fire({
+      title: 'Agregar Nota de Producción',
+      html: `
+        <div class="text-start mb-3">
+          <span class="fw-bold">${producto?.producto?.crearProducto?.titulo || 'Producto'}</span>
+        </div>
+        <textarea id="nota-produccion" class="form-control" placeholder="Escribe la nota de producción aquí..." rows="4"></textarea>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar Nota',
+      cancelButtonText: 'Cancelar',
+      showClass: {
+        popup: 'animate__animated animate__fadeInDown'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutUp'
+      },
+      preConfirm: () => {
+        const nota = (document.getElementById('nota-produccion') as HTMLTextAreaElement).value;
+        if (!nota.trim()) {
+          Swal.showValidationMessage('Por favor ingresa una nota');
+          return false;
+        }
+        return nota;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.guardarNotaProduccion(producto, result.value);
+      }
+    });
+  }
+  
+  guardarNotaProduccion(producto: any, nota: string): void {
+    // Inicializar el array de notas si no existe
+    if (!producto.notaProduccion) {
+      producto.notaProduccion = [];
+    }
+    
+    // Agregar la nueva nota
+    producto.notaProduccion.push(nota);
+    
+    // Actualizar localStorage y carrito
+    localStorage.setItem('carrito', JSON.stringify(this.productos));
+    this.carsingleton.refreshCart();
+    
+    // Emitir evento de nota agregada
+    this.notaAgregada.emit(producto);
+    
+    // Mostrar mensaje de éxito
+    this.toastrService.success('Nota de producción agregada correctamente', 'Éxito');
   }
 
   private calculateAdicionesPrice(adiciones: any[]): number {
@@ -188,5 +258,69 @@ export class CarritoComponent implements OnInit {
         });
       },
     });
+  }
+  
+  // Método para mostrar las notas existentes
+  mostrarNotasExistentes(producto: any): void {
+    if (!producto.notaProduccion || producto.notaProduccion.length === 0) {
+      this.toastrService.info('Este producto no tiene notas de producción', 'Información');
+      return;
+    }
+    
+    let notasHtml = '';
+    producto.notaProduccion.forEach((nota, index) => {
+      notasHtml += `
+        <div class="note-item mb-2 p-2 border-bottom">
+          <div class="d-flex justify-content-between">
+            <span class="note-number fw-bold">${index + 1}</span>
+            <span class="note-actions">
+              <button type="button" class="btn btn-sm btn-outline-danger delete-nota" data-index="${index}">
+                <i class="pi pi-trash"></i>
+              </button>
+            </span>
+          </div>
+          <div class="note-content mt-1">${nota}</div>
+        </div>
+      `;
+    });
+    
+    Swal.fire({
+      title: 'Notas de Producción',
+      html: `
+        <div class="product-title mb-3 fw-bold">
+          ${producto?.producto?.crearProducto?.titulo || 'Producto'}
+        </div>
+        <div class="notes-container" style="max-height: 300px; overflow-y: auto; text-align: left;">
+          ${notasHtml}
+        </div>
+      `,
+      showConfirmButton: true,
+      confirmButtonText: 'Cerrar',
+      width: '600px',
+      didOpen: () => {
+        // Agregar event listeners para los botones de eliminar
+        document.querySelectorAll('.delete-nota').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const target = e.currentTarget as HTMLElement;
+            const index = parseInt(target.getAttribute('data-index') || '0');
+            this.eliminarNotaProduccion(producto, index);
+            Swal.close();
+          });
+        });
+      }
+    });
+  }
+  
+  eliminarNotaProduccion(producto: any, index: number): void {
+    if (!producto.notaProduccion) return;
+    
+    producto.notaProduccion.splice(index, 1);
+    
+    // Actualizar localStorage y carrito
+    localStorage.setItem('carrito', JSON.stringify(this.productos));
+    this.carsingleton.refreshCart();
+    
+    // Mostrar mensaje de éxito
+    this.toastrService.success('Nota de producción eliminada correctamente', 'Éxito');
   }
 }

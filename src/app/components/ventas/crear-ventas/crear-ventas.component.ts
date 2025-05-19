@@ -1192,6 +1192,33 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   enterStep($event: MovingDirection, index: number) {
     console.log('Entrando al paso:', index);
     
+    // Intentar cargar datos del pedido desde sessionStorage
+    try {
+      const pedidoTemporal = sessionStorage.getItem('pedidoTemporal');
+      if (pedidoTemporal) {
+        const pedidoGuardado = JSON.parse(pedidoTemporal);
+        
+        // Asegurarse de que no perdemos las notas
+        if (pedidoGuardado.notasPedido) {
+          if (!this.pedidoGral.notasPedido) {
+            // Si no existe notasPedido en el pedido actual, inicializarlo con el guardado
+            this.pedidoGral.notasPedido = pedidoGuardado.notasPedido;
+          } else {
+            // Preservar todas las categorías de notas
+            this.pedidoGral.notasPedido.notasProduccion = pedidoGuardado.notasPedido.notasProduccion || [];
+            this.pedidoGral.notasPedido.notasCliente = pedidoGuardado.notasPedido.notasCliente || [];
+            this.pedidoGral.notasPedido.notasDespachos = pedidoGuardado.notasPedido.notasDespachos || [];
+            this.pedidoGral.notasPedido.notasEntregas = pedidoGuardado.notasPedido.notasEntregas || [];
+            this.pedidoGral.notasPedido.notasFacturacionPagos = pedidoGuardado.notasPedido.notasFacturacionPagos || [];
+          }
+          
+          console.log('Notas cargadas desde sessionStorage:', this.pedidoGral.notasPedido);
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar pedido desde sessionStorage:', error);
+    }
+    
     // Actualizar el estado en función del paso actual
     if (index == 3) {
       // Paso de cliente
@@ -1296,6 +1323,9 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     
     // Forzar la detección de cambios para actualizar la vista
     this.ref.detectChanges();
+    
+    // Al finalizar cualquier cambio de paso, guardar el estado actual
+    this.guardarEstadoPedidoEnSession();
   }
 
   @Input("icon") public icon;
@@ -2033,5 +2063,88 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         reject(error);
       }
     });
+  }
+
+  public onNotaAgregada(event: any): void {
+    // Asegurarse de que notasPedido existe
+    if (!this.pedidoGral.notasPedido) {
+      this.pedidoGral.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
+    }
+    
+    // Transferir la nota de producción del producto al objeto notasPedido
+    if (event && event.notaProduccion && event.notaProduccion.length > 0) {
+      // Obtener la última nota agregada (la más reciente)
+      const nuevaNota = event.notaProduccion[event.notaProduccion.length - 1];
+      
+      // Crear una nota estructurada para el pedido
+      const notaProduccion = {
+        fecha: new Date().toISOString(),
+        descripcion: nuevaNota,
+        usuario: this.formulario.value.nombres_completos || 'Usuario',
+        producto: event.producto?.crearProducto?.titulo || 'Producto sin nombre'
+      };
+      
+      // Agregar la nota al array de notasProduccion
+      this.pedidoGral.notasPedido.notasProduccion.push(notaProduccion);
+    }
+    
+    // Actualizar el carrito en el localStorage
+    localStorage.setItem('carrito', JSON.stringify(this.pedidoGral.carrito));
+    
+    // Guardar el estado del pedido en sessionStorage para persistencia entre pasos
+    this.guardarEstadoPedidoEnSession();
+    
+    // Opcional: mostrar un mensaje de éxito
+    console.log('Nota de producción agregada:', event);
+  }
+
+  /**
+   * Maneja el evento notasActualizadas del componente de notas
+   * @param event Información actualizada de notas
+   */
+  public onNotasActualizadas(event: any): void {
+    // Verificar que el evento tenga la información necesaria
+    if (event && event.notasPedido) {
+      // Actualizar las notas del pedido
+      this.pedidoGral.notasPedido = event.notasPedido;
+      
+      // Si el evento incluye el carrito actualizado, actualizar también el carrito
+      if (event.carrito) {
+        this.pedidoGral.carrito = event.carrito;
+      }
+      
+      // Guardar el pedido completo en sessionStorage para persistencia entre pasos
+      this.guardarEstadoPedidoEnSession();
+      
+      // Actualizar localStorage
+      localStorage.setItem('carrito', JSON.stringify(this.pedidoGral.carrito));
+      
+      // Log detallado para verificar todas las categorías de notas
+      console.log('Notas actualizadas recibidas del componente de notas:');
+      console.log('- Producción:', this.pedidoGral.notasPedido?.notasProduccion?.length || 0, 'notas');
+      console.log('- Cliente:', this.pedidoGral.notasPedido?.notasCliente?.length || 0, 'notas');
+      console.log('- Despachos:', this.pedidoGral.notasPedido?.notasDespachos?.length || 0, 'notas');
+      console.log('- Entregas:', this.pedidoGral.notasPedido?.notasEntregas?.length || 0, 'notas');
+      console.log('- Facturación:', this.pedidoGral.notasPedido?.notasFacturacionPagos?.length || 0, 'notas');
+    }
+  }
+
+  /**
+   * Guarda el estado actual del pedido en sessionStorage para mantener persistencia entre pasos
+   */
+  private guardarEstadoPedidoEnSession(): void {
+    try {
+      // Crear una copia limpia del pedido para evitar referencias circulares
+      const pedidoGuardado = JSON.parse(JSON.stringify(this.pedidoGral));
+      sessionStorage.setItem('pedidoTemporal', JSON.stringify(pedidoGuardado));
+    } catch (error) {
+      console.error('Error al guardar el pedido en sessionStorage:', error);
+    }
   }
 }
