@@ -11,5 +11,7 @@ export interface ProcesoComercial {
     aceptaVariable: boolean;
     pago: any[];
     aceptaComentarios: boolean;
-    configProcesoComercialActivo?: boolean
+    configProcesoComercialActivo?: boolean;
+    aceptaGenero?: boolean;
+    aceptaOcasion?: boolean;
 }

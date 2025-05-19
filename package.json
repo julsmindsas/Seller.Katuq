@@ -14,7 +14,7 @@
     "prebuild": "npm run update-version",
     "prebuild:prod": "npm run update-version",
     "actualizar-compilar": "npm run update-version && npm run build",    
-    "release": "npm run update-version && ng build --configuration=production"
+    "release": "npm run update-version && ng build --configuration=production && firebase deploy"
   },
   "private": true,
   "dependencies": {

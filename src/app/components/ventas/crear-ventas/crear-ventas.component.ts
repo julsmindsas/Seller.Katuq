@@ -331,7 +331,53 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.indicativo_celular_facturacion = "57";
     this.indicativo_celular_entrega = "57";
     this.indicativo_celular_entrega2 = "57";
+    
+    // Cargar bodegas y verificar si hay una bodega guardada en localStorage
     this.cargarBodegas();
+    
+    // Verificar si hay una ciudad seleccionada previamente en localStorage
+    const ciudadGuardada = localStorage.getItem('selectedCity');
+    if (ciudadGuardada) {
+      this.selectedCity = ciudadGuardada;
+      // Si hay una ciudad guardada, utilizarla para el pedido
+      if (this.pedidoGral && !this.pedidoGral.envio) {
+        this.pedidoGral.envio = {
+          ciudad: ciudadGuardada
+        } as any;
+      } else if (this.pedidoGral && this.pedidoGral.envio) {
+        this.pedidoGral.envio.ciudad = ciudadGuardada;
+      }
+    }
+    
+    // Verificar si hay una bodega guardada en localStorage
+    const bodegaGuardada = JSON.parse(localStorage.getItem('warehouse') || 'null');
+    if (bodegaGuardada) {
+      // Establecer la bodega en el objeto del componente
+      this.selectedWarehouse = bodegaGuardada.nombre;
+      this.bodega = bodegaGuardada;
+      
+      // Asignar la bodega al pedido
+      if (this.pedidoGral) {
+        this.pedidoGral.bodegaId = bodegaGuardada.idBodega;
+      }
+      
+      // Programar la carga de productos después de que los componentes estén inicializados
+      setTimeout(() => {
+        if (this.productos) {
+          this.productos.bodega = bodegaGuardada;
+          
+          // Si también hay una ciudad seleccionada, asignarla al componente productos
+          if (this.selectedCity && this.selectedCity !== 'seleccione') {
+            this.productos.ciudad = this.selectedCity;
+          }
+          
+          // Cargar productos con los filtros establecidos
+          if (typeof this.productos.cargarTodo === 'function') {
+            this.productos.cargarTodo();
+          }
+        }
+      }, 0);
+    }
   }
 
   // Método para cargar las zonas de cobro
@@ -1142,24 +1188,32 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.pedidoGral.envio = {
         ...(this.pedidoGral.envio || {}),
         ciudad: selectedValue
-      } as any; // Usar 'as any' para evitar problemas de tipo temporalmente
+      } as any;
       
-      // Asignar la ciudad seleccionada al componente catálogo
+      // Guardar la ciudad seleccionada en localStorage
+      localStorage.setItem('selectedCity', selectedValue);
+      
+      // Actualizar el componente catálogo con la ciudad seleccionada
       if (this.productos) {
-        this.productos.ciudad = this.pedidoGral.envio?.ciudad || this.selectedCity || '';
-        if (this.isChannelManual && this.bodega) {
+        this.productos.ciudad = selectedValue;
+        
+        // Si hay una bodega seleccionada, asignarla también
+        if (this.bodega) {
           this.productos.bodega = this.bodega;
         }
-        // Llamar al método que recarga el catálogo filtrado según la ciudad
+        
+        // Llamar al método que recarga el catálogo filtrado
         if (typeof this.productos.cargarTodo === 'function') {
           this.productos.cargarTodo();
+          this.toastrService.success('Catálogo filtrado por ciudad: ' + selectedValue, 'Éxito');
         }
       }
       
       console.log(`Ciudad seleccionada: ${this.pedidoGral.envio?.ciudad}`);
 
+      // Filtrar direcciones de entrega por la ciudad seleccionada
       if (this.originalDataEntregas) {
-        this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.pedidoGral.envio?.ciudad) || [];
+        this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.selectedCity) || [];
         if (this.datosEntregas.length === 0) {
           Swal.fire({
             title: "No encontrado!",
@@ -1176,6 +1230,17 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       }
     } else {
       this.selectedCity = '';
+      // Eliminar la ciudad guardada si se selecciona "seleccione"
+      localStorage.removeItem('selectedCity');
+      
+      // Limpiar el filtro de ciudad en el catálogo
+      if (this.productos) {
+        this.productos.ciudad = '';
+        // Recargar productos sin filtro de ciudad
+        if (typeof this.productos.cargarTodo === 'function') {
+          this.productos.cargarTodo();
+        }
+      }
     }
   }
 
@@ -1860,11 +1925,11 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.bodegaService.getBodegasByChannelName('Venta Asistida').subscribe({
       next: (bodegas) => {
         this.bodegas = bodegas;
-        // Intentar recuperar la bodega guardada
-        const bodegaGuardada = JSON.parse(localStorage.getItem('warehouse') || 'null');
-        if (bodegaGuardada) {
-          this.onWarehouseChange({ target: { value: bodegaGuardada.idBodega } } as any);
-        }
+        // Ya no necesitamos esta parte aquí, se maneja en ngOnInit
+        // const bodegaGuardada = JSON.parse(localStorage.getItem('warehouse') || 'null');
+        // if (bodegaGuardada) {
+        //   this.onWarehouseChange({ target: { value: bodegaGuardada.idBodega } } as any);
+        // }
       },
       error: (error) => {
         console.error('Error al cargar bodegas:', error);
@@ -1883,37 +1948,36 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.bodega = selected;
       localStorage.setItem('warehouse', JSON.stringify(selected));
 
-      // Actualizar el channel en el pedido
+      // Actualizar el bodegaId en el pedido
       if (this.pedidoGral) {
         this.pedidoGral.bodegaId = selected.idBodega;
       }
 
-      if (this.selectedCity && this.selectedCity !== 'seleccione') {
-        this.onSelectCity({ target: { value: this.selectedCity } } as any);
+      // Actualizar productos con la nueva bodega seleccionada
+      if (this.productos) {
+        this.productos.bodega = selected;
+        
+        // Si también hay una ciudad seleccionada, aplicarla junto con la bodega
+        if (this.selectedCity && this.selectedCity !== 'seleccione') {
+          this.productos.ciudad = this.selectedCity;
+          // Refrescar la lista de productos con los nuevos filtros
+          if (typeof this.productos.cargarTodo === 'function') {
+            this.productos.cargarTodo();
+          }
+        } else {
+          // Si no hay ciudad, solo actualizar con la bodega
+          if (typeof this.productos.cargarTodo === 'function') {
+            this.productos.cargarTodo();
+          }
+        }
+        
+        this.toastrService.success('Bodega seleccionada: ' + selected.nombre, 'Éxito');
       }
-
-      // this.productos.bodega = selectedId;
-
-      // // Cargar el inventario de la bodega seleccionada
-      // this.inventarioService.obtenerInventarioPorBodega(selected.id).subscribe({
-      //   next: (inventario) => {
-      //     // Actualizar el catálogo con el inventario de la bodega
-      //     if (this.productos) {
-      //       this.productos.productos = inventario;
-      //       this.productos.obtenerFiltros();
-      //     }
-      //     this.toastrService.success('Inventario cargado correctamente', 'Éxito');
-      //   },
-      //   error: (error) => {
-      //     console.error('Error al cargar el inventario:', error);
-      //     this.toastrService.error('Error al cargar el inventario', 'Error');
-      //   }
-      // });
     } else {
       this.selectedWarehouse = '';
       this.bodega = null;
       if (this.pedidoGral) {
-        this.pedidoGral.channel = undefined;
+        this.pedidoGral.bodegaId = undefined;
       }
     }
   }

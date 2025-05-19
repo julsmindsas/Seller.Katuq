@@ -59,6 +59,21 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   public caracteristicasRevisadas: boolean = false;
   public garantiasRevisadas: boolean = false;
   public condicionesRevisadas: boolean = false;
+  
+  // Propiedades computadas para verificar las propiedades no definidas en la interfaz
+  get hasAceptaGenero(): boolean {
+    if (!this.producto?.procesoComercial) return false;
+    const aceptaGenero = (this.producto.procesoComercial as any)['aceptaGenero'];
+    const tieneGeneros = this.producto.procesoComercial.genero && this.producto.procesoComercial.genero.length > 0;
+    return aceptaGenero || tieneGeneros;
+  }
+  
+  get hasAceptaOcasion(): boolean {
+    if (!this.producto?.procesoComercial) return false;
+    const aceptaOcasion = (this.producto.procesoComercial as any)['aceptaOcasion'];
+    const tieneOcasiones = this.producto.procesoComercial.ocasion && this.producto.procesoComercial.ocasion.length > 0;
+    return aceptaOcasion || tieneOcasiones;
+  }
 
   ngOnDestroy(): void {
     // Guardar estados en localStorage
@@ -567,9 +582,9 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
   crearTarjetaItem(tarjeta: any): any {
     return this.fb.group({
-      para: [tarjeta.para],
-      mensaje: [tarjeta.mensaje],
-      de: [tarjeta.de]
+      para: [tarjeta.para, Validators.required],
+      mensaje: [tarjeta.mensaje, Validators.required],
+      de: [tarjeta.de, Validators.required]
     });
   }
 
@@ -584,9 +599,17 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   addToCar() {
-    console.log('Método addToCar ejecutado'); // Agregar log para verificar la ejecución
+    console.log('Método addToCar ejecutado');
 
     try {
+      // Marcar todos los campos como tocados para mostrar errores de validación
+      this.markAllFieldsAsTouched();
+      
+      // Siempre validar formulario antes de proceder, sin importar configProcesoComercialActivo
+      if (!this.validateRequiredFields()) {
+        return;
+      }
+
       this.producto.rating = this.ratingForm.value.rating;
       this.productoConfiguradoForm.controls.datosEntrega.setValue(this.datosEntrega.value);
       this.productoConfiguradoForm.controls.cantidad.setValue(this.cantidad);
@@ -600,7 +623,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
         cantidad: this.cantidad,
       };
 
-      console.log('ProductoCompra creado:', ProductoCompra); // Log del objeto creado
+      console.log('ProductoCompra creado:', ProductoCompra);
 
       if (!this.isEdit && !this.isRebuy) {
         console.log('Agregar al carrito...');
@@ -628,6 +651,135 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       console.error('Error al agregar al carrito:', error);
       this.toastrService.error('Hubo un problema al agregar el producto al carrito', 'Error');
     }
+  }
+
+  /**
+   * Marca todos los campos de los formularios como tocados para mostrar validaciones
+   */
+  markAllFieldsAsTouched(): void {
+    // Marcar campos de datosEntrega
+    Object.keys(this.datosEntrega.controls).forEach(key => {
+      const control = this.datosEntrega.get(key);
+      if (control) {
+        control.markAsTouched();
+        control.updateValueAndValidity();
+      }
+    });
+
+    // Marcar campos de tarjetas
+    if (this.producto?.procesoComercial?.llevaTarjeta && !this.SinTarjeta) {
+      this.tarjetas.controls.forEach(tarjetaGroup => {
+        Object.keys(tarjetaGroup['controls']).forEach(key => {
+          const control = tarjetaGroup.get(key);
+          if (control) {
+            control.markAsTouched();
+            control.updateValueAndValidity();
+          }
+        });
+      });
+    }
+
+    // Actualizar UI para mostrar validaciones
+    this.activeAccordionPanel = this.determineInitialOpenSection();
+  }
+
+  /**
+   * Valida los campos requeridos en el formulario y marca todos como tocados
+   * para mostrar mensajes de error
+   * @returns true si el formulario es válido, false en caso contrario
+   */
+  validateRequiredFields(): boolean {
+    console.log('Ejecutando validateRequiredFields con configuración:', this.producto?.procesoComercial);
+    
+    // Primero vamos a validar los campos obligatorios según la configuración del producto
+    let hasValidationErrors = false;
+    
+    // Verificar si el formulario datosEntrega tiene campos obligatorios que deban validarse
+    if (this.producto?.procesoComercial?.llevaCalendario) {
+      // Si debe llevar calendario, estos campos son obligatorios
+      if (!this.datosEntrega.get('fechaEntrega')?.value) {
+        this.toastrService.warning('Por favor seleccione una fecha de entrega', 'Campo requerido');
+        this.activeAccordionPanel = 'datosEntregaPanel';
+        hasValidationErrors = true;
+      }
+      
+      if (!this.datosEntrega.get('formaEntrega')?.value) {
+        this.toastrService.warning('Por favor seleccione una forma de entrega', 'Campo requerido');
+        this.activeAccordionPanel = 'datosEntregaPanel';
+        hasValidationErrors = true;
+      }
+      
+      if (!this.datosEntrega.get('horarioEntrega')?.value) {
+        this.toastrService.warning('Por favor seleccione un horario de entrega', 'Campo requerido');
+        this.activeAccordionPanel = 'datosEntregaPanel';
+        hasValidationErrors = true;
+      }
+    }
+    
+    // Validar colores si son requeridos
+    if (this.producto?.procesoComercial?.aceptaColorDecoracion) {
+      const colores = this.datosEntrega.get('colores')?.value;
+      if (!colores || colores.length === 0) {
+        this.toastrService.warning('Por favor seleccione al menos un color', 'Campo requerido');
+        this.activeAccordionPanel = 'datosEntregaPanel';
+        hasValidationErrors = true;
+      }
+    }
+    
+    // Validar género si es requerido (usando la propiedad computada hasAceptaGenero)
+    if (this.hasAceptaGenero && !this.datosEntrega.get('genero')?.value) {
+      this.toastrService.warning('Por favor seleccione un género', 'Campo requerido');
+      this.activeAccordionPanel = 'datosEntregaPanel';
+      hasValidationErrors = true;
+    }
+    
+    // Validar ocasión si es requerida (usando la propiedad computada hasAceptaOcasion)
+    if (this.hasAceptaOcasion && !this.datosEntrega.get('ocasion')?.value) {
+      this.toastrService.warning('Por favor seleccione una ocasión', 'Campo requerido');
+      this.activeAccordionPanel = 'datosEntregaPanel';
+      hasValidationErrors = true;
+    }
+    
+    // Validar observaciones si son requeridas
+    if (this.producto?.procesoComercial?.aceptaComentarios && !this.datosEntrega.get('observaciones')?.value) {
+      this.toastrService.warning('Por favor ingrese las observaciones', 'Campo requerido');
+      this.activeAccordionPanel = 'datosEntregaPanel';
+      hasValidationErrors = true;
+    }
+
+    // Si el producto requiere tarjetas y no se ha seleccionado "Sin Tarjeta"
+    if (this.producto?.procesoComercial?.llevaTarjeta && !this.SinTarjeta) {
+      // Validar que al menos haya una tarjeta
+      if (this.tarjetas.length === 0) {
+        this.toastrService.warning('Debe agregar al menos una tarjeta o seleccionar "Sin Tarjeta"', 'Campo requerido');
+        this.activeAccordionPanel = 'tarjetasPanel';
+        return false;
+      }
+      
+      // Verificar si alguna tarjeta tiene campos inválidos
+      let tarjetasInvalidas = false;
+      this.tarjetas.controls.forEach(tarjetaGroup => {
+        if (tarjetaGroup.invalid) {
+          tarjetasInvalidas = true;
+        }
+      });
+      
+      if (tarjetasInvalidas) {
+        this.toastrService.warning('Por favor complete todos los campos de las tarjetas', 'Campos requeridos');
+        this.activeAccordionPanel = 'tarjetasPanel';
+        hasValidationErrors = true;
+      }
+    }
+    
+    // Verificar si se necesitan preferencias
+    if (this.producto?.procesoComercial?.aceptaVariable && !this.hasPreferencia()) {
+      this.toastrService.warning('Debe seleccionar al menos una preferencia', 'Campo requerido');
+      this.activeAccordionPanel = 'preferenciasPanel';
+      hasValidationErrors = true;
+    }
+    
+    console.log('Resultado validación:', !hasValidationErrors);
+    return !hasValidationErrors;
   }
 
   mostrarPrecios() {
@@ -1064,9 +1216,9 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
           tarjetas: this.fb.array([]),
         });
         const tarjeta = this.fb.group({
-          para: [''],
-          mensaje: [''],
-          de: [''],
+          para: ['', Validators.required],
+          mensaje: ['', Validators.required],
+          de: ['', Validators.required],
         });
         const tarjetas = this.tarjetasForm.get('tarjetas') as FormArray;
         tarjetas.push(tarjeta);
@@ -1079,9 +1231,9 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   addTarjeta() {
 
     const tarjeta = this.fb.group({
-      para: [''],
-      mensaje: [''],
-      de: [''],
+      para: ['', Validators.required],
+      mensaje: ['', Validators.required],
+      de: ['', Validators.required],
     });
 
     this.tarjetas.push(tarjeta);
@@ -1225,6 +1377,295 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     } catch (e) {
       // Si hay algún error procesando el HTML, devolver fragmento limitado
       return descripcion.substring(0, 150) + '...';
+    }
+  }
+
+  /**
+   * Verifica si el botón de agregar al carrito debe estar habilitado
+   * @returns true si el botón debe estar habilitado, false en caso contrario
+   */
+  isCartButtonDisabled(): boolean {
+    // Verificar formulario datosEntrega pero solo los campos que aplican según la configuración
+    let datosEntregaInvalid = false;
+    
+    // Solo validar fechaEntrega si llevaCalendario es true
+    if (this.producto?.procesoComercial?.llevaCalendario) {
+      if (!this.datosEntrega.get('fechaEntrega')?.value) datosEntregaInvalid = true;
+      if (!this.datosEntrega.get('formaEntrega')?.value) datosEntregaInvalid = true;
+      if (!this.datosEntrega.get('horarioEntrega')?.value) datosEntregaInvalid = true;
+    }
+    
+    // Solo validar colores si aceptaColorDecoracion es true
+    if (this.producto?.procesoComercial?.aceptaColorDecoracion) {
+      const colores = this.datosEntrega.get('colores')?.value;
+      if (!colores || colores.length === 0) datosEntregaInvalid = true;
+    }
+    
+    // Validar género si es requerido (usando la propiedad computada hasAceptaGenero)
+    if (this.hasAceptaGenero) {
+      if (!this.datosEntrega.get('genero')?.value) datosEntregaInvalid = true;
+    }
+    
+    // Validar ocasión si es requerida (usando la propiedad computada hasAceptaOcasion)
+    if (this.hasAceptaOcasion) {
+      if (!this.datosEntrega.get('ocasion')?.value) datosEntregaInvalid = true;
+    }
+    
+    // Validar observaciones si son requeridas
+    if (this.producto?.procesoComercial?.aceptaComentarios && !this.datosEntrega.get('observaciones')?.value) {
+      this.toastrService.warning('Por favor ingrese las observaciones', 'Campo requerido');
+      this.activeAccordionPanel = 'datosEntregaPanel';
+      datosEntregaInvalid = true;
+    }
+    
+    console.log('datosEntrega.invalid (calculado):', datosEntregaInvalid);
+    
+    // Verificar tarjetas solo si llevaTarjeta es true
+    const tarjetasRequeridas = this.producto?.procesoComercial?.llevaTarjeta && !this.SinTarjeta && this.tarjetas.length === 0;
+    console.log('tarjetasRequeridas:', tarjetasRequeridas, {
+      llevaTarjeta: this.producto?.procesoComercial?.llevaTarjeta,
+      SinTarjeta: this.SinTarjeta,
+      tarjetasLength: this.tarjetas.length
+    });
+
+    // Si tiene tarjetas, verificar que estén completas
+    let tarjetasInvalidas = false;
+    if (this.producto?.procesoComercial?.llevaTarjeta && !this.SinTarjeta && this.tarjetas.length > 0) {
+      this.tarjetas.controls.forEach(tarjetaGroup => {
+        if (tarjetaGroup.invalid) {
+          tarjetasInvalidas = true;
+        }
+      });
+    }
+    console.log('tarjetasInvalidas:', tarjetasInvalidas);
+
+    // Verificar preferencias solo si aceptaVariable es true
+    const preferenciasRequeridas = this.producto?.procesoComercial?.aceptaVariable && !this.hasPreferencia();
+    console.log('preferenciasRequeridas:', preferenciasRequeridas, {
+      aceptaVariable: this.producto?.procesoComercial?.aceptaVariable,
+      hasPreferencia: this.hasPreferencia()
+    });
+
+    // Resultado final
+    const isDisabled = datosEntregaInvalid || tarjetasRequeridas || tarjetasInvalidas || preferenciasRequeridas;
+    console.log('Botón deshabilitado:', isDisabled);
+    
+    return isDisabled;
+  }
+
+  /**
+   * Muestra información de depuración para ayudar a identificar por qué el botón está deshabilitado
+   */
+  showDebugInfo(): void {
+    // Construir mensaje de diagnóstico
+    let debugMessage = '<strong>Diagnóstico de validación:</strong><br><br>';
+    let errorEncontrado = false;
+    
+    // Verificar datosEntrega pero solo campos que son realmente requeridos
+    debugMessage += '<strong>Configuración del producto:</strong><br>';
+    if (this.producto?.procesoComercial) {
+      const pc = this.producto.procesoComercial;
+      debugMessage += `- llevaCalendario: ${pc.llevaCalendario ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br>`;
+      debugMessage += `- aceptaColorDecoracion: ${pc.aceptaColorDecoracion ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br>`;
+      debugMessage += `- aceptaComentarios: ${pc.aceptaComentarios ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br>`;
+      debugMessage += `- aceptaGenero (computed): ${this.hasAceptaGenero ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br>`;
+      debugMessage += `- aceptaOcasion (computed): ${this.hasAceptaOcasion ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br>`;
+      debugMessage += `- llevaTarjeta: ${pc.llevaTarjeta ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br>`;
+      debugMessage += `- aceptaVariable: ${pc.aceptaVariable ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br><br>`;
+    }
+    
+    // Verificar campos que son requeridos según la configuración
+    debugMessage += '<strong>Estado de campos requeridos:</strong><br>';
+    
+    // Calendario, forma y horario entrega
+    if (this.producto?.procesoComercial?.llevaCalendario) {
+      const fechaEntrega = this.datosEntrega.get('fechaEntrega')?.value;
+      const formaEntrega = this.datosEntrega.get('formaEntrega')?.value;
+      const horarioEntrega = this.datosEntrega.get('horarioEntrega')?.value;
+      
+      debugMessage += `- Fecha de entrega: ${fechaEntrega ? '<span class="text-success">Completado</span>' : '<span class="text-danger">Faltante</span>'}<br>`;
+      debugMessage += `- Forma de entrega: ${formaEntrega ? '<span class="text-success">Completado</span>' : '<span class="text-danger">Faltante</span>'}<br>`;
+      debugMessage += `- Horario de entrega: ${horarioEntrega ? '<span class="text-success">Completado</span>' : '<span class="text-danger">Faltante</span>'}<br>`;
+      
+      if (!fechaEntrega || !formaEntrega || !horarioEntrega) {
+        errorEncontrado = true;
+      }
+    }
+    
+    // Colores
+    if (this.producto?.procesoComercial?.aceptaColorDecoracion) {
+      const colores = this.datosEntrega.get('colores')?.value;
+      debugMessage += `- Colores: ${colores && colores.length > 0 ? '<span class="text-success">Seleccionados</span>' : '<span class="text-danger">Faltantes</span>'}<br>`;
+      
+      if (!colores || colores.length === 0) {
+        errorEncontrado = true;
+      }
+    }
+    
+    // Género
+    if (this.hasAceptaGenero) {
+      const genero = this.datosEntrega.get('genero')?.value;
+      debugMessage += `- Género: ${genero ? '<span class="text-success">Seleccionado</span>' : '<span class="text-danger">Faltante</span>'}<br>`;
+      
+      if (!genero) {
+        errorEncontrado = true;
+      }
+    }
+    
+    // Ocasión
+    if (this.hasAceptaOcasion) {
+      const ocasion = this.datosEntrega.get('ocasion')?.value;
+      debugMessage += `- Ocasión: ${ocasion ? '<span class="text-success">Seleccionada</span>' : '<span class="text-danger">Faltante</span>'}<br>`;
+      
+      if (!ocasion) {
+        errorEncontrado = true;
+      }
+    }
+    
+    // Observaciones
+    if (this.producto?.procesoComercial?.aceptaComentarios) {
+      const observaciones = this.datosEntrega.get('observaciones')?.value;
+      debugMessage += `- Observaciones: ${observaciones ? '<span class="text-success">Completadas</span>' : '<span class="text-danger">Faltantes</span>'}<br>`;
+      
+      if (!observaciones) {
+        errorEncontrado = true;
+      }
+    }
+    
+    debugMessage += '<br>';
+    
+    // Verificar tarjetas
+    if (this.producto?.procesoComercial?.llevaTarjeta) {
+      debugMessage += '<strong>Estado de tarjetas:</strong><br>';
+      debugMessage += `- Opción "Sin Tarjeta" seleccionada: ${this.SinTarjeta ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br>`;
+      
+      if (!this.SinTarjeta) {
+        debugMessage += `- Número de tarjetas: ${this.tarjetas.length}<br>`;
+        
+        if (this.tarjetas.length === 0) {
+          debugMessage += '→ <span class="text-danger">Debe agregar al menos una tarjeta o marcar "Sin Tarjeta"</span><br>';
+          errorEncontrado = true;
+        } else {
+          let tarjetasInvalidas = false;
+          this.tarjetas.controls.forEach((tarjetaGroup, index) => {
+            if (tarjetaGroup.invalid) {
+              tarjetasInvalidas = true;
+              errorEncontrado = true;
+              debugMessage += `- Tarjeta ${index + 1} tiene campos incompletos: `;
+              Object.keys(tarjetaGroup['controls']).forEach(key => {
+                const control = tarjetaGroup.get(key);
+                if (control?.invalid) {
+                  debugMessage += `${key}, `;
+                }
+              });
+              debugMessage = debugMessage.slice(0, -2) + '<br>'; // Eliminar última coma
+            }
+          });
+          
+          if (tarjetasInvalidas) {
+            debugMessage += '→ <span class="text-danger">Debe completar todos los campos de las tarjetas</span><br>';
+          } else {
+            debugMessage += '→ <span class="text-success">Todas las tarjetas están completas</span><br>';
+          }
+        }
+      } else {
+        debugMessage += '→ <span class="text-success">No requiere tarjetas (opción "Sin Tarjeta" seleccionada)</span><br>';
+      }
+      
+      debugMessage += '<br>';
+    }
+    
+    // Verificar preferencias
+    if (this.producto?.procesoComercial?.aceptaVariable) {
+      debugMessage += '<strong>Estado de preferencias:</strong><br>';
+      const tienePreferencias = this.hasPreferencia();
+      debugMessage += `- Tiene preferencias seleccionadas: ${tienePreferencias ? '<span class="text-success">Sí</span>' : '<span class="text-danger">No</span>'}<br>`;
+      debugMessage += `- Número de preferencias: ${this.productPreference.filter(p => p.tipo === 'preferencia').length}<br>`;
+      
+      if (!tienePreferencias) {
+        debugMessage += '→ <span class="text-danger">Debe seleccionar al menos una preferencia</span><br>';
+        errorEncontrado = true;
+      }
+      
+      debugMessage += '<br>';
+    }
+    
+    if (!errorEncontrado) {
+      debugMessage += '<br><strong class="text-success">No se encontraron errores específicos. Posible problema de validación interna.</strong><br>';
+      debugMessage += '<button id="swal-try-fix" class="btn btn-sm btn-primary mt-2">Intentar arreglar automáticamente</button>';
+    }
+    
+    // Agregar un resumen del estado de validación
+    debugMessage += '<br><strong>Resumen de validación:</strong><br>';
+    debugMessage += `- isCartButtonDisabled(): ${this.isCartButtonDisabled() ? '<span class="text-danger">Botón deshabilitado</span>' : '<span class="text-success">Botón habilitado</span>'}<br>`;
+    
+    // Mostrar mensaje usando Swal
+    Swal.fire({
+      title: 'Información de depuración',
+      html: debugMessage,
+      icon: 'info',
+      confirmButtonText: 'Cerrar',
+      didOpen: () => {
+        // Agregar event listener al botón de arreglo automático
+        const fixButton = document.getElementById('swal-try-fix');
+        if (fixButton) {
+          fixButton.addEventListener('click', () => {
+            this.tryToFixFormAutomatically();
+            Swal.close();
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Intenta corregir automáticamente los problemas de validación del formulario
+   */
+  tryToFixFormAutomatically(): void {
+    console.log('Intentando corregir automáticamente el formulario...');
+    
+    // 1. Revisar si tenemos problema de tarjetas
+    if (this.producto?.procesoComercial?.llevaTarjeta && this.tarjetas.length === 0) {
+      // Activar "Sin Tarjeta" automáticamente
+      this.SinTarjeta = true;
+      console.log('Se activó "Sin Tarjeta" automáticamente');
+      this.toastrService.info('Se activó "Sin Tarjeta" automáticamente', 'Corrección aplicada');
+    }
+    
+    // 2. Si hay tarjetas incompletas, intentar llenarlas con valores predeterminados
+    if (this.tarjetas.length > 0 && !this.SinTarjeta) {
+      let tarjetasActualizadas = false;
+      this.tarjetas.controls.forEach((tarjetaGroup) => {
+        if (tarjetaGroup.invalid) {
+          Object.keys(tarjetaGroup['controls']).forEach(key => {
+            const control = tarjetaGroup.get(key);
+            if (control?.invalid) {
+              // Valores predeterminados según el campo
+              if (key === 'para') control.setValue('Cliente');
+              if (key === 'mensaje') control.setValue('¡Felicidades por tu compra!');
+              if (key === 'de') control.setValue('Tienda');
+              control.markAsTouched();
+              tarjetasActualizadas = true;
+            }
+          });
+        }
+      });
+      
+      if (tarjetasActualizadas) {
+        console.log('Se actualizaron tarjetas automáticamente con valores predeterminados');
+        this.toastrService.info('Se actualizaron tarjetas con valores predeterminados', 'Corrección aplicada');
+      }
+    }
+    
+    // 3. Re-evaluar todas las validaciones
+    this.markAllFieldsAsTouched();
+    
+    // 4. Verificar si el botón ya se puede habilitar
+    const isStillDisabled = this.isCartButtonDisabled();
+    if (isStillDisabled) {
+      this.toastrService.warning('Se realizaron algunas correcciones, pero aún faltan campos por completar', 'Corrección parcial');
+    } else {
+      this.toastrService.success('El formulario ahora es válido, puede agregar al carrito', 'Corrección completada');
     }
   }
 

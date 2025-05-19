@@ -483,15 +483,15 @@ export class PaymentService extends BaseService {
         `;
       });
       // Si no hay nota específica pero quieres una fila por producto:
-      if (!item.notaProduccion || item.notaProduccion.length === 0) {
-        notasProduccionHtml += `
-           <tr>
-             <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
-             <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.obtenerFechaHoy()}</td>
-             <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">(Sin nota específica)</td>
-           </tr>
-         `;
-      }
+      // if (!item.notaProduccion || item.notaProduccion.length === 0) {
+      //   notasProduccionHtml += `
+      //      <tr>
+      //        <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
+      //        <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.obtenerFechaHoy()}</td>
+      //        <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">(Sin nota específica)</td>
+      //      </tr>
+      //    `;
+      // }
     });
 
 

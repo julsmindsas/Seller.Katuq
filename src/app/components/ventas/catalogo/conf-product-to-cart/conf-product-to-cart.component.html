@@ -374,7 +374,7 @@
                                     <h5 class="section-title">{{'1. Fecha de entrega' | translate}}</h5>
                                     <div class="form-group">
                                         <div class="input-group">
-                                            <input class="form-control" placeholder="{{'Fecha de entrega' | translate}}"
+                                            <input class="form-control" [ngClass]="{'is-invalid': datosEntrega.get('fechaEntrega')?.invalid && datosEntrega.get('fechaEntrega')?.touched}" placeholder="{{'Fecha de entrega' | translate}}"
                                                 name="dp" formControlName="fechaEntrega" ngbDatepicker
                                                 #d3="ngbDatepicker" [minDate]="minDate" [placement]="placement"
                                                 [positionTarget]="buttonEl" readonly />
@@ -382,6 +382,9 @@
                                                 type="button">
                                                 <app-feather-icons [icon]="'calendar'"></app-feather-icons>
                                             </button>
+                                        </div>
+                                        <div *ngIf="datosEntrega.get('fechaEntrega')?.invalid && datosEntrega.get('fechaEntrega')?.touched" class="invalid-feedback d-block">
+                                            {{'La fecha de entrega es obligatoria' | translate}}
                                         </div>
                                     </div>
 
@@ -391,9 +394,13 @@
                                         <div class="form-group">
                                             <ng-select [items]="formasEntregaProducto" bindLabel="nombre"
                                                 bindValue="nombre" placeholder="{{'Forma de entrega' | translate}}"
-                                                class="form-control" style="font-family: roboto;" [closeOnSelect]="true"
+                                                class="form-control" [ngClass]="{'is-invalid': datosEntrega.get('formaEntrega')?.invalid && datosEntrega.get('formaEntrega')?.touched}"
+                                                style="font-family: roboto;" [closeOnSelect]="true"
                                                 formControlName="formaEntrega" (change)="changeTipoEntrega($event)">
                                             </ng-select>
+                                            <div *ngIf="datosEntrega.get('formaEntrega')?.invalid && datosEntrega.get('formaEntrega')?.touched" class="invalid-feedback d-block">
+                                                {{'La forma de entrega es obligatoria' | translate}}
+                                            </div>
                                         </div>
                                     </div>
 
@@ -403,9 +410,13 @@
                                         <div class="form-group">
                                             <ng-select [items]="horarios" class="form-control"
                                                 placeholder="{{'Horarios' | translate}}" class="form-control"
+                                                [ngClass]="{'is-invalid': datosEntrega.get('horarioEntrega')?.invalid && datosEntrega.get('horarioEntrega')?.touched}"
                                                 formControlName="horarioEntrega" style="font-family: roboto;"
                                                 [closeOnSelect]="true">
                                             </ng-select>
+                                            <div *ngIf="datosEntrega.get('horarioEntrega')?.invalid && datosEntrega.get('horarioEntrega')?.touched" class="invalid-feedback d-block">
+                                                {{'El horario de entrega es obligatorio' | translate}}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -421,43 +432,55 @@
                                 </div>
 
                                 <!-- Sección de personalización -->
-                                <div *ngIf="producto?.procesoComercial?.aceptaOcasion || producto?.procesoComercial?.aceptaGenero || producto?.procesoComercial?.aceptaComentarios || producto?.procesoComercial.aceptaColorDecoracion"
+                                <div *ngIf="hasAceptaOcasion || hasAceptaGenero || producto?.procesoComercial?.aceptaComentarios || producto?.procesoComercial.aceptaColorDecoracion"
                                     class="mt-4">
                                     <h5 class="section-title">{{'OBSERVACIONES DE PERSONALIZACIÓN' | translate}}</h5>
 
                                     <!-- Ocasión -->
-                                    <div *ngIf="producto?.procesoComercial?.aceptaOcasion" class="form-group">
-                                        <label>{{'Ocasión' | translate}}</label>
+                                    <div *ngIf="hasAceptaOcasion" class="form-group">
+                                        <label>{{'Ocasión' | translate}} <span class="text-danger">*</span></label>
                                         <ng-select [items]="ocasiones" formControlName="ocasion" class="form-control"
+                                            [ngClass]="{'is-invalid': datosEntrega.get('ocasion')?.invalid && datosEntrega.get('ocasion')?.touched}"
                                             placeholder="{{'Ocasión' | translate}}"
                                             (change)="addOpcionesPersonalizacion()" style="font-family: roboto;"
                                             bindLabel="name" bindValue="id" [closeOnSelect]="true">
                                         </ng-select>
+                                        <div *ngIf="datosEntrega.get('ocasion')?.invalid && datosEntrega.get('ocasion')?.touched" class="invalid-feedback d-block">
+                                            {{'La ocasión es obligatoria' | translate}}
+                                        </div>
                                     </div>
 
                                     <!-- Género -->
-                                    <div *ngIf="producto?.procesoComercial?.aceptaGenero" class="form-group">
-                                        <label>{{'Género' | translate}}</label>
+                                    <div *ngIf="hasAceptaGenero" class="form-group">
+                                        <label>{{'Género' | translate}} <span class="text-danger">*</span></label>
                                         <ng-select style="height:auto !important" [items]="generos"
                                             formControlName="genero" bindLabel="name" bindValue="id"
+                                            [ngClass]="{'is-invalid': datosEntrega.get('genero')?.invalid && datosEntrega.get('genero')?.touched}"
                                             (change)="addOpcionesPersonalizacion()" class="form-control"
                                             placeholder="{{'Genero' | translate}}" style="font-family: roboto;"
                                             [multiple]="false" [closeOnSelect]="true">
                                         </ng-select>
+                                        <div *ngIf="datosEntrega.get('genero')?.invalid && datosEntrega.get('genero')?.touched" class="invalid-feedback d-block">
+                                            {{'El género es obligatorio' | translate}}
+                                        </div>
                                     </div>
 
                                     <!-- Observaciones -->
                                     <div *ngIf="producto?.procesoComercial?.aceptaComentarios" class="form-group">
-                                        <label>{{'Observaciones' | translate}}</label>
+                                        <label>{{'Observaciones' | translate}} <span class="text-danger">*</span></label>
                                         <textarea class="form-control" formControlName="observaciones"
+                                            [ngClass]="{'is-invalid': datosEntrega.get('observaciones')?.invalid && datosEntrega.get('observaciones')?.touched}"
                                             id="exampleFormControlTextarea1" rows="3"
                                             (keyup)="addOpcionesPersonalizacion()"
                                             placeholder="{{'Observaciones' | translate}}"></textarea>
+                                        <div *ngIf="datosEntrega.get('observaciones')?.invalid && datosEntrega.get('observaciones')?.touched" class="invalid-feedback d-block">
+                                            {{'Las observaciones son obligatorias' | translate}}
+                                        </div>
                                     </div>
 
                                     <!-- Colores -->
                                     <div *ngIf="producto?.procesoComercial.aceptaColorDecoracion" class="form-group">
-                                        <label>{{'Seleccione el color' | translate}}</label>
+                                        <label>{{'Seleccione el color' | translate}} <span class="text-danger">*</span></label>
                                         <div>
                                             <ul class="product-color m-t-15">
                                                 <li *ngFor="let item of producto.procesoComercial?.colorDecoracion"
@@ -466,6 +489,9 @@
                                                     style="cursor: pointer;">
                                                 </li>
                                             </ul>
+                                        </div>
+                                        <div *ngIf="datosEntrega.get('colores')?.invalid && datosEntrega.get('colores')?.touched" class="invalid-feedback d-block">
+                                            {{'Debe seleccionar al menos un color' | translate}}
                                         </div>
                                     </div>
                                 </div>
@@ -619,17 +645,30 @@
                                                 </div>
                                                 <div class="form-group mb-2">
                                                     <label class="form-label">{{'Para:' | translate}}</label>
-                                                    <input class="form-control" formControlName="para" />
+                                                    <input class="form-control" formControlName="para" 
+                                                           [ngClass]="{'is-invalid': tarjeta.get('para')?.invalid && tarjeta.get('para')?.touched}" />
+                                                    <div *ngIf="tarjeta.get('para')?.invalid && tarjeta.get('para')?.touched" 
+                                                         class="invalid-feedback">
+                                                        {{'Este campo es obligatorio' | translate}}
+                                                    </div>
                                                 </div>
                                                 <div class="form-group mb-2">
-                                                    <label class="form-label">{{'Mensaje Para La Tarjeta:' |
-                                                        translate}}</label>
-                                                    <textarea class="form-control" formControlName="mensaje"
-                                                        rows="3"></textarea>
+                                                    <label class="form-label">{{'Mensaje Para La Tarjeta:' | translate}}</label>
+                                                    <textarea class="form-control" formControlName="mensaje" rows="3"
+                                                              [ngClass]="{'is-invalid': tarjeta.get('mensaje')?.invalid && tarjeta.get('mensaje')?.touched}"></textarea>
+                                                    <div *ngIf="tarjeta.get('mensaje')?.invalid && tarjeta.get('mensaje')?.touched" 
+                                                         class="invalid-feedback">
+                                                        {{'Este campo es obligatorio' | translate}}
+                                                    </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label class="form-label">{{'De:' | translate}}</label>
-                                                    <input class="form-control" formControlName="de" />
+                                                    <input class="form-control" formControlName="de" 
+                                                           [ngClass]="{'is-invalid': tarjeta.get('de')?.invalid && tarjeta.get('de')?.touched}" />
+                                                    <div *ngIf="tarjeta.get('de')?.invalid && tarjeta.get('de')?.touched" 
+                                                         class="invalid-feedback">
+                                                        {{'Este campo es obligatorio' | translate}}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -782,13 +821,17 @@
                     </div>
 
                     <!-- Botón para agregar al carrito -->
-                    <button class="btn btn-primary btn-lg w-100 mt-2" type="button" (click)="addToCar()">
-                        <i class="fa fa-shopping-basket me-1"></i> {{isEdit ? 'Actualizar carrito' : 'Agregar al
-                        carrito' | translate}}
+                    <button class="btn btn-primary btn-lg w-100 mt-2" type="button" (click)="addToCar()" 
+                            [disabled]="isCartButtonDisabled()">
+                        <i class="fa fa-shopping-basket me-1"></i> {{isEdit ? 'Actualizar carrito' : 'Agregar al carrito' | translate}}
                     </button>
 
-                    <div *ngIf="datosEntrega.invalid" class="text-danger mt-2 small text-center">
+                    <div *ngIf="isCartButtonDisabled()" class="text-danger mt-2 small text-center">
                         {{'Complete los campos requeridos para continuar' | translate}}
+                        
+                        <button (click)="showDebugInfo()" class="btn btn-sm btn-link text-secondary mt-1">
+                            <i class="fa fa-bug"></i> {{'Ver campos faltantes' | translate}}
+                        </button>
                     </div>
                 </div>
             </div>
