@@ -1,252 +1,393 @@
+<!-- Mensaje de error/alerta -->
+<div *ngIf="paymentError" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+  <i class="fa fa-exclamation-triangle me-2"></i> {{ paymentError }}
+  <button type="button" class="btn-close" (click)="paymentError = null" aria-label="Close"></button>
+</div>
+
 <div class="container-fluid">
-  <div>
-    <div class="checkout mt-5">
-      <!-- <h4>Resumen y pagos</h4>
-      <hr> -->
-      <div class="row">
-        <div class="col-lg-6 col-sm-12">
-          <h5>{{ 'Datos de Cliente' | translate }}</h5>
-          <hr>
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <label for="nombres_completos"><strong>{{ 'Tipo Documento:' | translate }}</strong></label>
-              <p id="nombres_completos">{{pedido?.cliente?.tipo_documento_comprador}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="apellidos_completos">{{ 'Documento:' | translate }}</label></strong><br />
-              <p id="apellidos_completos">{{pedido?.cliente?.documento}}</p>
-            </div>
-          </div>
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <label for="nombres_completos"><strong>{{ 'Nombres:' | translate }}</strong></label>
-              <p id="nombres_completos">{{pedido?.cliente?.nombres_completos}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="apellidos_completos">{{ 'Apellidos:' | translate }}</label></strong><br />
-              <p id="apellidos_completos">{{pedido?.cliente?.apellidos_completos}}</p>
-            </div>
-          </div>
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <strong><label for="numero_celular_comprador">{{ 'Número de celular:' | translate }}</label></strong><br />
-              <p id="numero_celular_comprador">({{pedido?.cliente?.indicativo_celular_comprador}}){{pedido?.cliente?.numero_celular_comprador}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="numero_celular_comprador">{{ 'Número de celular WhatsApp:' | translate }}</label></strong><br />
-              <p id="numero_celular_comprador">({{pedido?.cliente?.indicativo_celular_whatsapp}}){{pedido?.cliente?.numero_celular_whatsapp}}</p>
-            </div>
-            
-          </div>
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <strong><label for="correo_electronico_comprador">{{ 'Estado Cliente:' | translate }}</label></strong><br />
-              <p id="correo_electronico_comprador">{{pedido?.cliente?.estado}}</p>
-            </div>
-            
-            <div class="mb-3 col-sm-6">
-              <strong><label for="correo_electronico_comprador">Correo electrónico:</label></strong><br />
-              <p id="correo_electronico_comprador">{{pedido?.cliente?.correo_electronico_comprador}}</p>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
-              <h5>{{ 'Datos de Envío' | translate }}</h5>
-              <hr>
-              <div class="row">
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioNombres">{{ 'Nombres:' | translate }}</label></strong><br />
-                  <p id="envioNombres">{{pedido?.envio?.nombres}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioApellidos">{{ 'Apellidos:' | translate }}</label></strong><br />
-                  <p id="envioApellidos">{{pedido?.envio?.apellidos}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioAlias">{{ 'Referencia de Datos:' | translate }}</label></strong><br />
-                  <p id="envioAlias">{{pedido?.envio?.alias}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioDireccionEntrega">{{ 'Dirección de Entrega:' | translate }}</label></strong><br />
-                  <p id="envioDireccionEntrega">{{pedido?.envio?.direccionEntrega}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioNombreUnidad">{{ 'Nombre de Unidad:' | translate }}</label></strong><br />
-                  <p id="envioNombreUnidad">{{pedido?.envio?.nombreUnidad}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioEspecificacionesInternas">{{ 'Especificaciones Internas:' | translate }}</label></strong><br />
-                  <p id="envioEspecificacionesInternas">{{pedido?.envio?.especificacionesInternas}}</p>
-                </div>
-                
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
-                  <p id="envioDepartamento">{{pedido?.envio?.departamento}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioCiudad">{{ 'Ciudad:' | translate }}</label></strong><br />
-                  <p id="envioCiudad">{{pedido?.envio?.ciudad}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioBarrio">{{ 'Barrio:' | translate }}</label></strong><br />
-                  <p id="envioBarrio">{{pedido?.envio?.barrio}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioCodigoPV">{{ 'Código Postal:' | translate }}</label></strong><br />
-                  <p id="envioCodigoPV">{{pedido?.envio?.codigoPV}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioCelular">{{ 'Celular:' | translate }}</label></strong><br />
-                  <p id="envioCelular">({{pedido?.envio?.indicativoCel}}){{pedido?.envio?.celular}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioOtroNumero">{{ 'Otro Número:' | translate }}</label></strong><br />
-                  <p id="envioOtroNumero">({{pedido?.envio?.indicativoOtroNumero}}){{pedido?.envio?.otroNumero}}</p>
-                </div>
-                <div class="mb-3 col-sm-6">
-                  <strong><label for="envioOtroNumero">{{ 'Zona:' | translate }}</label></strong><br />
-                  <p id="envioOtroNumero">{{pedido?.envio?.zonaCobro}}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <h5>{{ 'Datos de Facturación' | translate }}</h5>
-          <hr>
-          <div class="row">
-            
-          <div class="row">
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionNombres">{{ 'Nombres:' | translate }}</label></strong><br />
-              <p id="facturacionNombres">{{pedido?.facturacion?.nombres}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionTipoDocumento">{{ 'Tipo de Documento:' | translate }}</label></strong><br />
-              <p id="facturacionTipoDocumento">{{pedido?.facturacion?.tipoDocumento}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionTipoDocumento">{{ 'Documento:' | translate }}</label></strong><br />
-              <p id="facturacionTipoDocumento">{{pedido?.facturacion?.documento}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionPais">{{ 'País:' | translate }}</label></strong><br />
-              <p id="facturacionPais">{{pedido?.facturacion?.pais}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionDepartamento">{{ 'Departamento:' | translate }}</label></strong><br />
-              <p id="facturacionDepartamento">{{pedido?.facturacion?.departamento}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionCiudad">{{ 'Ciudad:' | translate }}</label></strong><br />
-              <p id="facturacionCiudad">{{pedido?.facturacion?.ciudad}}</p>
-            </div>
-          </div>
-            
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionCodigoPostal">{{ 'Código Postal:' | translate }}</label></strong><br />
-              <p id="facturacionCodigoPostal">{{pedido?.facturacion?.codigoPostal}}</p>
-            </div>
-            <div class="mb-3 col-sm-6">
-              <strong><label for="facturacionCelular">{{ 'Celular:' | translate }}</label></strong><br />
-              <p id="facturacionCelular">({{pedido?.facturacion?.indicativoCel}}){{pedido?.facturacion?.celular}}</p>
-            </div>
-            <div class="row">
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionDireccion">{{ 'Dirección:' | translate }}</label></strong><br />
-                <p id="facturacionDireccion">{{pedido?.facturacion?.direccion}}</p>
-              </div>
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionAlias">{{ 'Referencia de Datos:' | translate }}</label></strong><br />
-                <p id="facturacionAlias">{{pedido?.facturacion?.alias}}</p>
-              </div>
-            </div>
-  
-            <div class="row">
-              
-              <div class="mb-3 col-sm-6">
-                <strong><label for="facturacionCorreoElectronico">{{ 'Correo Electrónico:' | translate }}</label></strong><br />
-                <p id="facturacionCorreoElectronico">{{pedido?.facturacion?.correoElectronico}}</p>
-              </div>
-            </div>
-
-            <h5>{{ 'Datos Extras de Entrega' | translate }}</h5>
-            <hr>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
-              <div class="row">
-              
-                <div class="mb-3 col-sm-12">
-                  <strong><label for="facturacionCorreoElectronico">{{ 'Fecha Entrega:' | translate }}</label></strong><br />
-                  <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}-{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}</p>
-                </div>
-              </div>
-              <div class="row">
-                  
-                <div class="mb-3 col-sm-12">
-                  <strong><label for="facturacionCorreoElectronico">Forma Entrega:</label></strong><br />
-                  <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega}}</p>
-                </div>
-              </div>
-              <div class="row">
-                  
-                <div class="mb-3 col-sm-12">
-                  <strong><label for="facturacionCorreoElectronico">Horario Entrega:</label></strong><br />
-                  <p id="facturacionCorreoElectronico">{{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega}}</p>
-                </div>
-              </div>
-              
-              <div class="row">
-                  
-                
-              </div>
-    
-            </div>
-          </div>
-          
-         
-
-          
-
-
-
-
+  <div class="checkout">
+    <!-- Encabezado de resumen -->
+    <div class="checkout-header mb-4">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <h4 class="mb-0"><i class="fa fa-receipt me-2 text-primary"></i>Resumen y Confirmación</h4>
+          <p class="text-muted mt-2 mb-0">Revisa los detalles de tu pedido antes de realizar el pago</p>
         </div>
-
-        <div class="col-lg-6 col-sm-12">
-          <div class="checkout-details">
-            <div class="order-box">
-              <div class="title-box">
-                <div class="checkbox-title">
-                  <h4>{{ 'Productos' | translate }}</h4>
-                  <span>Total</span>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+          <div class="order-number">
+            <span class="badge bg-light text-primary">Preventa #{{pedido?.nroPedido || 'Nuevo pedido'}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Indicador de fecha estimada de entrega -->
+    <div class="delivery-estimate mb-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-body py-3">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <div class="d-flex align-items-center">
+                <div class="delivery-icon me-3">
+                  <i class="fa fa-shipping-fast text-primary fs-3"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Fecha estimada de entrega</p>
+                  <h5 class="mb-0 mt-1">{{ fechaEntregaEstimada }}</h5>
                 </div>
               </div>
-              <ul class="qty">
-                <li  *ngFor="let item of pedido?.carrito">
-                  <div class="mb-3 col-sm-12">
-                    
-                    <p>
-                      {{item?.producto?.crearProducto?.titulo}} × {{item?.cantidad}} <span class="count"> {{checkPriceScaleProd(item)| currency:'USD':'symbol':'1.0-0'}}</span> 
-                      <span style="font-size: 8px;">Este valor incluye adiciones y preferencias</span>
-                    </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+              <span class="badge bg-primary-light text-primary">Entrega en {{ pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega || 'Domicilio' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row">
+      <!-- Columna izquierda: Información del cliente en formato de acordeón -->
+      <div class="col-lg-6 col-sm-12">
+        <div class="accordion" id="accordionCheckout">
+          <!-- Acordeón: Datos del cliente -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingCliente">
+              <button class="accordion-button" 
+                      type="button" 
+                      data-bs-toggle="collapse" 
+                      data-bs-target="#collapseCliente" 
+                      [attr.aria-expanded]="activeStep === 'cliente'" 
+                      aria-controls="collapseCliente"
+                      (click)="toggleStep('cliente')">
+                <i class="fa fa-user me-2"></i>{{ 'Datos de Cliente' | translate }}
+                <div class="accordion-summary ms-auto" *ngIf="pedido?.cliente">
+                  <span><i class="fa fa-id-card-alt me-1"></i>{{ pedido?.cliente?.tipo_documento_comprador }}</span>
+                  <span><i class="fa fa-envelope me-1"></i>{{ pedido?.cliente?.correo_electronico_comprador }}</span>
+                  <span class="complete" *ngIf="pedido?.cliente"><i class="fa fa-check-circle me-1"></i>Completo</span>
+                </div>
+              </button>
+            </h2>
+            <div id="collapseCliente" 
+                 class="accordion-collapse collapse" 
+                 [ngClass]="{'show': activeStep === 'cliente'}"
+                 aria-labelledby="headingCliente" 
+                 data-bs-parent="#accordionCheckout">
+              <div class="accordion-body">
+                <div class="accordion-body-content">
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="tipo_documento"><strong>{{ 'Tipo Documento:' | translate }}</strong></label>
+                      <p id="tipo_documento" class="form-control-static">{{pedido?.cliente?.tipo_documento_comprador || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="documento"><strong>{{ 'Documento:' | translate }}</strong></label>
+                      <p id="documento" class="form-control-static">{{pedido?.cliente?.documento || '-'}}</p>
+                    </div>
                   </div>
-                </li>
-              </ul>
-              <!-- <ul class="qty">
-                <li >Costo de Productos
-                  <span>
-                    </span>
-                </li>
-              </ul> -->
-              <ul class="sub-total">
-
-                <li>Costo de productos: <span class="count"> {{checkPriceScale()| currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li>Domicilio: <span class="count"> {{pedidoUtilService.getShippingCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li>Descuentos: <span class="count"> {{pedidoUtilService.getDiscount() | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li>total sin IVA: <span class="count"> {{pedidoUtilService.getShippingCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li>total IVA: <span class="count"> {{checkIVAPrice().totalPrecioIVADef + pedidoUtilService.getShippingTaxCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <li><ul class="two-column-list">
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="nombres_completos"><strong>{{ 'Nombres:' | translate }}</strong></label>
+                      <p id="nombres_completos" class="form-control-static">{{pedido?.cliente?.nombres_completos || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="apellidos_completos"><strong>{{ 'Apellidos:' | translate }}</strong></label>
+                      <p id="apellidos_completos" class="form-control-static">{{pedido?.cliente?.apellidos_completos || '-'}}</p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="numero_celular_comprador"><strong>{{ 'Número de celular:' | translate }}</strong></label>
+                      <p id="numero_celular_comprador" class="form-control-static">
+                        <i class="fa fa-phone me-1 text-muted"></i>
+                        {{pedido?.cliente?.indicativo_celular_comprador ? '+' + pedido?.cliente?.indicativo_celular_comprador : ''}} {{pedido?.cliente?.numero_celular_comprador || '-'}}
+                      </p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="numero_celular_whatsapp"><strong>{{ 'Número de celular WhatsApp:' | translate }}</strong></label>
+                      <p id="numero_celular_whatsapp" class="form-control-static">
+                        <i class="fa fa-whatsapp me-1 text-success"></i>
+                        {{pedido?.cliente?.indicativo_celular_whatsapp ? '+' + pedido?.cliente?.indicativo_celular_whatsapp : ''}} {{pedido?.cliente?.numero_celular_whatsapp || '-'}}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="correo_electronico_comprador"><strong>{{ 'Correo electrónico:' | translate }}</strong></label>
+                      <p id="correo_electronico_comprador" class="form-control-static">
+                        <i class="fa fa-envelope me-1 text-muted"></i>
+                        {{pedido?.cliente?.correo_electronico_comprador || '-'}}
+                      </p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="estado_cliente"><strong>{{ 'Estado Cliente:' | translate }}</strong></label>
+                      <p id="estado_cliente" class="form-control-static">
+                        <span [ngClass]="{'badge bg-success': pedido?.cliente?.estado === 'Activo', 
+                                        'badge bg-warning text-dark': pedido?.cliente?.estado === 'Pendiente',
+                                        'badge bg-danger': pedido?.cliente?.estado === 'Inactivo'}">
+                          {{pedido?.cliente?.estado || '-'}}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Acordeón: Datos de envío -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingEnvio">
+              <button class="accordion-button" 
+                      type="button" 
+                      data-bs-toggle="collapse" 
+                      data-bs-target="#collapseEnvio" 
+                      [attr.aria-expanded]="activeStep === 'envio'" 
+                      aria-controls="collapseEnvio"
+                      (click)="toggleStep('envio')">
+                <i class="fa fa-truck me-2"></i>{{ 'Datos de Envío' | translate }}
+                <div class="accordion-summary ms-auto" *ngIf="pedido?.envio">
+                  <span><i class="fa fa-map-marker-alt me-1"></i>{{ pedido?.envio?.ciudad }}</span>
+                  <span><i class="fa fa-phone me-1"></i>{{ pedido?.envio?.celular }}</span>
+                  <span class="complete" *ngIf="pedido?.envio?.direccionEntrega"><i class="fa fa-check-circle me-1"></i>Completo</span>
+                </div>
+              </button>
+            </h2>
+            <div id="collapseEnvio" 
+                 class="accordion-collapse collapse" 
+                 [ngClass]="{'show': activeStep === 'envio'}"
+                 aria-labelledby="headingEnvio" 
+                 data-bs-parent="#accordionCheckout">
+              <div class="accordion-body">
+                <div class="accordion-body-content">
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="envioNombres"><strong>{{ 'Nombres:' | translate }}</strong></label>
+                      <p id="envioNombres" class="form-control-static">{{pedido?.envio?.nombres || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="envioApellidos"><strong>{{ 'Apellidos:' | translate }}</strong></label>
+                      <p id="envioApellidos" class="form-control-static">{{pedido?.envio?.apellidos || '-'}}</p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="envioAlias"><strong>{{ 'Referencia de Datos:' | translate }}</strong></label>
+                      <p id="envioAlias" class="form-control-static">{{pedido?.envio?.alias || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="envioCelular"><strong>{{ 'Celular:' | translate }}</strong></label>
+                      <p id="envioCelular" class="form-control-static">
+                        <i class="fa fa-phone me-1 text-muted"></i>
+                        {{pedido?.envio?.indicativoCel ? '+' + pedido?.envio?.indicativoCel : ''}} {{pedido?.envio?.celular || '-'}}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="mb-3 col-sm-12">
+                      <label for="envioDireccionEntrega"><strong>{{ 'Dirección de Entrega:' | translate }}</strong></label>
+                      <p id="envioDireccionEntrega" class="form-control-static">
+                        <i class="fa fa-map-marker-alt me-1 text-muted"></i>
+                        {{pedido?.envio?.direccionEntrega || '-'}}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="mb-3 col-sm-4">
+                      <label for="envioDepartamento"><strong>{{ 'Departamento:' | translate }}</strong></label>
+                      <p id="envioDepartamento" class="form-control-static">{{pedido?.envio?.departamento || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-4">
+                      <label for="envioCiudad"><strong>{{ 'Ciudad:' | translate }}</strong></label>
+                      <p id="envioCiudad" class="form-control-static">{{pedido?.envio?.ciudad || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-4">
+                      <label for="envioBarrio"><strong>{{ 'Barrio:' | translate }}</strong></label>
+                      <p id="envioBarrio" class="form-control-static">{{pedido?.envio?.barrio || '-'}}</p>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="envioZona"><strong>{{ 'Zona:' | translate }}</strong></label>
+                      <p id="envioZona" class="form-control-static">{{pedido?.envio?.zonaCobro || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="envioCodigoPV"><strong>{{ 'Código Postal:' | translate }}</strong></label>
+                      <p id="envioCodigoPV" class="form-control-static">{{pedido?.envio?.codigoPV || '-'}}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Acordeón: Datos de facturación -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFacturacion">
+              <button class="accordion-button" 
+                      type="button" 
+                      data-bs-toggle="collapse" 
+                      data-bs-target="#collapseFacturacion" 
+                      [attr.aria-expanded]="activeStep === 'facturacion'" 
+                      aria-controls="collapseFacturacion"
+                      (click)="toggleStep('facturacion')">
+                <i class="fa fa-file-invoice me-2"></i>{{ 'Datos de Facturación' | translate }}
+                <div class="accordion-summary ms-auto" *ngIf="pedido?.facturacion">
+                  <span><i class="fa fa-id-card me-1"></i>{{ pedido?.facturacion?.documento }}</span>
+                  <span class="complete" *ngIf="pedido?.facturacion?.documento"><i class="fa fa-check-circle me-1"></i>Completo</span>
+                </div>
+              </button>
+            </h2>
+            <div id="collapseFacturacion" 
+                 class="accordion-collapse collapse" 
+                 [ngClass]="{'show': activeStep === 'facturacion'}"
+                 aria-labelledby="headingFacturacion" 
+                 data-bs-parent="#accordionCheckout">
+              <div class="accordion-body">
+                <div class="accordion-body-content">
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="facturacionNombres"><strong>{{ 'Nombres:' | translate }}</strong></label>
+                      <p id="facturacionNombres" class="form-control-static">{{pedido?.facturacion?.nombres || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="facturacionTipoDocumento"><strong>{{ 'Tipo de Documento:' | translate }}</strong></label>
+                      <p id="facturacionTipoDocumento" class="form-control-static">{{pedido?.facturacion?.tipoDocumento || '-'}}</p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="mb-3 col-sm-6">
+                      <label for="facturacionDocumento"><strong>{{ 'Documento:' | translate }}</strong></label>
+                      <p id="facturacionDocumento" class="form-control-static">{{pedido?.facturacion?.documento || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-6">
+                      <label for="facturacionCorreoElectronico"><strong>{{ 'Correo Electrónico:' | translate }}</strong></label>
+                      <p id="facturacionCorreoElectronico" class="form-control-static">
+                        <i class="fa fa-envelope me-1 text-muted"></i>
+                        {{pedido?.facturacion?.correoElectronico || '-'}}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="mb-3 col-sm-12">
+                      <label for="facturacionDireccion"><strong>{{ 'Dirección:' | translate }}</strong></label>
+                      <p id="facturacionDireccion" class="form-control-static">
+                        <i class="fa fa-map-marker-alt me-1 text-muted"></i>
+                        {{pedido?.facturacion?.direccion || '-'}}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="mb-3 col-sm-4">
+                      <label for="facturacionPais"><strong>{{ 'País:' | translate }}</strong></label>
+                      <p id="facturacionPais" class="form-control-static">{{pedido?.facturacion?.pais || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-4">
+                      <label for="facturacionDepartamento"><strong>{{ 'Departamento:' | translate }}</strong></label>
+                      <p id="facturacionDepartamento" class="form-control-static">{{pedido?.facturacion?.departamento || '-'}}</p>
+                    </div>
+                    <div class="mb-3 col-sm-4">
+                      <label for="facturacionCiudad"><strong>{{ 'Ciudad:' | translate }}</strong></label>
+                      <p id="facturacionCiudad" class="form-control-static">{{pedido?.facturacion?.ciudad || '-'}}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Acordeón: Datos extras de entrega -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingEntrega">
+              <button class="accordion-button" 
+                      type="button" 
+                      data-bs-toggle="collapse" 
+                      data-bs-target="#collapseEntrega" 
+                      [attr.aria-expanded]="activeStep === 'entrega'" 
+                      aria-controls="collapseEntrega"
+                      (click)="toggleStep('entrega')">
+                <i class="fa fa-calendar-alt me-2"></i>{{ 'Datos de Entrega' | translate }}
+                <div class="accordion-summary ms-auto" *ngIf="pedido?.carrito?.[0]?.configuracion?.datosEntrega">
+                  <span><i class="fa fa-calendar me-1"></i>{{ fechaEntregaEstimada }}</span>
+                  <span><i class="fa fa-clock me-1"></i>{{ pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</span>
+                  <span class="complete" *ngIf="pedido?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega"><i class="fa fa-check-circle me-1"></i>Completo</span>
+                </div>
+              </button>
+            </h2>
+            <div id="collapseEntrega" 
+                 class="accordion-collapse collapse" 
+                 [ngClass]="{'show': activeStep === 'entrega'}"
+                 aria-labelledby="headingEntrega" 
+                 data-bs-parent="#accordionCheckout">
+              <div class="accordion-body">
+                <div class="accordion-body-content">
+                  <div class="info-summary">
+                    <div class="info-summary-item">
+                      <i class="fa fa-calendar"></i>
+                      <span><strong>Fecha:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}</span>
+                    </div>
+                    <div class="info-summary-item">
+                      <i class="fa fa-truck"></i>
+                      <span><strong>Forma:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega || '-'}}</span>
+                    </div>
+                    <div class="info-summary-item">
+                      <i class="fa fa-clock"></i>
+                      <span><strong>Horario:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega || '-'}}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Columna derecha: Resumen del pedido -->
+      <div class="col-lg-6 col-sm-12">
+        <div class="checkout-details">
+          <div class="order-box">
+            <!-- Encabezado de productos -->
+            <div class="title-box">
+              <h4><i class="fa fa-shopping-cart me-2"></i>{{ 'Productos' | translate }}</h4>
+            </div>
+            
+            <!-- Lista de productos -->
+            <div class="products-container">
+              <div *ngFor="let item of pedido?.carrito" class="product-card">
+                <div class="product-info">
+                  <div class="product-name">{{item?.producto?.crearProducto?.titulo}}</div>
+                  <div class="product-details">
+                    <span class="quantity">{{item?.cantidad}} × </span>
+                    <span class="price">{{checkPriceScaleProd(item) | currency:'USD':'symbol':'1.0-0'}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Resumen de costos -->
+            <ul class="sub-total">
+              <li>
+                <span>Costo de productos:</span>
+                <span class="count">{{checkPriceScale()| currency:'USD':'symbol':'1.0-0'}}</span>
+              </li>
+              <li>
+                <span>Domicilio:</span>
+                <span class="count">{{pedidoUtilService.getShippingCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span>
+              </li>
+              <li>
+                <span>Descuentos:</span>
+                <span class="count">{{pedidoUtilService.getDiscount() | currency:'USD':'symbol':'1.0-0'}}</span>
+              </li>
+              <li>
+                <span>Total sin IVA:</span>
+                <span class="count">{{pedidoUtilService.getShippingCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() | currency:'USD':'symbol':'1.0-0'}}</span>
+              </li>
+              
+              <!-- Desglose de impuestos -->
+              <li>
+                <ul class="two-column-list">
                   <li>
                     <span class="title">Excluidos 0%:</span>
                     <span class="value">{{ checkIVAPrice().totalExcluidos | currency:'USD':'symbol':'1.0-0' }}</span>
@@ -263,54 +404,100 @@
                     <span class="title">Iva 19%:</span>
                     <span class="value">{{ checkIVAPrice().totalIva19 | currency:'USD':'symbol':'1.0-0' }}</span>
                   </li>
-                </ul></li>
-                <li>total Con IVA: <span class="count"> {{pedidoUtilService.getShippingCost(allBillingZone)+pedidoUtilService.getShippingTaxCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() + checkIVAPrice().totalPrecioIVADef | currency:'USD':'symbol':'1.0-0'}}</span></li>
-                <!-- <li class="shipping-class">
-                  Costo de envio -->
-                  <!-- <div class="shopping-checkout-option">
-                    <label class="d-block" for="chk-ani"> <input class="checkbox_animated" id="chk-ani" type="checkbox"
-                        checked="" />Option 1 </label>
-                    <label class="d-block" for="chk-ani1"> <input class="checkbox_animated" id="chk-ani1"
-                        type="checkbox" />Option 2 </label>
-                  </div> -->
-                  <!-- <div class="shopping-checkout-option" >
-                    <label class="d-block"*ngFor="let formaPago of formasPago; let i = index" [for]="'chk-ani' + i">
-                      <input class="checkbox_animated" [id]="'chk-ani' + i" type="checkbox" [checked]="formaPago.id === 1" />{{formaPago.nombre}}
-                    </label>
-                  </div> -->
-                <!-- </l
-                  i> -->
+                </ul>
+              </li>
+              
+              <li>
+                <span>Total IVA:</span>
+                <span class="count">{{checkIVAPrice().totalPrecioIVADef + pedidoUtilService.getShippingTaxCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span>
+              </li>
+              
+              <!-- Total con IVA -->
+              <li>
+                <span>TOTAL A PAGAR:</span>
+                <span class="count">{{pedidoUtilService.getShippingCost(allBillingZone)+pedidoUtilService.getShippingTaxCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() + checkIVAPrice().totalPrecioIVADef | currency:'USD':'symbol':'1.0-0'}}</span>
+              </li>
+            </ul>
+            
+            <!-- Formas de pago con tabs -->
+            <form [formGroup]="form" class="needs-validation mt-4" novalidate>
+              <h5 class="mb-3"><i class="fa fa-credit-card me-2"></i>Formas de Pago</h5>
+              
+              <!-- Navegación por tabs para categorías de pago -->
+              <ul class="nav nav-tabs payment-tabs" id="paymentTabs" role="tablist">
+                <li class="nav-item" role="presentation" *ngFor="let categoria of categoriasFormasPago; let i = index">
+                  <button class="nav-link" 
+                          [ngClass]="{'active': activePaymentTab === categoria.categoria}"
+                          [id]="'tab-' + categoria.categoria" 
+                          (click)="setActivePaymentTab(categoria.categoria)"
+                          type="button" 
+                          role="tab" 
+                          [attr.aria-selected]="activePaymentTab === categoria.categoria">
+                    <i [class]="getPaymentCategoryIcon(categoria.categoria)"></i>
+                    {{ categoria.categoria }}
+                  </button>
+                </li>
               </ul>
-              <hr>
-              <!-- <ul class="sub-total">
-                <li>Total <span class="count">$ {{ pedidoUtilService.getTotalToPay(pedidoUtilService.getShippingCost(allBillingZone))}}</span></li>
-              </ul> -->
-              <div class="animate-chk">
-                <div class="row">
-                  <form [formGroup]="form">
-                    <h4>Formas de Pago</h4>
-                    <div class="col">
-                      <div *ngFor="let categoria of categoriasFormasPago">
-                        <h5>{{ categoria.categoria }}</h5> <!-- Título de la categoría -->
-                        <div *ngFor="let opcionPago of categoria.formasPago; let i = index">
-                          <label class="d-block nombre-largo" [for]="opcionPago.id">
-                            <input class="radio_animated" [id]="opcionPago.id" type="radio" [value]="opcionPago.id" formControlName="opcionSeleccionada" />
-                            <span title="{{opcionPago.nombre}}">{{opcionPago.nombre}}</span>
-                            <!-- Ejemplo condicional para mostrar imagen si aplica -->
-                            <!-- <img *ngIf="opcionPago.nombre === 'PayPal'" class="img-paypal" src="assets/images/checkout/paypal.png" alt="" /> -->
-                          </label>
+              
+              <!-- Contenido de tabs de pagos -->
+              <div class="tab-content mt-3" id="paymentTabsContent">
+                <div *ngFor="let categoria of categoriasFormasPago" 
+                     class="tab-pane fade" 
+                     [ngClass]="{'show active': activePaymentTab === categoria.categoria}"
+                     [id]="'content-' + categoria.categoria" 
+                     role="tabpanel">
+                  
+                  <div class="payment-grid">
+                    <div *ngFor="let opcionPago of categoria.formasPago" class="payment-option">
+                      <label class="payment-method-label" [for]="opcionPago.id">
+                        <input class="payment-radio" [id]="opcionPago.id" type="radio" [value]="opcionPago.id" formControlName="opcionSeleccionada" />
+                        <div class="payment-method-card">
+                          <i [class]="getPaymentMethodIcon(opcionPago.nombre)"></i>
+                          <span title="{{opcionPago.nombre}}">{{opcionPago.nombre}}</span>
                         </div>
-                      </div>
-                      
+                      </label>
                     </div>
-                  </form>
+                  </div>
                 </div>
               </div>
-              <script src="https://checkout.wompi.co/widget.js"></script>
-
-              <div class="order-place"><a class="btn btn-primary" (click)="gotToPaymentOrder()">Comprar y pagar
-                </a>
+              
+              <!-- Mensaje de validación -->
+              <div *ngIf="form.get('opcionSeleccionada')?.invalid && form.get('opcionSeleccionada')?.touched" class="text-danger small mt-2">
+                Por favor, selecciona una forma de pago
               </div>
+            </form>
+            
+            <!-- Información de seguridad -->
+            <div class="payment-security mt-4">
+              <div class="security-badges">
+                <div class="security-badge">
+                  <i class="fa fa-lock"></i>
+                  <span>Pago Seguro</span>
+                </div>
+                <div class="security-badge">
+                  <i class="fa fa-shield-alt"></i>
+                  <span>Datos Protegidos</span>
+                </div>
+                <div class="security-badge">
+                  <i class="fa fa-credit-card"></i>
+                  <span>Múltiples Métodos</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Botón de procesar pago -->
+            <div class="order-place">
+              <button class="btn btn-primary" [disabled]="isProcessingPayment || !pedidoValido" [ngClass]="{'processing': isProcessingPayment}" (click)="gotToPaymentOrder()">
+                <span *ngIf="!isProcessingPayment">
+                  <i class="fa fa-lock me-2"></i>Comprar y pagar
+                </span>
+                <span *ngIf="isProcessingPayment">
+                  <i class="fa fa-spinner fa-spin me-2"></i>Procesando pago...
+                </span>
+              </button>
+              <p class="text-muted mt-2 small">
+                <i class="fa fa-shield-alt me-1"></i> Pago seguro y procesado al instante
+              </p>
             </div>
           </div>
         </div>
@@ -318,3 +505,6 @@
     </div>
   </div>
 </div>
+
+<!-- Script de Wompi -->
+<script src="https://checkout.wompi.co/widget.js"></script>

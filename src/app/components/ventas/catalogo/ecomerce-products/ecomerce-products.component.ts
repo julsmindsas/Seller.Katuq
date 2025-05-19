@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import { Producto } from '../../../../shared/models/productos/Producto';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { parse, stringify } from 'flatted';
-import { FormGroup, FormControl, FormArray, FormBuilder } from '@angular/forms';
+import { FormGroup, FormControl, FormArray, FormBuilder, AbstractControl } from '@angular/forms';
 import { ConfProductToCartComponent } from '../conf-product-to-cart/conf-product-to-cart.component';
 import { After } from 'v8';
 import { forkJoin } from 'rxjs';
@@ -46,6 +46,15 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
   productoSeleccionado: Producto;
   @Input() isRebuy: boolean = false;
   temp: Producto[];
+  
+  // Propiedades para la paginación
+  productosCompletos: Producto[] = []; // Almacena todos los productos
+  productosPaginados: Producto[] = []; // Almacena los productos de la página actual
+  paginaActual: number = 1;
+  productosPorPagina: number = 8; // Cantidad de productos por página
+  totalPaginas: number = 0;
+  Math = Math; // Exponer Math para usarlo en la plantilla
+  
   constructor(
     private ventasService: VentasService, 
     private modalService: NgbModal, 
@@ -99,7 +108,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
   }
 
 
-  private onOccasionChange(event: any, index: number) {
+  onOccasionChange(event: any, index: number) {
     const occasions = this.filterForm.get('occasions') as FormGroup;
 
     if (event.target.checked) {
@@ -115,15 +124,15 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
 
 
 
-  private onDeliveryTimeChange(event: any, index: number) {
+  onDeliveryTimeChange(event: any, index: number) {
     const deliveryTimesArray = this.filterForm.get('deliveryTimes') as FormArray;
 
     if (event.target.checked) {
       deliveryTimesArray.push(new FormControl(event.target.value));
     } else {
       let i = 0;
-      deliveryTimesArray.controls.forEach((item: FormControl) => {
-        if (item.value == event.target.value) {
+      deliveryTimesArray.controls.forEach((item: AbstractControl) => {
+        if ((item as FormControl).value == event.target.value) {
           deliveryTimesArray.removeAt(i);
           return;
         }
@@ -233,19 +242,28 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
   }
 
   listProducts() {
-
-
     this.ventasService.getProducts().subscribe({
       next: (data) => {
         console.log(data);
         console.log("productos", JSON.stringify(data));
-        this.productos = data;
+        this.productosCompletos = data;
+        this.productos = data; // Mantener esta asignación para compatibilidad
 
-        const precios = this.productos.map((producto) => producto.precio.precioUnitarioConIva);
-        this.minPrice = precios.reduce((min, precio) => (precio < min ? precio : min), precios[0]);
-        this.maxPrice = precios.reduce((max, precio) => (precio > max ? precio : max), precios[0]);
-
-        this.filterForm.get('priceRange').setValue([this.minPrice, this.maxPrice]);
+        const precios = this.productos
+          .filter(p => p.precio)
+          .map((producto) => producto.precio?.precioUnitarioConIva || 0);
+          
+        if (precios.length > 0) {
+          this.minPrice = precios.reduce((min, precio) => (precio < min ? precio : min), precios[0]);
+          this.maxPrice = precios.reduce((max, precio) => (precio > max ? precio : max), precios[0]);
+          const priceControl = this.filterForm.get('priceRange');
+          if (priceControl) {
+            priceControl.setValue([this.minPrice, this.maxPrice]);
+          }
+        }
+        
+        // Configurar paginación
+        this.configurarPaginacion();
       },
       error: (error) => {
         Swal.fire({
@@ -257,30 +275,46 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
       }
     });
   }
+  
   limpiarFiltros() {
     this.initForm();
 
     this.tiempoEntrega.forEach((tiempo) => {
       tiempo.checked = false;
       const checkbox = document.getElementById("tiempo-" + tiempo.nombreInterno) as HTMLInputElement;
-      checkbox.checked = false;
+      if (checkbox) {
+        checkbox.checked = false;
+      }
     });
 
     this.ocasiones.forEach((ocasion) => {
       const checkbox = document.getElementById("ocasion-" + ocasion.id) as HTMLInputElement;
-      checkbox.checked = false;
+      if (checkbox) {
+        checkbox.checked = false;
+      }
     });
 
     this.generos.forEach((genero) => {
       const checkbox = document.getElementById("genero-" + genero.id) as HTMLInputElement;
-      checkbox.checked = false;
+      if (checkbox) {
+        checkbox.checked = false;
+      }
     });
-    // this.filterForm.reset();
-    this.filterForm.get('priceRange').setValue([this.minPrice, this.maxPrice]);
-    this.filterForm.get('category').setValue('');
+    
+    const priceControl = this.filterForm.get('priceRange');
+    const categoryControl = this.filterForm.get('category');
+    
+    if (priceControl) {
+      priceControl.setValue([this.minPrice, this.maxPrice]);
+    }
+    
+    if (categoryControl) {
+      categoryControl.setValue('');
+    }
 
     this.filtrarProductos();
   }
+  
   filtrarProductos() {
     const filter = this.filterForm.value;
     filter.deliveryCity = { label: this.ciudad, value: this.ciudad };
@@ -291,8 +325,13 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
       next: (data) => {
         console.log(data);
         console.log("productos", JSON.stringify([data[0], data[1], data[2]]));
-        this.productos = data;
+        this.productosCompletos = data;
+        this.productos = data; // Mantener para compatibilidad
         this.temp = [...data];
+        
+        // Reiniciar paginación y actualizar los productos paginados
+        this.paginaActual = 1;
+        this.configurarPaginacion();
       },
       error: (error) => {
         Swal.fire({
@@ -304,6 +343,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
       }
     });
   }
+  
   sidebarToggle() {
     this.openSidebar = !this.openSidebar;
     this.col = '3';
@@ -388,15 +428,77 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
   updateFilter(event: any) {
     const val = event.target.value.toLowerCase();
 
-    this.productos = this.temp.filter((d) => {
+    // Filtrar productos
+    const productosFiltrados = this.temp.filter((d) => {
       return (
-        d.crearProducto.titulo.toLowerCase().includes(val) ||
-        d.crearProducto.descripcion.toLowerCase().includes(val) ||
+        (d.crearProducto?.titulo?.toLowerCase().includes(val) ?? false) ||
+        (d.crearProducto?.descripcion?.toLowerCase().includes(val) ?? false) ||
         (d.identificacion?.referencia?.toString().toLowerCase().includes(val) ?? false) ||
         (d.disponibilidad?.cantidadDisponible?.toString().toLowerCase().includes(val) ?? false) ||
         (d.precio?.precioUnitarioSinIva?.toString().toLowerCase().includes(val) ?? false) ||
         (d.date_edit?.toLowerCase().includes(val) ?? false)
       );
     });
+    
+    // Actualizar productos y paginación
+    this.productosCompletos = productosFiltrados;
+    this.productos = productosFiltrados; // Para mantener compatibilidad
+    this.paginaActual = 1;
+    this.configurarPaginacion();
+  }
+  
+  // Métodos nuevos para paginación
+  
+  /**
+   * Configura la paginación
+   */
+  configurarPaginacion() {
+    this.totalPaginas = Math.ceil(this.productosCompletos.length / this.productosPorPagina);
+    this.cambiarPagina(this.paginaActual);
+  }
+  
+  /**
+   * Cambia a la página especificada
+   * @param pagina Número de página
+   */
+  cambiarPagina(pagina: number) {
+    if (pagina < 1) pagina = 1;
+    if (pagina > this.totalPaginas) pagina = this.totalPaginas;
+    
+    this.paginaActual = pagina;
+    
+    // Calcular índices para la página actual
+    const indiceInicial = (pagina - 1) * this.productosPorPagina;
+    const indiceFinal = Math.min(indiceInicial + this.productosPorPagina, this.productosCompletos.length);
+    
+    // Actualizar productos paginados
+    this.productosPaginados = this.productosCompletos.slice(indiceInicial, indiceFinal);
+  }
+  
+  /**
+   * Avanza a la siguiente página
+   */
+  paginaSiguiente() {
+    if (this.paginaActual < this.totalPaginas) {
+      this.cambiarPagina(this.paginaActual + 1);
+    }
+  }
+  
+  /**
+   * Retrocede a la página anterior
+   */
+  paginaAnterior() {
+    if (this.paginaActual > 1) {
+      this.cambiarPagina(this.paginaActual - 1);
+    }
+  }
+  
+  /**
+   * Cambia la cantidad de productos por página
+   * @param cantidad Nueva cantidad de productos por página
+   */
+  cambiarProductosPorPagina(cantidad: number) {
+    this.productosPorPagina = cantidad;
+    this.configurarPaginacion();
   }
 }

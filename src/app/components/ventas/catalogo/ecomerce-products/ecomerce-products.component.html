@@ -50,9 +50,10 @@
                 </div>
 
                 <div class="col-md-6 text-right">
-                    <span class="f-w-600 m-r-5">{{ 'Mostrando productos' | translate }} 1 -
-                        {{productos?.length}}
-                        {{ 'de' | translate }} {{productos?.length}}
+                    <span class="f-w-600 m-r-5">{{ 'Mostrando productos' | translate }} 
+                        {{ (paginaActual - 1) * productosPorPagina + 1 }} - 
+                        {{ Math.min(paginaActual * productosPorPagina, productosCompletos?.length || 0) }}
+                        {{ 'de' | translate }} {{ productosCompletos?.length || 0 }}
                         {{ 'Resultados' | translate }}</span>
                     <div class="select2-drpdwn-product select-options d-inline-block">
                         <select class="form-control btn-square" name="select">
@@ -234,7 +235,7 @@
         <div class="product-wrapper-grid" [class.list-view]="listView">
             <div class="row">
                 <div [class]="'col-xl-'+col+' col-sm-'+col" [class.col-xl-12]="listView"
-                    *ngFor="let producto of productos">
+                    *ngFor="let producto of productosPaginados">
                     <div class="card">
                         <div class="product-box">
                             <div class="product-img">
@@ -282,6 +283,70 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Control de paginación -->
+            <div class="pagination-wrapper mt-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="items-per-page">
+                            <label class="me-2">{{ 'Productos por página' | translate }}:</label>
+                            <select class="form-select form-select-sm d-inline-block w-auto" 
+                                (change)="cambiarProductosPorPagina(+$event.target.value)">
+                                <option value="4">4</option>
+                                <option value="8" selected>8</option>
+                                <option value="12">12</option>
+                                <option value="16">16</option>
+                                <option value="24">24</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <nav aria-label="Page navigation" class="d-flex justify-content-end">
+                            <ul class="pagination pagination-primary">
+                                <li class="page-item" [class.disabled]="paginaActual === 1">
+                                    <a class="page-link" href="javascript:void(0);" 
+                                       (click)="cambiarPagina(1)" aria-label="First">
+                                        <span aria-hidden="true">«</span>
+                                    </a>
+                                </li>
+                                <li class="page-item" [class.disabled]="paginaActual === 1">
+                                    <a class="page-link" href="javascript:void(0);" 
+                                       (click)="paginaAnterior()" aria-label="Previous">
+                                        <span aria-hidden="true">‹</span>
+                                    </a>
+                                </li>
+                                
+                                <!-- Páginas numéricas -->
+                                <ng-container *ngFor="let page of [].constructor(totalPaginas); let i = index">
+                                    <li class="page-item" [class.active]="paginaActual === i+1" 
+                                        *ngIf="(i+1 >= paginaActual - 1 && i+1 <= paginaActual + 1) || 
+                                               i+1 === 1 || i+1 === totalPaginas">
+                                        <a class="page-link" href="javascript:void(0);" 
+                                           (click)="cambiarPagina(i+1)">{{i+1}}</a>
+                                    </li>
+                                    <li class="page-item disabled" *ngIf="(i+1 === paginaActual - 2 && i+1 > 1) || 
+                                                                           (i+1 === paginaActual + 2 && i+1 < totalPaginas)">
+                                        <a class="page-link" href="javascript:void(0);">...</a>
+                                    </li>
+                                </ng-container>
+                                
+                                <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                                    <a class="page-link" href="javascript:void(0);" 
+                                       (click)="paginaSiguiente()" aria-label="Next">
+                                        <span aria-hidden="true">›</span>
+                                    </a>
+                                </li>
+                                <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                                    <a class="page-link" href="javascript:void(0);" 
+                                       (click)="cambiarPagina(totalPaginas)" aria-label="Last">
+                                        <span aria-hidden="true">»</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
