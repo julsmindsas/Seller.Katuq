@@ -1,95 +1,171 @@
-<!-- <h3 class="mb-4"> <span class="spanProccesName">Configuración {{processSelected}}</span></h3> -->
-<form [formGroup]="formulario" (ngSubmit)="onSubmit()">
-    <fieldset class="card mb-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="cantidad">Cantidad producidas:</label>
+<!-- Componente de Cierre de Artículo Modernizado -->
+<div class="cerrar-articulo-container">
+    <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
+        <div class="configuration-card">
+            <div class="card-header">
+                <i class="pi pi-cog me-2"></i>
+                <span>Configuración de producción</span>
+            </div>
+            <div class="card-content">
+                <div class="form-grid">
+                    <div class="form-cell">
+                        <label for="cantidad" class="control-label">
+                            <i class="pi pi-hashtag me-1"></i>Cantidad producidas:
+                        </label>
                         <input type="number" id="cantidad" formControlName="cantidad" min="0"
-                            [max]="getCantidadTotalProductoEnsamble()" class="form-control"
+                            [max]="getCantidadTotalProductoEnsamble()" class="modern-input"
                             [ngClass]="{'is-invalid': formulario.controls.cantidad.invalid && (formulario.controls.cantidad.dirty || formulario.controls.cantidad.touched)}">
                         <div *ngIf="formulario.get('cantidad').invalid && formulario.get('cantidad').touched"
-                            class="alert alert-danger">La cantidad es obligatoria</div>
+                            class="validation-error">
+                            <i class="pi pi-exclamation-circle me-1"></i>
+                            La cantidad es obligatoria
+                        </div>
                         <div *ngIf="formulario.get('cantidad').value > getCantidadTotalProductoEnsamble().toString()"
-                            class="alert alert-danger">La cantidad no puede ser mayor al faltante</div>
+                            class="validation-error">
+                            <i class="pi pi-exclamation-circle me-1"></i>
+                            La cantidad no puede ser mayor al faltante
+                        </div>
+                    </div>
+                    <div class="form-cell">
+                        <label for="faltante" class="control-label">
+                            <i class="pi pi-minus-circle me-1"></i>Faltante por producir:
+                        </label>
+                        <div id="faltante" class="info-value">{{formulario.value.faltante}}</div>
+                    </div>
+                    <div class="form-cell">
+                        <label for="cantidadPorRepartir" class="control-label">
+                            <i class="pi pi-chart-bar me-1"></i>Cantidad por repartir:
+                        </label>
+                        <div id="cantidadPorRepartir" class="info-value">
+                            {{formulario.value.piezasFaltantesPorRepartir}}
+                        </div>
+                    </div>
+                    <div class="form-cell">
+                        <label for="totalHistorico" class="control-label">
+                            <i class="pi pi-history me-1"></i>Total histórico:
+                        </label>
+                        <div id="totalHistorico" class="info-value">
+                            {{formulario.value.totalHistoricoProducido}}
+                        </div>
                     </div>
                 </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label for="faltante">Faltante por producir:</label>
-                        <div id="faltante" class="form-control-plaintext">{{formulario.value.faltante}}</div>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label for="cantidadPorRepartir" class="d-block">Cantidad por repartir:</label>
-                        <div id="cantidadPorRepartir" class="form-control-plaintext">
-                            {{formulario.value.piezasFaltantesPorRepartir}}</div>
-
-                    </div>
-                </div>
-                <div class="col-2">
-                    <div class="form-group">
-                        <label for="cantidadPorRepartir" class="d-block">Total producidas historicas:</label>
-                        <div id="cantidadPorRepartir" class="form-control-plaintext">
-                            {{formulario.value.totalHistoricoProducido}}</div>
-
-                    </div>
-                </div>
-            </div>
-            <!--generar el div de resumen-->
-            <div class="row" *ngIf="formulario.value.resumen !==''">
-                <div class="col-12 resumen" [ngClass]="{resumen: formulario.value.resumen !==''}">
-                    <div class="form-group">
-                        <label for="resumen" style="margin-top: 24px;">{{formulario.value.resumen}}</label>
+                
+                <!-- Resumen con animación de fade-in cuando está presente -->
+                <div class="resumen-container" *ngIf="formulario.value.resumen !==''">
+                    <div class="resumen-message">
+                        <i class="pi pi-info-circle me-2"></i>
+                        <span>{{formulario.value.resumen}}</span>
                     </div>
                 </div>
             </div>
         </div>
-
-    </fieldset>
-</form>
-<div class="row">
-    <div class="col-4">
-        <h4 class="mb-4">Repartición de piezas a cada pedido </h4>
+    </form>
+    
+    <div class="production-header">
+        <div class="title-section">
+            <i class="pi pi-sitemap me-2"></i>
+            <h4>Repartición de piezas a cada pedido</h4>
+        </div>
+        <div class="stats-section">
+            <div class="production-stat">
+                <i class="pi pi-box"></i>
+                <span>Total: <strong>{{totalPiezasProducidasSumadas}}</strong></span>
+            </div>
+        </div>
     </div>
-    <div class="col-4"> </div>
-    <div class="col-4">
-        <h4>Total Piezas Producidas Sumadas: {{totalPiezasProducidasSumadas}}</h4>
+
+    <div class="orders-container">
+        <div class="order-card" *ngFor="let item of selectedOrdersEnsamble">
+            <div class="order-detail" *ngFor="let detalle of item.detallePedido">
+                <div class="order-info">
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="pi pi-ticket me-2"></i>
+                            <span>Pedido:</span>
+                        </div>
+                        <div class="info-value">
+                            <strong>{{detalle.nroPedido}}</strong>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="pi pi-calendar me-2"></i>
+                            <span>Fecha entrega:</span>
+                        </div>
+                        <div class="info-value">
+                            <span class="date-badge" [ngClass]="{'urgent': esUrgente(detalle.fechaEntrega)}">
+                                {{detalle.fechaEntrega | date:'dd/MM/yyyy' || 'No especificada'}}
+                            </span>
+                            <span class="time-badge" *ngIf="detalle.horarioEntrega">
+                                {{detalle.horarioEntrega}}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="pi pi-th-large me-2"></i>
+                            <span>Piezas a producir:</span>
+                        </div>
+                        <div class="info-value">
+                            <span class="quantity-badge total">{{detalle.cantidadArticulosPorPedido}}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="production-input">
+                    <div class="input-group">
+                        <label for="piezas" class="control-label">
+                            <i class="pi pi-cog me-1"></i>Piezas producidas:
+                        </label>
+                        <input type="number" 
+                            max="{{getMaxActualizarPiezasPorRepartir(detalle)}}" 
+                            id="piezas"
+                            [(ngModel)]="detalle.piezasProducidas" 
+                            (ngModelChange)="actualizarPiezasPorRepartir(detalle)"
+                            class="modern-input">
+                    </div>
+                    <div class="remaining-pieces">
+                        <div class="info-label">
+                            <i class="pi pi-calculator me-2"></i>
+                            <span>Piezas por repartir:</span>
+                        </div>
+                        <div class="info-value">
+                            <span class="quantity-badge remaining">{{detalle.piezasPorRepartir}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-
-<fieldset class="card mb-4" *ngFor="let item of selectedOrdersEnsamble">
-    <div class="card-body" *ngFor="let detalle of item.detallePedido">
-        <div class="row mb-3">
-            <div class="col-6">
-                <label for="piezas">Pedido:</label>
-                <div id="piezas" class="form-control-plaintext">{{detalle.nroPedido}}</div>
-            </div>
-            <div class="col-6">
-                <label for="piezas">Piezas a producir:</label>
-                <div id="piezas" class="form-control-plaintext">{{detalle.cantidadArticulosPorPedido}}</div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-6">
-                <label for="piezas">Piezas producidas:</label>
-            </div>
-            <div class="col-6">
-                <input type="number" max="{{getMaxActualizarPiezasPorRepartir(detalle)}}" id="piezas"
-                    [(ngModel)]="detalle.piezasProducidas" (ngModelChange)="actualizarPiezasPorRepartir(detalle)"
-                    class="form-control">
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col-6">
-                <label for="piezasPorRepartir">Piezas por repartir:</label>
-            </div>
-            <div class="col-6">
-                <div id="piezasPorRepartir" class="form-control-plaintext">{{detalle.piezasPorRepartir}}</div>
-            </div>
-        </div>
-    </div>
-</fieldset>
+<!-- Estilos adicionales para los nuevos elementos -->
+<style>
+    .date-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.6rem;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #495057;
+        font-weight: 500;
+    }
+    
+    .date-badge.urgent {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+    
+    .time-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.6rem;
+        background-color: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        margin-left: 0.5rem;
+        font-weight: 500;
+    }
+</style>

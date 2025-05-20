@@ -1,28 +1,40 @@
 <!-- producto-table.component.html -->
-<div *ngFor="let producto of productsToClose">
-    <div class="row">
-        <div class="col">
+<div *ngFor="let producto of productsToClose" class="producto-container">
+    <div class="producto-header">
+        <div class="producto-title">
+            <i class="pi pi-box me-2"></i>
             <h4>{{ producto.producto }}</h4>
         </div>
-        <div class="col">
+        <div class="action-buttons">
             <button (click)="cambiarProductoEstado(producto)" *ngIf="verificarProduccionTotal(producto)"
-                class="btn btn-primary">Cerrar producto</button>
+                class="btn-cerrar-producto">
+                <i class="pi pi-check-circle me-2"></i>
+                <span>Cerrar producto</span>
+            </button>
         </div>
     </div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Artículo</th>
-                <th *ngFor="let proceso of producto.procesosUnicos">{{ proceso }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let articulo of producto.articulosConProcesos">
-                <td>{{ articulo.articulo }}</td>
-                <td *ngFor="let proceso of producto.procesosUnicos">
-                    {{ getProcesoIcono(getStatusProceso(articulo.procesos, proceso)) }}
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="modern-process-table">
+            <thead>
+                <tr>
+                    <th class="articulo-column">Artículo</th>
+                    <th *ngFor="let proceso of producto.procesosUnicos" class="proceso-column">{{ proceso }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let articulo of producto.articulosConProcesos">
+                    <td class="articulo-name">
+                        <i class="pi pi-tag me-2"></i>
+                        {{ articulo.articulo }}
+                    </td>
+                    <td *ngFor="let proceso of producto.procesosUnicos" class="proceso-status" 
+                        [ngClass]="getStatusClass(getStatusProceso(articulo.procesos, proceso))">
+                        <div class="estado-icon">
+                            <i [class]="getProcesoIconClass(getStatusProceso(articulo.procesos, proceso))"></i>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>

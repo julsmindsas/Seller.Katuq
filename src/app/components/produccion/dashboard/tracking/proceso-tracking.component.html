@@ -1,155 +1,198 @@
-<!-- Container principal con padding extra para mejor espaciado -->
-<div class="container py-4">
-    <!-- Card con sombra suave para mejor visibilidad -->
-    <div class="card shadow-sm mb-4" *ngFor="let detalle of articuloEnsamble.detallePedido">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">
-                <i class="pi pi-file me-2"></i>
-                Detalle del Pedido #{{detalle.nroPedido}}
-            </h4>
+<!-- Componente Tracking Mejorado -->
+<div class="tracking-dashboard">
+    <!-- Resumen General -->
+    <div class="tracking-summary">
+        <div class="summary-card total-items">
+            <div class="summary-icon">
+                <i class="pi pi-box"></i>
+            </div>
+            <div class="summary-content">
+                <span class="summary-value">{{getTotalArticulos()}}</span>
+                <span class="summary-label">Artículos Totales</span>
+            </div>
         </div>
+        <div class="summary-card completed-items">
+            <div class="summary-icon">
+                <i class="pi pi-check-circle"></i>
+            </div>
+            <div class="summary-content">
+                <span class="summary-value">{{getArticulosCompletados()}}</span>
+                <span class="summary-label">Completados</span>
+            </div>
+        </div>
+        <div class="summary-card in-progress-items">
+            <div class="summary-icon">
+                <i class="pi pi-sync"></i>
+            </div>
+            <div class="summary-content">
+                <span class="summary-value">{{getArticulosEnProceso()}}</span>
+                <span class="summary-label">En Proceso</span>
+            </div>
+        </div>
+        <div class="summary-card pending-items">
+            <div class="summary-icon">
+                <i class="pi pi-clock"></i>
+            </div>
+            <div class="summary-content">
+                <span class="summary-value">{{getArticulosPendientes()}}</span>
+                <span class="summary-label">Pendientes</span>
+            </div>
+        </div>
+    </div>
 
-        <!-- Información principal en grid responsivo -->
-        <div class="card-body">
-            <div class="row g-4">
-                <!-- Cada campo en su propia tarjeta -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="info-card p-3 bg-light rounded">
-                        <label class="d-block text-muted mb-2">
-                            <i class="pi pi-calendar me-2"></i>
-                            Fecha de Entrega
-                        </label>
-                        <h5 class="mb-0">{{ detalle.fechaEntrega | date:'dd/MM/yyyy HH:mm' }}</h5>
+    <!-- Órdenes de Producción -->
+    <div class="order-timeline">
+        <div class="order-card" *ngFor="let detalle of articuloEnsamble.detallePedido; let i = index">
+            <!-- Encabezado de Orden -->
+            <div class="order-header" [attr.id]="'pedido-' + detalle.nroPedido">
+                <div class="order-id">
+                    <i class="pi pi-ticket me-2"></i>
+                    <h4>Pedido #{{detalle.nroPedido}}</h4>
+                </div>
+                <div class="order-meta">
+                    <div class="meta-item" [pTooltip]="tooltips.fechaEntrega">
+                        <i class="pi pi-calendar"></i>
+                        <span>{{ detalle.fechaEntrega | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="meta-item" [pTooltip]="tooltips.horario">
+                        <i class="pi pi-clock"></i>
+                        <span>{{ detalle.horarioEntrega || 'No especificado' }}</span>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-3">
-                    <div class="info-card p-3 bg-light rounded">
-                        <label class="d-block text-muted mb-2">
-                            <i class="pi pi-truck me-2"></i>
-                            Forma de Entrega
-                        </label>
-                        <h5 class="mb-0">{{ detalle.formaEntrega }}</h5>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-lg-3">
-                    <div class="info-card p-3 bg-light rounded">
-                        <label class="d-block text-muted mb-2">
-                            <i class="pi pi-clock me-2"></i>
-                            Horario
-                        </label>
-                        <h5 class="mb-0">{{ detalle.horarioEntrega }}</h5>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-lg-3">
-                    <div class="info-card p-3 bg-light rounded">
-                        <label class="d-block text-muted mb-2">
-                            <i class="pi pi-box me-2"></i>
-                            Cantidad
-                        </label>
-                        <h5 class="mb-0">{{ detalle.cantidadArticulosPorPedido }}</h5>
-                    </div>
+                <div class="status-tag" [ngClass]="{
+                    'status-complete': getPedidoStatus(detalle) === 'completado',
+                    'status-partial': getPedidoStatus(detalle) === 'parcial',
+                    'status-pending': getPedidoStatus(detalle) === 'pendiente'
+                }">
+                    <i class="pi" [ngClass]="{
+                        'pi-check-circle': getPedidoStatus(detalle) === 'completado',
+                        'pi-sync': getPedidoStatus(detalle) === 'parcial',
+                        'pi-clock': getPedidoStatus(detalle) === 'pendiente'
+                    }"></i>
+                    <span>{{getPedidoStatusLabel(detalle)}}</span>
                 </div>
             </div>
 
-            <!-- Historial de producción -->
-            <div class="mt-4">
-                <h4 class="mb-3">
-                    <i class="pi pi-history me-2"></i>
-                    Historial de Producción
-                </h4>
-                
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="h6">
-                                    <i class="pi pi-calendar me-2"></i>
-                                    Fecha
-                                </th>
-                                <th class="h6">
-                                    <i class="pi pi-user me-2"></i>
-                                    Responsable
-                                </th>
-                                <th class="h6">
-                                    <i class="pi pi-box me-2"></i>
-                                    Piezas
-                                </th>
-                                <th class="h6">
-                                    <i class="pi pi-cog me-2"></i>
-                                    Proceso
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let historial of detalle.historialPiezasProducidas">
-                                <td class="align-middle">
-                                    <span class="badge bg-light text-dark">
-                                        {{ historial.fecha | date:'dd/MM/yyyy HH:mm' }}
-                                    </span>
-                                </td>
-                                <td class="align-middle">{{ historial.personaResponsable.name }}</td>
-                                <td class="align-middle">
-                                    <span class="badge bg-success">
-                                        {{ historial.piezasProducidas }}
-                                    </span>
-                                </td>
-                                <td class="align-middle">{{ historial.proceso }}</td>
-                            </tr>
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <td colspan="2" class="h6">Total de piezas producidas:</td>
-                                <td colspan="2" class="h6">
-                                    <span class="badge bg-primary">
-                                        {{ getTotalPiezasProducidas(detalle.historialPiezasProducidas) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
+            <!-- Contenido Principal -->
+            <div class="order-content">
+                <!-- Información de Entrega y Cantidad -->
+                <div class="order-details">
+                    <div class="detail-group">
+                        <div class="detail-item" [ngClass]="{'delivery-method': true}">
+                            <div class="item-icon" [ngClass]="{
+                                'delivery-icon': detalle.formaEntrega?.includes('Domicilio'), 
+                                'pickup-icon': detalle.formaEntrega?.includes('Tienda')
+                            }">
+                                <i class="pi" [ngClass]="{
+                                    'pi-truck': detalle.formaEntrega?.includes('Domicilio'), 
+                                    'pi-shopping-bag': detalle.formaEntrega?.includes('Tienda'),
+                                    'pi-map-marker': !detalle.formaEntrega || (!detalle.formaEntrega.includes('Domicilio') && !detalle.formaEntrega.includes('Tienda'))
+                                }"></i>
+                            </div>
+                            <div class="item-content">
+                                <span class="item-label">Entrega</span>
+                                <span class="item-value">{{ detalle.formaEntrega || 'No especificada' }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item quantity-item">
+                            <div class="item-icon">
+                                <i class="pi pi-box"></i>
+                            </div>
+                            <div class="item-content">
+                                <span class="item-label">Cantidad</span>
+                                <div class="quantity-display">
+                                    <span class="quantity-value">{{ detalle.cantidadArticulosPorPedido }}</span>
+                                    <div class="progress-container" *ngIf="detalle.cantidadArticulosPorPedido > 0">
+                                        <div class="progress-bar" [ngClass]="{
+                                            'progress-complete': getProgressPercentage(detalle) >= 100,
+                                            'progress-partial': getProgressPercentage(detalle) > 0 && getProgressPercentage(detalle) < 100,
+                                            'progress-pending': getProgressPercentage(detalle) === 0
+                                        }" [ngStyle]="{width: getProgressPercentage(detalle) + '%'}"></div>
+                                        <span class="progress-text">{{getProgressPercentage(detalle)}}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial de Producción -->
+                <div class="production-history">
+                    <div class="history-header">
+                        <i class="pi pi-history"></i>
+                        <h5>Historial de Producción</h5>
+                        <div class="total-badge">
+                            <span>{{ getTotalPiezasProducidas(detalle.historialPiezasProducidas) }}</span> / <span>{{ detalle.cantidadArticulosPorPedido }}</span> piezas
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline de Producción -->
+                    <div class="production-timeline" *ngIf="detalle.historialPiezasProducidas && detalle.historialPiezasProducidas.length > 0">
+                        <div class="timeline-entry" *ngFor="let historial of detalle.historialPiezasProducidas; let idx = index" [ngClass]="{'latest-entry': idx === 0}">
+                            <div class="timeline-connector" *ngIf="idx < detalle.historialPiezasProducidas.length - 1"></div>
+                            <div class="timeline-icon">
+                                <i class="pi pi-cog"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-header">
+                                    <div class="timeline-process">{{ historial.proceso }}</div>
+                                    <div class="timeline-date">
+                                        <i class="pi pi-calendar"></i>
+                                        <span>{{ historial.fecha | date:'dd/MM/yyyy' }}</span>
+                                    </div>
+                                    <div class="timeline-time">
+                                        <i class="pi pi-clock"></i>
+                                        <span>{{ historial.fecha | date:'HH:mm' }}</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-details">
+                                    <div class="timeline-quantity">
+                                        <span class="quantity-label">Piezas:</span>
+                                        <span class="quantity-badge">{{ historial.piezasProducidas }}</span>
+                                    </div>
+                                    <div class="timeline-user">
+                                        <div class="user-avatar">
+                                            <i class="pi pi-user"></i>
+                                        </div>
+                                        <span class="user-name">{{ historial.personaResponsable?.name || 'No asignado' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensaje de No Registros -->
+                    <div class="empty-timeline" *ngIf="!detalle.historialPiezasProducidas || detalle.historialPiezasProducidas.length === 0">
+                        <div class="empty-icon">
+                            <i class="pi pi-inbox"></i>
+                        </div>
+                        <div class="empty-message">No hay registros de producción para este pedido</div>
+                        <div class="empty-status">Estado: Pendiente</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas Rápidas -->
+            <div class="order-footer">
+                <div class="stats-item" [pTooltip]="'Tiempo restante estimado'">
+                    <i class="pi pi-hourglass"></i>
+                    <span>{{ getEstimatedTimeLeft(detalle) }}</span>
+                </div>
+                <div class="stats-item" [pTooltip]="'Eficiencia de producción'">
+                    <i class="pi pi-chart-line"></i>
+                    <span class="efficiency-indicator" 
+                          [ngClass]="{'high-efficiency': getEfficiency(detalle) > 80, 
+                                    'medium-efficiency': getEfficiency(detalle) >= 50 && getEfficiency(detalle) <= 80,
+                                    'low-efficiency': getEfficiency(detalle) < 50}">
+                        {{ getEfficiency(detalle) }}%
+                    </span>
+                </div>
+                <div class="stats-item" *ngIf="showNextActions(detalle)" [pTooltip]="'Siguiente acción recomendada'">
+                    <i class="pi pi-arrow-right"></i>
+                    <span>{{ getNextAction(detalle) }}</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Estilos personalizados -->
-<style>
-.info-card {
-    transition: all 0.3s ease;
-    border: 1px solid #dee2e6;
-}
-
-.info-card:hover {
-    background-color: #f8f9fa !important;
-    transform: translateY(-2px);
-}
-
-.table th, .table td {
-    font-size: 1.1rem;
-    padding: 1rem;
-}
-
-.badge {
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-}
-
-/* Mejoras de accesibilidad */
-.table-hover tbody tr:hover {
-    background-color: rgba(0,0,0,.03);
-    cursor: pointer;
-}
-
-/* Alto contraste para mejor legibilidad */
-.text-muted {
-    color: #666 !important;
-}
-
-.card-header {
-    border-bottom: 2px solid rgba(0,0,0,.125);
-}
-</style>

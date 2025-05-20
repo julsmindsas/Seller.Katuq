@@ -14,6 +14,7 @@ import { PedidoEntregaComponent } from '../../ventas/entrega/pedido-entrega.comp
 import { Pedido, Cliente, EstadoPago, Carrito, EstadoProceso } from '../../ventas/modelo/pedido';
 import { PedidosUtilService } from '../../ventas/service/pedidos.util.service';
 import { ProduccionService } from 'src/app/shared/services/produccion/produccion.service';
+import { ProduccionNewService } from 'src/app/shared/services/produccion/produccion-new.service';
 import { Detalle, DetallePedido, PedidoParaProduccion, PedidosParaProduccionEnsamble } from '../../../shared/models/produccion/Produccion';
 import { FilterMatchMode, PrimeIcons, PrimeNGConfig, TreeNode } from 'primeng/api';
 import { UtilsService } from 'src/app/shared/services/utils.service';
@@ -25,6 +26,10 @@ import { FilterService } from 'primeng/api';
 import { finalize } from 'rxjs';
 import { parse } from 'flatted';
 import { ListOrdersComponent } from '../../ventas/list/list.component';
+import { environment } from '../../../../environments/environment';
+import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { ProduccionDirectService } from 'src/app/shared/services/produccion/produccion-direct.service';
 
 
 @Component({
@@ -69,7 +74,7 @@ export class DashboardComponent implements OnInit {
     horarioEntrega: '10:00-12:00'
   }];
 
-  filterProcess: any[] = [
+  filterProcess: any[
   ]
   events: any[
   ]
@@ -79,12 +84,29 @@ export class DashboardComponent implements OnInit {
   productsToClose: DatosProducto[];
   filterProcessCombo: any[];
 
-  constructor(private produccionService: ProduccionService,
-    private ventasService: VentasService,
-    private config: PrimeNGConfig, private paymentService: PaymentService, private modalService: NgbModal, private formBuilder: FormBuilder, private pedidoUtilService: PedidosUtilService,
-    private utilService: UtilsService, private filterService: FilterService
-  ) {
+  columns = [
+    { field: 'nombreArticulo', header: 'Artículo', icon: 'pi pi-box', description: 'Nombre del artículo a fabricar' },
+    { field: 'nombreProducto', header: 'Producto', icon: 'pi pi-shopping-bag', description: 'Producto principal asociado' },
+    { field: 'proceso', header: 'Proceso', icon: 'pi pi-cog', description: 'Estado del proceso de fabricación' },
+    { field: 'tracking', header: 'Tracking', icon: 'pi pi-search', description: 'Seguimiento detallado del proceso' },
+    { field: 'cantidadTotalProducto', header: 'Cantidad', icon: 'pi pi-hashtag', description: 'Cantidad total a producir' },
+    { field: 'cantidadTotalProductoEnsamble', header: 'Ensamble', icon: 'pi pi-th-large', description: 'Cantidad total en ensamble' },
+    { field: 'fechaEntrega', header: 'Entrega', icon: 'pi pi-calendar', description: 'Fecha programada de finalización' },
+    { field: 'horarioEntrega', header: 'Horario', icon: 'pi pi-clock', description: 'Horario programado de finalización' }
+  ];
+  selectedColumns = [...this.columns];
 
+  constructor(
+    private produccionService: ProduccionNewService,
+    private ventasService: VentasService,
+    private config: PrimeNGConfig,
+    private paymentService: PaymentService,
+    private modalService: NgbModal,
+    private formBuilder: FormBuilder,
+    private pedidoUtilService: PedidosUtilService,
+    private utilService: UtilsService,
+    private filterService: FilterService
+  ) {
     this.registerCustomFilters();
 
 
@@ -179,34 +201,30 @@ export class DashboardComponent implements OnInit {
       { id: 3, nombre: 'Anulado' },
       { id: 4, nombre: 'Devuelto' }
     ];
+    this.selectedColumns = [...this.columns];
     this.refrescarDatosEnsamble();
-    this.refrescarDatos();
-
   }
 
   async refrescarDatos() {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
-      estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado'],
-      company: JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial
+      estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
+      company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
     this.loading = true;
     const context = this;
-    this.produccionService.getOrdersByFiltersFlatProduct(filter)
-      .pipe(
-        finalize(() => context.loading = false)
-      )
-      .subscribe({
-        next: (data) => {
-          context.orderResponse = data;
-          context.orders = data.orders;
-        },
-        error: (error) => {
-          console.error('Error al cargar los datos:', error);
-          // Manejar el error apropiadamente (por ejemplo, mostrar un mensaje al usuario)
-        }
-      });
+    this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe(
+      (data) => {
+        this.loading = false;
+        this.orderResponse = data;
+        this.orders = data.orders;
+      },
+      (error) => {
+        this.loading = false;
+        console.error('Error al cargar los datos:', error);
+      }
+    );
   }
 
   filterHorarioEntrega(value: string) {
@@ -269,15 +287,21 @@ export class DashboardComponent implements OnInit {
   }
 
   imprimirToPdf() {
-
     const DATA = document.getElementById('htmlPdf');
+
+    // Validar que el elemento exista
+    if (!DATA) {
+      console.error('No se encontró el elemento con ID "htmlPdf"');
+      return;
+    }
+
     const options = {
       useCORS: true,
       allowTaint: true,
       logging: true, // Para depuración, puede desactivarse en producción
     };
-    html2canvas(DATA, options).then(canvas => {
 
+    html2canvas(DATA, options).then(canvas => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF();
 
@@ -301,7 +325,6 @@ export class DashboardComponent implements OnInit {
 
       pdf.save('tu-archivo-pdf.pdf');
     });
-
   }
 
 
@@ -343,12 +366,23 @@ export class DashboardComponent implements OnInit {
         return;
       }
       this.configuracionCarritoSeleccionado = configuracionResult;
-      const index = order.carrito.findIndex((carrito) => carrito.producto.identificacion.referencia === configuracionResult?.producto.identificacion.referencia);
+
+      // Verificar si order.carrito existe
+      if (!order.carrito) {
+        console.error('El carrito del pedido no existe');
+        return;
+      }
+
+      const index = order.carrito.findIndex((carrito) =>
+        carrito && carrito.producto && carrito.producto.identificacion &&
+        configuracionResult && configuracionResult.producto && configuracionResult.producto.identificacion &&
+        carrito.producto.identificacion.referencia === configuracionResult.producto.identificacion.referencia
+      );
+
       if (index !== -1) {
         order.carrito[index] = configuracionResult;
       }
       // this.editOrder(order);
-
     });
   }
 
@@ -369,14 +403,22 @@ export class DashboardComponent implements OnInit {
 
 
   refrescarDatosEnsamble() {
-    const filter = {
-      fechaInicial: this.fechaInicial,
-      fechaFinal: this.fechaFinal,
-      estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado'],
-      company: JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial
+    let fechaInicial = this.fechaInicial;
+    let fechaFinal = this.fechaFinal;
+
+    // Corregir si las fechas están al revés
+    if (fechaInicial > fechaFinal) {
+      const temp = fechaInicial;
+      fechaInicial = fechaFinal;
+      fechaFinal = temp;
     }
 
-    this.refrescarDatos();
+    const filter = {
+      fechaInicial: fechaInicial,
+      fechaFinal: fechaFinal,
+      estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
+      company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial || ''
+    }
 
     this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe((data) => {
 
@@ -574,17 +616,21 @@ export class DashboardComponent implements OnInit {
         detallePedido: grupo.detallePedido
       }));
 
-      const resultado = Object.values(resultadoAgrupado).map((grupo: PedidosParaProduccionEnsamble) => ({
-        nombreProducto: grupo.nombreProducto,
-        nombreArticulo: grupo.nombreArticulo,
-        cantidadTotalProducto: grupo.cantidadTotalProducto,
-        detallePedido: grupo.detallePedido,
-        fechaEntrega: this.getFechaEntregaProgramada(grupo.detallePedido),
-        horarioEntrega: this.getHorarioEntregaProgramada(grupo.detallePedido),
-        tracking: [],
-        cantidadTotalProductoEnsamble: grupo.cantidadTotalProductoEnsamble * grupo.cantidadTotalProducto,
-        detalles: grupo.detalles
-      } as PedidosParaProduccionEnsamble));
+      // Solución al error de tipado: se debe usar (grupo: unknown) y hacer type assertion dentro del map
+      const resultado = Object.values(resultadoAgrupado).map((grupo: unknown) => {
+        const grupoTyped = grupo as PedidosParaProduccionEnsamble;
+        return {
+          nombreProducto: grupoTyped.nombreProducto,
+          nombreArticulo: grupoTyped.nombreArticulo,
+          cantidadTotalProducto: grupoTyped.cantidadTotalProducto,
+          detallePedido: grupoTyped.detallePedido,
+          fechaEntrega: this.getFechaEntregaProgramada(grupoTyped.detallePedido),
+          horarioEntrega: this.getHorarioEntregaProgramada(grupoTyped.detallePedido),
+          tracking: [],
+          cantidadTotalProductoEnsamble: grupoTyped.cantidadTotalProductoEnsamble * grupoTyped.cantidadTotalProducto,
+          detalles: grupoTyped.detalles
+        } as PedidosParaProduccionEnsamble;
+      });
 
       this.horariosEntrega = Array.from(new Set(resultado.flatMap((pedido) => {
         return pedido.detallePedido.flatMap((detalle) => {
@@ -607,6 +653,7 @@ export class DashboardComponent implements OnInit {
 
 
       this.orders = data.orders;
+      this.orderResponse = data;
 
       this.ordersEnsamble = resultado;
       this.AllOrdersEnsamble = this.utilService.deepClone(this.ordersEnsamble);
@@ -624,7 +671,7 @@ export class DashboardComponent implements OnInit {
   }
 
   addProductToCart(content, order: Pedido) {
-    this.ciudadSeleccionada = order.envio?.ciudad;
+    this.ciudadSeleccionada = order.envio?.ciudad || '';
     this.modalService.open(content, {
       size: 'xl',
       scrollable: true,
@@ -637,25 +684,49 @@ export class DashboardComponent implements OnInit {
       if (configuracionResult == 'Cross click') {
         return;
       }
+
+      // Verificar si order.carrito existe
+      if (!order.carrito) {
+        console.error('El carrito del pedido no existe');
+        return;
+      }
+
       order.carrito.push(configuracionResult);
       // actualizar valores del pedido
       order = this.actualizarValoresPedido(order);
-
-
       // this.editOrder(order);
-
     });
   }
   actualizarValoresPedido(order: Pedido) {
     this.pedidoUtilService.pedido = order;
     order.totalDescuento = this.pedidoUtilService.getDiscount();
     order.totalPedidoSinDescuento = this.pedidoUtilService.getSubtotal();
-    order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(order.totalEnvio);
+
+    // Asegurarse de que totalEnvio sea un número, usando 0 si es undefined
+    const totalEnvio = order.totalEnvio || 0;
+    order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(totalEnvio);
+
     return order;
   }
 
   deleteProductToCart(order: Pedido, carrito: Carrito) {
-    const index = order.carrito.findIndex((carrito) => carrito.producto.identificacion.referencia === carrito.producto.identificacion.referencia);
+    // Verificar si order.carrito existe
+    if (!order.carrito) {
+      console.error('El carrito del pedido no existe');
+      return;
+    }
+
+    // Verificar si carrito.producto e identificacion existen
+    if (!carrito || !carrito.producto || !carrito.producto.identificacion) {
+      console.error('El producto o su identificación no existen');
+      return;
+    }
+
+    const index = order.carrito.findIndex((item) =>
+      item && item.producto && item.producto.identificacion &&
+      item.producto.identificacion.referencia === carrito?.producto?.identificacion?.referencia
+    );
+
     if (index !== -1) {
       order.carrito.splice(index, 1);
     }
@@ -664,6 +735,12 @@ export class DashboardComponent implements OnInit {
 
 
   editSeller(order: Pedido) {
+    // Verificar que exista un asesor asignado
+    if (!order.asesorAsignado) {
+      console.error('No hay asesor asignado al pedido');
+      return;
+    }
+
     if (order.asesorAsignado.nit === '9999') {
       Swal.fire({
         title: '¿Estás seguro?',
@@ -677,19 +754,30 @@ export class DashboardComponent implements OnInit {
       }).then((result) => {
         if (result.isConfirmed) {
           const userString = localStorage.getItem('user');
-          const user = JSON.parse(userString) as UserLogged;
-          const userLite: UserLite = {
-            name: user.name,
-            email: user.email,
-            nit: user.nit
+
+          // Verificar que userString no sea null
+          if (!userString) {
+            console.error('No se encontró información del usuario en localStorage');
+            return;
           }
-          order.asesorAsignado = userLite;
-          // this.editOrder(order);
-          Swal.fire(
-            'Cambiado',
-            'El asesor ha sido cambiado.',
-            'success'
-          );
+
+          try {
+            const user = JSON.parse(userString) as UserLogged;
+            const userLite: UserLite = {
+              name: user.name,
+              email: user.email,
+              nit: user.nit
+            }
+            order.asesorAsignado = userLite;
+            // this.editOrder(order);
+            Swal.fire(
+              'Cambiado',
+              'El asesor ha sido cambiado.',
+              'success'
+            );
+          } catch (error) {
+            console.error('Error al procesar la información del usuario:', error);
+          }
         }
       })
     }
@@ -707,19 +795,32 @@ export class DashboardComponent implements OnInit {
 
   buscarPorFechas(table?: Table): void {
     // Implementar lógica para filtrar los pedidos entre fechaInicial y fechaFinal
-    const filter = {
-      fechaInicial: this.fechaInicial,
-      fechaFinal: this.fechaFinal,
-      estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado'],
-      company: JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial
-    }
-    this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe((data) => {
-      this.orders = data.orders;
-      this.loading = false;
-    });
+    const currentCompanyData = sessionStorage.getItem("currentCompany");
 
-    if (table) {
-      table.clear();
+    if (!currentCompanyData) {
+      console.error('No hay información de la compañía en sessionStorage');
+      return;
+    }
+
+    try {
+      const currentCompany = JSON.parse(currentCompanyData);
+      const filter = {
+        fechaInicial: this.fechaInicial,
+        fechaFinal: this.fechaFinal,
+        estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado'],
+        company: currentCompany.nomComercial || ''
+      }
+
+      this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe((data) => {
+        this.orders = data.orders;
+        this.loading = false;
+      });
+
+      if (table) {
+        table.clear();
+      }
+    } catch (error) {
+      console.error('Error al procesar la información de la compañía:', error);
     }
   }
 
@@ -806,7 +907,13 @@ export class DashboardComponent implements OnInit {
       if (result === 'cerrar') {
       }
     });
+  }
 
+  selectProcess(proceso) {
+    if (!proceso.statusJararquiaProcess) {
+      return; // No permitir seleccionar procesos deshabilitados
+    }
+    this.selectedProcesos = proceso.label;
   }
 
   private processStatusProductionProcess() {
@@ -874,6 +981,8 @@ export class DashboardComponent implements OnInit {
       return EstadoProcesoItem.ProducidasParcialmente;
     }
 
+    // Retorno por defecto para evitar error de TypeScript
+    return EstadoProcesoItem.SinProducir;
   }
 
   cerrarArticuloEnsamble(content, process) {
@@ -964,12 +1073,42 @@ export class DashboardComponent implements OnInit {
 
                   order.estadoProceso = EstadoProceso.SinProducir;
                   let orderToUpdate = this.orderResponse.ordersRaw.find(x => x._id == order.orderId);
-                  let carrito = orderToUpdate.carrito.find(x => x.producto.identificacion.referencia == order.producto.identificacion.referencia);
+
+                  // Verificar si orderToUpdate y su propiedad carrito existen
+                  if (!orderToUpdate) {
+                    console.error('No se encontró la orden a actualizar');
+                    return;
+                  }
+
+                  if (!orderToUpdate.carrito) {
+                    console.error('La orden a actualizar no tiene carrito');
+                    return;
+                  }
+
+                  let carrito = orderToUpdate.carrito.find(x => x.producto?.identificacion?.referencia == order.producto?.identificacion?.referencia);
+
+                  // Verificar si se encontró el carrito
+                  if (!carrito) {
+                    console.error('No se encontró el carrito correspondiente en la orden');
+                    return;
+                  }
 
                   carrito.producto = this.utilService.deepClone(order.producto);
 
+                  // Verificar si la estructura del producto existe antes de acceder
+                  if (!carrito.producto || !carrito.producto.otrosProcesos ||
+                    !carrito.producto.otrosProcesos.modulosVariables ||
+                    !carrito.producto.otrosProcesos.modulosVariables.produccion) {
+                    console.error('La estructura del producto en el carrito es incompleta');
+                    return;
+                  }
+
                   //validar si todos los procesos de todos los articulos estan producidos
-                  carrito.producto?.otrosProcesos.modulosVariables.produccion.forEach((prod) => {
+                  carrito.producto.otrosProcesos.modulosVariables.produccion.forEach((prod) => {
+                    if (!prod || !prod.procesos) {
+                      return; // Si no hay proceso o procesos, saltar este ítem
+                    }
+
                     const allProcesosProduced = prod.procesos.filter(p => p.nombre != this.procesoGlobal).every((proceso) => {
                       return proceso.estadoProceso === EstadoProcesoItem.ProducidasTotalmente;
                     });
@@ -979,15 +1118,20 @@ export class DashboardComponent implements OnInit {
                     } else {
                       prod.estadoArticulo = EstadoProcesoItem.ProducidasParcialmente;
                     }
-
                   });
 
 
                   //validar si todos los estadoArticulo de todos los articulos estan producidos
-                  const allArticulosProduced = carrito.producto.otrosProcesos.modulosVariables.produccion.every((prod) => {
-                    return prod.estadoArticulo === EstadoProcesoItem.ProducidasTotalmente;
-                  });
+                  if (!carrito.producto || !carrito.producto.otrosProcesos ||
+                    !carrito.producto.otrosProcesos.modulosVariables ||
+                    !carrito.producto.otrosProcesos.modulosVariables.produccion) {
+                    console.error('Estructura del producto incompleta al validar estados de artículos');
+                    return;
+                  }
 
+                  const allArticulosProduced = carrito.producto.otrosProcesos.modulosVariables.produccion.every((prod) => {
+                    return prod && prod.estadoArticulo === EstadoProcesoItem.ProducidasTotalmente;
+                  });
 
                   //si es true se le cambia el estado al producto
                   if (allArticulosProduced) {
@@ -995,29 +1139,34 @@ export class DashboardComponent implements OnInit {
                   } else {
                     //validar si almenos un articulo es diferente de sin producir
                     const allArticulosProducedPartial = carrito.producto.otrosProcesos.modulosVariables.produccion.some((prod) => {
-                      return prod.estadoArticulo !== EstadoProcesoItem.SinProducir;
+                      return prod && prod.estadoArticulo !== EstadoProcesoItem.SinProducir;
                     });
 
                     if (allArticulosProducedPartial) {
                       carrito.estadoProcesoProducto = EstadoProceso.ProducidoParcialmente;
                     } else {
-
                       carrito.estadoProcesoProducto = EstadoProceso.SinProducir;
                     }
                   }
 
                   //validar si todos los productos de la orden estan producidos
-                  const allProductsProduced = orderToUpdate.carrito.every((carrito) => {
-                    return carrito.estadoProcesoProducto === EstadoProceso.ProducidoTotalmente;
+                  if (!orderToUpdate.carrito) {
+                    console.error('Carrito undefined al validar todos los productos');
+                    return;
+                  }
+
+                  const allProductsProduced = orderToUpdate.carrito.every((carritoItem) => {
+                    return carritoItem && carritoItem.estadoProcesoProducto === EstadoProceso.ProducidoTotalmente;
                   });
 
                   if (allProductsProduced) {
                     orderToUpdate.estadoProceso = EstadoProceso.ProducidoTotalmente;
                   } else {
                     //validar si almenos un producto es diferente de sin producir
-                    const allProductsProducedPartial = orderToUpdate.carrito.some((carrito) => {
-                      return carrito.estadoProcesoProducto !== EstadoProceso.SinProducir;
+                    const allProductsProducedPartial = orderToUpdate.carrito.some((carritoItem) => {
+                      return carritoItem && carritoItem.estadoProcesoProducto !== EstadoProceso.SinProducir;
                     });
+
                     if (allProductsProducedPartial) {
                       orderToUpdate.estadoProceso = EstadoProceso.ProducidoParcialmente;
                     } else {
@@ -1197,38 +1346,66 @@ export class DashboardComponent implements OnInit {
 
           //buscar en orderresponse orderraw y editar la orden
           productsToClose.forEach(product => {
-            this.orderResponse.ordersRaw.filter(x => x.carrito.find(y => y.producto.crearProducto.titulo == product.producto)).forEach(order => {
-              let carritoSelected = order.carrito.find(x => x.producto.crearProducto.titulo == product.producto);
-              carritoSelected.estadoProcesoProducto = EstadoProceso.ProducidoTotalmente;
-              let orderToUpdate = order;
+            // Filtrar sólo los elementos que tienen carrito y producto definidos con la estructura esperada
+            this.orderResponse.ordersRaw
+              .filter(x => x.carrito && Array.isArray(x.carrito))
+              .forEach(order => {
+                // Buscar el carrito correspondiente con verificaciones de nulidad
+                const carritoSelected = order.carrito.find(x =>
+                  x && x.producto && x.producto.crearProducto &&
+                  x.producto.crearProducto.titulo === product.producto
+                );
 
+                // Si no se encuentra el carrito, saltar este elemento
+                if (!carritoSelected) {
+                  console.warn(`No se encontró un carrito para el producto ${product.producto}`);
+                  return;
+                }
 
-              //validar si todos los procesos de todos los articulos estan producidos
-              carritoSelected.producto?.otrosProcesos.modulosVariables.produccion.forEach((prod) => {
-                prod.procesos.forEach((proceso) => {
-                  proceso.estadoProceso = EstadoProcesoItem.ProducidasTotalmente;
+                carritoSelected.estadoProcesoProducto = EstadoProceso.ProducidoTotalmente;
+                let orderToUpdate = order;
+
+                // Verificar la estructura del producto
+                if (!carritoSelected.producto ||
+                  !carritoSelected.producto.otrosProcesos ||
+                  !carritoSelected.producto.otrosProcesos.modulosVariables ||
+                  !carritoSelected.producto.otrosProcesos.modulosVariables.produccion) {
+                  console.warn(`Estructura incompleta en el producto ${product.producto}`);
+                  return;
+                }
+
+                // Validar si todos los procesos de todos los artículos están producidos
+                carritoSelected.producto.otrosProcesos.modulosVariables.produccion.forEach((prod) => {
+                  if (!prod || !prod.procesos) {
+                    return; // Saltar si no hay procesos
+                  }
+                  prod.procesos.forEach((proceso) => {
+                    proceso.estadoProceso = EstadoProcesoItem.ProducidasTotalmente;
+                  });
+                  prod.estadoArticulo = EstadoProcesoItem.ProducidasTotalmente;
                 });
 
-                prod.estadoArticulo = EstadoProcesoItem.ProducidasTotalmente;
+                carritoSelected.estadoProcesoProducto = EstadoProceso.ProducidoTotalmente;
 
+                // Verificar que orderToUpdate.carrito exista
+                if (!orderToUpdate.carrito) {
+                  console.error('El carrito en orderToUpdate no existe');
+                  return;
+                }
 
+                // Validar si todos los productos de la orden están producidos
+                const allProductsProduced = orderToUpdate.carrito.every((carritoItem) => {
+                  return carritoItem && carritoItem.estadoProcesoProducto === EstadoProceso.ProducidoTotalmente;
+                });
+
+                if (allProductsProduced) {
+                  orderToUpdate.estadoProceso = EstadoProceso.ProducidoTotalmente;
+                } else {
+                  orderToUpdate.estadoProceso = EstadoProceso.SinProducir;
+                }
+
+                this.editOrder(orderToUpdate);
               });
-
-              carritoSelected.estadoProcesoProducto = EstadoProceso.ProducidoTotalmente;
-              //validar si todos los productos de la orden estan producidos
-              const allProductsProduced = orderToUpdate.carrito.every((carrito) => {
-                return carrito.estadoProcesoProducto === EstadoProceso.ProducidoTotalmente;
-              });
-
-              if (allProductsProduced) {
-                orderToUpdate.estadoProceso = EstadoProceso.ProducidoTotalmente;
-              } else {
-                orderToUpdate.estadoProceso = EstadoProceso.SinProducir;
-              }
-
-              this.editOrder(orderToUpdate);
-
-            });
           });
 
 
@@ -1310,11 +1487,31 @@ export class DashboardComponent implements OnInit {
   }
 
   producirPedidoLogic(pedido: Pedido) {
+    // Verificar si el pedido existe y tiene la propiedad carrito
+    if (!pedido) {
+      console.error('El pedido no existe');
+      return;
+    }
+
+    if (!pedido.carrito) {
+      console.error('El pedido no tiene la propiedad carrito');
+      return;
+    }
 
     if (pedido.estadoProceso != EstadoProceso.ProducidoTotalmente) {
       pedido.estadoProceso = EstadoProceso.ProducidoTotalmente;
       pedido.carrito.forEach(carrito => {
+        if (!carrito || !carrito.producto || !carrito.producto.otrosProcesos ||
+          !carrito.producto.otrosProcesos.modulosVariables ||
+          !carrito.producto.otrosProcesos.modulosVariables.produccion) {
+          return; // Saltar este carrito si no tiene la estructura esperada
+        }
+
         carrito.producto.otrosProcesos.modulosVariables.produccion.forEach(produccion => {
+          if (!produccion || !produccion.procesos) {
+            return; // Saltar esta producción si no tiene procesos
+          }
+
           produccion.procesos.forEach(proceso => {
             proceso.estadoProceso = EstadoProcesoItem.ProducidasTotalmente;
           });
@@ -1326,7 +1523,17 @@ export class DashboardComponent implements OnInit {
     else {
       pedido.estadoProceso = EstadoProceso.SinProducir;
       pedido.carrito.forEach(carrito => {
+        if (!carrito || !carrito.producto || !carrito.producto.otrosProcesos ||
+          !carrito.producto.otrosProcesos.modulosVariables ||
+          !carrito.producto.otrosProcesos.modulosVariables.produccion) {
+          return; // Saltar este carrito si no tiene la estructura esperada
+        }
+
         carrito.producto.otrosProcesos.modulosVariables.produccion.forEach(produccion => {
+          if (!produccion || !produccion.procesos) {
+            return; // Saltar esta producción si no tiene procesos
+          }
+
           produccion.procesos.forEach(proceso => {
             proceso.estadoProceso = EstadoProcesoItem.SinProducir;
           });
@@ -1337,7 +1544,89 @@ export class DashboardComponent implements OnInit {
     }
 
     this.editOrder(pedido);
+  }
 
+  resetColumnConfig() {
+    this.selectedColumns = [...this.columns];
+  }
+
+  /**
+   * Obtiene la clase CSS para el indicador de estado del proceso
+   */
+  getProcessStatusClass(row: PedidosParaProduccionEnsamble): string {
+    // Verificar si hay detalles de proceso
+    if (!row.detalles || row.detalles.length === 0) {
+      return 'status-none';
+    }
+
+    // Contar procesos totalmente producidos
+    const totalProcesos = row.detalles.length;
+    const procesosCompletados = row.detallePedido.filter(
+      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasTotalmente
+    ).length;
+    const procesosParciales = row.detallePedido.filter(
+      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasParcialmente
+    ).length;
+
+    // Determinar la clase basada en el estado general
+    if (procesosCompletados === totalProcesos) {
+      return 'status-complete';
+    } else if (procesosCompletados > 0 || procesosParciales > 0) {
+      return 'status-partial';
+    } else {
+      return 'status-pending';
+    }
+  }
+
+  /**
+   * Obtiene el ícono para el indicador de estado del proceso
+   */
+  getProcessStatusIcon(row: PedidosParaProduccionEnsamble): string {
+    // Verificar si hay detalles de proceso
+    if (!row.detalles || row.detalles.length === 0) {
+      return 'pi pi-question-circle';
+    }
+
+    // Contar procesos totalmente producidos
+    const totalProcesos = row.detalles.length;
+    const procesosCompletados = row.detallePedido.filter(
+      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasTotalmente
+    ).length;
+    const procesosParciales = row.detallePedido.filter(
+      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasParcialmente
+    ).length;
+
+    // Determinar el ícono basado en el estado general
+    if (procesosCompletados === totalProcesos) {
+      return 'pi pi-check-circle';
+    } else if (procesosCompletados > 0 || procesosParciales > 0) {
+      return 'pi pi-sync';
+    } else {
+      return 'pi pi-clock';
+    }
+  }
+
+  /**
+   * Obtiene el tooltip para el indicador de estado del proceso
+   */
+  getProcessStatusTooltip(row: PedidosParaProduccionEnsamble): string {
+    // Verificar si hay detalles de proceso
+    if (!row.detalles || row.detalles.length === 0) {
+      return 'Sin información de procesos';
+    }
+
+    // Contar procesos totalmente producidos
+    const totalProcesos = row.detalles.length;
+    const procesosCompletados = row.detallePedido.filter(
+      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasTotalmente
+    ).length;
+    const procesosParciales = row.detallePedido.filter(
+      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasParcialmente
+    ).length;
+    const procesosPendientes = totalProcesos - procesosCompletados - procesosParciales;
+
+    // Construir mensaje detallado
+    return `Estado: ${procesosCompletados} completados, ${procesosParciales} parciales, ${procesosPendientes} pendientes de ${totalProcesos} procesos`;
   }
 
 }

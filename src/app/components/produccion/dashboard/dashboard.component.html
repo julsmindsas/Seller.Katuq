@@ -1,160 +1,289 @@
 <app-breadcrumb [title]="'Produccion'" [items]="['Produccion/Tablero']" [active_item]="'Tablero'"></app-breadcrumb>
-<div class="container-xl withoutmargin">
+
+<!-- Sección principal -->
+<div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="order-history table-responsive custom-datatable product-list-custom">
+            <!-- Card principal -->
+            <div class="card shadow-sm border-0 mb-4">
+                <!-- Loader -->
+                <div class="loader-box" *ngIf="loading">
+                    <div class="loader-8"></div>
+                </div>
+
+                <!-- Header del módulo -->
+                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1 fw-bold text-primary"><i class="pi pi-box me-2"></i>Producción</h5>
+                        <p class="text-muted small mb-0">Gestión de producción y seguimiento de artículos</p>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
                         <p-tabView [scrollable]="false" (onChange)="handleChange($event)">
+                        <!-- TAB DE ENSAMBLE -->
                             <p-tabPanel header="Ensamble">
-                                <p-table #dtEnsamble [value]="ordersEnsamble" dataKey="nombreArticulo" [rows]="10"
-                                    [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading"
-                                    styleClass="p-datatable-customers p-datatable-gridlines" [paginator]="true"
-                                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
-                                    [globalFilterFields]="['nombreProducto', 'nombreArticulo']">
-                                    <!-- CAPTION: Filtros y botones arriba de la tabla -->
-                                    <ng-template pTemplate="caption">
-                                        <div class="row p-grid">
-                                            <div class="col-4 p-col-12 p-md-6 p-lg-3">
-                                                <label for="fechaInicial" class="labelHead">Proceso</label>
+                            <!-- Filtros de búsqueda -->
+                            <div class="filtros-container bg-light p-3 border-bottom">
+                                <div class="d-flex flex-column">
+                                    <!-- Encabezado de filtros -->
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0 text-muted">
+                                            <i class="pi pi-filter text-primary me-2"></i>
+                                            <span>Filtros de búsqueda</span>
+                                        </h6>
+                                    </div>
+                                    
+                                    <!-- Filtros -->
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-4 col-sm-6">
+                                            <label for="proceso" class="form-label small text-muted mb-1">Proceso</label>
                                                 <p-dropdown [options]="filterProcessCombo"
                                                     [(ngModel)]="selectedProcesosFilter"
-                                                    placeholder="Seleccione un proceso" optionLabel="label"
+                                                placeholder="Seleccione un proceso" 
+                                                optionLabel="label"
                                                     optionValue="value"
-                                                    (onChange)="filterOrderByProcess($event)"></p-dropdown>
+                                                styleClass="w-100"
+                                                (onChange)="filterOrderByProcess($event)">
+                                                <ng-template let-item pTemplate="item">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="pi pi-tag me-2 text-primary"></i>
+                                                        <span>{{ item.label }}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
+                                        </div>
+                                        <div class="col-md-4 col-sm-6">
+                                            <label for="fechaInicial" class="form-label small text-muted mb-1">Fecha Inicial</label>
+                                            <p-calendar id="fechaInicial" 
+                                                [(ngModel)]="fechaInicial"
+                                                [showIcon]="true"
+                                                dateFormat="dd/mm/yy"
+                                                [readonlyInput]="true"
+                                                styleClass="w-100"
+                                                [inputStyleClass]="'form-control form-control-sm rounded'">
+                                            </p-calendar>
+                                        </div>
+                                        <div class="col-md-4 col-sm-6">
+                                            <label for="fechaFinal" class="form-label small text-muted mb-1">Fecha Final</label>
+                                            <p-calendar id="fechaFinal" 
+                                                [(ngModel)]="fechaFinal"
+                                                [showIcon]="true"
+                                                dateFormat="dd/mm/yy"
+                                                [readonlyInput]="true"
+                                                styleClass="w-100"
+                                                [inputStyleClass]="'form-control form-control-sm rounded'">
+                                            </p-calendar>
                                             </div>
-                                            <div class="col-4 p-col-12 p-md-6 p-lg-3">
-                                                <label for="fechaInicial">Fecha Inicial</label>
-                                                <p-calendar id="fechaInicial" [(ngModel)]="fechaInicial"
-                                                    inputId="fechaInicial" [showIcon]="false"
-                                                    dateFormat="d/m/yy"></p-calendar>
                                             </div>
-                                            <div class="col-4 p-col-12 p-md-6 p-lg-3">
-                                                <label for="fechaFinal">Fecha Final</label>
-                                                <p-calendar id="fechaFinal" [(ngModel)]="fechaFinal"
-                                                    inputId="fechaFinal" [showIcon]="false"></p-calendar>
+                                    
+                                    <!-- Botones de acción para filtros -->
+                                    <div class="row mt-3">
+                                        <div class="col-md-8">
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-primary" (click)="refrescarDatosEnsamble()">
+                                                    <i class="pi pi-search me-1"></i>Buscar
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" (click)="clear(dtEnsamble)">
+                                                    <i class="pi pi-refresh me-1"></i>Limpiar
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaHoy()">
+                                                    <i class="pi pi-calendar-today me-1"></i>Hoy
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaManana()">
+                                                    <i class="pi pi-calendar me-1"></i>Mañana
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaPasadoManana()">
+                                                    <i class="pi pi-calendar-plus me-1"></i>Pasado mañana
+                                                </button>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <button pButton label="Buscar" class="col-2 p-button-outlined"
-                                                icon="pi pi-refresh" (click)="refrescarDatosEnsamble()"></button>
-                                            <button pButton label="Limpiar" class="col-2 p-button-outlined"
-                                                icon="pi pi-filter-slash" (click)="clear(dtEnsamble)"></button>
-                                            <button pButton label="Para hoy" icon="pi pi-calendar"
-                                                (click)="filtrarParaHoy()"
-                                                class="p-mr-2 col-2 p-button-outlined"></button>
-                                            <button pButton label="Para mañana" icon="pi pi-calendar-plus"
-                                                (click)="filtrarParaManana()"
-                                                class="p-mr-2 col-2 p-button-outlined"></button>
-                                            <button pButton label="Para pasado mañana" icon="pi pi-calendar-times"
-                                                (click)="filtrarParaPasadoManana()"
-                                                class="col-3 p-button-outlined"></button>
-                                            <button pButton label="Cerrar Producto" icon="pi pi-inbox p-button-outlined"
-                                                (click)="cerrarProductosSeleccionados(cerrarProductoModal)"
-                                                class="col-3 p-button-outlined mt-5"></button>
+                                        <div class="col-md-4 text-end">
+                                            <button pButton 
+                                                type="button" 
+                                                label="Cerrar Producto" 
+                                                icon="pi pi-inbox" 
+                                                class="p-button-outlined"
+                                                (click)="cerrarProductosSeleccionados(cerrarProductoModal)">
+                                            </button>
                                         </div>
-                                    </ng-template>
+                                    </div>
+                                </div>
+                            </div>
 
-                                    <!-- HEADER: Dos filas (títulos y filtros) -->
-                                    <ng-template pTemplate="header">
-                                        <tr class="p-table-tr-th">
-                                            <td style="width: 4rem !important"></td>
-                                            <th>
-                                                Nombre del Artículo
-                                                <p-columnFilter (onFilter)="handleFilter($event)" field="nombreArticulo"
-                                                    matchMode="contains"></p-columnFilter>
-                                            </th>
-                                            <th>
-                                                Nombre del Producto
-                                                <p-columnFilter field="nombreProducto"
-                                                    matchMode="contains"></p-columnFilter>
-                                            </th>
-                                            <th>Tracking de proceso</th>
-                                            <th>
-                                                Cantidad Total del Producto
-                                                <p-columnFilter field="cantidadTotalProducto"
-                                                    matchMode="equals"></p-columnFilter>
-                                            </th>
-                                            <th>
-                                                Cantidad Total del Producto Ensamble
-                                                <p-columnFilter field="cantidadTotalProductoEnsamble"
-                                                    matchMode="equals"></p-columnFilter>
-                                            </th>
-                                            <th>
-                                                Fecha entrega programada
-                                                <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega"
-                                                    [showMatchModes]="false" [showOperator]="false"
-                                                    [showAddButton]="false" type="date" display="menu">
-                                                    <ng-template pTemplate="filter" let-value
-                                                        let-filter="filterCallback">
-                                                        <p-calendar [(ngModel)]="dateFilter" (onSelect)="filter($event)"
-                                                            dateFormat="yy-mm-dd"></p-calendar>
+                            <!-- Selector de columnas moderno -->
+                            <div class="mb-3 d-flex align-items-center gap-2 px-3 pt-3">
+                                <div class="column-selector-container">
+                                    <p-multiSelect [options]="columns"
+                                                  [(ngModel)]="selectedColumns"
+                                                  optionLabel="header"
+                                                  display="chip"
+                                                  [panelStyle]="{ 'min-width': '280px', 'max-width': '340px', 'border-radius': '12px', 'box-shadow': '0 4px 20px rgba(0,0,0,0.08)' }"
+                                                  styleClass="modern-multiselect"
+                                                  [showToggleAll]="false"
+                                                  [filter]="true"
+                                                  defaultLabel="Columnas a mostrar"
+                                                  selectedItemsLabel="{0} columnas">
+                                        <ng-template let-option pTemplate="item">
+                                            <div class="column-option-item">
+                                                <i [ngClass]="option.icon" class="option-icon"></i>
+                                                <div>
+                                                    <span class="option-title">{{ option.header }}</span>
+                                                    <div class="option-description">{{ option.description }}</div>
+                                                </div>
+                                            </div>
                                                     </ng-template>
-                                                </p-columnFilter>
-                                            </th>
-                                            <th>
-                                                Horario entrega programada
-                                                <p-columnFilter field="horarioEntrega" matchMode="in" [showMenu]="false"
-                                                    [showMatchModes]="false" [showOperator]="false"
-                                                    [showAddButton]="false" [matchMode]="'horarioEntregaCustom'">
-                                                    <ng-template pTemplate="filter" let-value
-                                                        let-filter="filterCallback">
-                                                        <p-multiSelect [ngModel]="value" [options]="horariosEntrega"
-                                                            placeholder="Horarios" (onChange)="filter($event.value)"
-                                                            optionLabel="horarioEntrega">
-                                                            <ng-template let-option pTemplate="item">
-                                                                <div class="p-multiselect-representative-option">
-                                                                    <span class="ml-1">{{option.horarioEntrega}}</span>
+                                        <ng-template pTemplate="selectedItems" let-value>
+                                            <div class="selected-columns-chip">
+                                                <i class="pi pi-table me-1"></i> {{ value?.length || 0 }} columnas
                                                                 </div>
                                                             </ng-template>
                                                         </p-multiSelect>
-                                                    </ng-template>
-                                                </p-columnFilter>
+                                    <button pButton pRipple type="button" icon="pi pi-undo" 
+                                            class="reset-columns-btn"
+                                            pTooltip="Restaurar columnas"
+                                            tooltipPosition="top"
+                                            (click)="resetColumnConfig()">
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tabla de Producción Moderna -->
+                            <div class="px-3 pb-3">
+                                <div class="production-table-container">
+                                    <p-table #dtEnsamble 
+                                        [value]="ordersEnsamble" 
+                                        dataKey="nombreArticulo" 
+                                        [rows]="10"
+                                        [rowsPerPageOptions]="[5,10,25,50]" 
+                                        [loading]="loading"
+                                        styleClass="modern-production-table" 
+                                        [paginator]="true"
+                                        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} artículos"
+                                        [globalFilterFields]="['nombreProducto', 'nombreArticulo']">
+                                        
+                                        <ng-template pTemplate="header">
+                                            <tr>
+                                                <td class="action-column"></td>
+                                                <th *ngFor="let col of selectedColumns" 
+                                                    [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega',
+                                                              'text-end': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble'}">
+                                                    <div class="header-cell" pTooltip="{{ col.description }}" tooltipPosition="top">
+                                                        <i [ngClass]="col.icon"></i>
+                                                        <span>{{ col.header }}</span>
+                                                    </div>
                                             </th>
                                         </tr>
                                     </ng-template>
 
-                                    <!-- CUERPO: filas y row expansion -->
-                                    <ng-template pTemplate="body" let-agrupacionProducto let-expanded="expanded">
-                                        <tr class="p-table-tr-td">
-                                            <td>
-                                                <button type="button" pButton pRipple icon="pi pi-arrow-circle-up"
-                                                    (click)="seleccionarProcesoACerrar(processSelecteModal, agrupacionProducto)"></button>
+                                        <ng-template pTemplate="body" let-row>
+                                            <tr class="product-row">
+                                                <td class="action-column">
+                                                    <button type="button" 
+                                                        pButton 
+                                                        pRipple 
+                                                        icon="pi pi-sitemap"
+                                                        class="process-menu-btn"
+                                                        pTooltip="Ver procesos de fabricación"
+                                                        tooltipPosition="right"
+                                                        (click)="seleccionarProcesoACerrar(processSelecteModal, row)">
+                                                    </button>
                                             </td>
-                                            <td>{{ agrupacionProducto.nombreArticulo }}</td>
-                                            <td>{{ agrupacionProducto.nombreProducto }}</td>
-                                            <td>
-                                                <p-button label="Ver Tracking" icon="pi pi-external-link"
-                                                    (onClick)="mostrarTracking(trackinModal, agrupacionProducto)"></p-button>
+                                                <td *ngFor="let col of selectedColumns"
+                                                    [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega',
+                                                                'text-end': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble',
+                                                                'numeric-cell': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble'}">
+                                                    
+                                                    <ng-container [ngSwitch]="col.field">
+                                                        <!-- Tracking/Proceso -->
+                                                        <ng-container *ngSwitchCase="'tracking'">
+                                                            <button pButton 
+                                                                icon="pi pi-cog"
+                                                                class="process-action-btn"
+                                                                pTooltip="Ver proceso de fabricación"
+                                                                tooltipPosition="top"
+                                                                (click)="mostrarTracking(trackinModal, row)">
+                                                            </button>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Estado de Proceso -->
+                                                        <ng-container *ngSwitchCase="'proceso'">
+                                                            <div class="process-status-indicator" 
+                                                                 [ngClass]="getProcessStatusClass(row)"
+                                                                 pTooltip="{{getProcessStatusTooltip(row)}}"
+                                                                 tooltipPosition="top">
+                                                                <i [class]="getProcessStatusIcon(row)"></i>
+                                                            </div>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Cantidades con estilo numérico -->
+                                                        <ng-container *ngSwitchCase="'cantidadTotalProducto'">
+                                                            <div class="quantity-value">{{ row[col.field] }}</div>
+                                                        </ng-container>
+                                                        
+                                                        <ng-container *ngSwitchCase="'cantidadTotalProductoEnsamble'">
+                                                            <div class="quantity-value">{{ row[col.field] }}</div>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Fechas y horarios -->
+                                                        <ng-container *ngSwitchCase="'fechaEntrega'">
+                                                            <div class="date-cell" pTooltip="{{ row[col.field] }}" tooltipPosition="top">
+                                                                <i class="pi pi-calendar-plus date-icon"></i>
+                                                                <span>{{ row[col.field] }}</span>
+                                                            </div>
+                                                        </ng-container>
+                                                        
+                                                        <ng-container *ngSwitchCase="'horarioEntrega'">
+                                                            <div class="time-cell" pTooltip="{{ row[col.field] }}" tooltipPosition="top">
+                                                                <i class="pi pi-clock time-icon"></i>
+                                                                <span>{{ row[col.field] }}</span>
+                                                            </div>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Artículo - columna principal -->
+                                                        <ng-container *ngSwitchCase="'nombreArticulo'">
+                                                            <div class="article-name">{{ row[col.field] }}</div>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Producto -->
+                                                        <ng-container *ngSwitchCase="'nombreProducto'">
+                                                            <div class="product-name">{{ row[col.field] }}</div>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Default para otras columnas -->
+                                                        <ng-container *ngSwitchDefault>
+                                                            <span>{{ row[col.field] }}</span>
+                                                        </ng-container>
+                                                    </ng-container>
                                             </td>
-                                            <td>{{ agrupacionProducto.cantidadTotalProducto }}</td>
-                                            <td>{{ agrupacionProducto.cantidadTotalProductoEnsamble }}</td>
-                                            <td>{{ agrupacionProducto.fechaEntrega}}</td>
-                                            <td>{{ agrupacionProducto.horarioEntrega}}</td>
                                         </tr>
                                     </ng-template>
 
-                                    <!-- MENSAJE SI LA TABLA ESTÁ VACÍA -->
                                     <ng-template pTemplate="emptymessage">
                                         <tr>
-                                            <td colspan="7" style="text-align: center; font-size: 3em !important;">No
-                                                hay productos en el carrito
-                                                para este pedido.</td>
+                                                <td [attr.colspan]="selectedColumns.length + 1">
+                                                    <div class="empty-state">
+                                                        <div class="empty-icon-container">
+                                                            <i class="pi pi-box"></i>
+                                                        </div>
+                                                        <h5>Sin artículos disponibles</h5>
+                                                        <p>No se encontraron artículos que coincidan con los criterios establecidos.</p>
+                                                    </div>
+                                                </td>
                                         </tr>
                                     </ng-template>
                                 </p-table>
+                                </div>
+                            </div>
                             </p-tabPanel>
+
+                        <!-- TAB DE LISTA DE PEDIDOS -->
                             <p-tabPanel header="Lista pedidos">
                                 <app-list-orders [isFromProduction]="true" #listOrders
-                                    (producirPedido)="producirPedido($event)"></app-list-orders>
+                                (producirPedido)="producirPedido($event)">
+                            </app-list-orders>
                             </p-tabPanel>
                         </p-tabView>
-                    </div>
-                    <ng-template pTemplate="emptymessage">
-                        <tr>
-                            <td colspan="8">No hay productos en el carrito para este pedido.</td>
-                        </tr>
-                    </ng-template>
                 </div>
             </div>
         </div>
@@ -162,6 +291,7 @@
 </div>
 
 <!--Modales-->
+<!-- Modal Vista pedido para imprimir -->
 <ng-template #modalContent let-modal>
     <div class="modal-header">
         <h4 class="modal-title" id="modal-basic-title">Vista pedido para imprimir</h4>
@@ -178,11 +308,15 @@
     </div>
 </ng-template>
 
+<!-- Modal Clientes -->
 <ng-template #clientesModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title"></h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header modern-modal-header">
+        <h4 class="modal-title">
+            <i class="pi pi-user me-2"></i>
+            <span>Información del Cliente</span>
+        </h4>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
         </button>
     </div>
     <div class="modal-body">
@@ -191,39 +325,55 @@
     </div>
 </ng-template>
 
+<!-- Modal Datos de Entrega -->
 <ng-template #datosEnregaModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title"></h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header modern-modal-header">
+        <h4 class="modal-title">
+            <i class="pi pi-truck me-2"></i>
+            <span>Datos de Entrega</span>
+        </h4>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
         </button>
     </div>
     <div class="modal-body">
     </div>
 </ng-template>
 
+<!-- Modal Cerrar Artículo -->
 <ng-template #cerrarArticuloModal let-modal>
-    <div class="modal-header">
-        <h3 class="modal-title"> <span class="spanProccesName">Configuración {{selectedProcesos}}</span></h3>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header modern-modal-header bg-primary text-white">
+        <h4 class="modal-title">
+            <i class="pi pi-box me-2"></i>
+            <span>Configuración {{selectedProcesos}}</span>
+        </h4>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
         </button>
     </div>
     <div class="modal-body">
         <app-cerrararticulo #cerrarArticuloApp [selectedOrdersEnsamble]="selectedOrdersEnsamble"
             [processSelected]="selectedProcesos" [isEdit]="true"></app-cerrararticulo>
     </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="modal.close('cerrar')">Guardar</button>
-        <button type="button" class="btn btn-outline-dark" (click)="modal.close('Cross click')">Cancelar</button>
+    <div class="modal-footer modern-modal-footer">
+        <button type="button" class="btn-modal-secondary" (click)="modal.close('Cross click')">
+            <i class="pi pi-times me-2"></i>Cancelar
+        </button>
+        <button type="button" class="btn-modal-primary" (click)="modal.close('cerrar')">
+            <i class="pi pi-check me-2"></i>Guardar
+        </button>
     </div>
 </ng-template>
 
+<!-- Modal Notas -->
 <ng-template #notasModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title"></h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header modern-modal-header">
+        <h4 class="modal-title">
+            <i class="pi pi-file-edit me-2"></i>
+            <span>Notas del Pedido</span>
+        </h4>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
         </button>
     </div>
     <div class="modal-body">
@@ -231,62 +381,108 @@
     </div>
 </ng-template>
 
+<!-- Modal Cambio Estado Pago -->
 <ng-template #cambioEstadoPagoModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Cambiar estado de pago</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header modern-modal-header">
+        <h4 class="modal-title">
+            <i class="pi pi-credit-card me-2"></i>
+            <span>Cambiar estado de pago</span>
+        </h4>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
         </button>
     </div>
     <div class="modal-body">
-        <p>Estás a punto de cambiar el estado de pago. Por favor, selecciona el nuevo estado de pago:</p>
-        <select class="form-control" [(ngModel)]="pedidoSeleccionado.estadoPago">
+        <div class="estado-pago-content">
+            <p class="mb-3">Estás a punto de cambiar el estado de pago. Por favor, selecciona el nuevo estado:</p>
+            <div class="estado-select-container">
+                <select class="form-control modern-select" [(ngModel)]="pedidoSeleccionado.estadoPago">
             <option *ngFor="let estado of estadosPago" [value]="estado">{{estado}}</option>
         </select>
+                <i class="pi pi-chevron-down select-icon"></i>
+            </div>
+        </div>
     </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">Cancelar</button>
-        <button type="button" class="btn btn-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)">Confirmar</button>
+    <div class="modal-footer modern-modal-footer">
+        <button type="button" class="btn-modal-secondary" (click)="modal.dismiss('cancel')">
+            <i class="pi pi-times me-2"></i>Cancelar
+        </button>
+        <button type="button" class="btn-modal-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)">
+            <i class="pi pi-check me-2"></i>Confirmar
+        </button>
     </div>
 </ng-template>
 
-<!--modal pára app-conf-product-to-cart-->
+<!-- Modal Procesos Seleccionados -->
 <ng-template #processSelecteModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Procesos de {{
-            selectedOrdersEnsamble[0]?.nombreArticulo}}
+    <div class="modal-header modern-modal-header bg-primary text-white">
+        <h4 class="modal-title">
+            <i class="pi pi-sitemap me-2"></i>
+            <span>Procesos de Fabricación</span>
         </h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
         </button>
     </div>
     <div class="modal-body">
-        <p-timeline [value]="filterProcess" align="alternate">
-            <ng-template pTemplate="marker" let-event>
-                <span *ngIf="(event.status !='Producidas Totalmente' && event.statusJararquiaProcess)"
-                    class="custom-marker shadow-2" [style.backgroundColor]="event.color" style="cursor: pointer;"
-                    (click)="cerrarArticuloEnsamble(cerrarArticuloModal, event)">
-                    <i [ngClass]="event.icon"></i>
-                </span>
-                <span *ngIf="(event.status =='Producidas Totalmente' || !event.statusJararquiaProcess ) "
-                    class="custom-marker shadow-2" [style.backgroundColor]="event.color">
-                    <i [ngClass]="event.icon"></i>
-                </span>
-            </ng-template>
-            <ng-template pTemplate="content" let-event>
-                <p-card [header]="event.status" [subheader]="event.date" >
-                    <p style="font-size: 1rem !important;">{{event.label}} ({{event.status}})</p>
-                </p-card>
-            </ng-template>
-        </p-timeline>
+        <div class="proceso-selection-container">
+            <div class="proceso-info mb-4">
+                <div class="proceso-info-header">
+                    <i class="pi pi-box me-2"></i>
+                    <h5 class="mb-0">{{selectedOrdersEnsamble[0]?.nombreProducto}}</h5>
+                </div>
+                <div class="proceso-info-subtitle">
+                    <i class="pi pi-tag me-2"></i>
+                    <span>{{selectedOrdersEnsamble[0]?.nombreArticulo}}</span>
+                </div>
+            </div>
+            
+            <div class="procesos-list-container">
+                <h6 class="procesos-list-title">Seleccione un proceso para continuar:</h6>
+                <div class="procesos-list">
+                    <div *ngFor="let proceso of filterProcess" 
+                        class="proceso-item" 
+                        [ngClass]="{'proceso-disabled': !proceso.statusJararquiaProcess, 
+                                   'proceso-selected': selectedProcesos === proceso.label}" 
+                        (click)="selectProcess(proceso)">
+                        <div class="proceso-icon" [ngClass]="{
+                            'icon-complete': proceso.status === 'TOTALMENTE', 
+                            'icon-partial': proceso.status === 'PARCIALMENTE',
+                            'icon-pending': proceso.status === 'SIN PRODUCIR'
+                        }">
+                            <i [class]="'pi ' + proceso.icon"></i>
+                        </div>
+                        <div class="proceso-content">
+                            <span class="proceso-name">{{proceso.label}}</span>
+                            <span class="proceso-status">{{proceso.status}}</span>
+                        </div>
+                        <div class="proceso-action">
+                            <i class="pi pi-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer modern-modal-footer">
+        <button type="button" class="btn-modal-secondary" (click)="modal.dismiss('cancel')">
+            <i class="pi pi-times me-2"></i>Cancelar
+        </button>
+        <button type="button" class="btn-modal-primary" [disabled]="!selectedProcesos" (click)="cerrarArticuloEnsamble(cerrarArticuloModal, {label: selectedProcesos})">
+            <i class="pi pi-arrow-right me-2"></i>Continuar
+        </button>
     </div>
 </ng-template>
 
+<!-- Modal Cerrar Producto -->
 <ng-template #cerrarProductoModal let-modal>
-    <div class="modal-header">
-        <h3 class="modal-title" id="modal-basic-title">Cerrar productos para el macro {{procesoGlobal}}</h3>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+    <div class="modal-header modern-modal-header bg-success text-white">
+        <h4 class="modal-title">
+            <i class="pi pi-box me-2"></i>
+            <span>Cerrar productos para el macro {{procesoGlobal}}</span>
+        </h4>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
         </button>
     </div>
     <div class="modal-body">
@@ -294,16 +490,592 @@
     </div>
 </ng-template>
 
+<!-- Modal Tracking -->
 <ng-template #trackinModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Trackin del producto {{articuloEnsambleSelected?.nombreArticulo}}
+    <div class="modal-header modern-modal-header bg-gradient-primary text-white">
+        <h4 class="modal-title d-flex align-items-center">
+            <i class="pi pi-history me-2"></i>
+            <span>Seguimiento de Fabricación</span>
         </h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
         </button>
     </div>
-    <div class="modal-body">
+    <div class="modal-subheader p-3 bg-light border-bottom">
+        <div class="tracking-header-container">
+            <div class="tracking-product-section">
+                <div class="product-info-item">
+                    <i class="pi pi-box text-primary me-2"></i>
+                    <span class="info-label text-dark">Artículo:</span>
+                    <span class="info-value text-dark">{{articuloEnsambleSelected?.nombreArticulo}}</span>
+                </div>
+                <div class="product-info-item">
+                    <i class="pi pi-tag text-secondary me-2"></i>
+                    <span class="info-label text-dark">Producto:</span>
+                    <span class="info-value text-dark">{{articuloEnsambleSelected?.nombreProducto}}</span>
+                </div>
+            </div>
+            <div class="tracking-meta-section">
+                <div class="meta-info-item">
+                    <i class="pi pi-calendar text-success me-2"></i>
+                    <span class="info-label text-dark">Entrega:</span>
+                    <span class="info-value badge bg-light text-dark">{{articuloEnsambleSelected?.fechaEntrega}}</span>
+                </div>
+                <div class="meta-info-item">
+                    <i class="pi pi-hashtag text-info me-2"></i>
+                    <span class="info-label text-dark">Cantidad:</span>
+                    <span class="info-value badge bg-primary">{{articuloEnsambleSelected?.cantidadTotalProducto}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-body tracking-modal-body">
         <app-tracking [articuloEnsamble]="articuloEnsambleSelected"></app-tracking>
+    </div>
+    <div class="modal-footer tracking-modal-footer d-flex justify-content-between align-items-center">
+        <div class="tracking-legend">
+            <div class="legend-item">
+                <span class="status-indicator status-complete"></span>
+                <span class="legend-text">Completado</span>
+            </div>
+            <div class="legend-item">
+                <span class="status-indicator status-partial"></span>
+                <span class="legend-text">En proceso</span>
+            </div>
+            <div class="legend-item">
+                <span class="status-indicator status-pending"></span>
+                <span class="legend-text">Pendiente</span>
+            </div>
+        </div>
+        <button type="button" class="btn-modal-secondary" (click)="modal.close('cerrar')">
+            <i class="pi pi-times me-2"></i>
+            <span>Cerrar</span>
+        </button>
     </div>
 </ng-template>
 <!--Fin Modales-->
+
+<style>
+/* Variables globales */
+:root {
+    --primary-color: #6366f1;
+    --primary-light: rgba(99, 102, 241, 0.1);
+    --primary-lightest: rgba(99, 102, 241, 0.05);
+    --secondary-color: #3b82f6;
+    --secondary-light: rgba(59, 130, 246, 0.1);
+    --secondary-dark: #1e40af;
+    --text-dark: #374151;
+    --text-medium: #6b7280;
+    --text-light: #9ca3af;
+    --border-color: #e5e7eb;
+    --border-hover: #d1d5db;
+    --surface-0: #ffffff;
+    --surface-50: #f9fafb;
+    --surface-100: #f3f4f6;
+    --surface-200: #e5e7eb;
+    --accent-purple: #8b5cf6;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-green: #10b981;
+    --accent-orange: #f59e0b;
+    --error-color: #ef4444;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Selector de columnas */
+.column-selector-container {
+    display: flex;
+    align-items: center;
+    background-color: var(--surface-50);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.column-selector-container:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-hover);
+}
+
+.modern-multiselect {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.modern-multiselect .p-multiselect-label {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    color: var(--text-medium);
+}
+
+.modern-multiselect .p-multiselect-trigger {
+    width: 2rem;
+    color: var(--text-medium);
+}
+
+.column-option-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.option-icon {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.option-title {
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+}
+
+.option-description {
+    color: var(--text-light);
+    font-size: 0.75rem;
+    margin-top: 0.125rem;
+}
+
+.selected-columns-chip {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border-radius: var(--radius-md);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.reset-columns-btn {
+    width: 2rem !important;
+    height: 2rem !important;
+    margin-left: 0.5rem;
+    background-color: var(--surface-50) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-medium) !important;
+    border-radius: var(--radius-md) !important;
+    transition: all var(--transition-normal);
+}
+
+.reset-columns-btn:hover {
+    background-color: var(--primary-lightest) !important;
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    transform: translateY(-1px);
+}
+
+/* Contenedor de tabla */
+.production-table-container {
+    background-color: var(--surface-0);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.production-table-container:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+/* Tabla moderna */
+.modern-production-table {
+    font-family: var(--font-sans);
+}
+
+.modern-production-table .p-datatable-header {
+    background-color: var(--surface-0);
+    border: none;
+    padding: 1rem;
+}
+
+/* Encabezados */
+.modern-production-table .p-datatable-thead > tr > th {
+    background-color: var(--surface-50);
+    color: var(--text-medium);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: none;
+    padding: 0.75rem 1rem;
+    transition: all var(--transition-normal);
+}
+
+.modern-production-table .p-datatable-thead > tr > th:first-child {
+    border-top-left-radius: var(--radius-md);
+}
+
+.modern-production-table .p-datatable-thead > tr > th:last-child {
+    border-top-right-radius: var(--radius-md);
+}
+
+.header-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-cell i {
+    color: var(--primary-color);
+    opacity: 0.8;
+    font-size: 0.875rem;
+}
+
+/* Celdas y filas */
+.modern-production-table .p-datatable-tbody > tr > td {
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-dark);
+    vertical-align: middle;
+    background-color: transparent;
+    transition: all var(--transition-normal);
+}
+
+.product-row {
+    border-bottom: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.product-row:hover {
+    background-color: var(--primary-lightest) !important;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.product-row:last-child {
+    border-bottom: none;
+}
+
+/* Columna de acciones */
+.action-column {
+    width: 3rem;
+    text-align: center;
+    padding: 0.5rem !important;
+}
+
+.process-menu-btn {
+    width: 2rem !important;
+    height: 2rem !important;
+    background-color: transparent !important;
+    border: none !important;
+    color: var(--text-medium) !important;
+    border-radius: 50% !important;
+    transition: all var(--transition-normal);
+}
+
+.process-menu-btn:hover {
+    background-color: var(--primary-light) !important;
+    color: var(--primary-color) !important;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Botón de proceso */
+.process-action-btn {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color)) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 50% !important;
+    transition: all var(--transition-normal);
+    box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+}
+
+.process-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+}
+
+.process-action-btn .pi-cog {
+    font-size: 1rem;
+}
+
+/* Valores numéricos */
+.quantity-value {
+    font-family: 'Inter', monospace;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--secondary-color);
+    background-color: var(--secondary-light);
+    border-radius: var(--radius-md);
+    padding: 0.25rem 0.5rem;
+    display: inline-block;
+    min-width: 2.5rem;
+    text-align: center;
+}
+
+/* Artículo y producto */
+.article-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-name {
+    color: var(--text-medium);
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Fechas y horas */
+.date-cell, .time-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-md);
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.date-cell {
+    background-color: rgba(59, 130, 246, 0.08);
+    color: var(--accent-blue);
+}
+
+.time-cell {
+    background-color: rgba(139, 92, 246, 0.08);
+    color: var(--accent-purple);
+}
+
+.date-icon, .time-icon {
+    font-size: 0.75rem;
+}
+
+/* Estado vacío */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-icon-container {
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+    border-radius: 50%;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+}
+
+.empty-icon-container i {
+    font-size: 1.75rem;
+    color: white;
+}
+
+.empty-state h5 {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-size: 1.125rem;
+}
+
+.empty-state p {
+    color: var(--text-medium);
+    max-width: 300px;
+    margin: 0 auto;
+    font-size: 0.875rem;
+}
+
+/* Paginador */
+.modern-production-table .p-paginator {
+    background-color: var(--surface-50);
+    border: none;
+    padding: 0.5rem;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.modern-production-table .p-paginator .p-paginator-pages .p-paginator-page {
+    min-width: 2.25rem;
+    height: 2.25rem;
+    margin: 0 0.125rem;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+}
+
+.modern-production-table .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+}
+
+.modern-production-table .p-paginator button {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-md);
+}
+
+.modern-production-table .p-paginator button:not(.p-highlight):hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+/* Estilos para el Modal de Tracking */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #3f51b5, #1976d2) !important;
+}
+
+.tracking-container {
+    min-height: 300px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.modal-subheader {
+    background-color: rgba(240, 245, 250, 0.8);
+    backdrop-filter: blur(5px);
+    color: #343a40 !important;
+}
+
+.tracking-product-info, .tracking-status-info {
+    font-size: 0.9rem;
+    color: #343a40 !important;
+}
+
+.tracking-product-info span, 
+.tracking-status-info span:not(.badge) {
+    color: #343a40 !important;
+}
+
+/* Dots para la leyenda de estados */
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.status-complete {
+    background-color: #66BB6A;
+    box-shadow: 0 0 5px rgba(102, 187, 106, 0.5);
+}
+
+.status-dot.status-partial {
+    background-color: #FFA726;
+    box-shadow: 0 0 5px rgba(255, 167, 38, 0.5);
+}
+
+.status-dot.status-pending {
+    background-color: #FF5252;
+    box-shadow: 0 0 5px rgba(255, 82, 82, 0.5);
+}
+
+/* Badges mejorados */
+.badge {
+    padding: 0.4em 0.6em;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+/* Mejoras para el modal en general */
+::ng-deep .modal-content {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+::ng-deep .modal-dialog {
+    max-width: 800px;
+}
+
+/* Corrección específica para el modal de tracking */
+.tracking-modal-content {
+    color: #495057 !important;
+}
+
+.tracking-modal-content ::ng-deep h4,
+.tracking-modal-content ::ng-deep h5,
+.tracking-modal-content ::ng-deep span,
+.tracking-modal-content ::ng-deep p,
+.tracking-modal-content ::ng-deep div {
+    color: inherit !important;
+}
+
+.tracking-modal-content ::ng-deep .text-dark {
+    color: #343a40 !important;
+}
+
+.tracking-modal-content ::ng-deep .info-label {
+    color: #6c757d !important;
+}
+
+.tracking-modal-content ::ng-deep .info-value {
+    color: #212529 !important;
+}
+
+.tracking-legend {
+    color: #495057;
+}
+
+/* Estilos adicionales para los iconos del panel de información */
+.tracking-modal-content ::ng-deep .info-icon {
+    background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.tracking-modal-content ::ng-deep .info-icon i {
+    color: #3b82f6 !important;
+}
+
+/* Estilos para los badges dentro del modal de tracking */
+.tracking-modal-content ::ng-deep .pieces-count {
+    color: #3b82f6 !important;
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    font-weight: 600;
+}
+
+/* Asegurándonos que los encabezados de la tabla sean visibles */
+.tracking-modal-content ::ng-deep .history-table th {
+    color: #495057 !important;
+    font-weight: 600 !important;
+}
+
+.tracking-modal-content ::ng-deep .history-table th i {
+    color: #3b82f6 !important;
+}
+
+.tracking-modal-content ::ng-deep .history-table td {
+    color: #495057 !important;
+}
+
+.tracking-modal-content ::ng-deep .history-table .process-name {
+    color: #495057 !important;
+}
+
+.tracking-modal-content ::ng-deep .history-table .total-label span,
+.tracking-modal-content ::ng-deep .history-table .total-percent {
+    color: #495057 !important;
+}
+</style>

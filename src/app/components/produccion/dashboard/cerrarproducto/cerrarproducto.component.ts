@@ -54,6 +54,41 @@ export class CerrarProductoComponent implements OnInit {
                 return 'No Aplica';
         }
     }
+
+    getProcesoIconClass(status: string): string {
+        if (status === 'No Aplica') {
+            return 'pi pi-minus-circle';
+        }
+        switch (status) {
+            case EstadoProcesoItem.ProducidasTotalmente:
+                return 'pi pi-check-circle';
+            case EstadoProcesoItem.ProducidasParcialmente:
+                return 'pi pi-sync';
+            case EstadoProcesoItem.SinProducir:
+            case 'Produccion':
+                return 'pi pi-times-circle';
+            default:
+                return 'pi pi-minus-circle';
+        }
+    }
+
+    getStatusClass(status: string): string {
+        if (status === 'No Aplica') {
+            return 'status-na';
+        }
+        switch (status) {
+            case EstadoProcesoItem.ProducidasTotalmente:
+                return 'status-complete';
+            case EstadoProcesoItem.ProducidasParcialmente:
+                return 'status-partial';
+            case EstadoProcesoItem.SinProducir:
+            case 'Produccion':
+                return 'status-pending';
+            default:
+                return 'status-na';
+        }
+    }
+
     verificarProduccionTotal(producto: DatosProducto): boolean {
         return producto.articulosConProcesos.every(articulo =>
             articulo.procesos.every(proceso =>

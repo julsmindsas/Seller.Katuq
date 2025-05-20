@@ -54,6 +54,7 @@ import { PlanSelectorComponent } from './components/plan-selector/plan-selector.
 import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos.util.service';
 import { BaseService } from './services/base.service';
 import { CacheService } from './services/cache/cache.service';
+import { ProduccionService } from './services/produccion/produccion.service';
 
 @NgModule({
   declarations: [
@@ -113,7 +114,8 @@ import { CacheService } from './services/cache/cache.service';
     KatuqIntelligenceService,
     POSPedidosUtilService,
     BaseService,
-    CacheService
+    CacheService,
+    ProduccionService
   ],
   exports: [
     NgbModule,

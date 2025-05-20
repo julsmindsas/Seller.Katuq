@@ -17,7 +17,6 @@ import { TabViewModule } from 'primeng/tabview';
 import { ToastModule } from 'primeng/toast';
 import { TreeSelectModule } from 'primeng/treeselect';
 import { VentasRoutingModule } from '../ventas/ventas-routing.module';
-import { ProduccionService } from '../../shared/services/produccion/produccion.service';
 import { SharedModule } from '../../shared/shared.module';
 import { CheckboxModule } from 'primeng/checkbox';
 import { CerrararticuloComponent } from './dashboard/cerrararticulo/cerrararticulo.component';
@@ -26,6 +25,10 @@ import { ProcesoTrackingComponent } from './dashboard/tracking/proceso-tracking.
 import { TimelineModule } from 'primeng/timeline';
 import { CerrarProductoComponent } from './dashboard/cerrarproducto/cerrarproducto.component';
 import { VentasModule } from '../ventas/ventas.module';
+import { HttpClientModule } from '@angular/common/http';
+import { ProduccionService } from '../../shared/services/produccion/produccion.service';
+import { ProduccionNewService } from '../../shared/services/produccion/produccion-new.service';
+import { ProduccionDirectService } from '../../shared/services/produccion/produccion-direct.service';
 
 @NgModule({
     imports: [ProduccionModuleRoutingModule,
@@ -49,6 +52,7 @@ import { VentasModule } from '../ventas/ventas.module';
         NgxStarRatingModule,
         TableModule,
         MultiSelectModule,
+        
         VentasModule,
         TimelineModule,
         ToastModule],
@@ -56,6 +60,7 @@ import { VentasModule } from '../ventas/ventas.module';
     declarations: [DashboardComponent,
         CerrararticuloComponent, ProcesoTrackingComponent,
         CerrarProductoComponent],
-    providers: [ProduccionService],
+    providers: [
+    ],
 })
 export class ProduccionModule { }
