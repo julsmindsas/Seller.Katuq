@@ -96,6 +96,16 @@ export class DashboardComponent implements OnInit {
   ];
   selectedColumns = [...this.columns];
 
+  // Nuevas propiedades para métricas y alertas
+  pedidosUrgentes: PedidosParaProduccionEnsamble[] = [];
+  pedidosEnRiesgo: PedidosParaProduccionEnsamble[] = [];
+  pedidosNormales: PedidosParaProduccionEnsamble[] = [];
+  procesosEficiencia: any[] = [];
+  capacidadUtilizada: number = 0;
+  ensamblesPendientes: number = 0;
+  ensamblesProceso: number = 0;
+  ensamblesCompletados: number = 0;
+
   constructor(
     private produccionService: ProduccionNewService,
     private ventasService: VentasService,
@@ -658,6 +668,10 @@ export class DashboardComponent implements OnInit {
       this.ordersEnsamble = resultado;
       this.AllOrdersEnsamble = this.utilService.deepClone(this.ordersEnsamble);
       this.loading = false;
+
+      // Después de cargar los datos, clasificar los pedidos
+      this.clasificarPedidosPorUrgencia();
+      this.calcularEstadisticasProduccion();
     });
   }
 
@@ -861,13 +875,22 @@ export class DashboardComponent implements OnInit {
   }
 
   getFechaEntregaProgramada(detallePedido: DetallePedido[]): string {
-
     let infoFechas = "";
     detallePedido.forEach((detalle) => {
       // infoFechas += "Pedido: " + detalle.nroPedido + " - " + (detalle.fechaEntrega) + " ";
-      let fecha = new Date(detalle.fechaEntrega);
-      let formattedDate = `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}`;
-      infoFechas += "Pedido: " + detalle.nroPedido + " - " + formattedDate + "-";
+      if (detalle.fechaEntrega) {
+        try {
+          let fecha = new Date(detalle.fechaEntrega);
+          let formattedDate = `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}`;
+          infoFechas += "Pedido: " + detalle.nroPedido + " - " + formattedDate + "-";
+        } catch (error) {
+          console.warn('Error al formatear fecha:', error);
+          infoFechas += "Pedido: " + detalle.nroPedido + " - Sin fecha-";
+        }
+      } else {
+        // Si no hay fecha de entrega, mostrar "Sin fecha"
+        infoFechas += "Pedido: " + detalle.nroPedido + " - Sin fecha-";
+      }
     });
     return infoFechas.substring(0, infoFechas.length - 1);
   }
@@ -1627,6 +1650,251 @@ export class DashboardComponent implements OnInit {
 
     // Construir mensaje detallado
     return `Estado: ${procesosCompletados} completados, ${procesosParciales} parciales, ${procesosPendientes} pendientes de ${totalProcesos} procesos`;
+  }
+
+  /**
+   * Clasifica los pedidos en urgentes, en riesgo y normales según la fecha de entrega
+   */
+  clasificarPedidosPorUrgencia() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    // Limpiar los arreglos
+    this.pedidosUrgentes = [];
+    this.pedidosEnRiesgo = [];
+    this.pedidosNormales = [];
+    
+    if (!this.ordersEnsamble || this.ordersEnsamble.length === 0) {
+      return;
+    }
+    
+    this.ordersEnsamble.forEach(orden => {
+      // Verificar si hay detallePedido y si tiene elementos
+      if (!orden.detallePedido || orden.detallePedido.length === 0) {
+        this.pedidosNormales.push(orden);
+        return;
+      }
+      
+      // Buscar la fecha de entrega más cercana entre todos los detalles
+      let fechaMasCercana: Date | null = null;
+      
+      for (const detalle of orden.detallePedido) {
+        if (detalle.fechaEntrega) {
+          try {
+            const fecha = new Date(detalle.fechaEntrega);
+            // Verificar si la fecha es válida
+            if (!isNaN(fecha.getTime())) {
+              if (!fechaMasCercana || fecha < fechaMasCercana) {
+                fechaMasCercana = fecha;
+              }
+            }
+          } catch (error) {
+            console.warn('Error al convertir fecha:', detalle.fechaEntrega);
+          }
+        }
+      }
+      
+      // Si no hay fecha válida, considerar como normal
+      if (!fechaMasCercana) {
+        this.pedidosNormales.push(orden);
+        return;
+      }
+      
+      // Calcular días de diferencia
+      const diferenciaTiempo = fechaMasCercana.getTime() - hoy.getTime();
+      const diferenciaDias = Math.ceil(diferenciaTiempo / (1000 * 3600 * 24));
+      
+      // Clasificar según la urgencia
+      if (diferenciaDias <= 2) {
+        this.pedidosUrgentes.push(orden);
+      } else if (diferenciaDias <= 5) {
+        this.pedidosEnRiesgo.push(orden);
+      } else {
+        this.pedidosNormales.push(orden);
+      }
+    });
+    
+    // Ordenar por fecha de entrega (más cercanas primero)
+    this.ordenarPorFechaEntrega(this.pedidosUrgentes);
+    this.ordenarPorFechaEntrega(this.pedidosEnRiesgo);
+    this.ordenarPorFechaEntrega(this.pedidosNormales);
+  }
+
+  /**
+   * Ordena un array de pedidos por fecha de entrega
+   */
+  ordenarPorFechaEntrega(pedidos: PedidosParaProduccionEnsamble[]) {
+    // Definir una fecha futura lejana para pedidos sin fecha (baja prioridad)
+    const fechaFutura = new Date();
+    fechaFutura.setFullYear(fechaFutura.getFullYear() + 10);
+    
+    pedidos.sort((a, b) => {
+      // Función para obtener una fecha válida o la fecha futura por defecto
+      const obtenerFechaValida = (orden: PedidosParaProduccionEnsamble): Date => {
+        // Verificar si hay detallePedido y si tiene elementos
+        if (!orden.detallePedido || orden.detallePedido.length === 0) {
+          return fechaFutura;
+        }
+        
+        // Buscar el primer pedido con fecha válida
+        for (const detalle of orden.detallePedido) {
+          if (detalle.fechaEntrega) {
+            try {
+              const fecha = new Date(detalle.fechaEntrega);
+              // Verificar si la fecha es válida
+              if (!isNaN(fecha.getTime())) {
+                return fecha;
+              }
+            } catch (error) {
+              console.warn('Error al convertir fecha:', detalle.fechaEntrega);
+            }
+          }
+        }
+        
+        // Si no encontramos fechas válidas, usar la fecha futura
+        return fechaFutura;
+      };
+      
+      // Obtener fechas válidas para ambos órdenes
+      const fechaA = obtenerFechaValida(a);
+      const fechaB = obtenerFechaValida(b);
+      
+      // Comparar fechas
+      return fechaA.getTime() - fechaB.getTime();
+    });
+  }
+
+  /**
+   * Calcula estadísticas de producción para los KPIs
+   */
+  calcularEstadisticasProduccion() {
+    if (!this.ordersEnsamble || this.ordersEnsamble.length === 0) {
+      return;
+    }
+    
+    // 1. Calcular estadísticas de ensambles
+    this.ensamblesPendientes = 0;
+    this.ensamblesProceso = 0;
+    this.ensamblesCompletados = 0;
+    
+    this.ordersEnsamble.forEach(orden => {
+      // En lugar de usar la propiedad procesos (que no existe), 
+      // usamos los datos de detallePedido y detalles que sí existen
+      const totalProcesos = orden.detalles ? orden.detalles.length : 0;
+      let procesosCompletados = 0;
+      let procesosParciales = 0;
+      
+      if (orden.detalles && orden.detalles.length > 0) {
+        // Para cada proceso/detalle, verificamos su estado
+        orden.detalles.forEach(detalle => {
+          const estadoProceso = this.getProcessStatus(detalle.nombreProceso, orden);
+          if (estadoProceso === EstadoProcesoItem.ProducidasTotalmente) {
+            procesosCompletados++;
+          } else if (estadoProceso === EstadoProcesoItem.ProducidasParcialmente) {
+            procesosParciales++;
+          }
+        });
+      }
+      
+      if (procesosCompletados === totalProcesos && totalProcesos > 0) {
+        this.ensamblesCompletados++;
+      } else if (procesosCompletados > 0 || procesosParciales > 0) {
+        this.ensamblesProceso++;
+      } else {
+        this.ensamblesPendientes++;
+      }
+    });
+    
+    // 2. Calcular capacidad utilizada (relación entre completados+proceso y total)
+    const total = this.ordersEnsamble.length;
+    this.capacidadUtilizada = total > 0 ? 
+                           Math.round(((this.ensamblesProceso * 0.5) + this.ensamblesCompletados) / total * 100) : 0;
+    
+    // 3. Calcular eficiencia por proceso
+    // Recopilamos la información de todos los procesos
+    const procesos = new Map<string, { total: number, completados: number, parciales: number }>();
+    
+    this.ordersEnsamble.forEach(orden => {
+      if (!orden.detalles || orden.detalles.length === 0) return;
+      
+      orden.detalles.forEach(detalle => {
+        const nombreProceso = detalle.nombreProceso;
+        
+        if (!procesos.has(nombreProceso)) {
+          procesos.set(nombreProceso, { total: 0, completados: 0, parciales: 0 });
+        }
+        
+        const datosProceso = procesos.get(nombreProceso);
+        if (datosProceso) {
+          datosProceso.total++;
+          
+          const estadoProceso = this.getProcessStatus(nombreProceso, orden);
+          if (estadoProceso === EstadoProcesoItem.ProducidasTotalmente) {
+            datosProceso.completados++;
+          } else if (estadoProceso === EstadoProcesoItem.ProducidasParcialmente) {
+            datosProceso.parciales++;
+          }
+        }
+      });
+    });
+    
+    // Convertir a array para la vista
+    this.procesosEficiencia = Array.from(procesos.entries()).map(([nombre, datos]) => {
+      const { total, completados, parciales } = datos;
+      // Calculamos la eficiencia ponderada: completados valen 100%, parciales 50%
+      const eficiencia = total > 0 ? 
+                      Math.round(((completados * 1) + (parciales * 0.5)) / total * 100) : 0;
+      
+      return { nombre, eficiencia };
+    });
+    
+    // Ordenamos de mayor a menor eficiencia
+    this.procesosEficiencia.sort((a, b) => b.eficiencia - a.eficiencia);
+    
+    // Limitamos a máximo 4 procesos para visualización
+    if (this.procesosEficiencia.length > 4) {
+      this.procesosEficiencia = this.procesosEficiencia.slice(0, 4);
+    }
+  }
+
+  /**
+   * Muestra recomendaciones de optimización de producción
+   */
+  mostrarRecomendacionesProduccion() {
+    // Aquí puedes mostrar un modal o mensaje con recomendaciones
+    // Ejemplo usando algún servicio de notificaciones como SweetAlert o PrimeNG Toast
+    // Por ahora, solo mostramos un console.log como ejemplo
+    console.log('Mostrando recomendaciones de producción...');
+    
+    // Variables para calcular recomendaciones
+    const urgentes = this.pedidosUrgentes.length;
+    const enRiesgo = this.pedidosEnRiesgo.length;
+    const capacidad = this.capacidadUtilizada;
+    
+    // Construir mensaje de recomendación
+    let mensaje = 'Recomendaciones para optimizar producción:\n\n';
+    
+    if (urgentes > 0) {
+      mensaje += `• Prioriza ${urgentes} artículo(s) urgente(s) para entrega inmediata\n`;
+    }
+    
+    if (enRiesgo > 0) {
+      mensaje += `• Programa ${enRiesgo} artículo(s) en riesgo para evitar retrasos\n`;
+    }
+    
+    if (capacidad > 90) {
+      mensaje += '• La capacidad está al límite, considera redistribuir la carga\n';
+    } else if (capacidad < 50) {
+      mensaje += '• Capacidad subutilizada, puedes aceptar más pedidos\n';
+    }
+    
+    // Procesos con baja eficiencia
+    const procesosIneficientes = this.procesosEficiencia.filter(p => p.eficiencia < 60);
+    if (procesosIneficientes.length > 0) {
+      mensaje += `• Mejora la eficiencia de: ${procesosIneficientes.map(p => p.nombre).join(', ')}\n`;
+    }
+    
+    alert(mensaje);
   }
 
 }
