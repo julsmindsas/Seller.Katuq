@@ -41,10 +41,10 @@
                                     <label class="form-label" for="referencia">{{'Referencia' | translate}}:</label>
                                     <input type="text" class="form-control" id="referencia"
                                         formControlName="referencia" />
-                                    <div *ngIf="additionForm.get('descripcion').invalid && (additionForm.get('descripcion').dirty || additionForm.get('descripcion').touched)"
+                                    <div *ngIf="additionForm.get('referencia').invalid && (additionForm.get('referencia').dirty || additionForm.get('referencia').touched)"
                                         class="alert alert-danger">
-                                        <div *ngIf="additionForm.get('descripcion').errors.required">
-                                            {{'Descripción es requerido.' | translate}}
+                                        <div *ngIf="additionForm.get('referencia').errors.required">
+                                            {{'Referencia es requerido.' | translate}}
                                         </div>
                                     </div>
                                 </div>
@@ -69,10 +69,25 @@
                                             <div class="card" style="width: 10rem;">
                                                 <img src="{{img.urls}}" class="card-img-top" alt="Image"
                                                     style="width: 100%; height: auto;">
-                                                <button class="btn btn-danger btn-sm" (click)="deleteImg(img.path,i)">
+                                                <button class="btn btn-danger btn-sm" (click)="deleteImg(img.path, i)">
                                                     {{'Eliminar' | translate}}
                                                 </button>
-
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Vista previa de imágenes seleccionadas -->
+                                        <div class="row mt-3" *ngIf="carrouselImg && carrouselImg.length > 0">
+                                            <div class="col-12">
+                                                <h5>{{'Imágenes para subir' | translate}}:</h5>
+                                            </div>
+                                            <div class="col-md-3 item" *ngFor="let img of carrouselImg; let i = index">
+                                                <div class="card" style="width: 10rem;">
+                                                    <img [src]="img.preview" class="card-img-top" alt="Vista previa" 
+                                                        style="width: 100%; height: auto;">
+                                                    <div class="card-body text-center">
+                                                        <small>{{img.tipo === 'principal' ? 'Principal' : 'Secundaria'}}</small>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -166,7 +181,7 @@
                                     <div *ngIf="additionForm.get('tipoEntrega').invalid && (additionForm.get('tipoEntrega').dirty || additionForm.get('tipoEntrega').touched)"
                                         class="alert alert-danger">
                                         <div *ngIf="additionForm.get('tipoEntrega').errors.required">
-                                            {{'Tiempo de Entrega es requerido.' | translate}}
+                                            {{'Tipo de Entrega es requerido.' | translate}}
                                         </div>
                                     </div>
 
@@ -228,7 +243,7 @@
                                             <div class="col-sm-4">
                                                 <label class="form-label" for="availableForPurchase">{{'Disponible' | translate}}:</label>
                                             </div>
-                                            <div class="col sm 8">
+                                            <div class="col-sm-8">
                                                 <input type="checkbox" formControlName="availableForPurchase"
                                                     id="availableForPurchase">
                                             </div>
@@ -309,6 +324,9 @@
                         <div class="row">
                             <div class="col-sm-3">
                                 <button class="btn btn-lg btn-primary" (click)="submitAdicion()">{{'Guardar' | translate}}</button>
+                            </div>
+                            <div class="col-sm-3" *ngIf="isEditing">
+                                <button class="btn btn-lg btn-secondary" (click)="cancelarEdicion()">{{'Cancelar' | translate}}</button>
                             </div>
                         </div>
                     </div>
