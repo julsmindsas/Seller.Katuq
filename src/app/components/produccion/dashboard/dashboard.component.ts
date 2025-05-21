@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { Table } from 'primeng/table';
 import { PaymentService } from 'src/app/shared/services/ventas/payment.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -37,7 +37,7 @@ import { ProduccionDirectService } from 'src/app/shared/services/produccion/prod
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewInit {
 
   @ViewChild('clientes', { static: false }) clientes: ClientesComponent;
   @ViewChild('entrega', { static: false }) entrega: PedidoEntregaComponent;
@@ -105,6 +105,9 @@ export class DashboardComponent implements OnInit {
   ensamblesPendientes: number = 0;
   ensamblesProceso: number = 0;
   ensamblesCompletados: number = 0;
+
+  // Añadir una propiedad para controlar la densidad de la tabla
+  tableDensity: 'compact' | 'normal' | 'expanded' = 'normal';
 
   constructor(
     private produccionService: ProduccionNewService,
@@ -1895,6 +1898,93 @@ export class DashboardComponent implements OnInit {
     }
     
     alert(mensaje);
+  }
+
+  /**
+   * Establece la densidad de visualización de la tabla
+   */
+  setTableDensity(density: 'compact' | 'normal' | 'expanded'): void {
+    // Actualizar la propiedad que controla la densidad
+    this.tableDensity = density;
+    
+    // No es necesario manipular el DOM directamente ya que la clase 
+    // se aplica automáticamente mediante la vinculación en el HTML:
+    // styleClass="modern-production-table density-{{tableDensity}}"
+    
+    // Guardar preferencia en localStorage para mantenerla entre sesiones
+    try {
+      localStorage.setItem('tableDensityPreference', density);
+    } catch (e) {
+      console.warn('No se pudo guardar la preferencia de densidad', e);
+    }
+    
+    // Mensaje para confirmar que el cambio se realizó (opcional)
+    console.log(`Densidad de tabla cambiada a: ${density}`);
+  }
+
+  /**
+   * Ajusta automáticamente el ancho de las columnas según su contenido
+   */
+  autoAdjustColumns(): void {
+    // Obtener todas las celdas con nombres de artículos y productos
+    const articleCells = document.querySelectorAll('.article-name');
+    const productCells = document.querySelectorAll('.product-name');
+    
+    // Calcular el ancho máximo para cada tipo de celda
+    let maxArticleWidth = 150; // Ancho mínimo por defecto
+    let maxProductWidth = 150; // Ancho mínimo por defecto
+
+    articleCells.forEach(cell => {
+      const textLength = (cell.textContent || '').length;
+      const estimatedWidth = Math.min(300, Math.max(150, textLength * 8)); // Estimar 8px por carácter, con límites
+      maxArticleWidth = Math.max(maxArticleWidth, estimatedWidth);
+    });
+
+    productCells.forEach(cell => {
+      const textLength = (cell.textContent || '').length;
+      const estimatedWidth = Math.min(280, Math.max(150, textLength * 7)); // Estimar 7px por carácter, con límites
+      maxProductWidth = Math.max(maxProductWidth, estimatedWidth);
+    });
+
+    // Aplicar los anchos calculados a las columnas
+    const articleColumn = document.querySelector('th[data-field="nombreArticulo"]');
+    const productColumn = document.querySelector('th[data-field="nombreProducto"]');
+
+    if (articleColumn) {
+      (articleColumn as HTMLElement).style.width = `${maxArticleWidth}px`;
+    }
+    
+    if (productColumn) {
+      (productColumn as HTMLElement).style.width = `${maxProductWidth}px`;
+    }
+    
+    // Notificar al usuario
+    // Usar PrimeNG Toast o similar si está disponible en el proyecto
+  }
+
+  /**
+   * Inicializar la densidad de la tabla al cargar el componente
+   */
+  ngAfterViewInit() {
+    // Cargar preferencia guardada previamente, si existe
+    try {
+      const savedDensity = localStorage.getItem('tableDensityPreference');
+      if (savedDensity && ['compact', 'normal', 'expanded'].includes(savedDensity)) {
+        this.setTableDensity(savedDensity as 'compact' | 'normal' | 'expanded');
+      }
+      
+      // Añadir atributo data-field a las columnas para facilitar la selección en el ajuste automático
+      setTimeout(() => {
+        const headers = document.querySelectorAll('.modern-production-table th');
+        headers.forEach((header, index) => {
+          if (this.selectedColumns[index - 1]) { // -1 para compensar la columna de acciones
+            header.setAttribute('data-field', this.selectedColumns[index - 1].field);
+          }
+        });
+      }, 500);
+    } catch (e) {
+      console.warn('Error al cargar preferencias de densidad', e);
+    }
   }
 
 }

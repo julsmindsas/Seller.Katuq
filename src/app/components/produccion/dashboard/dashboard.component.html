@@ -272,7 +272,7 @@
                             </div>
 
                             <!-- Selector de columnas moderno -->
-                            <div class="mb-3 d-flex align-items-center gap-2 px-3 pt-3">
+                            <div class="mb-3 d-flex align-items-center gap-2 px-3 pt-3 justify-content-between">
                                 <div class="column-selector-container">
                                     <p-multiSelect [options]="columns"
                                                   [(ngModel)]="selectedColumns"
@@ -292,18 +292,50 @@
                                                     <div class="option-description">{{ option.description }}</div>
                                                 </div>
                                             </div>
-                                                    </ng-template>
+                                        </ng-template>
                                         <ng-template pTemplate="selectedItems" let-value>
                                             <div class="selected-columns-chip">
                                                 <i class="pi pi-table me-1"></i> {{ value?.length || 0 }} columnas
-                                                                </div>
-                                                            </ng-template>
-                                                        </p-multiSelect>
+                                            </div>
+                                        </ng-template>
+                                    </p-multiSelect>
                                     <button pButton pRipple type="button" icon="pi pi-undo" 
                                             class="reset-columns-btn"
                                             pTooltip="Restaurar columnas"
                                             tooltipPosition="top"
                                             (click)="resetColumnConfig()">
+                                    </button>
+                                </div>
+                                
+                                <!-- Control de densidad de visualización -->
+                                <div class="density-control-container">
+                                    <span class="density-label me-2">Densidad:</span>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn" 
+                                                [ngClass]="{'btn-primary': tableDensity === 'compact', 'btn-outline-secondary': tableDensity !== 'compact'}"
+                                                (click)="setTableDensity('compact')"
+                                                pTooltip="Vista compacta" tooltipPosition="top">
+                                            <i class="pi pi-align-justify"></i>
+                                        </button>
+                                        <button type="button" class="btn" 
+                                                [ngClass]="{'btn-primary': tableDensity === 'normal', 'btn-outline-secondary': tableDensity !== 'normal'}"
+                                                (click)="setTableDensity('normal')"
+                                                pTooltip="Vista normal" tooltipPosition="top">
+                                            <i class="pi pi-list"></i>
+                                        </button>
+                                        <button type="button" class="btn" 
+                                                [ngClass]="{'btn-primary': tableDensity === 'expanded', 'btn-outline-secondary': tableDensity !== 'expanded'}"
+                                                (click)="setTableDensity('expanded')"
+                                                pTooltip="Vista expandida" tooltipPosition="top">
+                                            <i class="pi pi-th-large"></i>
+                                        </button>
+                                    </div>
+                                    <button pButton 
+                                            class="ms-2 p-button-outlined p-button-sm"
+                                            icon="pi pi-arrows-alt" 
+                                            pTooltip="Ajustar columnas automáticamente" 
+                                            tooltipPosition="top"
+                                            (click)="autoAdjustColumns()">
                                     </button>
                                 </div>
                             </div>
@@ -317,7 +349,7 @@
                                         [rows]="10"
                                         [rowsPerPageOptions]="[5,10,25,50]" 
                                         [loading]="loading"
-                                        styleClass="modern-production-table" 
+                                        styleClass="modern-production-table density-{{tableDensity}}" 
                                         [paginator]="true"
                                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} artículos"
                                         [globalFilterFields]="['nombreProducto', 'nombreArticulo']">
@@ -402,12 +434,24 @@
                                                         
                                                         <!-- Artículo - columna principal -->
                                                         <ng-container *ngSwitchCase="'nombreArticulo'">
-                                                            <div class="article-name">{{ row[col.field] }}</div>
+                                                            <div class="article-name-container" 
+                                                                 pTooltip="{{ row[col.field] }}" 
+                                                                 tooltipPosition="top">
+                                                                <div class="article-name">
+                                                                    {{ row[col.field] }}
+                                                                </div>
+                                                            </div>
                                                         </ng-container>
                                                         
                                                         <!-- Producto -->
                                                         <ng-container *ngSwitchCase="'nombreProducto'">
-                                                            <div class="product-name">{{ row[col.field] }}</div>
+                                                            <div class="product-name-container"
+                                                                 pTooltip="{{ row[col.field] }}" 
+                                                                 tooltipPosition="top">
+                                                                <div class="product-name">
+                                                                    {{ row[col.field] }}
+                                                                </div>
+                                                            </div>
                                                         </ng-container>
                                                         
                                                         <!-- Default para otras columnas -->
@@ -981,22 +1025,70 @@
     text-align: center;
 }
 
-/* Artículo y producto */
-.article-name {
-    font-weight: 600;
-    color: var(--text-dark);
-    max-width: 300px;
-    white-space: nowrap;
+/* Mejoras para los contenedores de nombres */
+.article-name-container, .product-name-container {
+    padding: 0.75rem 0.5rem;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    min-width: 200px;
+    max-width: 350px;
+    transition: all 0.2s ease;
+    overflow: visible;
+    position: relative;
+}
+
+.article-name-container:hover, .product-name-container:hover {
+    background-color: var(--surface-50);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    z-index: 10;
+}
+
+/* Estilos específicos para los nombres */
+.article-name, .product-name {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+.article-name {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
 .product-name {
+    font-weight: 500;
+    font-size: 0.85rem;
     color: var(--text-medium);
+}
+
+/* Ajuste de columnas en la tabla */
+.modern-production-table th[data-field="nombreArticulo"],
+.modern-production-table th[data-field="nombreProducto"] {
+    min-width: 250px !important;
+    max-width: 350px !important;
+}
+
+/* Estilos para el modo de densidad */
+.modern-production-table.density-compact .article-name,
+.modern-production-table.density-compact .product-name {
+    -webkit-line-clamp: 1;
+}
+
+.modern-production-table.density-expanded .article-name,
+.modern-production-table.density-expanded .product-name {
+    -webkit-line-clamp: 3;
+}
+
+/* Estilos para tooltips más grandes */
+:host ::ng-deep .p-tooltip {
     max-width: 300px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: pre-wrap;
 }
 
 /* Fechas y horas */
@@ -1102,253 +1194,57 @@
     color: var(--primary-color);
 }
 
-/* Estilos para el Modal de Tracking */
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #3f51b5, #1976d2) !important;
-}
-
-.tracking-container {
-    min-height: 300px;
-    max-height: 60vh;
-    overflow-y: auto;
-}
-
-.modal-subheader {
-    background-color: rgba(240, 245, 250, 0.8);
-    backdrop-filter: blur(5px);
-    color: #343a40 !important;
-}
-
-.tracking-product-info, .tracking-status-info {
-    font-size: 0.9rem;
-    color: #343a40 !important;
-}
-
-.tracking-product-info span, 
-.tracking-status-info span:not(.badge) {
-    color: #343a40 !important;
-}
-
-/* Dots para la leyenda de estados */
-.status-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.status-dot.status-complete {
-    background-color: #66BB6A;
-    box-shadow: 0 0 5px rgba(102, 187, 106, 0.5);
-}
-
-.status-dot.status-partial {
-    background-color: #FFA726;
-    box-shadow: 0 0 5px rgba(255, 167, 38, 0.5);
-}
-
-.status-dot.status-pending {
-    background-color: #FF5252;
-    box-shadow: 0 0 5px rgba(255, 82, 82, 0.5);
-}
-
-/* Badges mejorados */
-.badge {
-    padding: 0.4em 0.6em;
-    font-weight: 500;
-    border-radius: 4px;
-}
-
-/* Mejoras para el modal en general */
-::ng-deep .modal-content {
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
-::ng-deep .modal-dialog {
-    max-width: 800px;
-}
-
-/* Corrección específica para el modal de tracking */
-.tracking-modal-content {
-    color: #495057 !important;
-}
-
-.tracking-modal-content ::ng-deep h4,
-.tracking-modal-content ::ng-deep h5,
-.tracking-modal-content ::ng-deep span,
-.tracking-modal-content ::ng-deep p,
-.tracking-modal-content ::ng-deep div {
-    color: inherit !important;
-}
-
-.tracking-modal-content ::ng-deep .text-dark {
-    color: #343a40 !important;
-}
-
-.tracking-modal-content ::ng-deep .info-label {
-    color: #6c757d !important;
-}
-
-.tracking-modal-content ::ng-deep .info-value {
-    color: #212529 !important;
-}
-
-.tracking-legend {
-    color: #495057;
-}
-
-/* Estilos adicionales para los iconos del panel de información */
-.tracking-modal-content ::ng-deep .info-icon {
-    background: rgba(59, 130, 246, 0.1) !important;
-}
-
-.tracking-modal-content ::ng-deep .info-icon i {
-    color: #3b82f6 !important;
-}
-
-/* Estilos para los badges dentro del modal de tracking */
-.tracking-modal-content ::ng-deep .pieces-count {
-    color: #3b82f6 !important;
-    background-color: rgba(59, 130, 246, 0.15) !important;
-    font-weight: 600;
-}
-
-/* Asegurándonos que los encabezados de la tabla sean visibles */
-.tracking-modal-content ::ng-deep .history-table th {
-    color: #495057 !important;
-    font-weight: 600 !important;
-}
-
-.tracking-modal-content ::ng-deep .history-table th i {
-    color: #3b82f6 !important;
-}
-
-.tracking-modal-content ::ng-deep .history-table td {
-    color: #495057 !important;
-}
-
-.tracking-modal-content ::ng-deep .history-table .process-name {
-    color: #495057 !important;
-}
-
-.tracking-modal-content ::ng-deep .history-table .total-label span,
-.tracking-modal-content ::ng-deep .history-table .total-percent {
-    color: #495057 !important;
-}
-
-/* Animaciones para los nuevos componentes de métricas */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideInRight {
-  from { transform: translateX(20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.metrics-container {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.card {
-  animation: scaleIn 0.4s ease-out;
-}
-
-.capacity-gauge .capacity-fill {
-  animation: slideInRight 0.8s ease-out;
-}
-
-.alert {
-  animation: fadeIn 0.5s ease-out;
-}
-
-/* Estilo para las alertas mejoradas */
-.alert {
-  border: none;
-  border-left: 4px solid;
-  border-radius: 0.375rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.alert.alert-warning {
-  background-color: rgba(255, 193, 7, 0.1);
-  border-left-color: #ffc107;
-}
-
-.alert.alert-info {
-  background-color: rgba(13, 202, 240, 0.1);
-  border-left-color: #0dcaf0;
-}
-
-/* Estilos adicionales para los nuevos elementos */
-.capacity-gauge {
-    position: relative;
-    height: 14px;
-    background-color: #e9ecef;
-    border-radius: 7px;
-    overflow: hidden;
-}
-
-.capacity-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    border-radius: 7px;
-    transition: width 0.5s ease;
-}
-
-.capacity-value {
-    position: absolute;
-    top: -6px;
-    right: 10px;
+/* Estilos para el control de densidad */
+.density-control-container {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    z-index: 1;
-}
-
-.capacity-value .value {
-    font-size: 14px;
-    font-weight: 600;
-    color: #495057;
-}
-
-.capacity-value .label {
-    font-size: 10px;
-    color: #6c757d;
-}
-
-.capacity-stats {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-}
-
-.capacity-stat {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    text-align: center;
+    background-color: var(--surface-50);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
 }
 
-.capacity-stat .stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #495057;
+.density-label {
+    font-size: 0.8125rem;
+    color: var(--text-medium);
+    font-weight: 500;
 }
 
-.capacity-stat .stat-label {
-    font-size: 0.75rem;
-    color: #6c757d;
+.density-control-container .btn-group {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.density-control-container .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    border-radius: 0;
+}
+
+.density-control-container .btn i {
+    font-size: 0.875rem;
+}
+
+.density-control-container .btn.btn-primary {
+    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+    border-color: var(--secondary-color);
+}
+
+.density-control-container .p-button-outlined {
+    border-color: var(--border-color);
+    color: var(--text-medium);
+    transition: all var(--transition-normal);
+}
+
+.density-control-container .p-button-outlined:hover {
+    background-color: var(--primary-lightest);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 </style>
