@@ -95,11 +95,11 @@
   <!-- <div class="left-arrow" id="left-arrow" [class.d-none]="leftArrowNone" (click)="scrollToLeft()">
     <app-feather-icons [icon]="'arrow-left'"></app-feather-icons>
   </div> -->
-  <div id="sidebar-menu" class="sidebar-menu-flex-container"
+  <div id="sidebar-menu" style="margin-bottom: 150px;"
     [ngStyle]="{ marginLeft: this.layout.config.settings.layout == 'Rome' || 'Singapore' || 'Barcelona' ? margin + 'px' : '0px'}">
     
     <!-- Accesos rápidos / Favoritos -->
-    <div class="favorites-section-wrapper" *ngIf="favoriteItems.length > 0 && !isCompactMode" role="region" aria-labelledby="favorites-heading">
+    <div class="favorites-section" *ngIf="favoriteItems.length > 0" role="region" aria-labelledby="favorites-heading">
       <div class="favorites-header" id="favorites-heading">
         <app-feather-icons [icon]="'star'" class="star-icon" aria-hidden="true"></app-feather-icons>
         <span>Favoritos</span>
@@ -121,7 +121,8 @@
       </ul>
     </div>
     
-    <ul class="sidebar-links custom-scrollbar custom-sidebar-katuq">
+    <ul class="sidebar-links custom-scrollbar custom-sidebar-katuq"
+      style="margin-bottom: 10px; height: calc(100vh - 200px); padding-bottom: 50px;">
       <li class="back-btn">
         <a href="javascript:void(0)">
           <img class="img-fluid " src="assets/images/logo/Katuq/katuq-logo-solo (1).png" alt="Logo Katuq mini">
@@ -163,10 +164,10 @@
         </li>
 
         <!-- Renderizar los items de la sección (si no está colapsada) -->
-        <div *ngIf="!section.collapsed || isCompactMode" 
-             [id]="'section-content-' + sectionIndex" 
-             role="group" 
-             [attr.aria-labelledby]="'section-heading-' + sectionIndex">
+        <ng-container *ngIf="!section.collapsed || isCompactMode" 
+                     [id]="'section-content-' + sectionIndex" 
+                     role="group" 
+                     [attr.aria-labelledby]="'section-heading-' + sectionIndex">
           <li class="sidebar-list" *ngFor="let menuItem of section.items" 
               [ngClass]="{active: menuItem.active}">
 
@@ -185,17 +186,17 @@
                role="button"
                tabindex="0"
                [attr.aria-expanded]="menuItem.active"
-               [attr.aria-controls]="'submenu-' + menuItem.title?.toLowerCase().replace(' ', '-')"
+               [attr.aria-controls]="'submenu-' + (menuItem.title?.toLowerCase().replace(' ', '-') || '')"
                (keydown.enter)="toggletNavActive(menuItem)" 
                (keydown.space)="toggletNavActive(menuItem)">
-              <app-feather-icons [icon]="menuItem.icon" role="presentation"></app-feather-icons>
+              <app-feather-icons [icon]="menuItem.icon" aria-hidden="true"></app-feather-icons>
               <span [class.visually-hidden]="isCompactMode">{{menuItem.title | translate}}</span>
               
               <!-- Tooltip para modo compacto -->
               <div class="tooltip-sidebar" *ngIf="isCompactMode">{{menuItem.title | translate}}</div>
               
               <div class="according-menu" [class.visually-hidden]="isCompactMode">
-                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" role="presentation"></i>
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" aria-hidden="true"></i>
               </div>
               <!-- Botón de favoritos -->
               <button class="favorite-toggle" 
@@ -203,7 +204,7 @@
                       [attr.aria-label]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
                       [attr.title]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
                       [class.active]="isFavorite(menuItem)">
-                <i class="fa fa-star" role="presentation"></i>
+                <i class="fa fa-star" aria-hidden="true"></i>
               </button>
             </a>
             
@@ -215,15 +216,15 @@
                [ngClass]="{active: menuItem.active}"
                *ngIf="menuItem.type === 'link'"
                tabindex="0"
-               [attr.aria-label]="menuItem.title | translate">
-              <app-feather-icons [icon]="menuItem.icon" role="presentation"></app-feather-icons>
+               [attr.aria-label]="(menuItem.title | translate) || ''">
+              <app-feather-icons [icon]="menuItem.icon" aria-hidden="true"></app-feather-icons>
               <span [class.visually-hidden]="isCompactMode">{{menuItem.title | translate}}</span>
               
               <!-- Tooltip para modo compacto -->
               <div class="tooltip-sidebar" *ngIf="isCompactMode">{{menuItem.title | translate}}</div>
               
               <div class="according-menu" [class.visually-hidden]="isCompactMode">
-                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" role="presentation"></i>
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" aria-hidden="true"></i>
               </div>
               <!-- Botón de favoritos -->
               <button class="favorite-toggle" 
@@ -231,7 +232,7 @@
                       [attr.aria-label]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
                       [attr.title]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
                       [class.active]="isFavorite(menuItem)">
-                <i class="fa fa-star" role="presentation"></i>
+                <i class="fa fa-star" aria-hidden="true"></i>
               </button>
             </a>
             
@@ -242,15 +243,15 @@
                [ngClass]="{active: menuItem.active}"
                *ngIf="menuItem.type === 'extLink'"
                tabindex="0"
-               [attr.aria-label]="getExtLinkLabel(menuItem.title | translate)">
-              <app-feather-icons [icon]="menuItem.icon" role="presentation"></app-feather-icons>
+               [attr.aria-label]="getExtLinkLabel((menuItem.title | translate) || '')">
+              <app-feather-icons [icon]="menuItem.icon" aria-hidden="true"></app-feather-icons>
               <span [class.visually-hidden]="isCompactMode">{{menuItem.title | translate}}</span>
               
               <!-- Tooltip para modo compacto -->
               <div class="tooltip-sidebar" *ngIf="isCompactMode">{{menuItem.title | translate}}</div>
               
               <div class="according-menu" [class.visually-hidden]="isCompactMode">
-                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" role="presentation"></i>
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" aria-hidden="true"></i>
               </div>
               <!-- Botón de favoritos -->
               <button class="favorite-toggle" 
@@ -258,7 +259,7 @@
                       [attr.aria-label]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
                       [attr.title]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
                       [class.active]="isFavorite(menuItem)">
-                <i class="fa fa-star" role="presentation"></i>
+                <i class="fa fa-star" aria-hidden="true"></i>
               </button>
             </a>
             
@@ -271,14 +272,14 @@
                *ngIf="menuItem.type === 'extTabLink'"
                tabindex="0"
                [attr.aria-label]="getNewWindowLabel(menuItem.title | translate)">
-              <app-feather-icons [icon]="menuItem.icon" role="presentation"></app-feather-icons>
+              <app-feather-icons [icon]="menuItem.icon" aria-hidden="true"></app-feather-icons>
               <span [class.visually-hidden]="isCompactMode">{{menuItem.title | translate}}</span>
               
               <!-- Tooltip para modo compacto -->
               <div class="tooltip-sidebar" *ngIf="isCompactMode">{{menuItem.title | translate}}</div>
               
               <div class="according-menu" [class.visually-hidden]="isCompactMode">
-                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" role="presentation"></i>
+                <i class="fa fa-angle-{{menuItem.active ? 'down' : 'right'}} pull-right" *ngIf="menuItem.children" aria-hidden="true"></i>
               </div>
               <!-- Botón de favoritos -->
               <button class="favorite-toggle" 
@@ -286,7 +287,7 @@
                       [attr.aria-label]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
                       [attr.title]="isFavorite(menuItem) ? 'Quitar de favoritos' : 'Añadir a favoritos'"
                       [class.active]="isFavorite(menuItem)">
-                <i class="fa fa-star" role="presentation"></i>
+                <i class="fa fa-star" aria-hidden="true"></i>
               </button>
             </a>
 
@@ -367,7 +368,7 @@
               </li>
             </ul>
           </li>
-        </div>
+        </ng-container> <!-- Fin *ngIf="!section.collapsed" -->
 
       </ng-container>
       <!-- *********************************************************** -->
@@ -378,84 +379,82 @@
     </ul>
 
     <!-- Card Balanceada -->
-    <div class="plan-card-wrapper" *ngIf="!isCompactMode">
-      <div class="plan-card-container" id="plan-card-container" *appRoleBasedVisibility="['Katuq', 'Administrador']"
-           [class.collapsed]="collapseMenu">
-        <!-- Cabecera siempre visible con botón de toggle -->
-        <div class="plan-card-header">
-          <div class="plan-title">
-            <i class="fa fa-crown"></i>
-            <small>Mi Plan</small>
-            <div class="plan-badge">{{currentPlan.type}}</div>
-          </div>
-          
-          <!-- Saldo visible cuando está colapsado -->
-          <div *ngIf="isPlanCardCollapsed" class="plan-balance">
-            <i class="fa fa-wallet"></i>
-            <span>${{currentPlan.walletBalance.toFixed(2)}}</span>
-          </div>
-          
-          <!-- Botón con mejor visibilidad -->
-          <button (click)="togglePlanCard()" class="toggle-plan-btn" [class.expanded]="!isPlanCardCollapsed">
-            <i class="fa" [ngClass]="isPlanCardCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
-          </button>
+    <div class="plan-card-container" id="plan-card-container" *appRoleBasedVisibility="['Katuq', 'Administrador']"
+         [class.collapsed]="collapseMenu">
+      <!-- Cabecera siempre visible con botón de toggle -->
+      <div class="plan-card-header">
+        <div class="plan-title">
+          <i class="fa fa-crown"></i>
+          <small>Mi Plan</small>
+          <div class="plan-badge">{{currentPlan.type}}</div>
         </div>
         
-        <!-- Contenido colapsable -->
-        <div class="plan-card-content" 
-             [class.collapsed]="isPlanCardCollapsed">
-          
-          <!-- Tarjeta moderna tipo crédito -->
-          <div class="credit-card">
-            <!-- Parte superior con logo y tipo de plan -->
-            <div class="card-header-section">
-              <div class="card-chip"></div>
-              <div class="plan-badge premium">{{currentPlan.type}}</div>
-            </div>
+        <!-- Saldo visible cuando está colapsado -->
+        <div *ngIf="isPlanCardCollapsed" class="plan-balance">
+          <i class="fa fa-wallet"></i>
+          <span>${{currentPlan.walletBalance.toFixed(2)}}</span>
+        </div>
+        
+        <!-- Botón con mejor visibilidad -->
+        <button (click)="togglePlanCard()" class="toggle-plan-btn" [class.expanded]="!isPlanCardCollapsed">
+          <i class="fa" [ngClass]="isPlanCardCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
+        </button>
+      </div>
+      
+      <!-- Contenido colapsable -->
+      <div class="plan-card-content" 
+           [class.collapsed]="isPlanCardCollapsed">
+        
+        <!-- Tarjeta moderna tipo crédito -->
+        <div class="credit-card">
+          <!-- Parte superior con logo y tipo de plan -->
+          <div class="card-header-section">
+            <div class="card-chip"></div>
+            <div class="plan-badge premium">{{currentPlan.type}}</div>
+          </div>
 
-            <!-- Saldo principal -->
-            <div class="card-balance-section">
-              <div class="balance-label">Saldo Disponible</div>
-              <div class="balance-amount">
-                <span class="currency">$</span>
-                <span class="amount">{{currentPlan.walletBalance.toFixed(2)}}</span>
-              </div>
+          <!-- Saldo principal -->
+          <div class="card-balance-section">
+            <div class="balance-label">Saldo Disponible</div>
+            <div class="balance-amount">
+              <span class="currency">$</span>
+              <span class="amount">{{currentPlan.walletBalance.toFixed(2)}}</span>
             </div>
+          </div>
 
-            <!-- Información adicional -->
-            <div class="card-details-section">
-              <div class="detail-item">
-                <div class="detail-label">Vencimiento</div>
-                <div class="detail-value">{{currentPlan.renewalDate}}</div>
-              </div>
-              <div class="detail-item">
-                <div class="detail-label">Consumo</div>
-                <div class="detail-value">{{currentPlan.progress}}%</div>
-              </div>
+          <!-- Información adicional -->
+          <div class="card-details-section">
+            <div class="detail-item">
+              <div class="detail-label">Vencimiento</div>
+              <div class="detail-value">{{currentPlan.renewalDate}}</div>
             </div>
+            <div class="detail-item">
+              <div class="detail-label">Consumo</div>
+              <div class="detail-value">{{currentPlan.progress}}%</div>
+            </div>
+          </div>
 
-            <!-- Barra de progreso con etiqueta -->
-            <div class="usage-bar-container">
-              <div class="usage-bar">
-                <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
-              </div>
-              <div class="days-left">
-                <i class="fa fa-calendar-day"></i>
-                <span>{{getDaysLeft()}} días restantes</span>
-              </div>
+          <!-- Barra de progreso con etiqueta -->
+          <div class="usage-bar-container">
+            <div class="usage-bar">
+              <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
             </div>
+            <div class="days-left">
+              <i class="fa fa-calendar-day"></i>
+              <span>{{getDaysLeft()}} días restantes</span>
+            </div>
+          </div>
 
-            <!-- Acciones -->
-            <div class="card-actions">
-              <button class="action-btn upgrade" (click)="openPlanModal(); $event.stopPropagation();">
-                <i class="fa fa-arrow-circle-up"></i>
-                <span>Mejorar Plan</span>
-              </button>
-              <button class="action-btn view-details">
-                <i class="fa fa-info-circle"></i>
-                <span>Ver Detalles</span>
-              </button>
-            </div>
+          <!-- Acciones -->
+          <div class="card-actions">
+            <button class="action-btn upgrade" (click)="openPlanModal(); $event.stopPropagation();">
+              <i class="fa fa-arrow-circle-up"></i>
+              <span>Mejorar Plan</span>
+            </button>
+            <button class="action-btn view-details">
+              <i class="fa fa-info-circle"></i>
+              <span>Ver Detalles</span>
+            </button>
           </div>
         </div>
       </div>
