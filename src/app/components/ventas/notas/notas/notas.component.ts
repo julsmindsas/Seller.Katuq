@@ -37,49 +37,92 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   constructor(private singleton: CartSingletonService, private formBuilder: FormBuilder, private modalService: NgbModal) { }
 
   ngAfterContentInit(): void {
-    if (!this.pedido?.notasPedido) {
-      this.pedido.notasPedido = {
-        notasProduccion: [],
-        notasCliente: [],
-        notasDespachos: [],
-        notasEntregas: [],
-        notasFacturacionPagos: []
+    if (!this.isEdit) {
+      // Limpiar todas las notas si no estamos en modo edición (creando algo nuevo)
+      if (this.pedido) { // Asegurarse que el pedido exista
+        this.pedido.notasPedido = {
+          notasProduccion: [],
+          notasCliente: [],
+          notasDespachos: [],
+          notasEntregas: [],
+          notasFacturacionPagos: []
+        };
+        // Limpiar también las notas de producción dentro de cada item del carrito
+        if (this.pedido.carrito && this.pedido.carrito.length > 0) {
+          this.pedido.carrito.forEach(prod => {
+            prod.notaProduccion = [];
+          });
+        }
+      }
+      // Limpiar las propiedades locales usadas para mostrar/ordenar
+      this.notasClienteOrdenadas = [];
+      this.notasDespachosOrdenadas = [];
+      this.notasEntregasOrdenadas = [];
+      this.notasFacturacionPagosOrdenadas = [];
+      // Limpiar las propiedades locales que podrían haber sido cargadas si isEdit hubiera sido true
+      this.notasProduccion = [];
+      this.notasCliente = [];
+      this.notasDespachos = [];
+      this.notasEntregas = [];
+      this.notasFacturacionPagos = [];
+
+    } else { // Modo Edición (isEdit = true)
+      if (this.pedido) { // Solo proceder si el pedido existe
+        // Si notasPedido no existe en el pedido (aunque en modo edición debería existir), inicializarlo.
+        if (!this.pedido.notasPedido) {
+          this.pedido.notasPedido = {
+            notasProduccion: [],
+            notasCliente: [],
+            notasDespachos: [],
+            notasEntregas: [],
+            notasFacturacionPagos: []
+          };
+        }
+
+        // Cargar y ordenar notas existentes del pedido
+        if (this.pedido.notasPedido?.notasCliente?.length > 0) {
+          this.notasClienteOrdenadas = [...this.pedido.notasPedido.notasCliente].sort((a, b) =>
+            new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+        } else { this.notasClienteOrdenadas = []; }
+
+        if (this.pedido.notasPedido?.notasDespachos?.length > 0) {
+          this.notasDespachosOrdenadas = [...this.pedido.notasPedido.notasDespachos].sort((a, b) =>
+            new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+        } else { this.notasDespachosOrdenadas = []; }
+
+        if (this.pedido.notasPedido?.notasEntregas?.length > 0) {
+          this.notasEntregasOrdenadas = [...this.pedido.notasPedido.notasEntregas].sort((a, b) =>
+            new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+        } else { this.notasEntregasOrdenadas = []; }
+
+        if (this.pedido.notasPedido?.notasFacturacionPagos?.length > 0) {
+          this.notasFacturacionPagosOrdenadas = [...this.pedido.notasPedido.notasFacturacionPagos].sort((a, b) =>
+            new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+        } else { this.notasFacturacionPagosOrdenadas = []; }
+
+        // Asignar a variables locales si estamos en modo edición
+        // Estas variables se usan en el template para mostrar las notas de forma no editable o para otros propósitos.
+        this.notasProduccion = this.pedido.notasPedido.notasProduccion || [];
+        this.notasCliente = this.pedido.notasPedido.notasCliente || [];
+        this.notasDespachos = this.pedido.notasPedido.notasDespachos || [];
+        this.notasEntregas = this.pedido.notasPedido.notasEntregas || [];
+        this.notasFacturacionPagos = this.pedido.notasPedido.notasFacturacionPagos || [];
+        
+      } else {
+        // Si this.pedido es undefined, asegurar que las propiedades locales estén vacías
+        this.notasClienteOrdenadas = [];
+        this.notasDespachosOrdenadas = [];
+        this.notasEntregasOrdenadas = [];
+        this.notasFacturacionPagosOrdenadas = [];
+        this.notasProduccion = [];
+        this.notasCliente = [];
+        this.notasDespachos = [];
+        this.notasEntregas = [];
+        this.notasFacturacionPagos = [];
       }
     }
 
-    if (this.pedido?.notasPedido?.notasCliente && this.pedido.notasPedido.notasCliente.length > 0) {
-      this.notasClienteOrdenadas = [...this.pedido.notasPedido.notasCliente].sort((a, b) => {
-        return new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime();
-      });
-    }
-
-    if (this.pedido?.notasPedido?.notasDespachos && this.pedido.notasPedido.notasDespachos.length > 0) {
-      this.notasDespachosOrdenadas = [...this.pedido.notasPedido.notasDespachos].sort((a, b) => {
-        return new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime();
-      });
-    }
-
-    if (this.pedido?.notasPedido?.notasEntregas && this.pedido.notasPedido.notasEntregas.length > 0) {
-      this.notasEntregasOrdenadas = [...this.pedido.notasPedido.notasEntregas].sort((a, b) => {
-        return new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime();
-      });
-    }
-
-    if (this.pedido?.notasPedido?.notasFacturacionPagos && this.pedido.notasPedido.notasFacturacionPagos.length > 0) {
-      this.notasFacturacionPagosOrdenadas = [...this.pedido.notasPedido.notasFacturacionPagos].sort((a, b) => {
-        return new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime();
-      });
-    }
-
-    if (this.isEdit) {
-      this.notasProduccion = this.pedido.notasPedido.notasProduccion || [];
-      this.notasCliente = this.pedido.notasPedido.notasCliente || [];
-      this.notasDespachos = this.pedido.notasPedido.notasDespachos || [];
-      this.notasEntregas = this.pedido.notasPedido.notasEntregas || [];
-      this.notasFacturacionPagos = this.pedido.notasPedido.notasFacturacionPagos || [];
-    }
-
-    this.initFormularios();
+    this.initFormularios(); // initFormularios construirá los forms basados en el estado ahora limpio/cargado de this.pedido
   }
 
   ngOnInit(): void {
@@ -135,8 +178,31 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       // Refrescar el carrito y actualizar el formulario
       this.singleton.refreshCart().subscribe((data: any) => {
         if (data) {
-          this.pedido.carrito = data;
-          // Reinicializar el formulario con los datos actualizados
+          let carritoParaFormulario = data;
+          if (!this.isEdit && Array.isArray(data)) {
+            // Si NO estamos editando y 'data' es un array (el carrito)
+            // limpiamos las notaProduccion de cada producto antes de pasarlo al formulario.
+            carritoParaFormulario = data.map(prod => {
+              // Clonar el producto para no modificar el original en el singleton directamente aquí,
+              // aunque el singleton podría devolver una copia ya.
+              // Lo importante es que el 'notaProduccion' para el formulario esté limpio.
+              return {
+                ...prod,
+                notaProduccion: [] // Limpiar notas de producción para el formulario
+              };
+            });
+          }
+          // Asignar el carrito (potencialmente limpio de notas de prod.) al pedido del componente
+          if (this.pedido) { // Asegurarse de que this.pedido exista antes de asignarle el carrito
+            this.pedido.carrito = carritoParaFormulario;
+          } else {
+            // Si this.pedido es undefined, esto podría indicar un problema de ciclo de vida o de inicialización.
+            // Por ahora, al menos evitamos un error, pero esto debería revisarse si ocurre.
+            console.warn('NotasComponent: this.pedido es undefined en ngOnChanges al intentar asignar carrito.');
+            // Podríamos crear un pedido básico aquí si fuera necesario, o manejarlo según la lógica de negocio.
+          }
+          
+          // Reinicializar el formulario con los datos actualizados (ahora limpios si !isEdit)
           this.initFormularios();
         }
       });

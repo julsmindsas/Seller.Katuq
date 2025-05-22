@@ -1056,7 +1056,7 @@ export class PaymentService extends BaseService {
     if (!dateString) return 'N/A';
     try {
       const date = new Date(dateString);
-      const datePipe = new DatePipe('es-ES');
+      const datePipe = new DatePipe('en-US');
       return datePipe.transform(date, 'yyyy-MM-dd') ?? 'N/A';
     } catch (e) {
       console.error("Error formatting date:", dateString, e);
