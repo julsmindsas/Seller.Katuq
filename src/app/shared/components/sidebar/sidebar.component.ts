@@ -134,6 +134,7 @@ export class SidebarComponent implements OnInit {
         document.body.classList.add('sidebar-compact-mode');
       }
     }
+    this.checkDeviceWidth(); // Llamar al inicio
     
     // Cargar favoritos
     this.loadFavoriteItems();
@@ -146,8 +147,10 @@ export class SidebarComponent implements OnInit {
   private setupMobileGestures(): void {
     // Solo necesitamos registrar eventos tactiles en móviles
     if (window.innerWidth >= 992) {
+      this.collapseMenu = this.navServices.collapseSidebar; // En escritorio, respetar el estado de navServices
       return;
     }
+    this.collapseMenu = true; // En móvil, empezar colapsado por defecto
     
     // Añadir listeners para eventos táctiles
     document.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
@@ -158,7 +161,9 @@ export class SidebarComponent implements OnInit {
       if (window.innerWidth >= 992) {
         this.collapseMenu = true; // Cerrar menú al redimensionar a escritorio
         document.body.style.overflow = ''; // Restablecer overflow
+        document.body.classList.remove('sidebar-mobile-open'); // Asegurar que se limpie la clase del body
       }
+      this.checkDeviceWidth(); // Llamar en cada resize
     });
   }
   
@@ -182,10 +187,12 @@ export class SidebarComponent implements OnInit {
       if (distance > 0 && this.collapseMenu) {
         // Deslizamiento de izquierda a derecha (abrir menú)
         this.collapseMenu = false;
+        document.body.classList.add('sidebar-mobile-open'); // Clase para controlar el estado del body
         document.body.style.overflow = 'hidden'; // Evitar scroll del body
       } else if (distance < 0 && !this.collapseMenu) {
         // Deslizamiento de derecha a izquierda (cerrar menú)
         this.collapseMenu = true;
+        document.body.classList.remove('sidebar-mobile-open');
         document.body.style.overflow = ''; // Restaurar scroll del body
       }
     }
@@ -396,8 +403,20 @@ export class SidebarComponent implements OnInit {
   }
 
   sidebarToggle() {
-    this.navServices.collapseSidebar = !this.navServices.collapseSidebar;
-    this.collapseMenu = this.navServices.collapseSidebar;
+    if (window.innerWidth < 992) {
+      this.collapseMenu = !this.collapseMenu;
+      if (!this.collapseMenu) {
+        document.body.classList.add('sidebar-mobile-open');
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.classList.remove('sidebar-mobile-open');
+        document.body.style.overflow = '';
+      }
+    } else {
+      this.navServices.collapseSidebar = !this.navServices.collapseSidebar;
+      this.collapseMenu = this.navServices.collapseSidebar;
+      // No manipular isCompactMode aquí directamente, permitir que toggleCompactMode lo haga
+    }
   }
 
   // Active Nav state - Marca el item activo y sus ancestros en la fuente original
@@ -532,13 +551,24 @@ export class SidebarComponent implements OnInit {
 
   // Método para alternar modo compacto
   toggleCompactMode(): void {
-    this.isCompactMode = !this.isCompactMode;
-    localStorage.setItem('sidebarCompactMode', this.isCompactMode.toString());
-    
-    if (this.isCompactMode) {
-      document.body.classList.add('sidebar-compact-mode');
+    if (window.innerWidth >= 992) { // Solo permitir modo compacto en escritorio
+      this.isCompactMode = !this.isCompactMode;
+      localStorage.setItem('sidebarCompactMode', this.isCompactMode.toString());
+      if (this.isCompactMode) {
+        document.body.classList.add('sidebar-compact-mode');
+        // Opcionalmente, forzar el colapso del menú principal si entra en modo compacto
+        // if (!this.navServices.collapseSidebar) {
+        //   this.navServices.collapseSidebar = true;
+        //   this.collapseMenu = true;
+        // }
+      } else {
+        document.body.classList.remove('sidebar-compact-mode');
+      }
     } else {
+      // Si está en móvil, asegurar que el modo compacto esté desactivado
+      this.isCompactMode = false;
       document.body.classList.remove('sidebar-compact-mode');
+      localStorage.setItem('sidebarCompactMode', 'false');
     }
   }
   
@@ -641,6 +671,30 @@ export class SidebarComponent implements OnInit {
       } catch(e) {
         console.error('Error loading favorite items:', e);
         this.favoriteItems = [];
+      }
+    }
+  }
+
+  // Nueva función para verificar el ancho del dispositivo y ajustar modos
+  private checkDeviceWidth(): void {
+    const isMobile = window.innerWidth < 992;
+    if (isMobile) {
+      if (this.isCompactMode) {
+        this.isCompactMode = false; // Forzar desactivación del modo compacto en móvil
+        document.body.classList.remove('sidebar-compact-mode');
+      }
+      // En móvil, el sidebar principal es el que se colapsa/expande, no el modo compacto.
+      // El estado de collapseMenu ya se maneja en setupMobileGestures y sidebarToggle para móvil.
+    } else {
+      // En escritorio, restaurar el estado de collapseMenu basado en navServices o la preferencia guardada
+      this.collapseMenu = this.navServices.collapseSidebar;
+      // El modo compacto solo aplica a escritorio
+      if (localStorage.getItem('sidebarCompactMode') === 'true') {
+        this.isCompactMode = true;
+        document.body.classList.add('sidebar-compact-mode');
+      } else {
+        this.isCompactMode = false;
+        document.body.classList.remove('sidebar-compact-mode');
       }
     }
   }
