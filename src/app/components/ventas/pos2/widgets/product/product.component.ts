@@ -168,8 +168,8 @@ export class ProductComponent implements OnInit {
             ...itemInventario,
             ...itemInventario.producto,
             disponibilidad: {
-              ...itemInventario.producto.disponibilidad,
-              cantidadDisponible: itemInventario.cantidad,
+              ...itemInventario?.producto?.disponibilidad,
+              cantidadDisponible: itemInventario?.cantidad,
             },
             cantidad: 1,
             imageLoaded: false

@@ -265,13 +265,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       if (sessionStorage.getItem("infoForms") == null) {
         this.identificacion.controls["referencia"].setValue(
           this.ultimasLetras +
-            "-" +
-            (this.totalProducts + 1).toString().padStart(6, "0"),
+          "-" +
+          (this.totalProducts + 1).toString().padStart(6, "0"),
         );
         this.identificacion.controls["codigoBarras"].setValue(
           this.ultimasLetras +
-            "-" +
-            (this.totalProducts + 1).toString().padStart(6, "0"),
+          "-" +
+          (this.totalProducts + 1).toString().padStart(6, "0"),
         );
         this.generarCodigoBarras();
       }
@@ -294,8 +294,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
             this.identificacion.controls["referencia"].disable();
             this.identificacion.controls["referencia"].setValue(
               this.ultimasLetras +
-                "-" +
-                (this.totalProducts + 1).toString().padStart(6, "0"),
+              "-" +
+              (this.totalProducts + 1).toString().padStart(6, "0"),
             );
             this.generarCodigoBarras();
           } else {
@@ -303,8 +303,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
             const referencia = this.edit.identificacion?.referencia
               ? this.edit.identificacion?.referencia
               : this.ultimasLetras +
-                "-" +
-                (this.totalProducts + 1).toString().padStart(6, "0");
+              "-" +
+              (this.totalProducts + 1).toString().padStart(6, "0");
             this.identificacion.controls["referencia"].setValue(referencia);
             this.generarCodigoBarras();
           }
@@ -329,8 +329,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
             if (this.identificacion.controls["codigoBarras"].value == "") {
               this.identificacion.controls["codigoBarras"].setValue(
                 this.ultimasLetras +
-                  "-" +
-                  (this.totalProducts + 1).toString().padStart(6, "0"),
+                "-" +
+                (this.totalProducts + 1).toString().padStart(6, "0"),
               );
             }
             this.generarCodigoBarras();
@@ -770,7 +770,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
     const texto = this.empresaActual.nomComercial.toString().replace(" ", "");
     this.ultimasLetras = texto.substring(0, 3);
-    this.procesoComercial.valueChanges.subscribe((valor: any) => {});
+    this.procesoComercial.valueChanges.subscribe((valor: any) => { });
     this.categoriasForm.valueChanges.subscribe((valor: any) => {
       this.pathParentRoute = this.construirRuta(
         valor.categorias,
@@ -823,17 +823,17 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
               parent: sub.parent,
               children: sub.children
                 ? sub.children.map((sub2) => {
-                    return {
-                      label: sub2.data.nombre,
-                      data: sub2.data,
-                      parent: sub2.parent,
-                      children: sub2.children
-                        ? sub2.children.map((sub2) => {
-                            return {};
-                          })
-                        : null,
-                    };
-                  })
+                  return {
+                    label: sub2.data.nombre,
+                    data: sub2.data,
+                    parent: sub2.parent,
+                    children: sub2.children
+                      ? sub2.children.map((sub2) => {
+                        return {};
+                      })
+                      : null,
+                  };
+                })
                 : null,
             };
           }),
@@ -1474,8 +1474,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         const referencia = this.edit.identificacion?.referencia
           ? this.edit.identificacion?.referencia
           : this.ultimasLetras +
-            "-" +
-            (this.totalProducts + 1).toString().padStart(6, "0");
+          "-" +
+          (this.totalProducts + 1).toString().padStart(6, "0");
 
         this.identificacion.controls["referencia"].setValue(referencia);
         if (this.identificacion.get("referencia").value) {
@@ -1824,7 +1824,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   addArticuloOfProduct() {
     const adicionSelected = this.moduloVariable.value.adicion;
-    if (adicionSelected) {
+    if (adicionSelected && !(typeof adicionSelected === 'object' && Object.keys(adicionSelected).length === 0)) {
       this.moduloVariable.controls["titulo"].setValue(adicionSelected);
     }
 
