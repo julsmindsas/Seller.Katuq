@@ -245,6 +245,20 @@
                                     [src]="producto.crearProducto.imagenesPrincipales[0].urls"
                                     [alt]="producto.crearProducto.titulo" appImageOptimizer [quality]="0.3" [width]="300"
                                     [height]="300" [lazy]="true" loading="lazy" priority>
+                                
+                                <!-- Badge de disponibilidad -->
+                                <span class="badge stock-badge"
+                                      [ngClass]="{
+                                        'bg-success': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 10,
+                                        'bg-warning': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 0 && producto.disponibilidad?.cantidadDisponible <= 10,
+                                        'bg-danger': producto.disponibilidad?.inventariable && (!producto.disponibilidad?.cantidadDisponible || producto.disponibilidad?.cantidadDisponible <= 0),
+                                        'bg-info': !producto.disponibilidad?.inventariable
+                                      }">
+                                    {{ producto.disponibilidad?.inventariable ? 
+                                       'Disponible: ' + (producto.disponibilidad?.cantidadDisponible || 0) : 
+                                       'No inventariable' }}
+                                </span>
+                                
                                 <div class="product-hover">
                                     <ul>
                                         <li>

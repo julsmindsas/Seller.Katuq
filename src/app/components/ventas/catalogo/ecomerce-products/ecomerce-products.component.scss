@@ -141,3 +141,55 @@
     }
   }
 }
+
+// Estilos para el badge de disponibilidad
+.product-img {
+  position: relative;
+  overflow: hidden;
+  
+  .stock-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.3s ease;
+  }
+  
+  // Mostramos el badge al hacer hover
+  .product-hover {
+    z-index: 9;
+  }
+  
+  &:hover {
+    .stock-badge {
+      opacity: 0.9;
+    }
+  }
+}
+
+// Colores de los badges
+.bg-success {
+  background-color: #28a745 !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.bg-info {
+  background-color: #17a2b8 !important;
+}
