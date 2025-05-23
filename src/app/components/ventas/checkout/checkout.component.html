@@ -20,7 +20,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Indicador de fecha estimada de entrega -->
     <div class="delivery-estimate mb-4">
       <div class="card shadow-sm border-0">
@@ -38,13 +38,14 @@
               </div>
             </div>
             <div class="col-md-4 text-md-end">
-              <span class="badge bg-primary-light text-primary">Entrega en {{ pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega || 'Domicilio' }}</span>
+              <span class="badge bg-primary-light text-primary">Entrega en {{
+                pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega || 'Domicilio' }}</span>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
+
     <div class="row">
       <!-- Columna izquierda: Información del cliente en formato de acordeón -->
       <div class="col-lg-6 col-sm-12">
@@ -52,13 +53,9 @@
           <!-- Acordeón: Datos del cliente -->
           <div class="accordion-item">
             <h2 class="accordion-header" id="headingCliente">
-              <button class="accordion-button" 
-                      type="button" 
-                      data-bs-toggle="collapse" 
-                      data-bs-target="#collapseCliente" 
-                      [attr.aria-expanded]="activeStep === 'cliente'" 
-                      aria-controls="collapseCliente"
-                      (click)="toggleStep('cliente')">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCliente"
+                [attr.aria-expanded]="activeStep === 'cliente'" aria-controls="collapseCliente"
+                (click)="toggleStep('cliente')">
                 <i class="fa fa-user me-2"></i>{{ 'Datos de Cliente' | translate }}
                 <div class="accordion-summary ms-auto" *ngIf="pedido?.cliente">
                   <span><i class="fa fa-id-card-alt me-1"></i>{{ pedido?.cliente?.tipo_documento_comprador }}</span>
@@ -67,17 +64,15 @@
                 </div>
               </button>
             </h2>
-            <div id="collapseCliente" 
-                 class="accordion-collapse collapse" 
-                 [ngClass]="{'show': activeStep === 'cliente'}"
-                 aria-labelledby="headingCliente" 
-                 data-bs-parent="#accordionCheckout">
+            <div id="collapseCliente" class="accordion-collapse collapse" [ngClass]="{'show': activeStep === 'cliente'}"
+              aria-labelledby="headingCliente" data-bs-parent="#accordionCheckout">
               <div class="accordion-body">
                 <div class="accordion-body-content">
                   <div class="row">
                     <div class="mb-3 col-sm-6">
                       <label for="tipo_documento"><strong>{{ 'Tipo Documento:' | translate }}</strong></label>
-                      <p id="tipo_documento" class="form-control-static">{{pedido?.cliente?.tipo_documento_comprador || '-'}}</p>
+                      <p id="tipo_documento" class="form-control-static">{{pedido?.cliente?.tipo_documento_comprador ||
+                        '-'}}</p>
                     </div>
                     <div class="mb-3 col-sm-6">
                       <label for="documento"><strong>{{ 'Documento:' | translate }}</strong></label>
@@ -87,32 +82,41 @@
                   <div class="row">
                     <div class="mb-3 col-sm-6">
                       <label for="nombres_completos"><strong>{{ 'Nombres:' | translate }}</strong></label>
-                      <p id="nombres_completos" class="form-control-static">{{pedido?.cliente?.nombres_completos || '-'}}</p>
+                      <p id="nombres_completos" class="form-control-static">{{pedido?.cliente?.nombres_completos ||
+                        '-'}}</p>
                     </div>
                     <div class="mb-3 col-sm-6">
                       <label for="apellidos_completos"><strong>{{ 'Apellidos:' | translate }}</strong></label>
-                      <p id="apellidos_completos" class="form-control-static">{{pedido?.cliente?.apellidos_completos || '-'}}</p>
+                      <p id="apellidos_completos" class="form-control-static">{{pedido?.cliente?.apellidos_completos ||
+                        '-'}}</p>
                     </div>
                   </div>
                   <div class="row">
                     <div class="mb-3 col-sm-6">
-                      <label for="numero_celular_comprador"><strong>{{ 'Número de celular:' | translate }}</strong></label>
+                      <label for="numero_celular_comprador"><strong>{{ 'Número de celular:' | translate
+                          }}</strong></label>
                       <p id="numero_celular_comprador" class="form-control-static">
                         <i class="fa fa-phone me-1 text-muted"></i>
-                        {{pedido?.cliente?.indicativo_celular_comprador ? '+' + pedido?.cliente?.indicativo_celular_comprador : ''}} {{pedido?.cliente?.numero_celular_comprador || '-'}}
+                        {{pedido?.cliente?.indicativo_celular_comprador ? '+' +
+                        pedido?.cliente?.indicativo_celular_comprador : ''}} {{pedido?.cliente?.numero_celular_comprador
+                        || '-'}}
                       </p>
                     </div>
                     <div class="mb-3 col-sm-6">
-                      <label for="numero_celular_whatsapp"><strong>{{ 'Número de celular WhatsApp:' | translate }}</strong></label>
+                      <label for="numero_celular_whatsapp"><strong>{{ 'Número de celular WhatsApp:' | translate
+                          }}</strong></label>
                       <p id="numero_celular_whatsapp" class="form-control-static">
                         <i class="fa fa-whatsapp me-1 text-success"></i>
-                        {{pedido?.cliente?.indicativo_celular_whatsapp ? '+' + pedido?.cliente?.indicativo_celular_whatsapp : ''}} {{pedido?.cliente?.numero_celular_whatsapp || '-'}}
+                        {{pedido?.cliente?.indicativo_celular_whatsapp ? '+' +
+                        pedido?.cliente?.indicativo_celular_whatsapp : ''}} {{pedido?.cliente?.numero_celular_whatsapp
+                        || '-'}}
                       </p>
                     </div>
                   </div>
                   <div class="row">
                     <div class="mb-3 col-sm-6">
-                      <label for="correo_electronico_comprador"><strong>{{ 'Correo electrónico:' | translate }}</strong></label>
+                      <label for="correo_electronico_comprador"><strong>{{ 'Correo electrónico:' | translate
+                          }}</strong></label>
                       <p id="correo_electronico_comprador" class="form-control-static">
                         <i class="fa fa-envelope me-1 text-muted"></i>
                         {{pedido?.cliente?.correo_electronico_comprador || '-'}}
@@ -133,30 +137,24 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Acordeón: Datos de envío -->
-          <div class="accordion-item">
+          <div class="accordion-item" *ngIf="pedido?.formaEntrega != 'Recoge'">
             <h2 class="accordion-header" id="headingEnvio">
-              <button class="accordion-button" 
-                      type="button" 
-                      data-bs-toggle="collapse" 
-                      data-bs-target="#collapseEnvio" 
-                      [attr.aria-expanded]="activeStep === 'envio'" 
-                      aria-controls="collapseEnvio"
-                      (click)="toggleStep('envio')">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEnvio"
+                [attr.aria-expanded]="activeStep === 'envio'" aria-controls="collapseEnvio"
+                (click)="toggleStep('envio')">
                 <i class="fa fa-truck me-2"></i>{{ 'Datos de Envío' | translate }}
                 <div class="accordion-summary ms-auto" *ngIf="pedido?.envio">
                   <span><i class="fa fa-map-marker-alt me-1"></i>{{ pedido?.envio?.ciudad }}</span>
                   <span><i class="fa fa-phone me-1"></i>{{ pedido?.envio?.celular }}</span>
-                  <span class="complete" *ngIf="pedido?.envio?.direccionEntrega"><i class="fa fa-check-circle me-1"></i>Completo</span>
+                  <span class="complete" *ngIf="pedido?.envio?.direccionEntrega"><i
+                      class="fa fa-check-circle me-1"></i>Completo</span>
                 </div>
               </button>
             </h2>
-            <div id="collapseEnvio" 
-                 class="accordion-collapse collapse" 
-                 [ngClass]="{'show': activeStep === 'envio'}"
-                 aria-labelledby="headingEnvio" 
-                 data-bs-parent="#accordionCheckout">
+            <div id="collapseEnvio" class="accordion-collapse collapse" [ngClass]="{'show': activeStep === 'envio'}"
+              aria-labelledby="headingEnvio" data-bs-parent="#accordionCheckout">
               <div class="accordion-body">
                 <div class="accordion-body-content">
                   <div class="row">
@@ -178,21 +176,23 @@
                       <label for="envioCelular"><strong>{{ 'Celular:' | translate }}</strong></label>
                       <p id="envioCelular" class="form-control-static">
                         <i class="fa fa-phone me-1 text-muted"></i>
-                        {{pedido?.envio?.indicativoCel ? '+' + pedido?.envio?.indicativoCel : ''}} {{pedido?.envio?.celular || '-'}}
+                        {{pedido?.envio?.indicativoCel ? '+' + pedido?.envio?.indicativoCel : ''}}
+                        {{pedido?.envio?.celular || '-'}}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div class="row">
                     <div class="mb-3 col-sm-12">
-                      <label for="envioDireccionEntrega"><strong>{{ 'Dirección de Entrega:' | translate }}</strong></label>
+                      <label for="envioDireccionEntrega"><strong>{{ 'Dirección de Entrega:' | translate
+                          }}</strong></label>
                       <p id="envioDireccionEntrega" class="form-control-static">
                         <i class="fa fa-map-marker-alt me-1 text-muted"></i>
                         {{pedido?.envio?.direccionEntrega || '-'}}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div class="row">
                     <div class="mb-3 col-sm-4">
                       <label for="envioDepartamento"><strong>{{ 'Departamento:' | translate }}</strong></label>
@@ -207,7 +207,7 @@
                       <p id="envioBarrio" class="form-control-static">{{pedido?.envio?.barrio || '-'}}</p>
                     </div>
                   </div>
-                  
+
                   <div class="row">
                     <div class="mb-3 col-sm-6">
                       <label for="envioZona"><strong>{{ 'Zona:' | translate }}</strong></label>
@@ -222,29 +222,24 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Acordeón: Datos de facturación -->
           <div class="accordion-item">
             <h2 class="accordion-header" id="headingFacturacion">
-              <button class="accordion-button" 
-                      type="button" 
-                      data-bs-toggle="collapse" 
-                      data-bs-target="#collapseFacturacion" 
-                      [attr.aria-expanded]="activeStep === 'facturacion'" 
-                      aria-controls="collapseFacturacion"
-                      (click)="toggleStep('facturacion')">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseFacturacion" [attr.aria-expanded]="activeStep === 'facturacion'"
+                aria-controls="collapseFacturacion" (click)="toggleStep('facturacion')">
                 <i class="fa fa-file-invoice me-2"></i>{{ 'Datos de Facturación' | translate }}
                 <div class="accordion-summary ms-auto" *ngIf="pedido?.facturacion">
                   <span><i class="fa fa-id-card me-1"></i>{{ pedido?.facturacion?.documento }}</span>
-                  <span class="complete" *ngIf="pedido?.facturacion?.documento"><i class="fa fa-check-circle me-1"></i>Completo</span>
+                  <span class="complete" *ngIf="pedido?.facturacion?.documento"><i
+                      class="fa fa-check-circle me-1"></i>Completo</span>
                 </div>
               </button>
             </h2>
-            <div id="collapseFacturacion" 
-                 class="accordion-collapse collapse" 
-                 [ngClass]="{'show': activeStep === 'facturacion'}"
-                 aria-labelledby="headingFacturacion" 
-                 data-bs-parent="#accordionCheckout">
+            <div id="collapseFacturacion" class="accordion-collapse collapse"
+              [ngClass]="{'show': activeStep === 'facturacion'}" aria-labelledby="headingFacturacion"
+              data-bs-parent="#accordionCheckout">
               <div class="accordion-body">
                 <div class="accordion-body-content">
                   <div class="row">
@@ -253,17 +248,21 @@
                       <p id="facturacionNombres" class="form-control-static">{{pedido?.facturacion?.nombres || '-'}}</p>
                     </div>
                     <div class="mb-3 col-sm-6">
-                      <label for="facturacionTipoDocumento"><strong>{{ 'Tipo de Documento:' | translate }}</strong></label>
-                      <p id="facturacionTipoDocumento" class="form-control-static">{{pedido?.facturacion?.tipoDocumento || '-'}}</p>
+                      <label for="facturacionTipoDocumento"><strong>{{ 'Tipo de Documento:' | translate
+                          }}</strong></label>
+                      <p id="facturacionTipoDocumento" class="form-control-static">{{pedido?.facturacion?.tipoDocumento
+                        || '-'}}</p>
                     </div>
                   </div>
                   <div class="row">
                     <div class="mb-3 col-sm-6">
                       <label for="facturacionDocumento"><strong>{{ 'Documento:' | translate }}</strong></label>
-                      <p id="facturacionDocumento" class="form-control-static">{{pedido?.facturacion?.documento || '-'}}</p>
+                      <p id="facturacionDocumento" class="form-control-static">{{pedido?.facturacion?.documento || '-'}}
+                      </p>
                     </div>
                     <div class="mb-3 col-sm-6">
-                      <label for="facturacionCorreoElectronico"><strong>{{ 'Correo Electrónico:' | translate }}</strong></label>
+                      <label for="facturacionCorreoElectronico"><strong>{{ 'Correo Electrónico:' | translate
+                          }}</strong></label>
                       <p id="facturacionCorreoElectronico" class="form-control-static">
                         <i class="fa fa-envelope me-1 text-muted"></i>
                         {{pedido?.facturacion?.correoElectronico || '-'}}
@@ -286,7 +285,8 @@
                     </div>
                     <div class="mb-3 col-sm-4">
                       <label for="facturacionDepartamento"><strong>{{ 'Departamento:' | translate }}</strong></label>
-                      <p id="facturacionDepartamento" class="form-control-static">{{pedido?.facturacion?.departamento || '-'}}</p>
+                      <p id="facturacionDepartamento" class="form-control-static">{{pedido?.facturacion?.departamento ||
+                        '-'}}</p>
                     </div>
                     <div class="mb-3 col-sm-4">
                       <label for="facturacionCiudad"><strong>{{ 'Ciudad:' | translate }}</strong></label>
@@ -297,44 +297,42 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Acordeón: Datos extras de entrega -->
           <div class="accordion-item">
             <h2 class="accordion-header" id="headingEntrega">
-              <button class="accordion-button" 
-                      type="button" 
-                      data-bs-toggle="collapse" 
-                      data-bs-target="#collapseEntrega" 
-                      [attr.aria-expanded]="activeStep === 'entrega'" 
-                      aria-controls="collapseEntrega"
-                      (click)="toggleStep('entrega')">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEntrega"
+                [attr.aria-expanded]="activeStep === 'entrega'" aria-controls="collapseEntrega"
+                (click)="toggleStep('entrega')">
                 <i class="fa fa-calendar-alt me-2"></i>{{ 'Datos de Entrega' | translate }}
                 <div class="accordion-summary ms-auto" *ngIf="pedido?.carrito?.[0]?.configuracion?.datosEntrega">
                   <span><i class="fa fa-calendar me-1"></i>{{ fechaEntregaEstimada }}</span>
-                  <span><i class="fa fa-clock me-1"></i>{{ pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</span>
-                  <span class="complete" *ngIf="pedido?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega"><i class="fa fa-check-circle me-1"></i>Completo</span>
+                  <span><i class="fa fa-clock me-1"></i>{{
+                    pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</span>
+                  <span class="complete" *ngIf="pedido?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega"><i
+                      class="fa fa-check-circle me-1"></i>Completo</span>
                 </div>
               </button>
             </h2>
-            <div id="collapseEntrega" 
-                 class="accordion-collapse collapse" 
-                 [ngClass]="{'show': activeStep === 'entrega'}"
-                 aria-labelledby="headingEntrega" 
-                 data-bs-parent="#accordionCheckout">
+            <div id="collapseEntrega" class="accordion-collapse collapse" [ngClass]="{'show': activeStep === 'entrega'}"
+              aria-labelledby="headingEntrega" data-bs-parent="#accordionCheckout">
               <div class="accordion-body">
                 <div class="accordion-body-content">
                   <div class="info-summary">
                     <div class="info-summary-item">
                       <i class="fa fa-calendar"></i>
-                      <span><strong>Fecha:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}</span>
+                      <span><strong>Fecha:</strong>
+                        {{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}</span>
                     </div>
                     <div class="info-summary-item">
                       <i class="fa fa-truck"></i>
-                      <span><strong>Forma:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega || '-'}}</span>
+                      <span><strong>Forma:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega ||
+                        '-'}}</span>
                     </div>
                     <div class="info-summary-item">
                       <i class="fa fa-clock"></i>
-                      <span><strong>Horario:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega || '-'}}</span>
+                      <span><strong>Horario:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega
+                        || '-'}}</span>
                     </div>
                   </div>
                 </div>
@@ -343,7 +341,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Columna derecha: Resumen del pedido -->
       <div class="col-lg-6 col-sm-12">
         <div class="checkout-details">
@@ -352,7 +350,7 @@
             <div class="title-box">
               <h4><i class="fa fa-shopping-cart me-2"></i>{{ 'Productos' | translate }}</h4>
             </div>
-            
+
             <!-- Lista de productos -->
             <div class="products-container">
               <div *ngFor="let item of pedido?.carrito" class="product-card">
@@ -365,7 +363,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Resumen de costos -->
             <ul class="sub-total">
               <li>
@@ -374,7 +372,8 @@
               </li>
               <li>
                 <span>Domicilio:</span>
-                <span class="count">{{pedidoUtilService.getShippingCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span>
+                <span class="count">{{pedidoUtilService.getShippingCost(allBillingZone) |
+                  currency:'USD':'symbol':'1.0-0'}}</span>
               </li>
               <li>
                 <span>Descuentos:</span>
@@ -382,9 +381,11 @@
               </li>
               <li>
                 <span>Total sin IVA:</span>
-                <span class="count">{{pedidoUtilService.getShippingCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() | currency:'USD':'symbol':'1.0-0'}}</span>
+                <span
+                  class="count">{{pedidoUtilService.getShippingCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale()
+                  | currency:'USD':'symbol':'1.0-0'}}</span>
               </li>
-              
+
               <!-- Desglose de impuestos -->
               <li>
                 <ul class="two-column-list">
@@ -406,51 +407,49 @@
                   </li>
                 </ul>
               </li>
-              
+
               <li>
                 <span>Total IVA:</span>
-                <span class="count">{{checkIVAPrice().totalPrecioIVADef + pedidoUtilService.getShippingTaxCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span>
+                <span class="count">{{checkIVAPrice().totalPrecioIVADef +
+                  pedidoUtilService.getShippingTaxCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span>
               </li>
-              
+
               <!-- Total con IVA -->
               <li>
                 <span>TOTAL A PAGAR:</span>
-                <span class="count">{{pedidoUtilService.getShippingCost(allBillingZone)+pedidoUtilService.getShippingTaxCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale() + checkIVAPrice().totalPrecioIVADef | currency:'USD':'symbol':'1.0-0'}}</span>
+                <span
+                  class="count">{{pedidoUtilService.getShippingCost(allBillingZone)+pedidoUtilService.getShippingTaxCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale()
+                  + checkIVAPrice().totalPrecioIVADef | currency:'USD':'symbol':'1.0-0'}}</span>
               </li>
             </ul>
-            
+
             <!-- Formas de pago con tabs -->
             <form [formGroup]="form" class="needs-validation mt-4" novalidate>
               <h5 class="mb-3"><i class="fa fa-credit-card me-2"></i>Formas de Pago</h5>
-              
+
               <!-- Navegación por tabs para categorías de pago -->
               <ul class="nav nav-tabs payment-tabs" id="paymentTabs" role="tablist">
                 <li class="nav-item" role="presentation" *ngFor="let categoria of categoriasFormasPago; let i = index">
-                  <button class="nav-link" 
-                          [ngClass]="{'active': activePaymentTab === categoria.categoria}"
-                          [id]="'tab-' + categoria.categoria" 
-                          (click)="setActivePaymentTab(categoria.categoria)"
-                          type="button" 
-                          role="tab" 
-                          [attr.aria-selected]="activePaymentTab === categoria.categoria">
+                  <button class="nav-link" [ngClass]="{'active': activePaymentTab === categoria.categoria}"
+                    [id]="'tab-' + categoria.categoria" (click)="setActivePaymentTab(categoria.categoria)" type="button"
+                    role="tab" [attr.aria-selected]="activePaymentTab === categoria.categoria">
                     <i [class]="getPaymentCategoryIcon(categoria.categoria)"></i>
                     {{ categoria.categoria }}
                   </button>
                 </li>
               </ul>
-              
+
               <!-- Contenido de tabs de pagos -->
               <div class="tab-content mt-3" id="paymentTabsContent">
-                <div *ngFor="let categoria of categoriasFormasPago" 
-                     class="tab-pane fade" 
-                     [ngClass]="{'show active': activePaymentTab === categoria.categoria}"
-                     [id]="'content-' + categoria.categoria" 
-                     role="tabpanel">
-                  
+                <div *ngFor="let categoria of categoriasFormasPago" class="tab-pane fade"
+                  [ngClass]="{'show active': activePaymentTab === categoria.categoria}"
+                  [id]="'content-' + categoria.categoria" role="tabpanel">
+
                   <div class="payment-grid">
                     <div *ngFor="let opcionPago of categoria.formasPago" class="payment-option">
                       <label class="payment-method-label" [for]="opcionPago.id">
-                        <input class="payment-radio" [id]="opcionPago.id" type="radio" [value]="opcionPago.id" formControlName="opcionSeleccionada" />
+                        <input class="payment-radio" [id]="opcionPago.id" type="radio" [value]="opcionPago.id"
+                          formControlName="opcionSeleccionada" />
                         <div class="payment-method-card">
                           <i [class]="getPaymentMethodIcon(opcionPago.nombre)"></i>
                           <span title="{{opcionPago.nombre}}">{{opcionPago.nombre}}</span>
@@ -460,13 +459,14 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Mensaje de validación -->
-              <div *ngIf="form.get('opcionSeleccionada')?.invalid && form.get('opcionSeleccionada')?.touched" class="text-danger small mt-2">
+              <div *ngIf="form.get('opcionSeleccionada')?.invalid && form.get('opcionSeleccionada')?.touched"
+                class="text-danger small mt-2">
                 Por favor, selecciona una forma de pago
               </div>
             </form>
-            
+
             <!-- Información de seguridad -->
             <div class="payment-security mt-4">
               <div class="security-badges">
@@ -484,10 +484,11 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Botón de procesar pago -->
             <div class="order-place">
-              <button class="btn btn-primary" [disabled]="isProcessingPayment || !pedidoValido" [ngClass]="{'processing': isProcessingPayment}" (click)="gotToPaymentOrder()">
+              <button class="btn btn-primary" [disabled]="isProcessingPayment || !pedidoValido"
+                [ngClass]="{'processing': isProcessingPayment}" (click)="gotToPaymentOrder()">
                 <span *ngIf="!isProcessingPayment">
                   <i class="fa fa-lock me-2"></i>Comprar y pagar
                 </span>

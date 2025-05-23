@@ -751,7 +751,7 @@ export class PaymentService extends BaseService {
         <p style="font-size: 14px; margin: 5px 0 5px 20px;">Alias: ${pedido.facturacion.alias ?? 'N/A'}</p>
     </div>` : '';
 
-    const htmlEnvio = !isComanda && pedido?.envio ? `
+    const htmlEnvio = (!isComanda && pedido?.formaEntrega != 'Recoge' && pedido?.envio) ? `
     <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
       <h2 style="color: #444; margin-bottom: 10px;">Datos de Envío</h2>
       <p style="font-size: 14px; margin: 5px 0 5px 20px;">Nombres: ${pedido.envio.nombres ?? 'N/A'}</p>

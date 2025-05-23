@@ -331,10 +331,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.indicativo_celular_facturacion = "57";
     this.indicativo_celular_entrega = "57";
     this.indicativo_celular_entrega2 = "57";
-    
+
     // Cargar bodegas y verificar si hay una bodega guardada en localStorage
     this.cargarBodegas();
-    
+
     // Verificar si hay una ciudad seleccionada previamente en localStorage
     const ciudadGuardada = localStorage.getItem('selectedCity');
     if (ciudadGuardada) {
@@ -348,29 +348,29 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         this.pedidoGral.envio.ciudad = ciudadGuardada;
       }
     }
-    
+
     // Verificar si hay una bodega guardada en localStorage
     const bodegaGuardada = JSON.parse(localStorage.getItem('warehouse') || 'null');
     if (bodegaGuardada) {
       // Establecer la bodega en el objeto del componente
       this.selectedWarehouse = bodegaGuardada.nombre;
       this.bodega = bodegaGuardada;
-      
+
       // Asignar la bodega al pedido
       if (this.pedidoGral) {
         this.pedidoGral.bodegaId = bodegaGuardada.idBodega;
       }
-      
+
       // Programar la carga de productos después de que los componentes estén inicializados
       setTimeout(() => {
         if (this.productos) {
           this.productos.bodega = bodegaGuardada;
-          
+
           // Si también hay una ciudad seleccionada, asignarla al componente productos
           if (this.selectedCity && this.selectedCity !== 'seleccione') {
             this.productos.ciudad = this.selectedCity;
           }
-          
+
           // Cargar productos con los filtros establecidos
           if (typeof this.productos.cargarTodo === 'function') {
             this.productos.cargarTodo();
@@ -1189,26 +1189,26 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         ...(this.pedidoGral.envio || {}),
         ciudad: selectedValue
       } as any;
-      
+
       // Guardar la ciudad seleccionada en localStorage
       localStorage.setItem('selectedCity', selectedValue);
-      
+
       // Actualizar el componente catálogo con la ciudad seleccionada
       if (this.productos) {
         this.productos.ciudad = selectedValue;
-        
+
         // Si hay una bodega seleccionada, asignarla también
         if (this.bodega) {
           this.productos.bodega = this.bodega;
         }
-        
+
         // Llamar al método que recarga el catálogo filtrado
         if (typeof this.productos.cargarTodo === 'function') {
           this.productos.cargarTodo();
           this.toastrService.success('Catálogo filtrado por ciudad: ' + selectedValue, 'Éxito');
         }
       }
-      
+
       console.log(`Ciudad seleccionada: ${this.pedidoGral.envio?.ciudad}`);
 
       // Filtrar direcciones de entrega por la ciudad seleccionada
@@ -1232,7 +1232,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.selectedCity = '';
       // Eliminar la ciudad guardada si se selecciona "seleccione"
       localStorage.removeItem('selectedCity');
-      
+
       // Limpiar el filtro de ciudad en el catálogo
       if (this.productos) {
         this.productos.ciudad = '';
@@ -1256,13 +1256,13 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   }
   enterStep($event: MovingDirection, index: number) {
     console.log('Entrando al paso:', index);
-    
+
     // Intentar cargar datos del pedido desde sessionStorage
     try {
       const pedidoTemporal = sessionStorage.getItem('pedidoTemporal');
       if (pedidoTemporal) {
         const pedidoGuardado = JSON.parse(pedidoTemporal);
-        
+
         // Asegurarse de que no perdemos las notas
         if (pedidoGuardado.notasPedido) {
           if (!this.pedidoGral.notasPedido) {
@@ -1276,20 +1276,80 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             this.pedidoGral.notasPedido.notasEntregas = pedidoGuardado.notasPedido.notasEntregas || [];
             this.pedidoGral.notasPedido.notasFacturacionPagos = pedidoGuardado.notasPedido.notasFacturacionPagos || [];
           }
-          
+
           console.log('Notas cargadas desde sessionStorage:', this.pedidoGral.notasPedido);
         }
       }
     } catch (error) {
       console.error('Error al cargar pedido desde sessionStorage:', error);
     }
-    
+
+    // Verificar si debemos saltar el paso de envío (4) cuando la forma de entrega es "recoge"
+    if (index === 4) { // Estamos en el paso del cliente
+      // Cargar datos del carrito para verificar la forma de entrega
+      const carrito = localStorage.getItem('carrito');
+      try {
+        if (carrito) {
+          const carritoObj = JSON.parse(carrito);
+          // Verificar si la forma de entrega contiene la palabra "recoge"
+          if (carritoObj && carritoObj.length > 0) {
+            const formaEntrega = carritoObj[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase();
+            if (formaEntrega && formaEntrega.includes('recoge')) {
+              console.log('Forma de entrega es "recoge", se saltará el paso de envío');
+
+              // Crear datos de envío simplificados para recogida en tienda
+              const envioRecoge = {
+                alias: 'Recoge',
+                nombres: 'N/A',
+                apellidos: 'N/A',
+                indicativoCel: 'N/A',
+                celular: 'N/A',
+                indicativoOtroNumero: 'N/A',
+                otroNumero: 'N/A',
+                direccionEntrega: 'N/A',
+                observaciones: 'N/A',
+                barrio: 'N/A',
+                nombreUnidad: 'N/A',
+                especificacionesInternas: 'N/A',
+                pais: 'N/A',
+                departamento: 'N/A',
+                ciudad: this.selectedCity || 'N/A',
+                zonaCobro: 'N/A',
+                valorZonaCobro: '0',
+                codigoPV: 'N/A'
+              };
+
+              // Asignar al pedido
+              this.pedidoGral.envio = envioRecoge;
+              this.pedidoGral.formaEntrega = 'Recoge';
+
+              // Si se ha validado el cliente y estamos avanzando al siguiente paso,
+              // saltar directamente al paso 5 (facturación)
+              if (this.pedidoGral.cliente && $event === MovingDirection.Forwards) {
+                // setTimeout(() => {
+                // }, 100);
+                this.mywizard.goToNextStep(); // El índice interno del wizard es 0-based, así que 4 es el paso 5 (Facturación)
+
+                return;
+              }
+              else if (this.pedidoGral.cliente && $event === MovingDirection.Backwards) {
+                this.mywizard.goToPreviousStep();
+                return;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error al procesar carrito para verificar forma de entrega:', error);
+      }
+    }
+
     // Actualizar el estado en función del paso actual
     if (index == 3) {
       // Paso de cliente
       if (this.pedidoGral && this.pedidoGral.cliente) {
         this.encontrado = true;
-        
+
         // Si tenemos un cliente, actualizar el formulario con sus datos
         if (this.formulario) {
           this.formulario.patchValue({
@@ -1306,19 +1366,19 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         }
       }
     }
-    
+
     if (index == 4) {
       // Paso de envío - Cargar datos de dirección del cliente
       if (this.pedidoGral && this.pedidoGral.cliente) {
         this.documentoBuscar = this.pedidoGral.cliente.documento;
-        
+
         // Verificar si se necesitan cargar datos de entrega
-        this.service.getClientByDocument({documento: this.documentoBuscar}).subscribe({
+        this.service.getClientByDocument({ documento: this.documentoBuscar }).subscribe({
           next: (res: any) => {
             if (res && res.datosEntrega && res.datosEntrega.length > 0) {
               // Guardar todos los datos de entrega originales
               this.originalDataEntregas = this.utils.deepClone(res.datosEntrega);
-              
+
               // Si no hay ciudad seleccionada, mostrar todas las direcciones
               if (!this.selectedCity || this.selectedCity === '') {
                 this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
@@ -1353,13 +1413,13 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         });
       }
     }
-    
+
     if (index == 5) {
       // Paso de facturación
       if (this.pedidoGral && this.pedidoGral.cliente) {
         // Intentar cargar datos de facturación si no se han cargado
         this.documentoBuscar = this.pedidoGral.cliente.documento;
-        
+
         if (!this.datosFacturacionElectronica || this.datosFacturacionElectronica.length === 0) {
           this.ventasService.getDatosFacturacion(this.documentoBuscar).subscribe({
             next: (res: any) => {
@@ -1375,20 +1435,20 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           });
         }
       }
-      
+
       // Si ya había datos previos de entrega, asegurarnos que se muestran
       if (this.pedidoGral && this.pedidoGral.envio) {
         this.ref.detectChanges();
       }
     }
-    
+
     if (index == 7) {
       this.carrito1 = localStorage.getItem('carrito');
     }
-    
+
     // Forzar la detección de cambios para actualizar la vista
     this.ref.detectChanges();
-    
+
     // Al finalizar cualquier cambio de paso, guardar el estado actual
     this.guardarEstadoPedidoEnSession();
   }
@@ -1403,7 +1463,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
   private reviewStepAndExecute(index: number) {
     console.log(`Revisando paso ${index}`);
-    
+
     if (index == 3) {
       // Paso del cliente - Validar que existe un cliente
       if (!this.pedidoGral.cliente) {
@@ -1415,20 +1475,20 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         return;
       }
     }
-    
+
     if (index == 4) {
       // Paso de envío - Preparar datos de envío
       if (this.pedidoGral.cliente) {
         // Si hay cliente, intentar cargar sus datos de envío
         this.documentoBuscar = this.pedidoGral.cliente.documento;
-        
+
         // Siempre cargar los datos de entrega actualizados para asegurar que estén disponibles
-        this.service.getClientByDocument({documento: this.documentoBuscar}).subscribe({
+        this.service.getClientByDocument({ documento: this.documentoBuscar }).subscribe({
           next: (res: any) => {
             if (res && res.datosEntrega && res.datosEntrega.length > 0) {
               // Guardar todos los datos originales primero
               this.originalDataEntregas = this.utils.deepClone(res.datosEntrega);
-              
+
               // Si no hay ciudad seleccionada, mostrar todas las direcciones
               if (!this.selectedCity || this.selectedCity === '') {
                 this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
@@ -1462,13 +1522,13 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         });
       }
     }
-    
+
     if (index == 5) {
       // Paso de facturación - Preparar datos de facturación
       if (this.pedidoGral.cliente) {
         // Si hay cliente, intentar cargar sus datos de facturación
         this.documentoBuscar = this.pedidoGral.cliente.documento;
-        
+
         // Verificamos si ya hay datos cargados previamente
         if (!this.datosFacturacionElectronica || this.datosFacturacionElectronica?.length === 0) {
           this.ventasService.getDatosFacturacion(this.documentoBuscar).subscribe({
@@ -1482,9 +1542,54 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             }
           });
         }
-        
-        // Si no hay datos de envío, intentar usar los datos del cliente
-        if (!this.pedidoGral.envio) {
+
+        // Verificar si la forma de entrega es "recoge" para no validar datos de envío
+        const carrito = localStorage.getItem('carrito');
+        let esRecogeEnTienda = false;
+
+        try {
+          if (carrito) {
+            const carritoObj = JSON.parse(carrito);
+            // Verificar si la forma de entrega contiene la palabra "recoge"
+            if (carritoObj && carritoObj.length > 0) {
+              const formaEntrega = carritoObj[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase();
+              if (formaEntrega && formaEntrega.includes('recoge')) {
+                esRecogeEnTienda = true;
+
+                // Si es recogida en tienda y no hay datos de envío, crear datos mínimos
+                if (!this.pedidoGral.envio) {
+                  const envioRecoge = {
+                    alias: 'Recoge',
+                    nombres: 'N/A',
+                    apellidos: 'N/A',
+                    indicativoCel: 'N/A',
+                    celular: 'N/A',
+                    indicativoOtroNumero: 'N/A',
+                    otroNumero: 'N/A',
+                    direccionEntrega: 'N/A',
+                    observaciones: 'N/A',
+                    barrio: 'N/A',
+                    nombreUnidad: 'N/A',
+                    especificacionesInternas: 'N/A',
+                    pais: 'N/A',
+                    departamento: 'N/A',
+                    ciudad: this.selectedCity || 'N/A',
+                    zonaCobro: 'N/A',
+                    valorZonaCobro: '0',
+                    codigoPV: 'N/A'
+                  };
+                  this.pedidoGral.envio = envioRecoge;
+                  this.pedidoGral.formaEntrega = 'Recoge';
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error al procesar carrito para verificar forma de entrega:', error);
+        }
+
+        // Si no es recogida en tienda, verificar que existan datos de envío
+        if (!esRecogeEnTienda && !this.pedidoGral.envio) {
           Swal.fire({
             title: 'Advertencia',
             text: 'Debe seleccionar o crear datos de envío antes de continuar',
@@ -1494,7 +1599,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         }
       }
     }
-    
+
     if (index == 6) {
       // Paso de resumen - Validar que existe información de facturación
       if (!this.pedidoGral.facturacion) {
@@ -1505,13 +1610,13 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         });
         return;
       }
-      
+
       // Cargar datos del carrito para el resumen
       this.carrito1 = localStorage.getItem('carrito');
       try {
         if (this.carrito1) {
           this.carrito1 = JSON.parse(this.carrito1);
-          
+
           // Si es forma de entrega "recoge", crear datos de envío simplificados
           if (this.carrito1[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase().includes('recoge')) {
             this.activarEntrega = false;
@@ -1577,7 +1682,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
     // Asegurarnos de mantener la información correcta del pedido
     this.pedidoGral = { ...pedidoProcesado };
-    
+
     // Añadir información de canal y tipo de orden
     this.pedidoGral.typeOrder = "E-commerce";
     this.pedidoGral.channel = {
@@ -1586,7 +1691,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       activo: true,
       createdAt: new Date().toISOString()
     }
-    
+
     // Verificar que se haya seleccionado una bodega
     if (this.bodega) {
       this.pedidoGral.bodegaId = this.bodega?.idBodega;
@@ -1599,10 +1704,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       });
       return;
     }
-    
+
     // Log para depuración
     console.log("Pedido final a procesar:", this.pedidoGral);
-    
+
     // Actualizar estado según los productos
     this.cambiarEstadoSegunLosProductos();
 
@@ -1679,6 +1784,8 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             }
             context.cartService.clearCart();
             context.pedidoSinGuardar = false;
+            this.mywizard.goToNextStep();
+
 
             // Mostrar mensaje de éxito
             Swal.fire({
@@ -1687,6 +1794,8 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
               icon: "success",
               confirmButtonText: "Ok",
             });
+            // ir al siguiente paso (confirmación)
+            this.mywizard.goToNextStep();
           },
           error: (err: any) => {
             console.error("Error al crear el pedido:", err);
@@ -1719,7 +1828,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     if (!this.pedidoGral?.carrito || this.pedidoGral.carrito.length === 0) {
       return; // No hay productos para procesar
     }
-    
+
     const siTodosSonParaProducir = this.pedidoGral.carrito.some(item => {
       return item?.producto?.crearProducto?.paraProduccion;
     });
@@ -1732,12 +1841,12 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   overridePedido(event: Pedido) {
     this.pedidoGral = event;
     console.log(this.pedidoGral);
-    
+
     // Usar operadores de acceso seguro para evitar errores
     if (this.pedidoGral?.facturacion && this.pedidoGral.facturacion.hasOwnProperty('direccion')) {
-      if (this.pedidoGral.carrito && 
-          this.pedidoGral.carrito[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase().includes("domicilio")) {
-        
+      if (this.pedidoGral.carrito &&
+        this.pedidoGral.carrito[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase().includes("domicilio")) {
+
         // Verificar que existe envío y tiene dirección
         if (this.pedidoGral.envio && this.pedidoGral.envio.hasOwnProperty('direccionEntrega')) {
           this.nextAvailable = true;
@@ -1956,7 +2065,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       // Actualizar productos con la nueva bodega seleccionada
       if (this.productos) {
         this.productos.bodega = selected;
-        
+
         // Si también hay una ciudad seleccionada, aplicarla junto con la bodega
         if (this.selectedCity && this.selectedCity !== 'seleccione') {
           this.productos.ciudad = this.selectedCity;
@@ -1970,7 +2079,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             this.productos.cargarTodo();
           }
         }
-        
+
         this.toastrService.success('Bodega seleccionada: ' + selected.nombre, 'Éxito');
       }
     } else {
@@ -2140,12 +2249,12 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         notasFacturacionPagos: []
       };
     }
-    
+
     // Transferir la nota de producción del producto al objeto notasPedido
     if (event && event.notaProduccion && event.notaProduccion.length > 0) {
       // Obtener la última nota agregada (la más reciente)
       const nuevaNota = event.notaProduccion[event.notaProduccion.length - 1];
-      
+
       // Crear una nota estructurada para el pedido
       const notaProduccion = {
         fecha: new Date().toISOString(),
@@ -2153,17 +2262,17 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         usuario: this.formulario.value.nombres_completos || 'Usuario',
         producto: event.producto?.crearProducto?.titulo || 'Producto sin nombre'
       };
-      
+
       // Agregar la nota al array de notasProduccion
       this.pedidoGral.notasPedido.notasProduccion.push(notaProduccion);
     }
-    
+
     // Actualizar el carrito en el localStorage
     localStorage.setItem('carrito', JSON.stringify(this.pedidoGral.carrito));
-    
+
     // Guardar el estado del pedido en sessionStorage para persistencia entre pasos
     this.guardarEstadoPedidoEnSession();
-    
+
     // Opcional: mostrar un mensaje de éxito
     console.log('Nota de producción agregada:', event);
   }
@@ -2177,18 +2286,18 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     if (event && event.notasPedido) {
       // Actualizar las notas del pedido
       this.pedidoGral.notasPedido = event.notasPedido;
-      
+
       // Si el evento incluye el carrito actualizado, actualizar también el carrito
       if (event.carrito) {
         this.pedidoGral.carrito = event.carrito;
       }
-      
+
       // Guardar el pedido completo en sessionStorage para persistencia entre pasos
       this.guardarEstadoPedidoEnSession();
-      
+
       // Actualizar localStorage
       localStorage.setItem('carrito', JSON.stringify(this.pedidoGral.carrito));
-      
+
       // Log detallado para verificar todas las categorías de notas
       console.log('Notas actualizadas recibidas del componente de notas:');
       console.log('- Producción:', this.pedidoGral.notasPedido?.notasProduccion?.length || 0, 'notas');
