@@ -5,6 +5,7 @@ import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject } from 'rxjs';
 import { takeUntil, map } from 'rxjs/operators';
+import { DataStoreService } from '../../shared/services/dataStoreService';
 
 // Definir interfaz para la estructura de datos de Empresa
 interface Empresa {
@@ -45,7 +46,8 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   constructor(
     private service: MaestroService,
     private router: Router,
-    private breakpointObserver: BreakpointObserver // Inyectar BreakpointObserver
+    private breakpointObserver: BreakpointObserver,
+    private dataStoreService: DataStoreService // Inyectar DataStoreService
   ) {
     const currentCompany = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
@@ -91,14 +93,16 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   }
 
   crearEmpresa() {
-    sessionStorage.removeItem('infoFormsCompany');
-    this.router.navigateByUrl('empresas/crearEmpresa');
+    this.dataStoreService.remove('infoFormsCompany').then(() => {
+      this.router.navigateByUrl('empresas/crearEmpresa');
+    });
   };
 
   editarEmpresa(row: Empresa) { // Usar la interfaz Empresa
     console.log(row);
-    sessionStorage.setItem('infoFormsCompany', JSON.stringify(row));
-    this.router.navigateByUrl('empresas/crearEmpresa');
+    this.dataStoreService.set('infoFormsCompany', row).then(() => {
+      this.router.navigateByUrl('empresas/crearEmpresa');
+    });
   }
 
   updateFilter(event: Event) { // Tipar el evento como Event

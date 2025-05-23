@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
+import { DataStoreService } from 'src/app/shared/services/dataStoreService';
 import Swal from 'sweetalert2';
 @Component({
   selector: 'app-formas-pago',
@@ -10,7 +11,11 @@ import Swal from 'sweetalert2';
 })
 export class POSFormasPagoComponent implements OnInit {
 
-  constructor(private service: MaestroService, private router: Router) { this.cargarDatos() }
+  constructor(
+    private service: MaestroService, 
+    private router: Router,
+    private dataStore: DataStoreService
+  ) { this.cargarDatos() }
   @ViewChild(DatatableComponent, { static: false }) table: DatatableComponent;
 
   cargando = false;
@@ -20,8 +25,8 @@ export class POSFormasPagoComponent implements OnInit {
   isMobile = false;
   ngOnInit(): void {
   }
-  crearFormasPago() {
-    sessionStorage.removeItem('payEdit')
+  async crearFormasPago() {
+    await this.dataStore.remove('payEdit');
     this.router.navigateByUrl('extras/pos/formasPago/crearFormasPago');
   };
   cargarDatos() {
@@ -74,24 +79,16 @@ export class POSFormasPagoComponent implements OnInit {
     this.table.offset = 0;
   }
 
-  editar(row) {
-
-    this.router.navigateByUrl("extras/pos/formasPago/crearFormasPago")
-    sessionStorage.setItem("payEdit", JSON.stringify(row));
+  async editar(row) {
+    this.router.navigateByUrl("extras/pos/formasPago/crearFormasPago");
+    await this.dataStore.set("payEdit", row);
   }
 
   deletePayMethod(row) {
-
     this.service.deleteFormaPagoPOS(row).subscribe(r => {
       console.log(r)
       Swal.fire('Eliminado', 'Item Eliminado con exito', 'success')
       this.cargarDatos()
     })
-
   }
-
-
-
-
-
 }

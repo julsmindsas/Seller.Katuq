@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, Validators, FormArray } from '@angular/forms';
 import { Session } from 'inspector';
 import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
+import { DataStoreService } from 'src/app/shared/services/dataStoreService';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -12,7 +13,13 @@ import Swal from 'sweetalert2';
 export class POSCrearFormasPagoComponent implements OnInit {
   fomrasPagoForm: FormGroup;
   editando: boolean = false;
-  constructor(private fb: FormBuilder, private service: MaestroService) {
+  payEditData: any = null;
+  
+  constructor(
+    private fb: FormBuilder, 
+    private service: MaestroService,
+    private dataStore: DataStoreService
+  ) {
     this.fomrasPagoForm = this.fb.group({
       id: ['', Validators.required],
       online: ['Offline (Efectivo,Datafono, consignación, Transferencia, App, QR)', Validators.required],
@@ -24,38 +31,38 @@ export class POSCrearFormasPagoComponent implements OnInit {
       recordatorioCobro: ['', Validators.required]
     });
   }
-  ngOnInit(): void {
-    if (sessionStorage.getItem('payEdit')) {
-      this.editando = true
-      this.fomrasPagoForm.patchValue(JSON.parse(sessionStorage.getItem('payEdit') ?? '{}'))
-
+  
+  async ngOnInit(): Promise<void> {
+    this.payEditData = await this.dataStore.get('payEdit');
+    if (this.payEditData) {
+      this.editando = true;
+      this.fomrasPagoForm.patchValue(this.payEditData);
     }
   }
+  
   guardar() {
     this.service.crearFormaPagoPOS(this.fomrasPagoForm.value).subscribe(r => {
-      console.log(r)
+      console.log(r);
       Swal.fire({
         title: 'Guardado!',
         text: 'Guardado con exito',
         icon: 'success',
         confirmButtonText: 'Ok'
-
-      })
+      });
     });
-
-
   }
+  
   editar() {
-    this.fomrasPagoForm.value['cd'] = JSON.parse(sessionStorage.getItem('payEdit') ?? '{}').cd
-    this.service.editFormaPagoPOS(this.fomrasPagoForm.value).subscribe(r => {
-      console.log(r)
+    const formValue = this.fomrasPagoForm.value;
+    formValue['cd'] = this.payEditData.cd;
+    this.service.editFormaPagoPOS(formValue).subscribe(r => {
+      console.log(r);
       Swal.fire({
         title: 'Guardado!',
         text: 'Editado con exito',
         icon: 'success',
         confirmButtonText: 'Ok'
-
-      })
+      });
     });
   }
 }
