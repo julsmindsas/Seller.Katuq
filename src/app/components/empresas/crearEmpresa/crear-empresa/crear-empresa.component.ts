@@ -7,6 +7,7 @@ import { InfoIndicativos } from '../../../../../Mock/indicativosPais'
 import { finalize, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
+import { DataStoreService } from '../../../../shared/services/dataStoreService';
 @Component({
   selector: 'app-crear-empresa',
   templateUrl: './crear-empresa.component.html',
@@ -195,7 +196,7 @@ export class CrearEmpresaComponent implements OnInit {
 
 
   constructor(private fb: FormBuilder,
-    private storage: AngularFireStorage, private service: MaestroService, private inforPaises: InfoPaises, private infoIndicativo: InfoIndicativos, private router: Router) {
+    private storage: AngularFireStorage, private service: MaestroService, private inforPaises: InfoPaises, private infoIndicativo: InfoIndicativos, private router: Router, private dataStoreService: DataStoreService) {
 
     this.f = fb.group({
       nombre: ['', Validators.required],
@@ -425,40 +426,41 @@ export class CrearEmpresaComponent implements OnInit {
 
   ngAfterContentInit() {
     this.mostrarCrear = true
-    const infoFormsCompany = sessionStorage.getItem('infoFormsCompany');
-    this.edit = infoFormsCompany ? JSON.parse(infoFormsCompany) : null;
-    if (this.edit != null) {
-      this.mostrarCrear = false
+    this.dataStoreService.get<any>('infoFormsCompany').then(data => {
+      this.edit = data;
+      if (this.edit != null) {
+        this.mostrarCrear = false
 
-      this.contactos = this.edit.contactos
-      this.sedess = this.edit.sedes
-      this.horarioPV = this.edit.horarioPV
-      this.f.value.canalesComunicacion = this.edit.canalesComunicacion
-      this.edit.horarioPV?.map(x => {
-        this.horarioPV = this.f.get('horarioPV') as FormArray;
-        this.horarioPV.push(this.horariosPV());
-      })
-      this.edit.canalesComunicacion?.map(x => {
-        this.addRowCC()
-      })
-      this.edit.marketPlace?.map(x => {
-        this.addRowMP()
-      })
-      this.edit.redesSociales?.map(x => {
-        this.addRowRS()
-      })
-      this.f.patchValue(this.edit)
-      this.f.controls['cel'].setValue(this.edit?.celular)
-      this.f.controls['emailContactoGeneral'].setValue(this.edit?.correo)
-      this.frmPersonificaTuMarca.patchValue(this.edit?.personalidadMarca);
-      this.uploadedFiles = this.edit.personalidadMarca?.archivos;
-      this.ciudadess.patchValue(this.edit?.ciudadess)
-      // this.ciudadesss.patchValue(this.edit.ciudadess.ciudadesOrigen)
+        this.contactos = this.edit.contactos
+        this.sedess = this.edit.sedes
+        this.horarioPV = this.edit.horarioPV
+        this.f.value.canalesComunicacion = this.edit.canalesComunicacion
+        this.edit.horarioPV?.map(x => {
+          this.horarioPV = this.f.get('horarioPV') as FormArray;
+          this.horarioPV.push(this.horariosPV());
+        })
+        this.edit.canalesComunicacion?.map(x => {
+          this.addRowCC()
+        })
+        this.edit.marketPlace?.map(x => {
+          this.addRowMP()
+        })
+        this.edit.redesSociales?.map(x => {
+          this.addRowRS()
+        })
+        this.f.patchValue(this.edit)
+        this.f.controls['cel'].setValue(this.edit?.celular)
+        this.f.controls['emailContactoGeneral'].setValue(this.edit?.correo)
+        this.frmPersonificaTuMarca.patchValue(this.edit?.personalidadMarca);
+        this.uploadedFiles = this.edit.personalidadMarca?.archivos;
+        this.ciudadess.patchValue(this.edit?.ciudadess)
+        // this.ciudadesss.patchValue(this.edit.ciudadess.ciudadesOrigen)
 
-      this.identificarDepto()
+        this.identificarDepto()
 
-      this.identificarCiu()
-    }
+        this.identificarCiu()
+      }
+    });
   }
 
 
@@ -512,13 +514,14 @@ export class CrearEmpresaComponent implements OnInit {
     this.f.controls['contactos'].setValue(this.contactos)
     this.f.controls['sedes'].setValue(this.sedess)
     this.service.editCompany(this.f.value).subscribe(r => {
-      sessionStorage.setItem('infoFormsCompany', JSON.stringify(this.f.value))
-      Swal.fire({
-        title: 'Editado!',
-        text: 'Editado con exito',
-        icon: 'success',
-        confirmButtonText: 'Ok'
-      })
+      this.dataStoreService.set('infoFormsCompany', this.f.value).then(() => {
+        Swal.fire({
+          title: 'Editado!',
+          text: 'Editado con exito',
+          icon: 'success',
+          confirmButtonText: 'Ok'
+        });
+      });
     });
   }
 

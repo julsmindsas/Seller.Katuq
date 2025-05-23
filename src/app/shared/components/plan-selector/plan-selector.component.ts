@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
+import { DataStoreService } from '../../../shared/services/dataStoreService';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -96,7 +97,10 @@ export class PlanSelectorComponent {
     }
   ];
 
-  constructor(private service: MaestroService) {}
+  constructor(
+    private service: MaestroService,
+    private dataStoreService: DataStoreService
+  ) {}
 
   close() {
     this.closed.emit();
@@ -136,19 +140,19 @@ export class PlanSelectorComponent {
       // Llamar al servicio para actualizar la empresa
       this.service.editCompany(datosActualizados).subscribe(
         response => {
-          // Guardar la información actualizada en sessionStorage
-          sessionStorage.setItem('infoFormsCompany', JSON.stringify(datosActualizados));
-          
-          // Notificar al usuario
-          Swal.fire({
-            title: 'Plan actualizado',
-            text: `Se ha actualizado el plan a ${planSeleccionado.name}`,
-            icon: 'success',
-            confirmButtonText: 'Ok'
+          // Guardar la información actualizada en el dataStore
+          this.dataStoreService.set('infoFormsCompany', datosActualizados).then(() => {
+            // Notificar al usuario
+            Swal.fire({
+              title: 'Plan actualizado',
+              text: `Se ha actualizado el plan a ${planSeleccionado.name}`,
+              icon: 'success',
+              confirmButtonText: 'Ok'
+            });
+            
+            // Emitir el plan seleccionado
+            this.planSelected.emit(datosActualizados);
           });
-          
-          // Emitir el plan seleccionado
-          this.planSelected.emit(datosActualizados);
         },
         error => {
           // Manejar error
