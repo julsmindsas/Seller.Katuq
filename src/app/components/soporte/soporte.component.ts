@@ -22,11 +22,13 @@ export class SoporteComponent implements OnInit {
   fileBase64String: any;
   selectedFiles: unknown[] = [];
   imagePreviews: any[] = [];
+  videoPreviews: any[] = [];
   isSubmitting: boolean = false;
   isDragging: boolean = false;
   selectedPriority: string = 'media'; // Default priority
   currentUser: any;
   selectedPreviewImage: string = ''; // Added for image preview modal
+  selectedPreviewVideo: any = { url: '', type: '' }; // Added for video preview modal
 
   constructor(
     private fb: FormBuilder, 
@@ -188,27 +190,40 @@ export class SoporteComponent implements OnInit {
 
   handleFiles(files: FileList): void {
     if (files && files.length > 0) {
-      const imageFiles = Array.from(files).filter(file => 
-        file.type.startsWith('image/')
-      );
-      
-      if (imageFiles.length === 0) {
-        Swal.fire('Formato no válido', 'Por favor, adjunte solo archivos de imagen (.jpg, .png, .gif)', 'warning');
-        return;
-      }
-      
-      // Add new files to existing selection
-      this.selectedFiles = [...this.selectedFiles, ...imageFiles];
-      
-      // Process previews
-      for (const file of imageFiles) {
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-          this.imagePreviews.push(e.target.result);
-        };
-        reader.readAsDataURL(file);
+      const validFiles = Array.from(files).filter(file => file.type.startsWith('video/'));
+      for (const file of validFiles) {
+        this.generateVideoThumbnail(file).then(thumbnail => {
+          this.videoPreviews.push({
+            url: URL.createObjectURL(file),
+            type: file.type,
+            file: file,
+            thumbnail
+          });
+        });
       }
     }
+  }
+
+  generateVideoThumbnail(file: File): Promise<string> {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      video.currentTime = 0.1;
+      video.muted = true;
+      video.playsInline = true;
+      video.addEventListener('loadeddata', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 150;
+        canvas.height = 150;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, 150, 150);
+          resolve(canvas.toDataURL('image/png'));
+        } else {
+          resolve('');
+        }
+      });
+    });
   }
 
   onFileChange(event: any): void {
@@ -230,11 +245,30 @@ export class SoporteComponent implements OnInit {
     }
   }
 
+  removeVideo(preview: any): void {
+    const index = this.videoPreviews.indexOf(preview);
+    if (index !== -1) {
+      this.videoPreviews.splice(index, 1);
+    }
+  }
+
   // Open image preview modal
   openImagePreview(imageUrl: string): void {
     this.selectedPreviewImage = imageUrl;
     // If using jQuery with Bootstrap modal:
     // $('#imagePreviewModal').modal('show');
+  }
+
+  // Open video preview modal
+  openVideoPreview(video: any): void {
+    this.selectedPreviewVideo = video;
+    // This assumes you have a Bootstrap modal with id 'videoPreviewModal'
+    // You might need to trigger it differently if not using jQuery
+    const modalElement = document.getElementById('videoPreviewModal');
+    if (modalElement && (window as any).bootstrap) {
+      const modal = new (window as any).bootstrap.Modal(modalElement);
+      modal.show();
+    }
   }
 
   // Reset form to initial state
@@ -254,6 +288,7 @@ export class SoporteComponent implements OnInit {
         this.ticketForm.reset();
         this.selectedFiles = [];
         this.imagePreviews = [];
+        this.videoPreviews = [];
         
         // Reset to defaults
         const today = new Date().toISOString().split('T')[0];
@@ -293,35 +328,55 @@ export class SoporteComponent implements OnInit {
 
   // Existing methods
   async subirImagenesAFirebase(): Promise<string[]> {
-    if (!this.selectedFiles || this.selectedFiles.length === 0) {
-      return []; // Return empty array if no files selected
+    const urls: string[] = [];
+    
+    // Upload images
+    for (const file of this.selectedFiles) {
+      if (file instanceof File) {
+        if (file.type.startsWith('image/')) {
+          const url = await this.subirImagenFirebase(file, `tickets/${Date.now()}_${file.name}`);
+          urls.push(url);
+        } else if (file.type.startsWith('video/')) {
+          const url = await this.subirVideoFirebase(file, `tickets/${Date.now()}_${file.name}`);
+          urls.push(url);
+        }
+      }
     }
     
-    const urls = await Promise.all(
-      this.selectedFiles.map(async (file:any, index) => {
-        const fileName = `ticket_${Date.now()}_${index + 1}.jpg`;
-        return this.subirImagenFirebase(file, fileName);
-      })
-    );
     return urls;
   }
 
   subirImagenFirebase(file: File, fileName: string): Promise<string> {
-    // ...existing code...
-    const ref = this.storage.ref(`tickets/${fileName}`);
-    const task = this.storage.upload(`tickets/${fileName}`, file);
-  
     return new Promise((resolve, reject) => {
+      const fileRef = this.storage.ref(fileName);
+      const task = this.storage.upload(fileName, file);
+      
       task.snapshotChanges().pipe(
         finalize(() => {
-          ref.getDownloadURL().subscribe({
-            next: (url) => resolve(url),
-            error: (err) => reject(err),
+          fileRef.getDownloadURL().subscribe(url => {
+            resolve(url);
+          }, error => {
+            reject(error);
           });
         })
-      ).subscribe({
-        error: (error) => reject(error),
-      });
+      ).subscribe();
+    });
+  }
+
+  subirVideoFirebase(file: File, fileName: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const fileRef = this.storage.ref(fileName);
+      const task = this.storage.upload(fileName, file);
+      
+      task.snapshotChanges().pipe(
+        finalize(() => {
+          fileRef.getDownloadURL().subscribe(url => {
+            resolve(url);
+          }, error => {
+            reject(error);
+          });
+        })
+      ).subscribe();
     });
   }
 

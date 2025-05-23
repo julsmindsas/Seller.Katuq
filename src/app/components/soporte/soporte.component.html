@@ -116,28 +116,28 @@
                             La descripción es obligatoria.
                         </div>
                         <small class="form-text text-muted">
-                            Proporcione la mayor cantidad de detalles posible para ayudarnos a entender su solicitud
+                            Proporcione la mayor cantidad de detalles posibles para ayudarnos a entender su solicitud
                         </small>
                     </div>
                 </div>
                 
                 <div class="form-section">
                     <h4 class="section-title">Archivos Adjuntos</h4>
-                    <!-- Adjuntar Imágenes -->
+                    <!-- Adjuntar Imágenes y Videos -->
                     <div class="form-group file-upload-area">
                         <label for="adjuntos" class="file-upload-label" 
                               (dragover)="$event.preventDefault()" 
                               (drop)="onFileDrop($event)">
                             <div class="upload-zone">
                                 <i class="fas fa-cloud-upload-alt fa-3x"></i>
-                                <span class="label-text">Arrastre imágenes aquí o haga clic para seleccionar</span>
+                                <span class="label-text">Arrastre archivos aquí o haga clic para seleccionar</span>
                                 <div class="upload-button">
                                     <i class="fas fa-upload"></i> Seleccionar Archivos
                                 </div>
-                                <small>Formatos aceptados: JPG, PNG, GIF - Máximo 5MB por archivo</small>
+                                <small>Formatos aceptados: JPG, PNG, GIF, MP4, MOV, AVI - Máximo 50MB por archivo</small>
                             </div>
                         </label>
-                        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*" />
+                        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*,video/*" />
                     </div>
                 
                     <!-- Vista Previa de Imágenes -->
@@ -151,6 +151,27 @@
                                     &times;
                                 </button>
                                 <span class="image-number">{{i+1}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vista Previa de Videos -->
+                    <div class="video-previews" *ngIf="videoPreviews.length > 0">
+                        <h5>Vista previa de los videos ({{videoPreviews.length}})</h5>
+                        <div class="preview-container">
+                            <div class="preview video-preview" *ngFor="let preview of videoPreviews; let i = index">
+                                <img [src]="preview.thumbnail" alt="Miniatura de video" class="video-thumbnail" />
+                                <span class="play-icon">&#9658;</span>
+                                <button
+                                    type="button"
+                                    class="remove-video-btn"
+                                    (click)="removeVideo(preview)"
+                                    title="Eliminar video"
+                                    aria-label="Eliminar video"
+                                >
+                                    X
+                                </button>
+                                <span class="video-number">{{i+1}}</span>
                             </div>
                         </div>
                     </div>
@@ -189,6 +210,26 @@
             </div>
             <div class="modal-body text-center">
                 <img [src]="selectedPreviewImage" class="img-fluid" alt="Vista ampliada">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para preview de videos -->
+<div class="modal fade" id="videoPreviewModal" tabindex="-1" role="dialog" aria-labelledby="videoPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoPreviewModalLabel">Vista ampliada</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <video class="img-fluid" controls>
+                    <source [src]="selectedPreviewVideo.url" [type]="selectedPreviewVideo.type">
+                    Tu navegador no soporta el elemento de video.
+                </video>
             </div>
         </div>
     </div>
