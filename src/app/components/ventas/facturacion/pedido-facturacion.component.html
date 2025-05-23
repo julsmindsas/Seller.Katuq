@@ -1,66 +1,70 @@
 <p-tabView [activeIndex]="activeIndex">
   <p-tabPanel header="{{ 'Mis Direcciones de Facturación' | translate}}">
-  <div class="alert alert-info">
-    {{ 'Por favor, seleccione o ingrese los datos de Facturación Electrónica.' | translate}}
-  </div>
-  <div class="card-header">
-    <div class="row">
+    <div class="alert alert-info">
+      {{ 'Por favor, seleccione o ingrese los datos de Facturación Electrónica.' | translate}}
+    </div>
+    <div class="card-header">
+      <div class="row">
 
-      <div class="col">
-        <h2><label for="">{{ 'Datos Facturación' | translate}}</label></h2>
+        <div class="col">
+          <h2><label for="">{{ 'Datos Facturación' | translate}}</label></h2>
+        </div>
+        <div class="col">
+          <!-- (change)="generarFacturacionElectronica()" -->
+          <!-- <input type="checkbox" [(ngModel)]="generarFactura">
+          {{ 'Generar Facturación Electronica' | translate}} -->
+        </div>
       </div>
-      <div class="col">
-        <!-- (change)="generarFacturacionElectronica()" -->
-        <input type="checkbox" [(ngModel)]="generarFactura">
-        {{ 'Generar Facturación Electronica' | translate}}
+      <div class="row">
+        <h3>
+          {{ 'Dirección de facturacion seleccionada:' | translate}} {{ pedidoGral?.facturacion?.direccion}}
+        </h3>
       </div>
     </div>
-    <div class="row">
-      <h3>
-        {{ 'Dirección de facturacion seleccionada:' | translate}} {{ pedidoGral?.facturacion?.direccion}}
-      </h3>
-    </div>
-  </div>
 
-  <div class="card-body">
-    <table class="table">
-      <thead>
-        <tr>
-          <th></th>
-          <th>{{ 'Referencia' | translate}}</th>
-          <th>{{ 'Nombres/Razon Social' | translate}}</th>
-          <th>{{ 'Tipo Documento' | translate}}</th>
-          <th>{{ 'Documento' | translate}}</th>
-          <th>{{ 'Dirección' | translate}}</th>
-          <th>{{ 'Opciones' | translate}}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of datosFacturacionElectronica; let i = index">
-          <td>
-            <button class="btn btn-primary" (click)="seleccionarDireccionFE(i)">
-              {{ 'Usar Esta Direccion' | translate}}
-            </button>
-          </td>
-          <td>{{ item.alias }}</td>
-          <td>{{ item.nombres }}</td>
-          <td>{{ item.tipoDocumento }}</td>
-          <td>{{ item.documento }}</td>
-          <!-- <td>{{item.indicativoCel}}{{item.celular}}</td>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>{{ 'Referencia' | translate}}</th>
+            <th>{{ 'Nombres/Razon Social' | translate}}</th>
+            <th>{{ 'Tipo Documento' | translate}}</th>
+            <th>{{ 'Documento' | translate}}</th>
+            <th>{{ 'Dirección' | translate}}</th>
+            <th>{{ 'Opciones' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of datosFacturacionElectronica; let i = index">
+            <td>
+              <button class="btn btn-primary" (click)="seleccionarDireccionFE(i)">
+                {{ 'Usar Esta Direccion' | translate}}
+              </button>
+            </td>
+            <td>{{ item.alias }}</td>
+            <td>{{ item.nombres }}</td>
+            <td>{{ item.tipoDocumento }}</td>
+            <td>{{ item.documento }}</td>
+            <!-- <td>{{item.indicativoCel}}{{item.celular}}</td>
                 <td>{{item.correoElectronico}}</td> -->
-          <td>{{ item.direccion }}</td>
-          <!-- <td>{{item.pais}}</td>
+            <td>{{ item.direccion }}</td>
+            <!-- <td>{{item.pais}}</td>
                 <td>{{item.departamento}}</td>
                 <td>{{item.ciudad}}</td>
                 <td>{{item.codigoPostal}}</td> -->
-          <td>
-            <i placement="top" ngbTooltip="{{ 'Editar' | translate }}" style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;" class="icofont icofont-pencil-alt-5" (click)="editarDatos1(facturacion, i)"></i>
-            <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}" style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;" (click)="eliminarDato(i)" class="icofont icofont icofont-trash"></i>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+            <td>
+              <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
+                style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                class="icofont icofont-pencil-alt-5" (click)="editarDatos1(facturacion, i)"></i>
+              <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+                style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
+                (click)="eliminarDato(i)" class="icofont icofont icofont-trash"></i>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </p-tabPanel>
   <p-tabPanel header="{{ 'Crear Dirección de Facturación' | translate}}">
     <input [(ngModel)]="facturacionElectronica" type="checkbox" (change)="datosFacElect($event)" />
@@ -71,7 +75,8 @@
     <div class="row">
       <div class="col-sm-6">
         <label class="form-label" for="razon_social">{{ 'Referencia para guardar datos:' | translate}}</label>
-        <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social" [(ngModel)]="alias_facturacion" />
+        <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social"
+          [(ngModel)]="alias_facturacion" />
       </div>
       <div class="col-sm-6">
         <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate}}</label>
@@ -90,7 +95,8 @@
       </div>
       <div class="col-sm-6">
         <label class="form-label" for="tipo_documento_facturacion">{{ 'Documento:' | translate}}</label>
-        <input class="form-control" type="text" id="numero_documento_facturacion" [(ngModel)]="numero_documento_facturacion" />
+        <input class="form-control" type="text" id="numero_documento_facturacion"
+          [(ngModel)]="numero_documento_facturacion" />
       </div>
     </div>
     <div class="row">
@@ -103,7 +109,8 @@
     </div>
     <div class="row">
       <div class="col-sm-3 mb-3">
-        <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion" class="form-control select-default" id="validationCustom01" type="number" required="">
+        <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion" class="form-control select-default"
+          id="validationCustom01" type="number" required="">
           <option disabled selected>
             {{ 'Indicativo Celular' | translate}}
           </option>
@@ -182,7 +189,8 @@
       <div class="row">
         <div class="col-sm-6">
           <label class="form-label" for="razon_social">{{ 'Referencia para guardar datos:' | translate}}</label>
-          <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social" [(ngModel)]="alias_facturacion" />
+          <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social"
+            [(ngModel)]="alias_facturacion" />
         </div>
         <div class="col-sm-6">
           <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate}}</label>
@@ -199,7 +207,8 @@
         </div>
         <div class="col-sm-6">
           <label class="form-label" for="tipo_documento_facturacion">{{ 'Documento:' | translate}}</label>
-          <input class="form-control" type="text" id="numero_documento_facturacion" [(ngModel)]="numero_documento_facturacion" />
+          <input class="form-control" type="text" id="numero_documento_facturacion"
+            [(ngModel)]="numero_documento_facturacion" />
         </div>
       </div>
       <div class="row">
@@ -212,7 +221,8 @@
       </div>
       <div class="row">
         <div class="col-sm-3 mb-3">
-          <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion" class="form-control select-default" id="validationCustom01" type="number" required="">
+          <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion" class="form-control select-default"
+            id="validationCustom01" type="number" required="">
             <option disabled selected>{{ 'Indicativo Celular' | translate}}</option>
             <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
               {{ item.nombre }} (+{{ item.phone_code }})
@@ -224,7 +234,8 @@
         </div>
 
         <div class="col-sm-6">
-          <input class="form-control" type="email" id="correo_electronico" [(ngModel)]="correo_electronico_facturacion" />
+          <input class="form-control" type="email" id="correo_electronico"
+            [(ngModel)]="correo_electronico_facturacion" />
         </div>
       </div>
       <div class="row">
