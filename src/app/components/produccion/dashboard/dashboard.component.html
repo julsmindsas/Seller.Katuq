@@ -406,6 +406,7 @@
                                                         class="process-menu-btn"
                                                         pTooltip="Ver procesos de fabricación"
                                                         tooltipPosition="right"
+                                                        *ngIf="getProcessStatusClass(row) !== 'status-complete'"
                                                         (click)="seleccionarProcesoACerrar(processSelecteModal, row)">
                                                     </button>
                                             </td>
@@ -667,11 +668,16 @@
             
             <div class="procesos-list-container">
                 <h6 class="procesos-list-title">Seleccione un proceso para continuar:</h6>
+                <div class="proceso-info-message mb-3">
+                    <i class="pi pi-info-circle text-primary me-2"></i>
+                    <span>Los procesos completados <i class="pi pi-check text-success"></i> y en progreso <i class="pi pi-sync text-warning"></i> pueden ser seleccionados incluso si hay dependencias.</span>
+                </div>
                 <div class="procesos-list">
                     <div *ngFor="let proceso of filterProcess" 
                         class="proceso-item" 
-                        [ngClass]="{'proceso-disabled': !proceso.statusJararquiaProcess, 
-                                   'proceso-selected': selectedProcesos === proceso.label}" 
+                        [ngClass]="{'proceso-disabled': !proceso.statusJararquiaProcess && proceso.icon !== 'pi-cog' && proceso.icon !== 'pi-sync', 
+                                   'proceso-selected': selectedProcesos === proceso.label,
+                                   'proceso-available': proceso.statusJararquiaProcess || proceso.icon === 'pi-cog' || proceso.icon === 'pi-sync'}" 
                         (click)="selectProcess(proceso)">
                         <div class="proceso-icon" [ngClass]="{
                             'icon-complete': proceso.status === 'TOTALMENTE', 
@@ -1683,5 +1689,48 @@
     min-width: 300px !important;
     max-width: 450px !important;
     width: auto !important;
+}
+
+/* Estilos para el mensaje informativo de procesos */
+.proceso-info-message {
+    display: flex;
+    align-items: center;
+    background-color: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-dark);
+}
+
+.proceso-info-message i {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+}
+
+.proceso-info-message .pi-check {
+    color: var(--accent-green);
+    margin: 0 0.25rem;
+}
+
+.proceso-info-message .pi-sync {
+    color: var(--accent-orange);
+    margin: 0 0.25rem;
+}
+
+/* Indicador visual de proceso disponible */
+.proceso-available {
+    border-left: 3px solid var(--primary-color);
+    background-color: rgba(99, 102, 241, 0.05);
+}
+
+.proceso-available:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+.proceso-available .proceso-icon {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 </style>

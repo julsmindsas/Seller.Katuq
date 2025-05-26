@@ -944,12 +944,50 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   selectedOrdersEnsamble: PedidosParaProduccionEnsamble[] = [];
 
   seleccionarProcesoACerrar(content, event) {
+    // Si todos los procesos están completados, no abrir el modal
+    if (this.getProcessStatusClass(event) === 'status-complete') {
+      Swal.fire({
+        icon: 'info',
+        title: 'Procesos completados',
+        text: 'Todos los procesos para este artículo ya están completados.'
+      });
+      return;
+    }
+    
     this.selectedOrdersEnsamble = [event]
     // buscar el nombre del articulo seleccionado y obtener los procesos de ese articulo en orders
     // a filter process debe tener los procesos agrupados
     this.selectedProcesos = null;
     this.processStatusProductionProcess();
 
+    // Verificar si hay algún proceso seleccionable (totalmente completado o en estado parcial)
+    const hayProcesosSeleccionables = this.filterProcess.some(proceso => 
+      proceso.statusJararquiaProcess || 
+      proceso.icon === 'pi-sync' || 
+      proceso.icon === 'pi-cog');
+
+    // Verificar si quedan procesos por completar
+    const hayProcesosPendientes = this.filterProcess.some(proceso => 
+      proceso.status !== EstadoProcesoItem.ProducidasTotalmente);
+
+    // Si todos los procesos están completados, no abrir el modal
+    if (!hayProcesosPendientes) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Procesos completados',
+        text: 'Todos los procesos para este artículo ya están completados.'
+      });
+      return;
+    }
+
+    if (!hayProcesosSeleccionables) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No hay procesos disponibles',
+        text: 'No hay procesos que puedan ser seleccionados en este momento. Asegúrese de completar los procesos previos.'
+      });
+      return;
+    }
 
     this.modalService.open(content, {
       size: 'lg',
@@ -965,8 +1003,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   selectProcess(proceso) {
-    if (!proceso.statusJararquiaProcess) {
-      return; // No permitir seleccionar procesos deshabilitados
+    // Permitir selección para procesos con estado parcial (COG o SYNC)
+    if (!proceso.statusJararquiaProcess && 
+        proceso.icon !== 'pi-sync' && 
+        proceso.icon !== 'pi-cog') {
+      return; // No permitir seleccionar procesos deshabilitados que no están en estado parcial
     }
     this.selectedProcesos = proceso.label;
   }
@@ -976,16 +1017,16 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       return pedido.detalles.flatMap((detalle, index) => {
         const status = this.getProcessStatus(detalle.nombreProceso, pedido);
         const statusProcessPrevious = this.validatePreviousStatusProduced(pedido, index);
-        let iconSelected = PrimeIcons.SIGN_IN;
+        let iconSelected = 'pi-sign-in';
         //validar status y statusprevies 
         if (status === EstadoProcesoItem.ProducidasTotalmente) {
-          iconSelected = PrimeIcons.CHECK;
+          iconSelected = 'pi-check';
         }
         else if (status === EstadoProcesoItem.ProducidasParcialmente) {
-          iconSelected = PrimeIcons.COG;
+          iconSelected = 'pi-sync'; // Cambiado de pi-cog a pi-sync para ser consistente
         }
         else if (!statusProcessPrevious) {
-          iconSelected = PrimeIcons.TIMES;
+          iconSelected = 'pi-times';
         }
 
 
@@ -1005,7 +1046,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       t.label === item.label
     ))
     );
-    
   }
 
   private validatePreviousStatusProduced(pedido: PedidosParaProduccionEnsamble, index: number): boolean {
@@ -1661,7 +1701,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       (p.status === EstadoProcesoItem.ProducidasTotalmente || 
        p.status === EstadoProcesoItem.ProducidasParcialmente) && 
        p.statusJararquiaProcess)) {
-      return 'pi pi-sync';
+      return 'pi pi-sync'; // Importante: Este es el icono que debe coincidir con 'pi-sync'
     } 
     // En cualquier otro caso
     else {
