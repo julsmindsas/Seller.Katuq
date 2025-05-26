@@ -226,7 +226,7 @@
             <!-- File Upload -->
             <div class="file-upload-section">
               <div class="upload-button-wrap">
-                <button class="upload-button" (click)="fileInput.click()">
+                <button type="button" class="btn-attach" (click)="fileInput.click()">
                   <i class="fa fa-paperclip"></i> Adjuntar archivos
                 </button>
                 <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="hidden-file-input" />
@@ -246,7 +246,7 @@
             </div>
             
             <div class="form-actions">
-              <button class="btn-submit" [disabled]="!newComment.trim() && imagePreviews.length === 0" (click)="addNewComment(ticket)">
+              <button type="button" class="btn-send-comment" [disabled]="!newComment.trim() && imagePreviews.length === 0" (click)="addNewComment(ticket)">
                 <i class="fa fa-paper-plane"></i> Enviar comentario
               </button>
             </div>
