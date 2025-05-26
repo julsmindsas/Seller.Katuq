@@ -1005,6 +1005,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       t.label === item.label
     ))
     );
+    
   }
 
   private validatePreviousStatusProduced(pedido: PedidosParaProduccionEnsamble, index: number): boolean {
@@ -1619,21 +1620,22 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       return 'status-none';
     }
 
-    // Contar procesos totalmente producidos
-    const totalProcesos = row.detalles.length;
-    const procesosCompletados = row.detallePedido.filter(
-      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasTotalmente
-    ).length;
-    const procesosParciales = row.detallePedido.filter(
-      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasParcialmente
-    ).length;
-
-    // Determinar la clase basada en el estado general
-    if (procesosCompletados === totalProcesos) {
+    // Enfoque mejorado que considera la jerarquía y dependencias entre procesos
+    const procesosConEstado = this.getProcesosConEstado(row);
+    
+    // Si todos los procesos están completados
+    if (procesosConEstado.every(p => p.status === EstadoProcesoItem.ProducidasTotalmente)) {
       return 'status-complete';
-    } else if (procesosCompletados > 0 || procesosParciales > 0) {
+    } 
+    // Si al menos un proceso está completo o parcial y todos los anteriores están completos
+    else if (procesosConEstado.some(p => 
+      (p.status === EstadoProcesoItem.ProducidasTotalmente || 
+       p.status === EstadoProcesoItem.ProducidasParcialmente) && 
+       p.statusJararquiaProcess)) {
       return 'status-partial';
-    } else {
+    } 
+    // En cualquier otro caso
+    else {
       return 'status-pending';
     }
   }
@@ -1647,21 +1649,22 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       return 'pi pi-question-circle';
     }
 
-    // Contar procesos totalmente producidos
-    const totalProcesos = row.detalles.length;
-    const procesosCompletados = row.detallePedido.filter(
-      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasTotalmente
-    ).length;
-    const procesosParciales = row.detallePedido.filter(
-      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasParcialmente
-    ).length;
-
-    // Determinar el ícono basado en el estado general
-    if (procesosCompletados === totalProcesos) {
+    // Enfoque mejorado que considera la jerarquía y dependencias entre procesos
+    const procesosConEstado = this.getProcesosConEstado(row);
+    
+    // Si todos los procesos están completados
+    if (procesosConEstado.every(p => p.status === EstadoProcesoItem.ProducidasTotalmente)) {
       return 'pi pi-check-circle';
-    } else if (procesosCompletados > 0 || procesosParciales > 0) {
+    } 
+    // Si al menos un proceso está completo o parcial y todos los anteriores están completos
+    else if (procesosConEstado.some(p => 
+      (p.status === EstadoProcesoItem.ProducidasTotalmente || 
+       p.status === EstadoProcesoItem.ProducidasParcialmente) && 
+       p.statusJararquiaProcess)) {
       return 'pi pi-sync';
-    } else {
+    } 
+    // En cualquier otro caso
+    else {
       return 'pi pi-clock';
     }
   }
@@ -1675,18 +1678,49 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       return 'Sin información de procesos';
     }
 
-    // Contar procesos totalmente producidos
-    const totalProcesos = row.detalles.length;
-    const procesosCompletados = row.detallePedido.filter(
-      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasTotalmente
-    ).length;
-    const procesosParciales = row.detallePedido.filter(
-      detalle => this.getProcessStatus(row.detalles[0].nombreProceso, row) === EstadoProcesoItem.ProducidasParcialmente
-    ).length;
-    const procesosPendientes = totalProcesos - procesosCompletados - procesosParciales;
-
+    // Enfoque mejorado que considera la jerarquía y dependencias entre procesos
+    const procesosConEstado = this.getProcesosConEstado(row);
+    
+    // Contar estados
+    const procesosCompletados = procesosConEstado.filter(p => p.status === EstadoProcesoItem.ProducidasTotalmente).length;
+    const procesosParciales = procesosConEstado.filter(p => p.status === EstadoProcesoItem.ProducidasParcialmente).length;
+    const procesosPendientes = procesosConEstado.filter(p => p.status !== EstadoProcesoItem.ProducidasTotalmente && 
+                                                     p.status !== EstadoProcesoItem.ProducidasParcialmente).length;
+    
+    // Identificar procesos bloqueados por dependencias
+    const procesosBloqueados = procesosConEstado.filter(p => !p.statusJararquiaProcess).length;
+    
     // Construir mensaje detallado
-    return `Estado: ${procesosCompletados} completados, ${procesosParciales} parciales, ${procesosPendientes} pendientes de ${totalProcesos} procesos`;
+    let mensaje = `Estado: ${procesosCompletados} completados, ${procesosParciales} parciales, ${procesosPendientes} pendientes de ${procesosConEstado.length} procesos`;
+    
+    // Agregar información sobre procesos bloqueados si existen
+    if (procesosBloqueados > 0) {
+      mensaje += `\n${procesosBloqueados} procesos bloqueados por dependencias sin completar`;
+    }
+    
+    return mensaje;
+  }
+
+  /**
+   * Método auxiliar para obtener los procesos con su estado y jerarquía
+   */
+  private getProcesosConEstado(row: PedidosParaProduccionEnsamble): Array<{
+    nombreProceso: string;
+    status: EstadoProcesoItem;
+    statusJararquiaProcess: boolean;
+    index: number;
+  }> {
+    return row.detalles.map((detalle, index) => {
+      const status = this.getProcessStatus(detalle.nombreProceso, row);
+      const statusProcessPrevious = this.validatePreviousStatusProduced(row, index);
+      
+      return {
+        nombreProceso: detalle.nombreProceso,
+        status,
+        statusJararquiaProcess: statusProcessPrevious,
+        index
+      };
+    }).filter(p => p.nombreProceso !== this.procesoGlobal);
   }
 
   /**

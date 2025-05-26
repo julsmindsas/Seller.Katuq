@@ -462,10 +462,8 @@
                                                         
                                                         <!-- Artículo - columna principal -->
                                                         <ng-container *ngSwitchCase="'nombreArticulo'">
-                                                            <div class="article-name-container" 
-                                                                 pTooltip="{{ row[col.field] }}" 
-                                                                 tooltipPosition="top">
-                                                                <div class="article-name">
+                                                            <div class="article-name-container">
+                                                                <div class="article-name" [class.truncated]="row[col.field] && row[col.field].length > 60" [pTooltip]="row[col.field]" tooltipPosition="top" [escape]="false" [showDelay]="300" tooltipStyleClass="tooltip-custom">
                                                                     {{ row[col.field] }}
                                                                 </div>
                                                             </div>
@@ -473,10 +471,8 @@
                                                         
                                                         <!-- Producto -->
                                                         <ng-container *ngSwitchCase="'nombreProducto'">
-                                                            <div class="product-name-container"
-                                                                 pTooltip="{{ row[col.field] }}" 
-                                                                 tooltipPosition="top">
-                                                                <div class="product-name">
+                                                            <div class="product-name-container">
+                                                                <div class="product-name" [class.truncated]="row[col.field] && row[col.field].length > 60" [pTooltip]="row[col.field]" tooltipPosition="top" [escape]="false" [showDelay]="300" tooltipStyleClass="tooltip-custom">
                                                                     {{ row[col.field] }}
                                                                 </div>
                                                             </div>
@@ -1053,35 +1049,39 @@
     text-align: center;
 }
 
-/* Mejoras para los contenedores de nombres */
+/* Mejoras para la legibilidad de artículos y productos */
 .article-name-container, .product-name-container {
-    padding: 0.75rem 0.5rem;
-    background-color: rgba(255, 255, 255, 0.5);
+    padding: 0.875rem 1rem;
+    background-color: var(--surface-0);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    min-width: 200px;
-    max-width: 350px;
     transition: all 0.2s ease;
-    overflow: visible;
     position: relative;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    margin: 0.25rem 0;
 }
 
 .article-name-container:hover, .product-name-container:hover {
-    background-color: var(--surface-50);
-    box-shadow: var(--shadow-md);
+    background-color: var(--primary-lightest);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
     transform: translateY(-2px);
     z-index: 10;
+    border-color: var(--primary-color);
 }
 
-/* Estilos específicos para los nombres */
 .article-name, .product-name {
-    font-size: 0.9rem;
-    line-height: 1.4;
+    font-size: 0.95rem;
+    line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    position: relative;
+    max-width: 100%;
+    word-wrap: break-word;
+    padding-right: 20px; /* Espacio para el indicador de truncado */
 }
 
 .article-name {
@@ -1091,24 +1091,45 @@
 
 .product-name {
     font-weight: 500;
-    font-size: 0.85rem;
-    color: var(--text-medium);
+    color: var(--text-dark);
 }
 
-/* Ajuste de columnas en la tabla */
-.modern-production-table th[data-field="nombreArticulo"],
-.modern-production-table th[data-field="nombreProducto"] {
-    min-width: 250px !important;
+/* Indicador de contenido truncado */
+.article-name.truncated::after,
+.product-name.truncated::after {
+    content: '•••';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, var(--primary-lightest) 40%);
+    padding: 0 6px 0 15px;
+    color: var(--primary-color);
+    font-weight: bold;
+    border-radius: 0 0 var(--radius-md) 0;
+    line-height: 1.5;
+}
+
+.tooltip-custom {
     max-width: 350px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    font-size: 0.95rem !important;
+    padding: 0.875rem !important;
+    line-height: 1.5 !important;
+    background-color: var(--surface-0) !important;
+    color: var(--text-dark) !important;
+    border: 1px solid var(--primary-color) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Estilos para el modo de densidad */
-.modern-production-table.density-compact .article-name,
+/* Ajuste para la densidad de tabla */
+.modern-production-table.density-compact .article-name, 
 .modern-production-table.density-compact .product-name {
     -webkit-line-clamp: 1;
 }
 
-.modern-production-table.density-expanded .article-name,
+.modern-production-table.density-expanded .article-name, 
 .modern-production-table.density-expanded .product-name {
     -webkit-line-clamp: 3;
 }
@@ -1593,5 +1614,74 @@
     background-color: var(--primary-light);
     color: var(--primary-color);
     font-weight: 500;
+}
+
+/* Estilos mejorados para los indicadores de estado de proceso */
+.process-status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    transition: all var(--transition-normal);
+}
+
+.status-complete {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--accent-green);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    animation: pulse-success 2s infinite;
+}
+
+.status-partial {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--accent-orange);
+}
+
+.status-pending {
+    background-color: rgba(107, 114, 128, 0.1);
+    color: var(--text-medium);
+}
+
+.status-none {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+}
+
+.process-status-indicator i {
+    font-size: 1.25rem;
+}
+
+.status-complete i {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+/* Animación de pulso para estado completado */
+@keyframes pulse-success {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* Ajuste de columnas en la tabla para garantizar legibilidad */
+:host ::ng-deep .modern-production-table th[data-field="nombreArticulo"],
+:host ::ng-deep .modern-production-table th[data-field="nombreProducto"] {
+    min-width: 300px !important;
+    max-width: 450px !important;
+}
+
+:host ::ng-deep .modern-production-table td:has(.article-name-container),
+:host ::ng-deep .modern-production-table td:has(.product-name-container) {
+    min-width: 300px !important;
+    max-width: 450px !important;
+    width: auto !important;
 }
 </style>
