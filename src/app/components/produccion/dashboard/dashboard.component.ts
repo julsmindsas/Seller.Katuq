@@ -21,7 +21,7 @@ import { UtilsService } from 'src/app/shared/services/utils.service';
 import { EstadoProcesoItem, PiezasProduccion } from '../../../shared/models/productos/otrosprocesos';
 import { icons } from 'feather-icons';
 import { stat } from 'fs';
-import { VentasService } from 'src/app/shared/services/ventas/ventas.service';
+import { VentasService } from '../../../shared/services/ventas/ventas.service';
 import { FilterService } from 'primeng/api';
 import { finalize } from 'rxjs';
 import { parse } from 'flatted';
@@ -108,6 +108,16 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   // Añadir una propiedad para controlar la densidad de la tabla
   tableDensity: 'compact' | 'normal' | 'expanded' = 'normal';
+
+  // Opciones para los modos de coincidencia en español
+  matchMode: string = 'startsWith';
+  matchModeOptions = [
+    { label: 'Coincide con todo', value: 'equals' },
+    { label: 'Comienza con', value: 'startsWith' },
+    { label: 'Contiene', value: 'contains' },
+    { label: 'No contiene', value: 'notContains' },
+    { label: 'Termina con', value: 'endsWith' }
+  ];
 
   constructor(
     private produccionService: ProduccionNewService,
@@ -347,6 +357,25 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       Swal.fire({
         icon: 'success',
         title: 'Pedido  actualizado correctamente',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    });
+  }
+
+  private editMultipleOrders(orders: Pedido[]) {
+    this.ventasService.editMultipleOrders({orders: orders}).subscribe((data) => {
+      this.refrescarDatos();
+      Swal.fire({
+        icon: 'success',
+        title: 'Pedidos actualizados correctamente',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }, (error) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al actualizar los pedidos',
         showConfirmButton: false,
         timer: 1500
       });
@@ -1044,6 +1073,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         }
         );
 
+        const ordersPushToUpdate: Pedido[] = [];
+
         this.selectedOrdersEnsamble.forEach((item) => {
 
           item.detallePedido.forEach((detallePedido) => {
@@ -1200,10 +1231,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
                     }
                   }
 
-                  this.editOrder(orderToUpdate);
+                  // this.editOrder(orderToUpdate);
+                  ordersPushToUpdate.push(orderToUpdate);
                 }
               });
           });
+
+          this.editMultipleOrders(ordersPushToUpdate);
 
           //buscar en allorders y reemplazar el item
           const index = this.AllOrdersEnsamble.findIndex((order) => order.nombreProducto === item.nombreProducto && order.nombreArticulo === item.nombreArticulo);
@@ -1661,26 +1695,26 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   clasificarPedidosPorUrgencia() {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    
+
     // Limpiar los arreglos
     this.pedidosUrgentes = [];
     this.pedidosEnRiesgo = [];
     this.pedidosNormales = [];
-    
+
     if (!this.ordersEnsamble || this.ordersEnsamble.length === 0) {
       return;
     }
-    
+
     this.ordersEnsamble.forEach(orden => {
       // Verificar si hay detallePedido y si tiene elementos
       if (!orden.detallePedido || orden.detallePedido.length === 0) {
         this.pedidosNormales.push(orden);
         return;
       }
-      
+
       // Buscar la fecha de entrega más cercana entre todos los detalles
       let fechaMasCercana: Date | null = null;
-      
+
       for (const detalle of orden.detallePedido) {
         if (detalle.fechaEntrega) {
           try {
@@ -1696,17 +1730,17 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           }
         }
       }
-      
+
       // Si no hay fecha válida, considerar como normal
       if (!fechaMasCercana) {
         this.pedidosNormales.push(orden);
         return;
       }
-      
+
       // Calcular días de diferencia
       const diferenciaTiempo = fechaMasCercana.getTime() - hoy.getTime();
       const diferenciaDias = Math.ceil(diferenciaTiempo / (1000 * 3600 * 24));
-      
+
       // Clasificar según la urgencia
       if (diferenciaDias <= 2) {
         this.pedidosUrgentes.push(orden);
@@ -1716,7 +1750,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         this.pedidosNormales.push(orden);
       }
     });
-    
+
     // Ordenar por fecha de entrega (más cercanas primero)
     this.ordenarPorFechaEntrega(this.pedidosUrgentes);
     this.ordenarPorFechaEntrega(this.pedidosEnRiesgo);
@@ -1730,7 +1764,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     // Definir una fecha futura lejana para pedidos sin fecha (baja prioridad)
     const fechaFutura = new Date();
     fechaFutura.setFullYear(fechaFutura.getFullYear() + 10);
-    
+
     pedidos.sort((a, b) => {
       // Función para obtener una fecha válida o la fecha futura por defecto
       const obtenerFechaValida = (orden: PedidosParaProduccionEnsamble): Date => {
@@ -1738,7 +1772,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         if (!orden.detallePedido || orden.detallePedido.length === 0) {
           return fechaFutura;
         }
-        
+
         // Buscar el primer pedido con fecha válida
         for (const detalle of orden.detallePedido) {
           if (detalle.fechaEntrega) {
@@ -1753,15 +1787,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             }
           }
         }
-        
+
         // Si no encontramos fechas válidas, usar la fecha futura
         return fechaFutura;
       };
-      
+
       // Obtener fechas válidas para ambos órdenes
       const fechaA = obtenerFechaValida(a);
       const fechaB = obtenerFechaValida(b);
-      
+
       // Comparar fechas
       return fechaA.getTime() - fechaB.getTime();
     });
@@ -1774,19 +1808,19 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (!this.ordersEnsamble || this.ordersEnsamble.length === 0) {
       return;
     }
-    
+
     // 1. Calcular estadísticas de ensambles
     this.ensamblesPendientes = 0;
     this.ensamblesProceso = 0;
     this.ensamblesCompletados = 0;
-    
+
     this.ordersEnsamble.forEach(orden => {
       // En lugar de usar la propiedad procesos (que no existe), 
       // usamos los datos de detallePedido y detalles que sí existen
       const totalProcesos = orden.detalles ? orden.detalles.length : 0;
       let procesosCompletados = 0;
       let procesosParciales = 0;
-      
+
       if (orden.detalles && orden.detalles.length > 0) {
         // Para cada proceso/detalle, verificamos su estado
         orden.detalles.forEach(detalle => {
@@ -1798,7 +1832,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           }
         });
       }
-      
+
       if (procesosCompletados === totalProcesos && totalProcesos > 0) {
         this.ensamblesCompletados++;
       } else if (procesosCompletados > 0 || procesosParciales > 0) {
@@ -1807,30 +1841,30 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         this.ensamblesPendientes++;
       }
     });
-    
+
     // 2. Calcular capacidad utilizada (relación entre completados+proceso y total)
     const total = this.ordersEnsamble.length;
-    this.capacidadUtilizada = total > 0 ? 
-                           Math.round(((this.ensamblesProceso * 0.5) + this.ensamblesCompletados) / total * 100) : 0;
-    
+    this.capacidadUtilizada = total > 0 ?
+      Math.round(((this.ensamblesProceso * 0.5) + this.ensamblesCompletados) / total * 100) : 0;
+
     // 3. Calcular eficiencia por proceso
     // Recopilamos la información de todos los procesos
     const procesos = new Map<string, { total: number, completados: number, parciales: number }>();
-    
+
     this.ordersEnsamble.forEach(orden => {
       if (!orden.detalles || orden.detalles.length === 0) return;
-      
+
       orden.detalles.forEach(detalle => {
         const nombreProceso = detalle.nombreProceso;
-        
+
         if (!procesos.has(nombreProceso)) {
           procesos.set(nombreProceso, { total: 0, completados: 0, parciales: 0 });
         }
-        
+
         const datosProceso = procesos.get(nombreProceso);
         if (datosProceso) {
           datosProceso.total++;
-          
+
           const estadoProceso = this.getProcessStatus(nombreProceso, orden);
           if (estadoProceso === EstadoProcesoItem.ProducidasTotalmente) {
             datosProceso.completados++;
@@ -1840,20 +1874,20 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         }
       });
     });
-    
+
     // Convertir a array para la vista
     this.procesosEficiencia = Array.from(procesos.entries()).map(([nombre, datos]) => {
       const { total, completados, parciales } = datos;
       // Calculamos la eficiencia ponderada: completados valen 100%, parciales 50%
-      const eficiencia = total > 0 ? 
-                      Math.round(((completados * 1) + (parciales * 0.5)) / total * 100) : 0;
-      
+      const eficiencia = total > 0 ?
+        Math.round(((completados * 1) + (parciales * 0.5)) / total * 100) : 0;
+
       return { nombre, eficiencia };
     });
-    
+
     // Ordenamos de mayor a menor eficiencia
     this.procesosEficiencia.sort((a, b) => b.eficiencia - a.eficiencia);
-    
+
     // Limitamos a máximo 4 procesos para visualización
     if (this.procesosEficiencia.length > 4) {
       this.procesosEficiencia = this.procesosEficiencia.slice(0, 4);
@@ -1868,35 +1902,35 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     // Ejemplo usando algún servicio de notificaciones como SweetAlert o PrimeNG Toast
     // Por ahora, solo mostramos un console.log como ejemplo
     console.log('Mostrando recomendaciones de producción...');
-    
+
     // Variables para calcular recomendaciones
     const urgentes = this.pedidosUrgentes.length;
     const enRiesgo = this.pedidosEnRiesgo.length;
     const capacidad = this.capacidadUtilizada;
-    
+
     // Construir mensaje de recomendación
     let mensaje = 'Recomendaciones para optimizar producción:\n\n';
-    
+
     if (urgentes > 0) {
       mensaje += `• Prioriza ${urgentes} artículo(s) urgente(s) para entrega inmediata\n`;
     }
-    
+
     if (enRiesgo > 0) {
       mensaje += `• Programa ${enRiesgo} artículo(s) en riesgo para evitar retrasos\n`;
     }
-    
+
     if (capacidad > 90) {
       mensaje += '• La capacidad está al límite, considera redistribuir la carga\n';
     } else if (capacidad < 50) {
       mensaje += '• Capacidad subutilizada, puedes aceptar más pedidos\n';
     }
-    
+
     // Procesos con baja eficiencia
     const procesosIneficientes = this.procesosEficiencia.filter(p => p.eficiencia < 60);
     if (procesosIneficientes.length > 0) {
       mensaje += `• Mejora la eficiencia de: ${procesosIneficientes.map(p => p.nombre).join(', ')}\n`;
     }
-    
+
     alert(mensaje);
   }
 
@@ -1906,18 +1940,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   setTableDensity(density: 'compact' | 'normal' | 'expanded'): void {
     // Actualizar la propiedad que controla la densidad
     this.tableDensity = density;
-    
+
     // No es necesario manipular el DOM directamente ya que la clase 
     // se aplica automáticamente mediante la vinculación en el HTML:
     // styleClass="modern-production-table density-{{tableDensity}}"
-    
+
     // Guardar preferencia en localStorage para mantenerla entre sesiones
     try {
       localStorage.setItem('tableDensityPreference', density);
     } catch (e) {
       console.warn('No se pudo guardar la preferencia de densidad', e);
     }
-    
+
     // Mensaje para confirmar que el cambio se realizó (opcional)
     console.log(`Densidad de tabla cambiada a: ${density}`);
   }
@@ -1929,7 +1963,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     // Obtener todas las celdas con nombres de artículos y productos
     const articleCells = document.querySelectorAll('.article-name');
     const productCells = document.querySelectorAll('.product-name');
-    
+
     // Calcular el ancho máximo para cada tipo de celda
     let maxArticleWidth = 150; // Ancho mínimo por defecto
     let maxProductWidth = 150; // Ancho mínimo por defecto
@@ -1953,11 +1987,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (articleColumn) {
       (articleColumn as HTMLElement).style.width = `${maxArticleWidth}px`;
     }
-    
+
     if (productColumn) {
       (productColumn as HTMLElement).style.width = `${maxProductWidth}px`;
     }
-    
+
     // Notificar al usuario
     // Usar PrimeNG Toast o similar si está disponible en el proyecto
   }
@@ -1972,7 +2006,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       if (savedDensity && ['compact', 'normal', 'expanded'].includes(savedDensity)) {
         this.setTableDensity(savedDensity as 'compact' | 'normal' | 'expanded');
       }
-      
+
       // Añadir atributo data-field a las columnas para facilitar la selección en el ajuste automático
       setTimeout(() => {
         const headers = document.querySelectorAll('.modern-production-table th');

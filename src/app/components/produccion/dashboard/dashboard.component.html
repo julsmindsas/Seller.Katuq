@@ -359,10 +359,38 @@
                                                 <td class="action-column"></td>
                                                 <th *ngFor="let col of selectedColumns" 
                                                     [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega',
-                                                              'text-end': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble'}">
+                                                              'text-end': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble'}"
+                                                    [pSortableColumn]="col.field">
                                                     <div class="header-cell" pTooltip="{{ col.description }}" tooltipPosition="top">
                                                         <i [ngClass]="col.icon"></i>
                                                         <span>{{ col.header }}</span>
+                                                        <p-sortIcon [field]="col.field"></p-sortIcon>
+                                                        <p-columnFilter type="text" [field]="col.field" display="menu" class="ml-auto filter-icon">
+                                                            <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                                                <div class="p-column-filter-matchmode-dropdown">
+                                                                    <p-dropdown [options]="matchModeOptions" [(ngModel)]="matchMode" (onChange)="filter($event.value)">
+                                                                        <ng-template pTemplate="item" let-option>
+                                                                            <span>{{option.label}}</span>
+                                                                        </ng-template>
+                                                                    </p-dropdown>
+                                                                </div>
+                                                                <div class="p-column-filter-constraint mt-2">
+                                                                    <input type="text" pInputText [ngModel]="value" (ngModelChange)="filter($event)" 
+                                                                        class="p-inputtext p-component w-100" placeholder="Buscar...">
+                                                                </div>
+                                                            </ng-template>
+                                                            <ng-template pTemplate="header">
+                                                                <div class="p-column-filter-row-header">
+                                                                    <span class="p-column-filter-menu-button-open">Filtrar por {{ col.header }}</span>
+                                                                </div>
+                                                            </ng-template>
+                                                            <ng-template pTemplate="footer">
+                                                                <div class="p-column-filter-row-footer">
+                                                                    <button type="button" pButton label="Limpiar" class="p-button-outlined p-button-sm" (click)="filter('', 'equals')"></button>
+                                                                    <button type="button" pButton label="Aplicar" class="p-button-sm" (click)="filter(value)"></button>
+                                                                </div>
+                                                            </ng-template>
+                                                        </p-columnFilter>
                                                     </div>
                                             </th>
                                         </tr>
@@ -1246,5 +1274,324 @@
     color: var(--primary-color);
     border-color: var(--primary-color);
     transform: translateY(-1px);
+}
+
+/* Estilos para los filtros de columna */
+:host ::ng-deep .modern-production-table .p-column-filter-menu-button {
+    width: 2rem;
+    height: 2rem;
+    color: var(--text-medium);
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+    margin-left: 0.25rem;
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-menu-button:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-menu-button.p-column-filter-menu-button-active {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+:host ::ng-deep .p-column-filter-overlay {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-column-filter-row-items {
+    padding: 0.5rem;
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    margin-bottom: 0.25rem;
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item:hover {
+    background-color: var(--primary-lightest);
+    color: var(--primary-color);
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item.p-highlight {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-dropdown-label {
+    font-size: 0.875rem;
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-input-icon-left > i:first-of-type {
+    color: var(--text-medium);
+    left: 0.75rem;
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-inputtext {
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    border-color: var(--border-color);
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-inputtext:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-lightest);
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-button.p-button-outlined {
+    color: var(--text-medium);
+    border-color: var(--border-color);
+    background-color: transparent;
+    transition: all var(--transition-fast);
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-button.p-button-outlined:hover {
+    background-color: var(--primary-lightest);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-button.p-button-primary {
+    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+    border-color: var(--secondary-color);
+}
+
+:host ::ng-deep .p-column-filter-overlay .p-button.p-button-primary:hover {
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+/* Ajustes para los filtros de columna */
+:host ::ng-deep .header-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+:host ::ng-deep .header-cell .p-column-filter {
+    margin-left: auto;
+}
+
+:host ::ng-deep .filter-icon .pi-filter {
+    font-size: 0.75rem;
+    color: var(--text-medium);
+    transition: all var(--transition-fast);
+}
+
+:host ::ng-deep .filter-icon:hover .pi-filter,
+:host ::ng-deep .p-column-filter-menu-button.p-column-filter-menu-button-active .pi-filter {
+    color: var(--primary-color);
+}
+
+:host ::ng-deep .modern-production-table th .p-column-title {
+    display: inline-flex;
+    align-items: center;
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-overlay {
+    min-width: 280px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-row {
+    padding: 0.5rem 0;
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-row .p-column-filter-constraint {
+    margin-bottom: 0.5rem;
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-row .p-column-filter-constraint:last-child {
+    margin-bottom: 0;
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-menu-button {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    margin-left: 0.25rem;
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-menu-button:hover {
+    background-color: var(--primary-light);
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-menu-button.p-column-filter-menu-button-active {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-menu-button .pi-filter-icon {
+    font-size: 0.75rem;
+}
+
+:host ::ng-deep .modern-production-table .p-datatable-thead th.p-highlight {
+    background-color: var(--primary-lightest);
+}
+
+:host ::ng-deep .modern-production-table .p-column-filter-clear-button {
+    margin-right: 0.5rem;
+}
+
+:host ::ng-deep .modern-production-table .p-inputtext {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+:host ::ng-deep .modern-production-table .p-dropdown {
+    min-width: 100%;
+}
+
+:host ::ng-deep .modern-production-table .p-dropdown-panel {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+}
+
+:host ::ng-deep .modern-production-table .p-dropdown-items {
+    padding: 0.5rem 0;
+}
+
+:host ::ng-deep .modern-production-table .p-dropdown-item {
+    padding: 0.5rem 1rem;
+    border-radius: 0;
+    transition: background-color var(--transition-fast);
+}
+
+:host ::ng-deep .modern-production-table .p-dropdown-item:hover {
+    background-color: var(--primary-lightest);
+    color: var(--primary-color);
+}
+
+:host ::ng-deep .modern-production-table .p-dropdown-item.p-highlight {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+/* Personalización de filtros en español */
+:host ::ng-deep .p-column-filter-row-header {
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--surface-50);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+:host ::ng-deep .p-column-filter-row-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--surface-50);
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+:host ::ng-deep .p-column-filter-menu-button-open {
+    font-size: 0.875rem;
+}
+
+:host ::ng-deep .p-inputtext[placeholder="Buscar..."] {
+    width: 100%;
+    margin: 0.5rem 0;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+:host ::ng-deep .p-inputtext[placeholder="Buscar..."]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-lightest);
+}
+
+:host ::ng-deep .p-column-filter-overlay {
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+:host ::ng-deep .p-column-filter .p-button-sm {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-md);
+}
+
+:host ::ng-deep .p-column-filter .p-button-outlined {
+    color: var(--text-medium);
+    border-color: var(--border-color);
+}
+
+:host ::ng-deep .p-column-filter .p-button-outlined:hover {
+    background-color: var(--primary-lightest);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+:host ::ng-deep .p-column-filter .p-button-sm:not(.p-button-outlined) {
+    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+    border-color: var(--secondary-color);
+}
+
+/* Estilos para el dropdown de modos de coincidencia */
+:host ::ng-deep .p-column-filter-matchmode-dropdown {
+    margin-bottom: 0.5rem;
+    width: 100%;
+}
+
+:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--surface-0);
+}
+
+:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown:hover {
+    border-color: var(--primary-color);
+}
+
+:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-label {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-trigger {
+    width: 2.5rem;
+}
+
+:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-panel {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+}
+
+:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item {
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-dark);
+    transition: all var(--transition-fast);
+}
+
+:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item:hover {
+    background-color: var(--primary-lightest);
+    color: var(--primary-color);
+}
+
+:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item.p-highlight {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 500;
 }
 </style>

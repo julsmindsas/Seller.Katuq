@@ -72,6 +72,10 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/orders/edit', order);
   }
 
+  editMultipleOrders(orders: any): Observable<any> {
+    return this.post<any>('/v1/orders/edit-multiple-orders', orders);
+  }
+
   getOrders() {
     const empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
     const id = empresaActual.nomComercial;
