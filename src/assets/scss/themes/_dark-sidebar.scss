@@ -1,53 +1,430 @@
 /**=====================
-   55. theme layout CSS Start
+   DARK SIDEBAR THEME - KATUQ 2025
 ==========================**/
 
+// Variables para tema oscuro
+:root {
+  &[data-theme="dark"] {
+    --sidebar-bg: #1a202c;
+    --sidebar-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    --sidebar-border: #2d3748;
+    
+    // Colores principales
+    --primary-color: #63b3ed;
+    --primary-hover: #4299e1;
+    --primary-light: rgba(99, 179, 237, 0.15);
+    --primary-lighter: rgba(99, 179, 237, 0.08);
+    
+    // Texto
+    --text-primary: #f7fafc;
+    --text-secondary: #cbd5e0;
+    --text-muted: #a0aec0;
+    
+    // Fondos
+    --bg-hover: #2d3748;
+    --bg-active: #4a5568;
+    --bg-section: #2d3748;
+  }
+}
+
+// Estilos específicos para el tema oscuro
+[data-theme="dark"] {
+  .sidebar-container {
+    background: var(--sidebar-bg);
+    border-right-color: var(--sidebar-border);
+    box-shadow: var(--sidebar-shadow);
+  }
+
+  .sidebar-header {
+    background: linear-gradient(135deg, rgba(99, 179, 237, 0.1) 0%, transparent 100%);
+    border-bottom-color: var(--sidebar-border);
+    
+    .logo-section {
+      .company-info {
+        .company-name {
+          color: var(--text-primary);
+        }
+        
+        .version {
+          color: var(--text-muted);
+        }
+      }
+    }
+    
+    .logo-compact {
+      a:hover {
+        background: var(--primary-light);
+      }
+    }
+    
+    .control-btn {
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+      
+      &:hover {
+        background: var(--primary-light);
+        color: var(--primary-color);
+      }
+    }
+  }
+
+  .search-section {
+    border-bottom-color: var(--sidebar-border);
+    
+    .search-input-container {
+      .search-icon {
+        color: var(--text-muted);
+      }
+      
+      .search-input {
+        background: var(--bg-hover);
+        border-color: var(--sidebar-border);
+        color: var(--text-primary);
+        
+        &:focus {
+          background: #2d3748;
+          border-color: var(--primary-color);
+        }
+        
+        &::placeholder {
+          color: var(--text-muted);
+        }
+      }
+      
+      .clear-btn {
+        color: var(--text-muted);
+        
+        &:hover {
+          background: var(--bg-active);
+          color: var(--text-primary);
+        }
+      }
+    }
+    
+    .search-results {
+      background: #2d3748;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      
+      .search-result-link {
+        color: var(--text-primary);
+        
+        i {
+          color: var(--text-muted);
+        }
+        
+        &:hover {
+          background: var(--bg-hover);
+          color: var(--primary-color);
+          
+          i {
+            color: var(--primary-color);
+          }
+        }
+      }
+    }
+    
+    .search-no-results {
+      color: var(--text-muted);
+    }
+  }
+
+  .favorites-section {
+    background: rgba(99, 179, 237, 0.05);
+    border-bottom-color: var(--sidebar-border);
+    
+    .favorites-title {
+      color: var(--primary-color);
+    }
+    
+    .favorite-link {
+      color: var(--text-primary);
+      
+      i {
+        color: #f1c40f;
+      }
+      
+      .remove-favorite-btn {
+        background: rgba(255, 0, 0, 0.15);
+        color: #fc8181;
+        
+        &:hover {
+          background: rgba(255, 0, 0, 0.25);
+        }
+      }
+      
+      &:hover {
+        background: #2d3748;
+      }
+    }
+  }
+
+  .menu-section {
+    .section-header {
+      background: linear-gradient(135deg, rgba(99, 179, 237, 0.08) 0%, transparent 100%);
+      color: var(--primary-color);
+      
+      &:hover {
+        background: linear-gradient(135deg, var(--primary-light) 0%, rgba(99, 179, 237, 0.08) 100%);
+      }
+      
+      .section-icon {
+        background: var(--primary-light);
+        
+        i {
+          color: var(--primary-color);
+        }
+      }
+    }
+  }
+
+  .menu-items {
+    .menu-item {
+      .menu-link {
+        color: var(--text-primary);
+        
+        &:hover {
+          background: var(--bg-hover);
+          color: var(--primary-color);
+        }
+        
+        &.active {
+          background: var(--primary-light);
+          color: var(--primary-color);
+          
+          &::before {
+            background: var(--primary-color);
+          }
+          
+          .menu-icon i {
+            color: var(--primary-color);
+          }
+        }
+        
+        .menu-icon i {
+          color: var(--text-secondary);
+        }
+        
+        .submenu-chevron {
+          color: var(--text-muted);
+        }
+        
+        .favorite-btn {
+          color: var(--text-muted);
+          
+          &:hover {
+            background: var(--bg-active);
+            color: #f1c40f;
+          }
+          
+          &.active {
+            color: #f1c40f;
+          }
+        }
+        
+        // Tooltip para modo compacto en tema oscuro
+        .tooltip {
+          background: rgba(26, 32, 44, 0.95);
+          color: var(--text-primary);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+          
+          &::before {
+            border-right-color: rgba(26, 32, 44, 0.95);
+          }
+        }
+      }
+    }
+  }
+
+  .submenu {
+    background: rgba(45, 55, 72, 0.8);
+    
+    &.compact-submenu {
+      background: #2d3748;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    
+    .submenu-item {
+      .submenu-link {
+        color: var(--text-primary);
+        
+        &:hover {
+          background: #2d3748;
+          color: var(--primary-color);
+        }
+        
+        &.active {
+          background: #2d3748;
+          color: var(--primary-color);
+          
+          &::before {
+            background: var(--primary-color);
+          }
+        }
+        
+        .submenu-chevron {
+          color: var(--text-muted);
+        }
+      }
+    }
+  }
+
+  .sub-submenu {
+    .sub-submenu-item {
+      .sub-submenu-link {
+        color: var(--text-secondary);
+        
+        &:hover {
+          background: rgba(45, 55, 72, 0.8);
+          color: var(--primary-color);
+        }
+        
+        &.active {
+          background: rgba(45, 55, 72, 0.8);
+          color: var(--primary-color);
+        }
+      }
+    }
+  }
+
+  // Plan card en tema oscuro
+  .plan-card-container {
+    background: var(--sidebar-bg);
+    border-top-color: var(--sidebar-border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .plan-card-header {
+    background: linear-gradient(to right, rgba(99, 179, 237, 0.08), rgba(99, 179, 237, 0.04));
+    border-bottom-color: rgba(99, 179, 237, 0.15);
+    
+    .plan-title {
+      small {
+        color: var(--text-primary);
+      }
+    }
+    
+    .plan-badge {
+      background: var(--primary-light);
+      color: var(--primary-color);
+    }
+    
+    .plan-balance {
+      background: rgba(99, 179, 237, 0.08);
+      
+      i {
+        color: var(--primary-color);
+      }
+      
+      span {
+        color: var(--text-primary);
+      }
+    }
+    
+    .toggle-plan-btn {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      
+      &:hover {
+        background-color: rgba(99, 179, 237, 0.2);
+      }
+    }
+  }
+
+  // Estados de focus en tema oscuro
+  *:focus {
+    outline-color: var(--primary-color);
+  }
+  
+  .focus-visible {
+    outline-color: var(--primary-color);
+  }
+  
+  .control-btn:focus-visible {
+    box-shadow: 0 0 0 2px var(--primary-color);
+  }
+  
+  .search-result-link:focus-visible,
+  .favorite-link:focus-within,
+  .menu-link:focus-visible,
+  .submenu-link:focus-visible,
+  .sub-submenu-link:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--primary-color);
+  }
+  
+  .section-header:focus-visible {
+    box-shadow: 0 0 0 2px var(--primary-color);
+  }
+}
+
+// Modo compacto en tema oscuro
+[data-theme="dark"] .sidebar-container.compact {
+  .tooltip {
+    background: rgba(26, 32, 44, 0.98) !important;
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+// Responsive en tema oscuro
+@media (max-width: 767.98px) {
+  [data-theme="dark"] {
+    .menu-link,
+    .submenu-link {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+// Compatibilidad con temas existentes
 .page-wrapper.compact-wrapper, .page-wrapper.horizontal-wrapper {
-	.page-body-wrapper {
-		.sidebar-wrapper{
-			&[sidebar-layout="border-sidebar"] {
-				.sidebar-main {
-					.sidebar-links{
-						>li{									
-							.sidebar-link{
-								border-bottom: 1px solid rgba($primary-color, 0.1);
-								transition: all 0.3s ease;									
-							}
-						}
-					}
-				}
-			}
-			&[sidebar-layout="iconcolor-sidebar"]{
-				.sidebar-main{
-					.sidebar-links{
-						>li{									
-							$colors: $success-color, $secondary-color, $primary-color, $danger-color, $info-color, $warning-color, $light-color;
-							$repeat: 60 ;
-							@for $i from 1 through $repeat {
-								&:nth-child(#{length($colors)}n+#{$i}) {
-									svg{
-										color: lighten(nth($colors, random(length($colors))), 15%) !important;
-									}
-									&:hover{												
-										a{
-											svg{
-												stroke: lighten(nth($colors, random(length($colors))), 15%) !important;
-											}
-											&:hover{
-												background-color: rgba(nth($colors, random(length($colors))), 0.15) !important;													
-											}
-										}
-									}											
-								}
-							}									
-						}
-					}							
-				}						
-			}
-		}		
-	}
+  &[data-theme="dark"] {
+    .page-body-wrapper {
+      .sidebar-wrapper {
+        &[sidebar-layout="border-sidebar"] {
+          .sidebar-main {
+            .sidebar-links {
+              > li {
+                .sidebar-link {
+                  border-bottom: 1px solid rgba(99, 179, 237, 0.1);
+                  transition: all 0.3s ease;
+                }
+              }
+            }
+          }
+        }
+        
+        &[sidebar-layout="iconcolor-sidebar"] {
+          .sidebar-main {
+            .sidebar-links {
+              > li {
+                $colors: #48bb78, #ed8936, #4299e1, #f56565, #38b2ac, #ecc94b, #e2e8f0;
+                $repeat: 60;
+                @for $i from 1 through $repeat {
+                  &:nth-child(#{length($colors)}n+#{$i}) {
+                    svg {
+                      color: lighten(nth($colors, random(length($colors))), 20%) !important;
+                    }
+                    &:hover {
+                      a {
+                        svg {
+                          stroke: lighten(nth($colors, random(length($colors))), 20%) !important;
+                        }
+                        &:hover {
+                          background-color: rgba(nth($colors, random(length($colors))), 0.2) !important;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 /**=====================
-   55. theme layout CSS ends
+   DARK SIDEBAR THEME ENDS
 ==========================**/
