@@ -126,11 +126,21 @@ export class SidebarComponent implements OnInit {
       this.isPlanCardCollapsed = savedState === 'true';
     }
     
-    // Cargar estado persistente del sidebar
-    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
-    if (sidebarCollapsed) {
-      this.collapseMenu = sidebarCollapsed === 'true';
-      this.navServices.collapseSidebar = this.collapseMenu;
+    // Configurar estado inicial basado en tamaño de pantalla
+    if (this.isMobile()) {
+      // En móvil: siempre empezar colapsado
+      this.collapseMenu = true;
+      this.navServices.collapseSidebar = true;
+    } else {
+      // En desktop: usar estado guardado o expandido por defecto
+      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+      if (sidebarCollapsed) {
+        this.collapseMenu = sidebarCollapsed === 'true';
+        this.navServices.collapseSidebar = this.collapseMenu;
+      } else {
+        this.collapseMenu = false;
+        this.navServices.collapseSidebar = false;
+      }
     }
     
     // Cargar preferencia de modo compacto
@@ -147,6 +157,9 @@ export class SidebarComponent implements OnInit {
     
     // Configurar eventos táctiles para dispositivos móviles
     this.setupMobileGestures();
+    
+    // Pre-cargar iconos comunes (método implementado más abajo)
+    // this.preloadIcons();
   }
   
   // Configurar eventos táctiles para móviles
@@ -159,8 +172,22 @@ export class SidebarComponent implements OnInit {
     // Configurar funcionalidad para overlay y swipe indicator
     this.renderer.listen('window', 'resize', () => {
       if (window.innerWidth >= 992) {
-        this.collapseMenu = true; // Cerrar menú al redimensionar a escritorio
-        document.body.style.overflow = ''; // Restablecer overflow
+        // En desktop, asegurar que el sidebar esté visible
+        if (this.collapseMenu) {
+          this.collapseMenu = false;
+          this.navServices.collapseSidebar = false;
+        }
+        // Restablecer estilos del body
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.top = '';
+      } else {
+        // En móvil, asegurar que el sidebar esté cerrado por defecto
+        if (!this.collapseMenu) {
+          this.collapseMenu = true;
+          this.navServices.collapseSidebar = true;
+        }
       }
     });
 
@@ -169,7 +196,19 @@ export class SidebarComponent implements OnInit {
       const swipeIndicator = document.querySelector('.sidebar-swipe-indicator');
       if (swipeIndicator) {
         this.renderer.listen(swipeIndicator, 'click', () => {
-          if (this.collapseMenu && window.innerWidth < 992) {
+          if (this.collapseMenu && this.isMobile()) {
+            this.sidebarToggle();
+          }
+        });
+      }
+    }, 100);
+    
+    // Configurar listener para el overlay
+    setTimeout(() => {
+      const overlay = document.querySelector('.sidebar-overlay');
+      if (overlay) {
+        this.renderer.listen(overlay, 'click', () => {
+          if (!this.collapseMenu && this.isMobile()) {
             this.sidebarToggle();
           }
         });
@@ -417,24 +456,21 @@ export class SidebarComponent implements OnInit {
     // Cerrar submenú flotante si está abierto
     this.closeCollapsedSubmenu();
     
-    // Manejar overflow del body en móviles
-    if (window.innerWidth < 992) {
+    // Manejar overflow del body SOLO en móviles
+    if (this.isMobile()) {
       if (!this.collapseMenu) {
         // Menú abierto en móvil - prevenir scroll del body
         document.body.style.overflow = 'hidden';
         document.body.style.position = 'fixed';
         document.body.style.width = '100%';
+        document.body.style.top = '0';
       } else {
         // Menú cerrado - restaurar scroll del body
         document.body.style.overflow = '';
         document.body.style.position = '';
         document.body.style.width = '';
+        document.body.style.top = '';
       }
-    } else {
-      // En desktop, asegurar que el body no tenga restricciones
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
     }
     
     // Cerrar búsqueda activa cuando se cierra el sidebar
@@ -449,6 +485,11 @@ export class SidebarComponent implements OnInit {
     
     // Guardar estado en localStorage para persistencia
     localStorage.setItem('sidebarCollapsed', this.collapseMenu.toString());
+    
+    // Forzar actualización del DOM
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 100);
   }
 
   // Active Nav state - Marca el item activo y sus ancestros en la fuente original
@@ -593,50 +634,50 @@ export class SidebarComponent implements OnInit {
 
   getSectionIcon(sectionTitle: string): string {
     const iconMap: { [key: string]: string } = {
-      // Secciones principales
-      'Gestión Comercial': 'fa-store',
+      // Secciones principales - Compatible con FontAwesome 4.7.0
+      'Gestión Comercial': 'fa-shopping-bag',
       'Operaciones Internas': 'fa-cogs',
       'Logística': 'fa-truck',
-      'Inteligencia de Negocios': 'fa-brain',
-      'Administración Global': 'fa-users-cog',
-      'Configuración Plataforma': 'fa-sliders-h',
+      'Inteligencia de Negocios': 'fa-lightbulb-o',
+      'Administración Global': 'fa-users',
+      'Configuración Plataforma': 'fa-sliders',
       
       // Módulos específicos
-      'Ventas': 'fa-chart-line',
-      'Inventario': 'fa-warehouse',
-      'Reportes': 'fa-chart-bar',
+      'Ventas': 'fa-line-chart',
+      'Inventario': 'fa-building-o',
+      'Reportes': 'fa-bar-chart',
       'Usuarios': 'fa-users',
       'Configuración': 'fa-cog',
-      'Finanzas': 'fa-dollar-sign',
+      'Finanzas': 'fa-dollar',
       'Marketing': 'fa-bullhorn',
-      'Soporte': 'fa-headset',
-      'Análisis': 'fa-chart-line',
+      'Soporte': 'fa-headphones',
+      'Análisis': 'fa-line-chart',
       'Productos': 'fa-cubes',
-      'Clientes': 'fa-handshake',
-      'Facturación': 'fa-file-invoice-dollar',
+      'Clientes': 'fa-handshake-o',
+      'Facturación': 'fa-file-text-o',
       'Compras': 'fa-shopping-cart',
       'Contabilidad': 'fa-calculator',
       'Recursos Humanos': 'fa-users',
-      'Calidad': 'fa-award',
-      'Seguridad': 'fa-shield-alt',
+      'Calidad': 'fa-star',
+      'Seguridad': 'fa-shield',
       'Comunicaciones': 'fa-comments',
-      'Herramientas': 'fa-tools',
+      'Herramientas': 'fa-wrench',
       'Integraciones': 'fa-puzzle-piece',
       'API': 'fa-code',
       'Notificaciones': 'fa-bell',
       'Alertas': 'fa-exclamation-triangle',
-      'Estadísticas': 'fa-chart-bar',
-      'Dashboard': 'fa-chart-pie',
-      'Panel Control': 'fa-tachometer-alt',
+      'Estadísticas': 'fa-bar-chart',
+      'Dashboard': 'fa-pie-chart',
+      'Panel Control': 'fa-tachometer',
       'Monitoreo': 'fa-desktop',
       'Auditoría': 'fa-search',
-      'Backup': 'fa-cloud-upload-alt',
-      'Importar/Exportar': 'fa-exchange-alt'
+      'Backup': 'fa-cloud-upload',
+      'Importar/Exportar': 'fa-exchange'
     };
-    return iconMap[sectionTitle] || 'fa-folder-open';
+    return iconMap[sectionTitle] || 'fa-folder-open-o';
   }
 
-  // Método inteligente para obtener iconos de menú con mapeo exhaustivo
+  // Método inteligente para obtener iconos de menú con mapeo para FontAwesome 4.7.0
   getMenuIcon(icon: string | undefined, title?: string, isSubmenu: boolean = false): string {
     // Si no hay icono, intentar inferir del título
     if (!icon && title) {
@@ -644,7 +685,7 @@ export class SidebarComponent implements OnInit {
     }
     
     if (!icon) {
-      return isSubmenu ? 'fa-circle-dot' : 'fa-circle';
+      return isSubmenu ? 'fa-circle-o' : 'fa-circle-o';
     }
 
     // Si ya tiene el prefijo fa-, devolverlo tal como está
@@ -652,119 +693,119 @@ export class SidebarComponent implements OnInit {
       return icon;
     }
 
-    // Mapeo de iconos con FontAwesome compatible
+    // Mapeo de iconos compatible con FontAwesome 4.7.0
     const iconMap: { [key: string]: string } = {
       // === COMERCIAL Y VENTAS ===
       'shopping-cart': 'fa-shopping-cart',
       'cart': 'fa-shopping-cart',
-      'store': 'fa-store',
-      'shop': 'fa-store',
-      'receipt': 'fa-receipt',
-      'cash-register': 'fa-cash-register',
+      'store': 'fa-shopping-bag',
+      'shop': 'fa-shopping-bag',
+      'receipt': 'fa-file-text-o',
+      'cash-register': 'fa-calculator',
       'credit-card': 'fa-credit-card',
       'payment': 'fa-credit-card',
-      'dollar-sign': 'fa-dollar-sign',
-      'euro-sign': 'fa-euro-sign',
-      'peso': 'fa-dollar-sign',
-      'money': 'fa-money-bill-alt',
-      'coins': 'fa-coins',
-      'wallet': 'fa-wallet',
-      'pos': 'fa-cash-register',
+      'dollar-sign': 'fa-dollar',
+      'euro-sign': 'fa-eur',
+      'peso': 'fa-dollar',
+      'money': 'fa-money',
+      'coins': 'fa-money',
+      'wallet': 'fa-credit-card-alt',
+      'pos': 'fa-calculator',
       'sale': 'fa-tags',
       'discount': 'fa-percent',
       'price': 'fa-tag',
-      'invoice': 'fa-file-invoice-dollar',
-      'billing': 'fa-file-invoice',
-      'quotation': 'fa-file-contract',
-      'order': 'fa-clipboard-list',
+      'invoice': 'fa-file-text-o',
+      'billing': 'fa-file-text-o',
+      'quotation': 'fa-file-text-o',
+      'order': 'fa-clipboard',
       'purchase': 'fa-shopping-cart',
-      'sell': 'fa-handshake',
+      'sell': 'fa-handshake-o',
       
       // === USUARIOS Y PERSONAS ===
       'user': 'fa-user',
       'users': 'fa-users',
-      'user-tie': 'fa-user-tie',
-      'user-cog': 'fa-user-cog',
+      'user-tie': 'fa-user',
+      'user-cog': 'fa-user',
       'user-friends': 'fa-users',
-      'user-shield': 'fa-user-shield',
-      'customer': 'fa-user-tie',
-      'client': 'fa-handshake',
+      'user-shield': 'fa-user',
+      'customer': 'fa-user',
+      'client': 'fa-handshake-o',
       'supplier': 'fa-truck',
-      'employee': 'fa-id-badge',
+      'employee': 'fa-id-card-o',
       'team': 'fa-users',
-      'profile': 'fa-address-card',
-      'contact': 'fa-address-book',
+      'profile': 'fa-address-card-o',
+      'contact': 'fa-address-book-o',
       'permission': 'fa-key',
-      'role': 'fa-user-tag',
+      'role': 'fa-user-circle-o',
       'group': 'fa-users',
       'organization': 'fa-sitemap',
       
       // === INVENTARIO Y PRODUCTOS ===
-      'box': 'fa-box',
-      'boxes': 'fa-boxes',
+      'box': 'fa-cube',
+      'boxes': 'fa-cubes',
       'cube': 'fa-cube',
       'cubes': 'fa-cubes',
-      'warehouse': 'fa-warehouse',
-      'inventory': 'fa-warehouse',
-      'stock': 'fa-boxes',
+      'warehouse': 'fa-building-o',
+      'inventory': 'fa-building-o',
+      'stock': 'fa-cubes',
       'product': 'fa-cube',
-      'category': 'fa-layer-group',
+      'category': 'fa-folder-o',
       'barcode': 'fa-barcode',
       'qrcode': 'fa-qrcode',
-      'package': 'fa-box-open',
-      'shipment': 'fa-shipping-fast',
-      'delivery': 'fa-shipping-fast',
-      'pickup': 'fa-hand-holding',
-      'transfer': 'fa-exchange-alt',
-      'movement': 'fa-arrows-alt',
+      'package': 'fa-cube',
+      'shipment': 'fa-truck',
+      'delivery': 'fa-truck',
+      'pickup': 'fa-hand-paper-o',
+      'transfer': 'fa-exchange',
+      'movement': 'fa-arrows',
       'catalog': 'fa-book',
       
       // === REPORTES Y ANÁLISIS ===
-      'chart-bar': 'fa-chart-bar',
-      'chart-line': 'fa-chart-line',
-      'chart-pie': 'fa-chart-pie',
-      'analytics': 'fa-chart-line',
-      'graph': 'fa-chart-area',
+      'chart-bar': 'fa-bar-chart',
+      'chart-line': 'fa-line-chart',
+      'chart-pie': 'fa-pie-chart',
+      'analytics': 'fa-line-chart',
+      'graph': 'fa-area-chart',
       'trending-up': 'fa-arrow-up',
       'trending-down': 'fa-arrow-down',
-      'statistics': 'fa-chart-bar',
-      'metrics': 'fa-tachometer-alt',
-      'dashboard': 'fa-tachometer-alt',
+      'statistics': 'fa-bar-chart',
+      'metrics': 'fa-tachometer',
+      'dashboard': 'fa-tachometer',
       'kpi': 'fa-bullseye',
-      'performance': 'fa-chart-line',
-      'insights': 'fa-lightbulb',
-      'business-intelligence': 'fa-brain',
-      'report': 'fa-file-alt',
+      'performance': 'fa-line-chart',
+      'insights': 'fa-lightbulb-o',
+      'business-intelligence': 'fa-lightbulb-o',
+      'report': 'fa-file-text-o',
       
       // === DOCUMENTOS Y ARCHIVOS ===
-      'file': 'fa-file',
-      'document': 'fa-file-alt',
-      'file-invoice': 'fa-file-invoice',
-      'file-invoice-dollar': 'fa-file-invoice-dollar',
-      'file-pdf': 'fa-file-pdf',
-      'file-excel': 'fa-file-excel',
-      'file-word': 'fa-file-word',
-      'file-image': 'fa-file-image',
-      'file-video': 'fa-file-video',
+      'file': 'fa-file-o',
+      'document': 'fa-file-text-o',
+      'file-invoice': 'fa-file-text-o',
+      'file-invoice-dollar': 'fa-file-text-o',
+      'file-pdf': 'fa-file-pdf-o',
+      'file-excel': 'fa-file-excel-o',
+      'file-word': 'fa-file-word-o',
+      'file-image': 'fa-file-image-o',
+      'file-video': 'fa-file-video-o',
       'clipboard': 'fa-clipboard',
-      'clipboard-list': 'fa-clipboard-list',
-      'note': 'fa-sticky-note',
-      'contract': 'fa-file-contract',
+      'clipboard-list': 'fa-clipboard',
+      'note': 'fa-sticky-note-o',
+      'contract': 'fa-file-text-o',
       'certificate': 'fa-certificate',
-      'archive': 'fa-file-archive',
-      'folder': 'fa-folder',
-      'folder-open': 'fa-folder-open',
+      'archive': 'fa-file-archive-o',
+      'folder': 'fa-folder-o',
+      'folder-open': 'fa-folder-open-o',
       
       // === CONFIGURACIÓN Y SISTEMA ===
       'cog': 'fa-cog',
       'cogs': 'fa-cogs',
       'settings': 'fa-cogs',
-      'config': 'fa-sliders-h',
-      'tools': 'fa-tools',
+      'config': 'fa-sliders',
+      'tools': 'fa-wrench',
       'wrench': 'fa-wrench',
       'preferences': 'fa-toggle-on',
-      'customize': 'fa-palette',
-      'system': 'fa-microchip',
+      'customize': 'fa-paint-brush',
+      'system': 'fa-desktop',
       'server': 'fa-server',
       'database': 'fa-database',
       'api': 'fa-code',
@@ -779,7 +820,7 @@ export class SidebarComponent implements OnInit {
       'bookmark': 'fa-bookmark',
       'star': 'fa-star',
       'favorite': 'fa-heart',
-      'pin': 'fa-thumbtack',
+      'pin': 'fa-thumb-tack',
       'link': 'fa-link',
       'back': 'fa-arrow-left',
       'forward': 'fa-arrow-right',
@@ -799,19 +840,19 @@ export class SidebarComponent implements OnInit {
       'message': 'fa-comment',
       'notification': 'fa-bell',
       'announcement': 'fa-bullhorn',
-      'news': 'fa-newspaper',
-      'broadcast': 'fa-broadcast-tower',
-      'support': 'fa-headset',
+      'news': 'fa-newspaper-o',
+      'broadcast': 'fa-bullhorn',
+      'support': 'fa-headphones',
       
       // === LOGÍSTICA Y TRANSPORTE ===
       'truck': 'fa-truck',
-      'shipping': 'fa-shipping-fast',
+      'shipping': 'fa-truck',
       'plane': 'fa-plane',
       'train': 'fa-train',
       'ship': 'fa-ship',
-      'map': 'fa-map',
-      'route': 'fa-route',
-      'location': 'fa-map-marker-alt',
+      'map': 'fa-map-o',
+      'route': 'fa-road',
+      'location': 'fa-map-marker',
       'gps': 'fa-crosshairs',
       'tracking': 'fa-location-arrow',
       'logistics': 'fa-truck',
@@ -827,9 +868,9 @@ export class SidebarComponent implements OnInit {
       'question': 'fa-question-circle',
       'help': 'fa-question-circle',
       'alert': 'fa-exclamation',
-      'pending': 'fa-clock',
+      'pending': 'fa-clock-o',
       'processing': 'fa-spinner',
-      'completed': 'fa-check-double',
+      'completed': 'fa-check',
       'status': 'fa-circle',
       
       // === ACCIONES ===
@@ -843,19 +884,19 @@ export class SidebarComponent implements OnInit {
       'modify': 'fa-edit',
       'update': 'fa-edit',
       'delete': 'fa-trash',
-      'trash': 'fa-trash-alt',
+      'trash': 'fa-trash-o',
       'save': 'fa-save',
       'download': 'fa-download',
       'upload': 'fa-upload',
-      'import': 'fa-file-import',
-      'export': 'fa-file-export',
+      'import': 'fa-download',
+      'export': 'fa-upload',
       'print': 'fa-print',
       'copy': 'fa-copy',
       'duplicate': 'fa-copy',
-      'move': 'fa-arrows-alt',
-      'sync': 'fa-sync',
-      'refresh': 'fa-sync',
-      'reload': 'fa-redo',
+      'move': 'fa-arrows',
+      'sync': 'fa-refresh',
+      'refresh': 'fa-refresh',
+      'reload': 'fa-repeat',
       
       // === BÚSQUEDA Y FILTROS ===
       'search': 'fa-search',
@@ -870,76 +911,76 @@ export class SidebarComponent implements OnInit {
       
       // === TIEMPO Y CALENDARIO ===
       'calendar': 'fa-calendar',
-      'date': 'fa-calendar-alt',
-      'time': 'fa-clock',
-      'schedule': 'fa-calendar-check',
-      'appointment': 'fa-calendar-plus',
-      'event': 'fa-calendar-week',
+      'date': 'fa-calendar-o',
+      'time': 'fa-clock-o',
+      'schedule': 'fa-calendar-check-o',
+      'appointment': 'fa-calendar-plus-o',
+      'event': 'fa-calendar',
       'deadline': 'fa-hourglass-end',
-      'timer': 'fa-stopwatch',
+      'timer': 'fa-clock-o',
       'history': 'fa-history',
       
       // === EMPRESARIAL Y NEGOCIOS ===
       'building': 'fa-building',
       'company': 'fa-building',
-      'office': 'fa-building-user',
+      'office': 'fa-building',
       'industry': 'fa-industry',
       'factory': 'fa-industry',
-      'handshake': 'fa-handshake',
-      'deal': 'fa-handshake',
-      'partnership': 'fa-handshake-simple',
+      'handshake': 'fa-handshake-o',
+      'deal': 'fa-handshake-o',
+      'partnership': 'fa-handshake-o',
       'briefcase': 'fa-briefcase',
       'business': 'fa-briefcase',
       'calculator': 'fa-calculator',
       'accounting': 'fa-calculator',
-      'finance': 'fa-hand-holding-dollar',
-      'budget': 'fa-money-bill-trend-up',
-      'investment': 'fa-chart-line-up',
-      'profit': 'fa-arrow-trend-up',
-      'loss': 'fa-arrow-trend-down',
+      'finance': 'fa-dollar',
+      'budget': 'fa-money',
+      'investment': 'fa-line-chart',
+      'profit': 'fa-arrow-up',
+      'loss': 'fa-arrow-down',
       
       // === CALIDAD Y CERTIFICACIONES ===
-      'quality': 'fa-award',
-      'medal': 'fa-medal',
+      'quality': 'fa-star',
+      'medal': 'fa-star',
       'trophy': 'fa-trophy',
-      'badge': 'fa-badge',
-      'verification': 'fa-badge-check',
-      'approval': 'fa-stamp',
-      'signature': 'fa-signature',
+      'badge': 'fa-certificate',
+      'verification': 'fa-check-circle',
+      'approval': 'fa-check-square-o',
+      'signature': 'fa-pencil-square-o',
       
       // === SEGURIDAD ===
-      'security': 'fa-shield-alt',
-      'shield': 'fa-shield-alt',
+      'security': 'fa-shield',
+      'shield': 'fa-shield',
       'lock': 'fa-lock',
       'unlock': 'fa-unlock',
       'key': 'fa-key',
       'password': 'fa-key',
       'encryption': 'fa-user-secret',
-      'privacy': 'fa-user-shield',
-      'backup': 'fa-cloud-upload-alt',
-      'restore': 'fa-cloud-download-alt',
+      'privacy': 'fa-user-secret',
+      'backup': 'fa-cloud-upload',
+      'restore': 'fa-cloud-download',
       
       // === TECNOLOGÍA ===
       'computer': 'fa-desktop',
       'laptop': 'fa-laptop',
-      'mobile': 'fa-mobile-alt',
-      'tablet': 'fa-tablet-alt',
+      'mobile': 'fa-mobile',
+      'tablet': 'fa-tablet',
       'wifi': 'fa-wifi',
       'bluetooth': 'fa-bluetooth-b',
       'usb': 'fa-usb',
       'cloud': 'fa-cloud',
-      'network': 'fa-network-wired',
+      'network': 'fa-sitemap',
       'internet': 'fa-globe',
       
       // === GENÉRICOS MEJORADOS ===
       'circle': 'fa-circle',
       'dot': 'fa-circle',
-      'point': 'fa-map-marker-alt',
+      'point': 'fa-map-marker',
       'marker': 'fa-map-marker',
       'flag': 'fa-flag',
       'tag': 'fa-tag',
       'label': 'fa-tag',
-      'external-link': 'fa-external-link-alt',
+      'external-link': 'fa-external-link',
     };
 
     // Intentar mapear el icono
@@ -950,126 +991,126 @@ export class SidebarComponent implements OnInit {
       mappedIcon = `fa-${icon.toLowerCase()}`;
     }
     
-    // Si aún no es válido, usar icono por defecto más moderno
-    return mappedIcon || (isSubmenu ? 'fa-circle-dot' : 'fa-circle');
+    // Si aún no es válido, usar icono por defecto
+    return mappedIcon || (isSubmenu ? 'fa-circle-o' : 'fa-circle-o');
   }
 
-  // Método para obtener icono contextual inteligente
+  // Método para obtener icono contextual inteligente - Compatible con FontAwesome 4.7.0
   private getContextualIcon(title: string, position: number, hasSubmenu: boolean): string {
     const titleLower = title.toLowerCase();
     
     // Iconos específicos por posición (primeros items suelen ser más importantes)
     if (position === 0) {
-      if (titleLower.includes('inicio') || titleLower.includes('dashboard')) return 'fa-house';
+      if (titleLower.includes('inicio') || titleLower.includes('dashboard')) return 'fa-home';
       if (titleLower.includes('principal')) return 'fa-star';
     }
     
     // Iconos para items con submenús (más elaborados)
     if (hasSubmenu) {
-      if (titleLower.includes('venta')) return 'fa-store';
-      if (titleLower.includes('inventario')) return 'fa-warehouse';
-      if (titleLower.includes('reporte')) return 'fa-chart-line';
-      if (titleLower.includes('usuario')) return 'fa-users-gear';
-      if (titleLower.includes('config')) return 'fa-gears';
+      if (titleLower.includes('venta')) return 'fa-shopping-bag';
+      if (titleLower.includes('inventario')) return 'fa-building-o';
+      if (titleLower.includes('reporte')) return 'fa-line-chart';
+      if (titleLower.includes('usuario')) return 'fa-users';
+      if (titleLower.includes('config')) return 'fa-cogs';
     }
     
     // Usar el método de inferencia estándar como fallback
     return this.inferIconFromTitle(title);
   }
 
-  // Método para inferir iconos basado en el título del menú
+  // Método para inferir iconos basado en el título del menú - Compatible con FontAwesome 4.7.0
   private inferIconFromTitle(title: string): string {
     const titleLower = title.toLowerCase();
     
-    // Patrones de títulos comunes y sus iconos
+    // Patrones de títulos comunes y sus iconos (FontAwesome 4.7.0)
     const titlePatterns: { [key: string]: string } = {
       // Dashboard y home
       'inicio': 'home',
-      'dashboard': 'dashboard',
-      'panel': 'gauge',
+      'dashboard': 'tachometer',
+      'panel': 'tachometer',
       'escritorio': 'desktop',
       
       // Ventas y comercial
-      'venta': 'cart-shopping',
-      'ventas': 'chart-line-up',
-      'factura': 'file-invoice-dollar',
-      'cotiza': 'file-contract',
-      'pedido': 'clipboard-list',
-      'orden': 'clipboard-list',
-      'cliente': 'user-tie',
+      'venta': 'shopping-cart',
+      'ventas': 'line-chart',
+      'factura': 'file-text-o',
+      'cotiza': 'file-text-o',
+      'pedido': 'clipboard',
+      'orden': 'clipboard',
+      'cliente': 'user',
       'prospecto': 'user-plus',
       
       // Inventario
       'producto': 'cube',
-      'inventario': 'warehouse',
-      'stock': 'boxes-stacked',
-      'categoria': 'layer-group',
-      'almacén': 'warehouse',
-      'bodega': 'warehouse',
+      'inventario': 'building-o',
+      'stock': 'cubes',
+      'categoria': 'folder-o',
+      'almacén': 'building-o',
+      'bodega': 'building-o',
       
       // Finanzas
-      'finanza': 'hand-holding-dollar',
+      'finanza': 'dollar',
       'contab': 'calculator',
       'pago': 'credit-card',
-      'cobro': 'money-bill-wave',
-      'gasto': 'money-bill-trend-down',
-      'ingreso': 'money-bill-trend-up',
+      'cobro': 'money',
+      'gasto': 'arrow-down',
+      'ingreso': 'arrow-up',
       'presupuesto': 'calculator',
       
       // Reportes
-      'reporte': 'chart-column',
-      'estadística': 'chart-simple',
-      'análisis': 'magnifying-glass-chart',
-      'gráfico': 'chart-pie',
-      'métrica': 'gauge-high',
+      'reporte': 'bar-chart',
+      'estadística': 'bar-chart',
+      'análisis': 'search',
+      'gráfico': 'pie-chart',
+      'métrica': 'tachometer',
       
       // Usuarios y administración
       'usuario': 'user',
-      'empleado': 'id-badge',
-      'equipo': 'people-group',
-      'rol': 'user-tag',
+      'empleado': 'id-card-o',
+      'equipo': 'users',
+      'rol': 'user-circle-o',
       'permiso': 'key',
-      'configuración': 'gear',
+      'configuración': 'cog',
       'ajuste': 'sliders',
       
       // Logística
-      'envío': 'truck-fast',
-      'entrega': 'truck-fast',
+      'envío': 'truck',
+      'entrega': 'truck',
       'transporte': 'truck',
-      'ruta': 'route',
-      'ubicación': 'location-dot',
+      'ruta': 'road',
+      'ubicación': 'map-marker',
       
       // Comunicación
-      'mensaje': 'message',
+      'mensaje': 'comment',
       'notificación': 'bell',
       'correo': 'envelope',
       'chat': 'comments',
-      'soporte': 'headset',
+      'soporte': 'headphones',
       
       // Documentos
-      'documento': 'file-lines',
-      'archivo': 'file',
-      'carpeta': 'folder',
-      'pdf': 'file-pdf',
-      'excel': 'file-excel',
-      'word': 'file-word',
+      'documento': 'file-text-o',
+      'archivo': 'file-o',
+      'carpeta': 'folder-o',
+      'pdf': 'file-pdf-o',
+      'excel': 'file-excel-o',
+      'word': 'file-word-o',
       
       // Procesos
-      'proceso': 'gears',
-      'flujo': 'arrows-rotate',
-      'tarea': 'list-check',
-      'actividad': 'clock',
-      'historial': 'clock-rotate-left',
+      'proceso': 'cogs',
+      'flujo': 'refresh',
+      'tarea': 'list',
+      'actividad': 'clock-o',
+      'historial': 'history',
       
       // Calidad y control
-      'calidad': 'award',
-      'auditoría': 'magnifying-glass',
-      'control': 'shield-halved',
+      'calidad': 'star',
+      'auditoría': 'search',
+      'control': 'shield',
       'seguridad': 'lock',
-      'backup': 'cloud-arrow-up',
+      'backup': 'cloud-upload',
       
       // Herramientas
-      'herramienta': 'toolbox',
+      'herramienta': 'wrench',
       'utilidad': 'wrench',
       'integración': 'puzzle-piece',
       'api': 'code',
@@ -1084,7 +1125,7 @@ export class SidebarComponent implements OnInit {
     }
 
     // Si no se encuentra patrón, retornar icono genérico
-    return 'circle-dot';
+    return 'circle-o';
   }
 
   // Método específico para iconos de subitems
@@ -1249,7 +1290,7 @@ export class SidebarComponent implements OnInit {
 
   // Método para detectar si estamos en móvil
   public isMobile(): boolean {
-    return window.innerWidth <= 991.98;
+    return window.innerWidth <= 991;
   }
 
   // Método para manejar clic fuera del sidebar en móviles
@@ -1258,10 +1299,11 @@ export class SidebarComponent implements OnInit {
     if (this.isMobile() && !this.collapseMenu) {
       const target = event.target as HTMLElement;
       const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
+      const toggleBtn = document.querySelector('.sidebar-toggle-btn');
       
-      if (sidebar && !sidebar.contains(target)) {
-        this.collapseMenu = true;
-        this.navServices.collapseSidebar = true;
+      // Verificar que el clic no sea en el sidebar ni en el botón toggle
+      if (sidebar && !sidebar.contains(target) && toggleBtn && !toggleBtn.contains(target)) {
+        this.sidebarToggle();
       }
     }
   }
@@ -1456,5 +1498,361 @@ export class SidebarComponent implements OnInit {
       }
     });
     this.saveSectionsState();
+  }
+
+  // ===================================================
+  // VALIDACIÓN Y OPTIMIZACIÓN DE ICONOS FA 4.7.0
+  // ===================================================
+
+  // Cache para iconos validados
+  private iconCache = new Map<string, string>();
+  
+  // Lista de iconos válidos en FontAwesome 4.7.0
+  private readonly validFA4Icons = new Set([
+    'fa-home', 'fa-user', 'fa-users', 'fa-cog', 'fa-cogs', 'fa-search', 'fa-bell',
+    'fa-envelope', 'fa-star', 'fa-heart', 'fa-shopping-cart', 'fa-truck', 'fa-calendar',
+    'fa-clock-o', 'fa-file-o', 'fa-folder-o', 'fa-folder-open-o', 'fa-edit', 'fa-trash-o',
+    'fa-save', 'fa-download', 'fa-upload', 'fa-print', 'fa-copy', 'fa-cut', 'fa-paste',
+    'fa-undo', 'fa-repeat', 'fa-refresh', 'fa-lock', 'fa-unlock', 'fa-key', 'fa-shield',
+    'fa-check', 'fa-times', 'fa-plus', 'fa-minus', 'fa-question', 'fa-info', 'fa-exclamation',
+    'fa-warning', 'fa-ban', 'fa-arrow-up', 'fa-arrow-down', 'fa-arrow-left', 'fa-arrow-right',
+    'fa-chevron-up', 'fa-chevron-down', 'fa-chevron-left', 'fa-chevron-right', 'fa-angle-up',
+    'fa-angle-down', 'fa-angle-left', 'fa-angle-right', 'fa-sort', 'fa-sort-up', 'fa-sort-down',
+    'fa-list', 'fa-th', 'fa-th-list', 'fa-table', 'fa-columns', 'fa-bars', 'fa-navicon',
+    'fa-filter', 'fa-tag', 'fa-tags', 'fa-bookmark', 'fa-flag', 'fa-thumbs-up', 'fa-thumbs-down',
+    'fa-share', 'fa-external-link', 'fa-link', 'fa-chain', 'fa-unlink', 'fa-chain-broken',
+    'fa-paperclip', 'fa-quote-left', 'fa-quote-right', 'fa-comment', 'fa-comments', 'fa-sitemap',
+    'fa-umbrella', 'fa-lightbulb-o', 'fa-exchange', 'fa-cloud-download', 'fa-cloud-upload',
+    'fa-user-md', 'fa-stethoscope', 'fa-suitcase', 'fa-bell-o', 'fa-coffee', 'fa-cutlery',
+    'fa-file-text-o', 'fa-building-o', 'fa-hospital-o', 'fa-ambulance', 'fa-medkit', 'fa-fighter-jet',
+    'fa-beer', 'fa-h-square', 'fa-plus-square', 'fa-angle-double-left', 'fa-angle-double-right',
+    'fa-angle-double-up', 'fa-angle-double-down', 'fa-angle-left', 'fa-angle-right', 'fa-angle-up',
+    'fa-angle-down', 'fa-desktop', 'fa-laptop', 'fa-tablet', 'fa-mobile', 'fa-circle-o',
+    'fa-quote-left', 'fa-quote-right', 'fa-spinner', 'fa-circle', 'fa-reply', 'fa-github-alt',
+    'fa-folder-o', 'fa-folder-open-o', 'fa-smile-o', 'fa-frown-o', 'fa-meh-o', 'fa-gamepad',
+    'fa-keyboard-o', 'fa-flag-o', 'fa-flag-checkered', 'fa-terminal', 'fa-code', 'fa-reply-all',
+    'fa-mail-reply-all', 'fa-star-half-empty', 'fa-star-half-full', 'fa-star-half-o', 'fa-star-o',
+    'fa-location-arrow', 'fa-crop', 'fa-code-fork', 'fa-unlink', 'fa-chain-broken', 'fa-question',
+    'fa-info', 'fa-exclamation', 'fa-superscript', 'fa-subscript', 'fa-eraser', 'fa-puzzle-piece',
+    'fa-microphone', 'fa-microphone-slash', 'fa-shield', 'fa-calendar-o', 'fa-fire-extinguisher',
+    'fa-rocket', 'fa-maxcdn', 'fa-chevron-circle-left', 'fa-chevron-circle-right', 'fa-chevron-circle-up',
+    'fa-chevron-circle-down', 'fa-html5', 'fa-css3', 'fa-anchor', 'fa-unlock-alt', 'fa-bullseye',
+    'fa-ellipsis-h', 'fa-ellipsis-v', 'fa-rss-square', 'fa-play-circle', 'fa-ticket', 'fa-minus-square',
+    'fa-minus-square-o', 'fa-level-up', 'fa-level-down', 'fa-check-square', 'fa-pencil-square',
+    'fa-external-link-square', 'fa-share-square', 'fa-compass', 'fa-toggle-down', 'fa-caret-down',
+    'fa-toggle-up', 'fa-caret-up', 'fa-toggle-right', 'fa-caret-right', 'fa-euro', 'fa-eur',
+    'fa-gbp', 'fa-dollar', 'fa-usd', 'fa-rupee', 'fa-inr', 'fa-cny', 'fa-rmb', 'fa-yen',
+    'fa-jpy', 'fa-ruble', 'fa-rouble', 'fa-rub', 'fa-won', 'fa-krw', 'fa-bitcoin', 'fa-btc',
+    'fa-file', 'fa-file-text', 'fa-sort-alpha-asc', 'fa-sort-alpha-desc', 'fa-sort-amount-asc',
+    'fa-sort-amount-desc', 'fa-sort-numeric-asc', 'fa-sort-numeric-desc', 'fa-thumbs-up',
+    'fa-thumbs-down', 'fa-youtube-square', 'fa-youtube', 'fa-xing', 'fa-xing-square', 'fa-youtube-play',
+    'fa-dropbox', 'fa-stack-overflow', 'fa-instagram', 'fa-flickr', 'fa-adn', 'fa-bitbucket',
+    'fa-bitbucket-square', 'fa-tumblr', 'fa-tumblr-square', 'fa-long-arrow-down', 'fa-long-arrow-up',
+    'fa-long-arrow-left', 'fa-long-arrow-right', 'fa-apple', 'fa-windows', 'fa-android', 'fa-linux',
+    'fa-dribbble', 'fa-skype', 'fa-foursquare', 'fa-trello', 'fa-female', 'fa-male', 'fa-gittip',
+    'fa-sun-o', 'fa-moon-o', 'fa-archive', 'fa-bug', 'fa-vk', 'fa-weibo', 'fa-renren', 'fa-pagelines',
+    'fa-stack-exchange', 'fa-arrow-circle-o-right', 'fa-arrow-circle-o-left', 'fa-toggle-left',
+    'fa-caret-left', 'fa-dot-circle-o', 'fa-wheelchair', 'fa-vimeo-square', 'fa-turkish-lira',
+    'fa-try', 'fa-plus-square-o', 'fa-space-shuttle', 'fa-slack', 'fa-envelope-square', 'fa-wordpress',
+    'fa-openid', 'fa-institution', 'fa-bank', 'fa-university', 'fa-mortar-board', 'fa-graduation-cap',
+    'fa-yahoo', 'fa-google', 'fa-reddit', 'fa-reddit-square', 'fa-stumbleupon-circle', 'fa-stumbleupon',
+    'fa-delicious', 'fa-digg', 'fa-pied-piper-pp', 'fa-pied-piper-alt', 'fa-drupal', 'fa-joomla',
+    'fa-language', 'fa-fax', 'fa-building', 'fa-child', 'fa-paw', 'fa-spoon', 'fa-cube', 'fa-cubes',
+    'fa-behance', 'fa-behance-square', 'fa-steam', 'fa-steam-square', 'fa-recycle', 'fa-automobile',
+    'fa-car', 'fa-cab', 'fa-taxi', 'fa-tree', 'fa-spotify', 'fa-deviantart', 'fa-soundcloud',
+    'fa-database', 'fa-file-pdf-o', 'fa-file-word-o', 'fa-file-excel-o', 'fa-file-powerpoint-o',
+    'fa-file-photo-o', 'fa-file-picture-o', 'fa-file-image-o', 'fa-file-zip-o', 'fa-file-archive-o',
+    'fa-file-sound-o', 'fa-file-audio-o', 'fa-file-movie-o', 'fa-file-video-o', 'fa-file-code-o',
+    'fa-vine', 'fa-codepen', 'fa-jsfiddle', 'fa-life-bouy', 'fa-life-buoy', 'fa-life-saver',
+    'fa-support', 'fa-life-ring', 'fa-circle-o-notch', 'fa-ra', 'fa-resistance', 'fa-rebel',
+    'fa-ge', 'fa-empire', 'fa-git-square', 'fa-git', 'fa-y-combinator-square', 'fa-yc-square',
+    'fa-hacker-news', 'fa-tencent-weibo', 'fa-qq', 'fa-wechat', 'fa-weixin', 'fa-send', 'fa-paper-plane',
+    'fa-send-o', 'fa-paper-plane-o', 'fa-history', 'fa-circle-thin', 'fa-header', 'fa-paragraph',
+    'fa-sliders', 'fa-share-alt', 'fa-share-alt-square', 'fa-bomb', 'fa-soccer-ball-o', 'fa-futbol-o',
+    'fa-tty', 'fa-binoculars', 'fa-plug', 'fa-slideshare', 'fa-twitch', 'fa-yelp', 'fa-newspaper-o',
+    'fa-wifi', 'fa-calculator', 'fa-paypal', 'fa-google-wallet', 'fa-cc-visa', 'fa-cc-mastercard',
+    'fa-cc-discover', 'fa-cc-amex', 'fa-cc-paypal', 'fa-cc-stripe', 'fa-bell-slash', 'fa-bell-slash-o',
+    'fa-trash', 'fa-copyright', 'fa-at', 'fa-eyedropper', 'fa-paint-brush', 'fa-birthday-cake',
+    'fa-area-chart', 'fa-pie-chart', 'fa-line-chart', 'fa-lastfm', 'fa-lastfm-square', 'fa-toggle-off',
+    'fa-toggle-on', 'fa-bicycle', 'fa-bus', 'fa-ioxhost', 'fa-angellist', 'fa-cc', 'fa-shekel',
+    'fa-sheqel', 'fa-ils', 'fa-meanpath', 'fa-buysellads', 'fa-connectdevelop', 'fa-dashcube',
+    'fa-forumbee', 'fa-leanpub', 'fa-sellsy', 'fa-shirtsinbulk', 'fa-simplybuilt', 'fa-skyatlas',
+    'fa-cart-plus', 'fa-cart-arrow-down', 'fa-diamond', 'fa-ship', 'fa-user-secret', 'fa-motorcycle',
+    'fa-street-view', 'fa-heartbeat', 'fa-venus', 'fa-mars', 'fa-mercury', 'fa-intersex',
+    'fa-transgender', 'fa-transgender-alt', 'fa-venus-double', 'fa-mars-double', 'fa-venus-mars',
+    'fa-mars-stroke', 'fa-mars-stroke-v', 'fa-mars-stroke-h', 'fa-neuter', 'fa-genderless',
+    'fa-facebook-official', 'fa-pinterest-p', 'fa-whatsapp', 'fa-server', 'fa-user-plus',
+    'fa-user-times', 'fa-hotel', 'fa-bed', 'fa-viacoin', 'fa-train', 'fa-subway', 'fa-medium',
+    'fa-yc', 'fa-y-combinator', 'fa-optin-monster', 'fa-opencart', 'fa-expeditedssl', 'fa-battery-4',
+    'fa-battery', 'fa-battery-full', 'fa-battery-3', 'fa-battery-three-quarters', 'fa-battery-2',
+    'fa-battery-half', 'fa-battery-1', 'fa-battery-quarter', 'fa-battery-0', 'fa-battery-empty',
+    'fa-mouse-pointer', 'fa-i-cursor', 'fa-object-group', 'fa-object-ungroup', 'fa-sticky-note',
+    'fa-sticky-note-o', 'fa-cc-jcb', 'fa-cc-diners-club', 'fa-clone', 'fa-balance-scale',
+    'fa-hourglass-o', 'fa-hourglass-1', 'fa-hourglass-start', 'fa-hourglass-2', 'fa-hourglass-half',
+    'fa-hourglass-3', 'fa-hourglass-end', 'fa-hourglass', 'fa-hand-grab-o', 'fa-hand-rock-o',
+    'fa-hand-stop-o', 'fa-hand-paper-o', 'fa-hand-scissors-o', 'fa-hand-lizard-o', 'fa-hand-spock-o',
+    'fa-hand-pointer-o', 'fa-hand-peace-o', 'fa-trademark', 'fa-registered', 'fa-creative-commons',
+    'fa-gg', 'fa-gg-circle', 'fa-tripadvisor', 'fa-odnoklassniki', 'fa-odnoklassniki-square',
+    'fa-get-pocket', 'fa-wikipedia-w', 'fa-safari', 'fa-chrome', 'fa-firefox', 'fa-opera',
+    'fa-internet-explorer', 'fa-tv', 'fa-television', 'fa-contao', 'fa-500px', 'fa-amazon',
+    'fa-calendar-plus-o', 'fa-calendar-minus-o', 'fa-calendar-times-o', 'fa-calendar-check-o',
+    'fa-industry', 'fa-map-pin', 'fa-map-signs', 'fa-map-o', 'fa-map', 'fa-commenting',
+    'fa-commenting-o', 'fa-houzz', 'fa-vimeo', 'fa-black-tie', 'fa-fonticons', 'fa-reddit-alien',
+    'fa-edge', 'fa-credit-card-alt', 'fa-codiepie', 'fa-modx', 'fa-fort-awesome', 'fa-usb',
+    'fa-product-hunt', 'fa-mixcloud', 'fa-scribd', 'fa-pause-circle', 'fa-pause-circle-o',
+    'fa-stop-circle', 'fa-stop-circle-o', 'fa-shopping-bag', 'fa-shopping-basket', 'fa-hashtag',
+    'fa-bluetooth', 'fa-bluetooth-b', 'fa-percent'
+  ]);
+
+  // Iconos de fallback por categoría
+  private readonly fallbackIcons = {
+    'user': 'fa-user',
+    'file': 'fa-file-o',
+    'folder': 'fa-folder-o',
+    'settings': 'fa-cog',
+    'navigation': 'fa-bars',
+    'action': 'fa-circle-o',
+    'status': 'fa-circle',
+    'communication': 'fa-comment',
+    'data': 'fa-database',
+    'business': 'fa-briefcase',
+    'default': 'fa-circle-o'
+  };
+
+  /**
+   * Valida si un icono existe en FontAwesome 4.7.0
+   */
+  private isValidFA4Icon(iconClass: string): boolean {
+    return this.validFA4Icons.has(iconClass);
+  }
+
+  /**
+   * Optimiza y valida un icono para FontAwesome 4.7.0
+   */
+  validateAndOptimizeIcon(iconClass: string, category: string = 'default'): string {
+    // Verificar cache primero
+    const cacheKey = `${iconClass}-${category}`;
+    if (this.iconCache.has(cacheKey)) {
+      return this.iconCache.get(cacheKey)!;
+    }
+
+    let optimizedIcon = iconClass;
+
+    // Asegurar que tiene prefijo fa-
+    if (!optimizedIcon.startsWith('fa-')) {
+      optimizedIcon = `fa-${optimizedIcon}`;
+    }
+
+    // Verificar si es válido
+    if (this.isValidFA4Icon(optimizedIcon)) {
+      this.iconCache.set(cacheKey, optimizedIcon);
+      return optimizedIcon;
+    }
+
+    // Intentar mapear iconos de FA5/6 a FA4
+    const fa4Mapped = this.mapToFA4Icon(optimizedIcon);
+    if (fa4Mapped && this.isValidFA4Icon(fa4Mapped)) {
+      this.iconCache.set(cacheKey, fa4Mapped);
+      return fa4Mapped;
+    }
+
+    // Usar icono de fallback
+    const fallbackIcon = this.fallbackIcons[category] || this.fallbackIcons['default'];
+    this.iconCache.set(cacheKey, fallbackIcon);
+    
+    // Log para debugging en desarrollo
+    if (!environment.production) {
+      console.warn(`Icon '${iconClass}' not found in FA 4.7.0, using fallback: ${fallbackIcon}`);
+    }
+
+    return fallbackIcon;
+  }
+
+  /**
+   * Mapea iconos de FontAwesome 5/6 a equivalentes en 4.7.0
+   */
+  private mapToFA4Icon(iconClass: string): string | null {
+    const fa5ToFa4Map: { [key: string]: string } = {
+      'fa-house': 'fa-home',
+      'fa-house-user': 'fa-home',
+      'fa-bars': 'fa-bars',
+      'fa-navicon': 'fa-bars',
+      'fa-chart-bar': 'fa-bar-chart',
+      'fa-chart-line': 'fa-line-chart',
+      'fa-chart-pie': 'fa-pie-chart',
+      'fa-chart-area': 'fa-area-chart',
+      'fa-file-alt': 'fa-file-text-o',
+      'fa-file-text': 'fa-file-text-o',
+      'fa-folder-open': 'fa-folder-open-o',
+      'fa-calendar-alt': 'fa-calendar-o',
+      'fa-clock': 'fa-clock-o',
+      'fa-user-tie': 'fa-user',
+      'fa-user-cog': 'fa-user',
+      'fa-users-cog': 'fa-users',
+      'fa-shield-alt': 'fa-shield',
+      'fa-shopping-bag': 'fa-shopping-bag',
+      'fa-shipping-fast': 'fa-truck',
+      'fa-warehouse': 'fa-building-o',
+      'fa-boxes': 'fa-cubes',
+      'fa-layer-group': 'fa-folder-o',
+      'fa-tachometer-alt': 'fa-tachometer',
+      'fa-dollar-sign': 'fa-dollar',
+      'fa-euro-sign': 'fa-eur',
+      'fa-pound-sign': 'fa-gbp',
+      'fa-yen-sign': 'fa-yen',
+      'fa-ruble-sign': 'fa-rub',
+      'fa-rupee-sign': 'fa-inr',
+      'fa-won-sign': 'fa-krw',
+      'fa-external-link-alt': 'fa-external-link',
+      'fa-mobile-alt': 'fa-mobile',
+      'fa-tablet-alt': 'fa-tablet',
+      'fa-desktop': 'fa-desktop',
+      'fa-laptop': 'fa-laptop',
+      'fa-headset': 'fa-headphones',
+      'fa-newspaper': 'fa-newspaper-o',
+      'fa-handshake': 'fa-handshake-o',
+      'fa-map-marker-alt': 'fa-map-marker',
+      'fa-route': 'fa-road',
+      'fa-id-badge': 'fa-id-card-o',
+      'fa-address-card': 'fa-address-card-o',
+      'fa-address-book': 'fa-address-book-o',
+      'fa-sticky-note': 'fa-sticky-note-o',
+      'fa-file-pdf': 'fa-file-pdf-o',
+      'fa-file-word': 'fa-file-word-o',
+      'fa-file-excel': 'fa-file-excel-o',
+      'fa-file-powerpoint': 'fa-file-powerpoint-o',
+      'fa-file-image': 'fa-file-image-o',
+      'fa-file-video': 'fa-file-video-o',
+      'fa-file-audio': 'fa-file-audio-o',
+      'fa-file-archive': 'fa-file-archive-o',
+      'fa-sliders-h': 'fa-sliders',
+      'fa-tools': 'fa-wrench',
+      'fa-cogs': 'fa-cogs',
+      'fa-microchip': 'fa-desktop',
+      'fa-palette': 'fa-paint-brush',
+      'fa-sync': 'fa-refresh',
+      'fa-sync-alt': 'fa-refresh',
+      'fa-redo': 'fa-repeat',
+      'fa-undo': 'fa-undo',
+      'fa-trash-alt': 'fa-trash-o',
+      'fa-eye-slash': 'fa-eye-slash',
+      'fa-lightbulb': 'fa-lightbulb-o',
+      'fa-brain': 'fa-lightbulb-o',
+      'fa-award': 'fa-star',
+      'fa-medal': 'fa-star',
+      'fa-crown': 'fa-star',
+      'fa-stamp': 'fa-certificate',
+      'fa-signature': 'fa-pencil-square-o',
+      'fa-user-shield': 'fa-user-secret',
+      'fa-cloud-upload-alt': 'fa-cloud-upload',
+      'fa-cloud-download-alt': 'fa-cloud-download',
+      'fa-bluetooth-b': 'fa-bluetooth-b',
+      'fa-compress': 'fa-compress',
+      'fa-expand': 'fa-expand',
+      'fa-thumbtack': 'fa-thumb-tack',
+      'fa-arrows-alt': 'fa-arrows',
+      'fa-exchange-alt': 'fa-exchange',
+      'fa-money-bill-alt': 'fa-money',
+      'fa-coins': 'fa-money',
+      'fa-wallet': 'fa-credit-card',
+      'fa-cash-register': 'fa-calculator',
+      'fa-receipt': 'fa-file-text-o',
+      'fa-clipboard-list': 'fa-clipboard',
+      'fa-file-contract': 'fa-file-text-o',
+      'fa-file-invoice': 'fa-file-text-o',
+      'fa-file-invoice-dollar': 'fa-file-text-o',
+      'fa-check-double': 'fa-check',
+      'fa-check-circle': 'fa-check-circle',
+      'fa-times-circle': 'fa-times-circle',
+      'fa-exclamation-triangle': 'fa-warning',
+      'fa-info-circle': 'fa-info-circle',
+      'fa-question-circle': 'fa-question-circle'
+    };
+
+    return fa5ToFa4Map[iconClass] || null;
+  }
+
+  /**
+   * Detecta el tipo de elemento para mejor mapeo de iconos
+   */
+  private detectIconCategory(title: string, hasChildren: boolean = false): string {
+    const titleLower = title.toLowerCase();
+    
+    if (titleLower.includes('usuario') || titleLower.includes('empleado') || titleLower.includes('cliente')) {
+      return 'user';
+    }
+    if (titleLower.includes('archivo') || titleLower.includes('documento') || titleLower.includes('reporte')) {
+      return 'file';
+    }
+    if (titleLower.includes('carpeta') || titleLower.includes('categoria') || hasChildren) {
+      return 'folder';
+    }
+    if (titleLower.includes('config') || titleLower.includes('ajuste') || titleLower.includes('setting')) {
+      return 'settings';
+    }
+    if (titleLower.includes('menú') || titleLower.includes('navegación') || titleLower.includes('inicio')) {
+      return 'navigation';
+    }
+    if (titleLower.includes('mensaje') || titleLower.includes('correo') || titleLower.includes('chat')) {
+      return 'communication';
+    }
+    if (titleLower.includes('base') || titleLower.includes('datos') || titleLower.includes('inventario')) {
+      return 'data';
+    }
+    if (titleLower.includes('empresa') || titleLower.includes('negocio') || titleLower.includes('comercial')) {
+      return 'business';
+    }
+    if (titleLower.includes('agregar') || titleLower.includes('crear') || titleLower.includes('nuevo')) {
+      return 'action';
+    }
+    if (titleLower.includes('estado') || titleLower.includes('estatus') || titleLower.includes('activo')) {
+      return 'status';
+    }
+    
+    return 'default';
+  }
+
+  /**
+   * Método público mejorado para obtener iconos optimizados
+   */
+  getOptimizedMenuIcon(icon: string | undefined, title?: string, hasChildren: boolean = false): string {
+    // Si no hay icono, inferir del título
+    if (!icon && title) {
+      icon = this.inferIconFromTitle(title);
+    }
+    
+    if (!icon) {
+      const category = this.detectIconCategory(title || '', hasChildren);
+      return this.validateAndOptimizeIcon('circle-o', category);
+    }
+
+    // Detectar categoría para mejor fallback
+    const category = this.detectIconCategory(title || '', hasChildren);
+    
+    // Usar mapeo existente primero
+    const mappedIcon = this.getMenuIcon(icon, title, false);
+    
+    // Validar y optimizar el resultado
+    return this.validateAndOptimizeIcon(mappedIcon, category);
+  }
+
+  /**
+   * Limpiar cache de iconos (útil para desarrollo)
+   */
+  clearIconCache(): void {
+    this.iconCache.clear();
+    if (!environment.production) {
+      console.log('Icon cache cleared');
+    }
+  }
+
+  /**
+   * Obtener estadísticas del cache de iconos
+   */
+  getIconCacheStats(): { size: number; keys: string[] } {
+    return {
+      size: this.iconCache.size,
+      keys: Array.from(this.iconCache.keys())
+    };
   }
 }
