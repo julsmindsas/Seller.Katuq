@@ -112,7 +112,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  z-index: 1049;
+  z-index: 1054;
   opacity: 0;
   visibility: hidden;
   transition: all var(--transition-normal);
@@ -125,8 +125,12 @@
   }
   
   @media (max-width: 991.98px) {
-    z-index: 1049 !important;
+    z-index: 1054 !important;
     display: block;
+  }
+  
+  @media (min-width: 992px) {
+    display: none !important;
   }
 }
 
@@ -134,9 +138,9 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 24px;
+  width: 30px;
   height: 100vh;
-  z-index: 1030;
+  z-index: 1053;
   pointer-events: auto;
   cursor: pointer;
   
@@ -146,7 +150,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 40px;
+    width: 50px;
     height: 100%;
     background: transparent;
   }
@@ -178,9 +182,13 @@
     }
   }
   
-  // Mostrar solo en móviles
+  // Mostrar solo en móviles cuando el sidebar está cerrado
   @media (min-width: 992px) {
-    display: none;
+    display: none !important;
+  }
+  
+  @media (max-width: 991.98px) {
+    display: block;
   }
 }
 
@@ -223,7 +231,7 @@
   flex-direction: column;
   z-index: 1055;
   transform: translateX(0);
-  transition: all var(--transition-normal);
+  transition: transform var(--transition-normal), width var(--transition-normal), visibility var(--transition-normal);
   will-change: transform, width;
   
   &.collapsed {
@@ -261,6 +269,7 @@
       width: 280px;
       box-shadow: none;
       visibility: hidden;
+      opacity: 0;
     }
   }
   
@@ -270,6 +279,27 @@
     .search-section,
     .favorites-section {
       display: none;
+    }
+  }
+  
+  // Estados específicos para móvil
+  @media (max-width: 991.98px) {
+    width: 280px !important;
+    z-index: 1055 !important;
+    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+    
+    &:not(.collapsed) {
+      transform: translateX(0) !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    &.collapsed {
+      transform: translateX(-100%) !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
   }
 }
@@ -1304,28 +1334,7 @@
 // ===================================================
 
 @media (max-width: 991.98px) {
-  .sidebar-container {
-    // En móviles el sidebar siempre se oculta cuando está colapsado
-    width: 280px !important;
-    z-index: 1055 !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    height: 100vh !important;
-    
-    &.collapsed {
-      transform: translateX(-100%) !important;
-      visibility: hidden;
-    }
-    
-    &:not(.collapsed) {
-      transform: translateX(0) !important;
-      visibility: visible;
-    }
-  }
-  
   // Mejoras táctiles para móviles
-  // En móviles, mejoras táctiles para el menú colapsado
   .menu-link,
   .submenu-link,
   .control-btn,
@@ -1373,6 +1382,7 @@
       background: rgba(69, 155, 209, 0.3);
       transform: translate(-50%, -50%);
       transition: width 0.3s, height 0.3s;
+      pointer-events: none;
     }
     
     &:active::after {
@@ -1393,6 +1403,16 @@
   
   .plan-card-container {
     display: none !important;
+  }
+  
+  // Asegurar que el overlay funcione correctamente
+  .sidebar-overlay {
+    &.active {
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
   }
 }
 
@@ -1758,7 +1778,7 @@
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1070;
+  z-index: 1060;
   transition: all var(--transition-normal);
   
   // Accesibilidad mejorada
@@ -1833,14 +1853,14 @@
 }
 
 // Solo mostrar en móviles cuando está colapsado
-@media (max-width: 991px) {
+@media (max-width: 991.98px) {
   .sidebar-toggle-btn {
     display: flex !important;
     width: 48px !important;
     height: 48px !important;
     top: 20px !important;
     left: 20px !important;
-    z-index: 1070 !important;
+    z-index: 1060 !important;
     position: fixed !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -1861,13 +1881,6 @@
     50% { 
       transform: scale(1.05);
       box-shadow: 0 6px 20px rgba(69, 155, 209, 0.5);
-    }
-  }
-  
-  // En móviles, mejoras táctiles para el sidebar colapsado
-  .sidebar-container.collapsed {
-    .menu-items {
-      padding: 0 var(--spacing-md);
     }
   }
 }
@@ -1925,6 +1938,15 @@
       animation: breatheIcon 4s ease-in-out infinite;
       animation-delay: calc(var(--item-index, 0) * 0.2s);
     }
+  }
+  
+  // Asegurar que overlay no aparezca en desktop
+  .sidebar-overlay {
+    display: none !important;
+  }
+  
+  .sidebar-swipe-indicator {
+    display: none !important;
   }
 }
 

@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, HostListener, OnInit, ElementRef, Renderer2 } from '@angular/core';
+import { Component, ViewEncapsulation, HostListener, OnInit, OnDestroy, ElementRef, Renderer2 } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Menu, NavService } from '../../services/nav.service';
 import { LayoutService } from '../../services/layout.service';
@@ -22,7 +22,7 @@ export interface SidebarSection {
   styleUrls: ['./sidebar.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   public showPlanModal: boolean = false;
   public currentPlan: any = {
     type: 'Completo',
@@ -127,21 +127,7 @@ export class SidebarComponent implements OnInit {
     }
     
     // Configurar estado inicial basado en tamaño de pantalla
-    if (this.isMobile()) {
-      // En móvil: siempre empezar colapsado
-      this.collapseMenu = true;
-      this.navServices.collapseSidebar = true;
-    } else {
-      // En desktop: usar estado guardado o expandido por defecto
-      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
-      if (sidebarCollapsed) {
-        this.collapseMenu = sidebarCollapsed === 'true';
-        this.navServices.collapseSidebar = this.collapseMenu;
-      } else {
-        this.collapseMenu = false;
-        this.navServices.collapseSidebar = false;
-      }
-    }
+    this.initializeSidebarState();
     
     // Cargar preferencia de modo compacto
     const compactMode = localStorage.getItem('sidebarCompactMode');
@@ -156,64 +142,128 @@ export class SidebarComponent implements OnInit {
     this.loadFavoriteItems();
     
     // Configurar eventos táctiles para dispositivos móviles
-    this.setupMobileGestures();
-    
-    // Pre-cargar iconos comunes (método implementado más abajo)
-    // this.preloadIcons();
+    setTimeout(() => {
+      this.setupMobileGestures();
+    }, 100);
   }
   
   // Configurar eventos táctiles para móviles
+  // Inicializar estado del sidebar
+  private initializeSidebarState(): void {
+    if (this.isMobile()) {
+      // En móvil: siempre empezar colapsado
+      this.collapseMenu = true;
+      this.navServices.collapseSidebar = true;
+    } else {
+      // En desktop: usar estado guardado o expandido por defecto
+      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+      if (sidebarCollapsed !== null) {
+        this.collapseMenu = sidebarCollapsed === 'true';
+        this.navServices.collapseSidebar = this.collapseMenu;
+      } else {
+        this.collapseMenu = false;
+        this.navServices.collapseSidebar = false;
+      }
+    }
+  }
+
   // Configurar eventos táctiles para dispositivos móviles
   private setupMobileGestures(): void {
+    // Limpiar listeners existentes para evitar duplicados
+    this.cleanupEventListeners();
+    
     // Añadir listeners para eventos táctiles
-    document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
-    document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
+    this.touchStartListener = this.handleTouchStart.bind(this);
+    this.touchEndListener = this.handleTouchEnd.bind(this);
+    this.resizeListener = this.handleResize.bind(this);
     
-    // Configurar funcionalidad para overlay y swipe indicator
-    this.renderer.listen('window', 'resize', () => {
-      if (window.innerWidth >= 992) {
-        // En desktop, asegurar que el sidebar esté visible
-        if (this.collapseMenu) {
-          this.collapseMenu = false;
-          this.navServices.collapseSidebar = false;
-        }
-        // Restablecer estilos del body
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
-        document.body.style.top = '';
-      } else {
-        // En móvil, asegurar que el sidebar esté cerrado por defecto
-        if (!this.collapseMenu) {
-          this.collapseMenu = true;
-          this.navServices.collapseSidebar = true;
-        }
-      }
-    });
+    document.addEventListener('touchstart', this.touchStartListener, { passive: true });
+    document.addEventListener('touchend', this.touchEndListener, { passive: true });
+    window.addEventListener('resize', this.resizeListener);
+    
+    // Configurar overlay y swipe indicator después de que el DOM esté listo
+    this.setupOverlayListeners();
+  }
 
-    // Añadir click listener al área de swipe
-    setTimeout(() => {
-      const swipeIndicator = document.querySelector('.sidebar-swipe-indicator');
-      if (swipeIndicator) {
-        this.renderer.listen(swipeIndicator, 'click', () => {
-          if (this.collapseMenu && this.isMobile()) {
-            this.sidebarToggle();
-          }
-        });
-      }
-    }, 100);
+  // Variables para gestión de listeners
+  private touchStartListener: any;
+  private touchEndListener: any;
+  private resizeListener: any;
+  private overlayListener: any;
+  private swipeListener: any;
+
+  // Limpiar event listeners
+  private cleanupEventListeners(): void {
+    if (this.touchStartListener) {
+      document.removeEventListener('touchstart', this.touchStartListener);
+    }
+    if (this.touchEndListener) {
+      document.removeEventListener('touchend', this.touchEndListener);
+    }
+    if (this.resizeListener) {
+      window.removeEventListener('resize', this.resizeListener);
+    }
+    if (this.overlayListener) {
+      this.overlayListener();
+    }
+    if (this.swipeListener) {
+      this.swipeListener();
+    }
+  }
+
+  // Manejar resize de ventana
+  private handleResize(): void {
+    const wasMobile = this.isMobile();
     
-    // Configurar listener para el overlay
+    if (window.innerWidth >= 992) {
+      // Desktop: restaurar estado normal
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      
+      // Solo cambiar estado si no estaba guardado intencionalmente
+      const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+      if (savedCollapsed === null) {
+        this.collapseMenu = false;
+        this.navServices.collapseSidebar = false;
+      }
+    } else {
+      // Móvil: cerrar sidebar
+      if (!this.collapseMenu) {
+        this.collapseMenu = true;
+        this.navServices.collapseSidebar = true;
+        this.restoreBodyScroll();
+      }
+    }
+  }
+
+  // Configurar listeners para overlay y swipe
+  private setupOverlayListeners(): void {
     setTimeout(() => {
       const overlay = document.querySelector('.sidebar-overlay');
+      const swipeIndicator = document.querySelector('.sidebar-swipe-indicator');
+      
       if (overlay) {
-        this.renderer.listen(overlay, 'click', () => {
+        this.overlayListener = this.renderer.listen(overlay, 'click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
           if (!this.collapseMenu && this.isMobile()) {
             this.sidebarToggle();
           }
         });
       }
-    }, 100);
+      
+      if (swipeIndicator) {
+        this.swipeListener = this.renderer.listen(swipeIndicator, 'click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (this.collapseMenu && this.isMobile()) {
+            this.sidebarToggle();
+          }
+        });
+      }
+    }, 200);
   }
   
   // Manejar inicio de toque
@@ -232,15 +282,13 @@ export class SidebarComponent implements OnInit {
     const distance = this.touchEndX - this.touchStartX;
     
     // Si estamos en móvil y el swipe es suficientemente largo
-    if (window.innerWidth < 992 && Math.abs(distance) > this.swipeThreshold) {
-      if (distance > 0 && this.collapseMenu) {
-        // Deslizamiento de izquierda a derecha (abrir menú)
-        this.collapseMenu = false;
-        document.body.style.overflow = 'hidden'; // Evitar scroll del body
+    if (this.isMobile() && Math.abs(distance) > this.swipeThreshold && !this.isToggling) {
+      if (distance > 0 && this.collapseMenu && this.touchStartX < 50) {
+        // Deslizamiento de izquierda a derecha desde el borde (abrir menú)
+        this.sidebarToggle();
       } else if (distance < 0 && !this.collapseMenu) {
         // Deslizamiento de derecha a izquierda (cerrar menú)
-        this.collapseMenu = true;
-        document.body.style.overflow = ''; // Restaurar scroll del body
+        this.sidebarToggle();
       }
     }
   }
@@ -450,26 +498,28 @@ export class SidebarComponent implements OnInit {
   }
 
   sidebarToggle() {
-    this.navServices.collapseSidebar = !this.navServices.collapseSidebar;
-    this.collapseMenu = this.navServices.collapseSidebar;
+    // Prevenir toggle múltiple rápido
+    if (this.isToggling) {
+      return;
+    }
+    
+    this.isToggling = true;
+    
+    // Cambiar estado
+    this.collapseMenu = !this.collapseMenu;
+    this.navServices.collapseSidebar = this.collapseMenu;
     
     // Cerrar submenú flotante si está abierto
     this.closeCollapsedSubmenu();
     
-    // Manejar overflow del body SOLO en móviles
+    // Manejar body scroll SOLO en móviles
     if (this.isMobile()) {
       if (!this.collapseMenu) {
-        // Menú abierto en móvil - prevenir scroll del body
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
-        document.body.style.top = '0';
+        // Menú abierto en móvil
+        this.preventBodyScroll();
       } else {
-        // Menú cerrado - restaurar scroll del body
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
-        document.body.style.top = '';
+        // Menú cerrado - restaurar scroll
+        this.restoreBodyScroll();
       }
     }
     
@@ -483,13 +533,41 @@ export class SidebarComponent implements OnInit {
       this.closeAllSubmenus();
     }
     
-    // Guardar estado en localStorage para persistencia
-    localStorage.setItem('sidebarCollapsed', this.collapseMenu.toString());
+    // Guardar estado en localStorage SOLO en desktop
+    if (!this.isMobile()) {
+      localStorage.setItem('sidebarCollapsed', this.collapseMenu.toString());
+    }
     
-    // Forzar actualización del DOM
+    // Liberar lock de toggle después de animación
     setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
-    }, 100);
+      this.isToggling = false;
+    }, 300);
+  }
+
+  // Variable para prevenir toggle múltiple
+  private isToggling = false;
+
+  // Métodos auxiliares para manejo de scroll
+  private preventBodyScroll(): void {
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    document.body.setAttribute('data-scroll-y', scrollY.toString());
+  }
+
+  private restoreBodyScroll(): void {
+    const scrollY = document.body.getAttribute('data-scroll-y');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    
+    if (scrollY) {
+      window.scrollTo(0, parseInt(scrollY));
+      document.body.removeAttribute('data-scroll-y');
+    }
   }
 
   // Active Nav state - Marca el item activo y sus ancestros en la fuente original
@@ -522,6 +600,7 @@ export class SidebarComponent implements OnInit {
   toggletNavActive(item, event?: Event) {
     if (event) {
       event.stopPropagation();
+      event.preventDefault();
     }
     
     // En estado colapsado para desktop, mostrar submenú flotante
@@ -543,6 +622,7 @@ export class SidebarComponent implements OnInit {
     }
 
     const currentlyActive = item.active; // Guardar estado actual
+    
     // Si no está activo, cerramos otros menús del mismo nivel o superiores antes de abrir
     if (!currentlyActive) {
        this.sections.forEach(section => {
@@ -551,11 +631,8 @@ export class SidebarComponent implements OnInit {
          });
        });
     }
-     item.active = !currentlyActive; // Cambiar estado del item clickeado
-
-     // No necesitamos reprocesar las secciones aquí si solo cambia el 'active' de un submenú
-     // Pero si el cambio de active debe reflejarse en this.sections, sí haría falta
-     // this.processMenuItems(this.navServices.getMenuItems()); // Descomentar si es necesario
+    
+    item.active = !currentlyActive; // Cambiar estado del item clickeado
   }
 
   // Helper para resetear el estado activo al hacer toggle en submenús
@@ -1290,20 +1367,31 @@ export class SidebarComponent implements OnInit {
 
   // Método para detectar si estamos en móvil
   public isMobile(): boolean {
-    return window.innerWidth <= 991;
+    return window.innerWidth <= 991.98;
   }
 
   // Método para manejar clic fuera del sidebar en móviles
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
-    if (this.isMobile() && !this.collapseMenu) {
+    if (this.isMobile() && !this.collapseMenu && !this.isToggling) {
       const target = event.target as HTMLElement;
       const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
       const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+      const overlay = document.querySelector('.sidebar-overlay');
       
-      // Verificar que el clic no sea en el sidebar ni en el botón toggle
-      if (sidebar && !sidebar.contains(target) && toggleBtn && !toggleBtn.contains(target)) {
-        this.sidebarToggle();
+      // Verificar que el clic no sea en elementos del sidebar
+      if (sidebar && !sidebar.contains(target) && 
+          toggleBtn && !toggleBtn.contains(target) &&
+          overlay && !overlay.contains(target)) {
+        
+        // Verificar que no sea un elemento interno del sidebar
+        const isInsideSidebar = target.closest('.sidebar-container') || 
+                               target.closest('.sidebar-toggle-btn') ||
+                               target.closest('.sidebar-overlay');
+        
+        if (!isInsideSidebar) {
+          this.sidebarToggle();
+        }
       }
     }
   }
@@ -1498,6 +1586,13 @@ export class SidebarComponent implements OnInit {
       }
     });
     this.saveSectionsState();
+  }
+
+  // Limpiar recursos al destruir componente
+  ngOnDestroy(): void {
+    this.cleanupEventListeners();
+    this.closeCollapsedSubmenu();
+    this.restoreBodyScroll();
   }
 
   // ===================================================
