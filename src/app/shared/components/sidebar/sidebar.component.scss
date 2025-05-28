@@ -106,10 +106,16 @@
   opacity: 0;
   visibility: hidden;
   transition: all var(--transition-normal);
+  pointer-events: none;
   
   &.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
+  }
+  
+  @media (max-width: 991.98px) {
+    z-index: 1045 !important;
   }
 }
 
@@ -1298,12 +1304,15 @@
 @media (max-width: 991.98px) {
   .sidebar-container {
     // En móviles el sidebar siempre se oculta cuando está colapsado
+    width: 280px !important;
+    z-index: 1050 !important;
+    
     &.collapsed {
       transform: translateX(-100%) !important;
     }
     
     &:not(.collapsed) {
-      transform: translateX(0);
+      transform: translateX(0) !important;
     }
   }
   
@@ -1312,19 +1321,29 @@
   .submenu-link,
   .control-btn,
   .favorite-btn {
-    min-height: 44px; // Área táctil mínima recomendada
+    min-height: 48px !important; // Área táctil mínima recomendada
+    padding: 12px 16px !important;
     
     &:active {
-      background: var(--bg-active);
+      background: var(--bg-active) !important;
       transform: scale(0.98);
     }
     
     // Feedback táctil mejorado
     &.touch-feedback {
-      background: var(--primary-light);
+      background: var(--primary-light) !important;
       transform: scale(0.95);
       transition: all 0.1s ease;
       box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  .menu-icon {
+    width: 24px !important;
+    margin-right: 16px !important;
+    
+    i {
+      font-size: 18px !important;
     }
   }
   
@@ -1369,11 +1388,19 @@
 
 @media (max-width: 767.98px) {
   .sidebar-container {
-    width: min(var(--sidebar-width), 80vw);
+    width: 100vw !important;
+    max-width: 320px !important;
   }
   
   .sidebar-header {
     padding: var(--spacing-xl);
+  }
+  
+  .sidebar-toggle-btn {
+    top: 15px !important;
+    left: 15px !important;
+    width: 40px !important;
+    height: 40px !important;
   }
   
   // Texto más grande en pantallas pequeñas
@@ -1389,16 +1416,31 @@
   .menu-link {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin-bottom: var(--spacing-xs);
+    min-height: 48px;
+    padding: var(--spacing-lg) !important;
   }
   
   .submenu-link {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    min-height: 44px;
   }
 }
 
 @media (max-width: 575.98px) {
   .sidebar-container {
-    width: min(240px, 85vw);
+    width: 100vw !important;
+    max-width: 280px !important;
+  }
+  
+  .sidebar-toggle-btn {
+    top: 10px !important;
+    left: 10px !important;
+    width: 36px !important;
+    height: 36px !important;
+    
+    i {
+      font-size: 14px !important;
+    }
   }
   
   .company-info {
@@ -1660,11 +1702,13 @@
 // Solo mostrar en móviles cuando está colapsado
 @media (max-width: 991.98px) {
   .sidebar-toggle-btn {
-    display: flex;
+    display: flex !important;
     width: 44px;
     height: 44px;
-    top: var(--spacing-lg);
-    left: var(--spacing-md);
+    top: 20px;
+    left: 20px;
+    z-index: 1060 !important;
+    position: fixed !important;
     
     i {
       font-size: 16px;
@@ -1697,6 +1741,11 @@
 @media (min-width: 992px) {
   .sidebar-toggle-btn {
     display: none !important;
+  }
+  
+  .sidebar-container {
+    position: fixed !important;
+    transform: translateX(0) !important;
   }
   
   // En desktop, el sidebar colapsado muestra iconos

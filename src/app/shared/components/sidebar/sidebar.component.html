@@ -65,7 +65,7 @@
               [attr.aria-label]="isCompactMode ? 'Modo normal' : 'Modo compacto'"
               [title]="isCompactMode ? 'Modo normal' : 'Modo compacto'"
               *ngIf="!collapseMenu">
-        <i class="fa" [ngClass]="isCompactMode ? 'fa-expand-arrows-alt' : 'fa-compress-arrows-alt'"></i>
+        <i class="fa" [ngClass]="isCompactMode ? 'fa-expand-alt' : 'fa-compress-alt'"></i>
       </button>
     </div>
   </header>
@@ -89,7 +89,7 @@
               *ngIf="searchTerm" 
               (click)="clearSearch()"
               aria-label="Limpiar búsqueda">
-        <i class="fa fa-times" aria-hidden="true"></i>
+        <i class="fas fa-times" aria-hidden="true"></i>
       </button>
     </div>
     
@@ -195,7 +195,7 @@
                [attr.title]="collapseMenu ? (item.title | translate) : ''"
                role="menuitem">
               <div class="menu-icon">
-                <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title)" aria-hidden="true"></i>
+                <i class="fas" [ngClass]="getMenuIcon(item.icon, item.title)" aria-hidden="true"></i>
               </div>
               <span class="menu-text" 
                     [class.sr-only]="isCompactMode || collapseMenu">{{item.title | translate}}</span>
@@ -204,7 +204,7 @@
                       (click)="toggleFavorite(item, $event)"
                       [class.active]="isFavorite(item)"
                       [attr.aria-label]="isFavorite(item) ? 'Quitar de favoritos' : 'Añadir a favoritos'">
-                <i class="fa fa-star" aria-hidden="true"></i>
+                <i class="fas fa-star" aria-hidden="true"></i>
               </button>
               <!-- Tooltip para modo compacto o colapsado -->
               <div class="tooltip" *ngIf="isCompactMode || collapseMenu">{{item.title | translate}}</div>
@@ -219,11 +219,11 @@
                [attr.title]="collapseMenu ? (item.title | translate) + ' (enlace externo)' : ''"
                role="menuitem">
               <div class="menu-icon">
-                <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-arrow-up-right-from-square'" aria-hidden="true"></i>
+                <i class="fas" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-external-link-alt'" aria-hidden="true"></i>
               </div>
               <span class="menu-text" 
                     [class.sr-only]="isCompactMode || collapseMenu">{{item.title | translate}}</span>
-              <i class="fa fa-arrow-up-right-from-square external-icon" 
+              <i class="fas fa-external-link-alt external-icon" 
                  *ngIf="!collapseMenu" 
                  aria-hidden="true"></i>
               <div class="tooltip" *ngIf="isCompactMode || collapseMenu">{{item.title | translate}}</div>
@@ -241,11 +241,11 @@
                     role="menuitem"
                     [attr.aria-haspopup]="true">
               <div class="menu-icon">
-                <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-folder'" aria-hidden="true"></i>
+                <i class="fas" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-folder'" aria-hidden="true"></i>
               </div>
               <span class="menu-text" 
                     [class.sr-only]="isCompactMode || collapseMenu">{{item.title | translate}}</span>
-              <i class="fa fa-chevron-down submenu-chevron" 
+              <i class="fas fa-chevron-down submenu-chevron" 
                  *ngIf="!collapseMenu"
                  [class.rotated]="item.active" 
                  aria-hidden="true"></i>
@@ -280,7 +280,7 @@
                    class="submenu-link"
                    role="menuitem">
                   <div class="submenu-icon">
-                    <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
+                    <i class="fas" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
                   </div>
                   <span class="submenu-text">{{child.title | translate}}</span>
                 </a>
@@ -297,7 +297,7 @@
                     <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
                   </div>
                   <span class="submenu-text">{{child.title | translate}}</span>
-                  <i class="fa fa-chevron-down submenu-chevron" 
+                  <i class="fas fa-chevron-down submenu-chevron" 
                      [class.rotated]="child.active" 
                      aria-hidden="true"></i>
                 </button>
@@ -316,7 +316,7 @@
                        class="sub-submenu-link"
                        role="menuitem">
                       <div class="sub-submenu-icon">
-                        <i class="fa" [ngClass]="getSubmenuIcon(grandchild.icon, grandchild.title)" aria-hidden="true"></i>
+                        <i class="fas" [ngClass]="getSubmenuIcon(grandchild.icon, grandchild.title)" aria-hidden="true"></i>
                       </div>
                       <span>{{grandchild.title | translate}}</span>
                     </a>
