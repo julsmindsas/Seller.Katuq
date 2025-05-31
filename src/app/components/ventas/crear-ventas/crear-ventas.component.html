@@ -63,7 +63,8 @@
                 </div>
               </ng-template>
 
-              <div class="card shadow-sm mb-3" *ngIf="selectedWarehouse">
+              <!-- Eliminamos este card para reubicar el selector de ciudad -->
+              <!-- <div class="card shadow-sm mb-3" *ngIf="selectedWarehouse">
                 <div class="card-body p-3">
                   <div class="row g-3">
                     <div class="col-md-4">
@@ -86,10 +87,10 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> -->
 
               <!-- Catálogo con diseño mejorado -->
-              <app-ecomerce-products #products></app-ecomerce-products>
+              <app-ecomerce-products #products [ciudadSelector]="empresaActual.ciudadess.ciudadesEntrega" [selectedCity]="selectedCity" (citySelected)="onSelectCity($event)"></app-ecomerce-products>
 
               <!-- Botones de navegación -->
               <div class="wizard-footer-container">

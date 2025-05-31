@@ -1181,65 +1181,51 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       });
     });
   }
-  onSelectCity(event: any): void {
-    const selectedValue = event.target.value;
-    if (selectedValue !== 'seleccione') {
-      this.selectedCity = selectedValue;
-      this.pedidoGral.envio = {
-        ...(this.pedidoGral.envio || {}),
-        ciudad: selectedValue
-      } as any;
-
-      // Guardar la ciudad seleccionada en localStorage
-      localStorage.setItem('selectedCity', selectedValue);
-
-      // Actualizar el componente catálogo con la ciudad seleccionada
-      if (this.productos) {
-        this.productos.ciudad = selectedValue;
-
-        // Si hay una bodega seleccionada, asignarla también
-        if (this.bodega) {
-          this.productos.bodega = this.bodega;
-        }
-
-        // Llamar al método que recarga el catálogo filtrado
-        if (typeof this.productos.cargarTodo === 'function') {
-          this.productos.cargarTodo();
-          this.toastrService.success('Catálogo filtrado por ciudad: ' + selectedValue, 'Éxito');
-        }
-      }
-
-      console.log(`Ciudad seleccionada: ${this.pedidoGral.envio?.ciudad}`);
-
-      // Filtrar direcciones de entrega por la ciudad seleccionada
-      if (this.originalDataEntregas) {
-        this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.selectedCity) || [];
-        if (this.datosEntregas.length === 0) {
-          Swal.fire({
-            title: "No encontrado!",
-            text: "No se ha encontrado la ciudad en los datos de entrega, recuerda registrarla",
-            icon: "warning",
-            confirmButtonText: "Ok",
-          });
-          this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-          this.activarDatosEntrega = true;
-        } else {
-          this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
-          this.activarDatosEntrega = false;
-        }
-      }
-    } else {
+  onSelectCity(event: any) {
+    // Determinar si el evento viene del select directo o del componente hijo
+    const value = event.target ? event.target.value : event;
+    
+    // Si la ciudad no es válida, retornar
+    if (value === 'seleccione') {
       this.selectedCity = '';
-      // Eliminar la ciudad guardada si se selecciona "seleccione"
-      localStorage.removeItem('selectedCity');
+      return;
+    }
+    
+    // Guardar la ciudad seleccionada
+    this.selectedCity = value;
+    
+    // Actualizar componentes relacionados
+    if (this.productos) {
+      this.productos.ciudad = value;
+      this.productos.filtrarProductos();
+    }
+    
+    // Resto del código existente...
+    this.pedidoGral.envio = {
+      ...(this.pedidoGral.envio || {}),
+      ciudad: value
+    } as any;
 
-      // Limpiar el filtro de ciudad en el catálogo
-      if (this.productos) {
-        this.productos.ciudad = '';
-        // Recargar productos sin filtro de ciudad
-        if (typeof this.productos.cargarTodo === 'function') {
-          this.productos.cargarTodo();
-        }
+    // Guardar la ciudad seleccionada en localStorage
+    localStorage.setItem('selectedCity', value);
+
+    console.log(`Ciudad seleccionada: ${this.pedidoGral.envio?.ciudad}`);
+
+    // Filtrar direcciones de entrega por la ciudad seleccionada
+    if (this.originalDataEntregas) {
+      this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.selectedCity) || [];
+      if (this.datosEntregas.length === 0) {
+        Swal.fire({
+          title: "No encontrado!",
+          text: "No se ha encontrado la ciudad en los datos de entrega, recuerda registrarla",
+          icon: "warning",
+          confirmButtonText: "Ok",
+        });
+        this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+        this.activarDatosEntrega = true;
+      } else {
+        this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+        this.activarDatosEntrega = false;
       }
     }
   }

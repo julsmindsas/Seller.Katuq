@@ -1,7 +1,60 @@
 <div class="container-fluid product-wrapper" [class.sidebaron]="openSidebar">
-    <strong class="me-15">{{ 'Ciudad' | translate }}: {{ciudad |uppercase}}</strong>
     <div class="product-grid">
         <div class="feature-products">
+            <div class="card mb-3">
+                <div class="card-body p-3">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative flex-grow-1">
+                                    <label class="form-label mb-1 small">
+                                        <i class="fa fa-map-marker-alt text-primary me-1"></i>
+                                        <span>{{ 'Ciudad de Entrega' | translate }}</span>
+                                    </label>
+                                    <select (change)="onCityChange($event)" class="form-select form-select-sm">
+                                        <option value="seleccione">{{ 'Seleccione ciudad' | translate }}</option>
+                                        <option *ngFor="let ciudad of ciudadSelector" [value]="ciudad.value" [selected]="selectedCity === ciudad.value">
+                                            {{ ciudad.label }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div *ngIf="selectedCity" class="ms-2 text-success">
+                                    <small><i class="fa fa-check-circle"></i></small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label mb-1 small">
+                                <i class="fa fa-search text-primary me-1"></i>
+                                <span>{{ 'Buscar productos' | translate }}</span>
+                            </label>
+                            <div class="input-group input-group-sm">
+                                <input class="form-control" type="search" 
+                                    placeholder="{{ 'Buscar..' | translate }}" 
+                                    (keyup)='updateFilter($event)'>
+                                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label mb-1 small">
+                                <i class="fa fa-th text-primary me-1"></i>
+                                <span>{{ 'Productos por página' | translate }}</span>
+                            </label>
+                            <select class="form-select form-select-sm" 
+                                (change)="cambiarProductosPorPagina(+$event.target.value)">
+                                <option value="4">4</option>
+                                <option value="8" selected>8</option>
+                                <option value="12">12</option>
+                                <option value="16">16</option>
+                                <option value="24">24</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="row">
                 <div class="col-md-6 products-total">
                     <div class="square-product-setting d-inline-block" (click)="toggleListView(false)">
@@ -219,15 +272,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-9 col-sm-12">
-                        <form>
-                            <div class="form-group m-0">
-                                <input class="form-control" class="form-control" type="search"
-                                    placeholder="{{ 'Buscar..' | translate }}" (keyup)='updateFilter($event)'
-                                    data-original-title="" title=""><i class="fa fa-search"></i>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </form>
         </div>
@@ -301,23 +345,9 @@
                 </div>
             </div>
             
-            <!-- Control de paginación -->
             <div class="pagination-wrapper mt-4">
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="items-per-page">
-                            <label class="me-2">{{ 'Productos por página' | translate }}:</label>
-                            <select class="form-select form-select-sm d-inline-block w-auto" 
-                                (change)="cambiarProductosPorPagina(+$event.target.value)">
-                                <option value="4">4</option>
-                                <option value="8" selected>8</option>
-                                <option value="12">12</option>
-                                <option value="16">16</option>
-                                <option value="24">24</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-8">
+                    <div class="col-12">
                         <nav aria-label="Page navigation" class="d-flex justify-content-end">
                             <ul class="pagination pagination-primary">
                                 <li class="page-item" [class.disabled]="paginaActual === 1">

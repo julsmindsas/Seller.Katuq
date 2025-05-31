@@ -25,6 +25,10 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
   @Input() public bodega: string;
   @Output() onRender = new EventEmitter<void>();
 
+  // Nuevos inputs y outputs para el selector de ciudad
+  @Input() ciudadSelector: any[] = [];
+  @Input() selectedCity: string = '';
+  @Output() citySelected = new EventEmitter<any>();
 
   openSidebar: boolean = false;
   col: string;
@@ -500,5 +504,21 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
   cambiarProductosPorPagina(cantidad: number) {
     this.productosPorPagina = cantidad;
     this.configurarPaginacion();
+  }
+
+  // Función para emitir la ciudad seleccionada
+  onCityChange(event: any) {
+    const selectedValue = event.target.value;
+    
+    if (selectedValue !== 'seleccione') {
+      this.ciudad = selectedValue;
+      // Filtrar productos por la ciudad seleccionada
+      this.filtrarProductos();
+    } else {
+      this.ciudad = '';
+    }
+    
+    // Emitir el evento con el valor seleccionado
+    this.citySelected.emit(selectedValue);
   }
 }
