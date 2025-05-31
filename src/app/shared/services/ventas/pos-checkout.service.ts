@@ -326,6 +326,12 @@ export class PosCheckoutService {
   resetCheckout(): void {
     this.cartService.clearCart();
     this.clearCustomer();
+    this.setPaymentMethod('');
+    this.pedido$.next(null);
+    
+    // Limpiar datos temporales del localStorage
+    localStorage.removeItem('selectedCustomerPOS');
+    localStorage.removeItem('tempOrderData');
   }
   
   /**

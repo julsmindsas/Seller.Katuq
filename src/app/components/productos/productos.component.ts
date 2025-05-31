@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { ImagenService } from '../../shared/utils/image.service';
 import { LazyLoadEvent } from 'primeng/api';
 import * as XLSX from 'xlsx';
+import { UtilsService } from '../../shared/services/utils.service';
 
 @Component({
   selector: 'app-productos',
@@ -45,7 +46,8 @@ export class ProductosComponent implements OnInit {
     private service: MaestroService,
     private imageService: ImagenService,
     private router: Router,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private utilsService: UtilsService
   ) { }
 
   ngOnInit(): void {
@@ -101,6 +103,150 @@ export class ProductosComponent implements OnInit {
     console.log(row);
     sessionStorage.setItem('infoForms', JSON.stringify(row));
     this.router.navigateByUrl('productos/crearProductos');
+  }
+
+  duplicarProducto(row) {
+    console.log('Producto a duplicar:', row);
+    
+    // Mostrar confirmación antes de duplicar
+    Swal.fire({
+      title: '¿Duplicar Producto?',
+      html: `
+        <div style="text-align: left; margin: 20px 0;">
+          <p><strong>Producto:</strong> ${row.crearProducto?.titulo || 'Sin título'}</p>
+          <p><strong>Referencia actual:</strong> ${row.identificacion?.referencia || 'Sin referencia'}</p>
+          <hr>
+          <p style="color: #666; font-size: 14px;">
+            Se creará una copia exacta del producto con una nueva referencia.<br>
+            <strong>Nueva referencia:</strong> ${row.identificacion?.referencia || 'REF'}-COPY-${new Date().getTime().toString().slice(-4)}
+          </p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: '<i class="fas fa-copy"></i> Sí, duplicar',
+      cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+      focusCancel: true,
+      customClass: {
+        popup: 'swal-wide'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ejecutarDuplicacion(row);
+      }
+    });
+  }
+
+  private ejecutarDuplicacion(row) {
+    console.log('Ejecutando duplicación del producto:', row);
+    
+    // Mostrar loading
+    Swal.fire({
+      title: 'Duplicando producto...',
+      text: 'Por favor espera mientras se crea la copia del producto.',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
+    // Usar deepClone para crear una copia exacta del producto
+    const productoDuplicado = this.utilsService.deepClone(row);
+    
+    // Quitar las propiedades que no deben duplicarse para crear un nuevo producto
+    delete productoDuplicado.id;
+    delete productoDuplicado._id;
+    delete productoDuplicado.cd;
+    delete productoDuplicado.date_edit;
+    
+    // Modificar la referencia para indicar que es una copia
+    if (productoDuplicado.identificacion && productoDuplicado.identificacion.referencia) {
+      const timestamp = new Date().getTime().toString().slice(-4);
+      productoDuplicado.identificacion.referencia = `${productoDuplicado.identificacion.referencia}-COPY-${timestamp}`;
+    }
+    
+    // Modificar el título para indicar que es una copia
+    if (productoDuplicado.crearProducto && productoDuplicado.crearProducto.titulo) {
+      productoDuplicado.crearProducto.titulo = `Copia de ${productoDuplicado.crearProducto.titulo}`;
+    }
+    
+    // También modificar el código de barras si existe
+    if (productoDuplicado.identificacion && productoDuplicado.identificacion.codigoBarras) {
+      const timestamp = new Date().getTime().toString().slice(-4);
+      productoDuplicado.identificacion.codigoBarras = `${productoDuplicado.identificacion.codigoBarras}-COPY-${timestamp}`;
+    }
+    
+    console.log('Producto duplicado (sin ID):', productoDuplicado);
+    
+    // Guardar automáticamente el producto duplicado
+    this.service.createProduct(productoDuplicado).subscribe({
+      next: (response) => {
+        console.log('Producto duplicado guardado exitosamente:', response);
+        
+        // Recargar la lista de productos para mostrar el nuevo producto
+        this.cargarDatos();
+        
+        // Mostrar mensaje de éxito
+        Swal.fire({
+          title: '¡Producto Duplicado!',
+          html: `
+            <div style="text-align: left; margin: 20px 0;">
+              <p><i class="fas fa-check-circle" style="color: #28a745;"></i> El producto se ha duplicado exitosamente.</p>
+              <hr>
+              <p><strong>Producto original:</strong> ${row.crearProducto?.titulo}</p>
+              <p><strong>Nueva referencia:</strong> <span style="color: #28a745; font-weight: bold;">${productoDuplicado.identificacion?.referencia}</span></p>
+              <p><strong>Nuevo título:</strong> ${productoDuplicado.crearProducto?.titulo}</p>
+            </div>
+          `,
+          icon: 'success',
+          confirmButtonText: '<i class="fas fa-check"></i> Perfecto',
+          showCancelButton: true,
+          cancelButtonText: '<i class="fas fa-edit"></i> Editar ahora',
+          confirmButtonColor: '#28a745',
+          cancelButtonColor: '#007bff'
+        }).then((result) => {
+          if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+            // Si el usuario quiere editar, navegar al formulario
+            sessionStorage.setItem('infoForms', JSON.stringify(response));
+            this.router.navigateByUrl('productos/crearProductos');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error al guardar el producto duplicado:', error);
+        
+        // Mostrar mensaje de error
+        Swal.fire({
+          title: 'Error al Duplicar',
+          html: `
+            <div style="text-align: left; margin: 20px 0;">
+              <p><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> No se pudo guardar el producto duplicado.</p>
+              <hr>
+              <p><strong>Error:</strong> ${error.error?.msg || 'Error desconocido'}</p>
+              <p style="color: #666; font-size: 14px;">Puedes intentar de nuevo o editar manualmente el producto.</p>
+            </div>
+          `,
+          icon: 'error',
+          confirmButtonText: '<i class="fas fa-redo"></i> Intentar de nuevo',
+          showCancelButton: true,
+          cancelButtonText: '<i class="fas fa-edit"></i> Editar manualmente',
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Intentar de nuevo
+            this.ejecutarDuplicacion(row);
+          } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+            // Si falla el guardado automático, permitir edición manual
+            sessionStorage.setItem('infoForms', JSON.stringify(productoDuplicado));
+            this.router.navigateByUrl('productos/crearProductos');
+          }
+        });
+      }
+    });
   }
 
   updateFilter(event: any) {

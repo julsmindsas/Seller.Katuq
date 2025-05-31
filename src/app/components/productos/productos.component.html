@@ -196,22 +196,15 @@
                                 </td>
 
                                 <!-- Acciones -->
-                                <td>
-                                    <i placement="top" ngbTooltip="{{ 'Edit' | translate }}" style="
-                                            font-size: 18px;
-                                            margin-left: 10px;
-                                            color: cornflowerblue;
-                                            cursor: pointer;
-                                        " class="icofont icofont-pencil-alt-5" (click)="editarProducto(row)"
+                                <td class="action-buttons">
+                                    <i placement="top" ngbTooltip="{{ 'Edit' | translate }}" 
+                                        class="icofont icofont-pencil-alt-5" (click)="editarProducto(row)"
                                         title="Editar producto"></i>
-                                    <i placement="top" ngbTooltip="{{
-                                            'Eliminar' | translate
-                                        }}" style="
-                                            font-size: 18px;
-                                            margin-left: 10px;
-                                            color: cornflowerblue;
-                                            cursor: pointer;
-                                        " class="icofont icofont-trash" (click)="eliminarProducto(row)"
+                                    <i placement="top" ngbTooltip="{{ 'Duplicar' | translate }}" 
+                                        class="icofont icofont-copy" (click)="duplicarProducto(row)"
+                                        title="Duplicar producto"></i>
+                                    <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}" 
+                                        class="icofont icofont-trash" (click)="eliminarProducto(row)"
                                         title="Eliminar producto"></i>
                                 </td>
                             </tr>

@@ -212,12 +212,32 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
             error: (err) => console.error("Error al enviar correo:", err)
           });
 
+          // Manejar pedido exitoso (incluye mostrar factura y limpiar datos)
           this.checkoutService.orderCreatorService.handleSuccessfulOrder(pedido);
+          
+          // Limpiar datos adicionales del checkout
+          this.limpiarDatosDespuesDeVenta();
         }
       },
       error: (err: any) => {
         console.error("Error al actualizar el pedido:", err);
       }
     });
+  }
+  
+  /**
+   * Limpia datos específicos del checkout después de una venta exitosa
+   */
+  private limpiarDatosDespuesDeVenta(): void {
+    // Resetear las banderas de control
+    this.showPedidoConfirm = false;
+    this.showSteper = true;
+    this.processingPayment = false;
+    
+    // Limpiar el pedido actual
+    this.checkoutService.pedido$.next(null);
+    
+    // Resetear método de pago
+    this.checkoutService.setPaymentMethod('');
   }
 }

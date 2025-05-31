@@ -833,7 +833,7 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         this.datosFacturacionElectronica
       );
-      this.formulario.controls["datosEntrega"].setValue(res.datosEntregas);
+      this.formulario.controls["datosEntrega"].setValue(res.datosEntrega);
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
@@ -1288,9 +1288,20 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
             console.log(res);
             context.cartService.clearCart();
             context.pedidoSinGuardar = false;
+            
+            // Usar la referencia que viene en res.order.referencia
+            const orderFromResponse = res.order;
+            if (orderFromResponse && orderFromResponse.referencia) {
+              orderFromResponse.nroFactura = orderFromResponse.referencia;
+              orderFromResponse.nroPedido = orderFromResponse.referencia;
+              // Actualizar el pedido general con la referencia
+              context.pedidoGral.nroFactura = orderFromResponse.referencia;
+              context.pedidoGral.nroPedido = orderFromResponse.referencia;
+            }
+            
             if (context.generarFacturaElectronica) {
               const orderSiigo = context.facturacionElectronicaService.transformarPedidoCompletoParaCrearUsuarioDesdeLaVenta(context.pedidoGral);
-              context.pedidoGral = res.order;
+              context.pedidoGral = orderFromResponse;
               context.facturacionElectronicaService.createFacturaSiigo(orderSiigo).subscribe({
                 next: (value: any) => {
                   if (value.isSuccess) {
@@ -1302,8 +1313,15 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
                       icon: "success",
                       confirmButtonText: "Ok",
                     });
+                    // Si la factura electrónica fue exitosa, usar el número de factura de Siigo
                     context.pedidoGral.nroFactura = value.result.name;
-                    context.pedidoGral.pdfUrlInvoice = value.result.public_url
+                    context.pedidoGral.pdfUrlInvoice = value.result.public_url;
+                    
+                    // Mantener la referencia original del pedido
+                    if (!context.pedidoGral.nroPedido && context.pedidoGral.referencia) {
+                      context.pedidoGral.nroPedido = context.pedidoGral.referencia;
+                    }
+                    
                     context.ventasService.editOrder(context.pedidoGral).subscribe(p =>
                       console.log(p)
                     );
@@ -1335,7 +1353,8 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
             else {
               this.showPedidoConfirm = true;
               this.showSteper = false;
-              this.modalService.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = this.pedidoGral;
+              // Usar el pedido con la referencia actualizada
+              this.modalService.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = orderFromResponse;
 
               Swal.fire({
                 title: "Pedido creado!",

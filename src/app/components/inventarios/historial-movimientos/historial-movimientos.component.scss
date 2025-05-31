@@ -162,6 +162,20 @@
         width: 2rem;
     }
     
+    // Evitar overflow horizontal en el contenedor principal
+    .card-body {
+        overflow-x: auto;
+        position: relative;
+        
+        .row {
+            min-width: 0;
+        }
+        
+        .col-12, .col-md-3, .col-md-6 {
+            min-width: 0;
+        }
+    }
+    
     // Ajustes específicos para PrimeNG
     .movimientos-table {
         .p-datatable-wrapper {
@@ -203,11 +217,72 @@
     }
 }
 
+// Solución específica para dropdowns de PrimeNG
+:host ::ng-deep .p-dropdown {
+    position: relative;
+    width: 100%;
+    
+    .p-dropdown-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+// Estilos globales para el panel del dropdown (se aplica a nivel del body)
+::ng-deep .p-dropdown-panel {
+    position: fixed !important;
+    z-index: 1100 !important;
+    max-width: 350px !important;
+    min-width: 200px !important;
+    
+    // Evitar que se salga de los bordes de la pantalla
+    left: auto !important;
+    right: auto !important;
+    
+    .p-dropdown-items {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .p-dropdown-filter-container {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: white;
+        border-bottom: 1px solid #e9ecef;
+    }
+}
+
+// Asegurar que el contenedor principal no tenga overflow
+.container-fluid,
+.card {
+    overflow-x: visible !important;
+}
+
+// Ajuste específico para las columnas de los filtros
+.row.g-2 {
+    margin-left: 0;
+    margin-right: 0;
+    
+    .col-12, .col-md-3, .col-md-6 {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        
+        .p-dropdown {
+            width: 100%;
+        }
+    }
+}
+
 .card {
     margin-bottom: 1.5rem;
     box-shadow: 0 2px 6px rgba(0,0,0,.08);
     border-radius: 0.5rem;
     border: none;
+    
+    // Evitar overflow horizontal
+    overflow: hidden;
 }
 
 .card-header {

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, forwardRef } from '@angular/core';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
 import { EstadoPago, EstadoProceso, Pedido } from '../../../components/ventas/modelo/pedido';
 import { CartService } from '../cart.service';
@@ -124,13 +124,18 @@ export class PosOrderCreatorService {
         // Crear el pedido
         this.ventasService.createOrder({ order: pedido, emailHtml: htmlSanizado }).subscribe({
           next: (res: any) => {
-            // Limpiar carrito (esto ahora se maneja desde el servicio de checkout)
+            // Usar la referencia que viene en res.order.referencia
+            const orderFromResponse = res.order;
+            if (orderFromResponse && orderFromResponse.referencia) {
+              orderFromResponse.nroFactura = orderFromResponse.referencia;
+              orderFromResponse.nroPedido = orderFromResponse.referencia;
+            }
             
             // Procesar factura electrónica si es necesario
             if (pedido.generarFacturaElectronica) {
-              this.processElectronicInvoice(pedido, res.order);
+              this.processElectronicInvoice(pedido, orderFromResponse);
             } else {
-              this.handleSuccessfulOrder(res.order);
+              this.handleSuccessfulOrder(orderFromResponse);
             }
           },
           error: (err: any) => {
@@ -177,11 +182,21 @@ export class PosOrderCreatorService {
     this.facturacionElectronicaService.createFacturaSiigo(orderSiigo).subscribe({
       next: (value: any) => {
         if (value.isSuccess) {
+          // Si la factura electrónica fue exitosa, usar el número de factura de Siigo
           savedPedido.nroFactura = value.result.name;
           savedPedido.pdfUrlInvoice = value.result.public_url;
           
+          // Mantener la referencia original del pedido
+          if (!savedPedido.nroPedido && savedPedido.referencia) {
+            savedPedido.nroPedido = savedPedido.referencia;
+          }
+          
           // Actualizar el pedido con la información de la factura
           this.ventasService.editOrder(savedPedido).subscribe();
+          
+          // Limpiar el carrito y datos del cliente después de una venta exitosa
+          this.cartService.clearCart();
+          this.clearCustomerData();
           
           // Mostrar la factura
           this.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = savedPedido;
@@ -202,11 +217,28 @@ export class PosOrderCreatorService {
    * Maneja un pedido creado exitosamente (sin factura electrónica)
    */
   public handleSuccessfulOrder(order: any): void {
+    // Limpiar el carrito después de una venta exitosa
+    this.cartService.clearCart();
+    
+    // Limpiar datos del cliente (usando localStorage ya que no hay servicio de checkout inyectado)
+    this.clearCustomerData();
+    
     // Mostrar la factura/tirilla
     this.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = order;
     
     // Mostrar mensaje de éxito
     this.showSuccessAlert('Pedido creado con éxito');
+  }
+  
+  /**
+   * Limpia los datos del cliente almacenados
+   */
+  private clearCustomerData(): void {
+    // Limpiar datos del cliente que puedan estar en localStorage
+    localStorage.removeItem('selectedCustomerPOS');
+    
+    // También limpiar cualquier otro dato temporal del POS si existe
+    // localStorage.removeItem('tempOrderData');
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Component, ViewChild, AfterViewInit } from '@angular/core'; // Importar AfterViewInit
+import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core'; // Importar OnInit
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { ProductCategoryComponent } from "./widgets/product-category/product-category.component";
@@ -7,6 +7,8 @@ import { PosCheckoutComponent } from "./widgets/pos-checkout/pos-checkout.compon
 import { WarehouseSelectorComponent } from './widgets/warehouse-selector/warehouse-selector'; // Importar WarehouseSelectorComponent
 import { CashClosingComponent } from './widgets/cash-closing/cash-closing.component';
 import { CashClosingHistoryComponent } from './widgets/cash-closing-history/cash-closing-history.component';
+import { CartService } from '../../../shared/services/cart.service';
+import { PosCheckoutService } from '../../../shared/services/ventas/pos-checkout.service';
 
 @Component({
   selector: 'app-pos',
@@ -14,11 +16,20 @@ import { CashClosingHistoryComponent } from './widgets/cash-closing-history/cash
   styleUrls: ['./pos.component.scss']
 })
 
-export class PosComponent implements AfterViewInit { // Implementar AfterViewInit
+export class PosComponent implements OnInit, AfterViewInit { // Implementar OnInit además de AfterViewInit
   @ViewChild(ProductComponent) productComponent: ProductComponent;
   @ViewChild(WarehouseSelectorComponent) warehouseSelectorComponent: WarehouseSelectorComponent; // Añadir ViewChild para WarehouseSelector
 
-  constructor(private modal: NgbModal) {}
+  constructor(
+    private modal: NgbModal,
+    private cartService: CartService,
+    private checkoutService: PosCheckoutService
+  ) {}
+
+  ngOnInit(): void {
+    // Limpiar datos al inicializar el POS para empezar siempre con estado limpio
+    this.limpiarDatos();
+  }
 
   ngAfterViewInit(): void {
     // Carga inicial de productos después de que los componentes hijos estén listos
@@ -28,6 +39,31 @@ export class PosComponent implements AfterViewInit { // Implementar AfterViewIni
     if (this.productComponent) {
        this.productComponent.obtenerProductos(initialBodegaId);
     }
+  }
+
+  /**
+   * Limpia los datos del carrito y cliente al inicializar el POS
+   */
+  private limpiarDatos(): void {
+    // Limpiar carrito
+    this.cartService.clearCart();
+    
+    // Limpiar datos del cliente
+    this.checkoutService.clearCustomer();
+    
+    // Limpiar cualquier dato temporal del POS
+    localStorage.removeItem('selectedCustomerPOS');
+    localStorage.removeItem('tempOrderData');
+  }
+
+  /**
+   * Método público para iniciar una nueva venta limpiando todos los datos
+   */
+  public nuevaVenta(): void {
+    this.limpiarDatos();
+    
+    // Opcional: mostrar mensaje de confirmación
+    console.log('POS limpiado - listo para nueva venta');
   }
 
   onWarehouseChanged() {
