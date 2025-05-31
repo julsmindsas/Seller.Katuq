@@ -250,7 +250,7 @@ export class NavService implements OnDestroy {
 			title: 'Ventas', icon: 'dollar-sign', type: 'sub', active: false, children: [
 				{ path: 'ventas/crear-ventas', title: 'Venta asistida', type: 'link' },
 				{ path: 'ventas/carga-ventas', title: 'Ventas masivas', type: 'link' },
-				{ path: 'pos/ventas', title: 'Ventas POS', type: 'link' }
+				{ path: 'ventas/ventas-pos', title: 'Ventas POS', type: 'link' }
 			]
 		},
 

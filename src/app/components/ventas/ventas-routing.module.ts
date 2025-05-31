@@ -30,7 +30,7 @@ const routes: Routes = [
     component: CargaVentasComponent
   },
   {
-    path: 'pos2',
+    path: 'ventas-pos',
     component: PosComponent
   },
   {
