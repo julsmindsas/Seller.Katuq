@@ -47,36 +47,27 @@ export class ListaComponent implements OnInit {
   ngOnInit(): void {
   }
   updateFilter(event: any) {
-
     const val = event.target.value.toLowerCase();
 
     let temp: any;
 
-    if (this.isMobile) {
-      temp = this.temp.filter(function (d) {
-        const res1 = d.nombre.toLowerCase().indexOf(val) !== -1 || !val;
-        const res3 = d.nomComercial.toLowerCase().indexOf(val) !== -1 || !val;
-        return res1 || res3;
-      });
-    } else {
-      temp = this.temp.filter(function (d) {
-        const res = d.nit.toLowerCase().indexOf(val) !== -1 || !val;
-        const res1 = d.nombre.toLowerCase().indexOf(val) !== -1 || !val;
-        const res2 = d.email.toLowerCase().indexOf(val) !== -1 || !val;
-        const res3 = d.nomComercial.toLowerCase().indexOf(val) !== -1 || !val;
-        const res4 = d.fijo.toString().toLowerCase().indexOf(val) !== -1 || !val;
-        const res5 = d.cel.toString().toLowerCase().indexOf(val) !== -1 || !val;
-        const res6 = d.direccion.toLowerCase().indexOf(val) !== -1 || !val;
-        const res7 = d.pais.toLowerCase().indexOf(val) !== -1 || !val;
-        const res8 = d.departamento.toLowerCase().indexOf(val) !== -1 || !val;
-        const res9 = d.ciudad.toLowerCase().indexOf(val) !== -1 || !val;
-        return res || res1 || res2 || res3 || res4 || res5 || res6 || res7 || res8 || res9;
-      });
-    }
+    // Filtrar por campos específicos de adiciones
+    temp = this.temp.filter(function (d) {
+      const titulo = d.titulo ? d.titulo.toLowerCase().indexOf(val) !== -1 || !val : false;
+      const referencia = d.referencia ? d.referencia.toLowerCase().indexOf(val) !== -1 || !val : false;
+      const descripcion = d.descripcion ? d.descripcion.toLowerCase().indexOf(val) !== -1 || !val : false;
+      const tiempoEntrega = d.tiempoEntrega ? d.tiempoEntrega.toString().toLowerCase().indexOf(val) !== -1 || !val : false;
+      const tipoEntrega = d.tipoEntrega ? d.tipoEntrega.toLowerCase().indexOf(val) !== -1 || !val : false;
+      const active = d.active !== undefined ? (d.active ? 'si' : 'no').indexOf(val) !== -1 || !val : false;
+      
+      return titulo || referencia || descripcion || tiempoEntrega || tipoEntrega || active;
+    });
 
     this.rows = temp;
 
-    this.table.offset = 0;
+    if (this.table) {
+      this.table.offset = 0;
+    }
   }
 
 
