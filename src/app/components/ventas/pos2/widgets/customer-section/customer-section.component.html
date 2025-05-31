@@ -14,7 +14,8 @@
           <i data-feather="search" height="16" width="16" class="fc-gray"></i>
         </span>
         <input #clienteBuscar class="form-control" type="text" [(ngModel)]="documentoCliente"
-          placeholder="{{'Buscar documento cliente...' | translate }}">
+          placeholder="{{'Buscar documento cliente...' | translate }}"
+          (keyup.enter)="buscar()">
       </div>
       <div class="common-flex">
         <a class="btn bc-primary ml-3 fc-white" (click)="buscar()">{{ 'Buscar' | translate }}</a>

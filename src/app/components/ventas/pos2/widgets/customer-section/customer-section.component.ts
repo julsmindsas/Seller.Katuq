@@ -115,18 +115,34 @@ export class CustomerSectionComponent implements OnInit {
    * Busca un cliente por su documento
    */
   buscar(): void {
-    if (!this.documentoCliente) return;
+    // Obtener el valor actual del input
+    const documento = this.clienteBuscar?.nativeElement?.value?.trim() || this.documentoCliente?.trim();
     
-    const data = { documento: this.documentoCliente };
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      if (!res.company) {
-        this.showAlert('No encontrado!', 'No se encuentra el documento. Si desea crearlo llene los datos a continuación');
-      } else {
-        try {
-          this.checkoutService.setCustomer(res);
-        } catch (error) {
-          console.log(error);
+    if (!documento) {
+      this.showAlert('Campo requerido', 'Por favor ingrese un documento para buscar');
+      return;
+    }
+    
+    // Actualizar la variable del componente
+    this.documentoCliente = documento;
+    
+    const data = { documento: documento };
+    this.service.getClientByDocument(data).subscribe({
+      next: (res: any) => {
+        if (!res.company) {
+          this.showAlert('No encontrado!', 'No se encuentra el documento. Si desea crearlo llene los datos a continuación');
+        } else {
+          try {
+            this.checkoutService.setCustomer(res);
+          } catch (error) {
+            console.log(error);
+            this.showAlert('Error', 'Ocurrió un error al cargar los datos del cliente');
+          }
         }
+      },
+      error: (error) => {
+        console.error('Error al buscar cliente:', error);
+        this.showAlert('Error', 'Ocurrió un error al buscar el cliente. Intente nuevamente.');
       }
     });
   }

@@ -2,31 +2,59 @@
 .warehouse-selector {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
+  width: 100%;
   
-  .warehouse-title {
-    margin-bottom: 0;
-    font-weight: 500;
-    font-size: 1.25rem;
-  }
-  
-  .select-container {
-    margin-bottom: 0;
+  .selector-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
     
-    select {
+    .warehouse-title {
+      margin-bottom: 0;
+      font-weight: 500;
+      font-size: 1.1rem;
+      color: #495057;
+    }
+    
+    .select-container {
+      margin-bottom: 0;
       width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #cad4e4;
-      background-color: #f9faff;
+      
+      select {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        background-color: #fff;
+        font-size: 0.95rem;
+        
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+      }
     }
   }
   
   .selected-warehouse {
-    padding: 15px;
-    background-color: #f8f9fe;
+    padding: 8px 12px;
+    background-color: #e7f3ff;
     border: 1px solid #b3d9ff;
-    border-radius: 6px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    
+    i {
+      color: #007bff;
+      font-size: 1rem;
+    }
     
     strong {
       font-weight: 600;
@@ -34,31 +62,32 @@
   }
 }
 
-// Estilo para pantallas más grandes - elementos en línea
+// Estilo para pantallas más grandes - solo el título y select en línea
 @media (min-width: 768px) {
   .warehouse-selector {
-    flex-direction: row;
-    align-items: center;
+    gap: 12px;
     
-    .warehouse-title {
-      margin-right: 15px;
-      margin-bottom: 0;
-      white-space: nowrap;
-    }
-    
-    .select-container {
-      flex: 1;
-      margin: 0 15px 0 0;
+    .selector-row {
+      flex-direction: row;
+      align-items: center;
+      gap: 15px;
       
-      select {
+      .warehouse-title {
+        white-space: nowrap;
+        min-width: max-content;
+        flex-shrink: 0;
+      }
+      
+      .select-container {
+        flex: 1;
         width: auto;
-        min-width: 200px;
       }
     }
     
+    // La bodega seleccionada SIEMPRE debajo, nunca al lado
     .selected-warehouse {
+      width: 100%;
       margin-top: 0;
-      white-space: nowrap;
     }
   }
 }

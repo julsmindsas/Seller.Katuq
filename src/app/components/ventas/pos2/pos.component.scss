@@ -8,16 +8,23 @@
 
 .pos-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 15px;
   padding: 15px;
   background-color: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
   margin-bottom: 20px;
 
+  // En pantallas grandes, organizar en fila
+  @media (min-width: 992px) {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
   .warehouse-selector {
     flex: 1;
-    max-width: 300px;
+    width: 100%;
     position: relative;
 
     ::ng-deep {
@@ -48,6 +55,12 @@
   .action-buttons {
     display: flex;
     gap: 10px;
+    flex-shrink: 0;
+    align-self: flex-end;
+
+    @media (min-width: 992px) {
+      align-self: flex-start;
+    }
 
     .cash-closing-btn,
     .history-btn {
@@ -58,6 +71,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      white-space: nowrap;
 
       i {
         font-size: 1.1rem;

@@ -1,17 +1,20 @@
 <!-- warehouse-selector.component.html -->
 <div class="warehouse-selector">
-  <h3 class="warehouse-title">Seleccionar Bodega:</h3>
-  
-  <div class="select-container">
-    <select #ware class="form-control" id="bodegaSelect" (change)="onWarehouseChange($event)">
-      <option value="">{{ "Seleccione una bodega" }}</option>
-      <option *ngFor="let bodega of bodegas" [value]="bodega.id">
-        {{ bodega.nombre }} ({{ bodega.idBodega }})
-      </option>
-    </select>
+  <div class="selector-row">
+    <h3 class="warehouse-title">Seleccionar Bodega:</h3>
+    
+    <div class="select-container">
+      <select #ware class="form-control" id="bodegaSelect" (change)="onWarehouseChange($event)">
+        <option value="">{{ "Seleccione una bodega" }}</option>
+        <option *ngFor="let bodega of bodegas" [value]="bodega.id">
+          {{ bodega.nombre }} ({{ bodega.idBodega }})
+        </option>
+      </select>
+    </div>
   </div>
 
   <div *ngIf="selectedWarehouse" class="selected-warehouse">
-    <strong>Bodega Seleccionada:</strong> {{ selectedWarehouse }}
+    <i class="fas fa-warehouse"></i>
+    <strong>Bodega Actual:</strong> {{ selectedWarehouse }}
   </div>
 </div>
