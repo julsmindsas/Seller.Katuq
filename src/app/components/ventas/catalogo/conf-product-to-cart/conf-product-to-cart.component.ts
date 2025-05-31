@@ -1,4 +1,4 @@
-import { AfterContentChecked, AfterContentInit, Component, Input, OnDestroy, OnInit, TemplateRef, ViewChild, ElementRef } from '@angular/core';
+import { AfterContentChecked, AfterContentInit, AfterViewInit, Component, Input, OnDestroy, OnInit, TemplateRef, ViewChild, ElementRef, Renderer2 } from '@angular/core';
 import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { Producto, ProductoCarrito } from 'src/app/shared/models/productos/Producto';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
@@ -19,7 +19,7 @@ import { NotificationService } from 'src/app/shared/services/notification.servic
   templateUrl: './conf-product-to-cart.component.html',
   styleUrls: ['./conf-product-to-cart.component.scss']
 })
-export class ConfProductToCartComponent implements OnInit, AfterContentChecked, AfterContentInit, OnDestroy {
+export class ConfProductToCartComponent implements OnInit, AfterContentChecked, AfterContentInit, AfterViewInit, OnDestroy {
   active = 1;
   private subs: Subscription[] = [];
   productPreference: any = [];
@@ -121,7 +121,8 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   libConfigCarouselFixed: CarouselLibConfig;
 
   constructor(private storage: AngularFireStorage, private toastrService: ToastrService, private modalService: NgbModal, private carsingleton: CartSingletonService, private maestroService: MaestroService, private fb: FormBuilder,
-    private pedidoUtilService: PedidosUtilService, private notificacionService: NotificationService) {
+    private pedidoUtilService: PedidosUtilService, private notificacionService: NotificationService,
+    private renderer: Renderer2) {
 
 
     this.libConfigCarouselFixed = {
@@ -235,7 +236,8 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
   masCantidad() {
     this.cantidad++;
-    document.getElementById("cantidad").setAttribute("value", this.cantidad.toString());
+    this.actualizarTodosLosInputsCantidad();
+    
     if (this.producto.precio.preciosVolumen.length > 0) {
       let rangoActual = this.producto.precio.preciosVolumen.find(x =>
         this.cantidad >= x.numeroUnidadesInicial && this.cantidad <= x.numeroUnidadesLimite
@@ -270,6 +272,9 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
         this.tarjetaForm.removeControl(`tarjeta${this.cantidad}`);
         this.cantidadTarjetas = this.cantidad;
       }
+      
+      this.actualizarTodosLosInputsCantidad();
+      
       if (this.producto.precio.preciosVolumen.length > 0) {
         let rangoActual = this.producto.precio.preciosVolumen.find(x =>
           this.cantidad >= x.numeroUnidadesInicial && this.cantidad <= x.numeroUnidadesLimite
@@ -297,8 +302,6 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
         }
       }
     }
-    document.getElementById("cantidad").setAttribute("value", this.cantidad.toString());
-
   }
 
   ngOnInit(): void {
@@ -367,6 +370,64 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     if (this.tarjetas && this.tarjetas.value) {
       this.tarjetaMostrada = new Array(this.tarjetas.value.length).fill(false);
     }
+  }
+
+  /**
+   * Actualiza el valor del input de cantidad de manera consistente
+   * usando múltiples métodos para asegurar que se muestre correctamente
+   */
+  private updateCantidadInputValue(): void {
+    // Asegurarse de que cantidad sea un número
+    const cantidadNumero = Number(this.cantidad);
+    const cantidadTexto = cantidadNumero.toString();
+    
+    // 1. Usar ElementRef si está disponible - acceso directo al DOM
+    if (this.cantidadControl && this.cantidadControl.nativeElement) {
+      this.cantidadControl.nativeElement.value = cantidadTexto;
+    }
+  }
+
+  /**
+   * Establece el valor del input directamente en el DOM
+   * Este es un método de respaldo para asegurar que el valor se muestre
+   */
+  public setInputValueDirectly(): void {
+    // Forzar a número para evitar objetos
+    const cantidadNumero = Number(this.cantidad);
+    const cantidadTexto = cantidadNumero.toString();
+    
+    // 1. Método preferido: usar ViewChild/ElementRef
+    if (this.cantidadControl && this.cantidadControl.nativeElement) {
+      this.renderer.setProperty(this.cantidadControl.nativeElement, 'value', cantidadTexto);
+    }
+  }
+
+  /**
+   * Actualiza el valor de todos los inputs con nombre 'cantidad'
+   * Se llama en los puntos clave del ciclo de vida del componente
+   */
+  private actualizarTodosLosInputsCantidad(): void {
+    // Esperar brevemente para que el DOM se actualice
+    setTimeout(() => {
+      try {
+        // Si tenemos acceso a través de ViewChild, usarlo primero
+        if (this.cantidadControl && this.cantidadControl.nativeElement) {
+          this.renderer.setProperty(this.cantidadControl.nativeElement, 'value', this.cantidad.toString());
+        }
+      } catch (error) {
+        // Ignorar errores silenciosamente
+      }
+    });
+  }
+
+  ngAfterViewInit() {
+    this.actualizarTodosLosInputsCantidad();
+  }
+
+  ngAfterViewChecked() {
+    // Este método se llama después de cada ciclo de detección de cambios
+    // Es un buen lugar para asegurarnos de que el valor del input esté actualizado
+    this.actualizarTodosLosInputsCantidad();
   }
 
   // Eliminar el método menosCantidad1 que está duplicado y quedarse solo con menosCantidad
@@ -502,12 +563,15 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   configurarProducto(producto: Producto) {
-
     this.producto = producto;
-    // this.adicionesrows = this.adicionesrows
     this.initForm();
     this.modalOpen = true;
-    this.cantidad = producto?.disponibilidad?.cantidadMinVenta
+    this.cantidad = producto?.disponibilidad?.cantidadMinVenta;
+    
+    // Programar actualización para después de la detección de cambios
+    setTimeout(() => {
+      this.actualizarTodosLosInputsCantidad();
+    });
 
     if (this.producto) {
 
@@ -577,6 +641,12 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     }
 
     this.cantidad = this.configuracionCarrito.cantidad;
+    
+    // Intentar establecer el valor usando el método centralizado
+    setTimeout(() => {
+      this.actualizarTodosLosInputsCantidad();
+    }, 100);
+    
     this.isOnlyOneTarjeta = this.cantidadTarjetas == 1;
     this.SinTarjeta = this.cantidadTarjetas == 0;
   }
@@ -1253,9 +1323,8 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   enterStep($event: MovingDirection, index: number) {
-
     if (index == 2) {
-      document.getElementById("cantidad").setAttribute("value", this.cantidad.toString());
+      this.actualizarTodosLosInputsCantidad();
     }
     console.log($event);
     this.sumar()
@@ -1418,15 +1487,9 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       datosEntregaInvalid = true;
     }
     
-    console.log('datosEntrega.invalid (calculado):', datosEntregaInvalid);
-    
     // Verificar tarjetas solo si llevaTarjeta es true
     const tarjetasRequeridas = this.producto?.procesoComercial?.llevaTarjeta && !this.SinTarjeta && this.tarjetas.length === 0;
-    console.log('tarjetasRequeridas:', tarjetasRequeridas, {
-      llevaTarjeta: this.producto?.procesoComercial?.llevaTarjeta,
-      SinTarjeta: this.SinTarjeta,
-      tarjetasLength: this.tarjetas.length
-    });
+   
 
     // Si tiene tarjetas, verificar que estén completas
     let tarjetasInvalidas = false;
@@ -1437,18 +1500,13 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
         }
       });
     }
-    console.log('tarjetasInvalidas:', tarjetasInvalidas);
 
     // Verificar preferencias solo si aceptaVariable es true
     const preferenciasRequeridas = this.producto?.procesoComercial?.aceptaVariable && !this.hasPreferencia();
-    console.log('preferenciasRequeridas:', preferenciasRequeridas, {
-      aceptaVariable: this.producto?.procesoComercial?.aceptaVariable,
-      hasPreferencia: this.hasPreferencia()
-    });
+  
 
     // Resultado final
     const isDisabled = datosEntregaInvalid || tarjetasRequeridas || tarjetasInvalidas || preferenciasRequeridas;
-    console.log('Botón deshabilitado:', isDisabled);
     
     return isDisabled;
   }

@@ -188,6 +188,10 @@ export class DespachosComponent implements OnInit {
     ];
     // Inicializar las columnas seleccionadas al cargar
     this.selectedColumns = this.displayedColumns.filter(col => col.visible);
+    
+    // Inicializar métricas antes de cargar datos
+    this.inicializarMetricas();
+    
     this.refrescarDatos();
     this.initForms();
   }
@@ -200,6 +204,11 @@ export class DespachosComponent implements OnInit {
       estadoProceso: [EstadoProceso.Rechazado, EstadoProceso.ParaDespachar, EstadoProceso.ProducidoTotalmente, EstadoProceso.SinProducir, EstadoProceso.Producido, EstadoProceso.Entregado, EstadoProceso.Despachado, EstadoProceso.Empacado],
       estadosPago: [EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente, EstadoPago.Pospendiente],
       tipoFecha: 'fechaEntrega'
+    }
+
+    // Inicializar vendors para evitar errores
+    if (!this.vendors) {
+      this.vendors = [];
     }
 
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
@@ -222,7 +231,7 @@ export class DespachosComponent implements OnInit {
     });
 
     this.logisticaService.getTransportadores().subscribe((data) => {
-      this.vendors = data;
+      this.vendors = data || [];
     });
   }
 
@@ -466,10 +475,12 @@ export class DespachosComponent implements OnInit {
     });
     
     // Eficiencia de transportadores (simulado)
-    this.vendors.forEach(transportador => {
-      const nombre = `${transportador.nombres} ${transportador.apellidos}`;
-      this.metricasLogistica.transportadoresEficiencia[nombre] = Math.floor(Math.random() * 30) + 70; // 70-100%
-    });
+    if (this.vendors && Array.isArray(this.vendors)) {
+      this.vendors.forEach(transportador => {
+        const nombre = `${transportador.nombres} ${transportador.apellidos}`;
+        this.metricasLogistica.transportadoresEficiencia[nombre] = Math.floor(Math.random() * 30) + 70; // 70-100%
+      });
+    }
     
     // Predicción de carga para próximos días
     const hoy = new Date();
@@ -498,7 +509,9 @@ export class DespachosComponent implements OnInit {
   generarPrediccionesKAI() {
     const hoy = new Date();
     const zonas = ['Norte', 'Sur', 'Este', 'Oeste', 'Centro'];
-    const transportadores = this.vendors.map(v => `${v.nombres} ${v.apellidos}`);
+    const transportadores = this.vendors && Array.isArray(this.vendors) 
+      ? this.vendors.map(v => `${v.nombres} ${v.apellidos}`)
+      : [];
     
     // Estructura para predicciones KAI
     this.kaiPredicciones = {
@@ -2013,6 +2026,171 @@ export class DespachosComponent implements OnInit {
     );
     
     return pedidosUrgentesPendientes.length > 0 ? pedidosUrgentesPendientes[0] : null;
+  }
+  
+  onSubmitOrdenEnvio(event: any) {
+    console.log('Recibiendo datos de orden de envío:', event);
+    
+    // Validar que el evento no sea nulo
+    if (!event) {
+      console.error('Error: No se recibieron datos de la orden de envío');
+      Swal.fire('Error', 'No se recibieron datos para la orden de envío', 'error');
+      return;
+    }
+    
+    // Asignar datos recibidos a la nueva orden de envío
+    if (!this.nuevaOrdenEnvio) {
+      const currentCompanyStr = sessionStorage.getItem("currentCompany");
+      const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : '';
+      
+      // Buscar un transportador del formulario
+      let transportadorSeleccionado = '';
+      
+      // Si el usuario seleccionó un transportador mediante el diálogo de Swal
+      if (this.transportadorSeleccionado) {
+        transportadorSeleccionado = this.transportadorSeleccionado;
+      }
+      
+      this.nuevaOrdenEnvio = {
+        id: '',
+        nroShippingOrder: this.nroShippingOrder || '',
+        fecha: new Date().toISOString(),
+        transportador: transportadorSeleccionado,
+        company: companyName,
+        pedidos: this.pedidosSeleccionados || []
+      };
+    } else {
+      // Actualizar la orden existente manteniendo el transportador
+      if (this.transportadorSeleccionado) {
+        this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
+      }
+      this.nuevaOrdenEnvio.fecha = new Date().toISOString();
+      this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados || [];
+    }
+    
+    // Validar que haya pedidos seleccionados
+    if (!this.pedidosSeleccionados || this.pedidosSeleccionados.length === 0) {
+      console.error('Error: No hay pedidos seleccionados para la orden de envío');
+      Swal.fire('Error', 'No hay pedidos seleccionados para la orden de envío', 'error');
+      return;
+    }
+    
+    // Si no hay transportador seleccionado, pedir que se seleccione uno
+    if (!this.nuevaOrdenEnvio.transportador || this.nuevaOrdenEnvio.transportador === '') {
+      this.seleccionarTransportador().then(transportador => {
+        if (transportador) {
+          this.transportadorSeleccionado = transportador;
+          this.nuevaOrdenEnvio.transportador = transportador;
+          this.enviarOrdenAlServidor();
+        } else {
+          console.error('No se seleccionó un transportador');
+          Swal.fire('Error', 'Debe seleccionar un transportador para la orden', 'error');
+        }
+      });
+    } else {
+      this.enviarOrdenAlServidor();
+    }
+  }
+  
+  // Método para solicitar selección de transportador
+  private seleccionarTransportador(): Promise<string> {
+    return new Promise((resolve) => {
+      if (!this.vendors || !Array.isArray(this.vendors) || this.vendors.length === 0) {
+        console.error('No hay transportadores disponibles');
+        Swal.fire('Error', 'No hay transportadores disponibles', 'error');
+        resolve('');
+        return;
+      }
+      
+      Swal.fire({
+        title: 'Asignar Transportador',
+        input: 'select',
+        inputOptions: this.vendors.reduce((acc, vendor) => {
+          acc[`${vendor.nombres} ${vendor.apellidos}-${vendor.telefono}`] = `${vendor.nombres} ${vendor.apellidos}`;
+          return acc;
+        }, {}),
+        showCancelButton: true,
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Debes ingresar el nombre del transportador';
+          }
+          return null;
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          resolve(result.value);
+        } else {
+          resolve('');
+        }
+      });
+    });
+  }
+  
+  // Método para enviar la orden al servidor
+  private enviarOrdenAlServidor(): void {
+    console.log('Enviando orden de envío:', this.nuevaOrdenEnvio);
+    
+    // Determinar si es una nueva orden o una existente
+    const esNuevaOrden = !this.nroShippingOrder || this.nroShippingOrder === '';
+    
+    // Usar el método adecuado según si es una nueva orden o una existente
+    const observable = esNuevaOrden 
+      ? this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio)
+      : this.logisticaService.dispatchShippingOrder(this.nuevaOrdenEnvio);
+    
+    console.log(esNuevaOrden ? 'Creando nueva orden...' : 'Despachando orden existente...');
+    
+    observable.subscribe({
+      next: (response) => {
+        console.log('Respuesta exitosa del servidor:', response);
+        
+        // Actualizar nroShippingOrder si es una nueva orden
+        if (esNuevaOrden && response && response.nroShippingOrder) {
+          this.nroShippingOrder = response.nroShippingOrder;
+          this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
+          
+          Swal.fire({
+            title: 'Orden Creada',
+            text: `La orden de envío #${response.nroShippingOrder} ha sido creada exitosamente`,
+            icon: 'success',
+            confirmButtonText: '¿Desea despachar ahora?',
+            showCancelButton: true,
+            cancelButtonText: 'No, más tarde'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // Si el usuario confirma, despachar la orden recién creada
+              this.nuevaOrdenEnvio.id = response.id || '';
+              this.logisticaService.dispatchShippingOrder(this.nuevaOrdenEnvio).subscribe({
+                next: (dispatchResponse) => {
+                  Swal.fire('Éxito', 'Orden despachada exitosamente', 'success');
+                  this.refrescarDatos();
+                },
+                error: (dispatchError) => {
+                  console.error('Error al despachar la orden:', dispatchError);
+                  Swal.fire('Error', 'Hubo un problema al despachar la orden', 'error');
+                }
+              });
+            }
+          });
+        } else {
+          // Si solo se estaba despachando una orden existente
+          Swal.fire('Éxito', 'Orden despachada exitosamente', 'success');
+        }
+        
+        // Actualizar la lista de órdenes
+        this.refrescarDatos();
+        
+        // Cerrar el modal si es necesario
+        this.modalService.dismissAll();
+      },
+      error: (error) => {
+        console.error(`Error al ${esNuevaOrden ? 'crear' : 'despachar'} la orden de envío:`, error);
+        Swal.fire('Error', `Hubo un problema al ${esNuevaOrden ? 'crear' : 'despachar'} la orden de envío: ${error.message || 'Error desconocido'}`, 'error');
+      },
+      complete: () => {
+        console.log(`Proceso de ${esNuevaOrden ? 'creación' : 'despacho'} de orden de envío completado`);
+      }
+    });
   }
 }
 
