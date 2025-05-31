@@ -229,93 +229,139 @@ export class NavService implements OnDestroy {
 	}
 
 	MENUITEMS: Menu[] = [
+		// CONFIGURACIÓN PLATAFORMA
+		{ headTitle1: 'Configuración Plataforma' },
+		{
+			title: 'Gestión General', icon: 'settings', type: 'sub', active: false, children: [
+				{ path: 'superadmin/clientes', title: 'Clientes plataforma', type: 'link' },
+				{ path: 'prospectos/lista', title: 'Prospectos', type: 'link' }
+			]
+		},
+
+		// GESTIÓN COMERCIAL
 		{ headTitle1: 'Gestión Comercial' },
 		{
 			title: 'Clientes', icon: 'user-check', type: 'sub', active: false, children: [
-				{ path: 'ventas/clientes', title: 'Crear Clientes', type: 'link' },
-				{ path: 'ventas/clienteslista', title: 'Lista de Clientes', type: 'link' },
-				{ path: 'prospectos/lista', title: 'Gestión de Prospectos', type: 'link' },
+				{ path: 'ventas/clientes', title: 'Crear cliente', type: 'link' },
+				{ path: 'ventas/clienteslista', title: 'Listado de clientes', type: 'link' }
+			]
+		},
+		{
+			title: 'Ventas', icon: 'dollar-sign', type: 'sub', active: false, children: [
+				{ path: 'ventas/crear-ventas', title: 'Venta asistida', type: 'link' },
+				{ path: 'ventas/carga-ventas', title: 'Ventas masivas', type: 'link' },
+				{ path: 'pos/ventas', title: 'Ventas POS', type: 'link' }
+			]
+		},
+
+		// OPERACIONES
+		{ headTitle1: 'Operaciones' },
+		{
+			title: 'Pedidos', icon: 'shopping-cart', type: 'sub', active: false, children: [
+				{ path: 'ventas/pedidos', title: 'Todos los pedidos', type: 'link' },
+				{ path: 'pos/list-ventas', title: 'Pedidos POS', type: 'link' }
+			]
+		},
+		{
+			title: 'Producción', icon: 'archive', type: 'sub', active: false, children: [
+				{ path: 'produccion/dashboard', title: 'Órdenes de producción', type: 'link' }
+			]
+		},
+		{
+			title: 'Logística', icon: 'map-pin', type: 'sub', active: false, children: [
+				{ path: 'despachos', title: 'Envíos y entregas', type: 'link' }
+			]
+		},
+
+		// INVENTARIOS Y PRODUCTOS
+		{ headTitle1: 'Inventarios y Productos' },
+		{
+			title: 'Productos', icon: 'package', type: 'sub', active: false, children: [
+				{ path: 'productos', title: 'Productos', type: 'link' },
+				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones', type: 'link' }
+			]
+		},
+		{
+			title: 'Inventarios', icon: 'box', type: 'sub', active: false, children: [
+				{ path: 'inventario/inventario-catalogo', title: 'Inventario por bodega', type: 'link' },
+				{ path: 'inventario/recepcion-mercancia', title: 'Ajustes de inventario', type: 'link' },
+				{ path: 'inventario/traslados', title: 'Traslados entre bodegas', type: 'link' },
+				{ path: 'inventario/historial-movimientos', title: 'Historial de movimientos', type: 'link' }
+			]
+		},
+		{
+			title: 'Picking y packing', icon: 'layers', type: 'sub', active: false, children: [
+				{ path: 'picking-packing/picking', title: 'Órdenes de picking', type: 'link' },
+				{ path: 'picking-packing/packing', title: 'Órdenes de packing', type: 'link' }
+			]
+		},
+
+		// INTELIGENCIA DE NEGOCIOS
+		{ headTitle1: 'Inteligencia de Negocios' },
+		{
+			title: 'Indicadores', icon: 'trending-up', type: 'sub', active: false, children: [
+				{ path: 'dashboards', title: 'Dashboard gerencial', type: 'link' }
+			]
+		},
+
+		// CONFIGURACIÓN
+		{ headTitle1: 'Configuración' },
+		{
+			title: 'Seguridad', icon: 'shield', type: 'sub', active: false, children: [
+				{ path: 'rol/rol', title: 'Roles y permisos', type: 'link' },
+				{ path: 'usuarios', title: 'Usuarios', type: 'link' }
+			]
+		},
+		{
+			title: 'Empresa', icon: 'briefcase', type: 'sub', active: false, children: [
+				{ path: 'empresas', title: 'Mi Empresa', type: 'link' },
+				{ path: 'empresas/planes', title: 'Planes y suscripciones', type: 'link' },
+				{ path: 'extras/formasPago', title: 'Medios de pago', type: 'link' },
+				{ path: 'empresa/facturacion', title: 'Facturación', type: 'link' },
+				{ path: 'empresas/modulovariable/produccion/opciones', title: 'Activación Módulos', type: 'link' }
+			]
+		},
+		{
+			title: 'Módulos Variables', icon: 'grid', type: 'sub', active: false, children: [
+				{ path: 'empresas/modulovariable/produccion/opciones', title: 'Producción', type: 'link' },
+				{ path: 'app-entregas', title: 'App de entregas', type: 'link' }
+			]
+		},
+		{
+			title: 'Inventarios y productos', icon: 'database', type: 'sub', active: false, children: [
+				{ path: 'categorias', title: 'Categorías de productos', type: 'link' },
+				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link' },
+				{ path: 'proceso/canales', title: 'Canales de venta', type: 'link' },
+				{ path: 'proceso/bodegas-por-canal', title: 'Bodegas por canal', type: 'link' }
+			]
+		},
+		{
+			title: 'Producto', icon: 'tag', type: 'sub', active: false, children: [
 				{ path: 'proceso/ocasiones', title: 'Ocasiones', type: 'link' },
 				{ path: 'proceso/generos', title: 'Géneros', type: 'link' }
 			]
 		},
 		{
-			title: 'Pedidos y Ventas', icon: 'dollar-sign', type: 'sub', active: false, children: [
-				{ path: 'ventas/crear-ventas', title: 'Crear Venta Asistida', type: 'link' },
-				{ path: 'ventas/venta-asistida', title: 'Venta Asistida Ultra', type: 'link' },
-				{ path: 'ventas/carga-ventas', title: 'Cargar Ventas Masivas', type: 'link' },
-				{ path: 'ventas/pedidos', title: 'Lista de Pedidos', type: 'link' },
-				{ path: 'ventas/pos2', title: 'Ventas POS Avanzado', type: 'link' },
-				// { path: 'pos/ventas', title: 'Ventas POS Rápido', type: 'link' },
-				{ path: 'pos/list-ventas', title: 'Listado Ventas POS', type: 'link' }
-			]
-		},
-
-		{ headTitle1: 'Operaciones Internas' },
-		{
-			title: 'Inventario y Productos', icon: 'package', type: 'sub', active: false, children: [
-				{ path: 'productos', title: 'Maestro de Productos', type: 'link' },
-				{ path: 'categorias', title: 'Categorías Globales', type: 'link' },
-				{ path: 'ecommerce/adiciones/listar', title: 'Adiciones Globales', type: 'link' },
-				{ path: 'proceso/canales', title: 'Canales de Venta', type: 'link' },
-				{ path: 'proceso/bodegas-por-canal', title: 'Bodegas por Canal', type: 'link' },
-				{ path: 'inventario/inventario-catalogo', title: 'Inventario por Bodega', type: 'link' },
-				{ path: 'inventario/bodegas', title: 'Bodegas', type: 'link' },
-				{ path: 'inventario/recepcion-mercancia', title: 'Ajustes de Inventario', type: 'link' },
-				{ path: 'inventario/traslados', title: 'Traslados entre Bodegas', type: 'link' },
-				{ path: 'inventario/historial-movimientos', title: 'Historial Movimientos', type: 'link' }
+			title: 'Logística', icon: 'truck', type: 'sub', active: false, children: [
+				{ path: 'formasEntrega', title: 'Formas de entrega', type: 'link' },
+				{ path: 'formasEntrega/tipoentrega/lista', title: 'Tipos de entrega', type: 'link' },
+				{ path: 'tiempoentrega', title: 'Tiempos de entrega', type: 'link' },
+				{ path: 'extras/zonasCobro', title: 'Zonas de cobro', type: 'link' }
 			]
 		},
 		{
-			title: 'Picking y Packing', icon: 'box', type: 'sub', active: false, children: [
-				{ path: 'picking-packing/picking', title: 'Órdenes de Picking', type: 'link' },
-				{ path: 'picking-packing/packing', title: 'Órdenes de Packing', type: 'link' }
+			title: 'Pagos', icon: 'credit-card', type: 'sub', active: false, children: [
+				{ path: 'extras/formasPago', title: 'Métodos de pago', type: 'link' }
 			]
 		},
 		{
-			title: 'Plan de Producción', icon: 'archive', type: 'sub', active: false, children: [
-				{ path: 'produccion/dashboard', title: 'Dashboard Producción', type: 'link' }
-			]
-		},
-		{ headTitle1: 'Logística' },
-		{
-			title: 'Envíos y Entregas', icon: 'map-pin', type: 'sub', active: false, children: [
-				{ path: 'formasEntrega', title: 'Formas Entrega Globales', type: 'link' },
-				{ path: 'formasEntrega/tipoentrega/lista', title: 'Tipos de Entrega Globales', type: 'link' },
-				{ path: 'tiempoentrega', title: 'Tiempos de Entrega Globales', type: 'link' },
-				{ path: 'despachos', title: 'Lista de Despachos', type: 'link' },
-				{ path: 'extras/zonasCobro', title: 'Zonas de Cobro Envío', type: 'link' }
-			]
-		},
-
-		{ headTitle1: 'Inteligencia de Negocios', isOnlySuperAdministrador: false },
-		{
-			title: 'Indicadores KPI', icon: 'trending-up', type: 'sub', active: false, isOnlySuperAdministrador: false, children: [
-				{ path: 'dashboards', title: 'Dashboard Gerencial', type: 'link' }
-			]
-		},
-
-		{ headTitle1: 'Administración Global', isOnlySuperAdministrador: false },
-		{
-			title: 'Usuarios y Permisos', icon: 'shield', type: 'sub', active: false, isOnlySuperAdministrador: false, children: [
-				{ path: 'rol/rol', title: 'Gestión de Roles', type: 'link' },
-				{ path: 'usuarios', title: 'Gestión de Usuarios', type: 'link' }
+			title: 'Integraciones', icon: 'link', type: 'sub', active: false, children: [
+				{ path: 'integrations', title: 'Integraciones', type: 'link' }
 			]
 		},
 		{
-			title: 'Gestión de Empresas', icon: 'briefcase', type: 'sub', active: false, isOnlySuperAdministrador: false, children: [
-				{ path: 'empresas', title: 'Directorio de Empresas', type: 'link' },
-				{ path: 'empresas/modulovariable/produccion/opciones', title: 'Módulos Variables', type: 'link' }
-			]
-		},
-
-		{ headTitle1: 'Configuración Plataforma', isOnlySuperAdministrador: false },
-		{
-			title: 'Gestión General', icon: 'settings', type: 'sub', active: false, isOnlySuperAdministrador: false, children: [
-				{ path: 'superadmin/clientes', title: 'Gestión Clientes Plataforma', type: 'link', isOnlySuperAdministrador: false },
-				{ path: 'notificaciones', title: 'Notificaciones Globales', type: 'link' },
-				{ path: 'integrations', title: 'Integraciones Globales', type: 'link' },
-				{ path: 'extras/formasPago', title: 'Formas de Pago Globales', type: 'link' }
+			title: 'Notificaciones', icon: 'bell', type: 'sub', active: false, children: [
+				{ path: 'notificaciones', title: 'Notificaciones', type: 'link' }
 			]
 		},
 
