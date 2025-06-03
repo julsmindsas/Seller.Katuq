@@ -201,7 +201,7 @@ export class DespachosComponent implements OnInit {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial,
-      estadoProceso: [EstadoProceso.Rechazado, EstadoProceso.ParaDespachar, EstadoProceso.ProducidoTotalmente, EstadoProceso.Producido, EstadoProceso.Entregado, EstadoProceso.Despachado, EstadoProceso.Empacado],
+      estadoProceso: [EstadoProceso.Rechazado, EstadoProceso.ParaDespachar, EstadoProceso.ProducidoTotalmente, EstadoProceso.SinProducir, EstadoProceso.ProducidoParcialmente, EstadoProceso.Entregado, EstadoProceso.Despachado, EstadoProceso.Empacado],
       estadosPago: [EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente, EstadoPago.Pospendiente],
       tipoFecha: 'fechaEntrega'
     }
