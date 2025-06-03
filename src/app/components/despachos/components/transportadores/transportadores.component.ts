@@ -45,6 +45,7 @@ export class TransportadoresComponent implements OnInit {
       lineaMoto: [''],
       modeloMoto: [''],
       placa: [''],
+      capacidadCarga: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
       pwd: ['', Validators.required],
     });
   }

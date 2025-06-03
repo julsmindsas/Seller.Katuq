@@ -909,6 +909,7 @@ export class DespachosComponent implements OnInit {
       lineaMoto: [''],
       modeloMoto: [''],
       placa: [''],
+      capacidadCarga: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
       pwd: ['', Validators.required],
     });
 
@@ -992,7 +993,51 @@ export class DespachosComponent implements OnInit {
       });
     });
   }
+  // Método para verificar si un pedido puede ser manipulado
+  puedeManipularPedido(pedido: Pedido): boolean {
+    // Los pedidos en estado "Sin Producir" no pueden ser manipulados
+    if (pedido.estadoProceso === EstadoProceso.SinProducir) {
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // Verificar si un pedido específico puede cambiar a un estado específico
+  puedeAvanzarAEstado(pedido: Pedido, nuevoEstado: string): boolean {
+    // Si el pedido está en estado "Sin Producir" y se intenta avanzar a cualquier 
+    // estado de empacado, despachado o entregado, bloquearlo
+    if (pedido.estadoProceso === EstadoProceso.SinProducir &&
+        [EstadoProceso.Empacado, EstadoProceso.Despachado, EstadoProceso.Entregado].includes(nuevoEstado as EstadoProceso)) {
+      return false;
+    }
+    
+    return true;
+  }
+  
   cambiarEstado(order: Pedido, estado: number) {
+    // Determinar el nuevo estado basado en el código
+    let nuevoEstado: EstadoProceso;
+    switch(estado) {
+      case 1: nuevoEstado = EstadoProceso.Empacado; break;
+      case 2: nuevoEstado = EstadoProceso.ProducidoTotalmente; break;
+      case 3: nuevoEstado = EstadoProceso.Empacado; break;
+      case 4: nuevoEstado = EstadoProceso.Despachado; break;
+      case 5: nuevoEstado = EstadoProceso.Entregado; break;
+      default: return; // Estado no reconocido
+    }
+    
+    // Verificar si el pedido puede cambiar al nuevo estado
+    if (!this.puedeAvanzarAEstado(order, nuevoEstado)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Operación no permitida',
+        text: 'Los pedidos en estado "Sin Producir" no pueden ser empacados, despachados o entregados. Debe completarse la producción primero.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+    
     const userLite = this.getCurrentUser();
     if (!userLite) {
       Swal.fire('Error', 'No se pudo obtener información del usuario', 'error');
@@ -1049,7 +1094,6 @@ export class DespachosComponent implements OnInit {
       });
     });
   }
-
 
   actualizarValoresPedido(order: Pedido) {
     this.pedidoUtilService.pedido = order;
@@ -2357,6 +2401,184 @@ export class DespachosComponent implements OnInit {
       showConfirmButton: false,
       customClass: {
         image: 'img-fluid'
+      }
+    });
+  }
+
+  // Método para calcular la recomendación de transportadores necesarios
+  calcularRecomendacionTransportadores(): { 
+    transportadoresNecesarios: number,
+    transportadoresActuales: number,
+    deficit: number,
+    cargaPromedioPorTransportador: number,
+    capacidadTotalActual: number,
+    capacidadPromedio: number,
+    pedidosPorDia: { [fecha: string]: number },
+    recomendacionesPorDia: { [fecha: string]: number }
+  } {
+    // 1. Obtener número de transportadores actuales
+    const transportadoresActuales = this.vendors && Array.isArray(this.vendors) ? this.vendors.length : 0;
+    
+    // 2. Calcular la capacidad total y promedio de los transportadores actuales
+    let capacidadTotalActual = 0;
+    let capacidadPromedio = 5; // Valor por defecto si no hay transportadores
+    
+    if (transportadoresActuales > 0) {
+      // Sumar las capacidades individuales
+      capacidadTotalActual = this.vendors.reduce((total, transportador) => {
+        // Usar la capacidad configurada o 5 como valor por defecto
+        const capacidad = transportador.capacidadCarga || 5;
+        return total + capacidad;
+      }, 0);
+      
+      // Calcular el promedio
+      capacidadPromedio = capacidadTotalActual / transportadoresActuales;
+    }
+    
+    // 3. Calcular carga total por día (próximos 7 días)
+    const pedidosPorDia: { [fecha: string]: number } = {};
+    const recomendacionesPorDia: { [fecha: string]: number } = {};
+    let totalPedidosProximos7Dias = 0;
+    
+    // Obtener fecha actual
+    const hoy = new Date();
+    
+    // Para cada día en los próximos 7 días
+    for (let i = 0; i < 7; i++) {
+      const fecha = new Date(hoy);
+      fecha.setDate(fecha.getDate() + i);
+      const fechaStr = fecha.toISOString().split('T')[0]; // formato YYYY-MM-DD
+      
+      // Contar pedidos programados para este día
+      const pedidosDia = this.orders.filter(p => {
+        if (!p.fechaEntrega) return false;
+        const fechaEntrega = new Date(p.fechaEntrega);
+        return fechaEntrega.toISOString().split('T')[0] === fechaStr;
+      }).length;
+      
+      pedidosPorDia[fechaStr] = pedidosDia;
+      totalPedidosProximos7Dias += pedidosDia;
+      
+      // Calcular transportadores necesarios para este día basado en la capacidad promedio actual
+      const transportadoresNecesariosDia = Math.ceil(pedidosDia / capacidadPromedio);
+      recomendacionesPorDia[fechaStr] = transportadoresNecesariosDia;
+    }
+    
+    // 4. Calcular el promedio de pedidos diarios
+    const promedioPedidosDiarios = totalPedidosProximos7Dias / 7;
+    
+    // 5. Calcular transportadores necesarios en total (basado en la capacidad promedio actual)
+    const transportadoresNecesarios = Math.ceil(promedioPedidosDiarios / capacidadPromedio);
+    
+    // 6. Calcular déficit de transportadores
+    const deficit = Math.max(0, transportadoresNecesarios - transportadoresActuales);
+    
+    // 7. Calcular carga promedio por transportador actual
+    const cargaPromedioPorTransportador = capacidadTotalActual > 0 
+      ? promedioPedidosDiarios / transportadoresActuales 
+      : promedioPedidosDiarios; // Si no hay transportadores, la carga sería todo
+    
+    return {
+      transportadoresNecesarios,
+      transportadoresActuales,
+      deficit,
+      cargaPromedioPorTransportador,
+      capacidadTotalActual,
+      capacidadPromedio,
+      pedidosPorDia,
+      recomendacionesPorDia
+    };
+  }
+  
+  // Método para mostrar recomendaciones de transportadores
+  mostrarRecomendacionTransportadores() {
+    const recomendacion = this.calcularRecomendacionTransportadores();
+    
+    // Formatea las fechas para mostrarlas
+    const pedidosPorDiaFormateado = Object.entries(recomendacion.pedidosPorDia).map(([fecha, cantidad]) => {
+      return `<tr>
+        <td>${this.formatearFecha(fecha)}</td>
+        <td class="text-center">${cantidad}</td>
+        <td class="text-center">${recomendacion.recomendacionesPorDia[fecha]}</td>
+      </tr>`;
+    }).join('');
+    
+    // Crear HTML para la tabla de pedidos por día
+    const tablaPedidosPorDia = `
+      <table class="table table-sm table-striped mt-3">
+        <thead class="table-primary">
+          <tr>
+            <th>Fecha</th>
+            <th class="text-center">Pedidos</th>
+            <th class="text-center">Transportadores recomendados</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pedidosPorDiaFormateado}
+        </tbody>
+      </table>
+    `;
+    
+    // Crear mensaje de recomendación
+    let mensajeRecomendacion = '';
+    if (recomendacion.deficit > 0) {
+      mensajeRecomendacion = `<div class="alert alert-warning">
+        <i class="pi pi-exclamation-triangle me-2"></i>
+        <strong>Recomendación:</strong> Se sugiere contratar ${recomendacion.deficit} transportador(es) adicional(es) para manejar la carga actual.
+      </div>`;
+    } else {
+      mensajeRecomendacion = `<div class="alert alert-success">
+        <i class="pi pi-check-circle me-2"></i>
+        <strong>Recomendación:</strong> El número actual de transportadores es suficiente para manejar la carga prevista.
+      </div>`;
+    }
+    
+    // Mostrar el análisis en un modal
+    Swal.fire({
+      title: 'Análisis de Transportadores',
+      html: `
+        <div class="text-start">
+          <div class="mb-3">
+            <h6 class="fw-bold">Resumen General:</h6>
+            <ul class="list-group">
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Transportadores actuales:</span>
+                <span class="fw-bold">${recomendacion.transportadoresActuales}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Capacidad total actual:</span>
+                <span class="fw-bold">${recomendacion.capacidadTotalActual} pedidos/día</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Capacidad promedio por transportador:</span>
+                <span class="fw-bold">${recomendacion.capacidadPromedio.toFixed(1)} pedidos/día</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Transportadores recomendados:</span>
+                <span class="fw-bold">${recomendacion.transportadoresNecesarios}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Carga promedio por transportador:</span>
+                <span class="fw-bold">${recomendacion.cargaPromedioPorTransportador.toFixed(1)} pedidos/día</span>
+              </li>
+            </ul>
+          </div>
+          
+          ${mensajeRecomendacion}
+          
+          <h6 class="fw-bold mt-4">Detalles por día:</h6>
+          ${tablaPedidosPorDia}
+          
+          <div class="alert alert-info mt-3">
+            <i class="pi pi-info-circle me-2"></i>
+            <small>Este análisis utiliza la capacidad de carga configurada para cada transportador. Puede modificarla en la sección de gestión de transportadores.</small>
+          </div>
+        </div>
+      `,
+      width: '600px',
+      confirmButtonText: 'Entendido',
+      showClass: {
+        popup: 'animate__animated animate__fadeIn'
       }
     });
   }

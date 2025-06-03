@@ -217,6 +217,15 @@ export class TablaPedidosComponent implements OnInit {
     this.onViewFullObservaciones.emit(envioData);
   }
   
+  // Método para verificar si un pedido puede ser manipulado
+  puedeManipularPedido(pedido: Pedido): boolean {
+    // Los pedidos en estado "Sin Producir" no pueden ser manipulados
+    if (pedido.estadoProceso === 'SinProducir') {
+      return false;
+    }
+    return true;
+  }
+  
   // Métodos para hacer cálculos
   calculateTotalEnvio(orders: Pedido[]): number {
     return orders.reduce((acc, pedido) => acc + (pedido.totalEnvio ?? 0), 0);

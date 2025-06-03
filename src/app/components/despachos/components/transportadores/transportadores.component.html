@@ -122,6 +122,19 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
+                            <label for="capacidadCarga">{{ 'Capacidad de Carga (pedidos/día)' | translate }}</label>
+                            <input type="number" class="form-control" id="capacidadCarga" formControlName="capacidadCarga" min="1" max="50" required>
+                            <div *ngIf="transportadorForm.get('capacidadCarga').invalid && transportadorForm.get('capacidadCarga').touched" class="text-danger">
+                                <span *ngIf="transportadorForm.get('capacidadCarga').errors?.required">{{ 'La capacidad de carga es requerida' | translate }}</span>
+                                <span *ngIf="transportadorForm.get('capacidadCarga').errors?.min">{{ 'La capacidad mínima es 1' | translate }}</span>
+                                <span *ngIf="transportadorForm.get('capacidadCarga').errors?.max">{{ 'La capacidad máxima es 50' | translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
                             <label for="pwd">{{ 'Contraseña' | translate }}</label>
                             <input type="password" class="form-control" id="pwd" formControlName="pwd" required>
                             <div *ngIf="transportadorForm.get('pwd').invalid && transportadorForm.get('pwd').touched" class="text-danger">
@@ -150,6 +163,7 @@
                             <th scope="col">{{ 'Apellidos' | translate }}</th>
                             <th scope="col">{{ 'Teléfono' | translate }}</th>
                             <th scope="col">{{ 'WhatsApp' | translate }}</th>
+                            <th scope="col">{{ 'Capacidad (pedidos/día)' | translate }}</th>
                             <th scope="col">{{ 'Acciones' | translate }}</th>
                         </tr>
                     </thead>
@@ -160,6 +174,7 @@
                             <td>{{vendor.apellidos}}</td>
                             <td>{{vendor.telefono}}</td>
                             <td>{{vendor.whatsapp}}</td>
+                            <td>{{vendor.capacidadCarga || 5}}</td>
                             <td>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-primary" (click)="editTransporter(vendor)">
