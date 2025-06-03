@@ -2038,29 +2038,24 @@ export class DespachosComponent implements OnInit {
       return;
     }
     
+    // Determinar si es una nueva orden o una existente
+    const esNuevaOrden = !this.nroShippingOrder || this.nroShippingOrder === '';
+    
     // Asignar datos recibidos a la nueva orden de envío
     if (!this.nuevaOrdenEnvio) {
       const currentCompanyStr = sessionStorage.getItem("currentCompany");
       const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : '';
       
-      // Buscar un transportador del formulario
-      let transportadorSeleccionado = '';
-      
-      // Si el usuario seleccionó un transportador mediante el diálogo de Swal
-      if (this.transportadorSeleccionado) {
-        transportadorSeleccionado = this.transportadorSeleccionado;
-      }
-      
       this.nuevaOrdenEnvio = {
         id: '',
         nroShippingOrder: this.nroShippingOrder || '',
         fecha: new Date().toISOString(),
-        transportador: transportadorSeleccionado,
+        transportador: this.transportadorSeleccionado || '',
         company: companyName,
         pedidos: this.pedidosSeleccionados || []
       };
     } else {
-      // Actualizar la orden existente manteniendo el transportador
+      // Actualizar la orden existente
       if (this.transportadorSeleccionado) {
         this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
       }
@@ -2075,120 +2070,218 @@ export class DespachosComponent implements OnInit {
       return;
     }
     
-    // Si no hay transportador seleccionado, pedir que se seleccione uno
-    if (!this.nuevaOrdenEnvio.transportador || this.nuevaOrdenEnvio.transportador === '') {
+    // Si es una nueva orden, crear directamente sin solicitar transportador
+    if (esNuevaOrden) {
+      this.crearOrdenEnvio();
+    } 
+    // Si es despacho de una orden existente y no hay transportador, solicitarlo
+    else if (!this.nuevaOrdenEnvio.transportador || this.nuevaOrdenEnvio.transportador === '') {
       this.seleccionarTransportador().then(transportador => {
         if (transportador) {
           this.transportadorSeleccionado = transportador;
           this.nuevaOrdenEnvio.transportador = transportador;
-          this.enviarOrdenAlServidor();
+          this.despacharOrdenEnvio();
         } else {
           console.error('No se seleccionó un transportador');
-          Swal.fire('Error', 'Debe seleccionar un transportador para la orden', 'error');
+          Swal.fire('Error', 'Debe seleccionar un transportador para despachar la orden', 'error');
         }
       });
     } else {
-      this.enviarOrdenAlServidor();
+      // Si ya tiene transportador, despachar directamente
+      this.despacharOrdenEnvio();
     }
+  }
+  
+  // Método para crear una nueva orden de envío
+  private crearOrdenEnvio(): void {
+    console.log('Creando nueva orden de envío:', this.nuevaOrdenEnvio);
+    
+    this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
+      next: (response) => {
+        console.log('Respuesta exitosa del servidor:', response);
+        
+        // Actualizar nroShippingOrder
+        if (response && response.nroShippingOrder) {
+          this.nroShippingOrder = response.nroShippingOrder;
+          this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
+        }
+        
+        Swal.fire({
+          title: 'Éxito',
+          text: `La orden de envío ${response.nroShippingOrder || ''} ha sido creada exitosamente`,
+          icon: 'success',
+          timer: 2000,  
+          showConfirmButton: false
+        });
+        
+        // Actualizar la lista de órdenes y cerrar el modal
+        this.refrescarDatos();
+        this.modalService.dismissAll();
+      },
+      error: (error) => {
+        console.error('Error al crear la orden de envío:', error);
+        Swal.fire('Error', 'Hubo un problema al crear la orden de envío: ' + (error.message || 'Error desconocido'), 'error');
+      }
+    });
+  }
+  
+  // Método para despachar una orden existente
+  private despacharOrdenEnvio(): void {
+    console.log('Despachando orden existente:', this.nuevaOrdenEnvio);
+    
+    // Verificar que haya un transportador asignado
+    if (!this.nuevaOrdenEnvio.transportador || this.nuevaOrdenEnvio.transportador === '') {
+      console.error('Error: No hay transportador asignado');
+      Swal.fire('Error', 'Debe asignar un transportador antes de despachar la orden', 'error');
+      return;
+    }
+    
+    // Actualizar el estado de cada pedido a "Despachado"
+    const userLite = this.getCurrentUser();
+    if (!userLite) {
+      Swal.fire('Error', 'No se pudo obtener información del usuario actual', 'error');
+      return;
+    }
+    
+    // Actualizar cada pedido con los datos de despacho
+    if (this.nuevaOrdenEnvio.pedidos && this.nuevaOrdenEnvio.pedidos.length > 0) {
+      this.nuevaOrdenEnvio.pedidos.forEach(pedido => {
+        pedido.estadoProceso = EstadoProceso.Despachado;
+        pedido.transportador = this.nuevaOrdenEnvio.transportador;
+        pedido.despachador = userLite;
+        pedido.fechaYHorarioDespachado = new Date().toISOString();
+        pedido.nroShippingOrder = this.nuevaOrdenEnvio.nroShippingOrder;
+        pedido.shippingOrder = this.nuevaOrdenEnvio.nroShippingOrder;
+      });
+    }
+    
+    console.log('Datos de despacho actualizados:', this.nuevaOrdenEnvio);
+    
+    // Enviar la orden al servidor
+    this.logisticaService.dispatchShippingOrder(this.nuevaOrdenEnvio).subscribe({
+      next: (response) => {
+        console.log('Respuesta exitosa del servidor:', response);
+        
+        // Actualizar los pedidos individualmente para asegurar que se guarden los cambios
+        const actualizarPromises = this.nuevaOrdenEnvio.pedidos.map(pedido => 
+          new Promise((resolve, reject) => {
+            this.ventasService.editOrder(pedido).subscribe({
+              next: () => resolve(true),
+              error: (err) => {
+                console.error(`Error al actualizar pedido ${pedido.nroPedido}:`, err);
+                reject(err);
+              }
+            });
+          })
+        );
+        
+        Promise.all(actualizarPromises).then(() => {
+          Swal.fire('Éxito', 'Orden despachada exitosamente y todos los pedidos actualizados', 'success');
+          
+          // Actualizar la lista de órdenes
+          this.refrescarDatos();
+          
+          // Cerrar el modal
+          this.modalService.dismissAll();
+        }).catch(error => {
+          console.error('Error al actualizar algunos pedidos:', error);
+          Swal.fire({
+            title: 'Advertencia',
+            text: 'La orden fue despachada pero hubo problemas al actualizar algunos pedidos. Se recomienda verificar el estado de los pedidos.',
+            icon: 'warning'
+          });
+          
+          // Actualizar la lista de órdenes
+          this.refrescarDatos();
+          
+          // Cerrar el modal
+          this.modalService.dismissAll();
+        });
+      },
+      error: (error) => {
+        console.error('Error al despachar la orden de envío:', error);
+        Swal.fire('Error', 'Hubo un problema al despachar la orden de envío: ' + (error.message || 'Error desconocido'), 'error');
+      }
+    });
   }
   
   // Método para solicitar selección de transportador
   private seleccionarTransportador(): Promise<string> {
     return new Promise((resolve) => {
       if (!this.vendors || !Array.isArray(this.vendors) || this.vendors.length === 0) {
-        console.error('No hay transportadores disponibles');
-        Swal.fire('Error', 'No hay transportadores disponibles', 'error');
-        resolve('');
-        return;
-      }
-      
-      Swal.fire({
-        title: 'Asignar Transportador',
-        input: 'select',
-        inputOptions: this.vendors.reduce((acc, vendor) => {
-          acc[`${vendor.nombres} ${vendor.apellidos}-${vendor.telefono}`] = `${vendor.nombres} ${vendor.apellidos}`;
-          return acc;
-        }, {}),
-        showCancelButton: true,
-        inputValidator: (value) => {
-          if (!value) {
-            return 'Debes ingresar el nombre del transportador';
+        // Intentar cargar transportadores si no están disponibles
+        this.logisticaService.getTransportadores().subscribe({
+          next: (data) => {
+            this.vendors = data || [];
+            if (this.vendors.length === 0) {
+              console.error('No hay transportadores disponibles después de cargar');
+              Swal.fire('Error', 'No hay transportadores disponibles', 'error');
+              resolve('');
+              return;
+            }
+            this.mostrarDialogoSeleccionTransportador(resolve);
+          },
+          error: (error) => {
+            console.error('Error al cargar transportadores:', error);
+            Swal.fire('Error', 'No se pudieron cargar los transportadores', 'error');
+            resolve('');
           }
-          return null;
-        }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          resolve(result.value);
-        } else {
-          resolve('');
-        }
-      });
+        });
+      } else {
+        this.mostrarDialogoSeleccionTransportador(resolve);
+      }
     });
   }
   
-  // Método para enviar la orden al servidor
-  private enviarOrdenAlServidor(): void {
-    console.log('Enviando orden de envío:', this.nuevaOrdenEnvio);
+  private mostrarDialogoSeleccionTransportador(resolve: (value: string) => void): void {
+    const opciones = this.vendors.reduce((acc, vendor) => {
+      const nombreCompleto = `${vendor.nombres} ${vendor.apellidos}`;
+      acc[nombreCompleto] = nombreCompleto;
+      return acc;
+    }, {});
     
-    // Determinar si es una nueva orden o una existente
-    const esNuevaOrden = !this.nroShippingOrder || this.nroShippingOrder === '';
-    
-    // Usar el método adecuado según si es una nueva orden o una existente
-    const observable = esNuevaOrden 
-      ? this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio)
-      : this.logisticaService.dispatchShippingOrder(this.nuevaOrdenEnvio);
-    
-    console.log(esNuevaOrden ? 'Creando nueva orden...' : 'Despachando orden existente...');
-    
-    observable.subscribe({
-      next: (response) => {
-        console.log('Respuesta exitosa del servidor:', response);
-        
-        // Actualizar nroShippingOrder si es una nueva orden
-        if (esNuevaOrden && response && response.nroShippingOrder) {
-          this.nroShippingOrder = response.nroShippingOrder;
-          this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
-          
-          Swal.fire({
-            title: 'Orden Creada',
-            text: `La orden de envío #${response.nroShippingOrder} ha sido creada exitosamente`,
-            icon: 'success',
-            confirmButtonText: '¿Desea despachar ahora?',
-            showCancelButton: true,
-            cancelButtonText: 'No, más tarde'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              // Si el usuario confirma, despachar la orden recién creada
-              this.nuevaOrdenEnvio.id = response.id || '';
-              this.logisticaService.dispatchShippingOrder(this.nuevaOrdenEnvio).subscribe({
-                next: (dispatchResponse) => {
-                  Swal.fire('Éxito', 'Orden despachada exitosamente', 'success');
-                  this.refrescarDatos();
-                },
-                error: (dispatchError) => {
-                  console.error('Error al despachar la orden:', dispatchError);
-                  Swal.fire('Error', 'Hubo un problema al despachar la orden', 'error');
-                }
-              });
-            }
-          });
-        } else {
-          // Si solo se estaba despachando una orden existente
-          Swal.fire('Éxito', 'Orden despachada exitosamente', 'success');
+    Swal.fire({
+      title: 'Asignar Transportador',
+      input: 'select',
+      inputOptions: opciones,
+      inputPlaceholder: 'Seleccione un transportador',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Seleccionar',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debes seleccionar un transportador';
         }
-        
-        // Actualizar la lista de órdenes
-        this.refrescarDatos();
-        
-        // Cerrar el modal si es necesario
-        this.modalService.dismissAll();
-      },
-      error: (error) => {
-        console.error(`Error al ${esNuevaOrden ? 'crear' : 'despachar'} la orden de envío:`, error);
-        Swal.fire('Error', `Hubo un problema al ${esNuevaOrden ? 'crear' : 'despachar'} la orden de envío: ${error.message || 'Error desconocido'}`, 'error');
-      },
-      complete: () => {
-        console.log(`Proceso de ${esNuevaOrden ? 'creación' : 'despacho'} de orden de envío completado`);
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        console.log('Transportador seleccionado:', result.value);
+        resolve(result.value);
+      } else {
+        resolve('');
+      }
+    });
+  }
+
+  // Método para manejar la visualización de imágenes a tamaño completo
+  openFullImage(imageUrl: string): void {
+    if (!imageUrl) {
+      console.error('No se recibió una URL de imagen válida');
+      return;
+    }
+    
+    console.log('Abriendo imagen a tamaño completo:', imageUrl);
+    
+    // Mostrar la imagen a tamaño completo usando SweetAlert2
+    Swal.fire({
+      imageUrl: imageUrl,
+      imageAlt: 'Imagen de entrega',
+      width: '80%',
+      showCloseButton: true,
+      showConfirmButton: false,
+      customClass: {
+        image: 'img-fluid'
       }
     });
   }
