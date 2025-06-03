@@ -76,26 +76,39 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         res.datosFacturacionElectronica.map((x) => {
           this.datosFacturacionElectronica.push(x);
         });
+
+
       });
 
     }
   }
 
-  ngOnInit() { 
+  ngOnInit() {
+
     // Si se reciben valores por herencia y no hay datos de facturación, crear uno nuevo
-    if (this.paisInicial && this.departamentoInicial && this.ciudad && this.direccionFacturacion && 
-        (!this.datosFacturacionElectronica || this.datosFacturacionElectronica.length === 0)) {
+    if (this.paisInicial && this.departamentoInicial && this.ciudad && this.direccionFacturacion &&
+      (!this.datosFacturacionElectronica || this.datosFacturacionElectronica.length === 0)) {
       this.pais = this.paisInicial;
       this.departamento = this.departamentoInicial;
       this.ciudad_municipio = this.ciudad;
       this.direccion_facturacion = this.direccionFacturacion;
       this.codigo_postal = this.codigoPostal;
-      
+
       // Identificar departamentos y ciudades
       this.identificarDepto();
       this.identificarCiu();
+
+      // Inicializar la lista si es necesario
+      if (!this.datosFacturacionElectronica) {
+        this.datosFacturacionElectronica = [];
+      }
+
+
     }
   }
+
+
+
   guardarDatosFacturacionElectronica() {
     this.datosFacturacionElectronica = [];
     const datosFacturacionElec = {
@@ -156,8 +169,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     this.pedidoGral.facturacion = this.datosFacturacionElectronica[index];
     this.pedidoGral = { ...this.pedidoGral };
     Swal.fire({
-      title: "Direccion Seleccionada!",
-      text: this.datosFacturacionElectronica[index].direccion,
+      title: "Datos Seleccionados!",
+      text: this.datosFacturacionElectronica[index].alias,
       icon: "success",
       confirmButtonText: "Ok",
     });

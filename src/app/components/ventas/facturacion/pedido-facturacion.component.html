@@ -31,7 +31,7 @@
             <th>{{ 'Nombres/Razon Social' | translate}}</th>
             <th>{{ 'Tipo Documento' | translate}}</th>
             <th>{{ 'Documento' | translate}}</th>
-            <th>{{ 'Dirección' | translate}}</th>
+            <!-- <th>{{ 'Dirección' | translate}}</th> -->
             <th>{{ 'Opciones' | translate}}</th>
           </tr>
         </thead>
@@ -39,7 +39,7 @@
           <tr *ngFor="let item of datosFacturacionElectronica; let i = index">
             <td>
               <button class="btn btn-primary" (click)="seleccionarDireccionFE(i)">
-                {{ 'Usar Esta Direccion' | translate}}
+                {{ 'Usar Estos Datos' | translate}}
               </button>
             </td>
             <td>{{ item.alias }}</td>
@@ -48,7 +48,7 @@
             <td>{{ item.documento }}</td>
             <!-- <td>{{item.indicativoCel}}{{item.celular}}</td>
                 <td>{{item.correoElectronico}}</td> -->
-            <td>{{ item.direccion }}</td>
+            <!-- <td>{{ item.direccion }}</td> -->
             <!-- <td>{{item.pais}}</td>
                 <td>{{item.departamento}}</td>
                 <td>{{item.ciudad}}</td>

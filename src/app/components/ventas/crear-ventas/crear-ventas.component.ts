@@ -169,6 +169,11 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   activarEntrega: boolean = true;
   documentoBuscar: any;
 
+  @Input("icon") public icon;
+
+  public col1: string = "4";
+  public col2: string = "6";
+
   originalDataEntregas: any[];
   originalDataFacturacionElectronica: any[];
   nextAvailable: boolean;
@@ -296,9 +301,15 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
+      // Agregar el consumidor final si no existe
+      if (!this.existeConsumidorFinal()) {
+        this.agregarConsumidorFinal();
+      }
+      
       res.datosFacturacionElectronica.map((x) => {
         this.datosFacturacionElectronica.push(x);
       });
+
     });
 
   }
@@ -1184,22 +1195,22 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   onSelectCity(event: any) {
     // Determinar si el evento viene del select directo o del componente hijo
     const value = event.target ? event.target.value : event;
-    
+
     // Si la ciudad no es válida, retornar
     if (value === 'seleccione') {
       this.selectedCity = '';
       return;
     }
-    
+
     // Guardar la ciudad seleccionada
     this.selectedCity = value;
-    
+
     // Actualizar componentes relacionados
     if (this.productos) {
       this.productos.ciudad = value;
       this.productos.filtrarProductos();
     }
-    
+
     // Resto del código existente...
     this.pedidoGral.envio = {
       ...(this.pedidoGral.envio || {}),
@@ -1412,6 +1423,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
               if (res && res.length > 0) {
                 this.datosFacturacionElectronica = res;
                 this.originalDataFacturacionElectronica = this.utils.deepClone(res);
+                // Agregar el consumidor final si no existe
+                if (!this.existeConsumidorFinal()) {
+                  this.agregarConsumidorFinal();
+                }
                 this.ref.detectChanges();
               }
             },
@@ -1439,13 +1454,38 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.guardarEstadoPedidoEnSession();
   }
 
-  @Input("icon") public icon;
 
-  public col1: string = "4";
-  public col2: string = "6";
+  // Método para verificar si ya existe un consumidor final en la lista
+  existeConsumidorFinal(): boolean {
+    if (!this.datosFacturacionElectronica) return false;
+    return this.datosFacturacionElectronica.some(item => item.documento === '222222222222');
+  }
 
+  // Método para agregar un consumidor final a la lista de facturación
+  agregarConsumidorFinal(): void {
+    const consumidorFinal = {
+      alias: 'Consumidor Final',
+      nombres: 'Consumidor Final',
+      tipoDocumento: 'CC-NIT',
+      documento: '222222222222',
+      indicativoCel: '',
+      celular: '',
+      correoElectronico: '',
+      direccion: this.direccion_facturacion || 'N/A',
+      pais: this.pais || 'Colombia',
+      departamento: this.departamento || '',
+      ciudad: this.ciudad_municipio || '',
+      codigoPostal: this.codigo_postal || ''
+    };
 
+    // Si la lista no está inicializada, crearla
+    if (!this.datosFacturacionElectronica) {
+      this.datosFacturacionElectronica = [];
+    }
 
+    // Agregar el consumidor final
+    this.datosFacturacionElectronica.push(consumidorFinal);
+  }
 
   private reviewStepAndExecute(index: number) {
     console.log(`Revisando paso ${index}`);
