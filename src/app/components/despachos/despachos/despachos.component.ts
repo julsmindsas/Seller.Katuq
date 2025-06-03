@@ -201,7 +201,7 @@ export class DespachosComponent implements OnInit {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial,
-      estadoProceso: [EstadoProceso.Rechazado, EstadoProceso.ParaDespachar, EstadoProceso.ProducidoTotalmente, EstadoProceso.SinProducir, EstadoProceso.Producido, EstadoProceso.Entregado, EstadoProceso.Despachado, EstadoProceso.Empacado],
+      estadoProceso: [EstadoProceso.Rechazado, EstadoProceso.ParaDespachar, EstadoProceso.ProducidoTotalmente, EstadoProceso.Producido, EstadoProceso.Entregado, EstadoProceso.Despachado, EstadoProceso.Empacado],
       estadosPago: [EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente, EstadoPago.Pospendiente],
       tipoFecha: 'fechaEntrega'
     }
@@ -218,6 +218,8 @@ export class DespachosComponent implements OnInit {
           order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
         }
         order.anticipo = order.anticipo ?? 0;
+        order.subtotal = (order.totalPedididoConDescuento ?? 0) + (order.totalEnvio ?? 0) - (order.totalDescuento ?? 0);
+        order.totalPedididoConDescuento = order.subtotal ?? 0 + (order.totalImpuesto ?? 0);
         order.faltaPorPagar = (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
       });
       
@@ -430,6 +432,14 @@ export class DespachosComponent implements OnInit {
       transportadoresEficiencia: {},
       prediccionCargaProximosDias: {}
     };
+    
+    // Inicializar kaiPredicciones para evitar errores de null
+    this.kaiPredicciones = {
+      cargaEstimada: {},
+      zonasCriticas: [],
+      asignacionOptima: {},
+      recomendaciones: []
+    };
   }
   
   // Calcular métricas para análisis KAI
@@ -488,17 +498,21 @@ export class DespachosComponent implements OnInit {
     for (let i = 0; i < 7; i++) {
       const fecha = new Date(hoy);
       fecha.setDate(fecha.getDate() + i);
-      const fechaStr = fecha.toISOString().split('T')[0];
+      // Usar timestamp en lugar de cadena ISO
+      const fechaTimestamp = fecha.getTime();
       
       // Contar pedidos programados para cada día
       const pedidosProgramados = this.orders.filter(p => {
         if (!p.fechaEntrega) return false;
         const fechaEntrega = new Date(p.fechaEntrega);
-        return fechaEntrega.toISOString().split('T')[0] === fechaStr;
+        // Convertir ambas fechas a formato 'YYYY-MM-DD' para comparar solo la fecha sin la hora
+        const fechaEntregaStr = fechaEntrega.toISOString().split('T')[0];
+        const fechaComparacionStr = fecha.toISOString().split('T')[0];
+        return fechaEntregaStr === fechaComparacionStr;
       }).length;
       
       // Añadir predicción base + variación aleatoria para simular
-      this.metricasLogistica.prediccionCargaProximosDias[fechaStr] = pedidosProgramados;
+      this.metricasLogistica.prediccionCargaProximosDias[fechaTimestamp] = pedidosProgramados;
     }
     
     // Simular predicciones de KAI
@@ -530,9 +544,10 @@ export class DespachosComponent implements OnInit {
     for (let i = 0; i < 7; i++) {
       const fecha = new Date(hoy);
       fecha.setDate(fecha.getDate() + i);
-      const fechaStr = fecha.toISOString().split('T')[0];
+      // Guardar la fecha como timestamp (número) en lugar de cadena ISO
+      const fechaTimestamp = fecha.getTime();
       
-      this.kaiPredicciones.cargaEstimada[fechaStr] = {};
+      this.kaiPredicciones.cargaEstimada[fechaTimestamp] = {};
       
       zonas.forEach(zona => {
         // Simular carga por zona - más alta para los primeros días, decreciente después
@@ -541,14 +556,20 @@ export class DespachosComponent implements OnInit {
         if (zona === 'Centro') cargaBase += 3; // Más carga en centro
         if (i === 1 || i === 2) cargaBase += 2; // Más carga en días específicos
         
-        this.kaiPredicciones.cargaEstimada[fechaStr][zona] = cargaBase;
+        this.kaiPredicciones.cargaEstimada[fechaTimestamp][zona] = cargaBase;
       });
     }
     
     // Zonas críticas (con alta carga o problemas históricos)
+    const fechaCritica1 = new Date(hoy);
+    fechaCritica1.setDate(fechaCritica1.getDate() + 1);
+    
+    const fechaCritica2 = new Date(hoy);
+    fechaCritica2.setDate(fechaCritica2.getDate() + 2);
+    
     this.kaiPredicciones.zonasCriticas = [
-      { zona: 'Sur', motivo: 'Alta demanda prevista', fechaCritica: new Date(hoy.setDate(hoy.getDate() + 1)).toISOString().split('T')[0] },
-      { zona: 'Centro', motivo: 'Congestión de tráfico', fechaCritica: new Date(hoy.setDate(hoy.getDate() + 2)).toISOString().split('T')[0] }
+      { zona: 'Sur', motivo: 'Alta demanda prevista', fechaCritica: fechaCritica1.getTime() },
+      { zona: 'Centro', motivo: 'Congestión de tráfico', fechaCritica: fechaCritica2.getTime() }
     ];
     
     // Asignación óptima de transportadores
@@ -2026,6 +2047,60 @@ export class DespachosComponent implements OnInit {
     );
     
     return pedidosUrgentesPendientes.length > 0 ? pedidosUrgentesPendientes[0] : null;
+  }
+  
+  // Método para formatear fechas en español con formato 'Nombre Día semana, Día Mes'
+  formatearFecha(fecha: any): string {
+    let fechaObj: Date;
+    
+    // Convertir a objeto Date válido
+    // Si es un número, lo tratamos como timestamp
+    if (typeof fecha === 'number') {
+      fechaObj = new Date(fecha);
+    }
+    // Si es string, intentamos convertirlo
+    else if (typeof fecha === 'string') {
+      // Si es formato ISO (YYYY-MM-DD)
+      if (fecha.match(/^\d{4}-\d{2}-\d{2}/)) {
+        fechaObj = new Date(fecha);
+      }
+      // Si es un número almacenado como string, convertirlo
+      else {
+        const timestamp = parseInt(fecha, 10);
+        if (!isNaN(timestamp)) {
+          fechaObj = new Date(timestamp);
+        } else {
+          fechaObj = new Date();
+        }
+      }
+    }
+    // Si es objeto Date, usarlo directamente
+    else if (fecha instanceof Date) {
+      fechaObj = fecha;
+    }
+    // Si todo falla, usar la fecha actual
+    else {
+      console.warn('No se pudo convertir la fecha:', fecha);
+      fechaObj = new Date();
+    }
+    
+    // Formatear la fecha en español
+    try {
+      const opciones: Intl.DateTimeFormatOptions = {
+        weekday: 'long',  // Nombre completo del día
+        day: 'numeric',   // Día del mes en números
+        month: 'long',    // Nombre completo del mes
+      };
+      
+      const formatoEspanol = new Intl.DateTimeFormat('es-ES', opciones);
+      const fechaFormateada = formatoEspanol.format(fechaObj);
+      
+      // Convertir primera letra a mayúscula
+      return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+    } catch (error) {
+      console.error('Error al formatear la fecha:', error);
+      return fechaObj.toLocaleDateString('es-ES');
+    }
   }
   
   onSubmitOrdenEnvio(event: any) {

@@ -248,8 +248,7 @@
                                                 *ngIf="metricasLogistica?.prediccionCargaProximosDias as prediccion">
                                                 <div class="d-flex justify-content-between align-items-center"
                                                     *ngFor="let item of (prediccion | keyvalue)?.slice(0, 5)">
-                                                    <span class="fw-bold small">{{ item.key | date:'EEE, dd MMM':'':'es'
-                                                        }}</span>
+                                                    <span class="fw-bold small">{{ formatearFecha(item.key) }}</span>
                                                     <div class="d-flex align-items-center">
                                                         <div class="progress flex-grow-1 me-2"
                                                             style="width: 100px; height: 6px;">
