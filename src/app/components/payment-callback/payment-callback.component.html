@@ -1,65 +1,169 @@
 <!-- Page Header Start -->
 <section class="section hero has-bg-image" id="home" aria-label="home" style="background-image: url('./assets/images/banner6.jpg'); background-repeat: no-repeat;
-  background-size: 100% 100%;background-position: top;">
-
-<br><br><br>
+  background-size: cover; background-position: center; height: 300px;">
   <!-- Page Header Start -->
-  <div class="container-fluid mb-5 position-relative overlay-bottom">
+  <div class="container-fluid mb-3 position-relative overlay-bottom">
     <div class="d-flex flex-column align-items-center justify-content-center pt-0 pt-lg-5" style="min-height: 200px">
-      <div class="logo-container" style="margin-bottom: 20px;">
-        <img src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo" class="katuq-logo" style="max-width: 200px;">
+      <div class="logo-container" style="margin-bottom: 10px;">
+        <img src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo" class="katuq-logo" style="max-width: 180px;">
       </div>
-      <h3 class="display-4 mb-3 mt-0 mt-lg-5 text-white title-form text-uppercase">Resultado de transacción</h3>
-      <div class="d-inline-flex mb-lg-5">
-        <!-- Enlaces de navegación si son necesarios -->
-      </div>
+      <h3 class="display-4 mb-3 mt-2 text-white title-form text-uppercase" style="font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Resultado de tu transacción</h3>
     </div>
   </div>
 </section>
 <!-- Page Header End -->
 
-<div class="container-fluid pt-5" style="font-family: Mulish;">
-  <div class="container">
-    <div>
+<div class="container pt-4" style="font-family: Mulish; max-width: 800px; margin-top: -50px;">
+  <div class="card border-0 shadow-lg rounded-lg">
+    <div class="card-body p-4">
       <section>
-        <div *ngIf="!aprobada">
-          <h4 class="text-center tituloCarro" style="color: white">OCURRIO UN ERROR</h4>
-          <br>
-          <div style="margin:20px;">
-            <h2 class="text-center textoCarro">Lamentamos el inconveniente. Por favor comunicate con nosotros</h2>
+        <!-- Estado de carga con animación mejorada -->
+        <div *ngIf="loading" class="text-center py-5">
+          <div class="spinner-grow text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Cargando...</span>
           </div>
-          <div style="margin:20px;">
-            <h2 class="text-center textoCarro fc-primary">Referencia: {{ paymentReference }}</h2>
-          </div>
-        </div>
-
-        <div *ngIf="aprobada">
-          <h4 class="text-center tituloCarro" style="color: white">GRACIAS POR TU COMPRA</h4>
-          <br>
-          <div style="margin:20px;">
-            <h2 class="text-center textoCarro">Estamos preparando tu pedido.</h2>
-          </div>
-          <div style="margin:20px;">
-            <h2 class="text-center textoCarro">Guarda éste número para el seguimiento de tu orden.</h2>
-          </div>
-          <div style="margin:20px;">
-            <h2 class="text-center textoCarro"><strong>{{ paymentReference }}</strong></h2>
-          </div>
-          <div style="margin:20px;">
-            <h3 class="text-center textoCarro">orden: {{ idOrden }}</h3>
+          <h4 class="mt-4 text-center" style="color: #555;">Verificando el estado de tu transacción...</h4>
+          <div class="progress mt-3" style="height: 6px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
           </div>
         </div>
 
-        <div style="margin:20px;">
-          <p class="text-center textoCarro">Si tienes alguna inquietud, no dudes en comunicarte con nosotros a nuestro whatsapp!</p>
+        <!-- Manejo de errores con iconos -->
+        <div *ngIf="error && !loading" class="text-center py-4">
+          <div class="mb-3">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
+            <h4 class="text-center mt-3" style="color: #dc3545; font-weight: 600;">ERROR DE TRANSACCIÓN</h4>
+          </div>
+          <div class="alert alert-danger mx-auto" style="max-width: 90%;">
+            <p class="mb-0">{{ errorMessage || 'Ocurrió un error al procesar la transacción' }}</p>
+          </div>
+          <div class="card bg-light mt-3 mb-3 mx-auto" style="max-width: 90%;">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-sm-6" *ngIf="paymentReference">
+                  <h6 class="text-muted">Referencia:</h6>
+                  <p class="font-weight-bold" style="font-size: 1.1rem;">{{ paymentReference }}</p>
+                </div>
+                <div class="col-sm-6" *ngIf="transactionId">
+                  <h6 class="text-muted">ID transacción:</h6>
+                  <p class="font-weight-bold" style="font-size: 1.1rem;">{{ transactionId }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <br>
-        <div class="text-center">
-          <button class="btn btn-dark w-50" type="submit" (click)="returnToHome()">
-            REGRESAR
-          </button>
+
+        <!-- Transacción rechazada con diseño mejorado -->
+        <div *ngIf="!aprobada && !loading && !error" class="text-center py-4">
+          <div class="mb-3">
+            <i class="fas fa-times-circle" style="font-size: 4rem; color: #ff6b6b;"></i>
+            <h4 class="text-center mt-3" style="color: #ff6b6b; font-weight: 600;">TRANSACCIÓN RECHAZADA</h4>
+          </div>
+          <div class="alert alert-warning mx-auto" style="max-width: 90%;">
+            <p class="mb-0">{{ transactionDetails?.status_message || 'La transacción fue rechazada por el sistema de pagos' }}</p>
+          </div>
+          <div class="card border-light shadow-sm mt-4 mb-3 mx-auto" style="max-width: 90%;">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <h6 class="text-muted">Referencia:</h6>
+                    <p class="font-weight-bold" style="font-size: 1.1rem;">{{ paymentReference }}</p>
+                  </div>
+                  <div *ngIf="transactionDetails?.payment_method_type">
+                    <h6 class="text-muted">Método de pago:</h6>
+                    <p>{{ transactionDetails?.payment_method_type }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <h6 class="text-muted">ID transacción:</h6>
+                    <p class="font-weight-bold" style="font-size: 1.1rem;">{{ transactionId }}</p>
+                  </div>
+                  <div *ngIf="transactionDetails?.created_at">
+                    <h6 class="text-muted">Fecha:</h6>
+                    <p>{{ transactionDetails?.created_at | date: 'dd/MM/yyyy HH:mm' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transacción aprobada con diseño mejorado y celebración -->
+        <div *ngIf="aprobada && !loading && !error" class="text-center py-4">
+          <div class="mb-3">
+            <i class="fas fa-check-circle" style="font-size: 4rem; color: #28a745;"></i>
+            <h4 class="text-center mt-3" style="color: #28a745; font-weight: 600;">¡PAGO APROBADO!</h4>
+          </div>
+          <div class="alert alert-success mx-auto my-3" style="max-width: 90%;">
+            <p class="mb-0">¡Gracias por tu compra! Tu transacción ha sido procesada exitosamente.</p>
+          </div>
+          <div class="card border-success shadow-sm mt-3 mb-3 mx-auto" style="max-width: 90%;">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0">Detalles de tu compra</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <h6 class="text-muted">Referencia:</h6>
+                    <p class="font-weight-bold" style="font-size: 1.2rem;">{{ paymentReference }}</p>
+                  </div>
+                  <div *ngIf="transactionDetails?.payment_method_type">
+                    <h6 class="text-muted">Método de pago:</h6>
+                    <p>{{ transactionDetails?.payment_method_type }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <h6 class="text-muted">ID transacción:</h6>
+                    <p>{{ transactionId }}</p>
+                  </div>
+                  <div *ngIf="transactionDetails?.amount_in_cents">
+                    <h6 class="text-muted">Monto pagado:</h6>
+                    <p class="font-weight-bold" style="font-size: 1.2rem; color: #28a745;">
+                      {{ (transactionDetails?.amount_in_cents / 100) | currency:'COP':'symbol':'1.0-0' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="text-center mt-3">
+                <p>Estamos preparando tu pedido. Te notificaremos cuando esté listo.</p>
+                <p class="text-success font-weight-bold">Guarda este número para el seguimiento de tu orden.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agregar un nuevo div para mostrar el estado de la notificación, justo antes del botón de regresar -->
+        <!-- <div *ngIf="!loading && notificationSent" class="text-center mb-3">
+          <div *ngIf="notificationSuccess" class="alert alert-success mx-auto" style="max-width: 90%;">
+            <i class="fas fa-sync-alt"></i> La transacción ha sido registrada en el sistema correctamente.
+          </div>
+          <div *ngIf="!notificationSuccess" class="alert alert-warning mx-auto" style="max-width: 90%;">
+            <i class="fas fa-exclamation-triangle"></i> No se pudo registrar la transacción en el sistema.
+            <button class="btn btn-outline-warning btn-sm ml-3" (click)="resendTransactionNotification()">
+              <i class="fas fa-sync"></i> Reintentar
+            </button>
+          </div>
+        </div> -->
+
+        <div *ngIf="!loading" class="text-center py-3">
+          <p class="text-muted">Si tienes alguna inquietud, comunícate con nosotros por WhatsApp</p>
+          <a href="https://wa.me/+573243564016" class="btn btn-outline-success btn-sm mb-3">
+            <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+          </a>
+          <div class="mt-2">
+            <button class="btn btn-primary btn-lg px-5" type="button" (click)="returnToHome()">
+              REGRESAR A INICIO
+            </button>
+          </div>
         </div>
       </section>
     </div>
   </div>
 </div>
+
+<!-- Añadir FontAwesome para los iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />

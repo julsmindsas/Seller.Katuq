@@ -170,4 +170,6 @@ export interface PagoInformation {
     tipo: string;
     id: string;
     integridad?: string;
+    linkPago?: string;
+    detalleIntegracion?: any;
 }

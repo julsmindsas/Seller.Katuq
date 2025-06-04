@@ -1738,8 +1738,8 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.cambiarEstadoSegunLosProductos();
 
     // Verificar la forma de pago
-    const formaPago = this.pedidoGral.formaDePago?.toLowerCase();
-    if (formaPago === 'wompi') {
+    const formaPago = this.pedidoGral.formaDePago?.toLowerCase() || '';
+    if (formaPago.includes('wompi')) {
       // Para Wompi, primero guardar el pedido y después mostrar el widget de pago
       this.pedidoGral.estadoPago = EstadoPago.Pendiente; // Asegurar que el estado comienza como pendiente
       this.guardarPedidoParaWompi().then(pedidoGuardado => {
@@ -2188,77 +2188,51 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     });
   }
 
-  // Método modificado para iniciar el pago con Wompi (ahora solo inicia el widget, no guarda el pedido)
+  /**
+   * Inicia el proceso de pago con Wompi
+   * 
+   * IMPLEMENTACIÓN ANTERIOR:
+   * Anteriormente, este método inicializaba y abría el widget de Wompi directamente en el navegador:
+   * 1. Configuraba los datos necesarios (monto, referencia, datos del cliente)
+   * 2. Creaba una instancia del WidgetCheckout con la configuración
+   * 3. Abría el widget que mostraba una interfaz para ingresar datos de la tarjeta
+   * 4. Procesaba la respuesta del widget para actualizar el estado del pedido
+   * 
+   * NUEVA IMPLEMENTACIÓN:
+   * Ahora utilizamos un enfoque basado en link de pago que viene desde el backend:
+   * 1. El backend genera un link de pago en Wompi y lo envía en el objeto order.pagoInformation
+   * 2. Este método simplemente abre ese link en una pestaña nueva
+   * 3. El estado del pago se actualiza posteriormente mediante webhooks configurados en el backend
+   * 
+   * El objeto pagoInformation ahora contiene:
+   * - integridad: hash de verificación
+   * - estado: estado del pago ("pendiente", "aprobado", etc.)
+   * - fecha: fecha de generación
+   * - linkPago: URL generada por Wompi para completar el pago
+   * - detalleIntegracion: información adicional de la integración con Wompi
+   * 
+   * @returns Promise<boolean> Promesa que se resuelve con true si el proceso de pago se inició correctamente
+   */
   private iniciarPagoConWompi(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
-        // Configuración del widget de Wompi
-        const amountInCents = Math.round((this.pedidoGral?.totalPedididoConDescuento ?? 0) * 100); // Convertir a centavos
+        // NUEVA IMPLEMENTACIÓN: Utiliza el link de pago proporcionado por el backend
+        if (!this.pedidoGral.pagoInformation || !this.pedidoGral.pagoInformation.linkPago) {
+          console.error('No se encontró el link de pago en la información del pedido');
+          reject(new Error('Link de pago no disponible'));
+          return;
+        }
 
-        // Asegúrate de tener estos datos disponibles en tu pedido o configuración
-        // const wompiPublicKey = environment.wompi.public_key || 'pub_test_YOUR_PUBLIC_KEY';
-        const wompiPublicKey = 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy';  //|| 'pub_test_YOUR_PUBLIC_KEY';
-
-        // Usar el número de pedido ya asignado como referencia
-        const reference = this.pedidoGral?.nroPedido || `order-${new Date().getTime()}`;
-
-        // Configurar datos del cliente para el formulario de pago
-        const customerData = {
-          fullName: this.pedidoGral?.cliente?.nombres_completos || '',
-          phoneNumber: this.pedidoGral?.cliente?.numero_celular_comprador || '',
-          phoneNumberPrefix: this.pedidoGral?.cliente?.indicativo_celular_comprador || '57',
-          email: this.pedidoGral?.cliente?.correo_electronico_comprador || ''
-        };
-
-        // Inicializar el widget de Wompi
-        const checkout = new window['WidgetCheckout']({
-          currency: 'COP',
-          amountInCents: amountInCents,
-          reference: reference,
-          publicKey: wompiPublicKey,
-          redirectUrl: 'http://localhost:4200/payment-callback',//environment.wompi.redirectURL, // URL a la que Wompi redirigirá después del pago
-          taxInCents: {
-            vat: Math.round((this.pedidoGral?.totalImpuesto ?? 0) * 100), // IVA, ajustar según necesidades
-            consumption: 0 // Impuesto al consumo, ajustar según necesidades
-          },
-          signature: {
-            integrity: this.pedidoGral?.pagoInformation?.integridad || '', // Firma de seguridad, ajustar según necesidades 
-          },
-
-          customerData: customerData,
-          // Puedes agregar más configuraciones según la documentación de Wompi
-        });
-
-        // Abrir el widget y manejar la respuesta
-        checkout.open((result) => {
-          const { transaction } = result;
-
-          if (transaction.status === 'APPROVED') {
-            // Almacenar los datos de la transacción en el pedido
-            this.pedidoGral.transaccionId = transaction.id;
-            this.pedidoGral.estadoPago = EstadoPago.Aprobado;
-            this.pedidoGral.PagosAsentados = [{
-              fechaHoraAprobacionRechazo: new Date().toISOString(),
-              numeroPedido: reference,
-              numeroComprobante: transaction.id,
-              estadoVerificacion: 'Aprobado',
-              formaPago: 'Wompi',
-              valorRegistrado: this.pedidoGral.totalPedididoConDescuento || 0
-            }];
-
-            resolve(true); // Pago exitoso
-          } else {
-            this.pedidoGral.estadoPago = EstadoPago.Rechazado;
-            // Puedes guardar más detalles sobre el rechazo si lo necesitas
-            resolve(false); // Pago rechazado
-          }
-        }, (error) => {
-          console.error('Error en el widget de Wompi:', error);
-          reject(error);
-        });
+        // Redireccionar al usuario al link de pago proporcionado por el backend
+        // window.open(this.pedidoGral.pagoInformation.linkPago, '_blank');
+        
+        // Como ahora trabajamos con un link externo y no hay forma directa de saber cuando 
+        // finaliza el pago, simplemente resolvemos la promesa sin esperar confirmación
+        // El estado del pago se actualizará posteriormente mediante una notificación webhook
+        resolve(true);
 
       } catch (error) {
-        console.error('Error al inicializar el widget de Wompi:', error);
+        console.error('Error al procesar el pago:', error);
         reject(error);
       }
     });

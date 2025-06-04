@@ -1,60 +1,172 @@
 <div class="modal-header">
-  <h5 class="modal-title">
-    <i class="fa" [ngClass]="isEdit ? 'fa-edit' : 'fa-plus-circle'"></i>
-    {{ isEdit ? 'Editar integración: ' + integrationData.name : 'Nueva integración' }}
-    <span *ngIf="selectedCategory && !isEdit">: {{ categoryLabels[selectedCategory] }}</span>
-  </h5>
+  <div class="modal-header-content">
+    <h5 class="modal-title">
+      <i class="fa" [ngClass]="isEdit ? 'fa-edit' : 'fa-plus-circle'"></i>
+      {{ isEdit ? 'Editar integración: ' + integrationData.name : 'Nueva integración' }}
+      <span *ngIf="selectedCategory && !isEdit">: {{ categoryLabels[selectedCategory] }}</span>
+    </h5>
+    
+    <!-- Progress indicator -->
+    <div class="integration-progress" *ngIf="!isEdit">
+      <div class="progress-steps">
+        <div class="step" [ngClass]="{'active': currentStep === 1, 'completed': currentStep > 1}">
+          <div class="step-circle">
+            <i class="fa" [ngClass]="currentStep > 1 ? 'fa-check' : 'fa-layer-group'"></i>
+          </div>
+          <span class="step-label">Categoría</span>
+        </div>
+        <div class="step-connector" [ngClass]="{'completed': currentStep > 1}"></div>
+        <div class="step" [ngClass]="{'active': currentStep === 2, 'completed': currentStep > 2}">
+          <div class="step-circle">
+            <i class="fa" [ngClass]="currentStep > 2 ? 'fa-check' : 'fa-puzzle-piece'"></i>
+          </div>
+          <span class="step-label">Servicio</span>
+        </div>
+        <div class="step-connector" [ngClass]="{'completed': currentStep > 2}"></div>
+        <div class="step" [ngClass]="{'active': currentStep === 3, 'completed': currentStep > 3}">
+          <div class="step-circle">
+            <i class="fa" [ngClass]="currentStep > 3 ? 'fa-check' : 'fa-cog'"></i>
+          </div>
+          <span class="step-label">Configuración</span>
+        </div>
+        <div class="step-connector" [ngClass]="{'completed': currentStep > 3}"></div>
+        <div class="step" [ngClass]="{'active': currentStep === 4}">
+          <div class="step-circle">
+            <i class="fa fa-check-circle"></i>
+          </div>
+          <span class="step-label">Verificación</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <button type="button" class="close" (click)="closeModal()" aria-label="Close">
     <span aria-hidden="true">&times;</span>
   </button>
 </div>
 
 <div class="modal-body">
-  <!-- Selector de categoría (solo si es nueva integración) -->
-  <div *ngIf="!isEdit && !selectedCategory" class="mb-4">
-    <h6 class="mb-3">Selecciona una categoría de integración</h6>
+  <!-- Step 1: Selector de categoría -->
+  <div *ngIf="!isEdit && (!selectedCategory || currentStep === 1)" class="step-content" [ngClass]="{'step-active': currentStep === 1}">
+    <div class="step-header">
+      <div class="step-indicator">
+        <i class="fa fa-layer-group"></i>
+        <span class="step-number">1</span>
+      </div>
+      <div class="step-info">
+        <h6 class="step-title">Selecciona una categoría de integración</h6>
+        <p class="step-description">Elige el tipo de servicio que deseas integrar con tu tienda</p>
+      </div>
+    </div>
     
-    <div class="integration-categories-tabs">
+    <div class="integration-categories-grid">
       <div *ngFor="let category of categories" 
-           class="category-tab" 
-           [ngClass]="{'active': selectedCategory === category}"
+           class="category-option" 
+           [ngClass]="{'selected': selectedCategory === category}"
            (click)="selectCategory(category)">
-        <div class="category-tab-icon">
+        <div class="category-option-icon">
           <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
         </div>
-        <span class="category-tab-label">{{ categoryLabels[category] }}</span>
+        <div class="category-option-content">
+          <h6 class="category-option-title">{{ categoryLabels[category] }}</h6>
+          <p class="category-option-description">{{ getCategoryDescription(category) }}</p>
+          <span class="category-option-count">{{ getIntegrationsCountForCategory(category) }} opciones disponibles</span>
+        </div>
+        <div class="category-option-arrow">
+          <i class="fa fa-chevron-right"></i>
+        </div>
       </div>
     </div>
   </div>
   
-  <!-- Selector de tipo de integración -->
-  <div *ngIf="selectedCategory || isEdit" class="mb-4">
-    <h6 class="mb-3">{{ isEdit ? 'Tipo de integración' : 'Selecciona el servicio' }}</h6>
+  <!-- Step 2: Selector de tipo de integración -->
+  <div *ngIf="(selectedCategory || isEdit) && (!selectedIntegrationType || currentStep === 2)" 
+       class="step-content" 
+       [ngClass]="{'step-active': currentStep === 2}">
+    <div class="step-header">
+      <div class="step-indicator">
+        <i class="fa fa-puzzle-piece"></i>
+        <span class="step-number">2</span>
+      </div>
+      <div class="step-info">
+        <h6 class="step-title">{{ isEdit ? 'Tipo de integración' : 'Selecciona el servicio' }}</h6>
+        <p class="step-description">Elige el proveedor específico que deseas configurar</p>
+      </div>
+      <button *ngIf="!isEdit && selectedCategory" 
+              class="btn btn-sm btn-outline-primary step-back-btn" 
+              (click)="goToPreviousStep()">
+        <i class="fa fa-chevron-left"></i> Cambiar categoría
+      </button>
+    </div>
     
     <!-- Logos de integraciones populares con manejo de errores -->
-    <div class="integration-logos-grid">
+    <div class="integration-services-grid">
       <div *ngFor="let integration of getIntegrationsForCategory(selectedCategory || integrationData.category)" 
-           class="logo-item"
-           [ngClass]="{'selected': selectedIntegrationType === integration.id}"
+           class="service-option"
+           [ngClass]="{'selected': selectedIntegrationType === integration.id, 'popular': integration.popular}"
            (click)="selectIntegrationType(integration.id)">
-        <img [src]="integration.logo" 
-             [alt]="integration.name" 
-             *ngIf="integration.logo"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="integration-icon" *ngIf="!integration.logo" [style.display]="integration.logo ? 'none' : 'flex'">
-          <i class="fa" [ngClass]="getIntegrationIcon(integration.id)"></i>
+        <div class="service-option-header">
+          <img [src]="integration.logo" 
+               [alt]="integration.name" 
+               *ngIf="integration.logo"
+               class="service-logo"
+               (error)="handleImageError($event, integration.id)">
+          <div class="service-icon" *ngIf="!integration.logo || hasImageError(integration.id)">
+            <i class="fa" [ngClass]="getIntegrationIcon(integration.id)"></i>
+          </div>
+          <span class="popular-badge" *ngIf="integration.popular">Popular</span>
         </div>
-        <span>{{ integration.name }}</span>
+        <div class="service-option-content">
+          <h6 class="service-name">{{ integration.name }}</h6>
+          <p class="service-description">{{ integration.description }}</p>
+          <div class="service-features" *ngIf="integration.features">
+            <span *ngFor="let feature of integration.features" class="feature-tag">{{ feature }}</span>
+          </div>
+        </div>
+        <div class="service-option-action">
+          <i class="fa fa-chevron-right"></i>
+        </div>
       </div>
     </div>
   </div>
   
-  <!-- Formulario de configuración -->
-  <div *ngIf="selectedIntegrationType || isEdit" class="integration-config-form">
-    <div class="credentials-alert" *ngIf="!isEdit">
-      <i class="fa fa-info-circle"></i>
-      Las credenciales de API son necesarias para conectar con el servicio externo. Puedes encontrarlas en tu panel de administración de {{ getSelectedIntegrationName() }}.
+  <!-- Step 3: Formulario de configuración -->
+  <div *ngIf="(selectedIntegrationType || isEdit) && currentStep >= 3" 
+       class="step-content" 
+       [ngClass]="{'step-active': currentStep === 3}">
+    <div class="step-header">
+      <div class="step-indicator">
+        <i class="fa fa-cog"></i>
+        <span class="step-number">3</span>
+      </div>
+      <div class="step-info">
+        <h6 class="step-title">Configuración de credenciales</h6>
+        <p class="step-description">Ingresa las credenciales necesarias para conectar con {{ getSelectedIntegrationName() }}</p>
+      </div>
+      <button *ngIf="!isEdit" 
+              class="btn btn-sm btn-outline-primary step-back-btn" 
+              (click)="goToPreviousStep()">
+        <i class="fa fa-chevron-left"></i> Cambiar servicio
+      </button>
     </div>
+
+    <div class="integration-config-form">
+      <div class="credentials-info-card">
+        <div class="info-card-icon">
+          <i class="fa fa-info-circle"></i>
+        </div>
+        <div class="info-card-content">
+          <h6>¿Dónde encontrar las credenciales?</h6>
+          <p>Las credenciales de API son necesarias para conectar con {{ getSelectedIntegrationName() }}. 
+             Puedes encontrarlas en tu panel de administración.</p>
+          <a [href]="getDocumentationUrl(selectedIntegrationType)" 
+             target="_blank" 
+             class="info-card-link"
+             *ngIf="getDocumentationUrl(selectedIntegrationType)">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+      </div>
     
     <form [formGroup]="integrationForm" (ngSubmit)="saveIntegration()">
       <!-- Nombre -->
@@ -205,17 +317,136 @@
           </div>
         </div>
       </div>
+      <!-- Step 4: Verification step -->
+      <div class="step-navigation" *ngIf="!isEdit && currentStep === 3">
+        <button type="button" 
+                class="btn btn-outline-secondary" 
+                (click)="goToPreviousStep()">
+          <i class="fa fa-chevron-left"></i> Anterior
+        </button>
+        <button type="button" 
+                class="btn btn-primary" 
+                (click)="proceedToVerification()"
+                [disabled]="integrationForm.invalid">
+          Continuar <i class="fa fa-chevron-right"></i>
+        </button>
+      </div>
     </form>
+    
+    <!-- Step 4: Verification -->
+    <div *ngIf="currentStep === 4" class="verification-step">
+      <div class="step-header">
+        <div class="step-indicator">
+          <i class="fa fa-check-circle"></i>
+          <span class="step-number">4</span>
+        </div>
+        <div class="step-info">
+          <h6 class="step-title">Verificación y confirmación</h6>
+          <p class="step-description">Revisa la configuración antes de guardar</p>
+        </div>
+      </div>
+      
+      <div class="configuration-summary">
+        <h6><i class="fa fa-clipboard-list"></i> Resumen de configuración</h6>
+        <div class="summary-item">
+          <span class="summary-label">Nombre:</span>
+          <span class="summary-value">{{ integrationForm.get('name')?.value }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Tipo:</span>
+          <span class="summary-value">{{ getSelectedIntegrationName() }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Ambiente:</span>
+          <span class="summary-value">{{ integrationForm.get('environment')?.value | titlecase }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Estado:</span>
+          <span class="summary-value" [ngClass]="integrationForm.get('enabled')?.value ? 'text-success' : 'text-warning'">
+            {{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+      </div>
+      
+      <div class="connection-test" *ngIf="connectionTestResult">
+        <div class="test-result" [ngClass]="connectionTestResult.success ? 'test-success' : 'test-error'">
+          <i class="fa" [ngClass]="connectionTestResult.success ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+          <span>{{ connectionTestResult.message }}</span>
+        </div>
+      </div>
+      
+      <div class="step-navigation">
+        <button type="button" 
+                class="btn btn-outline-secondary" 
+                (click)="goToPreviousStep()">
+          <i class="fa fa-chevron-left"></i> Anterior
+        </button>
+        <button type="button" 
+                class="btn btn-success" 
+                (click)="saveIntegration()"
+                [disabled]="integrationForm.invalid || isSaving">
+          <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{ isSaving ? 'Guardando...' : 'Guardar integración' }}
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-light" (click)="closeModal()">Cancelar</button>
-  <button type="button" class="btn btn-primary" (click)="testConnection()" *ngIf="selectedIntegrationType || isEdit">
-    <i class="fa fa-plug"></i> Probar conexión
-  </button>
-  <button type="button" class="btn btn-success" (click)="saveIntegration()" [disabled]="integrationForm.invalid">
-    <i class="fa" [ngClass]="isEdit ? 'fa-save' : 'fa-plus-circle'"></i>
-    {{ isEdit ? 'Guardar cambios' : 'Crear integración' }}
-  </button>
+  <div class="modal-footer-left">
+    <button type="button" class="btn btn-light" (click)="closeModal()">
+      <i class="fa fa-times"></i> Cancelar
+    </button>
+  </div>
+  
+  <div class="modal-footer-right">
+    <!-- Show different buttons based on current step and edit mode -->
+    <div *ngIf="isEdit" class="footer-actions-edit">
+      <button type="button" 
+              class="btn btn-info" 
+              (click)="testConnection()" 
+              [disabled]="integrationForm.invalid || isTesting">
+        <i class="fa" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
+        {{ isTesting ? 'Probando...' : 'Probar conexión' }}
+      </button>
+      <button type="button" 
+              class="btn btn-success" 
+              (click)="saveIntegration()" 
+              [disabled]="integrationForm.invalid || isSaving">
+        <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+        {{ isSaving ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+    
+    <div *ngIf="!isEdit" class="footer-actions-new">
+      <!-- Step 1 & 2: Category and service selection -->
+      <button *ngIf="currentStep < 3" 
+              type="button" 
+              class="btn btn-primary" 
+              (click)="goToNextStep()"
+              [disabled]="!canProceedToNextStep()">
+        Continuar <i class="fa fa-chevron-right"></i>
+      </button>
+      
+      <!-- Step 3: Configuration -->
+      <div *ngIf="currentStep === 3" class="step-3-actions">
+        <button type="button" 
+                class="btn btn-info" 
+                (click)="testConnection()" 
+                [disabled]="integrationForm.invalid || isTesting">
+          <i class="fa" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
+          {{ isTesting ? 'Probando...' : 'Probar conexión' }}
+        </button>
+        <button type="button" 
+                class="btn btn-primary" 
+                (click)="proceedToVerification()"
+                [disabled]="integrationForm.invalid">
+          Revisar <i class="fa fa-chevron-right"></i>
+        </button>
+      </div>
+      
+      <!-- Step 4: Final save is handled in the step content -->
+    </div>
+  </div>
 </div>
