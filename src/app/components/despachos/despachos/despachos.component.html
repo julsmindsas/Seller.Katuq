@@ -28,7 +28,7 @@
 
                 <!-- Alertas de priorización -->
                 <div class="px-4 py-3 bg-light border-bottom"
-                    *ngIf="!loading && (obtenerConteoPedidosUrgentesNoDespachados() > 0 || obtenerConteoPedidosEnRiesgoNoDespachados() > 0)">
+                    *ngIf="!loading && (obtenerConteoPedidosUrgentesNoDespachados() > 0 || obtenerConteoPedidosEnRiesgoNoDespachados() > 0 || obtenerConteoPedidosSinProducirUrgentes() > 0)">
                     <div class="d-flex flex-column">
                         <div class="alert alert-warning mb-2" *ngIf="obtenerConteoPedidosUrgentesNoDespachados() > 0">
                             <div class="d-flex align-items-center">
@@ -43,6 +43,22 @@
                                             obtenerPrimerPedidoUrgenteNoDespachado().nroPedido }} - {{
                                             obtenerPrimerPedidoUrgenteNoDespachado().diasRestantes }} {{ 'día(s)
                                             restante(s)' | translate }})
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mb-2" *ngIf="obtenerConteoPedidosSinProducirUrgentes() > 0">
+                            <div class="d-flex align-items-center">
+                                <i class="pi pi-exclamation-circle fs-4 me-3"></i>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ 'Pedidos Urgentes Sin Producir' | translate }}</h6>
+                                    <p class="mb-0">
+                                        {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosSinProducirUrgentes()
+                                            }}</strong> {{ 'pedidos sin iniciar producción con fecha de entrega cercana' | translate }}
+                                        <span class="text-danger ms-2">
+                                            <i class="pi pi-arrow-right"></i> {{ 'Requieren prioridad de producción' | translate }}
                                         </span>
                                     </p>
                                 </div>
@@ -185,6 +201,23 @@
                                                 </div>
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-info fw-bold">{{ 'Sin Producir' | translate }}</span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress flex-grow-1 me-2"
+                                                        style="width: 100px; height: 6px;">
+                                                        <div class="progress-bar bg-info"
+                                                            [style.width.%]="(pedidosSinProducir.length / orders.length) * 100">
+                                                        </div>
+                                                    </div>
+                                                    <span class="text-info">
+                                                        {{ pedidosSinProducir.length }}<span
+                                                            class="text-muted small" *ngIf="obtenerConteoPedidosSinProducirUrgentes() > 0">
+                                                            <i class="pi pi-exclamation-triangle text-danger ms-1" pTooltip="{{ 'Urgentes' | translate }}: {{ obtenerConteoPedidosSinProducirUrgentes() }}"></i>
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
                                                 <span class="text-success fw-bold">{{ 'Normales' | translate }}</span>
                                                 <div class="d-flex align-items-center">
                                                     <div class="progress flex-grow-1 me-2"
@@ -254,17 +287,39 @@
                                                     *ngFor="let item of (prediccion | keyvalue: orderByDate)?.slice(0, 7)">
                                                     <span class="fw-bold small">{{ formatearFecha(item.key) }}</span>
                                                     <div class="d-flex align-items-center">
-                                                        <div class="progress flex-grow-1 me-2"
-                                                            style="width: 100px; height: 6px;">
+                                                        <div class="progress flex-grow-1 me-2 position-relative"
+                                                            style="width: 100px; height: 8px;">
+                                                            <!-- Pedidos confirmados -->
                                                             <div class="progress-bar bg-primary"
-                                                                [style.width.%]="(item.value / 10) * 100"></div>
+                                                                [style.width.%]="(item.value.confirmados / 15) * 100"></div>
+                                                            
+                                                            <!-- Pedidos pendientes de producción (patrón rayado) -->
+                                                            <div *ngIf="item.value.pendientesProduccion > 0" class="progress-bar bg-info"
+                                                                [style.width.%]="(item.value.pendientesProduccion / 15) * 100"
+                                                                style="opacity: 0.7; background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent); background-size: 1rem 1rem;"></div>
                                                         </div>
-                                                        <span class="text-primary">{{ item.value }}</span>
+                                                        <div class="text-nowrap">
+                                                            <span class="text-primary">{{ item.value.confirmados }}</span>
+                                                            <span class="text-info" *ngIf="item.value.pendientesProduccion > 0">
+                                                                +<span class="badge bg-info rounded-pill">{{ item.value.pendientesProduccion }}</span>
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div *ngIf="(prediccion | keyvalue)?.length === 0" class="text-center text-muted py-2">
                                                     <i class="pi pi-calendar fs-3 mb-2"></i>
                                                     <p class="mb-0">{{ 'No hay datos disponibles' | translate }}</p>
+                                                </div>
+                                                <!-- Leyenda para explicar código de colores -->
+                                                <div class="d-flex justify-content-between mt-3 pt-2 border-top">
+                                                    <div class="d-flex align-items-center small text-muted">
+                                                        <div class="d-inline-block me-2" style="width: 12px; height: 12px; background-color: var(--bs-primary);"></div>
+                                                        {{ 'Confirmados' | translate }}
+                                                    </div>
+                                                    <div class="d-flex align-items-center small text-muted">
+                                                        <div class="d-inline-block me-2" style="width: 12px; height: 12px; background-color: var(--bs-info); background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent); background-size: 10px 10px;"></div>
+                                                        {{ 'Sin Producir' | translate }}
+                                                    </div>
                                                 </div>
                                             </ng-container>
                                         </div>

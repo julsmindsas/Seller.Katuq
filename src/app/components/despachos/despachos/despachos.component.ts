@@ -41,11 +41,19 @@ interface MetricasLogistica {
   pedidosUrgentes: number;
   pedidosEnRiesgo: number;
   pedidosNormales: number;
+  pedidosSinProducir: number; // Nuevo campo para pedidos sin producir
   porcentajeEntregasTiempo: number;
   tiempoPromedioDespacho: number;
   zonasConRetrasos: {[zona: string]: number};
   transportadoresEficiencia: {[transportador: string]: number};
-  prediccionCargaProximosDias: {[fecha: string]: number};
+  prediccionCargaProximosDias: {[fecha: string]: CargaDiaria};
+}
+
+// Nueva interfaz para la carga diaria
+interface CargaDiaria {
+  confirmados: number;
+  pendientesProduccion: number;
+  total: number;
 }
 
 interface PedidoPriorizado extends Pedido {
@@ -112,6 +120,7 @@ export class DespachosComponent implements OnInit {
   pedidosUrgentes: PedidoPriorizado[] = [];
   pedidosEnRiesgo: PedidoPriorizado[] = [];
   pedidosNormales: PedidoPriorizado[] = [];
+  pedidosSinProducir: PedidoPriorizado[] = []; // Nueva propiedad para pedidos sin producir
   diasUmbralUrgente: number = 1; // Pedidos con 1 día o menos para entrega
   diasUmbralRiesgo: number = 3; // Pedidos con 3 días o menos para entrega
   mostrarAlertasAvanzadas: boolean = true;
@@ -246,9 +255,16 @@ export class DespachosComponent implements OnInit {
     this.pedidosUrgentes = [];
     this.pedidosEnRiesgo = [];
     this.pedidosNormales = [];
+    this.pedidosSinProducir = []; // Reiniciar arreglo de pedidos sin producir
     
     // Para cada pedido, calcular los días restantes hasta la entrega
     this.orders.forEach(pedido => {
+      // Primero verificar si es un pedido sin producir
+      if (pedido.estadoProceso === EstadoProceso.SinProducir) {
+        this.procesarPedidoSinProducir(pedido, hoy);
+        return; // Salir temprano, ya que se ha procesado como sin producir
+      }
+      
       let fechaEntrega: Date;
       
       // Obtener la fecha de entrega del pedido
@@ -353,12 +369,108 @@ export class DespachosComponent implements OnInit {
     this.pedidosUrgentes.sort((a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999));
     this.pedidosEnRiesgo.sort((a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999));
     this.pedidosNormales.sort((a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999));
+    this.pedidosSinProducir.sort((a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999));
     
     // Implementar optimización rudimentaria de ruta
     this.optimizarRutas();
     
     // Mostrar alertas para pedidos urgentes
     this.mostrarAlertasPedidosUrgentes();
+    
+    // Mostrar alertas para pedidos sin producir
+    this.mostrarAlertasPedidosSinProducir();
+  }
+  
+  // Método para procesar pedidos sin producir
+  procesarPedidoSinProducir(pedido: PedidoPriorizado, hoy: Date) {
+    let fechaEntrega: Date;
+    
+    // Obtener la fecha de entrega del pedido
+    if (pedido.fechaEntrega) {
+      fechaEntrega = new Date(pedido.fechaEntrega);
+    } else if (pedido.carrito && pedido.carrito.length > 0 && 
+              pedido.carrito[0].configuracion?.datosEntrega?.fechaEntrega) {
+      const { year, month, day } = pedido.carrito[0].configuracion.datosEntrega.fechaEntrega;
+      fechaEntrega = new Date(year, month - 1, day);
+    } else {
+      // Si no hay fecha de entrega, es un pedido sin fecha definida
+      pedido.prioridad = 'baja';
+      pedido.diasRestantes = 999; // Valor alto para indicar que no tiene fecha
+      this.pedidosSinProducir.push(pedido);
+      return;
+    }
+    
+    fechaEntrega.setHours(0, 0, 0, 0);
+    
+    // Calcular días restantes
+    const diferenciaTiempo = fechaEntrega.getTime() - hoy.getTime();
+    const diasRestantes = Math.ceil(diferenciaTiempo / (1000 * 3600 * 24));
+    
+    // Guardar los días restantes en el pedido
+    pedido.diasRestantes = diasRestantes;
+    
+    // Identificar factores de riesgo específicos para pedidos sin producir
+    const factoresRiesgo: string[] = ['Sin iniciar producción'];
+    
+    // Añadir factor de riesgo por cercanía a la fecha de entrega
+    if (diasRestantes <= this.diasUmbralRiesgo) {
+      factoresRiesgo.push('Fecha entrega cercana');
+    }
+    
+    // Verificar si es un pedido grande (más de 3 items)
+    if (pedido.carrito && pedido.carrito.length > 3) {
+      factoresRiesgo.push('Pedido grande');
+    }
+    
+    // Verificar si es un pedido con envío a zona remota
+    if (pedido.envio?.zonaCobro && 
+        ['Rural', 'Extrarradio', 'Remota'].some(zona => pedido.envio?.zonaCobro?.includes(zona))) {
+      factoresRiesgo.push('Zona remota');
+    }
+    
+    pedido.factoresRiesgo = factoresRiesgo;
+    
+    // Calcular tiempo estimado (mayor para pedidos sin producir)
+    let tiempoBase = 60; // 60 minutos base para pedidos sin producir
+    
+    // Ajustes por zona
+    if (pedido.envio?.zonaCobro) {
+      if (pedido.envio.zonaCobro.includes('Centro')) tiempoBase += 15;
+      else if (pedido.envio.zonaCobro.includes('Rural')) tiempoBase += 60;
+      else if (pedido.envio.zonaCobro.includes('Extrarradio')) tiempoBase += 90;
+      else tiempoBase += 30; // Otras zonas
+    }
+    
+    // Ajustes por tamaño de pedido
+    if (pedido.carrito) {
+      tiempoBase += pedido.carrito.length * 5; // 5 minutos por artículo
+    }
+    
+    pedido.tiempoEstimadoEntrega = tiempoBase;
+    
+    // Asignar prioridad basada en días restantes
+    if (diasRestantes <= this.diasUmbralUrgente) {
+      pedido.prioridad = 'alta';
+    } else if (diasRestantes <= this.diasUmbralRiesgo) {
+      pedido.prioridad = 'media';
+    } else {
+      pedido.prioridad = 'baja';
+    }
+    
+    // Añadir a la lista de pedidos sin producir
+    this.pedidosSinProducir.push(pedido);
+    
+    // Calcular puntaje KAI específico para pedidos sin producir (más urgente)
+    let puntajeBase = 40; // Punto base más bajo (más urgente) para pedidos sin producir
+    
+    // Reducir puntaje (más urgente) por cada día menos
+    puntajeBase -= (this.diasUmbralRiesgo - diasRestantes) * 12; // Factor más alto
+    
+    // Reducir puntaje por cada factor de riesgo
+    puntajeBase -= factoresRiesgo.length * 5;
+    
+    // Limitar el rango entre 0 y 100
+    pedido.puntajeKAI = Math.max(0, Math.min(100, puntajeBase));
   }
   
   // Optimizar rutas agrupando pedidos por zonas
@@ -426,6 +538,7 @@ export class DespachosComponent implements OnInit {
       pedidosUrgentes: 0,
       pedidosEnRiesgo: 0,
       pedidosNormales: 0,
+      pedidosSinProducir: 0, // Inicializar contador de pedidos sin producir
       porcentajeEntregasTiempo: 0,
       tiempoPromedioDespacho: 0,
       zonasConRetrasos: {},
@@ -448,6 +561,7 @@ export class DespachosComponent implements OnInit {
     this.metricasLogistica.pedidosUrgentes = this.pedidosUrgentes.length;
     this.metricasLogistica.pedidosEnRiesgo = this.pedidosEnRiesgo.length;
     this.metricasLogistica.pedidosNormales = this.pedidosNormales.length;
+    this.metricasLogistica.pedidosSinProducir = this.pedidosSinProducir.length; // Actualizar contador
     
     // Calcular porcentaje de entregas a tiempo (simulado para demostración)
     const entregados = this.orders.filter(p => p.estadoProceso === 'Entregado');
@@ -519,16 +633,37 @@ export class DespachosComponent implements OnInit {
       const fechaTimestamp = fecha.getTime();
       
       // Contar pedidos programados para cada día
-      const pedidosProgramados = this.orders.filter(p => {
-        if (!p.fechaEntrega) return false;
+      const pedidosConfirmados = this.orders.filter(p => {
+        if (!p.fechaEntrega || p.estadoProceso === EstadoProceso.SinProducir) return false;
         const fechaEntrega = new Date(p.fechaEntrega);
         // Convertir ambas fechas a formato 'YYYY-MM-DD' para comparar solo la fecha sin la hora
         const fechaEntregaStr = fechaEntrega.toISOString().split('T')[0];
         return fechaEntregaStr === fechaKey;
       }).length;
       
-      // Añadir predicción base
-      this.metricasLogistica.prediccionCargaProximosDias[fechaTimestamp] = pedidosProgramados;
+      // Contar pedidos sin producir para este día
+      const pedidosSinProducir = this.orders.filter(p => {
+        if (p.estadoProceso !== EstadoProceso.SinProducir || !p.fechaEntrega) return false;
+        const fechaEntrega = new Date(p.fechaEntrega);
+        // Estimar que estarán listos 2 días antes de la entrega
+        const fechaEstimadaProduccion = new Date(fechaEntrega);
+        fechaEstimadaProduccion.setDate(fechaEstimadaProduccion.getDate() - 2);
+        
+        // Si la fecha de entrega es el día actual, considerarlo para producción hoy
+        if (fechaEstimadaProduccion < hoy) {
+          fechaEstimadaProduccion.setTime(hoy.getTime());
+        }
+        
+        const fechaEstimadaStr = fechaEstimadaProduccion.toISOString().split('T')[0];
+        return fechaEstimadaStr === fechaKey;
+      }).length;
+      
+      // Añadir predicción con la nueva estructura
+      this.metricasLogistica.prediccionCargaProximosDias[fechaTimestamp] = {
+        confirmados: pedidosConfirmados,
+        pendientesProduccion: pedidosSinProducir,
+        total: pedidosConfirmados + pedidosSinProducir
+      };
     }
     
     // Simular predicciones de KAI
@@ -548,13 +683,41 @@ export class DespachosComponent implements OnInit {
       cargaEstimada: {},
       zonasCriticas: [],
       asignacionOptima: {},
-      recomendaciones: [
-        'Priorizar pedidos de la zona Sur para el día de mañana debido a alta demanda.',
-        'Considerar asignar un transportador adicional para el sector Norte el próximo jueves.',
-        'Revisar los pedidos con instrucciones especiales de entrega con anticipación.',
-        'Los pedidos de productos frágiles deben ser empacados con material adicional.'
-      ]
+      recomendaciones: []
     };
+    
+    // Añadir recomendaciones específicas para pedidos sin producir
+    const pedidosSinProducirUrgentes = this.pedidosSinProducir.filter(p => 
+      p.diasRestantes !== undefined && 
+      p.diasRestantes <= this.diasUmbralUrgente
+    ).length;
+    
+    if (pedidosSinProducirUrgentes > 0) {
+      this.kaiPredicciones.recomendaciones.push(
+        `Solicitar prioridad de producción para ${pedidosSinProducirUrgentes} pedidos urgentes pendientes de producción.`
+      );
+    }
+    
+    // Añadir recomendación para pedidos en riesgo
+    const pedidosSinProducirRiesgo = this.pedidosSinProducir.filter(p => 
+      p.diasRestantes !== undefined && 
+      p.diasRestantes > this.diasUmbralUrgente &&
+      p.diasRestantes <= this.diasUmbralRiesgo
+    ).length;
+    
+    if (pedidosSinProducirRiesgo > 0) {
+      this.kaiPredicciones.recomendaciones.push(
+        `Planificar producción para ${pedidosSinProducirRiesgo} pedidos en riesgo que aún no inician producción.`
+      );
+    }
+    
+    // Añadir recomendaciones estándar
+    this.kaiPredicciones.recomendaciones.push(
+      'Priorizar pedidos de la zona Sur para el día de mañana debido a alta demanda.',
+      'Considerar asignar un transportador adicional para el sector Norte el próximo jueves.',
+      'Revisar los pedidos con instrucciones especiales de entrega con anticipación.',
+      'Los pedidos de productos frágiles deben ser empacados con material adicional.'
+    );
     
     // Usar el mismo conjunto de fechas que ya usamos en calcularMetricas para mantener consistencia
     const fechasYaProcesadas = new Set();
@@ -604,6 +767,32 @@ export class DespachosComponent implements OnInit {
       { zona: 'Centro', motivo: 'Congestión de tráfico', fechaCritica: fechaCritica2.getTime() }
     ];
     
+    // Añadir zonas críticas específicas para pedidos sin producir
+    const pedidosSinProducirPorZona: { [zona: string]: number } = {};
+    
+    this.pedidosSinProducir.forEach(pedido => {
+      const zona = pedido.envio?.zonaCobro || 'Sin zona';
+      if (!pedidosSinProducirPorZona[zona]) {
+        pedidosSinProducirPorZona[zona] = 0;
+      }
+      pedidosSinProducirPorZona[zona]++;
+    });
+    
+    // Encontrar zonas con mayor concentración de pedidos sin producir
+    const zonasOrdenadas = Object.entries(pedidosSinProducirPorZona)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 2);
+      
+    zonasOrdenadas.forEach(([zona, cantidad]) => {
+      if (cantidad > 2) { // Solo considerar zonas con más de 2 pedidos
+        this.kaiPredicciones.zonasCriticas.push({
+          zona,
+          motivo: `${cantidad} pedidos pendientes de producción`,
+          fechaCritica: hoy.getTime()
+        });
+      }
+    });
+    
     // Asignación óptima de transportadores
     transportadores.forEach(transportador => {
       this.kaiPredicciones.asignacionOptima[transportador] = {
@@ -620,8 +809,63 @@ export class DespachosComponent implements OnInit {
       urgentes: this.pedidosUrgentes.length,
       riesgo: this.pedidosEnRiesgo.length,
       normales: this.pedidosNormales.length,
+      sinProducir: this.pedidosSinProducir.length,
       total: this.orders.length
     };
+  }
+  
+  // Método para obtener pedidos sin producir urgentes
+  obtenerPedidosSinProducirUrgentes(): PedidoPriorizado[] {
+    return this.pedidosSinProducir.filter(p => 
+      p.diasRestantes !== undefined && 
+      p.diasRestantes <= this.diasUmbralUrgente
+    );
+  }
+  
+  // Método para obtener pedidos sin producir en riesgo
+  obtenerPedidosSinProducirEnRiesgo(): PedidoPriorizado[] {
+    return this.pedidosSinProducir.filter(p => 
+      p.diasRestantes !== undefined && 
+      p.diasRestantes > this.diasUmbralUrgente &&
+      p.diasRestantes <= this.diasUmbralRiesgo
+    );
+  }
+  
+  // Método para obtener conteo de pedidos sin producir urgentes
+  obtenerConteoPedidosSinProducirUrgentes(): number {
+    return this.obtenerPedidosSinProducirUrgentes().length;
+  }
+  
+  // Método para obtener conteo de pedidos sin producir en riesgo
+  obtenerConteoPedidosSinProducirEnRiesgo(): number {
+    return this.obtenerPedidosSinProducirEnRiesgo().length;
+  }
+  
+  // Método para mostrar alertas de pedidos sin producir
+  mostrarAlertasPedidosSinProducir() {
+    const pedidosSinProducirUrgentes = this.obtenerPedidosSinProducirUrgentes();
+    
+    if (pedidosSinProducirUrgentes.length > 0 && this.mostrarAlertasAvanzadas) {
+      const cantidadUrgentes = pedidosSinProducirUrgentes.length;
+      const pedidosMasUrgentes = pedidosSinProducirUrgentes
+        .slice(0, Math.min(3, cantidadUrgentes))
+        .map(p => `<li>#${p.nroPedido} - ${p.diasRestantes} día(s) - ${p.cliente?.nombres_completos || 'Cliente'}</li>`)
+        .join('');
+      
+      Swal.fire({
+        title: '¡Atención! Pedidos Urgentes Sin Producir',
+        html: `
+          <div class="text-start">
+            <p>Se han detectado <strong>${cantidadUrgentes} pedidos urgentes sin iniciar producción</strong> que requieren atención inmediata:</p>
+            <ul>${pedidosMasUrgentes}</ul>
+            ${cantidadUrgentes > 3 ? `<p>...y ${cantidadUrgentes - 3} más.</p>` : ''}
+            <p class="mt-3 text-danger">Estos pedidos deben priorizarse en producción para evitar retrasos en la entrega.</p>
+          </div>
+        `,
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+      });
+    }
   }
   
   // Método para obtener zonas críticas para mostrar alertas
@@ -2460,7 +2704,7 @@ export class DespachosComponent implements OnInit {
     cargaPromedioPorTransportador: number,
     capacidadTotalActual: number,
     capacidadPromedio: number,
-    pedidosPorDia: { [fecha: string]: number },
+    pedidosPorDia: { [fecha: string]: CargaDiaria },
     recomendacionesPorDia: { [fecha: string]: number }
   } {
     // 1. Obtener número de transportadores actuales
@@ -2483,36 +2727,56 @@ export class DespachosComponent implements OnInit {
     }
     
     // 3. Calcular carga total por día (próximos 7 días)
-    const pedidosPorDia: { [fecha: string]: number } = {};
+    const pedidosPorDia: { [fecha: string]: CargaDiaria } = {};
     const recomendacionesPorDia: { [fecha: string]: number } = {};
-    let totalPedidosProximos7Dias = 0;
+    let totalPedidosConfirmados = 0;
+    let totalPedidosSinProducir = 0;
     
     // Obtener fecha actual
     const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    // Factor de probabilidad para pedidos sin producir (70% de probabilidad)
+    const factorProbabilidadSinProducir = 0.7;
     
     // Para cada día en los próximos 7 días
     for (let i = 0; i < 7; i++) {
       const fecha = new Date(hoy);
       fecha.setDate(fecha.getDate() + i);
       const fechaStr = fecha.toISOString().split('T')[0]; // formato YYYY-MM-DD
+      const fechaTimestamp = fecha.getTime();
       
-      // Contar pedidos programados para este día
-      const pedidosDia = this.orders.filter(p => {
-        if (!p.fechaEntrega) return false;
-        const fechaEntrega = new Date(p.fechaEntrega);
-        return fechaEntrega.toISOString().split('T')[0] === fechaStr;
-      }).length;
+      // Obtener datos de carga para este día
+      const datoCarga = this.metricasLogistica.prediccionCargaProximosDias[fechaTimestamp];
       
-      pedidosPorDia[fechaStr] = pedidosDia;
-      totalPedidosProximos7Dias += pedidosDia;
-      
-      // Calcular transportadores necesarios para este día basado en la capacidad promedio actual
-      const transportadoresNecesariosDia = Math.ceil(pedidosDia / capacidadPromedio);
-      recomendacionesPorDia[fechaStr] = transportadoresNecesariosDia;
+      if (datoCarga) {
+        // Crear registro con valores por defecto si no existe
+        pedidosPorDia[fechaStr] = {
+          confirmados: datoCarga.confirmados,
+          pendientesProduccion: datoCarga.pendientesProduccion,
+          total: datoCarga.total
+        };
+        
+        totalPedidosConfirmados += datoCarga.confirmados;
+        totalPedidosSinProducir += datoCarga.pendientesProduccion;
+        
+        // Calcular transportadores necesarios considerando pedidos confirmados
+        // y un porcentaje de los pendientes de producción
+        const cargaEstimada = datoCarga.confirmados + 
+                              (datoCarga.pendientesProduccion * factorProbabilidadSinProducir);
+                              
+        const transportadoresNecesariosDia = Math.ceil(cargaEstimada / capacidadPromedio);
+        recomendacionesPorDia[fechaStr] = transportadoresNecesariosDia;
+      } else {
+        // Si no hay datos para este día, inicializar con ceros
+        pedidosPorDia[fechaStr] = { confirmados: 0, pendientesProduccion: 0, total: 0 };
+        recomendacionesPorDia[fechaStr] = 0;
+      }
     }
     
-    // 4. Calcular el promedio de pedidos diarios
-    const promedioPedidosDiarios = totalPedidosProximos7Dias / 7;
+    // 4. Calcular el promedio de pedidos diarios (considerando ambos tipos)
+    const totalPedidosProyectados = totalPedidosConfirmados + (totalPedidosSinProducir * factorProbabilidadSinProducir);
+    const promedioPedidosDiarios = totalPedidosProyectados / 7;
     
     // 5. Calcular transportadores necesarios en total (basado en la capacidad promedio actual)
     const transportadoresNecesarios = Math.ceil(promedioPedidosDiarios / capacidadPromedio);
@@ -2521,7 +2785,7 @@ export class DespachosComponent implements OnInit {
     const deficit = Math.max(0, transportadoresNecesarios - transportadoresActuales);
     
     // 7. Calcular carga promedio por transportador actual
-    const cargaPromedioPorTransportador = capacidadTotalActual > 0 
+    const cargaPromedioPorTransportador = transportadoresActuales > 0
       ? promedioPedidosDiarios / transportadoresActuales 
       : promedioPedidosDiarios; // Si no hay transportadores, la carga sería todo
     
@@ -2541,11 +2805,25 @@ export class DespachosComponent implements OnInit {
   mostrarRecomendacionTransportadores() {
     const recomendacion = this.calcularRecomendacionTransportadores();
     
+    // Calcular el porcentaje de carga sin producir del total
+    const totalCargaConfirmada = Object.values(recomendacion.pedidosPorDia).reduce((sum, dia) => sum + dia.confirmados, 0);
+    const totalCargaSinProducir = Object.values(recomendacion.pedidosPorDia).reduce((sum, dia) => sum + dia.pendientesProduccion, 0);
+    
+    // Porcentaje que representan los pedidos sin producir del total
+    const porcentajeSinProducir = totalCargaSinProducir > 0 
+      ? Math.round((totalCargaSinProducir / (totalCargaConfirmada + totalCargaSinProducir)) * 100) 
+      : 0;
+    
     // Formatea las fechas para mostrarlas
-    const pedidosPorDiaFormateado = Object.entries(recomendacion.pedidosPorDia).map(([fecha, cantidad]) => {
+    const pedidosPorDiaFormateado = Object.entries(recomendacion.pedidosPorDia).map(([fecha, data]) => {
       return `<tr>
         <td>${this.formatearFecha(fecha)}</td>
-        <td class="text-center">${cantidad}</td>
+        <td class="text-center">${data.confirmados}</td>
+        <td class="text-center">
+          ${data.pendientesProduccion > 0 
+            ? `${data.pendientesProduccion} <span class="badge rounded-pill bg-info">SP</span>` 
+            : '0'}
+        </td>
         <td class="text-center">${recomendacion.recomendacionesPorDia[fecha]}</td>
       </tr>`;
     }).join('');
@@ -2556,7 +2834,8 @@ export class DespachosComponent implements OnInit {
         <thead class="table-primary">
           <tr>
             <th>Fecha</th>
-            <th class="text-center">Pedidos</th>
+            <th class="text-center">Pedidos confirmados</th>
+            <th class="text-center">Pendientes de producción</th>
             <th class="text-center">Transportadores recomendados</th>
           </tr>
         </thead>
@@ -2577,6 +2856,18 @@ export class DespachosComponent implements OnInit {
       mensajeRecomendacion = `<div class="alert alert-success">
         <i class="pi pi-check-circle me-2"></i>
         <strong>Recomendación:</strong> El número actual de transportadores es suficiente para manejar la carga prevista.
+      </div>`;
+    }
+    
+    // Mensaje específico para pedidos sin producir
+    let mensajeSinProducir = '';
+    if (totalCargaSinProducir > 0) {
+      mensajeSinProducir = `<div class="alert alert-info">
+        <i class="pi pi-info-circle me-2"></i>
+        <strong>Nota sobre pedidos sin producir:</strong> Un ${porcentajeSinProducir}% de la carga total corresponde a pedidos sin iniciar producción.
+        ${this.obtenerConteoPedidosSinProducirUrgentes() > 0 
+          ? `<br><strong class="text-danger">¡Atención!</strong> ${this.obtenerConteoPedidosSinProducirUrgentes()} de estos pedidos son urgentes.` 
+          : ''}
       </div>`;
     }
     
@@ -2612,17 +2903,30 @@ export class DespachosComponent implements OnInit {
           </div>
           
           ${mensajeRecomendacion}
+          ${mensajeSinProducir}
           
           <h6 class="fw-bold mt-4">Detalles por día:</h6>
           ${tablaPedidosPorDia}
           
-          <div class="alert alert-info mt-3">
-            <i class="pi pi-info-circle me-2"></i>
-            <small>Este análisis utiliza la capacidad de carga configurada para cada transportador. Puede modificarla en la sección de gestión de transportadores.</small>
+          <div class="mt-3">
+            <div class="d-flex gap-3 mb-2">
+              <div class="d-flex align-items-center small">
+                <span class="badge rounded-pill bg-info me-1">SP</span>
+                <span>Pedidos Sin Producir</span>
+              </div>
+            </div>
+            <div class="alert alert-info small">
+              <i class="pi pi-info-circle me-2"></i>
+              El análisis considera los pedidos sin producir con un factor de probabilidad del 70%, ya que existe cierta incertidumbre sobre su disponibilidad para el día previsto.
+            </div>
+            <div class="alert alert-secondary small">
+              <i class="pi pi-cog me-2"></i>
+              Este análisis utiliza la capacidad de carga configurada para cada transportador. Puede modificarla en la sección de gestión de transportadores.
+            </div>
           </div>
         </div>
       `,
-      width: '600px',
+      width: '700px',
       confirmButtonText: 'Entendido',
       showClass: {
         popup: 'animate__animated animate__fadeIn'
