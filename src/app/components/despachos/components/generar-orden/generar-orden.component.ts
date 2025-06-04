@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EstadoProceso, Pedido } from '../../../ventas/modelo/pedido';
 import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
+import Swal from 'sweetalert2';
 
 interface ColumnDefinition {
   field: string;
@@ -166,7 +167,7 @@ export class GenerarOrdenComponent implements OnInit {
             ].join('-');
           }
 
-          console.log(`Pedido ${o.nroPedido} - Fecha entrega: ${o.fechaEntrega}, Normalizada: ${fechaPedidoStr}`);
+          // console.log(`Pedido ${o.nroPedido} - Fecha entrega: ${o.fechaEntrega}, Normalizada: ${fechaPedidoStr}`);
 
           // Verificar si el pedido ya está seleccionado
           const yaSeleccionado = this.pedidosSeleccionados.some(p => p.nroPedido === o.nroPedido);
@@ -176,11 +177,16 @@ export class GenerarOrdenComponent implements OnInit {
           const estadoValido = (o.estadoProceso !== EstadoProceso.Entregado && o.estadoProceso !== EstadoProceso.Despachado && o.estadoProceso !== EstadoProceso.SinProducir);
           const formaEntregaValida = (o.carrito ? o.carrito[0].configuracion?.datosEntrega.formaEntrega.toLocaleUpperCase().includes('DOMICILIO') : false);
 
-          console.log(`Pedido ${o.nroPedido} - ¿Fechas coinciden?: ${fechasCoinciden} (${fechaPedidoStr} === ${fechaSeleccionada})`);
-          console.log(`Pedido ${o.nroPedido} - Estado: ${estadoValido}(${o.estadoProceso}), Forma entrega: ${formaEntregaValida}(${o.formaEntrega})`);
+          // console.log(`Pedido ${o.nroPedido} - ¿Fechas coinciden?: ${fechasCoinciden} (${fechaPedidoStr} === ${fechaSeleccionada})`);
+          // console.log(`Pedido ${o.nroPedido} - Estado: ${estadoValido}(${o.estadoProceso}), Forma entrega: ${formaEntregaValida}(${o.formaEntrega})`);
 
           return fechasCoinciden && estadoValido && formaEntregaValida && !yaSeleccionado;
         } catch (err) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al procesar pedido: ' + o.nroPedido + ' - ' + err
+          });
           console.error('Error al procesar pedido:', o.nroPedido, err);
           return false;
         }

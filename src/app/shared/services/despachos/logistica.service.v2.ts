@@ -25,6 +25,10 @@ export class LogisticaServiceV2 extends BaseService {
         return this.http.post(`${this.apiUrl}/v1/logistica/vendors/create`, transportadora);
     }
 
+    updateTrasportadora(transportadora: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/v1/logistica/vendors/update`, transportadora);
+    }
+
     deleteTrasportadora(id: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/v1/logistica/vendors/delete`, id);
     }

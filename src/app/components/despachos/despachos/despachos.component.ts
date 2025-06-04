@@ -492,13 +492,30 @@ export class DespachosComponent implements OnInit {
       });
     }
     
+    // Limpiar las predicciones de carga anteriores para evitar duplicados
+    this.metricasLogistica.prediccionCargaProximosDias = {};
+    
     // Predicción de carga para próximos días
     const hoy = new Date();
+    const fechasYaProcesadas = new Set(); // Para evitar fechas duplicadas
     
     for (let i = 0; i < 7; i++) {
       const fecha = new Date(hoy);
       fecha.setDate(fecha.getDate() + i);
-      // Usar timestamp en lugar de cadena ISO
+      // Normalizar fecha para que solo tenga año, mes y día (sin hora)
+      fecha.setHours(0, 0, 0, 0);
+      
+      // Usar formato YYYY-MM-DD como clave para evitar duplicados
+      const fechaKey = fecha.toISOString().split('T')[0];
+      
+      // Verificar si esta fecha ya ha sido procesada
+      if (fechasYaProcesadas.has(fechaKey)) {
+        continue;
+      }
+      
+      fechasYaProcesadas.add(fechaKey);
+      
+      // Usar timestamp como clave en el objeto
       const fechaTimestamp = fecha.getTime();
       
       // Contar pedidos programados para cada día
@@ -507,11 +524,10 @@ export class DespachosComponent implements OnInit {
         const fechaEntrega = new Date(p.fechaEntrega);
         // Convertir ambas fechas a formato 'YYYY-MM-DD' para comparar solo la fecha sin la hora
         const fechaEntregaStr = fechaEntrega.toISOString().split('T')[0];
-        const fechaComparacionStr = fecha.toISOString().split('T')[0];
-        return fechaEntregaStr === fechaComparacionStr;
+        return fechaEntregaStr === fechaKey;
       }).length;
       
-      // Añadir predicción base + variación aleatoria para simular
+      // Añadir predicción base
       this.metricasLogistica.prediccionCargaProximosDias[fechaTimestamp] = pedidosProgramados;
     }
     
@@ -527,7 +543,7 @@ export class DespachosComponent implements OnInit {
       ? this.vendors.map(v => `${v.nombres} ${v.apellidos}`)
       : [];
     
-    // Estructura para predicciones KAI
+    // Estructura para predicciones KAI (reinicializar para evitar datos antiguos)
     this.kaiPredicciones = {
       cargaEstimada: {},
       zonasCriticas: [],
@@ -540,11 +556,27 @@ export class DespachosComponent implements OnInit {
       ]
     };
     
+    // Usar el mismo conjunto de fechas que ya usamos en calcularMetricas para mantener consistencia
+    const fechasYaProcesadas = new Set();
+    
     // Predicción de carga por zona y día
     for (let i = 0; i < 7; i++) {
       const fecha = new Date(hoy);
       fecha.setDate(fecha.getDate() + i);
-      // Guardar la fecha como timestamp (número) en lugar de cadena ISO
+      // Normalizar fecha
+      fecha.setHours(0, 0, 0, 0);
+      
+      // Usar formato YYYY-MM-DD como clave para verificar duplicados
+      const fechaKey = fecha.toISOString().split('T')[0];
+      
+      // Verificar si esta fecha ya ha sido procesada
+      if (fechasYaProcesadas.has(fechaKey)) {
+        continue;
+      }
+      
+      fechasYaProcesadas.add(fechaKey);
+      
+      // Guardar la fecha como timestamp (número)
       const fechaTimestamp = fecha.getTime();
       
       this.kaiPredicciones.cargaEstimada[fechaTimestamp] = {};
@@ -1339,6 +1371,21 @@ export class DespachosComponent implements OnInit {
       }
     );
   }
+  
+  onEditTransportador(transportador: any) {
+    this.editTransporter = true;
+    this.dataEditTransporter = transportador;
+    
+    // Actualizar el formulario para que contenga los datos del transportador a editar
+    if (this.transportadorForm) {
+      this.transportadorForm.patchValue(transportador);
+    }
+    
+    // Si el modal no está abierto, abrirlo con los datos del transportador
+    if (!this.modalRef) {
+      this.openModal(this.transportadoresModal, true, transportador);
+    }
+  } 
   
   imprimirToPdf() {
     const printContent = document.getElementById('htmlPdf');
@@ -2581,6 +2628,21 @@ export class DespachosComponent implements OnInit {
         popup: 'animate__animated animate__fadeIn'
       }
     });
+  }
+
+  // Método para ordenar fechas cronológicamente (para usar con keyvalue pipe)
+  orderByDate = (a: any, b: any): number => {
+    // Convertir las claves (que son timestamps) a números y comparar
+    const dateA = Number(a.key);
+    const dateB = Number(b.key);
+    
+    if (dateA < dateB) {
+      return -1;
+    } else if (dateA > dateB) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 }
 
