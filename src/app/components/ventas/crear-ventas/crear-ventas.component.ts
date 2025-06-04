@@ -1748,7 +1748,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           this.iniciarPagoConWompi().then(pagoExitoso => {
             if (pagoExitoso) {
               // El pago fue exitoso, actualizar estado del pedido
-              this.actualizarEstadoPedido(this.pedidoGral.nroPedido as string, EstadoPago.Aprobado);
+              this.actualizarEstadoPedido(this.pedidoGral.nroPedido as string, EstadoPago.Pendiente);
               this.showPedidoConfirm = true;
               this.showSteper = true; // Mantener visible el wizard para mostrar el paso de confirmación
               this.mywizard.goToNextStep();
