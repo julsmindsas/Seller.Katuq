@@ -204,6 +204,29 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
     });
   }
   masCantidad() {
+    // Validar disponibilidad de stock antes de incrementar
+    if (this.producto?.disponibilidad?.inventariable) {
+      const stockDisponible = this.producto.disponibilidad.cantidadDisponible || 0;
+      
+      if (stockDisponible === 0) {
+        this.toastrService.error('No hay unidades disponibles para este producto', 'Sin Stock', {
+          timeOut: 4000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        });
+        return;
+      }
+      
+      if (this.cantidad >= stockDisponible) {
+        this.toastrService.warning(`Solo hay ${stockDisponible} unidades disponibles`, 'Stock Limitado', {
+          timeOut: 4000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        });
+        return;
+      }
+    }
+
     this.cantidad++;
     document.getElementById("cantidad")?.setAttribute("value", this.cantidad.toString());
     if (this.producto?.precio?.preciosVolumen?.length > 0) {
@@ -543,6 +566,29 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
   }
 
   addToCar() {
+    // Validar disponibilidad de stock antes de agregar al carrito
+    if (this.producto?.disponibilidad?.inventariable) {
+      const stockDisponible = this.producto.disponibilidad.cantidadDisponible || 0;
+      
+      if (stockDisponible === 0) {
+        this.toastrService.error('No hay unidades disponibles para este producto', 'Sin Stock', {
+          timeOut: 4000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        });
+        return;
+      }
+      
+      if (this.cantidad > stockDisponible) {
+        this.toastrService.warning(`Solo hay ${stockDisponible} unidades disponibles`, 'Stock Limitado', {
+          timeOut: 4000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        });
+        return;
+      }
+    }
+
     this.producto.rating = this.ratingForm.value.rating;
     const fechaActual = new Date();
     this.datosEntrega.controls['fechaEntrega'].setValue({ year: fechaActual.getFullYear(), month: fechaActual.getMonth() + 1, day: fechaActual.getDate() });
@@ -1109,5 +1155,180 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
     return `haz un mesaje bonito para una tarjeta referente a la descripcion de este producto ${descripcion}`;
   }
 
+  /**
+   * Obtiene la clase CSS para el estado del stock
+   */
+  getStockStatusClass(): string {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return 'text-muted';
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'text-danger fw-bold';
+    } else if (stockDisponible <= 5) {
+      return 'text-warning fw-bold';
+    } else {
+      return 'text-success';
+    }
+  }
+
+  /**
+   * Obtiene el texto a mostrar para el stock
+   */
+  getStockDisplayText(): string {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return 'No aplica control de inventario';
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'Sin stock disponible';
+    } else {
+      return `${stockDisponible} unidades disponibles`;
+    }
+  }
+
+  /**
+   * Obtiene el mensaje de tooltip para el estado del stock
+   */
+  getStockStatusMessage(): string {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return 'Este producto no maneja control de inventario';
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'No hay unidades disponibles para este producto';
+    } else if (stockDisponible <= 5) {
+      return `Stock limitado: solo ${stockDisponible} unidades disponibles`;
+    } else {
+      return `Stock disponible: ${stockDisponible} unidades`;
+    }
+  }
+
+  /**
+   * Determina si debe mostrarse la alerta de stock
+   */
+  shouldShowStockAlert(): boolean {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return false;
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    return stockDisponible <= 5; // Mostrar alerta cuando hay 5 o menos unidades
+  }
+
+  /**
+   * Obtiene la clase CSS para la alerta de stock
+   */
+  getStockAlertClass(): string {
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'alert alert-danger';
+    } else if (stockDisponible <= 3) {
+      return 'alert alert-warning';
+    } else {
+      return 'alert alert-info';
+    }
+  }
+
+  /**
+   * Obtiene el icono para la alerta de stock
+   */
+  getStockAlertIcon(): string {
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'fa fa-exclamation-triangle';
+    } else if (stockDisponible <= 3) {
+      return 'fa fa-exclamation-circle';
+    } else {
+      return 'fa fa-info-circle';
+    }
+  }
+
+  /**
+   * Obtiene el mensaje para la alerta de stock
+   */
+  getStockAlertMessage(): string {
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'Este producto está agotado. No se puede agregar al carrito.';
+    } else if (stockDisponible === 1) {
+      return '¡Última unidad disponible! Apresúrate antes de que se agote.';
+    } else if (stockDisponible <= 3) {
+      return `¡Solo quedan ${stockDisponible} unidades! Stock muy limitado.`;
+    } else {
+      return `Quedan ${stockDisponible} unidades disponibles.`;
+    }
+  }
+
+  /**
+   * Verifica si el stock no está disponible
+   */
+  isStockUnavailable(): boolean {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return false; // Si no maneja inventario, no hay restricción
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    return stockDisponible === 0;
+  }
+
+  /**
+   * Verifica si la cantidad actual está en el máximo del stock
+   */
+  isQuantityAtMaxStock(): boolean {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return false;
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    return this.cantidad >= stockDisponible;
+  }
+
+  /**
+   * Obtiene el tooltip para el botón de cantidad
+   */
+  getQuantityButtonTooltip(): string {
+    if (this.isStockUnavailable()) {
+      return 'No hay stock disponible';
+    } else if (this.isQuantityAtMaxStock()) {
+      return 'Has alcanzado el máximo stock disponible';
+    }
+    return 'Aumentar cantidad';
+  }
+
+  /**
+   * Obtiene la clase CSS para el botón del carrito
+   */
+  getCartButtonClass(): string {
+    if (this.isStockUnavailable()) {
+      return 'btn btn-danger';
+    } else if (this.isCartButtonDisabled()) {
+      return 'btn btn-secondary';
+    } else {
+      return 'btn btn-primary';
+    }
+  }
+
+  /**
+   * Verifica si el botón de agregar al carrito debe estar deshabilitado
+   */
+  isCartButtonDisabled(): boolean {
+    // Verificar si el stock no está disponible
+    if (this.isStockUnavailable()) {
+      return true;
+    }
+
+    // Verificar validación de formulario existente
+    return this.datosEntrega.invalid;
+  }
 
 }

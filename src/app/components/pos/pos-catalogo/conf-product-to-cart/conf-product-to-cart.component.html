@@ -24,8 +24,19 @@
                                 <h6>{{getTituloTiempoEntrega()}}</h6>
 
                                 <h6>
-                                    Unidades disponibles {{producto?.disponibilidad?.cantidadDisponible}}
+                                    <span [class]="getStockStatusClass()" [title]="getStockStatusMessage()">
+                                        {{getStockDisplayText()}}
+                                    </span>
                                 </h6>
+                                
+                                <!-- Alerta de stock -->
+                                <div *ngIf="shouldShowStockAlert()" 
+                                     [class]="getStockAlertClass()" 
+                                     class="p-2 small mb-2">
+                                    <i [class]="getStockAlertIcon() + ' me-1'"></i>
+                                    {{getStockAlertMessage()}}
+                                </div>
+                                
                                 <h6>NO se incluye valor del domicilio</h6>
                                 <h6>Incluye impuestos </h6>
                             </div>
@@ -742,15 +753,19 @@
                                             <div class="input-group">
                                                 <span class="input-group-prepend">
                                                     <button class="btn quantity-left-minus" type="button"
+                                                        [disabled]="isStockUnavailable()"
                                                         data-type="minus" data-field="" (click)="menosCantidad()">
                                                         <app-feather-icons [icon]="'minus'"></app-feather-icons>
                                                     </button>
                                                 </span>
                                                 <input #cantidad class="form-control input-number" type="text"
                                                     name="cantidad" id="cantidad" readonly
+                                                    [class.is-invalid]="isStockUnavailable()"
                                                     min="{{producto?.disponibilidad?.cantidadMinVenta}}" max="100">
                                                 <span class="input-group-prepend">
                                                     <button class="btn quantity-right-plus" type="button"
+                                                        [disabled]="isStockUnavailable() || isQuantityAtMaxStock()"
+                                                        [title]="getQuantityButtonTooltip()"
                                                         data-type="plus" data-field="" (click)="masCantidad()">
                                                         <app-feather-icons [icon]="'plus'"></app-feather-icons>
                                                     </button>
@@ -776,12 +791,20 @@
                                     <button class="btn btn-secondary pull-right mr-1" type="button" awPreviousStep>
                                         Anterior
                                     </button>
-                                    <button class="btn btn-primary m-r-10 m-t-10" type="button" *ngIf="!isEdit" title=""
-                                        (click)="addToCar()"> <i class="fa fa-shopping-basket me-1"></i>Agregar al
-                                        carrito</button>
-                                    <button class="btn btn-primary m-r-10 m-t-10" type="button" *ngIf="isEdit"
-                                        (click)="addToCar()"> <i class="fa fa-shopping-basket me-1"></i>Actualizar
-                                        carrito</button>
+                                    <button [class]="getCartButtonClass() + ' m-r-10 m-t-10'" type="button" *ngIf="!isEdit" 
+                                        [disabled]="isCartButtonDisabled()"
+                                        [title]="isStockUnavailable() ? 'Sin stock disponible' : 'Agregar al carrito'"
+                                        (click)="addToCar()"> 
+                                        <i class="fa fa-shopping-basket me-1"></i>
+                                        {{isStockUnavailable() ? 'Sin stock disponible' : 'Agregar al carrito'}}
+                                    </button>
+                                    <button [class]="getCartButtonClass() + ' m-r-10 m-t-10'" type="button" *ngIf="isEdit"
+                                        [disabled]="isCartButtonDisabled()"
+                                        [title]="isStockUnavailable() ? 'Sin stock disponible' : 'Actualizar carrito'"
+                                        (click)="addToCar()"> 
+                                        <i class="fa fa-shopping-basket me-1"></i>
+                                        {{isStockUnavailable() ? 'Sin stock disponible' : 'Actualizar carrito'}}
+                                    </button>
                                 </div>
                             </div>
                         </aw-wizard-step>
@@ -936,9 +959,18 @@
             </div> -->
 <div class="modal-footer">
     <div class="product-button">
-        <button class="btn btn-primary m-r-10 m-t-10" type="button" title="" *ngIf="isEdit == false"
-            [disabled]="datosEntrega.invalid" (click)="addToCar()"> <i class="fa fa-shopping-basket me-1"></i>Agregar al
-            carrito</button>
+        <button [class]="getCartButtonClass() + ' m-r-10 m-t-10'" type="button" *ngIf="isEdit == false"
+            [disabled]="isCartButtonDisabled()" 
+            [title]="isStockUnavailable() ? 'Sin stock disponible' : 'Agregar al carrito'"
+            (click)="addToCar()"> 
+            <i class="fa fa-shopping-basket me-1"></i>
+            {{isStockUnavailable() ? 'Sin stock disponible' : 'Agregar al carrito'}}
+        </button>
+        
+        <div *ngIf="isStockUnavailable()" class="text-danger mt-2 small">
+            <i class="fa fa-exclamation-triangle me-1"></i>
+            Este producto no tiene stock disponible
+        </div>
         <!-- <button class="btn btn-success m-r-10 m-t-10" type="button" title=""> <i
                             class="fa fa-shopping-cart me-1"></i>Comprar ahora</button>
                     <a class="btn btn-secondary m-t-10" href="javascript:void(0);"> <i class="fa fa-heart me-1"></i>Agregar a mi

@@ -104,3 +104,67 @@
   background-color: transparent;
 }
 
+/* Estilos para indicadores de stock */
+.product-stock-indicator {
+  margin-top: 5px;
+  font-weight: 500;
+
+  &.text-danger {
+    color: #dc3545 !important;
+  }
+
+  &.text-warning {
+    color: #ffc107 !important;
+  }
+
+  &.text-success {
+    color: #28a745 !important;
+  }
+
+  &.text-muted {
+    color: #6c757d !important;
+  }
+
+  small {
+    font-size: 0.8rem;
+  }
+}
+
+/* Estilos para botones deshabilitados por falta de stock */
+.product-hover ul li.disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+
+  button {
+    cursor: not-allowed !important;
+
+    &:hover {
+      background-color: transparent !important;
+    }
+  }
+}
+
+/* Alertas de stock en modales */
+.alert.alert-danger,
+.alert.alert-warning,
+.alert.alert-info {
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+/* Botones deshabilitados por stock */
+.btn:disabled.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  opacity: 0.8;
+}
+
+.qty-box .input-group .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545;
+}
+

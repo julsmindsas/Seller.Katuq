@@ -1,9 +1,9 @@
 import { AfterContentChecked, AfterContentInit, AfterViewInit, Component, Input, OnDestroy, OnInit, TemplateRef, ViewChild, ElementRef, Renderer2 } from '@angular/core';
 import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
-import { Producto, ProductoCarrito } from 'src/app/shared/models/productos/Producto';
+import { Producto, ProductoCarrito } from '../../../../shared/models/productos/Producto';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { CarouselLibConfig, Image } from '@ks89/angular-modal-gallery';
-import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { Form, FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { finalize, Subscription } from 'rxjs';
@@ -13,7 +13,7 @@ import { MovingDirection } from 'angular-archwizard';
 import { PedidosUtilService } from '../../service/pedidos.util.service';
 import { parse } from 'flatted';
 import { ToastrService } from "ngx-toastr";
-import { NotificationService } from 'src/app/shared/services/notification.service';
+import { NotificationService } from '../../../../shared/services/notification.service';
 @Component({
   selector: 'app-conf-product-to-cart',
   templateUrl: './conf-product-to-cart.component.html',
@@ -235,6 +235,29 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     });
   }
   masCantidad() {
+    // Validar disponibilidad de stock antes de incrementar
+    if (this.producto?.disponibilidad?.inventariable) {
+      const stockDisponible = this.producto.disponibilidad.cantidadDisponible || 0;
+      
+      if (stockDisponible === 0) {
+        this.toastrService.error('No hay unidades disponibles para este producto', 'Sin Stock', {
+          timeOut: 4000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        });
+        return;
+      }
+      
+      if (this.cantidad >= stockDisponible) {
+        this.toastrService.warning(`Solo hay ${stockDisponible} unidades disponibles`, 'Stock Limitado', {
+          timeOut: 4000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        });
+        return;
+      }
+    }
+
     this.cantidad++;
     this.actualizarTodosLosInputsCantidad();
     
@@ -672,6 +695,29 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     console.log('Método addToCar ejecutado');
 
     try {
+      // Validar disponibilidad de stock antes de agregar al carrito
+      if (this.producto?.disponibilidad?.inventariable) {
+        const stockDisponible = this.producto.disponibilidad.cantidadDisponible || 0;
+        
+        if (stockDisponible === 0) {
+          this.toastrService.error('No hay unidades disponibles para este producto', 'Sin Stock', {
+            timeOut: 4000,
+            progressBar: true,
+            positionClass: 'toast-bottom-right'
+          });
+          return;
+        }
+        
+        if (this.cantidad > stockDisponible) {
+          this.toastrService.warning(`Solo hay ${stockDisponible} unidades disponibles`, 'Stock Limitado', {
+            timeOut: 4000,
+            progressBar: true,
+            positionClass: 'toast-bottom-right'
+          });
+          return;
+        }
+      }
+
       // Marcar todos los campos como tocados para mostrar errores de validación
       this.markAllFieldsAsTouched();
       
@@ -1480,10 +1526,8 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       if (!this.datosEntrega.get('ocasion')?.value) datosEntregaInvalid = true;
     }
     
-    // Validar observaciones si son requeridas
+    // Validar observaciones si son requeridas (validación silenciosa para estado del botón)
     if (this.producto?.procesoComercial?.aceptaComentarios && !this.datosEntrega.get('observaciones')?.value) {
-      this.toastrService.warning('Por favor ingrese las observaciones', 'Campo requerido');
-      this.activeAccordionPanel = 'datosEntregaPanel';
       datosEntregaInvalid = true;
     }
     
@@ -1504,9 +1548,11 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     // Verificar preferencias solo si aceptaVariable es true
     const preferenciasRequeridas = this.producto?.procesoComercial?.aceptaVariable && !this.hasPreferencia();
   
+    // Verificar disponibilidad de stock
+    const stockNoDisponible = this.isStockUnavailable();
 
     // Resultado final
-    const isDisabled = datosEntregaInvalid || tarjetasRequeridas || tarjetasInvalidas || preferenciasRequeridas;
+    const isDisabled = datosEntregaInvalid || tarjetasRequeridas || tarjetasInvalidas || preferenciasRequeridas || stockNoDisponible;
     
     return isDisabled;
   }
@@ -1693,7 +1739,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     // 2. Si hay tarjetas incompletas, intentar llenarlas con valores predeterminados
     if (this.tarjetas.length > 0 && !this.SinTarjeta) {
       let tarjetasActualizadas = false;
-      this.tarjetas.controls.forEach((tarjetaGroup) => {
+      this.tarjetas.controls.forEach(tarjetaGroup => {
         if (tarjetaGroup.invalid) {
           Object.keys(tarjetaGroup['controls']).forEach(key => {
             const control = tarjetaGroup.get(key);
@@ -1724,6 +1770,169 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       this.toastrService.warning('Se realizaron algunas correcciones, pero aún faltan campos por completar', 'Corrección parcial');
     } else {
       this.toastrService.success('El formulario ahora es válido, puede agregar al carrito', 'Corrección completada');
+    }
+  }
+
+  /**
+   * Obtiene la clase CSS para el estado del stock
+   */
+  getStockStatusClass(): string {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return 'text-muted';
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'text-danger fw-bold';
+    } else if (stockDisponible <= 5) {
+      return 'text-warning fw-bold';
+    } else {
+      return 'text-success';
+    }
+  }
+
+  /**
+   * Obtiene el texto a mostrar para el stock
+   */
+  getStockDisplayText(): string {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return 'No aplica control de inventario';
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'Sin stock disponible';
+    } else {
+      return `${stockDisponible} unidades disponibles`;
+    }
+  }
+
+  /**
+   * Obtiene el mensaje de tooltip para el estado del stock
+   */
+  getStockStatusMessage(): string {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return 'Este producto no maneja control de inventario';
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'No hay unidades disponibles para este producto';
+    } else if (stockDisponible <= 5) {
+      return `Stock limitado: solo ${stockDisponible} unidades disponibles`;
+    } else {
+      return `Stock disponible: ${stockDisponible} unidades`;
+    }
+  }
+
+  /**
+   * Determina si debe mostrarse la alerta de stock
+   */
+  shouldShowStockAlert(): boolean {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return false;
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    return stockDisponible <= 5; // Mostrar alerta cuando hay 5 o menos unidades
+  }
+
+  /**
+   * Obtiene la clase CSS para la alerta de stock
+   */
+  getStockAlertClass(): string {
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'alert alert-danger';
+    } else if (stockDisponible <= 3) {
+      return 'alert alert-warning';
+    } else {
+      return 'alert alert-info';
+    }
+  }
+
+  /**
+   * Obtiene el icono para la alerta de stock
+   */
+  getStockAlertIcon(): string {
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'fa fa-exclamation-triangle';
+    } else if (stockDisponible <= 3) {
+      return 'fa fa-exclamation-circle';
+    } else {
+      return 'fa fa-info-circle';
+    }
+  }
+
+  /**
+   * Obtiene el mensaje para la alerta de stock
+   */
+  getStockAlertMessage(): string {
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    
+    if (stockDisponible === 0) {
+      return 'Este producto está agotado. No se puede agregar al carrito.';
+    } else if (stockDisponible === 1) {
+      return '¡Última unidad disponible! Apresúrate antes de que se agote.';
+    } else if (stockDisponible <= 3) {
+      return `¡Solo quedan ${stockDisponible} unidades! Stock muy limitado.`;
+    } else {
+      return `Quedan ${stockDisponible} unidades disponibles.`;
+    }
+  }
+
+  /**
+   * Verifica si el stock no está disponible
+   */
+  isStockUnavailable(): boolean {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return false; // Si no maneja inventario, no hay restricción
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    return stockDisponible === 0;
+  }
+
+  /**
+   * Verifica si la cantidad actual está en el máximo del stock
+   */
+  isQuantityAtMaxStock(): boolean {
+    if (!this.producto?.disponibilidad?.inventariable) {
+      return false;
+    }
+
+    const stockDisponible = this.producto.disponibilidad?.cantidadDisponible || 0;
+    return this.cantidad >= stockDisponible;
+  }
+
+  /**
+   * Obtiene el tooltip para el botón de cantidad
+   */
+  getQuantityButtonTooltip(): string {
+    if (this.isStockUnavailable()) {
+      return 'No hay stock disponible';
+    } else if (this.isQuantityAtMaxStock()) {
+      return 'Has alcanzado el máximo stock disponible';
+    }
+    return 'Aumentar cantidad';
+  }
+
+  /**
+   * Obtiene la clase CSS para el botón del carrito
+   */
+  getCartButtonClass(): string {
+    if (this.isStockUnavailable()) {
+      return 'btn btn-danger';
+    } else if (this.isCartButtonDisabled()) {
+      return 'btn btn-secondary';
+    } else {
+      return 'btn btn-primary';
     }
   }
 

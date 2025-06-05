@@ -247,16 +247,14 @@
                                     </button> -->
                                     <div class="product-hover">
                                         <ul style="padding-left: 0px;">
-                                            <li 
-                                            (click)="quickAddToCart(producto, $event)">
-                                                <!-- <button class="btn" type="button"
-                                                    (click)="configurarProducto(producto)">
-                                                    <i class="icon-shopping-cart"></i>
-                                                </button> -->
-                                                <button class="btn" type="button">
-                                                    <i class="icon-shopping-cart"></i>
+                                            <li [class.disabled]="isProductStockUnavailable(producto)"
+                                                [title]="getQuickAddTooltip(producto)"
+                                                (click)="!isProductStockUnavailable(producto) && quickAddToCart(producto, $event)">
+                                                <button class="btn" type="button" 
+                                                        [disabled]="isProductStockUnavailable(producto)">
+                                                    <i class="icon-shopping-cart" 
+                                                       [class.text-muted]="isProductStockUnavailable(producto)"></i>
                                                 </button>
-
                                             </li>
                                             <li (click)="QuickView.openModal(producto)">
                                                 <button class="btn" type="button">
@@ -278,6 +276,16 @@
                                         {{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}
                                         <del>{{producto.precio.precioTotalVolumenConIva |
                                             currency:'USD':'symbol':'1.0-0'}}</del>
+                                    </div>
+                                    
+                                    <!-- Indicador de stock -->
+                                    <div class="product-stock-indicator" 
+                                         [class]="getProductStockClass(producto)"
+                                         [title]="getProductStockMessage(producto)">
+                                        <small>
+                                            <i [class]="getProductStockIcon(producto)"></i>
+                                            {{getProductStockText(producto)}}
+                                        </small>
                                     </div>
                                 </div>
                             </div>
