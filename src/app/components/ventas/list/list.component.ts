@@ -1054,8 +1054,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   filtrarParaHoy(): void {
     // Implementar lógica para ajustar fechaInicial y fechaFinal al día actual y luego filtrar
     const fechaActual = new Date();
-    // this.fechaInicial = new Date(fechaActual.setHours(0, 0, 0, 0));
-    // this.fechaFinal = new Date(fechaActual.setHours(23, 59, 59, 999));
+    this.fechaInicial = fechaActual.toISOString().split('T')[0];
+    this.fechaFinal = fechaActual.toISOString().split('T')[0];
     this.refrescarDatos();
   }
   filter(event) {
@@ -1066,8 +1066,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Similar a filtrarParaHoy pero ajustando las fechas para mañana
     const fechaManana = new Date();
     fechaManana.setDate(fechaManana.getDate() + 1);
-    // this.fechaInicial = new Date(fechaManana.setHours(0, 0, 0, 0));
-    // this.fechaFinal = new Date(fechaManana.setHours(23, 59, 59, 999));
+    this.fechaInicial = fechaManana.toISOString().split('T')[0];
+    this.fechaFinal = fechaManana.toISOString().split('T')[0];
     this.refrescarDatos();
   }
 
@@ -1075,8 +1075,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Similar a filtrarParaHoy pero ajustando las fechas para pasado mañana
     const fechaPasadoManana = new Date();
     fechaPasadoManana.setDate(fechaPasadoManana.getDate() + 2);
-    // this.fechaInicial = new Date(fechaPasadoManana.setHours(0, 0, 0, 0));
-    // this.fechaFinal = new Date(fechaPasadoManana.setHours(23, 59, 59, 999));
+    this.fechaInicial = fechaPasadoManana.toISOString().split('T')[0];
+    this.fechaFinal = fechaPasadoManana.toISOString().split('T')[0];
     this.refrescarDatos();
   }
 
