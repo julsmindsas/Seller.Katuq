@@ -52,7 +52,7 @@ export const environment = {
       clientSecret: ''
     }
   },
-  useModelBig: false
+  useModelBig: true
 };
 /*
  * For easier debugging in development mode, you can import the following file

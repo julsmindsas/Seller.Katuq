@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h5 class="modal-title">{{ direccionActual ? 'Editar' : 'Crear' }} dirección estructurada</h5>
+  <h5 class="modal-title">{{ direccionActual ? 'Editar' : 'Crear' }} dirección estructurada (Colombia)</h5>
   <button type="button" class="btn-close" aria-label="Close" (click)="cancelar()"></button>
 </div>
 
@@ -9,72 +9,198 @@
     <strong>Editando:</strong> {{ direccionActual }}
   </div>
 
+  <!-- Selector tipo de dirección -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="esRural" formControlName="esRural" (change)="cambiarTipoDireccion()">
+        <label class="form-check-label" for="esRural">
+          <strong>Dirección rural</strong> (Vereda, Corregimiento, Finca, etc.)
+        </label>
+      </div>
+    </div>
+  </div>
+
   <div class="row">
     <!-- Formulario con labels en la columna izquierda -->
     <div class="col-md-5">
       <form [formGroup]="direccionForm" class="labeled-form">
-        <!-- Vía principal -->
-        <div class="mb-3">
-          <label class="form-label">Vía principal</label>
-          <div class="row g-2">
-            <div class="col-5">
-              <label class="form-label small">Tipo</label>
-              <select class="form-select" formControlName="tipoVia">
-                <option *ngFor="let tipo of tiposVia" [value]="tipo">{{ tipo }}</option>
-              </select>
-            </div>
-            <div class="col-4">
-              <label class="form-label small">Número</label>
-              <input type="text" class="form-control" placeholder="Ej: 80" formControlName="numeroVia">
-            </div>
-            <div class="col-3">
-              <label class="form-label small">Letra</label>
-              <select class="form-select" formControlName="letraVia">
-                <option value="">-</option>
-                <option *ngFor="let letra of letras" [value]="letra">{{ letra }}</option>
-              </select>
-            </div>
+        
+        <!-- FORMULARIO RURAL -->
+        <div *ngIf="esDireccionRural" class="rural-form">
+          <!-- Tipo de nomenclatura rural -->
+          <div class="mb-3">
+            <label class="form-label">Tipo de ubicación rural</label>
+            <select class="form-select" formControlName="tipoNomenclaturaRural">
+              <option *ngFor="let tipo of tiposNomenclaturaRural" [value]="tipo">{{ tipo }}</option>
+            </select>
+          </div>
+
+          <!-- Nombre rural -->
+          <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" placeholder="Ej: La Esperanza" formControlName="nombreRural">
+          </div>
+
+          <!-- Referencias rurales -->
+          <div class="mb-3">
+            <label class="form-label">Referencias / Descripción</label>
+            <textarea class="form-control" rows="3" placeholder="Ej: A 500 metros de la escuela, casa de dos pisos color blanco" formControlName="referencias"></textarea>
           </div>
         </div>
 
-        <!-- Número de cruce -->
-        <div class="mb-3">
-          <label class="form-label">Cruce</label>
-          <div class="row g-2">
-            <div class="col-6">
-              <label class="form-label small">Número</label>
-              <div class="input-group">
-                <span class="input-group-text">#</span>
-                <input type="text" class="form-control" placeholder="Ej: 30" formControlName="numero">
+        <!-- FORMULARIO URBANO -->
+        <div *ngIf="!esDireccionRural" class="urban-form">
+          <!-- Vía principal -->
+          <div class="mb-3">
+            <label class="form-label">Vía principal</label>
+            <div class="row g-2">
+              <div class="col-5">
+                <label class="form-label small">Tipo</label>
+                <select class="form-select" formControlName="tipoVia">
+                  <option *ngFor="let tipo of tiposVia" [value]="tipo">{{ tipo }}</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <label class="form-label small">Número</label>
+                <input type="text" class="form-control" placeholder="Ej: 80" formControlName="numeroVia">
+              </div>
+              <div class="col-3">
+                <label class="form-label small">Letra</label>
+                <select class="form-select" formControlName="letraVia">
+                  <option value="">-</option>
+                  <option *ngFor="let letra of letras" [value]="letra">{{ letra }}</option>
+                </select>
               </div>
             </div>
-            <div class="col-6">
-              <label class="form-label small">Letra</label>
-              <select class="form-select" formControlName="letraCruce">
-                <option value="">-</option>
-                <option *ngFor="let letra of letras" [value]="letra">{{ letra }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Número de casa -->
-        <div class="mb-3">
-          <label class="form-label">Número de casa/edificio</label>
-          <div class="row g-2">
-            <div class="col-12">
-              <label class="form-label small">Número</label>
-              <div class="input-group">
-                <span class="input-group-text">-</span>
-                <input type="text" class="form-control" placeholder="Ej: 15" formControlName="numeroCasa">
+            <!-- Complemento vía -->
+            <div class="row g-2 mt-1">
+              <div class="col-12">
+                <label class="form-label small">Complemento (Opcional)</label>
+                <select class="form-select" formControlName="complementoVia">
+                  <option value="">-</option>
+                  <option *ngFor="let comp of complementos" [value]="comp">{{ comp }}</option>
+                </select>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Ciudad -->
+          <!-- Número de cruce -->
+          <div class="mb-3">
+            <label class="form-label">Cruce</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label small">Número</label>
+                <div class="input-group">
+                  <span class="input-group-text">#</span>
+                  <input type="text" class="form-control" placeholder="Ej: 30" formControlName="numero">
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="form-label small">Letra</label>
+                <select class="form-select" formControlName="letraCruce">
+                  <option value="">-</option>
+                  <option *ngFor="let letra of letras" [value]="letra">{{ letra }}</option>
+                </select>
+              </div>
+            </div>
+            <!-- Complemento cruce -->
+            <div class="row g-2 mt-1">
+              <div class="col-12">
+                <label class="form-label small">Complemento (Opcional)</label>
+                <select class="form-select" formControlName="complementoCruce">
+                  <option value="">-</option>
+                  <option *ngFor="let comp of complementos" [value]="comp">{{ comp }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Número de casa -->
+          <div class="mb-3">
+            <label class="form-label">Número de casa/edificio</label>
+            <div class="row g-2">
+              <div class="col-12">
+                <label class="form-label small">Número</label>
+                <div class="input-group">
+                  <span class="input-group-text">-</span>
+                  <input type="text" class="form-control" placeholder="Ej: 15" formControlName="numeroCasa">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipo y número de vivienda específica -->
+          <div class="mb-3">
+            <label class="form-label">Vivienda específica (Opcional)</label>
+            <div class="row g-2">
+              <div class="col-7">
+                <label class="form-label small">Tipo</label>
+                <select class="form-select" formControlName="tipoVivienda">
+                  <option value="">Seleccionar...</option>
+                  <option *ngFor="let tipo of tiposVivienda" [value]="tipo">{{ tipo }}</option>
+                </select>
+              </div>
+              <div class="col-5">
+                <label class="form-label small">Número</label>
+                <input type="text" class="form-control" placeholder="Ej: 201" formControlName="numeroVivienda">
+              </div>
+            </div>
+          </div>
+
+          <!-- Barrio -->
+          <div class="mb-3 barrio-field">
+            <label class="form-label">Barrio (Opcional)</label>
+            <div class="row g-2">
+              <div class="col-12">
+                <select class="form-select" formControlName="barrio" (change)="onBarrioSeleccionado($event.target.value)" *ngIf="barriosDisponibles.length > 0">
+                  <option value="">Seleccionar barrio...</option>
+                  <option *ngFor="let barrio of barriosDisponibles" [value]="barrio.nombre">
+                    {{ barrio.nombre }}
+                    <span *ngIf="barrio.estrato && barrio.estrato.length > 0"> (Estrato {{ barrio.estrato.join('-') }})</span>
+                  </option>
+                </select>
+                <input type="text" class="form-control" placeholder="Nombre del barrio" formControlName="barrio" (blur)="onBarrioSeleccionado($event.target.value)" *ngIf="barriosDisponibles.length === 0">
+              </div>
+            </div>
+            <small *ngIf="estratosSugeridos.length > 0" class="text-info">
+              <i class="pi pi-info-circle"></i> Estrato típico: {{ estratosSugeridos.join(', ') }}
+            </small>
+          </div>
+
+          <!-- Información adicional colombiana -->
+          <div class="row mb-3 info-adicional">
+            <div class="col-6">
+              <label class="form-label">Estrato (Opcional)</label>
+              <select class="form-select estrato-field" formControlName="estrato">
+                <option value="">-</option>
+                <option *ngFor="let estrato of estratosSocioeconomicos" [value]="estrato" 
+                        [class.text-success]="estratosSugeridos.includes(estrato)">
+                  {{ estrato }}
+                  <span *ngIf="estratosSugeridos.includes(estrato)"> ✓</span>
+                </option>
+              </select>
+              <small *ngIf="codigoPostalSugerido" class="text-success">
+                <i class="pi pi-check"></i> Código postal sugerido: {{ codigoPostalSugerido }}
+              </small>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Código postal</label>
+              <input type="text" class="form-control" placeholder="DIVIPOLA (6 dígitos)" formControlName="codigoPostal" maxlength="6">
+              <small class="text-muted">Formato DIVIPOLA colombiano</small>
+            </div>
+          </div>
+
+          <!-- Referencias adicionales -->
+          <div class="mb-3 referencias-field">
+            <label class="form-label">Referencias de ubicación (Opcional)</label>
+            <textarea class="form-control" rows="2" placeholder="Ej: Frente al parque, al lado del supermercado, casa color blanco con portón negro" formControlName="referencias"></textarea>
+            <small class="text-muted">Describe puntos de referencia que faciliten encontrar la dirección</small>
+          </div>
+        </div>
+        <!-- Ciudad (común para ambos tipos) -->
         <div class="mb-3">
-          <label class="form-label">Ciudad</label>
+          <label class="form-label">Ciudad *</label>
           <input type="text" class="form-control" placeholder="Ej: Bogotá" formControlName="ciudad">
         </div>
 
@@ -92,10 +218,25 @@
           <small *ngIf="errorGeocodificacion" class="text-danger">{{ mensajeError }}</small>
         </div>
 
+        <!-- Botones de acción del formulario -->
+        <div class="mb-3">
+          <button type="button" class="btn btn-outline-warning btn-sm me-2" (click)="limpiarFormulario()">
+            <i class="pi pi-refresh"></i> Limpiar
+          </button>
+          <button type="button" class="btn btn-outline-info btn-sm" (click)="buscarCoordenadas()" [disabled]="geocodificando">
+            <i class="pi pi-search"></i> Buscar coordenadas
+          </button>
+        </div>
+
         <!-- Vista previa de dirección -->
         <div class="direccion-preview">
           <strong>Vista previa de la dirección:</strong>
-          <p [ngClass]="{'text-muted': !vistaPrevia}">{{ vistaPrevia || 'Completa el formulario para ver la dirección' }}</p>
+          <p [ngClass]="{'text-muted': !vistaPrevia, 'text-success': vistaPrevia && validarDireccionColombiana(), 'text-warning': vistaPrevia && !validarDireccionColombiana()}">
+            {{ vistaPrevia || 'Completa el formulario para ver la dirección' }}
+          </p>
+          <small *ngIf="vistaPrevia && !validarDireccionColombiana()" class="text-warning">
+            <i class="pi pi-exclamation-triangle"></i> Revisa los datos ingresados
+          </small>
         </div>
       </form>
     </div>
@@ -118,7 +259,7 @@
 
 <div class="modal-footer">
   <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
-  <button type="button" class="btn btn-primary" [disabled]="!direccionForm.valid" (click)="generarDireccion()">
+  <button type="button" class="btn btn-primary" [disabled]="!validarDireccionColombiana()" (click)="generarDireccion()">
     {{ direccionActual ? 'Actualizar' : 'Aplicar' }}
   </button>
 </div> 

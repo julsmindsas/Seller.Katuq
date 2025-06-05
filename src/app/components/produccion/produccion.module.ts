@@ -17,6 +17,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { ToastModule } from 'primeng/toast';
 import { TreeSelectModule } from 'primeng/treeselect';
 import { VentasRoutingModule } from '../ventas/ventas-routing.module';
+import { VentasModule } from '../ventas/ventas.module';
 import { SharedModule } from '../../shared/shared.module';
 import { CheckboxModule } from 'primeng/checkbox';
 import { CerrararticuloComponent } from './dashboard/cerrararticulo/cerrararticulo.component';
@@ -24,7 +25,6 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ProcesoTrackingComponent } from './dashboard/tracking/proceso-tracking.component';
 import { TimelineModule } from 'primeng/timeline';
 import { CerrarProductoComponent } from './dashboard/cerrarproducto/cerrarproducto.component';
-import { VentasModule } from '../ventas/ventas.module';
 import { HttpClientModule } from '@angular/common/http';
 import { ProduccionService } from '../../shared/services/produccion/produccion.service';
 import { ProduccionNewService } from '../../shared/services/produccion/produccion-new.service';
@@ -36,6 +36,7 @@ import { ProduccionDirectService } from '../../shared/services/produccion/produc
         CommonModule,
         SharedModule,
         DropdownModule,
+        VentasModule,
         VentasRoutingModule,
         NgxDatatableModule,
         TabViewModule,
@@ -53,7 +54,6 @@ import { ProduccionDirectService } from '../../shared/services/produccion/produc
         TableModule,
         MultiSelectModule,
         
-        VentasModule,
         TimelineModule,
         ToastModule],
     exports: [DashboardComponent],

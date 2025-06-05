@@ -536,8 +536,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     await this.peerConnection.setLocalDescription(offer);
 
     const baseUrl = "https://api.openai.com/v1/realtime";
-    const modelBig = "gpt-4o-realtime-preview-2024-12-17";
-    const modelMini = "gpt-4o-mini-realtime-preview-2024-12-17";
+    const modelBig = "gpt-4o-realtime-preview-2025-06-03";
+    const modelMini = "gpt-4o-mini-realtime-preview-2025-06-03";
     const model = this.useModelBig ? modelBig : modelMini;
 
     // Realizar la petición a la API de OpenAI
