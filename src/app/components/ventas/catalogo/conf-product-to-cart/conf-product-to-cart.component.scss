@@ -174,54 +174,227 @@
   padding: 1rem;
 }
 
-// Reemplazar los estilos del fixed-action-button con el nuevo contenedor de resumen
-.fixed-summary-container {
+// Nuevo contenedor de carrito flotante mejorado y menos invasivo
+.cart-floating-container {
   position: fixed !important;
-  bottom: 15px !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 9999 !important;
-  padding: 1rem !important;
-  background-color: rgba(255, 255, 255, 0.97) !important;
-  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2) !important;
-  margin: 0 auto !important;
-  width: calc(100% - 30px) !important;
-  max-width: 500px !important;
-  border-radius: 10px !important;
-  backdrop-filter: blur(4px) !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 1050 !important;
+  max-width: 400px !important;
+  width: auto !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(8px) !important;
+  transition: all 0.3s ease !important;
 
-  button {
-    cursor: pointer !important;
-    font-weight: bold !important;
-  }
-
-  .price-summary {
-    margin-bottom: 10px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    padding-bottom: 10px;
-  }
-
-  .price-row {
+  // Vista compacta principal
+  .cart-compact-view {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
 
-    &.total {
-      font-weight: bold;
-      font-size: 1.1rem;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px dashed rgba(0, 0, 0, 0.1);
+    .compact-info {
+      cursor: pointer;
+      flex: 1;
+      
+      .compact-price {
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: #2c3e50;
+      }
+      
+      .compact-quantity {
+        font-size: 0.85rem;
+        color: #6c757d;
+      }
+    }
+
+    .btn-compact-cart {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &.primary {
+        background-color: #007bff;
+        color: white;
+        
+        &:hover {
+          background-color: #0056b3;
+          transform: translateY(-1px);
+        }
+      }
+
+      &.disabled {
+        background-color: #6c757d;
+        color: white;
+        cursor: not-allowed;
+        
+        &.danger {
+          background-color: #dc3545;
+        }
+      }
+
+      i {
+        font-size: 1rem;
+      }
     }
   }
 
-  .price-label {
-    font-weight: 500;
+  // Vista expandida con desglose
+  .cart-expanded-view {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 12px 16px;
+    background-color: rgba(248, 249, 250, 0.8);
+
+    .price-summary-expanded {
+      .price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+
+        .price-label {
+          color: #6c757d;
+        }
+
+        .price-value {
+          font-weight: 600;
+          color: #2c3e50;
+        }
+      }
+    }
   }
 
-  .price-value {
-    text-align: right;
+  // Mensajes de error compactos
+  .cart-error-info {
+    padding: 8px 16px;
+    border-top: 1px solid rgba(220, 53, 69, 0.2);
+    background-color: rgba(248, 215, 218, 0.3);
+
+    .error-message {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #721c24;
+
+      .btn-debug {
+        background: none;
+        border: none;
+        color: #6c757d;
+        padding: 2px 4px;
+        cursor: pointer;
+        
+        &:hover {
+          color: #495057;
+        }
+      }
+    }
+  }
+
+  // Botón de minimizar
+  .minimize-toggle {
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.7rem;
+    color: #6c757d;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #e9ecef;
+      color: #495057;
+    }
+  }
+
+  // Estado minimizado
+  &.minimized {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    
+    .cart-compact-view,
+    .cart-expanded-view,
+    .cart-error-info,
+    .minimize-toggle {
+      display: none !important;
+    }
+  }
+
+  // Botón para expandir cuando está minimizado
+  .expand-button {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    i {
+      font-size: 1.2rem;
+      margin-bottom: 2px;
+    }
+
+    .price-badge {
+      font-size: 0.6rem;
+      font-weight: bold;
+      line-height: 1;
+    }
+  }
+
+  // Responsivo para móvil
+  @media (max-width: 768px) {
+    bottom: 15px !important;
+    right: 15px !important;
+    left: 15px !important;
+    max-width: none !important;
+    width: auto !important;
+
+    &.minimized {
+      left: auto !important;
+      width: 60px !important;
+      right: 15px !important;
+    }
+
+    .cart-compact-view {
+      padding: 10px 12px;
+      
+      .btn-compact-cart {
+        padding: 10px 12px;
+        
+        span {
+          font-size: 0.8rem;
+        }
+      }
+    }
   }
 }
 

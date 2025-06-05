@@ -54,6 +54,10 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   public mostrarPersonalizacionCompleta: boolean = false;
   public tarjetaMostrada: boolean[] = [];
 
+  // Propiedades para controlar el carrito flotante
+  public isCartMinimized: boolean = false;
+  public isCartExpanded: boolean = false;
+
   // Propiedades para controlar el estado de características del producto
   public mostrarCaracteristicas: boolean = false;
   public caracteristicasRevisadas: boolean = false;
@@ -186,8 +190,8 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
           if (r.tipoEntrega && r.tiempoEntrega && r.generos && r.ocasiones && r.formaEntrega) {
             this.tipoEntrega = r.tipoEntrega;
             this.tiemposEntrega = r.tiempoEntrega;
-            this.generos = r.generos?.filter((p: { id: number }) => producto.procesoComercial.genero.find((g: number) => g == p.id));
-            this.ocasiones = r.ocasiones?.filter((p: { id: string }) => producto.procesoComercial.ocasion.find((g: string) => g == p.id));
+            this.generos = producto.procesoComercial?.genero ? r.generos?.filter((p: { id: number }) => producto.procesoComercial!.genero.find((g: number) => g == p.id)) : [];
+            this.ocasiones = producto.procesoComercial?.ocasion ? r.ocasiones?.filter((p: { id: string }) => producto.procesoComercial!.ocasion.find((g: string) => g == p.id)) : [];
             this.formasEntrega = r.formaEntrega;
             this.adicionesPreferencias = r.adiciones.filter(p => p.esPreferencia);
             this.adicionesrows = (r.adiciones as any[]).filter(p => p.esAdicion).sort((a, b) => {
@@ -207,7 +211,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
             this.rowsinicialesSinMod = JSON.stringify(this.adicionesrows)
 
             this.loadFormasEntregaConfiguracionProducto();
-            this.variables = parse(producto.procesoComercial.variablesForm);
+            this.variables = producto.procesoComercial?.variablesForm ? parse(producto.procesoComercial.variablesForm) : null;
             this.configurarProducto(producto);
 
           }
@@ -261,7 +265,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     this.cantidad++;
     this.actualizarTodosLosInputsCantidad();
     
-    if (this.producto.precio.preciosVolumen.length > 0) {
+    if (this.producto?.precio?.preciosVolumen && this.producto.precio.preciosVolumen.length > 0) {
       let rangoActual = this.producto.precio.preciosVolumen.find(x =>
         this.cantidad >= x.numeroUnidadesInicial && this.cantidad <= x.numeroUnidadesLimite
       );
@@ -289,7 +293,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   menosCantidad() {
-    if (this.cantidad > this.producto.disponibilidad?.cantidadMinVenta) {
+    if (this.cantidad > (this.producto?.disponibilidad?.cantidadMinVenta || 1)) {
       this.cantidad--;
       if (this.cantidadTarjetas > this.cantidad) {
         this.tarjetaForm.removeControl(`tarjeta${this.cantidad}`);
@@ -298,13 +302,13 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       
       this.actualizarTodosLosInputsCantidad();
       
-      if (this.producto.precio.preciosVolumen.length > 0) {
+      if (this.producto?.precio?.preciosVolumen && this.producto.precio.preciosVolumen.length > 0) {
         let rangoActual = this.producto.precio.preciosVolumen.find(x =>
           this.cantidad >= x.numeroUnidadesInicial && this.cantidad <= x.numeroUnidadesLimite
         );
         let precioFormateado
         if (rangoActual == undefined) {
-          precioFormateado = this.producto.precio.precioUnitarioConIva.toLocaleString('es-CO', {
+          precioFormateado = this.producto?.precio?.precioUnitarioConIva?.toLocaleString('es-CO', {
             style: 'currency',
             currency: 'COP',
             minimumFractionDigits: 2,
@@ -333,7 +337,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
     // this.initForm();
     // this.getAdiciones();
-    this.datosEntrega.get('fechaEntrega').valueChanges.subscribe(valor => {
+    this.datosEntrega.get('fechaEntrega')?.valueChanges.subscribe(valor => {
       if (!valor) return;
       const fechaEntregatoDateformat = new Date(valor.year, valor.month - 1, valor.day);
       const fechaActual = new Date()
@@ -542,27 +546,27 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     const tipoImagen = objeto.data?.tipoImagen || '';
     switch (tipoImagen) {
       case 'texto':
-        grupo.get('textoIngresado').setValidators([Validators.required]);
-        grupo.get('imagenIngresado').clearValidators();
-        grupo.get('archivoIngresado').clearValidators();
+        grupo.get('textoIngresado')?.setValidators([Validators.required]);
+        grupo.get('imagenIngresado')?.clearValidators();
+        grupo.get('archivoIngresado')?.clearValidators();
         break;
       case 'imagen':
-        grupo.get('textoIngresado').clearValidators();
-        grupo.get('imagenIngresado').setValidators([Validators.required]);
-        grupo.get('archivoIngresado').clearValidators();
+        grupo.get('textoIngresado')?.clearValidators();
+        grupo.get('imagenIngresado')?.setValidators([Validators.required]);
+        grupo.get('archivoIngresado')?.clearValidators();
         break;
       case 'archivo':
-        grupo.get('textoIngresado').clearValidators();
-        grupo.get('imagenIngresado').clearValidators();
-        grupo.get('archivoIngresado').setValidators([Validators.required]);
+        grupo.get('textoIngresado')?.clearValidators();
+        grupo.get('imagenIngresado')?.clearValidators();
+        grupo.get('archivoIngresado')?.setValidators([Validators.required]);
         break;
       // Aplica otros casos según sea necesario
     }
 
     // Asegúrate de actualizar la validez de los controles después de cambiar las validaciones
-    grupo.get('textoIngresado').updateValueAndValidity();
-    grupo.get('imagenIngresado').updateValueAndValidity();
-    grupo.get('archivoIngresado').updateValueAndValidity();
+    grupo.get('textoIngresado')?.updateValueAndValidity();
+    grupo.get('imagenIngresado')?.updateValueAndValidity();
+    grupo.get('archivoIngresado')?.updateValueAndValidity();
   }
 
   get variablesControls() {
@@ -589,32 +593,35 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     this.producto = producto;
     this.initForm();
     this.modalOpen = true;
-    this.cantidad = producto?.disponibilidad?.cantidadMinVenta;
+    this.cantidad = producto?.disponibilidad?.cantidadMinVenta || 1;
     
     // Programar actualización para después de la detección de cambios
     setTimeout(() => {
       this.actualizarTodosLosInputsCantidad();
     });
 
-    if (this.producto) {
+    if (this.producto && this.producto.crearProducto) {
 
-      this.imagesRect = this.producto.crearProducto.imagenesPrincipales.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls }));
+      this.imagesRect = this.producto.crearProducto.imagenesPrincipales?.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls })) || [];
       if (!this.producto.crearProducto.imagenesSecundarias) {
         this.producto.crearProducto.imagenesSecundarias = [];
       }
-      this.producto.crearProducto.imagenesSecundarias.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls })).forEach((image) => {
+      this.producto.crearProducto.imagenesSecundarias?.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls })).forEach((image) => {
         this.imagesRect.push(image);
       });
 
       this.imagesRect = [...this.imagesRect];
 
       const itemsArray = this.formulario.get('variables') as FormArray;
-      this.variables.forEach((objeto) => {
-        itemsArray.push(this.crearItem(objeto));
-      });
+      if (this.variables) {
+        this.variables.forEach((objeto) => {
+          itemsArray.push(this.crearItem(objeto));
+        });
+      }
 
       const fechaOriginal = new Date();
-      const tiempoEntrega = parseInt(this.producto?.disponibilidad?.tiempoEntrega); // Reemplaza con el valor correspondiente
+      const tiempoEntregaStr = this.producto?.disponibilidad?.tiempoEntrega;
+      const tiempoEntrega = tiempoEntregaStr ? parseInt(tiempoEntregaStr) : 0;
       const fechaConTiempoEntrega = new Date(fechaOriginal.setDate(fechaOriginal.getDate() + tiempoEntrega));
 
       const fechaConvertida = {
@@ -635,9 +642,11 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   llenarCamposEdicion() {
-    const configuracion = this.configuracionCarrito.configuracion;
-    this.producto = this.configuracionCarrito.producto;
-    this.inicializacionConfigurarProducto(this.producto);
+    const configuracion = this.configuracionCarrito?.configuracion;
+    if (this.configuracionCarrito?.producto) {
+      this.producto = this.configuracionCarrito.producto;
+      this.inicializacionConfigurarProducto(this.producto);
+    }
     if (configuracion) {
       this.productoConfiguradoForm.patchValue(configuracion);
       setTimeout(() => {
@@ -663,7 +672,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       });
     }
 
-    this.cantidad = this.configuracionCarrito.cantidad;
+    this.cantidad = this.configuracionCarrito?.cantidad || 1;
     
     // Intentar establecer el valor usando el método centralizado
     setTimeout(() => {
@@ -1095,11 +1104,11 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
                   const preference = {
                     titulo: item.value.data.titulo,
                     subtitulo: item.value.data.titulo,
-                    valorUnitarioSinIva: selectedValue.data.valorUnitarioSinIva || 0,
-                    valorIva: selectedValue.data.valorIva || 0,
-                    porcentajeIva: selectedValue.data.porcentajeIva || 0,
-                    precioTotalConIva: selectedValue.data.precioTotalConIva || 0,
-                    imagen: selectedValue.data.imagen || 'assets/images/other-images/sinimagen.webp',
+                    valorUnitarioSinIva: (selectedValue as any)?.data?.valorUnitarioSinIva || 0,
+                    valorIva: (selectedValue as any)?.data?.valorIva || 0,
+                    porcentajeIva: (selectedValue as any)?.data?.porcentajeIva || 0,
+                    precioTotalConIva: (selectedValue as any)?.data?.precioTotalConIva || 0,
+                    imagen: (selectedValue as any)?.data?.imagen || 'assets/images/other-images/sinimagen.webp',
                     tipo: 'preferencia',
                     cantidad: 1
                   };
@@ -1125,12 +1134,12 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
     const preference = {
       titulo: item.value.data.titulo,
-      subtitulo: selectedValue.data.titulo,
-      valorUnitarioSinIva: selectedValue.data.valorUnitarioSinIva || 0,
-      valorIva: selectedValue.data.valorIva || 0,
-      porcentajeIva: selectedValue.data.porcentajeIva || 0,
-      precioTotalConIva: selectedValue.data.precioTotalConIva || 0,
-      imagen: selectedValue.data.imagen || 'assets/images/other-images/sinimagen.webp',
+      subtitulo: (selectedValue as any)?.data?.titulo || '',
+      valorUnitarioSinIva: (selectedValue as any)?.data?.valorUnitarioSinIva || 0,
+      valorIva: (selectedValue as any)?.data?.valorIva || 0,
+      porcentajeIva: (selectedValue as any)?.data?.porcentajeIva || 0,
+      precioTotalConIva: (selectedValue as any)?.data?.precioTotalConIva || 0,
+      imagen: (selectedValue as any)?.data?.imagen || 'assets/images/other-images/sinimagen.webp',
       tipo: 'preferencia',
       paraProduccion: false,
       cantidad: 1
@@ -1159,12 +1168,12 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
     const preference = {
       titulo: item.value.data.titulo,
-      subtitulo: selectedValue.data.titulo,
-      valorUnitarioSinIva: selectedValue.data.valorUnitarioSinIva || 0,
-      valorIva: selectedValue.data.valorIva || 0,
-      porcentajeIva: selectedValue.data.porcentajeIva || 0,
-      precioTotalConIva: selectedValue.data.precioTotalConIva || 0,
-      imagen: this.getImgAdicion(selectedValue.data.titulo),
+      subtitulo: selectedValue?.data?.titulo || '',
+      valorUnitarioSinIva: selectedValue?.data?.valorUnitarioSinIva || 0,
+      valorIva: selectedValue?.data?.valorIva || 0,
+      porcentajeIva: selectedValue?.data?.porcentajeIva || 0,
+      precioTotalConIva: selectedValue?.data?.precioTotalConIva || 0,
+      imagen: selectedValue?.data?.titulo ? this.getImgAdicion(selectedValue.data.titulo) : 'assets/images/other-images/sinimagen.webp',
       tipo: 'preferencia',
       paraProduccion: true,
       cantidad: 1
@@ -1578,7 +1587,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       debugMessage += `- aceptaVariable: ${pc.aceptaVariable ? '<span class="text-success">Sí</span>' : '<span class="text-secondary">No</span>'}<br><br>`;
     }
     
-    // Verificar campos que son requeridos según la configuración
+    // Verificar campos que son requeridos según la configuración del producto
     debugMessage += '<strong>Estado de campos requeridos:</strong><br>';
     
     // Calendario, forma y horario entrega
@@ -1933,6 +1942,42 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       return 'btn btn-secondary';
     } else {
       return 'btn btn-primary';
+    }
+  }
+
+  /**
+   * Métodos para el carrito flotante mejorado
+   */
+  
+  /**
+   * Alterna entre minimizar y expandir el carrito flotante
+   */
+  toggleMinimizeCart(): void {
+    this.isCartMinimized = !this.isCartMinimized;
+    if (this.isCartMinimized) {
+      this.isCartExpanded = false;
+    }
+  }
+
+  /**
+   * Alterna la vista expandida del carrito (mostrando desglose de precios)
+   */
+  toggleExpandCart(): void {
+    if (!this.isCartMinimized) {
+      this.isCartExpanded = !this.isCartExpanded;
+    }
+  }
+
+  /**
+   * Obtiene la clase CSS para el botón compacto del carrito
+   */
+  getCompactCartButtonClass(): string {
+    if (this.isStockUnavailable()) {
+      return 'btn-compact-cart disabled danger';
+    } else if (this.isCartButtonDisabled()) {
+      return 'btn-compact-cart disabled';
+    } else {
+      return 'btn-compact-cart primary';
     }
   }
 

@@ -815,48 +815,70 @@
                     </ngb-panel>
                 </ngb-accordion>
 
-                <!-- Botón fijo para agregar al carrito -->
-                <div class="fixed-summary-container">
-                    <!-- Resumen de precios -->
-                    <div class="price-summary">
-                        <div class="price-row">
-                            <div class="price-label">{{'Producto:' | translate}}</div>
-                            <div class="price-value">{{ precioproducto * (sumar1() || 1) |
-                                currency:'USD':'symbol':'1.0-0' }}</div>
-                        </div>
-                        <div class="price-row">
-                            <div class="price-label">{{'Adiciones:' | translate}}</div>
-                            <div class="price-value">{{ (getBigTotalProductWithPreferenceAndAdictions() -
-                                precioproducto) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}</div>
-                        </div>
-                        <div class="price-row total">
-                            <div class="price-label">{{'Total:' | translate}}</div>
-                            <div class="price-value">{{ (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() ||
-                                1) | currency:'USD':'symbol':'1.0-0' }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Botón para agregar al carrito -->
-                    <button class="btn btn-lg w-100 mt-2" type="button" (click)="addToCar()" 
-                            [disabled]="isCartButtonDisabled()"
-                            [class]="getCartButtonClass()">
-                        <i class="fa fa-shopping-basket me-1"></i> 
-                        {{isEdit ? 'Actualizar carrito' : (isStockUnavailable() ? 'Sin stock disponible' : 'Agregar al carrito') | translate}}
+                <!-- Botón flotante mejorado para agregar al carrito -->
+                <div class="cart-floating-container" [class.minimized]="isCartMinimized" [class.expanded]="isCartExpanded">
+                    <!-- Botón de minimizar/maximizar -->
+                    <button class="minimize-toggle" (click)="toggleMinimizeCart()" *ngIf="!isCartMinimized">
+                        <i class="fa fa-chevron-down"></i>
                     </button>
-
-                    <div *ngIf="isCartButtonDisabled()" class="text-danger mt-2 small text-center">
-                        <span *ngIf="isStockUnavailable()">
-                            <i class="fa fa-exclamation-triangle me-1"></i>
-                            {{'Este producto no tiene stock disponible' | translate}}
-                        </span>
-                        <span *ngIf="!isStockUnavailable()">
-                            {{'Complete los campos requeridos para continuar' | translate}}
-                            
-                            <button (click)="showDebugInfo()" class="btn btn-sm btn-link text-secondary mt-1">
-                                <i class="fa fa-bug"></i> {{'Ver campos faltantes' | translate}}
-                            </button>
-                        </span>
+                    
+                    <!-- Vista compacta (siempre visible) -->
+                    <div class="cart-compact-view">
+                        <div class="compact-info" (click)="toggleExpandCart()">
+                            <div class="compact-price">
+                                {{ (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}
+                            </div>
+                            <div class="compact-quantity" *ngIf="(sumar1() || 1) > 1">
+                                x{{ sumar1() || 1 }}
+                            </div>
+                        </div>
+                        
+                        <button class="btn-compact-cart" type="button" (click)="addToCar()" 
+                                [disabled]="isCartButtonDisabled()"
+                                [class]="getCompactCartButtonClass()">
+                            <i class="fa fa-shopping-basket"></i>
+                            <span class="d-none d-sm-inline ms-1">
+                                {{isEdit ? 'Actualizar' : (isStockUnavailable() ? 'Sin stock' : 'Agregar') | translate}}
+                            </span>
+                        </button>
                     </div>
+
+                    <!-- Vista expandida (opcional) -->
+                    <div class="cart-expanded-view" *ngIf="isCartExpanded && !isCartMinimized">
+                        <div class="price-summary-expanded">
+                            <div class="price-row">
+                                <div class="price-label">{{'Producto:' | translate}}</div>
+                                <div class="price-value">{{ precioproducto * (sumar1() || 1) |
+                                    currency:'USD':'symbol':'1.0-0' }}</div>
+                            </div>
+                            <div class="price-row" *ngIf="getTotalPrecioTotalConIva() > 0">
+                                <div class="price-label">{{'Adiciones:' | translate}}</div>
+                                <div class="price-value">{{ (getBigTotalProductWithPreferenceAndAdictions() -
+                                    precioproducto) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mensajes de error/información -->
+                    <div *ngIf="isCartButtonDisabled() && !isCartMinimized" class="cart-error-info">
+                        <div class="error-message" *ngIf="isStockUnavailable()">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            <span>{{'Sin stock' | translate}}</span>
+                        </div>
+                        <div class="error-message" *ngIf="!isStockUnavailable()">
+                            <i class="fa fa-info-circle"></i>
+                            <span class="d-none d-sm-inline">{{'Faltan campos' | translate}}</span>
+                            <button (click)="showDebugInfo()" class="btn-debug">
+                                <i class="fa fa-bug"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botón para expandir cuando está minimizado -->
+                    <button class="expand-button" (click)="toggleMinimizeCart()" *ngIf="isCartMinimized">
+                        <i class="fa fa-shopping-basket"></i>
+                        <span class="price-badge">{{ (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}</span>
+                    </button>
                 </div>
             </div>
         </div>
