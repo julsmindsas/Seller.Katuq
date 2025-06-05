@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output, Renderer2, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output, Renderer2, ViewChild, AfterViewInit, HostListener } from '@angular/core';
 import { VentasService } from '../../../shared/services/ventas/ventas.service';
 import { Carrito, Cliente, EstadoPago, EstadoProceso, EstadoProcesoFiltros, Pedido } from '../modelo/pedido';
 import { Table } from 'primeng/table';
@@ -18,6 +18,8 @@ import { UserLite } from '../../../shared/models/User/UserLite';
 import { FilterService } from 'primeng/api';
 import { ServiciosService } from '../../../shared/services/servicios.service';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
+
+import { ColumnDefinition } from '../interfaces/column-definition.interface';
 import * as XLSX from 'xlsx';
 
 @Component({
@@ -25,7 +27,7 @@ import * as XLSX from 'xlsx';
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.scss']
 })
-export class ListOrdersComponent implements OnInit {
+export class ListOrdersComponent implements OnInit, AfterViewInit {
 
   @ViewChild('clientes', { static: false }) clientes: ClientesComponent;
   @ViewChild('entrega', { static: false }) entrega: PedidoEntregaComponent;
@@ -47,6 +49,67 @@ export class ListOrdersComponent implements OnInit {
   pedidoSeleccionado: Pedido;
   estadosPago = Object.values(EstadoPago);
   ciudadSeleccionada: any;
+
+
+
+  ngAfterViewInit() {
+    // Limpiar funciones del menú anterior
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll() {
+    // No action needed for modal-based options
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onWindowResize() {
+    // No action needed for modal-based options
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    // Modal handles its own click-outside behavior
+  }
+
+
+
+  openOptionsModal(order: any) {
+    this.selectedOrder = order;
+    this.modalVisible = true;
+    // Usar clase CSS en lugar de manipulación directa del style
+    document.body.classList.add('modal-open');
+  }
+
+  closeOptionsModal() {
+    this.modalVisible = false;
+    this.selectedOrder = null;
+    // Remover la clase CSS para restaurar el scroll
+    document.body.classList.remove('modal-open');
+  }
+
+  onBackdropClick(event: Event) {
+    if (event.target === event.currentTarget) {
+      this.closeOptionsModal();
+    }
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && this.modalVisible) {
+      this.closeOptionsModal();
+    }
+  }
+
+  canDeleteOrder(): boolean {
+    const authorizedEmails = ['jarango@almara.com', 'danielmauriciogarcia@hotmail.com', 'dgarciar@gmail.com'];
+    return this.UserLogged?.email && authorizedEmails.includes(this.UserLogged.email);
+  }
+
+  confirmDeleteOrder(order: any) {
+    if (confirm(`¿Está seguro de eliminar el pedido #${order.nroPedido}?`)) {
+      this.deleteOrder(order);
+    }
+  }
   ESTADOPAGO: any[];
   cargando = true;
 
@@ -68,12 +131,51 @@ export class ListOrdersComponent implements OnInit {
   ordersByName: any;
   UserLogged: UserLogged;
   allBillingZone: any;
+  selectedOrder: any;
+  modalVisible = false;
+
+  // Configuración de columnas - IMPORTANTE: 'detalles' debe estar siempre primero
+  displayedColumns: ColumnDefinition[] = [
+    { field: 'detalles', header: 'Detalles', visible: true, type: 'actions' },
+    { field: 'nroPedido', header: '# Pedido', visible: true, type: 'text', filterable: true },
+    { field: 'fechaEntrega', header: 'Fecha entrega', visible: true, type: 'date', filterable: true },
+    { field: 'opciones', header: 'Opciones', visible: true, type: 'actions' },
+    { field: 'estadoPago', header: 'Estado de Pago', visible: true, type: 'status', filterable: true },
+    { field: 'estadoProceso', header: 'Estado de Proceso', visible: true, type: 'status', filterable: true },
+    { field: 'validacion', header: 'Validación', visible: true, type: 'boolean', filterable: true },
+    { field: 'cliente', header: 'Cliente', visible: true, type: 'text', filterable: true },
+    { field: 'valorBruto', header: 'Valor Bruto', visible: true, type: 'currency', filterable: true },
+    { field: 'descuento', header: 'Descuento', visible: true, type: 'currency', filterable: true },
+    { field: 'domicilio', header: 'Domicilio', visible: true, type: 'currency', filterable: true },
+    { field: 'subtotal', header: 'Subtotal', visible: true, type: 'currency', filterable: true },
+    { field: 'iva', header: 'IVA', visible: true, type: 'currency', filterable: true },
+    { field: 'total', header: 'Total', visible: true, type: 'currency', filterable: true },
+    { field: 'anticipo', header: 'Anticipo', visible: true, type: 'currency', filterable: true },
+    { field: 'faltaPorPagar', header: 'Falta por Pagar', visible: true, type: 'currency', filterable: true },
+    { field: 'fechaCreacion', header: 'Fecha de compra', visible: true, type: 'date', filterable: true },
+    { field: 'ciudad', header: 'Ciudad', visible: false, type: 'text', filterable: true },
+    { field: 'zonaCobro', header: 'Zona de Entrega', visible: false, type: 'text', filterable: true },
+    { field: 'formaEntrega', header: 'Forma de Entrega', visible: true, type: 'text', filterable: true },
+    { field: 'horarioEntrega', header: 'Horario de Entrega', visible: true, type: 'text', filterable: true },
+    { field: 'vendedor', header: 'Vendedor', visible: false, type: 'text', filterable: true }
+  ];
+
+  selectedColumns: ColumnDefinition[] = [];
+  showColumnConfig: boolean = false;
+  showFilters: boolean = false;
+  nroPedido: any;
+  
+  // Filtros rápidos
+  quickFilters = {
+    estadoPago: 'all',
+    estadoProceso: 'all'
+  };
 
 
 
   constructor(
-
     private renderer: Renderer2,
+    private elementRef: ElementRef,
     private service: ServiciosService, private route: ActivatedRoute, private filterService: FilterService, private ventasService: VentasService, private paymentService: PaymentService, private modalService: NgbModal, private formBuilder: FormBuilder,
     private pedidoUtilService: PedidosUtilService,
     private maestroService: MaestroService) {
@@ -113,6 +215,21 @@ export class ListOrdersComponent implements OnInit {
       { value: false, nombre: "No" },
       { value: true, nombre: "Si" }
     ];
+
+    // Cargar configuración de columnas guardada
+    this.loadColumnConfiguration();
+    
+    // Asegurar que las columnas estén en el orden correcto
+    this.initializeColumns();
+    
+    // Debug: Verificar configuración de columnas
+    console.log('Columnas mostradas:', this.displayedColumns);
+    console.log('Columnas seleccionadas:', this.selectedColumns);
+    console.log('¿Detalles visible?', this.isColumnVisible('detalles'));
+    
+    // Cargar estado de filtros guardado
+    this.loadFiltersState();
+    
     if (!this.numberProduct) {
       this.refrescarDatos();
     }
@@ -285,12 +402,21 @@ export class ListOrdersComponent implements OnInit {
     // this.fechaInicial.setHours(0, 0, 0, 0);
     // this.fechaFinal.setHours(23, 59, 59, 999);
 
-    const filter = {
+    const filter: any = {
       fechaInicial: this.fechaInicial + 'T00:00:00.0000Z',
       fechaFinal: this.fechaFinal + 'T23:59:59.9999Z',
       company: JSON.parse(sessionStorage.getItem("currentCompany")!).nomComercial,
       tipoFecha: 'fechaEntrega',
       estadoProceso: this.isFromProduction ? [EstadoProceso.SinProducir] : ['Todos']
+    }
+
+    // Aplicar filtros rápidos
+    if (this.quickFilters.estadoPago !== 'all') {
+      filter.estadosPago = [this.quickFilters.estadoPago];
+    }
+    
+    if (this.quickFilters.estadoProceso !== 'all' && !this.isFromProduction) {
+      filter.estadoProceso = [this.quickFilters.estadoProceso];
     }
 
     // if (this.isFromProduction) {
@@ -1012,6 +1138,280 @@ export class ListOrdersComponent implements OnInit {
 
   clearFilter(): void {
     this.orders = [];
+  }
+
+  // Métodos para manejo de columnas
+  loadColumnConfiguration(): void {
+    const savedColumns = localStorage.getItem('ventasListColumns');
+    if (savedColumns) {
+      try {
+        const parsed = JSON.parse(savedColumns);
+        // Validar que las columnas guardadas coincidan con las actuales
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.displayedColumns = parsed;
+        }
+      } catch (e) {
+        console.error('Error parsing saved columns configuration', e);
+      }
+    }
+    
+    // Asegurar que la columna 'detalles' esté siempre primera y visible
+    const detallesIndex = this.displayedColumns.findIndex(col => col.field === 'detalles');
+    if (detallesIndex > 0) {
+      const detallesColumn = this.displayedColumns.splice(detallesIndex, 1)[0];
+      this.displayedColumns.unshift(detallesColumn);
+    }
+    if (detallesIndex >= 0) {
+      this.displayedColumns[0].visible = true;
+    }
+    
+    // Inicializar columnas seleccionadas manteniendo el orden
+    // La columna 'detalles' debe estar siempre incluida y primera
+    this.selectedColumns = this.displayedColumns.filter(col => col.visible);
+    
+    // Verificar que 'detalles' esté en selectedColumns y sea la primera
+    const detallesInSelected = this.selectedColumns.findIndex(col => col.field === 'detalles');
+    if (detallesInSelected === -1) {
+      // Si no está, agregarla al inicio
+      const detallesColumn = this.displayedColumns.find(col => col.field === 'detalles');
+      if (detallesColumn) {
+        this.selectedColumns.unshift(detallesColumn);
+      }
+    } else if (detallesInSelected > 0) {
+      // Si está pero no es la primera, moverla al inicio
+      const detallesColumn = this.selectedColumns.splice(detallesInSelected, 1)[0];
+      this.selectedColumns.unshift(detallesColumn);
+    }
+  }
+
+  saveColumnConfiguration(): void {
+    localStorage.setItem('ventasListColumns', JSON.stringify(this.displayedColumns));
+  }
+
+  isColumnVisible(field: string): boolean {
+    // La columna 'detalles' siempre debe ser visible
+    if (field === 'detalles') {
+      return true;
+    }
+    return this.selectedColumns.some(col => col.field === field);
+  }
+
+  onColumnSelectionChange(): void {
+    // Actualizar la propiedad visible en displayedColumns basado en selectedColumns
+    this.displayedColumns.forEach(col => {
+      col.visible = this.selectedColumns.some(selected => selected.field === col.field);
+    });
+    
+    // Asegurar que la columna 'detalles' esté siempre visible
+    const detallesColumn = this.displayedColumns.find(col => col.field === 'detalles');
+    if (detallesColumn) {
+      detallesColumn.visible = true;
+      if (!this.selectedColumns.some(col => col.field === 'detalles')) {
+        this.selectedColumns.unshift(detallesColumn);
+      }
+    }
+    
+    // Guardar la configuración en localStorage
+    this.saveColumnConfiguration();
+  }
+
+  resetColumnConfig(): void {
+    this.displayedColumns = [
+      { field: 'detalles', header: 'Detalles', visible: true, type: 'actions' },
+      { field: 'nroPedido', header: '# Pedido', visible: true, type: 'text', filterable: true },
+      { field: 'fechaEntrega', header: 'Fecha entrega', visible: true, type: 'date', filterable: true },
+      { field: 'opciones', header: 'Opciones', visible: true, type: 'actions' },
+      { field: 'estadoPago', header: 'Estado de Pago', visible: true, type: 'status', filterable: true },
+      { field: 'estadoProceso', header: 'Estado de Proceso', visible: true, type: 'status', filterable: true },
+      { field: 'validacion', header: 'Validación', visible: true, type: 'boolean', filterable: true },
+      { field: 'cliente', header: 'Cliente', visible: true, type: 'text', filterable: true },
+      { field: 'valorBruto', header: 'Valor Bruto', visible: true, type: 'currency', filterable: true },
+      { field: 'descuento', header: 'Descuento', visible: true, type: 'currency', filterable: true },
+      { field: 'domicilio', header: 'Domicilio', visible: true, type: 'currency', filterable: true },
+      { field: 'subtotal', header: 'Subtotal', visible: true, type: 'currency', filterable: true },
+      { field: 'iva', header: 'IVA', visible: true, type: 'currency', filterable: true },
+      { field: 'total', header: 'Total', visible: true, type: 'currency', filterable: true },
+      { field: 'anticipo', header: 'Anticipo', visible: true, type: 'currency', filterable: true },
+      { field: 'faltaPorPagar', header: 'Falta por Pagar', visible: true, type: 'currency', filterable: true },
+      { field: 'fechaCreacion', header: 'Fecha de compra', visible: true, type: 'date', filterable: true },
+      { field: 'ciudad', header: 'Ciudad', visible: false, type: 'text', filterable: true },
+      { field: 'zonaCobro', header: 'Zona de Entrega', visible: false, type: 'text', filterable: true },
+      { field: 'formaEntrega', header: 'Forma de Entrega', visible: true, type: 'text', filterable: true },
+      { field: 'horarioEntrega', header: 'Horario de Entrega', visible: true, type: 'text', filterable: true },
+      { field: 'vendedor', header: 'Vendedor', visible: false, type: 'text', filterable: true }
+    ];
+    
+    // Re-inicializar para asegurar orden correcto
+    this.initializeColumns();
+    
+    // Asegurar que selectedColumns mantenga el orden correcto con 'detalles' primero
+    this.selectedColumns = this.displayedColumns.filter(col => col.visible);
+    this.saveColumnConfiguration();
+  }
+
+  private initializeColumns(): void {
+    // Asegurar que la columna 'detalles' esté siempre primera
+    const detallesIndex = this.displayedColumns.findIndex(col => col.field === 'detalles');
+    if (detallesIndex > 0) {
+      const detallesColumn = this.displayedColumns.splice(detallesIndex, 1)[0];
+      this.displayedColumns.unshift(detallesColumn);
+    }
+    
+    // Asegurar que la columna 'detalles' esté visible
+    const detallesColumn = this.displayedColumns.find(col => col.field === 'detalles');
+    if (detallesColumn) {
+      detallesColumn.visible = true;
+    }
+  }
+
+  getVisibleColumnsCount(): number {
+    // Siempre incluir la columna 'detalles' en el conteo
+    const visibleCount = this.selectedColumns.length;
+    const hasDetalles = this.selectedColumns.some(col => col.field === 'detalles');
+    return hasDetalles ? visibleCount : visibleCount + 1;
+  }
+
+  getVisibleColumnFields(): string[] {
+    return this.selectedColumns.map(col => col.field);
+  }
+
+  // Nuevos métodos para filtros modernos
+  toggleColumnConfig(): void {
+    this.showColumnConfig = !this.showColumnConfig;
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+    this.saveFiltersState();
+  }
+
+  getActiveFiltersCount(): number {
+    let count = 0;
+    if (this.fechaInicial) count++;
+    if (this.fechaFinal) count++;
+    if (this.nroPedido) count++;
+    if (this.quickFilters.estadoPago !== 'all') count++;
+    if (this.quickFilters.estadoProceso !== 'all') count++;
+    return count;
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(this.fechaInicial || this.fechaFinal || this.nroPedido || 
+              this.quickFilters.estadoPago !== 'all' || 
+              this.quickFilters.estadoProceso !== 'all');
+  }
+
+  clearDateFilter(type: 'inicial' | 'final'): void {
+    if (type === 'inicial') {
+      this.fechaInicial = '';
+    } else {
+      this.fechaFinal = '';
+    }
+    this.refrescarDatos();
+  }
+
+  clearSearchFilter(): void {
+    this.nroPedido = null;
+    this.orders = [];
+    this.refrescarDatos();
+  }
+
+  // Métodos para rangos de fecha predefinidos
+  setDateRange(range: string): void {
+    const today = new Date();
+    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+    const endOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+    
+    switch (range) {
+      case 'today':
+        const todayDate = new Date().toISOString().split('T')[0];
+        this.fechaInicial = todayDate;
+        this.fechaFinal = todayDate;
+        break;
+      case 'week':
+        this.fechaInicial = startOfWeek.toISOString().split('T')[0];
+        this.fechaFinal = endOfWeek.toISOString().split('T')[0];
+        break;
+      case 'month':
+        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+        this.fechaInicial = startOfMonth.toISOString().split('T')[0];
+        this.fechaFinal = endOfMonth.toISOString().split('T')[0];
+        break;
+      case 'lastWeek':
+        const lastWeekStart = new Date(today.setDate(today.getDate() - today.getDay() - 7));
+        const lastWeekEnd = new Date(today.setDate(today.getDate() - today.getDay() - 1));
+        this.fechaInicial = lastWeekStart.toISOString().split('T')[0];
+        this.fechaFinal = lastWeekEnd.toISOString().split('T')[0];
+        break;
+      case 'lastMonth':
+        const lastMonthStart = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+        const lastMonthEnd = new Date(new Date().getFullYear(), new Date().getMonth(), 0);
+        this.fechaInicial = lastMonthStart.toISOString().split('T')[0];
+        this.fechaFinal = lastMonthEnd.toISOString().split('T')[0];
+        break;
+    }
+    this.refrescarDatos();
+  }
+
+  // Métodos para filtros rápidos (movido abajo para evitar duplicación)
+
+  clearQuickFilter(type: 'estadoPago' | 'estadoProceso'): void {
+    this.quickFilters[type] = 'all';
+    this.refrescarDatos();
+  }
+
+  clearAllFilters(): void {
+    this.fechaInicial = '';
+    this.fechaFinal = '';
+    this.nroPedido = null;
+    this.quickFilters = {
+      estadoPago: 'all',
+      estadoProceso: 'all'
+    };
+    // Cerrar filtros si no hay filtros activos
+    if (!this.hasActiveFilters()) {
+      this.showFilters = false;
+      this.saveFiltersState();
+    }
+    this.refrescarDatos();
+  }
+
+  // Métodos para persistir estado de filtros
+  private loadFiltersState(): void {
+    const savedState = localStorage.getItem('ventasFiltersState');
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        this.showFilters = state.showFilters || false;
+        // Si hay filtros activos, abrir automáticamente
+        if (this.hasActiveFilters()) {
+          this.showFilters = true;
+        }
+      } catch (e) {
+        console.error('Error loading filters state', e);
+        this.showFilters = false;
+      }
+    }
+  }
+
+  private saveFiltersState(): void {
+    const state = {
+      showFilters: this.showFilters,
+      timestamp: new Date().getTime()
+    };
+    localStorage.setItem('ventasFiltersState', JSON.stringify(state));
+  }
+
+  // Auto-abrir filtros cuando se aplicen filtros rápidos
+  setQuickFilter(type: 'estadoPago' | 'estadoProceso', value: string): void {
+    this.quickFilters[type] = value;
+    // Abrir filtros si se aplica un filtro
+    if (value !== 'all' && !this.showFilters) {
+      this.showFilters = true;
+      this.saveFiltersState();
+    }
+    this.refrescarDatos();
   }
 
 }

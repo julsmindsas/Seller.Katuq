@@ -1,0 +1,463 @@
+<!-- PROPUESTA 4: Botones de Acción Inline Expandibles -->
+<!-- Esta propuesta muestra botones directamente en la fila con expansión inteligente -->
+
+<!-- En la columna de opciones de la tabla -->
+<td *ngIf="isColumnVisible('opciones')" class="options-cell-inline" style="width: auto; min-width: 120px; padding: 0.5rem;">
+    <div class="inline-actions-container" [class.expanded]="expandedRow === pedido.nroPedido">
+        
+        <!-- Botones principales (siempre visibles) -->
+        <div class="primary-actions">
+            <!-- PDF - Siempre visible -->
+            <button class="action-btn action-btn-primary pdf-btn" 
+                    type="button"
+                    (click)="pdfOrder(modalContent, pedido)"
+                    [title]="'Imprimir PDF' | translate">
+                <i class="fa fa-file-pdf-o"></i>
+            </button>
+            
+            <!-- Producción o Editar Cliente - Según contexto -->
+            <button *ngIf="isFromProduction" 
+                    class="action-btn action-btn-secondary production-btn" 
+                    type="button"
+                    (click)="produceOrder(pedido)"
+                    [title]="'Producción' | translate">
+                <i class="fa fa-sitemap"></i>
+            </button>
+            
+            <button *ngIf="!isFromProduction" 
+                    class="action-btn action-btn-secondary edit-btn" 
+                    type="button"
+                    (click)="editDatosClientes(clientesModal, pedido)"
+                    [title]="'Editar Cliente' | translate">
+                <i class="fa fa-user"></i>
+            </button>
+            
+            <!-- Botón Más (expandir) -->
+            <button class="action-btn action-btn-expand more-btn" 
+                    type="button"
+                    (click)="toggleExpanded(pedido.nroPedido)"
+                    [title]="'Más opciones' | translate">
+                <i class="fa" [ngClass]="expandedRow === pedido.nroPedido ? 'fa-times' : 'fa-ellipsis-h'"></i>
+            </button>
+        </div>
+        
+        <!-- Botones secundarios (expandibles) -->
+        <div class="secondary-actions" *ngIf="!isFromProduction">
+            <div class="actions-row">
+                <!-- Fila 1: Edición -->
+                <button class="action-btn action-btn-outline address-btn" 
+                        type="button"
+                        (click)="editDatosEntrega(datosEnregaModal, pedido)"
+                        [title]="'Editar Dirección' | translate">
+                    <i class="fa fa-map-marker"></i>
+                    <span class="btn-label">{{ 'Dirección' | translate }}</span>
+                </button>
+                
+                <button class="action-btn action-btn-outline billing-btn" 
+                        type="button"
+                        (click)="editDatosFacturacion(datosFacturacionModal, pedido)"
+                        [title]="'Editar Facturación' | translate">
+                    <i class="fa fa-credit-card"></i>
+                    <span class="btn-label">{{ 'Facturación' | translate }}</span>
+                </button>
+                
+                <button class="action-btn action-btn-outline notes-btn" 
+                        type="button"
+                        (click)="editNotas(notasModal, pedido)"
+                        [title]="'Editar Notas' | translate">
+                    <i class="fa fa-sticky-note"></i>
+                    <span class="btn-label">{{ 'Notas' | translate }}</span>
+                </button>
+            </div>
+            
+            <div class="actions-row">
+                <!-- Fila 2: Gestión -->
+                <button class="action-btn action-btn-outline payment-btn" 
+                        type="button"
+                        (click)="editarEstadoPago(cambioEstadoPagoModal, pedido)"
+                        [title]="'Estado de Pago' | translate">
+                    <i class="fa fa-credit-card-alt"></i>
+                    <span class="btn-label">{{ 'Estado Pago' | translate }}</span>
+                </button>
+                
+                <button class="action-btn action-btn-outline cart-btn" 
+                        type="button"
+                        (click)="addProductToCart(recompraModal, pedido)"
+                        [title]="'Agregar Productos' | translate">
+                    <i class="fa fa-shopping-cart"></i>
+                    <span class="btn-label">{{ 'Productos' | translate }}</span>
+                </button>
+                
+                <button class="action-btn action-btn-outline seller-btn" 
+                        type="button"
+                        (click)="editSeller(pedido)"
+                        [title]="'Asignar Asesor' | translate">
+                    <i class="fa fa-users"></i>
+                    <span class="btn-label">{{ 'Asesor' | translate }}</span>
+                </button>
+            </div>
+            
+            <div class="actions-row">
+                <!-- Fila 3: Otros -->
+                <button class="action-btn action-btn-outline history-btn" 
+                        type="button"
+                        (click)="AsentarPago(pagosModal, pedido)"
+                        [title]="'Historial Pagos' | translate">
+                    <i class="fa fa-history"></i>
+                    <span class="btn-label">{{ 'Historial' | translate }}</span>
+                </button>
+                
+                <!-- Eliminar (solo usuarios autorizados) -->
+                <button *ngIf="canDeleteOrder()" 
+                        class="action-btn action-btn-danger delete-btn" 
+                        type="button"
+                        (click)="confirmDeleteOrder(pedido)"
+                        [title]="'Eliminar Pedido' | translate">
+                    <i class="fa fa-trash"></i>
+                    <span class="btn-label">{{ 'Eliminar' | translate }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</td>
+
+<style>
+/* Contenedor principal de acciones inline */
+.inline-actions-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transition: all 0.3s ease;
+}
+
+/* Acciones principales (siempre visibles) */
+.primary-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+/* Acciones secundarias (expandibles) */
+.secondary-actions {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 0;
+}
+
+.inline-actions-container.expanded .secondary-actions {
+    max-height: 200px;
+    opacity: 1;
+    margin-top: 8px;
+}
+
+.actions-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+    
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Estilos base para botones de acción */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    padding: 6px 8px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    .btn-label {
+        margin-left: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+}
+
+/* Variantes de botones principales */
+.action-btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    
+    &:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+}
+
+.action-btn-secondary {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+    
+    &:hover {
+        background: linear-gradient(135deg, #4b5563, #374151);
+    }
+}
+
+.action-btn-expand {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    
+    &:hover {
+        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+        color: #374151;
+    }
+}
+
+/* Variantes de botones secundarios */
+.action-btn-outline {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    min-width: auto;
+    padding: 4px 8px;
+    
+    &:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: #f8faff;
+    }
+    
+    .btn-label {
+        margin-left: 4px;
+        font-size: 10px;
+    }
+}
+
+.action-btn-danger {
+    background: white;
+    border: 1px solid #fca5a5;
+    color: #dc2626;
+    
+    &:hover {
+        background: #fef2f2;
+        border-color: #f87171;
+        color: #b91c1c;
+    }
+}
+
+/* Colores específicos para cada tipo de botón */
+.pdf-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.production-btn {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.edit-btn {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.address-btn:hover {
+    border-color: #f59e0b;
+    color: #f59e0b;
+    background: #fffbeb;
+}
+
+.billing-btn:hover {
+    border-color: #10b981;
+    color: #10b981;
+    background: #f0fdf4;
+}
+
+.notes-btn:hover {
+    border-color: #ec4899;
+    color: #ec4899;
+    background: #fdf2f8;
+}
+
+.payment-btn:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
+.cart-btn:hover {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+    background: #faf5ff;
+}
+
+.seller-btn:hover {
+    border-color: #06b6d4;
+    color: #06b6d4;
+    background: #f0f9ff;
+}
+
+.history-btn:hover {
+    border-color: #f97316;
+    color: #f97316;
+    background: #fff7ed;
+}
+
+/* Estilos para la celda de opciones */
+.options-cell-inline {
+    vertical-align: top !important;
+    white-space: nowrap;
+    position: relative;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .primary-actions {
+        gap: 2px;
+    }
+    
+    .action-btn {
+        min-width: 28px;
+        height: 28px;
+        font-size: 11px;
+        padding: 4px 6px;
+    }
+    
+    .actions-row {
+        gap: 2px;
+    }
+    
+    .action-btn-outline {
+        padding: 3px 6px;
+        
+        .btn-label {
+            font-size: 9px;
+            margin-left: 3px;
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .primary-actions {
+        flex-direction: column;
+        gap: 2px;
+        align-items: stretch;
+    }
+    
+    .action-btn {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 6px 8px;
+        
+        .btn-label {
+            display: inline;
+            margin-left: 8px;
+        }
+    }
+    
+    .more-btn .btn-label::after {
+        content: attr(data-text);
+    }
+    
+    .actions-row {
+        flex-direction: column;
+        gap: 2px;
+    }
+}
+
+/* Animaciones adicionales */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.inline-actions-container.expanded .secondary-actions {
+    animation: slideDown 0.3s ease;
+}
+
+/* Efectos de hover mejorados */
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.action-btn:hover::before {
+    left: 100%;
+}
+
+/* Indicador de estado expandido */
+.inline-actions-container.expanded::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 1px;
+    animation: expandIndicator 0.3s ease;
+}
+
+@keyframes expandIndicator {
+    from {
+        height: 0;
+        top: 50%;
+    }
+    to {
+        height: 100%;
+        top: 0;
+    }
+}
+</style>
+
+<!-- 
+Funciones TypeScript necesarias:
+
+expandedRow: number | null = null;
+
+toggleExpanded(orderId: number) {
+    this.expandedRow = this.expandedRow === orderId ? null : orderId;
+}
+
+// Cerrar todas las expansiones cuando se hace scroll o click fuera
+@HostListener('window:scroll', ['$event'])
+onWindowScroll() {
+    this.expandedRow = null;
+}
+
+@HostListener('document:click', ['$event'])
+onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.inline-actions-container')) {
+        this.expandedRow = null;
+    }
+}
+
+// Las demás funciones permanecen igual (canDeleteOrder, confirmDeleteOrder, etc.)
+-->

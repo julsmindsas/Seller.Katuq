@@ -31,82 +31,360 @@
                                     styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
                                     [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }"
                                     style="font-size: 0.7em; table-layout: auto;">
-                                    <!-- CAPTION: Filtros y botones arriba de la tabla -->
+                                    <!-- CAPTION: Filtros modernos y selector de columnas -->
                                     <ng-template pTemplate="caption">
-                                        <div style="margin-bottom: 5px;">
+                                        <div class="modern-filters-container">
+                                            <!-- Header compacto y colapsable -->
+                                            <div class="filters-compact-header">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="filter-toggle-section" style="cursor: pointer;" (click)="toggleFilters()">
+                                                        <i class="pi me-2 text-primary" [ngClass]="showFilters ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                                                        <i class="pi pi-filter me-2 text-primary"></i>
+                                                        <span class="fw-bold text-dark">{{ 'Filtros' | translate }}</span>
+                                                        <span class="filter-count ms-2" *ngIf="hasActiveFilters()">
+                                                            <span class="badge bg-primary">{{ getActiveFiltersCount() }}</span>
+                                                        </span>
+                                                    </div>
+                                                    <div class="quick-actions d-flex align-items-center">
+                                                        <!-- Filtros rápidos en header -->
+                                                        <div class="header-quick-filters d-flex align-items-center">
+                                                            <span class="shortcuts-label me-2">{{ 'Rápidos:' | translate }}</span>
+                                                            <div class="shortcuts-group d-flex">
+                                                                <button type="button"
+                                                                    class="btn btn-sm shortcut-btn"
+                                                                    [ngClass]="{'btn-primary': quickFilters.estadoPago === 'Pendiente', 'btn-outline-secondary': quickFilters.estadoPago !== 'Pendiente'}"
+                                                                    (click)="setQuickFilter('estadoPago', quickFilters.estadoPago === 'Pendiente' ? 'all' : 'Pendiente')"
+                                                                    pTooltip="{{ 'Pendientes' | translate }}">
+                                                                    <i class="pi pi-clock"></i>
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-sm shortcut-btn"
+                                                                    [ngClass]="{'btn-success': quickFilters.estadoPago === 'Aprobado', 'btn-outline-secondary': quickFilters.estadoPago !== 'Aprobado'}"
+                                                                    (click)="setQuickFilter('estadoPago', quickFilters.estadoPago === 'Aprobado' ? 'all' : 'Aprobado')"
+                                                                    pTooltip="{{ 'Aprobados' | translate }}">
+                                                                    <i class="pi pi-check"></i>
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-secondary shortcut-btn"
+                                                                    (click)="setDateRange('today')"
+                                                                    pTooltip="{{ 'Filtrar por hoy' | translate }}">
+                                                                    <i class="pi pi-calendar"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
 
-                                            <div class="row mb-4">
+                                                        <div class="vertical-separator mx-3"></div>
 
-                                                <div class="date-control col-md-2 col-sm-3">
-                                                    <label for="fechaInicial" class="fw-bold text-muted fs-16">{{ 'Fecha
-                                                        Inicial' | translate }}</label>
-                                                    <input type="date" class="form-control fs-16"
-                                                        [(ngModel)]="fechaInicial"
-                                                        (change)="firstEvent($event.target.value)" />
-                                                </div>
-                                                <div class="date-control col-md-2 col-sm-3">
-                                                    <label for="fechaFinal" class="fw-bold text-muted fs-16">{{ 'Fecha
-                                                        Final' | translate }}</label>
-                                                    <input type="date" class="form-control fs-16"
-                                                        [(ngModel)]="fechaFinal"
-                                                        (change)="secondEvent($event.target.value)" />
-                                                </div>
-
-                                                <!-- <div class="col-md-2 col-sm-3">
-                                            <label for="fechaInicial">Fecha Inicial</label>
-                                            <p-calendar id="fechaInicial" dateFormat="dd/mm/yy"
-                                                (change)="firstEvent($event.target.value)" [(ngModel)]="fechaInicial"
-                                                inputId="fechaInicial" [showIcon]="true">
-                                            </p-calendar>
-                                        </div>
-
-                                        <div class="col-md-2 col-sm-3">
-                                            <label for="fechaFinal">Fecha Final</label>
-                                            <p-calendar id="fechaFinal" dateFormat="dd/mm/yy"
-                                                (change)="secondEvent($event.target.value)" [(ngModel)]="fechaFinal"
-                                                inputId="fechaFinal" [showIcon]="true">
-                                            </p-calendar>
-                                        </div> -->
-
-                                                <div class="col-md-2 col-sm-3">
-                                                    <label for="busqueda">{{'Buscar pedido' | translate}}</label>
-                                                    <br />
-                                                    <p-autoComplete id="busqueda" [(ngModel)]="nroPedido"
-                                                        [suggestions]="filteredOrderNumbers"
-                                                        (completeMethod)="filtroGlobal($event)" field="nroPedido"
-                                                        placeholder="{{'Número pedido' | translate}}"
-                                                        (onSelect)="onOrderSelect($event)">
-                                                    </p-autoComplete>
-                                                </div>
-
-                                                <div class="col-md-6 col-sm-12 mt-4" style="align-items: end;">
-                                                    <button pButton class="btn btn-primary m-1 pull-left"
-                                                        (click)="refrescar(dt1)">
-                                                        {{'Filtrar' | translate}}
-                                                    </button>
-
-                                                    <button pButton class="btn btn-tertiary m-1 pull-left"
-                                                        (click)="clear(dt1)">{{'Reset' | translate}}</button>
-
-                                                    <button pButton (click)="filtrarParaHoy()"
-                                                        class="btn btn-secondary m-1 pull-right">{{'Para Hoy' |
-                                                        translate}}
-                                                    </button>
-
-                                                    <button pButton (click)="filtrarParaManana()"
-                                                        class="btn btn-secondary m-1 pull-right">
-                                                        {{'Para Mañana' | translate}}
-                                                    </button>
-
-                                                    <button pButton icon="pi pi-excel" (click)="exportarExcel()"
-                                                        [disabled]="orders.length == 0"
-                                                        class="btn btn-success m-1 pull-right">
-                                                        {{'Excel' | translate}}
-                                                    </button>
+                                                        <div class="action-buttons d-flex align-items-center">
+                                                            <span class="actions-label me-2">{{ 'Acciones:' | translate }}</span>
+                                                            <div class="actions-group d-flex">
+                                                                <button pButton type="button"
+                                                                    icon="pi pi-search"
+                                                                    class="p-button-sm p-button-primary action-btn"
+                                                                    pTooltip="{{ 'Filtrar' | translate }}"
+                                                                    (click)="refrescar(dt1)">
+                                                                </button>
+                                                                <button pButton type="button"
+                                                                    icon="pi pi-refresh"
+                                                                    class="p-button-sm p-button-text action-btn"
+                                                                    pTooltip="{{ 'Limpiar filtros' | translate }}"
+                                                                    (click)="clearAllFilters()">
+                                                                </button>
+                                                                <button pButton type="button"
+                                                                    icon="pi pi-file-excel"
+                                                                    class="p-button-sm p-button-success action-btn"
+                                                                    [disabled]="orders.length == 0"
+                                                                    pTooltip="{{ 'Exportar Excel' | translate }}"
+                                                                    (click)="exportarExcel()">
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                        </div>
+                                            <!-- Contenido expandible de filtros -->
+                                            <div class="filters-expanded-content mt-3" [ngClass]="{'d-none': !showFilters}">
+
+                                                <!-- Indicadores de filtros activos en la parte superior -->
+                                                <div class="active-filters-summary mb-3" *ngIf="hasActiveFilters()">
+                                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                                        <span class="filter-indicator-label">
+                                                            <i class="pi pi-filter me-1"></i>
+                                                            {{ 'Filtros activos:' | translate }}
+                                                        </span>
+                                                        <div class="filter-tags d-flex flex-wrap gap-1">
+                                                            <span class="filter-tag" *ngIf="fechaInicial">
+                                                                {{ 'Desde: ' + (fechaInicial | date:'dd/MM/yyyy') }}
+                                                                <i class="pi pi-times ms-1" (click)="clearDateFilter('inicial')"></i>
+                                                            </span>
+                                                            <span class="filter-tag" *ngIf="fechaFinal">
+                                                                {{ 'Hasta: ' + (fechaFinal | date:'dd/MM/yyyy') }}
+                                                                <i class="pi pi-times ms-1" (click)="clearDateFilter('final')"></i>
+                                                            </span>
+                                                            <span class="filter-tag" *ngIf="nroPedido">
+                                                                {{ 'Pedido: ' + (nroPedido.nroPedido || nroPedido) }}
+                                                                <i class="pi pi-times ms-1" (click)="clearSearchFilter()"></i>
+                                                            </span>
+                                                            <span class="filter-tag status-filter-tag" *ngIf="quickFilters.estadoPago !== 'all'">
+                                                                {{ 'Estado Pago: ' + quickFilters.estadoPago }}
+                                                                <i class="pi pi-times ms-1" (click)="clearQuickFilter('estadoPago')"></i>
+                                                            </span>
+                                                            <span class="filter-tag status-filter-tag" *ngIf="quickFilters.estadoProceso !== 'all'">
+                                                                {{ 'Estado Proceso: ' + quickFilters.estadoProceso }}
+                                                                <i class="pi pi-times ms-1" (click)="clearQuickFilter('estadoProceso')"></i>
+                                                            </span>
+                                                            <button type="button"
+                                                                class="btn btn-outline-secondary btn-sm ms-2"
+                                                                (click)="clearAllFilters()">
+                                                                <i class="pi pi-times me-1"></i>
+                                                                {{ 'Limpiar todo' | translate }}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Configuración de columnas colapsible -->
+                                                <div class="column-config-section mb-4">
+                                                    <div class="config-header" style="cursor: pointer;" (click)="toggleColumnConfig()">
+                                                        <i class="pi" [ngClass]="showColumnConfig ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                                                        <span class="ms-2 fw-medium">{{ 'Configurar Columnas' | translate }}</span>
+                                                    </div>
+                                                    <div class="config-content mt-2" [ngClass]="{'d-none': !showColumnConfig}">
+                                                        <div class="d-flex align-items-center flex-wrap">
+                                                            <p-multiSelect
+                                                                [options]="displayedColumns"
+                                                                [(ngModel)]="selectedColumns"
+                                                                optionLabel="header"
+                                                                defaultLabel="{{ 'Seleccionar columnas' | translate }}"
+                                                                selectedItemsLabel="{0} columnas seleccionadas"
+                                                                styleClass="me-2 column-selector"
+                                                                [style]="{'min-width': '250px'}"
+                                                                (onChange)="onColumnSelectionChange()">
+                                                            </p-multiSelect>
+                                                            <button pButton type="button"
+                                                                icon="pi pi-undo"
+                                                                label="{{ 'Restaurar' | translate }}"
+                                                                class="p-button-outlined p-button-sm"
+                                                                pTooltip="{{ 'Restaurar columnas por defecto' | translate }}"
+                                                                (click)="resetColumnConfig()">
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            <!-- Filtros principales -->
+                                            <div class="main-filters-grid">
+                                                <!-- Grupo de fechas -->
+                                                <div class="filter-group date-filters">
+                                                    <div class="filter-group-header">
+                                                        <i class="pi pi-calendar me-2 text-primary"></i>
+                                                        <span class="fw-medium">{{ 'Rango de Fechas' | translate }}</span>
+                                                    </div>
+                                                    <div class="filter-group-content">
+                                                        <div class="date-range-container">
+                                                            <div class="date-input-wrapper">
+                                                                <label class="filter-label">{{ 'Desde' | translate }}</label>
+                                                                <input type="date"
+                                                                    class="form-control modern-date-input"
+                                                                    [(ngModel)]="fechaInicial"
+                                                                    (change)="firstEvent($event.target.value)" />
+                                                            </div>
+                                                            <div class="date-separator">
+                                                                <i class="pi pi-arrow-right"></i>
+                                                            </div>
+                                                            <div class="date-input-wrapper">
+                                                                <label class="filter-label">{{ 'Hasta' | translate }}</label>
+                                                                <input type="date"
+                                                                    class="form-control modern-date-input"
+                                                                    [(ngModel)]="fechaFinal"
+                                                                    (change)="secondEvent($event.target.value)" />
+                                                            </div>
+                                                        </div>
+                                                        <!-- Filtros rápidos de fecha -->
+                                                        <div class="quick-date-filters mt-2">
+                                                            <button type="button"
+                                                                class="btn btn-outline-primary btn-sm me-2"
+                                                                (click)="filtrarParaHoy()">
+                                                                <i class="pi pi-sun me-1"></i>
+                                                                {{ 'Hoy' | translate }}
+                                                            </button>
+                                                            <button type="button"
+                                                                class="btn btn-outline-primary btn-sm me-2"
+                                                                (click)="filtrarParaManana()">
+                                                                <i class="pi pi-forward me-1"></i>
+                                                                {{ 'Mañana' | translate }}
+                                                            </button>
+                                                        </div>
+                                                        <!-- Rangos predefinidos -->
+                                                        <div class="predefined-ranges mt-2">
+                                                            <small class="text-muted d-block mb-2">{{ 'Rangos predefinidos:' | translate }}</small>
+                                                            <div class="d-flex gap-1 flex-wrap">
+                                                                <button type="button"
+                                                                    class="btn btn-outline-secondary btn-xs"
+                                                                    (click)="setDateRange('today')">
+                                                                    {{ 'Hoy' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-secondary btn-xs"
+                                                                    (click)="setDateRange('week')">
+                                                                    {{ 'Esta semana' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-secondary btn-xs"
+                                                                    (click)="setDateRange('month')">
+                                                                    {{ 'Este mes' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-secondary btn-xs"
+                                                                    (click)="setDateRange('lastWeek')">
+                                                                    {{ 'Semana pasada' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-secondary btn-xs"
+                                                                    (click)="setDateRange('lastMonth')">
+                                                                    {{ 'Mes pasado' | translate }}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Filtros rápidos por estado -->
+                                                <div class="filter-group status-filters">
+                                                    <div class="filter-group-header">
+                                                        <i class="pi pi-flag me-2 text-primary"></i>
+                                                        <span class="fw-medium">{{ 'Filtros Rápidos' | translate }}</span>
+                                                    </div>
+                                                    <div class="filter-group-content">
+                                                        <div class="status-filter-section">
+                                                            <label class="filter-label">{{ 'Estado de Pago' | translate }}</label>
+                                                            <div class="status-chips mb-3">
+                                                                <button type="button"
+                                                                    class="status-chip"
+                                                                    [ngClass]="{'active': quickFilters.estadoPago === 'all'}"
+                                                                    (click)="setQuickFilter('estadoPago', 'all')">
+                                                                    <i class="pi pi-list me-1"></i>
+                                                                    {{ 'Todos' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="status-chip status-success"
+                                                                    [ngClass]="{'active': quickFilters.estadoPago === 'Aprobado'}"
+                                                                    (click)="setQuickFilter('estadoPago', 'Aprobado')">
+                                                                    <i class="pi pi-check me-1"></i>
+                                                                    {{ 'Aprobados' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="status-chip status-warning"
+                                                                    [ngClass]="{'active': quickFilters.estadoPago === 'Pendiente'}"
+                                                                    (click)="setQuickFilter('estadoPago', 'Pendiente')">
+                                                                    <i class="pi pi-clock me-1"></i>
+                                                                    {{ 'Pendientes' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="status-chip status-info"
+                                                                    [ngClass]="{'active': quickFilters.estadoPago === 'PreAprobado'}"
+                                                                    (click)="setQuickFilter('estadoPago', 'PreAprobado')">
+                                                                    <i class="pi pi-eye me-1"></i>
+                                                                    {{ 'Pre-aprobados' | translate }}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="status-filter-section">
+                                                            <label class="filter-label">{{ 'Estado de Proceso' | translate }}</label>
+                                                            <div class="status-chips">
+                                                                <button type="button"
+                                                                    class="status-chip"
+                                                                    [ngClass]="{'active': quickFilters.estadoProceso === 'all'}"
+                                                                    (click)="setQuickFilter('estadoProceso', 'all')">
+                                                                    <i class="pi pi-list me-1"></i>
+                                                                    {{ 'Todos' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="status-chip status-secondary"
+                                                                    [ngClass]="{'active': quickFilters.estadoProceso === 'SinProducir'}"
+                                                                    (click)="setQuickFilter('estadoProceso', 'SinProducir')">
+                                                                    <i class="pi pi-circle me-1"></i>
+                                                                    {{ 'Sin Producir' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="status-chip status-info"
+                                                                    [ngClass]="{'active': quickFilters.estadoProceso === 'Producido'}"
+                                                                    (click)="setQuickFilter('estadoProceso', 'Producido')">
+                                                                    <i class="pi pi-cog me-1"></i>
+                                                                    {{ 'Producido' | translate }}
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="status-chip status-success"
+                                                                    [ngClass]="{'active': quickFilters.estadoProceso === 'Entregado'}"
+                                                                    (click)="setQuickFilter('estadoProceso', 'Entregado')">
+                                                                    <i class="pi pi-check-circle me-1"></i>
+                                                                    {{ 'Entregado' | translate }}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Búsqueda de pedidos -->
+                                                <div class="filter-group search-filters">
+                                                    <div class="filter-group-header">
+                                                        <i class="pi pi-search me-2 text-primary"></i>
+                                                        <span class="fw-medium">{{ 'Búsqueda' | translate }}</span>
+                                                    </div>
+                                                    <div class="filter-group-content">
+                                                        <div class="search-input-wrapper">
+                                                            <label class="filter-label">{{ 'Número de Pedido' | translate }}</label>
+                                                            <p-autoComplete
+                                                                [(ngModel)]="nroPedido"
+                                                                [suggestions]="filteredOrderNumbers"
+                                                                (completeMethod)="filtroGlobal($event)"
+                                                                field="nroPedido"
+                                                                placeholder="{{ 'Buscar por número...' | translate }}"
+                                                                (onSelect)="onOrderSelect($event)"
+                                                                styleClass="modern-autocomplete w-100">
+                                                                <ng-template let-item pTemplate="item">
+                                                                    <div class="suggestion-item">
+                                                                        <span class="fw-bold">#{{ item.nroPedido }}</span>
+                                                                        <small class="text-muted ms-2">{{ item.cliente?.nombres_completos }}</small>
+                                                                    </div>
+                                                                </ng-template>
+                                                            </p-autoComplete>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Acciones -->
+                                                <div class="filter-group action-filters">
+                                                    <div class="filter-group-header">
+                                                        <i class="pi pi-cog me-2 text-primary"></i>
+                                                        <span class="fw-medium">{{ 'Acciones' | translate }}</span>
+                                                    </div>
+                                                    <div class="filter-group-content">
+                                                        <div class="action-buttons">
+                                                            <button pButton
+                                                                type="button"
+                                                                icon="pi pi-search"
+                                                                label="{{ 'Filtrar' | translate }}"
+                                                                class="p-button-primary action-btn"
+                                                                (click)="refrescar(dt1)">
+                                                            </button>
+                                                            <button pButton
+                                                                type="button"
+                                                                icon="pi pi-file-excel"
+                                                                label="{{ 'Exportar' | translate }}"
+                                                                class="p-button-success action-btn"
+                                                                [disabled]="orders.length == 0"
+                                                                (click)="exportarExcel()">
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            </div> <!-- Cierre de filters-expanded-content -->
+                                        </div> <!-- Cierre de modern-filters-container -->
                                     </ng-template>
 
                                     <!-- HEADER: Dos filas (títulos y filtros) -->
@@ -116,12 +394,15 @@
                                 </tr> -->
                                         <!-- Fila de encabezados y filtros por columna -->
                                         <tr style="font-size: 0.8em;">
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex text-center">
+                                            <!-- Columna Detalles -->
+                                            <th *ngIf="isColumnVisible('detalles')" style="width: 2.5rem; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                <div class="flex justify-content-center">
                                                     {{'Detalles' | translate}}
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+
+                                            <!-- Columna # Pedido -->
+                                            <th *ngIf="isColumnVisible('nroPedido')" style="width: 8rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex text-center align-items-center">
                                                     {{'# Pedido' | translate}}
                                                     <p-columnFilter type="text" field="nroPedido" display="menu"
@@ -130,7 +411,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+
+                                            <!-- Columna Fecha Entrega -->
+                                            <th *ngIf="isColumnVisible('fechaEntrega')" style="width: 7rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Fecha entrega' | translate}}
                                                     <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega"
@@ -145,21 +428,17 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <!-- <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;" *ngIf="!isFromProduction">
-                                        <div class="flex  text-center align-items-center">
-                                            Número de Factura
-                                            <p-columnFilter type="text" field="facturacion?.nrofactura" display="menu"
-                                                [showMenu]="true" placeholder="N° factura" matchMode="contains">
-                                            </p-columnFilter>
-                                        </div>
-                                    </th> -->
-                                            <th
-                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;min-width:140px">
-                                                <div class="flex text-center">
+
+                                            <!-- Columna Opciones -->
+                                            <th *ngIf="isColumnVisible('opciones')"
+                                                style="width: 5rem; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                <div class="flex justify-content-center">
                                                     {{'Opciones' | translate}}
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+
+                                            <!-- Columna Estado de Pago -->
+                                            <th *ngIf="isColumnVisible('estadoPago')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex text-center align-items-center">
                                                     {{'Estado de Pago' | translate}}
                                                     <p-columnFilter field="estadoPago" matchMode="equals"
@@ -175,7 +454,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+
+                                            <!-- Columna Estado de Proceso -->
+                                            <th *ngIf="isColumnVisible('estadoProceso')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Estado de Proceso' | translate}}
                                                     <p-columnFilter field="estadoProceso" matchMode="equals"
@@ -191,8 +472,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Validación -->
+                                            <th *ngIf="isColumnVisible('validacion') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Validación' | translate}}
                                                     <p-columnFilter field="validacion" matchMode="equals"
@@ -209,8 +491,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Cliente -->
+                                            <th *ngIf="isColumnVisible('cliente') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Cliente' | translate}}
                                                     <p-columnFilter type="text" field="cliente.nombres_completos"
@@ -219,8 +502,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Valor Bruto -->
+                                            <th *ngIf="isColumnVisible('valorBruto') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Valor Bruto' | translate}}
                                                     <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
@@ -229,8 +513,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Descuento -->
+                                            <th *ngIf="isColumnVisible('descuento') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Descuento' | translate}}
                                                     <p-columnFilter type="numeric" field="totalDescuento"
@@ -239,8 +524,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Domicilio -->
+                                            <th *ngIf="isColumnVisible('domicilio') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Domicilio' | translate}}
                                                     <p-columnFilter type="numeric" field="totalEnvio"
@@ -249,8 +535,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Subtotal -->
+                                            <th *ngIf="isColumnVisible('subtotal') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Subtotal' | translate}}
                                                     <p-columnFilter type="numeric" field="subtotal" matchMode="contains"
@@ -259,8 +546,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna IVA -->
+                                            <th *ngIf="isColumnVisible('iva') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'IVA' | translate}}
                                                     <p-columnFilter type="numeric" field="totalImpuesto"
@@ -269,8 +557,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Total -->
+                                            <th *ngIf="isColumnVisible('total') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Total' | translate}}
                                                     <p-columnFilter type="numeric" field="totalPedididoConDescuento"
@@ -279,8 +568,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Anticipo -->
+                                            <th *ngIf="isColumnVisible('anticipo') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Anticipo' | translate}}
                                                     <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
@@ -289,8 +579,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Falta por Pagar -->
+                                            <th *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Falta por Pagar' | translate}}
                                                     <p-columnFilter type="numeric" field="faltaPorPagar"
@@ -299,7 +590,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+
+                                            <!-- Columna Fecha de compra -->
+                                            <th *ngIf="isColumnVisible('fechaCreacion')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Fecha de compra' | translate}}
                                                     <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion"
@@ -314,8 +607,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Ciudad -->
+                                            <th *ngIf="isColumnVisible('ciudad') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Ciudad' | translate}}
                                                     <p-columnFilter type="text" field="envio.ciudad"
@@ -324,8 +618,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Zona de Entrega -->
+                                            <th *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Zona de Entrega' | translate}}
                                                     <p-columnFilter type="text" field="envio.zonaCobro"
@@ -334,7 +629,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+
+                                            <!-- Columna Forma de Entrega -->
+                                            <th *ngIf="isColumnVisible('formaEntrega')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Forma de Entrega' | translate}}
                                                     <p-columnFilter type="text" field="formaEntrega"
@@ -343,7 +640,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+
+                                            <!-- Columna Horario de Entrega -->
+                                            <th *ngIf="isColumnVisible('horarioEntrega')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Horario de Entrega' | translate}}
                                                     <p-columnFilter type="text" field="horarioEntrega"
@@ -352,8 +651,9 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
-                                            <th style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                                *ngIf="!isFromProduction">
+
+                                            <!-- Columna Vendedor -->
+                                            <th *ngIf="isColumnVisible('vendedor') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Vendedor' | translate}}
                                                     <p-columnFilter type="text" field="asesorAsignado.name"
@@ -368,203 +668,154 @@
                                     <!-- CUERPO: filas y row expansion -->
                                     <ng-template pTemplate="body" let-pedido let-expanded="expanded">
                                         <tr class="p-table-tr-td" style="font-size: 0.85em;">
-                                            <td style="width: 5rem;">
+                                            <!-- Columna Detalles -->
+                                            <td *ngIf="isColumnVisible('detalles')" style="width: 2.0rem; text-align: center; vertical-align: middle; padding: 0.5rem 0.25rem;">
                                                 <button type="button" pButton pRipple [pRowToggler]="pedido"
-                                                    class="p-button-text p-button-rounded p-button-plain"
+                                                    class="p-button-text p-button-rounded p-button-plain p-button-sm"
                                                     [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
                                             </td>
-                                            <td>{{ pedido.nroPedido }}</td>
-                                            <td>
-                                                {{
-                                                convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega)
-                                                }}
+
+                                            <!-- Columna # Pedido -->
+                                            <td *ngIf="isColumnVisible('nroPedido')" class="pedido-number-cell" style="width: 8rem;">
+                                                <span class="pedido-number">{{ pedido.nroPedido }}</span>
                                             </td>
-                                            <!-- <td *ngIf="!isFromProduction">{{ pedido?.nroFactura }}</td> -->
-                                            <td class="text-center">
-                                                <div class="btn-actions hover-container">
-                                                    <button class="btn btn-hover" type="button">
-                                                        <i class="icon-more-alt"></i>
-                                                    </button>
 
-                                                    <ul class="list-actions popup">
-                                                        <li (click)="pdfOrder(modalContent,pedido)">
-                                                            <i class="fa fa-file-pdf-o"></i>
-                                                            <span>
-                                                                {{'Imprimir Pdf' | translate}}
-                                                            </span>
-                                                        </li>
-
-                                                        <li *ngIf="isFromProduction" (click)="produceOrder(pedido)">
-                                                            <i class="fa fa-sitemap"></i>
-                                                            <span>
-                                                                {{'Producción' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="!isFromProduction"
-                                                            (click)="editDatosClientes(clientesModal,pedido)">
-                                                            <i class="fa fa-child"></i>
-                                                            <span>
-                                                                {{'Editar cliente' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="!isFromProduction"
-                                                            (click)="editDatosEntrega(datosEnregaModal,pedido)">
-                                                            <i class="fa fa-book"></i>
-                                                            <span>
-                                                                {{'Editar Dirección' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="!isFromProduction"
-                                                            (click)="editDatosFacturacion(datosFacturacionModal,pedido)">
-                                                            <i class="fa fa-money"></i>
-                                                            <span>
-                                                                {{'Editar facturación' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="!isFromProduction"
-                                                            (click)="editNotas(notasModal,pedido)">
-                                                            <i class="fa fa-file-word-o"></i>
-                                                            <span>
-                                                                {{'Editar notas' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="!isFromProduction"
-                                                            (click)="editarEstadoPago(cambioEstadoPagoModal,pedido)">
-                                                            <i class="fa fa-gears"></i>
-                                                            <span>
-                                                                {{'Editar estado Pago' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="!isFromProduction"
-                                                            (click)="addProductToCart(recompraModal,pedido)">
-                                                            <i class="fa fa-shopping-basket"></i>
-                                                            <span>
-                                                                {{'Agregar productos' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="!isFromProduction" (click)="editSeller(pedido)">
-                                                            <i class="fa fa-users"></i>
-                                                            <span>
-                                                                {{'Asignar asesor' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="!isFromProduction"
-                                                            (click)="AsentarPago(pagosModal,pedido)">
-                                                            <i class="fa fa-bank"></i>
-                                                            <span>
-                                                                {{'Historial pagos' | translate}}
-                                                            </span>
-                                                        </li>
-                                                        <li *ngIf="UserLogged?.email=='jarango@almara.com' || 'danielmauriciogarcia@hotmail.com' || 'dgarciar@gmail.com' "
-                                                            (click)="deleteOrder(pedido)">
-                                                            <i class="fa fa-trash"></i>
-                                                            <span>
-                                                                {{'Eliminar Pedido' | translate}}
-                                                            </span>
-                                                        </li>
-
-
-                                                        <!-- <li
-                                                *ngIf="row.envio !=='' && !(row.estado === 'Cancelada' || row.estado === 'Borrador'  || row.estado === 'Pendiente')">
-                                                <i class="fa fa-eye"></i>
-                                                <a (click)="verGuia(row)">{{'Ver guía' | translate}}</a>
-                                              </li>
-                                              <li *ngIf="row.coords?.latitud !== undefined && row.envio==='SWAYP'">
-                                                <i class="fa fa-map"></i>
-                                                <a (click)="openMap(row)">{{'Ver mapa' | translate}}</a>
-                                              </li>
-                                              <li *ngIf="row.estado === 'Entregada'">
-                                                <i class="fa fa-strikethrough"></i>
-                                                <a (click)="openSign(row.guide)">{{'Ver firma' |
-                                                  translate}}</a>
-                                              </li>
-                                              <li>
-                                                <i class="fa fa-shopping-cart"></i>
-                                                <a (click)="productos(row)">{{'Productos' | translate}}</a>
-                                              <li *ngIf="row.tipoContrato!=='DropShipping'">
-                                                <i class="fa fa-copy"></i>
-                                                <a (click)="duplicar(row)">{{'Guide duplicate' | translate}}</a>
-                                              </li> -->
-                                                    </ul>
-                                                </div>
-
-
-
-                                                <!-- <i title="Imprimir Pdf" class="fa fa-file-pdf-o"
-                                            (click)="pdfOrder(modalContent,pedido)" style="cursor: pointer;"></i>
-                                        <i *ngIf="isFromProduction" title="Producir Pedido" class="fa fa-sitemap"
-                                            (click)="produceOrder(pedido)"
-                                            style="cursor: pointer; margin-left: 4px;"></i>
-                                        <i *ngIf="!isFromProduction" title="Editar cliente" class="fa fa-child"
-                                            style="cursor: pointer; margin-left: 4px;"
-                                            (click)="editDatosClientes(clientesModal,pedido)"></i>
-                                        <i *ngIf="!isFromProduction" title="Editar dirección entrega" class="fa fa-book"
-                                            style="cursor: pointer; margin-left: 4px;"
-                                            (click)="editDatosEntrega(datosEnregaModal,pedido)"></i>
-                                        <i *ngIf="!isFromProduction" class="fa fa-money"
-                                            title="Editar datos facturación" style="cursor: pointer; margin-left: 4px;"
-                                            (click)="editDatosFacturacion(datosFacturacionModal,pedido)"></i>
-                                        <i *ngIf="!isFromProduction" class="fa fa-file-word-o" title="Editar notas"
-                                            style="cursor: pointer; margin-left: 4px;"
-                                            (click)="editNotas(notasModal,pedido)"></i>
-                                        <i *ngIf="!isFromProduction" class="fa fa-gears" title="Cambiar estado pago"
-                                            style="cursor: pointer; margin-left: 4px;"
-                                            (click)="editarEstadoPago(cambioEstadoPagoModal,pedido)"></i>
-                                        <i *ngIf="!isFromProduction" class="fa fa-shopping-basket"
-                                            title="Hacer recompra" style="cursor: pointer; margin-left: 4px;"
-                                            (click)="addProductToCart(recompraModal,pedido)"></i>
-                                        <i *ngIf="!isFromProduction" class="fa fa-users" title="Asignar asesor"
-                                            style="cursor: pointer; margin-left: 4px;" (click)="editSeller(pedido)"></i>
-                                        <i *ngIf="!isFromProduction" class="fa fa-bank"
-                                            title="Historial pagos y asentar pagos"
-                                            style="cursor: pointer; margin-left: 4px;"
-                                            (click)="AsentarPago(pagosModal,pedido)"></i>
-                                        <i *ngIf="UserLogged?.email=='jarango@almara.com'" class="fa fa-trash"
-                                            title="Eliminar Pedido" style="cursor: pointer; margin-left: 4px;"
-                                            (click)="deleteOrder(pedido)"></i> -->
+                                            <!-- Columna Fecha Entrega -->
+                                            <td *ngIf="isColumnVisible('fechaEntrega')" class="fecha-cell" style="width: 7rem;">
+                                                {{ convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega) }}
                                             </td>
-                                            <td>{{ pedido?.estadoPago }}</td>
-                                            <td>{{ pedido?.estadoProceso }}</td>
-                                            <td *ngIf="!isFromProduction">
-                                                {{ pedido.validacion == true ? 'Si' : 'No' }}
+
+                                            <!-- Columna Opciones -->
+                                            <td *ngIf="isColumnVisible('opciones')" class="text-center options-cell" style="width: 5rem; padding: 0.5rem 0.25rem;">
+                                                <button class="btn btn-outline-primary btn-sm" 
+                                                        type="button" 
+                                                        (click)="openOptionsModal(pedido)"
+                                                        [title]="'Opciones del pedido' | translate">
+                                                    <i class="pi pi-cog"></i>
+                                                </button>
                                             </td>
-                                            <td *ngIf="!isFromProduction">
-                                                <span (click)="editDatosClientes(clientesModal,pedido)">
+
+                                            <!-- Columna Estado de Pago -->
+                                            <td *ngIf="isColumnVisible('estadoPago')" class="estado-cell text-center">
+                                                <span class="modern-badge" [ngClass]="{
+                                                    'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
+                                                    'badge-success': pedido?.estadoPago === 'Aprobado',
+                                                    'badge-info': pedido?.estadoPago === 'PreAprobado',
+                                                    'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
+                                                }">
+                                                    <i class="status-icon pi" [ngClass]="{
+                                                        'pi-clock': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
+                                                        'pi-check-circle': pedido?.estadoPago === 'Aprobado',
+                                                        'pi-eye': pedido?.estadoPago === 'PreAprobado',
+                                                        'pi-times-circle': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
+                                                    }"></i>
+                                                    {{ pedido?.estadoPago }}
+                                                </span>
+                                            </td>
+
+                                            <!-- Columna Estado de Proceso -->
+                                            <td *ngIf="isColumnVisible('estadoProceso')" class="estado-cell text-center">
+                                                <span class="modern-badge" [ngClass]="{
+                                                    'badge-secondary': pedido?.estadoProceso === 'SinProducir',
+                                                    'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                    'badge-primary': pedido?.estadoProceso === 'Empacado',
+                                                    'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                    'badge-success': pedido?.estadoProceso === 'Entregado',
+                                                    'badge-danger': pedido?.estadoProceso === 'Rechazado'
+                                                }">
+                                                    <i class="status-icon pi" [ngClass]="{
+                                                        'pi-circle': pedido?.estadoProceso === 'SinProducir',
+                                                        'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                        'pi-box': pedido?.estadoProceso === 'Empacado',
+                                                        'pi-truck': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                        'pi-check-circle': pedido?.estadoProceso === 'Entregado',
+                                                        'pi-times-circle': pedido?.estadoProceso === 'Rechazado'
+                                                    }"></i>
+                                                    {{ pedido?.estadoProceso }}
+                                                </span>
+                                            </td>
+
+                                            <!-- Columna Validación -->
+                                            <td *ngIf="isColumnVisible('validacion') && !isFromProduction" class="estado-cell text-center">
+                                                <span class="modern-badge validation-badge" [ngClass]="{
+                                                    'badge-success': pedido.validacion == true,
+                                                    'badge-secondary': pedido.validacion == false
+                                                }">
+                                                    <i class="status-icon pi" [ngClass]="{
+                                                        'pi-check': pedido.validacion == true,
+                                                        'pi-minus': pedido.validacion == false
+                                                    }"></i>
+                                                    {{ pedido.validacion == true ? 'Sí' : 'No' }}
+                                                </span>
+                                            </td>
+
+                                            <!-- Columna Cliente -->
+                                            <td *ngIf="isColumnVisible('cliente') && !isFromProduction" class="text-nowrap cliente-cell">
+                                                <span class="cliente-info" (click)="editDatosClientes(clientesModal,pedido)">
                                                     {{ pedido.cliente.nombres_completos }}
                                                     {{ pedido.cliente.apellidos_completos }}
                                                 </span>
                                             </td>
-                                            <td *ngIf="!isFromProduction" class="td-money">
+
+                                            <!-- Columna Valor Bruto -->
+                                            <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction" class="td-money text-nowrap money-cell">
                                                 {{ pedido?.totalPedidoSinDescuento | currency }}
                                             </td>
-                                            <td *ngIf="!isFromProduction" class="td-money">
+
+                                            <!-- Columna Descuento -->
+                                            <td *ngIf="isColumnVisible('descuento') && !isFromProduction" class="td-money text-nowrap">
                                                 {{ pedido?.totalDescuento | currency }}
                                             </td>
-                                            <td *ngIf="!isFromProduction" class="td-money">
+
+                                            <!-- Columna Domicilio -->
+                                            <td *ngIf="isColumnVisible('domicilio') && !isFromProduction" class="td-money text-nowrap">
                                                 {{ pedido?.totalEnvio | currency }}
                                             </td>
-                                            <td *ngIf="!isFromProduction" class="td-money">
+
+                                            <!-- Columna Subtotal -->
+                                            <td *ngIf="isColumnVisible('subtotal') && !isFromProduction" class="td-money text-nowrap">
                                                 {{ pedido?.subtotal | currency }}
                                             </td>
-                                            <td *ngIf="!isFromProduction" class="td-money">
+
+                                            <!-- Columna IVA -->
+                                            <td *ngIf="isColumnVisible('iva') && !isFromProduction" class="td-money text-nowrap">
                                                 {{ pedido?.totalImpuesto | currency }}
                                             </td>
-                                            <td *ngIf="!isFromProduction" class="td-money">
-                                                {{ pedido.totalPedididoConDescuento | currency }}
+
+                                            <!-- Columna Total -->
+                                            <td *ngIf="isColumnVisible('total') && !isFromProduction" class="td-money text-nowrap money-cell total-cell">
+                                                <span class="total-amount">{{ pedido.totalPedididoConDescuento | currency }}</span>
                                             </td>
-                                            <td *ngIf="!isFromProduction" class="td-money">
+
+                                            <!-- Columna Anticipo -->
+                                            <td *ngIf="isColumnVisible('anticipo') && !isFromProduction" class="td-money text-nowrap">
                                                 {{ pedido?.anticipo | currency }}
                                             </td>
-                                            <td *ngIf="!isFromProduction" class="td-money">
+
+                                            <!-- Columna Falta por Pagar -->
+                                            <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" class="td-money text-nowrap">
                                                 {{ pedido?.faltaPorPagar | currency }}
                                             </td>
-                                            <td>{{ pedido.fechaCreacion | date: 'dd/MM/yyyy' }}</td>
-                                            <td *ngIf="!isFromProduction">{{ pedido.envio?.ciudad }}</td>
-                                            <td *ngIf="!isFromProduction">{{ pedido.envio?.zonaCobro }}</td>
-                                            <td>{{ pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
-                                            <td>{{ pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}
+
+                                            <!-- Columna Fecha de compra -->
+                                            <td *ngIf="isColumnVisible('fechaCreacion')" class="text-nowrap fecha-cell">
+                                                {{ pedido.fechaCreacion | date: 'dd/MM/yyyy' }}
                                             </td>
-                                            <td *ngIf="!isFromProduction">
+
+                                            <!-- Columna Ciudad -->
+                                            <td *ngIf="isColumnVisible('ciudad') && !isFromProduction" class="text-nowrap">{{ pedido.envio?.ciudad }}</td>
+
+                                            <!-- Columna Zona de Entrega -->
+                                            <td *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" class="text-nowrap">{{ pedido.envio?.zonaCobro }}</td>
+
+                                            <!-- Columna Forma de Entrega -->
+                                            <td *ngIf="isColumnVisible('formaEntrega')" class="text-nowrap">{{ pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
+
+                                            <!-- Columna Horario de Entrega -->
+                                            <td *ngIf="isColumnVisible('horarioEntrega')" class="text-nowrap">{{ pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
+
+                                            <!-- Columna Vendedor -->
+                                            <td *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="text-nowrap">
                                                 {{ pedido.asesorAsignado?.name }}
                                             </td>
                                         </tr>
@@ -572,10 +823,10 @@
 
                                     <!-- EXPANSIÓN DE FILAS -->
                                     <ng-template pTemplate="rowexpansion" let-pedido>
-                                        <tr style="width: 50%; font-size: 0.85em;">
-                                            <td colspan="5">
-                                                <div style="padding: 10px;">
-                                                    <p-table [value]="pedido.carrito" dataKey="pedido.carrito">
+                                        <tr style="font-size: 0.85em;">
+                                            <td [attr.colspan]="getVisibleColumnsCount()">
+                                                <div class="p-2">
+                                                    <p-table [value]="pedido.carrito" dataKey="pedido.carrito" styleClass="p-datatable-sm expanded-table">
                                                         <ng-template pTemplate="header">
                                         <tr>
                                             <th style="width: 2rem;"></th>
@@ -615,10 +866,10 @@
                                     <ng-template pTemplate="rowexpansion" let-configuracion>
                                         <tr>
                                             <td colspan="7">
-                                                <div style="padding: 10px;">
+                                                <div class="p-2">
                                                     <h5>{{'Preferencias' | translate}}</h5>
                                                     <p-table [value]="configuracion?.configuracion?.preferencias"
-                                                        dataKey="configuracion.id" style="font-size: 0.8em;">
+                                                        dataKey="configuracion.id" styleClass="p-datatable-sm expanded-table">
                                                         <ng-template pTemplate="header">
                                         <tr>
                                             <th>{{'Imagen' | translate}}</th>
@@ -652,7 +903,7 @@
                                     translate}}</h5>
                                 <p-table *ngIf="configuracion?.configuracion?.adiciones.length > 0"
                                     [value]="configuracion?.configuracion?.adiciones" dataKey="configuracion.id"
-                                    style="font-size: 0.8em;">
+                                    styleClass="p-datatable-sm expanded-table">
                                     <ng-template pTemplate="header">
                                         <tr>
                                             <th>{{'Imagen' | translate}}</th>
@@ -701,30 +952,46 @@
                         <!-- MENSAJE SI LA TABLA ESTÁ VACÍA -->
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td colspan="19">
-                                    <br>
-                                    <span class="m-5 fs-18 fc-primary">
-                                        {{'No hay datos.' | translate}}
-                                    </span>
-                                    <br><br>
+                                <td [attr.colspan]="getVisibleColumnsCount()" class="text-center">
+                                    <div class="p-4">
+                                        <span class="fs-18 text-muted">
+                                            {{'No hay datos.' | translate}}
+                                        </span>
+                                    </div>
                                 </td>
                             </tr>
                         </ng-template>
 
                         <!-- FOOTER para totales, si no es producción -->
                         <ng-template pTemplate="footer" *ngIf="!isFromProduction">
-                            <tr style="font-size: 0.85em;">
-                                <!-- Ajusta este colspan si mueves columnas -->
-                                <td colspan="8" style="text-align: right;">{{'Total' | translate}}</td>
-                                <td class="td-money">{{ calculateValorBruto() | currency }}</td>
-                                <td class="td-money">{{ calculateDescuento() | currency }}</td>
-                                <td class="td-money">{{ calculateEnvio() | currency }}</td>
-                                <td class="td-money">{{ calculateSubtotal() | currency }}</td>
-                                <td class="td-money">{{ calculateTotalImpuestos() | currency }}</td>
-                                <td class="td-money">{{ calculateTotal() | currency }}</td>
-                                <td class="td-money">{{ calculateAnticipo() | currency }}</td>
-                                <td class="td-money">{{ calculateFaltaPorPagar() | currency }}</td>
-                                <td colspan="8"></td>
+                            <tr style="font-size: 0.85em; background-color: #f8f9fa;">
+                                <!-- Celdas vacías para columnas antes de los valores monetarios -->
+                                <td *ngIf="isColumnVisible('detalles')"></td>
+                                <td *ngIf="isColumnVisible('nroPedido')"></td>
+                                <td *ngIf="isColumnVisible('fechaEntrega')"></td>
+                                <td *ngIf="isColumnVisible('opciones')"></td>
+                                <td *ngIf="isColumnVisible('estadoPago')"></td>
+                                <td *ngIf="isColumnVisible('estadoProceso')"></td>
+                                <td *ngIf="isColumnVisible('validacion')"></td>
+                                <td *ngIf="isColumnVisible('cliente')" class="text-right fw-bold">{{'Total' | translate}}</td>
+
+                                <!-- Valores monetarios -->
+                                <td *ngIf="isColumnVisible('valorBruto')" class="td-money fw-bold">{{ calculateValorBruto() | currency }}</td>
+                                <td *ngIf="isColumnVisible('descuento')" class="td-money fw-bold">{{ calculateDescuento() | currency }}</td>
+                                <td *ngIf="isColumnVisible('domicilio')" class="td-money fw-bold">{{ calculateEnvio() | currency }}</td>
+                                <td *ngIf="isColumnVisible('subtotal')" class="td-money fw-bold">{{ calculateSubtotal() | currency }}</td>
+                                <td *ngIf="isColumnVisible('iva')" class="td-money fw-bold">{{ calculateTotalImpuestos() | currency }}</td>
+                                <td *ngIf="isColumnVisible('total')" class="td-money fw-bold">{{ calculateTotal() | currency }}</td>
+                                <td *ngIf="isColumnVisible('anticipo')" class="td-money fw-bold">{{ calculateAnticipo() | currency }}</td>
+                                <td *ngIf="isColumnVisible('faltaPorPagar')" class="td-money fw-bold">{{ calculateFaltaPorPagar() | currency }}</td>
+
+                                <!-- Celdas vacías para las columnas restantes -->
+                                <td *ngIf="isColumnVisible('fechaCreacion')"></td>
+                                <td *ngIf="isColumnVisible('ciudad')"></td>
+                                <td *ngIf="isColumnVisible('zonaCobro')"></td>
+                                <td *ngIf="isColumnVisible('formaEntrega')"></td>
+                                <td *ngIf="isColumnVisible('horarioEntrega')"></td>
+                                <td *ngIf="isColumnVisible('vendedor')"></td>
                             </tr>
                         </ng-template>
                         </p-table>
@@ -869,6 +1136,161 @@
     </div>
 </ng-template>
 
+<!-- Modal de Opciones -->
+<div *ngIf="modalVisible" class="custom-modal-overlay" (click)="onBackdropClick($event)">
+  <div class="custom-modal">
+    <div class="custom-modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header border-0 pb-2">
+        <div class="d-flex align-items-center">
+          <div class="option-modal-icon me-3">
+            <i class="pi pi-cog"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0">{{ 'Opciones del Pedido' | translate }}</h5>
+            <small class="text-muted">{{ 'Pedido #' | translate }}{{ selectedOrder?.nroPedido }}</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closeOptionsModal()" aria-label="Close"></button>
+      </div>
 
+      <!-- Modal Body -->
+      <div class="modal-body pt-2">
+        <div class="options-grid">
+          
+          <!-- Imprimir PDF -->
+          <button class="option-btn" type="button" (click)="pdfOrder(modalContent, selectedOrder); closeOptionsModal()">
+            <div class="option-icon pdf-icon">
+              <i class="fa fa-file-pdf-o"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Imprimir PDF' | translate }}</span>
+              <small class="option-description">{{ 'Generar documento del pedido' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Producción (solo si isFromProduction) -->
+          <button *ngIf="isFromProduction" class="option-btn" type="button" (click)="produceOrder(selectedOrder); closeOptionsModal()">
+            <div class="option-icon production-icon">
+              <i class="fa fa-sitemap"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Producción' | translate }}</span>
+              <small class="option-description">{{ 'Gestionar proceso productivo' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Editar Cliente -->
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editDatosClientes(clientesModal, selectedOrder); closeOptionsModal()">
+            <div class="option-icon client-icon">
+              <i class="fa fa-user"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Editar Cliente' | translate }}</span>
+              <small class="option-description">{{ 'Modificar datos del cliente' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Editar Dirección -->
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editDatosEntrega(datosEnregaModal, selectedOrder); closeOptionsModal()">
+            <div class="option-icon address-icon">
+              <i class="fa fa-map-marker"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Editar Dirección' | translate }}</span>
+              <small class="option-description">{{ 'Modificar dirección de entrega' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Editar Facturación -->
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder); closeOptionsModal()">
+            <div class="option-icon billing-icon">
+              <i class="fa fa-credit-card"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Editar Facturación' | translate }}</span>
+              <small class="option-description">{{ 'Modificar datos de facturación' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Editar Notas -->
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editNotas(notasModal, selectedOrder); closeOptionsModal()">
+            <div class="option-icon notes-icon">
+              <i class="fa fa-sticky-note"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Editar Notas' | translate }}</span>
+              <small class="option-description">{{ 'Agregar o modificar notas' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Estado de Pago -->
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
+            <div class="option-icon payment-icon">
+              <i class="fa fa-credit-card-alt"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Estado de Pago' | translate }}</span>
+              <small class="option-description">{{ 'Cambiar estado del pago' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Agregar Productos -->
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="addProductToCart(recompraModal, selectedOrder); closeOptionsModal()">
+            <div class="option-icon cart-icon">
+              <i class="fa fa-shopping-cart"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Agregar Productos' | translate }}</span>
+              <small class="option-description">{{ 'Añadir más productos al pedido' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Asignar Asesor -->
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editSeller(selectedOrder); closeOptionsModal()">
+            <div class="option-icon seller-icon">
+              <i class="fa fa-users"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Asignar Asesor' | translate }}</span>
+              <small class="option-description">{{ 'Cambiar asesor responsable' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Historial de Pagos -->
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="AsentarPago(pagosModal, selectedOrder); closeOptionsModal()">
+            <div class="option-icon history-icon">
+              <i class="fa fa-history"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Historial Pagos' | translate }}</span>
+              <small class="option-description">{{ 'Ver historial de pagos' | translate }}</small>
+            </div>
+          </button>
+
+          <!-- Eliminar Pedido (Solo usuarios autorizados) -->
+          <button *ngIf="canDeleteOrder() && !isFromProduction" class="option-btn danger-btn" type="button" (click)="confirmDeleteOrder(selectedOrder); closeOptionsModal()">
+            <div class="option-icon delete-icon">
+              <i class="fa fa-trash"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Eliminar Pedido' | translate }}</span>
+              <small class="option-description">{{ 'Eliminar permanentemente' | translate }}</small>
+            </div>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer border-0 pt-2">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closeOptionsModal()">
+          <i class="fa fa-times me-1"></i>
+          {{ 'Cancelar' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!--Fin Modales-->

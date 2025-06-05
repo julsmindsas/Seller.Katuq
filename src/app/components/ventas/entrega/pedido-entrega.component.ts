@@ -98,9 +98,11 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
             };
             this.datosEntregas = [];
             this.service.getClientByDocument(data).subscribe((res: any) => {
-                res.datosEntrega.map((x) => {
-                    this.datosEntregas.push(x);
-                });
+                if (res && res.datosEntrega && Array.isArray(res.datosEntrega)) {
+                    res.datosEntrega.map((x) => {
+                        this.datosEntregas.push(x);
+                    });
+                }
             });
 
         }

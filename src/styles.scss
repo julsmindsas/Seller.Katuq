@@ -190,3 +190,11 @@ img[appSafeImage] {
     padding: 10px;
   }
 }
+
+/* Clase para prevenir el scroll del body cuando el modal está abierto */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
