@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, ViewChild, ElementRef, ChangeDetectorRef, AfterViewChecked, OnChanges, SimpleChanges } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { InfoIndicativos } from "../../../../Mock/indicativosPais";
 import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
 import { QuickViewComponent } from "../quick-view/quick-view.component";
@@ -29,6 +30,17 @@ import { InventarioService } from "../../../shared/services/inventarios/inventar
   selector: "app-pedido",
   templateUrl: "./crear-ventas.component.html",
   styleUrls: ["./crear-ventas.component.scss"],
+  animations: [
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-20px)' }),
+        animate('300ms ease-in', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-out', style({ opacity: 0, transform: 'translateY(-20px)' }))
+      ])
+    ])
+  ]
 })
 export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges {
   @ViewChild("buscarPor") buscarPor: ElementRef;
@@ -180,6 +192,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   datosEntregaNoEncontradosParaCiudadSeleccionada: boolean;
   mostrarFormularioCliente: boolean = false;
   clienteRecienCreado: boolean = false;
+  creandoCliente: boolean = false;
   public bodegas: any[] = [];
   public selectedWarehouse: string = '';
   public selectedCity: string = '';
@@ -701,6 +714,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           this.identificarCiu1();
           this.encontrado = true;
           this.mostrarFormularioCliente = false;
+          this.clienteRecienCreado = false; // Asegurar que este flag esté en false para clientes encontrados
           if (this.formulario.value.estado == "Bloqueado") {
             this.bloqueado = true;
           }
@@ -1987,6 +2001,9 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
   // NUEVO MÉTODO: Crear cliente de forma rápida usando los datos mínimos del formulario
   crearClienteRapido() {
+    // Activar indicador de carga
+    this.creandoCliente = true;
+
     // Recopilar datos mínimos para la creación del cliente
     const clienteData = {
       ...this.formulario.value,
@@ -2034,20 +2051,71 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       clienteData.datosEntrega = [datoEntrega];
       this.datosEntregas = [datoEntrega];
     }
-    this.service.createClient(clienteData).subscribe((r: any) => {
-      this.pedidoGral.facturacion = this.datosFacturacionElectronica[0];
-      this.pedidoGral.envio = this.datosEntregas[0];
-      // Si la respuesta es un ArrayBuffer, se decodifica y se parsea a JSON
-      const client = (r instanceof ArrayBuffer) ? JSON.parse(new TextDecoder().decode(r)) : r;
-      Swal.fire({
-        title: "Guardado!",
-        text: "Cliente creado rápidamente",
-        icon: "success",
-        confirmButtonText: "Ok",
-      });
-      sessionStorage.setItem("cliente", JSON.stringify(clienteData));
-      this.clienteRecienCreado = true; // Esto activará la visualización de facturación y entrega
-      this.pedidoGral = { ...this.pedidoGral };
+    this.service.createClient(clienteData).subscribe({
+      next: (r: any) => {
+        // Desactivar indicador de carga
+        this.creandoCliente = false;
+
+        this.pedidoGral.facturacion = this.datosFacturacionElectronica[0];
+        this.pedidoGral.envio = this.datosEntregas[0];
+        
+        // Si la respuesta es un ArrayBuffer, se decodifica y se parsea a JSON
+        const client = (r instanceof ArrayBuffer) ? JSON.parse(new TextDecoder().decode(r)) : r;
+        
+        // Ocultar formulario y activar estado "encontrado"
+        this.mostrarFormularioCliente = false;
+        this.encontrado = true;
+        this.clienteRecienCreado = true;
+        
+        sessionStorage.setItem("cliente", JSON.stringify(clienteData));
+        this.pedidoGral = { ...this.pedidoGral };
+        
+        // Mostrar mensaje de éxito con información específica del cliente
+        Swal.fire({
+          title: "¡Cliente creado exitosamente!",
+          html: `
+            <div class="text-start">
+              <strong>Cliente:</strong> ${this.formulario.value.nombres_completos}<br>
+              <strong>Documento:</strong> ${this.formulario.value.documento}<br>
+              <strong>El cliente ha sido guardado y está listo para continuar.</strong>
+            </div>
+          `,
+          icon: "success",
+          confirmButtonText: "Continuar",
+          timer: 3000,
+          timerProgressBar: true
+        });
+
+        // Mostrar notificación toast adicional
+        this.toastrService.success(
+          `Cliente ${this.formulario.value.nombres_completos} creado correctamente`, 
+          'Cliente Creado', 
+          { 
+            closeButton: true, 
+            enableHtml: true, 
+            positionClass: 'toast-bottom-right', 
+            timeOut: 3000 
+          }
+        );
+
+        // Resetear el estado de "recién creado" después de 5 segundos para remover la animación
+        setTimeout(() => {
+          this.clienteRecienCreado = false;
+          this.ref.detectChanges();
+        }, 5000);
+      },
+      error: (error: any) => {
+        // Desactivar indicador de carga en caso de error
+        this.creandoCliente = false;
+        
+        console.error('Error al crear cliente:', error);
+        Swal.fire({
+          title: "Error al crear cliente",
+          text: "Ha ocurrido un error al crear el cliente. Por favor, intente nuevamente.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      }
     });
   }
 

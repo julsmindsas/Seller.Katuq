@@ -205,13 +205,21 @@
               </div>
 
               <!-- Cliente encontrado -->
-              <div *ngIf="encontrado" class="card border-success mb-4">
+              <div *ngIf="encontrado" class="card border-success mb-4" 
+                   [ngClass]="{'cliente-recien-creado': clienteRecienCreado}">
                 <div class="card-header bg-success text-white">
                   <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fa fa-check-circle me-2"></i>Cliente Encontrado</h5>
+                    <h5 class="mb-0">
+                      <i class="fa fa-check-circle me-2"></i>
+                      {{ clienteRecienCreado ? '¡Cliente Creado Exitosamente!' : 'Cliente Encontrado' }}
+                    </h5>
                     <button class="btn btn-light btn-sm" (click)="mostrarFormularioCliente = true">
                       <i class="fa fa-edit me-1"></i> Editar
                     </button>
+                  </div>
+                  <!-- Mensaje adicional para cliente recién creado -->
+                  <div *ngIf="clienteRecienCreado" class="mt-2">
+                    <small><i class="fa fa-info-circle me-1"></i>El cliente ha sido guardado y está listo para continuar con el pedido.</small>
                   </div>
                 </div>
                 <div class="card-body">
@@ -249,7 +257,8 @@
               </div>
 
               <!-- Formulario para crear/editar cliente si es necesario -->
-              <div *ngIf="mostrarFormularioCliente" class="card shadow-sm mb-4">
+              <div *ngIf="mostrarFormularioCliente" class="card shadow-sm mb-4 formulario-cliente"
+                   [@slideInOut]>
                 <div class="card-header bg-light">
                   <h5 class="mb-0">
                     <i class="fa" [ngClass]="{'fa-edit': encontrado, 'fa-user-plus': !encontrado}"></i>
@@ -382,8 +391,10 @@
                         <i class="fa fa-times me-1"></i> Cancelar
                       </button>
                       <button *ngIf="!encontrado" type="button" class="btn btn-success" (click)="crearClienteRapido()"
-                        [disabled]="formulario.invalid">
-                        <i class="fa fa-save me-1"></i> Guardar Cliente
+                        [disabled]="formulario.invalid || creandoCliente">
+                        <span *ngIf="creandoCliente" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <i *ngIf="!creandoCliente" class="fa fa-save me-1"></i> 
+                        {{ creandoCliente ? 'Creando...' : 'Guardar Cliente' }}
                       </button>
                       <button *ngIf="encontrado" type="button" class="btn btn-primary" (click)="editarCliente()"
                         [disabled]="formulario.invalid">
