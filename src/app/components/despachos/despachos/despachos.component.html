@@ -21,61 +21,77 @@
                         <p class="text-muted small mb-0">{{ 'Administra pedidos y órdenes de envío' | translate }}</p>
                     </div>
 
-                    <!-- Botón de recomendaciones KAI -->
-                    <button pButton type="button" icon="pi pi-brain" label="{{ 'Recomendaciones KAI' | translate }}"
-                        class="p-button-info p-button-sm" (click)="mostrarRecomendacionesOptimizacion()"></button>
+                    <!-- Botones de KAI y alertas -->
+                    <div class="btn-group">
+                        <button pButton type="button" icon="pi pi-brain" label="{{ 'Recomendaciones KAI' | translate }}"
+                            class="p-button-info p-button-sm" (click)="mostrarRecomendacionesOptimizacion()"></button>
+                        <button pButton type="button" icon="pi pi-refresh" 
+                            pTooltip="{{ 'Reiniciar alertas de prioridad' | translate }}"
+                            class="p-button-secondary p-button-sm" (click)="reiniciarControlAlertas()"></button>
+                    </div>
                 </div>
 
                 <!-- Alertas de priorización -->
                 <div class="px-4 py-3 bg-light border-bottom"
                     *ngIf="!loading && (obtenerConteoPedidosUrgentesNoDespachados() > 0 || obtenerConteoPedidosEnRiesgoNoDespachados() > 0 || obtenerConteoPedidosSinProducirUrgentes() > 0)">
-                    <div class="d-flex flex-column">
-                        <div class="alert alert-warning mb-2" *ngIf="obtenerConteoPedidosUrgentesNoDespachados() > 0">
-                            <div class="d-flex align-items-center">
-                                <i class="pi pi-exclamation-triangle fs-4 me-3"></i>
-                                <div>
-                                    <h6 class="mb-1 fw-bold">{{ 'Pedidos Urgentes' | translate }}</h6>
-                                    <p class="mb-0">
-                                        {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosUrgentesNoDespachados()
-                                            }}</strong> {{ 'pedidos que requieren atención inmediata' | translate }}
-                                        <span *ngIf="obtenerPrimerPedidoUrgenteNoDespachado()">
-                                            ({{ 'Más urgente' | translate }}: #{{
-                                            obtenerPrimerPedidoUrgenteNoDespachado().nroPedido }} - {{
-                                            obtenerPrimerPedidoUrgenteNoDespachado().diasRestantes }} {{ 'día(s)
-                                            restante(s)' | translate }})
-                                        </span>
-                                    </p>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="alert alert-warning mb-2" *ngIf="obtenerConteoPedidosUrgentesNoDespachados() > 0">
+                                <div class="d-flex align-items-center">
+                                    <i class="pi pi-exclamation-triangle fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">{{ 'Pedidos Urgentes' | translate }}</h6>
+                                        <p class="mb-0">
+                                            {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosUrgentesNoDespachados()
+                                                }}</strong> {{ 'pedidos que requieren atención inmediata' | translate }}
+                                            <span *ngIf="obtenerPrimerPedidoUrgenteNoDespachado()">
+                                                ({{ 'Más urgente' | translate }}: #{{
+                                                obtenerPrimerPedidoUrgenteNoDespachado().nroPedido }} - {{
+                                                obtenerPrimerPedidoUrgenteNoDespachado().diasRestantes }} {{ 'día(s)
+                                                restante(s)' | translate }})
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mb-2" *ngIf="obtenerConteoPedidosSinProducirUrgentes() > 0">
+                                <div class="d-flex align-items-center">
+                                    <i class="pi pi-exclamation-circle fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">{{ 'Pedidos Urgentes Sin Producir' | translate }}</h6>
+                                        <p class="mb-0">
+                                            {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosSinProducirUrgentes()
+                                                }}</strong> {{ 'pedidos sin iniciar producción con fecha de entrega cercana' | translate }}
+                                            <span class="text-danger ms-2">
+                                                <i class="pi pi-arrow-right"></i> {{ 'Requieren prioridad de producción' | translate }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mb-0" *ngIf="obtenerConteoPedidosEnRiesgoNoDespachados() > 0">
+                                <div class="d-flex align-items-center">
+                                    <i class="pi pi-clock fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">{{ 'Pedidos en Riesgo' | translate }}</h6>
+                                        <p class="mb-0">
+                                            {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosEnRiesgoNoDespachados()
+                                                }}</strong> {{ 'pedidos que podrían retrasarse' | translate }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="alert alert-info mb-2" *ngIf="obtenerConteoPedidosSinProducirUrgentes() > 0">
-                            <div class="d-flex align-items-center">
-                                <i class="pi pi-exclamation-circle fs-4 me-3"></i>
-                                <div>
-                                    <h6 class="mb-1 fw-bold">{{ 'Pedidos Urgentes Sin Producir' | translate }}</h6>
-                                    <p class="mb-0">
-                                        {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosSinProducirUrgentes()
-                                            }}</strong> {{ 'pedidos sin iniciar producción con fecha de entrega cercana' | translate }}
-                                        <span class="text-danger ms-2">
-                                            <i class="pi pi-arrow-right"></i> {{ 'Requieren prioridad de producción' | translate }}
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info mb-0" *ngIf="obtenerConteoPedidosEnRiesgoNoDespachados() > 0">
-                            <div class="d-flex align-items-center">
-                                <i class="pi pi-clock fs-4 me-3"></i>
-                                <div>
-                                    <h6 class="mb-1 fw-bold">{{ 'Pedidos en Riesgo' | translate }}</h6>
-                                    <p class="mb-0">
-                                        {{ 'Hay' | translate }} <strong>{{ obtenerConteoPedidosEnRiesgoNoDespachados()
-                                            }}</strong> {{ 'pedidos que podrían retrasarse' | translate }}
-                                    </p>
-                                </div>
-                            </div>
+                        
+                        <!-- Botón para ver detalles de alertas -->
+                        <div class="ms-3">
+                            <button pButton type="button" icon="pi pi-info-circle" 
+                                label="{{ 'Ver Detalles' | translate }}"
+                                class="p-button-outlined p-button-sm p-button-warning"
+                                pTooltip="{{ 'Ver resumen detallado de todas las alertas' | translate }}"
+                                (click)="mostrarResumenAlertas()"></button>
                         </div>
                     </div>
                 </div>

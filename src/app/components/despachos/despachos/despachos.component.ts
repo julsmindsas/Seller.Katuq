@@ -126,6 +126,11 @@ export class DespachosComponent implements OnInit {
   mostrarAlertasAvanzadas: boolean = true;
   kaiPredicciones: any = null;
   
+  // Control de frecuencia para modales de advertencia
+  private ultimaAlertaPedidosUrgentes: Date | null = null;
+  private ultimaAlertaPedidosSinProducir: Date | null = null;
+  private intervaloBetweenAlertas: number = 5 * 60 * 1000; // 5 minutos en milisegundos
+  
   // Definiciones para la gestión de columnas
   displayedColumns: ColumnDefinition[] = [
     { field: 'detalles', header: 'Detalles', visible: true },
@@ -201,11 +206,18 @@ export class DespachosComponent implements OnInit {
     // Inicializar métricas antes de cargar datos
     this.inicializarMetricas();
     
-    this.refrescarDatos();
+    // Configurar intervalo de alertas según preferencias del usuario (5 minutos por defecto)
+    const alertInterval = localStorage.getItem('alertInterval');
+    if (alertInterval) {
+      this.configurarIntervaloAlertas(parseInt(alertInterval));
+    }
+    
+    // En ngOnInit, mostrar alertas automáticas
+    this.refrescarDatos(true);
     this.initForms();
   }
 
-  refrescarDatos() {
+  refrescarDatos(mostrarAlertas: boolean = false) {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
@@ -233,7 +245,7 @@ export class DespachosComponent implements OnInit {
       });
       
       // Aplicar algoritmo de priorización
-      this.aplicarAlgoritmoPriorizacion();
+      this.aplicarAlgoritmoPriorizacion(mostrarAlertas);
       
       // Calcular métricas para análisis KAI
       this.calcularMetricas();
@@ -247,7 +259,7 @@ export class DespachosComponent implements OnInit {
   }
 
   // Algoritmo principal de priorización
-  aplicarAlgoritmoPriorizacion() {
+  aplicarAlgoritmoPriorizacion(mostrarAlertas: boolean = false) {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     
@@ -372,13 +384,17 @@ export class DespachosComponent implements OnInit {
     this.pedidosSinProducir.sort((a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999));
     
     // Implementar optimización rudimentaria de ruta
+    // Optimizar rutas agrupando pedidos por zonas
     this.optimizarRutas();
     
-    // Mostrar alertas para pedidos urgentes
-    this.mostrarAlertasPedidosUrgentes();
-    
-    // Mostrar alertas para pedidos sin producir
-    this.mostrarAlertasPedidosSinProducir();
+    // Mostrar alertas solo si se solicita explícitamente
+    if (mostrarAlertas) {
+      // Mostrar alertas para pedidos urgentes
+      this.mostrarAlertasPedidosUrgentes();
+      
+      // Mostrar alertas para pedidos sin producir
+      this.mostrarAlertasPedidosSinProducir();
+    }
   }
   
   // Método para procesar pedidos sin producir
@@ -504,6 +520,11 @@ export class DespachosComponent implements OnInit {
   
   // Mostrar alertas para pedidos urgentes
   mostrarAlertasPedidosUrgentes() {
+    // Verificar si debe mostrar la alerta basado en la frecuencia
+    if (!this.deberMostrarAlerta('urgentes')) {
+      return;
+    }
+    
     // Filtrar los pedidos urgentes excluyendo los despachados y entregados
     const pedidosUrgentesPendientes = this.pedidosUrgentes.filter(
       pedido => pedido.estadoProceso !== EstadoProceso.Despachado && 
@@ -511,6 +532,9 @@ export class DespachosComponent implements OnInit {
     );
     
     if (pedidosUrgentesPendientes.length > 0 && this.mostrarAlertasAvanzadas) {
+      // Marcar que se mostró la alerta
+      this.ultimaAlertaPedidosUrgentes = new Date();
+      
       const cantidadUrgentes = pedidosUrgentesPendientes.length;
       const pedidosMasUrgentes = pedidosUrgentesPendientes
         .slice(0, Math.min(3, cantidadUrgentes))
@@ -843,9 +867,17 @@ export class DespachosComponent implements OnInit {
   
   // Método para mostrar alertas de pedidos sin producir
   mostrarAlertasPedidosSinProducir() {
+    // Verificar si debe mostrar la alerta basado en la frecuencia
+    if (!this.deberMostrarAlerta('sinProducir')) {
+      return;
+    }
+    
     const pedidosSinProducirUrgentes = this.obtenerPedidosSinProducirUrgentes();
     
     if (pedidosSinProducirUrgentes.length > 0 && this.mostrarAlertasAvanzadas) {
+      // Marcar que se mostró la alerta
+      this.ultimaAlertaPedidosSinProducir = new Date();
+      
       const cantidadUrgentes = pedidosSinProducirUrgentes.length;
       const pedidosMasUrgentes = pedidosSinProducirUrgentes
         .slice(0, Math.min(3, cantidadUrgentes))
@@ -1140,7 +1172,7 @@ export class DespachosComponent implements OnInit {
     this.fechaFinal.setDate(this.fechaFinal.getDate() + 7); // Una semana desde hoy
     this.fechaFinal.setHours(23, 59, 59, 999);
     
-    this.refrescarDatos();
+    this.refrescarDatos(false); // No mostrar alertas en clear
     
     // Si se proporciona una tabla, limpiarla
     if (table) {
@@ -1149,7 +1181,7 @@ export class DespachosComponent implements OnInit {
   }
 
   refrescar(table?: Table) {
-    this.refrescarDatos();
+    this.refrescarDatos(false); // No mostrar alertas en refrescar manual
     if (table) {
       table.clear();
     }
@@ -1213,6 +1245,7 @@ export class DespachosComponent implements OnInit {
         fullscreen: false,
         ariaLabelledBy: 'modal-basic-title'
       }).result.then((result) => {
+        this.actualizarValoresPedido(order);
         this.editOrder(order);
       }, (reason) => {
         if (reason !== 'Cross click') {
@@ -1260,7 +1293,7 @@ export class DespachosComponent implements OnInit {
     }
     
     this.ventasService.editOrder(order).subscribe((data) => {
-      this.refrescarDatos();
+      this.refrescarDatos(false); // No mostrar alertas al editar pedido
       Swal.fire({
         icon: 'success',
         title: 'Pedido actualizado correctamente',
@@ -1361,7 +1394,7 @@ export class DespachosComponent implements OnInit {
     }
 
     this.ventasService.editOrder(order).subscribe((data) => {
-      this.refrescarDatos();
+      this.refrescarDatos(false); // No mostrar alertas al cambiar estado
       Swal.fire({
         icon: 'success',
         title: 'Pedido actualizado correctamente',
@@ -1404,7 +1437,7 @@ export class DespachosComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.ventasService.deleteOrder(order).subscribe((data) => {
-          this.refrescarDatos();
+          this.refrescarDatos(false); // No mostrar alertas al eliminar pedido
           Swal.fire(
             'Eliminado',
             'El pedido ha sido eliminado.',
@@ -1490,7 +1523,7 @@ export class DespachosComponent implements OnInit {
 
     this.loading = true;
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
-      this.orders = data;
+      this.orders = data as PedidoPriorizado[];
       this.orders.forEach(order => {
         if (order.fechaCreacion) {
           order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
@@ -1498,6 +1531,13 @@ export class DespachosComponent implements OnInit {
         order.anticipo = order.anticipo ?? 0;
         order.faltaPorPagar = (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
       });
+      
+      // Aplicar algoritmo de priorización sin mostrar alertas en buscarPorFechas
+      this.aplicarAlgoritmoPriorizacion(false);
+      
+      // Calcular métricas para análisis KAI
+      this.calcularMetricas();
+      
       this.loading = false;
     });
 
@@ -1510,7 +1550,7 @@ export class DespachosComponent implements OnInit {
     const fechaActual = new Date();
     this.fechaInicial = new Date(fechaActual.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaActual.setHours(23, 59, 59, 999));
-    this.refrescarDatos();
+    this.refrescarDatos(false); // No mostrar alertas en filtros rápidos
   }
 
   filtrarParaManana(): void {
@@ -1518,7 +1558,7 @@ export class DespachosComponent implements OnInit {
     fechaManana.setDate(fechaManana.getDate() + 1);
     this.fechaInicial = new Date(fechaManana.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaManana.setHours(23, 59, 59, 999));
-    this.refrescarDatos();
+    this.refrescarDatos(false); // No mostrar alertas en filtros rápidos
   }
 
   filtrarParaPasadoManana(): void {
@@ -1526,7 +1566,7 @@ export class DespachosComponent implements OnInit {
     fechaPasadoManana.setDate(fechaPasadoManana.getDate() + 2);
     this.fechaInicial = new Date(fechaPasadoManana.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaPasadoManana.setHours(23, 59, 59, 999));
-    this.refrescarDatos();
+    this.refrescarDatos(false); // No mostrar alertas en filtros rápidos
   }
 
   AsentarPago(content, order: Pedido) {
@@ -2934,6 +2974,101 @@ export class DespachosComponent implements OnInit {
     });
   }
 
+  // Método para verificar si debe mostrar una alerta basado en la frecuencia
+  private deberMostrarAlerta(tipoAlerta: 'urgentes' | 'sinProducir'): boolean {
+    const ahora = new Date();
+    let ultimaAlerta: Date | null = null;
+    
+    if (tipoAlerta === 'urgentes') {
+      ultimaAlerta = this.ultimaAlertaPedidosUrgentes;
+    } else if (tipoAlerta === 'sinProducir') {
+      ultimaAlerta = this.ultimaAlertaPedidosSinProducir;
+    }
+    
+    // Si nunca se ha mostrado la alerta, permitir mostrarla
+    if (!ultimaAlerta) {
+      return true;
+    }
+    
+    // Verificar si ha pasado el tiempo suficiente desde la última alerta
+    const tiempoTranscurrido = ahora.getTime() - ultimaAlerta.getTime();
+    return tiempoTranscurrido >= this.intervaloBetweenAlertas;
+  }
+  
+  // Método para forzar el reinicio de las alertas (útil para botones de acción)
+  public reiniciarControlAlertas(): void {
+    this.ultimaAlertaPedidosUrgentes = null;
+    this.ultimaAlertaPedidosSinProducir = null;
+    
+    Swal.fire({
+      title: 'Alertas Reiniciadas',
+      text: 'Las alertas de prioridad han sido reiniciadas y se mostrarán nuevamente cuando sea necesario.',
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+  
+  // Método para configurar el intervalo entre alertas (en minutos)
+  public configurarIntervaloAlertas(minutos: number): void {
+    this.intervaloBetweenAlertas = minutos * 60 * 1000;
+  }
+  
+  // Método para verificar si hay alertas pendientes de mostrar
+  public hayAlertasPendientes(): boolean {
+    const pedidosUrgentesPendientes = this.pedidosUrgentes.filter(
+      pedido => pedido.estadoProceso !== EstadoProceso.Despachado && 
+               pedido.estadoProceso !== EstadoProceso.Entregado
+    );
+    
+    const pedidosSinProducirUrgentes = this.obtenerPedidosSinProducirUrgentes();
+    
+    return pedidosUrgentesPendientes.length > 0 || pedidosSinProducirUrgentes.length > 0;
+  }
+  
+  // Método para mostrar resumen de alertas sin modales intrusivos
+  public mostrarResumenAlertas(): void {
+    if (!this.hayAlertasPendientes()) {
+      Swal.fire({
+        title: 'Estado de Alertas',
+        text: 'No hay alertas de prioridad pendientes en este momento.',
+        icon: 'info',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      return;
+    }
+    
+    const pedidosUrgentesPendientes = this.obtenerConteoPedidosUrgentesNoDespachados();
+    const pedidosSinProducirUrgentes = this.obtenerConteoPedidosSinProducirUrgentes();
+    
+    let mensaje = 'Resumen de alertas de prioridad:\n\n';
+    
+    if (pedidosUrgentesPendientes > 0) {
+      mensaje += `• ${pedidosUrgentesPendientes} pedidos urgentes pendientes de despacho\n`;
+    }
+    
+    if (pedidosSinProducirUrgentes > 0) {
+      mensaje += `• ${pedidosSinProducirUrgentes} pedidos urgentes sin iniciar producción\n`;
+    }
+    
+    Swal.fire({
+      title: 'Alertas de Prioridad',
+      text: mensaje,
+      icon: 'warning',
+      confirmButtonText: 'Ver detalles',
+      showCancelButton: true,
+      cancelButtonText: 'Cerrar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Reiniciar alertas y mostrarlas
+        this.reiniciarControlAlertas();
+        this.mostrarAlertasPedidosUrgentes();
+        this.mostrarAlertasPedidosSinProducir();
+      }
+    });
+  }
+  
   // Método para ordenar fechas cronológicamente (para usar con keyvalue pipe)
   orderByDate = (a: any, b: any): number => {
     // Convertir las claves (que son timestamps) a números y comparar
