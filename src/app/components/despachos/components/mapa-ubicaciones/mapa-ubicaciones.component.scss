@@ -1,0 +1,413 @@
+// Variables para el mapa
+$primary-color: #2196F3;
+$success-color: #28a745;
+$warning-color: #ffc107;
+$info-color: #17a2b8;
+$danger-color: #dc3545;
+$border-radius: 8px;
+
+// Contenedor principal del mapa
+.mapa-ubicaciones-container {
+  .mapa-header {
+    h6 {
+      color: #495057;
+      font-weight: 600;
+    }
+    
+    small {
+      font-size: 0.85rem;
+    }
+  }
+
+  // Leyenda de estados
+  .mapa-leyenda {
+    background: #ffffff;
+    border-radius: $border-radius;
+    padding: 0.75rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    .leyenda-item {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+      &.despachado {
+        background-color: $success-color;
+        animation: pulse-green 2s infinite;
+      }
+
+      &.para-despachar {
+        background-color: $warning-color;
+      }
+
+      &.empacado {
+        background-color: $info-color;
+      }
+
+      &.producido {
+        background-color: #6f42c1;
+      }
+    }
+
+    small {
+      font-size: 0.8rem;
+      color: #495057 !important;
+      font-weight: 600;
+    }
+  }
+
+  // Wrapper del mapa
+  .mapa-wrapper {
+    position: relative;
+    border-radius: $border-radius;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+
+    .mapa-container {
+      width: 100%;
+      background: #f8f9fa;
+      z-index: 1;
+    }
+
+    // Overlay de carga
+    .mapa-loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+
+      .spinner-border {
+        width: 3rem;
+        height: 3rem;
+      }
+
+      p {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+    }
+
+    // Mensaje de error
+    .mapa-error {
+      background: #f8f9fa;
+      color: #6c757d;
+      
+      i {
+        font-size: 3rem;
+      }
+
+      h6 {
+        color: #495057;
+      }
+    }
+  }
+
+  // Panel de información
+  .mapa-info {
+    .info-card {
+      transition: all 0.2s ease;
+      border: 1px solid #e9ecef;
+      background: #ffffff !important;
+
+      &:hover {
+        background: #f8f9fa !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .fw-bold {
+        font-size: 1.2rem;
+        line-height: 1.2;
+        color: #495057 !important;
+        
+        &.text-primary {
+          color: #0d6efd !important;
+        }
+        
+        &.text-success {
+          color: #198754 !important;
+        }
+        
+        &.text-warning {
+          color: #ffc107 !important;
+        }
+        
+        &.text-info {
+          color: #0dcaf0 !important;
+        }
+      }
+
+      small {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6c757d !important;
+      }
+    }
+  }
+
+  // Lista de pedidos (fallback)
+  .pedidos-lista {
+    .pedido-item {
+      transition: all 0.2s ease;
+      border-color: #e9ecef !important;
+
+      &:hover {
+        border-color: $primary-color !important;
+        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+        transform: translateY(-1px);
+      }
+
+      .card-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0d6efd !important;
+      }
+
+      .card-text {
+        line-height: 1.3;
+        color: #495057 !important;
+      }
+
+      .badge {
+        font-size: 0.7rem;
+        padding: 0.25em 0.5em;
+      }
+
+      .small {
+        font-size: 0.8rem;
+        line-height: 1.4;
+        color: #6c757d !important;
+
+        i {
+          width: 12px;
+          text-align: center;
+        }
+      }
+    }
+  }
+
+  // Sin datos
+  .sin-datos {
+    background: #f8f9fa;
+    border-radius: $border-radius;
+    border: 2px dashed #dee2e6;
+    color: #6c757d;
+
+    i {
+      opacity: 0.5;
+    }
+
+    h6, p {
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+// Indicador de estado en tiempo real
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #dc3545;
+
+  &.active {
+    background-color: $success-color;
+    animation: pulse-green 2s infinite;
+  }
+}
+
+// Animaciones
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Estilos globales para Leaflet (cuando se carga)
+:host ::ng-deep {
+  // Marcadores personalizados
+  .custom-marker {
+    background: none !important;
+    border: none !important;
+  }
+
+  .marker-container {
+    position: relative;
+    cursor: pointer;
+    z-index: 1000;
+  }
+
+  // Popups personalizados
+  .leaflet-popup-content-wrapper {
+    border-radius: $border-radius;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .leaflet-popup-content {
+    margin: 0;
+    
+    .popup-pedido {
+      .badge {
+        &.bg-success {
+          background-color: $success-color !important;
+        }
+        
+        &.bg-warning {
+          background-color: $warning-color !important;
+          color: #000 !important;
+        }
+        
+        &.bg-info {
+          background-color: $info-color !important;
+          color: #fff !important;
+        }
+        
+        &.bg-primary {
+          background-color: $primary-color !important;
+        }
+        
+        &.bg-secondary {
+          background-color: #6c757d !important;
+        }
+      }
+    }
+  }
+
+  .leaflet-popup-tip {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  // Controles del mapa
+  .leaflet-control-zoom {
+    border-radius: $border-radius;
+    overflow: hidden;
+    
+    a {
+      border-radius: 0;
+      
+      &:first-child {
+        border-radius: $border-radius $border-radius 0 0;
+      }
+      
+      &:last-child {
+        border-radius: 0 0 $border-radius $border-radius;
+      }
+    }
+  }
+
+  // Atribución
+  .leaflet-control-attribution {
+    font-size: 0.7rem;
+    background: rgba(255, 255, 255, 0.8);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .mapa-ubicaciones-container {
+    .mapa-leyenda {
+      padding: 0.5rem;
+      
+      .d-flex {
+        flex-direction: column;
+        gap: 0.5rem !important;
+      }
+    }
+
+    .mapa-info {
+      .row {
+        margin: 0 -0.25rem;
+        
+        .col-6, .col-md-3 {
+          padding: 0 0.25rem;
+        }
+      }
+
+      .info-card {
+        padding: 0.5rem !important;
+        
+        .fw-bold {
+          font-size: 1rem;
+        }
+        
+        small {
+          font-size: 0.7rem;
+        }
+      }
+    }
+
+    .pedidos-lista {
+      .row {
+        margin: 0 -0.25rem;
+        
+        .col-md-6, .col-lg-4 {
+          padding: 0 0.25rem;
+          margin-bottom: 0.5rem;
+        }
+      }
+
+      .pedido-item .card-body {
+        padding: 0.75rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .mapa-ubicaciones-container {
+    .mapa-wrapper .mapa-container {
+      height: 300px !important;
+    }
+
+    .sin-datos {
+      padding: 2rem 1rem !important;
+      
+      i {
+        font-size: 2rem !important;
+      }
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .mapa-ubicaciones-container {
+    .mapa-header .btn,
+    .status-indicator {
+      display: none !important;
+    }
+
+    .mapa-wrapper {
+      box-shadow: none;
+      border: 1px solid #000;
+    }
+  }
+}

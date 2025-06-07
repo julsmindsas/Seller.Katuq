@@ -35,6 +35,7 @@ import { GenerarOrdenComponent } from './components/generar-orden/generar-orden.
 import { OrdenesDespachoComponent } from './components/ordenes-despacho/ordenes-despacho.component';
 import { ImprimirPdfComponent } from './components/imprimir-pdf/imprimir-pdf.component';
 import { ObservacionesDetalleComponent } from './components/observaciones-detalle/observaciones-detalle.component';
+import { MapaUbicacionesComponent } from './components/mapa-ubicaciones/mapa-ubicaciones.component';
 
 // Pipes
 import { TotalValorACobrarPipe } from './pipes/total-valor-cobrar.pipe';
@@ -80,6 +81,7 @@ import { TotalValorACobrarPipe } from './pipes/total-valor-cobrar.pipe';
     OrdenesDespachoComponent,
     ImprimirPdfComponent,
     ObservacionesDetalleComponent,
+    MapaUbicacionesComponent,
     TotalValorACobrarPipe
   ]
 })

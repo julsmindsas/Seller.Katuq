@@ -42,11 +42,14 @@ interface MetricasLogistica {
   pedidosEnRiesgo: number;
   pedidosNormales: number;
   pedidosSinProducir: number; // Nuevo campo para pedidos sin producir
+  pedidosEnRuta: number; // Pedidos despachados pero no entregados
+  pedidosDespacho: number; // Pedidos listos para despachar
   porcentajeEntregasTiempo: number;
   tiempoPromedioDespacho: number;
   zonasConRetrasos: {[zona: string]: number};
   transportadoresEficiencia: {[transportador: string]: number};
   prediccionCargaProximosDias: {[fecha: string]: CargaDiaria};
+  ubicacionesPedidos?: UbicacionPedido[]; // Para el mapa de ubicaciones
 }
 
 // Nueva interfaz para la carga diaria
@@ -63,6 +66,21 @@ interface PedidoPriorizado extends Pedido {
   factoresRiesgo?: string[];
   puntajeKAI?: number;
   optimizacionRuta?: boolean;
+}
+
+// Nueva interfaz para ubicaciones de pedidos
+interface UbicacionPedido {
+  nroPedido: string;
+  estado: EstadoProceso;
+  cliente: string;
+  direccion: string;
+  latitud?: number;
+  longitud?: number;
+  transportador?: string;
+  fechaEntrega: string;
+  horaEstimada?: string;
+  distanciaRestante?: number; // en km
+  tiempoEstimado?: number; // en minutos
 }
 
 @Component({
@@ -121,10 +139,13 @@ export class DespachosComponent implements OnInit {
   pedidosEnRiesgo: PedidoPriorizado[] = [];
   pedidosNormales: PedidoPriorizado[] = [];
   pedidosSinProducir: PedidoPriorizado[] = []; // Nueva propiedad para pedidos sin producir
+  pedidosEnRuta: Pedido[] = []; // Pedidos despachados en ruta
+  pedidosParaDespacho: Pedido[] = []; // Pedidos listos para despachar
   diasUmbralUrgente: number = 1; // Pedidos con 1 día o menos para entrega
   diasUmbralRiesgo: number = 3; // Pedidos con 3 días o menos para entrega
   mostrarAlertasAvanzadas: boolean = true;
   kaiPredicciones: any = null;
+  mostrarMapa: boolean = false; // Control para mostrar/ocultar mapa
   
   // Control de frecuencia para modales de advertencia
   private ultimaAlertaPedidosUrgentes: Date | null = null;
@@ -562,12 +583,15 @@ export class DespachosComponent implements OnInit {
       pedidosUrgentes: 0,
       pedidosEnRiesgo: 0,
       pedidosNormales: 0,
-      pedidosSinProducir: 0, // Inicializar contador de pedidos sin producir
+      pedidosSinProducir: 0, // Inicializar el nuevo campo
+      pedidosEnRuta: 0, // Pedidos despachados pero no entregados
+      pedidosDespacho: 0, // Pedidos listos para despachar
       porcentajeEntregasTiempo: 0,
       tiempoPromedioDespacho: 0,
       zonasConRetrasos: {},
       transportadoresEficiencia: {},
-      prediccionCargaProximosDias: {}
+      prediccionCargaProximosDias: {},
+      ubicacionesPedidos: [] // Para el mapa de ubicaciones
     };
     
     // Inicializar kaiPredicciones para evitar errores de null
@@ -581,11 +605,21 @@ export class DespachosComponent implements OnInit {
   
   // Calcular métricas para análisis KAI
   calcularMetricas() {
+    // Clasificar pedidos por estado de despacho
+    this.pedidosEnRuta = this.orders.filter(p => p.estadoProceso === EstadoProceso.Despachado);
+    this.pedidosParaDespacho = this.orders.filter(p => 
+      p.estadoProceso === EstadoProceso.ParaDespachar || 
+      p.estadoProceso === EstadoProceso.Empacado ||
+      p.estadoProceso === EstadoProceso.ProducidoTotalmente
+    );
+    
     // Contar pedidos por categoría
     this.metricasLogistica.pedidosUrgentes = this.pedidosUrgentes.length;
     this.metricasLogistica.pedidosEnRiesgo = this.pedidosEnRiesgo.length;
     this.metricasLogistica.pedidosNormales = this.pedidosNormales.length;
     this.metricasLogistica.pedidosSinProducir = this.pedidosSinProducir.length; // Actualizar contador
+    this.metricasLogistica.pedidosEnRuta = this.pedidosEnRuta.length;
+    this.metricasLogistica.pedidosDespacho = this.pedidosParaDespacho.length;
     
     // Calcular porcentaje de entregas a tiempo (simulado para demostración)
     const entregados = this.orders.filter(p => p.estadoProceso === 'Entregado');
@@ -690,8 +724,87 @@ export class DespachosComponent implements OnInit {
       };
     }
     
+    // Generar ubicaciones para el mapa
+    this.generarUbicacionesPedidos();
+    
     // Simular predicciones de KAI
     this.generarPrediccionesKAI();
+  }
+
+  // Método para generar ubicaciones simuladas de pedidos para el mapa
+  generarUbicacionesPedidos() {
+    const ubicaciones: UbicacionPedido[] = [];
+    
+    // Coordenadas base para diferentes ciudades (simuladas)
+    const ciudadesBase = {
+      'Bogotá': { lat: 4.6097, lng: -74.0817 },
+      'Medellín': { lat: 6.2486, lng: -75.5742 },
+      'Cali': { lat: 3.4516, lng: -76.5320 },
+      'Barranquilla': { lat: 10.9639, lng: -74.7965 },
+      'Bucaramanga': { lat: 7.1253, lng: -73.1198 }
+    };
+
+    // Procesar pedidos en ruta y para despacho
+    [...this.pedidosEnRuta, ...this.pedidosParaDespacho].forEach(pedido => {
+      const ciudad = pedido.envio?.ciudad || 'Bogotá';
+      const coordBase = ciudadesBase[ciudad] || ciudadesBase['Bogotá'];
+      
+      // Agregar variación aleatoria para simular direcciones específicas
+      const variacion = 0.05; // Aproximadamente 5km de variación
+      const latitud = coordBase.lat + (Math.random() - 0.5) * variacion;
+      const longitud = coordBase.lng + (Math.random() - 0.5) * variacion;
+
+      const ubicacion: UbicacionPedido = {
+        nroPedido: pedido.nroPedido || '',
+        estado: pedido.estadoProceso,
+        cliente: pedido.cliente?.nombres_completos || 
+                pedido.cliente?.apellidos_completos || 
+                'Cliente sin nombre',
+        direccion: pedido.envio?.direccionEntrega || 'Dirección no especificada',
+        latitud: latitud,
+        longitud: longitud,
+        transportador: pedido.transportador?.nombres || 'Sin asignar',
+        fechaEntrega: pedido.fechaEntrega || '',
+        horaEstimada: pedido.horarioEntrega || '',
+        distanciaRestante: Math.floor(Math.random() * 20) + 1, // 1-20 km
+        tiempoEstimado: Math.floor(Math.random() * 60) + 10 // 10-70 minutos
+      };
+
+      ubicaciones.push(ubicacion);
+    });
+
+    // Actualizar las métricas con las ubicaciones
+    if (this.metricasLogistica) {
+      this.metricasLogistica.ubicacionesPedidos = ubicaciones;
+    }
+  }
+
+  // Método para obtener pedidos en ruta
+  obtenerPedidosEnRuta(): Pedido[] {
+    return this.pedidosEnRuta;
+  }
+
+  // Método para obtener pedidos listos para despacho
+  obtenerPedidosParaDespacho(): Pedido[] {
+    return this.pedidosParaDespacho;
+  }
+
+  // Método para alternar la visualización del mapa
+  toggleMapa(): void {
+    this.mostrarMapa = !this.mostrarMapa;
+    if (this.mostrarMapa) {
+      // Actualizar ubicaciones cuando se abre el mapa
+      this.generarUbicacionesPedidos();
+    }
+  }
+
+  // Método para obtener datos del mapa
+  obtenerDatosMapa() {
+    return {
+      ubicaciones: this.metricasLogistica?.ubicacionesPedidos || [],
+      centroMapa: { lat: 4.6097, lng: -74.0817 }, // Bogotá como centro por defecto
+      zoom: 11
+    };
   }
   
   // Generar predicciones simuladas para KAI

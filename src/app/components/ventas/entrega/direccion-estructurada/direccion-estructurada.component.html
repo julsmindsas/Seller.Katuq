@@ -67,10 +67,12 @@
               </div>
               <div class="col-3">
                 <label class="form-label small">Letra</label>
-                <select class="form-select" formControlName="letraVia">
-                  <option value="">-</option>
-                  <option *ngFor="let letra of letras" [value]="letra">{{ letra }}</option>
-                </select>
+                <input type="text" 
+                       class="form-control" 
+                       placeholder="A, B, AA..."
+                       formControlName="letraVia"
+                       maxlength="2"
+                       style="text-transform: uppercase;">
               </div>
             </div>
             <!-- Complemento vía -->
@@ -98,10 +100,12 @@
               </div>
               <div class="col-6">
                 <label class="form-label small">Letra</label>
-                <select class="form-select" formControlName="letraCruce">
-                  <option value="">-</option>
-                  <option *ngFor="let letra of letras" [value]="letra">{{ letra }}</option>
-                </select>
+                <input type="text" 
+                       class="form-control" 
+                       placeholder="A, B, BA..."
+                       formControlName="letraCruce"
+                       maxlength="2"
+                       style="text-transform: uppercase;">
               </div>
             </div>
             <!-- Complemento cruce -->
@@ -134,7 +138,33 @@
         <!-- Ciudad (común para ambos tipos) -->
         <div class="mb-3">
           <label class="form-label">Ciudad *</label>
-          <input type="text" class="form-control" placeholder="Ej: Bogotá" formControlName="ciudad">
+          <div class="position-relative">
+            <input type="text" 
+                   class="form-control" 
+                   [class.is-valid]="ciudadValida"
+                   [class.is-invalid]="ciudadInvalida"
+                   placeholder="Ej: Bogotá, Medellín, Cali..." 
+                   formControlName="ciudad"
+                   (input)="validarCiudadEnTiempoReal($event)"
+                   autocomplete="off">
+            
+            <!-- Sugerencias de ciudad -->
+            <div *ngIf="sugerenciasCiudad.length > 0" class="suggestions-dropdown">
+              <div *ngFor="let ciudad of sugerenciasCiudad" 
+                   class="suggestion-item" 
+                   (click)="seleccionarCiudad(ciudad)">
+                {{ ciudad }}
+              </div>
+            </div>
+            
+            <!-- Indicadores de validación -->
+            <div class="valid-feedback" *ngIf="ciudadValida">
+              <i class="pi pi-check"></i> Ciudad válida
+            </div>
+            <div class="invalid-feedback" *ngIf="ciudadInvalida">
+              <i class="pi pi-times"></i> Ciudad no encontrada. Verifica el nombre.
+            </div>
+          </div>
         </div>
 
         <!-- Coordenadas (solo lectura) -->
@@ -168,7 +198,7 @@
             {{ vistaPrevia || 'Completa el formulario para ver la dirección' }}
           </p>
           <small *ngIf="vistaPrevia && !validarDireccionColombiana()" class="text-warning">
-            <i class="pi pi-exclamation-triangle"></i> Revisa los datos ingresados
+            <i class="pi pi-exclamation-triangle"></i> {{ mensajeError || 'Revisa los datos ingresados' }}
           </small>
         </div>
       </form>

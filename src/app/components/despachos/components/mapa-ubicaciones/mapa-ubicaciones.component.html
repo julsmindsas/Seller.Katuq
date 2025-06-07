@@ -1,0 +1,159 @@
+<div class="mapa-ubicaciones-container">
+  <!-- Header del mapa -->
+  <div class="mapa-header d-flex justify-content-between align-items-center mb-3" *ngIf="mostrarControles">
+    <div>
+      <h6 class="mb-1">{{ 'Mapa de Ubicaciones' | translate }}</h6>
+      <small class="text-muted">{{ 'Seguimiento en tiempo real de entregas' | translate }}</small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <!-- Indicador de tiempo real -->
+      <div class="d-flex align-items-center" *ngIf="tiempoReal">
+        <div class="status-indicator active me-2"></div>
+        <small class="text-success">{{ 'Tiempo Real' | translate }}</small>
+      </div>
+      
+      <!-- Botón para ajustar vista -->
+      <button type="button" 
+        class="btn btn-sm btn-outline-secondary"
+        (click)="ajustarVistaAMarcadores()"
+        title="{{ 'Ajustar vista a todas las ubicaciones' | translate }}">
+        <i class="pi pi-search-plus"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Leyenda de estados -->
+  <div class="mapa-leyenda mb-3" *ngIf="mostrarControles">
+    <div class="d-flex flex-wrap gap-3">
+      <div class="d-flex align-items-center">
+        <div class="leyenda-item despachado me-2"></div>
+        <small>{{ 'En Ruta' | translate }} ({{ contadorDespachados }})</small>
+      </div>
+      <div class="d-flex align-items-center">
+        <div class="leyenda-item para-despachar me-2"></div>
+        <small>{{ 'Para Despachar' | translate }} ({{ contadorParaDespachar }})</small>
+      </div>
+      <div class="d-flex align-items-center">
+        <div class="leyenda-item empacado me-2"></div>
+        <small>{{ 'Empacado' | translate }} ({{ contadorEmpacados }})</small>
+      </div>
+      <div class="d-flex align-items-center">
+        <div class="leyenda-item producido me-2"></div>
+        <small>{{ 'Producido' | translate }} ({{ contadorProducidos }})</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor del mapa -->
+  <div class="mapa-wrapper">
+    <div #mapaContainer 
+      class="mapa-container"
+      [style.height]="altura">
+    </div>
+    
+    <!-- Overlay de carga -->
+    <div class="mapa-loading" *ngIf="!leafletCargado">
+      <div class="text-center">
+        <div class="spinner-border text-primary mb-3" role="status">
+          <span class="visually-hidden">{{ 'Cargando mapa...' | translate }}</span>
+        </div>
+        <p class="text-muted">{{ 'Cargando mapa interactivo...' | translate }}</p>
+      </div>
+    </div>
+
+    <!-- Mensaje de error si no se puede cargar -->
+    <div class="mapa-error text-center p-4" *ngIf="leafletCargado && !mapa">
+      <i class="pi pi-exclamation-triangle text-warning fs-2 mb-2"></i>
+      <h6 class="text-muted">{{ 'Error al cargar el mapa' | translate }}</h6>
+      <p class="text-muted small">
+        {{ 'No se pudo inicializar el mapa. Verifique su conexión a internet.' | translate }}
+      </p>
+      <button type="button" 
+        class="btn btn-sm btn-outline-primary"
+        (click)="cargarLeaflet()">
+        <i class="pi pi-refresh me-1"></i>{{ 'Reintentar' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Panel de información rápida -->
+  <div class="mapa-info mt-3" *ngIf="mostrarControles && configuracion.ubicaciones.length > 0">
+    <div class="row g-2">
+      <div class="col-6 col-md-3">
+        <div class="info-card text-center p-2 bg-light rounded">
+          <div class="fw-bold text-primary">{{ configuracion.ubicaciones.length }}</div>
+          <small class="text-muted">{{ 'Total Pedidos' | translate }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="info-card text-center p-2 bg-light rounded">
+          <div class="fw-bold text-success">{{ contadorEnRuta }}</div>
+          <small class="text-muted">{{ 'En Ruta' | translate }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="info-card text-center p-2 bg-light rounded">
+          <div class="fw-bold text-warning">{{ contadorPendientes }}</div>
+          <small class="text-muted">{{ 'Pendientes' | translate }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="info-card text-center p-2 bg-light rounded">
+          <div class="fw-bold text-info">{{ obtenerEstadisticas().tiempoPromedioEstimado || 0 }}</div>
+          <small class="text-muted">{{ 'Min Promedio' | translate }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de pedidos como alternativa al mapa -->
+  <div class="pedidos-lista mt-3" *ngIf="configuracion.ubicaciones.length > 0 && !leafletCargado">
+    <h6 class="mb-3">{{ 'Lista de Pedidos' | translate }}</h6>
+    <div class="row g-2">
+      <div class="col-md-6 col-lg-4" *ngFor="let ubicacion of configuracion.ubicaciones">
+        <div class="card border pedido-item">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="card-title mb-1 text-primary">#{{ ubicacion.nroPedido }}</h6>
+                <p class="card-text small text-muted mb-1">{{ ubicacion.cliente }}</p>
+              </div>
+              <span class="badge" [ngClass]="{
+                'bg-success': ubicacion.estado === 'Despachado',
+                'bg-warning text-dark': ubicacion.estado === 'ParaDespachar',
+                'bg-info': ubicacion.estado === 'Empacado',
+                'bg-primary': ubicacion.estado === 'ProducidoTotalmente'
+              }">{{ ubicacion.estado }}</span>
+            </div>
+            
+            <div class="small text-muted">
+              <div class="mb-1">
+                <i class="pi pi-map-marker me-1"></i>{{ ubicacion.direccion }}
+              </div>
+              <div class="mb-1" *ngIf="ubicacion.transportador">
+                <i class="pi pi-user me-1"></i>{{ ubicacion.transportador }}
+              </div>
+              <div class="d-flex justify-content-between" *ngIf="ubicacion.tiempoEstimado">
+                <span>
+                  <i class="pi pi-clock me-1"></i>{{ ubicacion.tiempoEstimado }} min
+                </span>
+                <span *ngIf="ubicacion.distanciaRestante">
+                  <i class="pi pi-compass me-1"></i>{{ ubicacion.distanciaRestante }} km
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje cuando no hay datos -->
+  <div class="sin-datos text-center p-4" *ngIf="configuracion.ubicaciones.length === 0">
+    <i class="pi pi-map text-muted fs-1 mb-3"></i>
+    <h6 class="text-muted">{{ 'No hay pedidos para mostrar' | translate }}</h6>
+    <p class="text-muted small">
+      {{ 'Cuando haya pedidos en proceso de entrega, aparecerán aquí en el mapa.' | translate }}
+    </p>
+  </div>
+</div>

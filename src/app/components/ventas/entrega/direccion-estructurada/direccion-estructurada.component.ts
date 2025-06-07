@@ -179,6 +179,21 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   esDireccionRural = false;
   ciudadSeleccionada: string = "";
 
+  // Validación de ciudad
+  ciudadValida = false;
+  ciudadInvalida = false;
+  sugerenciasCiudad: string[] = [];
+
+  // Lista de ciudades principales de Colombia
+  ciudadesColombianas = [
+    'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Cúcuta', 'Soledad', 'Ibagué',
+    'Bucaramanga', 'Soacha', 'Santa Marta', 'Villavicencio', 'Valledupar', 'Pereira', 'Montería',
+    'Itagüí', 'Pasto', 'Manizales', 'Neiva', 'Palmira', 'Popayán', 'Buenaventura', 'Tuluá',
+    'Dosquebradas', 'Envigado', 'Cartago', 'Bello', 'Florencia', 'Sincelejo', 'Malambo',
+    'Barrancas', 'Apartadó', 'Turbo', 'Riohacha', 'Girardot', 'Ubaté', 'Zipaquirá', 'Facatativá',
+    'Chía', 'Mosquera', 'Madrid', 'Funza', 'Cajicá', 'La Calera', 'Sopó', 'Tocancipá', 'Gachancipá'
+  ];
+
   // Suscripciones para liberar en OnDestroy
   private suscripciones: Subscription[] = [];
 
@@ -295,50 +310,72 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
   // Parsea una dirección urbana colombiana
   private parsearDireccionUrbana(direccion: string): void {
-    // Patrones mejorados para Colombia
-    const patronPrincipal =
-      /^(Calle|Carrera|Avenida|Diagonal|Transversal|Circular|Autopista|Vía|Kilometro|Troncal|Variante|Anillo Vial)\s+(\d+)(?:\s+([A-Z]))?(?:\s+(Bis|Norte|Sur|Este|Oeste))?/i;
-    const patronCruce =
-      /\#\s*(\d+)(?:\s+([A-Z]))?(?:\s+(Bis|Norte|Sur|Este|Oeste))?/i;
-    const patronNumeroCasa = /-\s*(\d+)/i;
-
-    // Extraer la vía principal
-    const matchPrincipal = direccion.match(patronPrincipal);
-    if (matchPrincipal) {
-      this.direccionForm.get("tipoVia")?.setValue(matchPrincipal[1]);
-      this.direccionForm.get("numeroVia")?.setValue(matchPrincipal[2]);
-
-      if (matchPrincipal[3]) {
-        this.direccionForm.get("letraVia")?.setValue(matchPrincipal[3]);
+    // Patrones mejorados para Colombia - más flexibles
+    const patronCompleto = /^(Calle|Carrera|Avenida|Diagonal|Transversal|Circular|Autopista|Vía|Kilometro|Troncal|Variante|Anillo Vial)\s+(\d+)(?:\s*([A-Z]{1,2}))?(?:\s+(Bis|Norte|Sur|Este|Oeste))?\s*(?:#\s*)?(\d+)(?:\s*([A-Z]{1,2}))?(?:\s+(Bis|Norte|Sur|Este|Oeste))?\s*(?:-\s*|\s+CASA\s+|\s+)(.+?)(?:\s*,.*)?$/i;
+    
+    const matchCompleto = direccion.match(patronCompleto);
+    
+    if (matchCompleto) {
+      // Vía principal
+      this.direccionForm.get("tipoVia")?.setValue(matchCompleto[1]);
+      this.direccionForm.get("numeroVia")?.setValue(matchCompleto[2]);
+      
+      if (matchCompleto[3]) {
+        this.direccionForm.get("letraVia")?.setValue(matchCompleto[3].toUpperCase());
       }
-
-      if (matchPrincipal[4]) {
-        this.direccionForm.get("complementoVia")?.setValue(matchPrincipal[4]);
+      
+      if (matchCompleto[4]) {
+        this.direccionForm.get("complementoVia")?.setValue(matchCompleto[4]);
       }
-    }
-
-    // Extraer el cruce
-    const matchCruce = direccion.match(patronCruce);
-    if (matchCruce) {
-      this.direccionForm.get("numero")?.setValue(matchCruce[1]);
-
-      if (matchCruce[2]) {
-        this.direccionForm.get("letraCruce")?.setValue(matchCruce[2]);
+      
+      // Cruce
+      if (matchCompleto[5]) {
+        this.direccionForm.get("numero")?.setValue(matchCompleto[5]);
       }
-
-      if (matchCruce[3]) {
-        this.direccionForm.get("complementoCruce")?.setValue(matchCruce[3]);
+      
+      if (matchCompleto[6]) {
+        this.direccionForm.get("letraCruce")?.setValue(matchCompleto[6].toUpperCase());
       }
-    }
-
-    // Extraer el número de casa
-    const matchNumeroCasa = direccion.match(patronNumeroCasa);
-    if (matchNumeroCasa) {
-      this.direccionForm.get("numeroCasa")?.setValue(matchNumeroCasa[1]);
+      
+      if (matchCompleto[7]) {
+        this.direccionForm.get("complementoCruce")?.setValue(matchCompleto[7]);
+      }
+      
+      // Número de casa - extraer solo números si hay texto adicional
+      if (matchCompleto[8]) {
+        let numeroCasa = matchCompleto[8].trim();
+        // Extraer números del texto (ej: "160 CASA 119" -> "160")
+        const soloNumeros = numeroCasa.match(/^\d+/);
+        if (soloNumeros) {
+          numeroCasa = soloNumeros[0];
+        }
+        this.direccionForm.get("numeroCasa")?.setValue(numeroCasa);
+      }
+    } else {
+      // Intentar parseo alternativo para casos más complejos
+      this.parseoAlternativo(direccion);
     }
 
     // Establecer valores por defecto si falta información requerida
     this.establecerValoresPorDefecto();
+  }
+
+  // Método de parseo alternativo para direcciones complejas
+  private parseoAlternativo(direccion: string): void {
+    // Buscar elementos básicos por separado
+    const tipoVia = direccion.match(/^(Calle|Carrera|Avenida|Diagonal|Transversal|Circular|Autopista|Vía|Kilometro|Troncal|Variante|Anillo Vial)/i);
+    const numeroVia = direccion.match(/(?:Calle|Carrera|Avenida|Diagonal|Transversal|Circular|Autopista|Vía|Kilometro|Troncal|Variante|Anillo Vial)\s+(\d+)/i);
+    const letraVia = direccion.match(/(?:Calle|Carrera|Avenida|Diagonal|Transversal|Circular|Autopista|Vía|Kilometro|Troncal|Variante|Anillo Vial)\s+\d+\s*([A-Z]{1,2})/i);
+    const numeroCruce = direccion.match(/\s(\d+)(?:[A-Z]{0,2})?\s*(?:CASA|\-|$)/i);
+    const letraCruce = direccion.match(/\s\d+([A-Z]{1,2})\s*(?:CASA|\-|$)/i);
+    const numeroCasa = direccion.match(/(?:CASA\s+|\-\s*)(\d+)/i);
+
+    if (tipoVia) this.direccionForm.get("tipoVia")?.setValue(tipoVia[1]);
+    if (numeroVia) this.direccionForm.get("numeroVia")?.setValue(numeroVia[1]);
+    if (letraVia) this.direccionForm.get("letraVia")?.setValue(letraVia[1].toUpperCase());
+    if (numeroCruce) this.direccionForm.get("numero")?.setValue(numeroCruce[1]);
+    if (letraCruce) this.direccionForm.get("letraCruce")?.setValue(letraCruce[1].toUpperCase());
+    if (numeroCasa) this.direccionForm.get("numeroCasa")?.setValue(numeroCasa[1]);
   }
 
   // Parsea una dirección rural colombiana
@@ -468,12 +505,41 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   validarDireccionColombiana(): boolean {
     const form = this.direccionForm.value;
 
-    // Usar el servicio colombiano para validación completa
-    const validacion =
-      this.colombiaAddressService.validarDireccionCompleta(form);
+    // Validación básica simplificada y más permisiva
+    if (form.esRural) {
+      // Validación rural
+      if (!form.tipoNomenclaturaRural || !form.nombreRural) {
+        this.mensajeError = "Completa el tipo y nombre de la ubicación rural";
+        return false;
+      }
+    } else {
+      // Validación urbana
+      if (!form.tipoVia || !form.numeroVia || !form.numero || !form.numeroCasa) {
+        this.mensajeError = "Completa los campos obligatorios de la dirección urbana";
+        return false;
+      }
 
-    if (!validacion.valida) {
-      this.mensajeError = validacion.errores.join(", ");
+      // Validar que los números sean válidos
+      if (!/^\d+$/.test(form.numeroVia) || !/^\d+$/.test(form.numero) || !/^\d+$/.test(form.numeroCasa)) {
+        this.mensajeError = "Los números de vía, cruce y casa deben ser valores numéricos";
+        return false;
+      }
+
+      // Validar letras si están presentes (más permisivo)
+      if (form.letraVia && !/^[A-Z]{1,2}$/i.test(form.letraVia)) {
+        this.mensajeError = "La letra de vía debe ser una o dos letras";
+        return false;
+      }
+
+      if (form.letraCruce && !/^[A-Z]{1,2}$/i.test(form.letraCruce)) {
+        this.mensajeError = "La letra de cruce debe ser una o dos letras";
+        return false;
+      }
+    }
+
+    // Validar ciudad
+    if (!form.ciudad || form.ciudad.trim().length < 2) {
+      this.mensajeError = "Ingresa una ciudad válida";
       return false;
     }
 
@@ -703,5 +769,39 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   buscarCoordenadas(): void {
     this.actualizarVistaPrevia();
     this.geocodificarDireccion();
+  }
+
+  // Validar ciudad en tiempo real
+  validarCiudadEnTiempoReal(event: any): void {
+    const ciudad = event.target.value.trim();
+    
+    if (ciudad.length < 2) {
+      this.ciudadValida = false;
+      this.ciudadInvalida = false;
+      this.sugerenciasCiudad = [];
+      return;
+    }
+
+    // Buscar coincidencias
+    this.sugerenciasCiudad = this.ciudadesColombianas
+      .filter(c => c.toLowerCase().includes(ciudad.toLowerCase()))
+      .slice(0, 5);
+
+    // Validar si es una ciudad exacta
+    const ciudadExacta = this.ciudadesColombianas.find(c => 
+      c.toLowerCase() === ciudad.toLowerCase()
+    );
+
+    this.ciudadValida = !!ciudadExacta;
+    this.ciudadInvalida = ciudad.length >= 3 && !ciudadExacta && this.sugerenciasCiudad.length === 0;
+  }
+
+  // Seleccionar ciudad de las sugerencias
+  seleccionarCiudad(ciudad: string): void {
+    this.direccionForm.get('ciudad')?.setValue(ciudad);
+    this.ciudadSeleccionada = ciudad;
+    this.ciudadValida = true;
+    this.ciudadInvalida = false;
+    this.sugerenciasCiudad = [];
   }
 }
