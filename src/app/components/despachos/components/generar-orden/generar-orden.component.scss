@@ -109,7 +109,7 @@ $light-color: #f8f9fa;
   overflow: hidden;
 }
 
-// Estilos para alertas
+/* Estilos para alertas */
 .alert {
   border-radius: 4px;
   padding: 0.75rem 1.25rem;
@@ -118,10 +118,19 @@ $light-color: #f8f9fa;
     background-color: rgba($primary-color, 0.1);
     border-color: rgba($primary-color, 0.2);
     color: darken($primary-color, 20%);
+    
+    .pi-info-circle {
+      color: $primary-color;
+    }
+    
+    .small {
+      margin-top: 0.25rem;
+      opacity: 0.8;
+    }
   }
 }
 
-// Estilos para badges
+/* Estilos para badges */
 .badge {
   font-weight: 500;
   padding: 0.5em 0.85em;
@@ -130,6 +139,23 @@ $light-color: #f8f9fa;
   
   &.bg-primary {
     background-color: $primary-color !important;
+  }
+  
+  &.bg-warning {
+    background-color: $warning-color !important;
+    color: #000 !important;
+    
+    .pi-exclamation-triangle {
+      color: darken($warning-color, 30%);
+    }
+  }
+  
+  &.bg-success {
+    background-color: $success-color !important;
+    
+    .pi-check {
+      color: lighten($success-color, 20%);
+    }
   }
 }
 
@@ -209,6 +235,17 @@ $light-color: #f8f9fa;
       color: white;
     }
   }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    
+    &:hover {
+      background-color: initial;
+      color: initial;
+      border-color: initial;
+    }
+  }
 }
 
 /* Estilos para el input de fecha */
@@ -286,6 +323,31 @@ $light-color: #f8f9fa;
   padding: 1rem;
 }
 
+/* Estilos para form switches */
+.form-check-switch {
+  .form-check-input {
+    width: 2rem;
+    height: 1rem;
+    background-color: #dee2e6;
+    border: none;
+    
+    &:checked {
+      background-color: $primary-color;
+      border-color: $primary-color;
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 0.25rem rgba($primary-color, 0.25);
+    }
+  }
+  
+  .form-check-label {
+    font-size: 0.875rem;
+    color: #495057;
+    margin-left: 0.5rem;
+  }
+}
+
 /* Clases de utilidad */
 .text-small {
   font-size: 0.85rem;
@@ -295,4 +357,93 @@ $light-color: #f8f9fa;
   height: 35px;
   font-size: 0.875rem;
   padding: 0.25rem 0.5rem;
-} 
+}
+
+/* Estilos específicos para pedidos movidos */
+.table-info {
+  background-color: rgba(13, 202, 240, 0.1) !important;
+  border-left: 3px solid #0dcaf0;
+}
+
+.badge.bg-info {
+  background-color: #0dcaf0 !important;
+  color: #000 !important;
+  
+  .pi-refresh {
+    color: #087990;
+  }
+}
+
+/* Estilos para botones de mover pedidos */
+.btn-outline-info {
+  color: #0dcaf0;
+  border-color: #0dcaf0;
+  
+  &:hover {
+    background-color: #0dcaf0;
+    color: white;
+    border-color: #0dcaf0;
+  }
+  
+  &.btn-sm {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+/* Estilos para alertas de pedidos movidos */
+.alert-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+  color: #856404;
+  
+  .pi-exclamation-triangle {
+    color: #ffc107;
+  }
+}
+
+/* Mejoras para la columna de estado en orden */
+.d-flex.flex-column.gap-1 {
+  min-width: 120px;
+  
+  .btn {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Estilos para badges en información de orden */
+.badge {
+  &.bg-info {
+    .pi-refresh {
+      animation: rotate 2s linear infinite;
+    }
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .d-flex.flex-column.gap-1 {
+    min-width: 100px;
+    
+    .btn-sm {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.3rem;
+    }
+  }
+  
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.25em 0.5em;
+  }
+}

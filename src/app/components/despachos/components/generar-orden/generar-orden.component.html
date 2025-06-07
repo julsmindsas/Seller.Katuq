@@ -57,19 +57,37 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="card-title m-0">{{ 'Pedidos Disponibles' | translate }}</h5>
           
-          <!-- Selector de columnas -->
-          <div class="d-flex align-items-center gap-2">
-            <label class="me-2 text-nowrap">{{ 'Columnas:' | translate }}</label>
-            <p-multiSelect [options]="displayedColumns" [(ngModel)]="selectedColumns" 
-              optionLabel="header" [style]="{'width':'200px'}" 
-              defaultLabel="Seleccionar columnas" 
-              [ngModelOptions]="{standalone: true}"
-              (onChange)="onColumnSelectionChange()"></p-multiSelect>
+          <!-- Controles de filtrado y columnas -->
+          <div class="d-flex align-items-center gap-3">
+
+            <!-- Filtro para mostrar pedidos en órdenes -->
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="mostrarPedidosEnOrdenes" 
+                [(ngModel)]="mostrarPedidosEnOrdenes" [ngModelOptions]="{standalone: true}"
+                (change)="actualizarPedidosDisponibles()">
+              <label class="form-check-label small" for="mostrarPedidosEnOrdenes">
+                Mostrar pedidos ya en órdenes
+              </label>
+            </div>
+            
+            <!-- Selector de columnas -->
+            <div class="d-flex align-items-center gap-2">
+              <label class="me-2 text-nowrap">{{ 'Columnas:' | translate }}</label>
+              <p-multiSelect [options]="displayedColumns" [(ngModel)]="selectedColumns" 
+                optionLabel="header" [style]="{'width':'200px'}" 
+                defaultLabel="Seleccionar columnas" 
+                [ngModelOptions]="{standalone: true}"
+                (onChange)="onColumnSelectionChange()"></p-multiSelect>
+            </div>
           </div>
         </div>
         
         <div class="alert alert-info" *ngIf="pedidosDisponibles.length === 0">
+          <i class="pi pi-info-circle me-2"></i>
           {{ 'No hay pedidos disponibles para esta fecha y método de envío' | translate }}
+          <div class="small mt-1" *ngIf="!mostrarPedidosEnOrdenes">
+            <em>Tip: Activa "Mostrar pedidos ya en órdenes" para ver todos los pedidos de la fecha y poder moverlos entre órdenes</em>
+          </div>
         </div>
 
         <div class="table-responsive" *ngIf="pedidosDisponibles.length > 0">
@@ -101,6 +119,23 @@
                       <ng-container *ngSwitchCase="'faltaPorPagar'">
                         {{ getNestedProperty(pedido, col.field) | currency }}
                       </ng-container>
+                      <ng-container *ngSwitchCase="'enOrden'">
+                        <div *ngIf="pedidoExisteEnOrden(pedido)" class="d-flex flex-column gap-1">
+                          <span class="badge bg-warning text-dark" 
+                            [title]="'Pedido incluido en la orden: ' + getNumeroOrdenPedido(pedido)">
+                            <i class="pi pi-exclamation-triangle me-1"></i>Orden {{ getNumeroOrdenPedido(pedido) }}
+                          </span>
+                          <button type="button" 
+                            class="btn btn-sm btn-outline-info" 
+                            (click)="moverPedidoDeOrden(pedido)"
+                            [title]="'Mover pedido de la orden ' + getNumeroOrdenPedido(pedido) + ' a esta orden'">
+                            <i class="pi pi-arrow-right me-1"></i>Mover aquí
+                          </button>
+                        </div>
+                        <span *ngIf="!pedidoExisteEnOrden(pedido)" class="badge bg-success">
+                          <i class="pi pi-check me-1"></i>Disponible
+                        </span>
+                      </ng-container>
                       <ng-container *ngSwitchDefault>
                         {{ getNestedProperty(pedido, col.field) }}
                       </ng-container>
@@ -108,9 +143,24 @@
                   </td>
                 </ng-container>
                 <td *ngIf="isActionColumnVisible()">
-                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="agregarPedido(pedido)">
-                    <i class="pi pi-plus"></i> {{ 'Agregar' | translate }}
-                  </button>
+                  <div class="d-flex flex-column gap-1">
+                    <button type="button" 
+                      class="btn btn-sm btn-outline-primary" 
+                      (click)="agregarPedido(pedido)"
+                      [disabled]="pedidoExisteEnOrden(pedido)"
+                      [title]="pedidoExisteEnOrden(pedido) ? 'Este pedido ya existe en la orden: ' + getNumeroOrdenPedido(pedido) : 'Agregar pedido a la orden'">
+                      <i class="pi pi-plus"></i> {{ 'Agregar' | translate }}
+                    </button>
+                    
+                    <!-- Botón para ver detalles de la orden existente -->
+                    <button type="button" 
+                      *ngIf="pedidoExisteEnOrden(pedido)"
+                      class="btn btn-sm btn-outline-secondary" 
+                      (click)="verDetallesOrdenExistente(pedido)"
+                      [title]="'Ver detalles de la orden ' + getNumeroOrdenPedido(pedido)">
+                      <i class="pi pi-eye"></i> Ver orden
+                    </button>
+                  </div>
                 </td>
               </tr>
             </ng-template>
@@ -132,7 +182,12 @@
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="card-title m-0">{{ 'Pedidos Seleccionados' | translate }}</h5>
-          <span class="badge bg-primary">{{ pedidosSeleccionados.length }}</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary">{{ pedidosSeleccionados.length }}</span>
+            <span *ngIf="hayPedidosMovidos" class="badge bg-info">
+              <i class="pi pi-refresh me-1"></i>{{ contarPedidosMovidos() }} movidos
+            </span>
+          </div>
         </div>
         
         <div class="table-responsive">
@@ -143,16 +198,31 @@
                 <th>{{ 'Cliente' | translate }}</th>
                 <th>{{ 'Ciudad' | translate }}</th>
                 <th>{{ 'Valor a Cobrar' | translate }}</th>
+                <th>{{ 'Estado' | translate }}</th>
                 <th>{{ 'Acción' | translate }}</th>
               </tr>
             </ng-template>
             
             <ng-template pTemplate="body" let-pedido>
-              <tr>
-                <td>{{ pedido.nroPedido }}</td>
+              <tr [class.table-info]="esPedidoMovido(pedido)">
+                <td>
+                  {{ pedido.nroPedido }}
+                  <span *ngIf="esPedidoMovido(pedido)" class="badge bg-info ms-1" 
+                    [title]="'Movido desde la orden ' + getOrdenAnteriorPedido(pedido)">
+                    <i class="pi pi-refresh"></i>
+                  </span>
+                </td>
                 <td>{{ getNestedProperty(pedido, 'cliente') }}</td>
                 <td>{{ getNestedProperty(pedido, 'ciudad') }}</td>
                 <td>{{ pedido.faltaPorPagar | currency }}</td>
+                <td>
+                  <span *ngIf="esPedidoMovido(pedido)" class="badge bg-warning text-dark">
+                    Movido desde orden {{ getOrdenAnteriorPedido(pedido) }}
+                  </span>
+                  <span *ngIf="!esPedidoMovido(pedido)" class="badge bg-success">
+                    Agregado normalmente
+                  </span>
+                </td>
                 <td>
                   <button type="button" class="btn btn-sm btn-outline-danger" (click)="retirarPedido(pedido)">
                     <i class="pi pi-trash"></i> {{ 'Retirar' | translate }}
@@ -163,12 +233,18 @@
             
             <ng-template pTemplate="footer">
               <tr>
-                <td colspan="3" class="text-end"><strong>{{ 'Total a Cobrar:' | translate }}</strong></td>
+                <td colspan="4" class="text-end"><strong>{{ 'Total a Cobrar:' | translate }}</strong></td>
                 <td>{{ pedidosSeleccionados | totalValorACobrar | currency }}</td>
                 <td></td>
               </tr>
             </ng-template>
           </p-table>
+        </div>
+        
+        <!-- Advertencia si hay pedidos movidos -->
+        <div *ngIf="hayPedidosMovidos" class="alert alert-warning mt-3">
+          <i class="pi pi-exclamation-triangle me-2"></i>
+          <strong>Importante:</strong> Al guardar esta orden, los pedidos movidos serán removidos automáticamente de sus órdenes anteriores.
         </div>
       </div>
     </div>
