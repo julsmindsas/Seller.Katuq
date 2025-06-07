@@ -23,6 +23,7 @@ export class AsentarpagomanualComponent implements OnInit {
 
   permiteAsentarPago: boolean=true;
   valorExcedido: boolean;
+  isDragOver: boolean = false;
 
   constructor(private formasPagoService: MaestroService, private storage: AngularFireStorage, private modalService: NgbModal) { }
 
@@ -78,6 +79,53 @@ export class AsentarpagomanualComponent implements OnInit {
     }
   }
 
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+    
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.selectedFile = files[0];
+    }
+  }
+
+  removeFile() {
+    this.selectedFile = null;
+    const fileInput = document.getElementById('archivo') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  verArchivo(url: string) {
+    window.open(url, '_blank');
+  }
+
+  trackByPago(index: number, pago: Pago): string {
+    return pago.fechaHoraCarga + pago.numeroComprobante;
+  }
+
+  cancelar() {
+    this.transaccionForm.reset();
+    this.selectedFile = null;
+    this.valorExcedido = false;
+    // Reinicializar fecha con la actual
+    this.transaccionForm.get('fecha')?.setValue(new Date().toISOString().split('T')[0]);
+  }
+
 
 
   registrarTransaccion(): void {
@@ -110,20 +158,20 @@ export class AsentarpagomanualComponent implements OnInit {
         task.snapshotChanges().pipe(
           finalize(() => {
             fileRef.getDownloadURL().subscribe(url => {
-              this.transaccionForm.get('archivo').setValue(url);
+              this.transaccionForm.get('archivo')?.setValue(url);
 
               const transacionPago: Pago = {
-                fecha: this.transaccionForm.get('fecha').value,
-                formaPago: this.transaccionForm.get('formaPago').value,
-                valor: this.transaccionForm.get('valor').value,
+                fecha: this.transaccionForm.get('fecha')?.value,
+                formaPago: this.transaccionForm.get('formaPago')?.value,
+                valor: this.transaccionForm.get('valor')?.value,
                 numeroPedido: this.pedido.nroPedido,
-                numeroComprobante: this.transaccionForm.get('numeroComprobante').value,
-                archivo: this.transaccionForm.get('archivo').value,
-                notas: this.transaccionForm.get('notas').value,
+                numeroComprobante: this.transaccionForm.get('numeroComprobante')?.value,
+                archivo: this.transaccionForm.get('archivo')?.value,
+                notas: this.transaccionForm.get('notas')?.value,
                 fechaTransaccion: new Date().toISOString(),
                 valorTotalVenta: this.pedido.totalPedididoConDescuento,
-                valorRegistrado: this.transaccionForm.get('valor').value,
-                valorRestante: this.pedido.totalPedididoConDescuento - ((this.pedido?.PagosAsentados != undefined ? this.pedido?.PagosAsentados?.reduce((a, b) => a + b.valor, 0) : 0) + this.transaccionForm.get('valor').value),
+                valorRegistrado: this.transaccionForm.get('valor')?.value,
+                valorRestante: this.pedido.totalPedididoConDescuento - ((this.pedido?.PagosAsentados != undefined ? this.pedido?.PagosAsentados?.reduce((a, b) => a + b.valor, 0) : 0) + this.transaccionForm.get('valor')?.value),
                 archivoEvidencia: '',
                 usuarioRegistro: (JSON.parse(localStorage.getItem('user')) as UserLite).name,
                 estadoVerificacion: 'Pendiente',
@@ -149,6 +197,9 @@ export class AsentarpagomanualComponent implements OnInit {
 
               // Cierra la alerta cuando la subida se ha completado
               Swal.close();
+              
+              // Limpiar formulario después del registro exitoso
+              this.cancelar();
             });
           })
         ).subscribe();
@@ -173,24 +224,24 @@ export class AsentarpagomanualComponent implements OnInit {
 
   editarPago(pago: Pago) {
 
-    this.transaccionForm.get('fecha').setValue(pago.fecha);
-    this.transaccionForm.get('formaPago').setValue(pago.formaPago);
-    this.transaccionForm.get('valor').setValue(pago.valor);
-    this.transaccionForm.get('numeroComprobante').setValue(pago.numeroComprobante);
-    this.transaccionForm.get('archivo').setValue(pago.archivo);
-    this.transaccionForm.get('notas').setValue(pago.notas);
+    this.transaccionForm.get('fecha')?.setValue(pago.fecha);
+    this.transaccionForm.get('formaPago')?.setValue(pago.formaPago);
+    this.transaccionForm.get('valor')?.setValue(pago.valor);
+    this.transaccionForm.get('numeroComprobante')?.setValue(pago.numeroComprobante);
+    this.transaccionForm.get('archivo')?.setValue(pago.archivo);
+    this.transaccionForm.get('notas')?.setValue(pago.notas);
 
     const transacionPago: Pago = this.pedido.PagosAsentados.find(x => x.fecha == pago.fecha && x.valor == pago.valor && x.numeroComprobante == pago.numeroComprobante);
 
-    transacionPago.fecha = this.transaccionForm.get('fecha').value;
-    transacionPago.formaPago = this.transaccionForm.get('formaPago').value;
-    transacionPago.valor = this.transaccionForm.get('valor').value;
-    transacionPago.numeroComprobante = this.transaccionForm.get('numeroComprobante').value;
-    transacionPago.archivo = this.transaccionForm.get('archivo').value;
-    transacionPago.notas = this.transaccionForm.get('notas').value;
+    transacionPago.fecha = this.transaccionForm.get('fecha')?.value;
+    transacionPago.formaPago = this.transaccionForm.get('formaPago')?.value;
+    transacionPago.valor = this.transaccionForm.get('valor')?.value;
+    transacionPago.numeroComprobante = this.transaccionForm.get('numeroComprobante')?.value;
+    transacionPago.archivo = this.transaccionForm.get('archivo')?.value;
+    transacionPago.notas = this.transaccionForm.get('notas')?.value;
     transacionPago.fechaTransaccion = new Date().toISOString();
-    transacionPago.valorRegistrado = this.transaccionForm.get('valor').value;
-    transacionPago.valorRestante = this.pedido.totalPedididoConDescuento - ((this.pedido?.PagosAsentados != undefined ? this.pedido?.PagosAsentados?.reduce((a, b) => a + b.valor, 0) : 0) + this.transaccionForm.get('valor').value);
+    transacionPago.valorRegistrado = this.transaccionForm.get('valor')?.value;
+    transacionPago.valorRestante = this.pedido.totalPedididoConDescuento - ((this.pedido?.PagosAsentados != undefined ? this.pedido?.PagosAsentados?.reduce((a, b) => a + b.valor, 0) : 0) + this.transaccionForm.get('valor')?.value);
     transacionPago.usuarioRegistro = (JSON.parse(localStorage.getItem('user')) as UserLite).name;
     transacionPago.fechaHoraSistema = new Date().toISOString();
     transacionPago.fechaHoraCarga = new Date().toISOString();

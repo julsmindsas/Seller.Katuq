@@ -21,6 +21,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   ventasMesCheck = false;
   ventasRes: string = '';
+  isAnalyzing = false;
 
   constructor(
     private ventasService: VentasService,
@@ -214,8 +215,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   analizar(tipo: string) {
     switch (tipo) {
       case 'VentasMes':
-
         console.log('Analizando ventas');
+        
+        // Resetear estado
+        this.ventasMesCheck = false;
+        this.ventasRes = '';
+        this.isAnalyzing = true;
 
         const item = {
           "startDate": this.fechaInicial + 'T00:00:00.000Z',
@@ -223,32 +228,89 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           "tipo": "ventas"
         }
 
-        const valor = this.katuqintelligenceService.getAnalitycsGraphs(item).subscribe(
+        this.katuqintelligenceService.getAnalitycsGraphs(item).subscribe(
           (data: any) => {
-            console.log(data);
+            try {
+              console.log('Respuesta del análisis:', data);
+              
+              let valor = data.result;
+              
+              // Limpiar la respuesta JSON
+              if (valor.includes('```json')) {
+                valor = valor.replace(/```json/g, '').replace(/```/g, '').trim();
+              }
+              
+              // Parsear JSON si es necesario
+              if (valor.startsWith('{') || valor.startsWith('[')) {
+                const parsedData = JSON.parse(valor);
+                valor = parsedData.respuesta || parsedData.resultado || valor;
+              }
+              
+              // Mejorar el formato del HTML
+              valor = this.formatAnalysisHTML(valor);
+              
+              this.ventasRes = valor;
+              this.ventasMesCheck = true;
+              
+            } catch (error) {
+              console.error('Error procesando respuesta:', error);
+              this.ventasRes = '<p class="text-danger">Error al procesar el análisis. Por favor, intenta nuevamente.</p>';
+              this.ventasMesCheck = true;
+            } finally {
+              this.isAnalyzing = false;
+            }
+          },
+          (error) => {
+            console.error('Error en la petición:', error);
+            this.ventasRes = '<p class="text-danger">Error al obtener el análisis. Verifica tu conexión e intenta nuevamente.</p>';
             this.ventasMesCheck = true;
-            let valor = data.result.replace('```json', '').replace('```', '').trim();
-
-            //estructura de la respuesta
-            // valor = '<p>' + valor + '</p>';
-            // valor.replace(' **', '</p><br><h4>').replace('** ', '</h4><p>');
-            // valor.replace('*', '<br>');
-
-            valor = JSON.parse(valor).respuesta || '';
-
-            // valor = '<p>' + valor + '</p>';
-            // valor.replace(' **', '</p><br><h4>').replace('** ', '</h4><p>');
-            // valor.replace('*', '<br>');
-
-            valor.replace('h4>', 'h5>').replace('h3>', 'h5>').replace('h2>', 'h4>').replace('h1>', 'h4>');
-
-
-            this.ventasRes = valor;
-
+            this.isAnalyzing = false;
           }
         );
 
         break;
     }
+  }
+
+  private formatAnalysisHTML(content: string): string {
+    if (!content) return '<p>No se pudo generar el análisis.</p>';
+    
+    // Si ya contiene HTML, solo hacer ajustes menores
+    if (content.includes('<') && content.includes('>')) {
+      return content
+        .replace(/<h1>/g, '<h4>')
+        .replace(/<\/h1>/g, '</h4>')
+        .replace(/<h2>/g, '<h4>')
+        .replace(/<\/h2>/g, '</h4>')
+        .replace(/<h3>/g, '<h5>')
+        .replace(/<\/h3>/g, '</h5>');
+    }
+    
+    // Si es texto plano, convertir a HTML básico
+    let formattedContent = content;
+    
+    // Convertir markdown-style headers
+    formattedContent = formattedContent.replace(/^# (.*$)/gm, '<h4>$1</h4>');
+    formattedContent = formattedContent.replace(/^## (.*$)/gm, '<h5>$1</h5>');
+    formattedContent = formattedContent.replace(/^### (.*$)/gm, '<h6>$1</h6>');
+    
+    // Convertir texto en negrita
+    formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formattedContent = formattedContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // Convertir saltos de línea a párrafos
+    const paragraphs = formattedContent.split('\n\n');
+    formattedContent = paragraphs
+      .filter(p => p.trim().length > 0)
+      .map(p => {
+        p = p.trim();
+        if (p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<ol')) {
+          return p;
+        }
+        return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+      })
+      .join('');
+    
+    return formattedContent || '<p>Análisis completado sin contenido específico.</p>';
   }
 }

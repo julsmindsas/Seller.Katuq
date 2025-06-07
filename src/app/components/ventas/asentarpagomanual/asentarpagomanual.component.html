@@ -1,101 +1,282 @@
-<p-tabView>
-<p-tabPanel header="{{ 'Pagos asentados' | translate }}">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>{{ 'Forma de Pago' | translate }}</th>
-                <th>{{ 'Número de Comprobante' | translate }}</th>
-                <th>{{ 'Archivo' | translate }}</th>
-                <th>{{ 'Notas' | translate }}</th>
-                <th>{{ 'Número de Pedido' | translate }}</th>
-                <th>{{ 'Fecha de Transacción' | translate }}</th>
-                <th>{{ 'Valor Total de Venta' | translate }}</th>
-                <th>{{ 'Valor Registrado' | translate }}</th>
-                <th>{{ 'Valor Restante' | translate }}</th>
-                <th>{{ 'Usuario de Registro' | translate }}</th>
-                <th>{{ 'Fecha y Hora de Carga' | translate }}</th>
-                <th>{{ 'Acciones' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let pago of pedido?.PagosAsentados">
-                <td>{{pago.formaPago}}</td>
-                <td>{{pago.numeroComprobante}}</td>
-                <td><a [href]="pago.archivo" target="_blank">{{ 'Ver archivo' | translate }}</a></td>
-                <td>{{pago.notas}}</td>
-                <td>{{pago.numeroPedido}}</td>
-                <td>{{pago.fecha}}</td>
-                <td>{{pago.valorTotalVenta | currency:'USD':'symbol':'1.0-0'}}</td>
-                <td>{{pago.valorRegistrado | currency:'USD':'symbol':'1.0-0'}}</td>
-                <td>{{pago.valorRestante | currency:'USD':'symbol':'1.0-0'}}</td>
-                <td>{{pago.usuarioRegistro}}</td>
-                <td>{{pago.fechaHoraCarga | date: 'yyyy-MM-dd hh:mm'}}</td>
-                <td>
-                    <button class="btn btn-danger" (click)="eliminarPago(pago)">{{ 'Eliminar' | translate }}</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</p-tabPanel>
-
-<p-tabPanel header="{{ 'Asentar un pago' | translate }}" *ngIf="permiteAsentarPago">
-    <form [formGroup]="transaccionForm" class="container">
-        <div class="form-group">
-            <label for="fecha">{{ 'Fecha de la transacción' | translate }}:</label>
-            <input type="date" id="fecha" formControlName="fecha" class="form-control">
-            <div *ngIf="transaccionForm.get('fecha').touched && transaccionForm.get('fecha').errors"
-                class="alert alert-danger">
-                <div *ngIf="transaccionForm.get('fecha').errors.required">{{ 'La fecha de la transacción es requerida' | translate }}.</div>
-            </div>
+<div class="payment-management-container">
+  <p-tabView [activeIndex]="0" styleClass="modern-tabs">
+    
+    <!-- Tab de Pagos Asentados -->
+    <p-tabPanel>
+      <ng-template pTemplate="header">
+        <i class="pi pi-list mr-2"></i>
+        <span>{{ 'Pagos asentados' | translate }}</span>
+      </ng-template>
+      
+      <div class="payments-list-container">
+        <div class="list-header">
+          <h3 class="section-title">
+            <i class="pi pi-credit-card"></i>
+            {{ 'Historial de Pagos' | translate }}
+          </h3>
+          <p class="section-subtitle">{{ 'Pagos registrados para este pedido' | translate }}</p>
         </div>
 
-        <div class="form-group">
-            <label for="formaPago">{{ 'Forma de pago' | translate }}:</label>
-            <select id="formaPago" formControlName="formaPago" class="form-control">
-                <option *ngFor="let formaPago of formasPago" [value]="formaPago.id">{{formaPago.nombre}}</option>
-            </select>
-            <div *ngIf="transaccionForm.get('formaPago').touched && transaccionForm.get('formaPago').errors"
-                class="alert alert-danger">
-                <div *ngIf="transaccionForm.get('formaPago').errors.required">{{ 'La forma de pago es requerida' | translate }}.</div>
+        <div class="payments-grid" *ngIf="pedido?.PagosAsentados && pedido.PagosAsentados.length > 0; else noPayments">
+          <div class="payment-card" *ngFor="let pago of pedido?.PagosAsentados; trackBy: trackByPago">
+            <div class="card-header">
+              <div class="payment-type">
+                <i class="pi pi-wallet payment-icon"></i>
+                <span class="payment-method">{{pago.formaPago}}</span>
+              </div>
+              <div class="payment-status">
+                <span class="status-badge" 
+                      [class]="'status-' + pago.estadoVerificacion?.toLowerCase()">
+                  {{pago.estadoVerificacion}}
+                </span>
+              </div>
             </div>
+
+            <div class="card-body">
+              <div class="payment-details">
+                <div class="detail-row">
+                  <span class="label">{{ 'Número de Comprobante' | translate }}:</span>
+                  <span class="value">{{pago.numeroComprobante}}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">{{ 'Fecha de Transacción' | translate }}:</span>
+                  <span class="value">{{pago.fecha | date: 'dd/MM/yyyy'}}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">{{ 'Valor Registrado' | translate }}:</span>
+                  <span class="value amount">{{pago.valorRegistrado | currency:'USD':'symbol':'1.0-0'}}</span>
+                </div>
+                <div class="detail-row" *ngIf="pago.notas">
+                  <span class="label">{{ 'Notas' | translate }}:</span>
+                  <span class="value">{{pago.notas}}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="footer-info">
+                <small class="text-muted">
+                  <i class="pi pi-user"></i> {{pago.usuarioRegistro}} | 
+                  <i class="pi pi-clock"></i> {{pago.fechaHoraCarga | date: 'dd/MM/yyyy HH:mm'}}
+                </small>
+              </div>
+              <div class="card-actions">
+                <button type="button" 
+                        class="btn btn-outline-primary btn-sm"
+                        *ngIf="pago.archivo"
+                        (click)="verArchivo(pago.archivo)">
+                  <i class="pi pi-file"></i>
+                  {{ 'Ver archivo' | translate }}
+                </button>
+                <button type="button" 
+                        class="btn btn-outline-danger btn-sm"
+                        (click)="eliminarPago(pago)">
+                  <i class="pi pi-trash"></i>
+                  {{ 'Eliminar' | translate }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-            <label for="valor">{{ 'Valor' | translate }}:</label>
-            <input type="number" id="valor" formControlName="valor" class="form-control">
-            <div *ngIf="transaccionForm.get('valor').touched && transaccionForm.get('valor').errors"
-                class="alert alert-danger">
-                <div *ngIf="transaccionForm.get('valor').errors.required">{{ 'El valor es requerido' | translate }}.</div>
+        <ng-template #noPayments>
+          <div class="empty-state">
+            <i class="pi pi-credit-card empty-icon"></i>
+            <h4>{{ 'No hay pagos registrados' | translate }}</h4>
+            <p>{{ 'Aún no se han registrado pagos para este pedido' | translate }}</p>
+          </div>
+        </ng-template>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab de Asentar Pago -->
+    <p-tabPanel *ngIf="permiteAsentarPago">
+      <ng-template pTemplate="header">
+        <i class="pi pi-plus mr-2"></i>
+        <span>{{ 'Asentar un pago' | translate }}</span>
+      </ng-template>
+
+      <div class="payment-form-container">
+        <div class="form-header">
+          <h3 class="section-title">
+            <i class="pi pi-plus-circle"></i>
+            {{ 'Registrar Nuevo Pago' | translate }}
+          </h3>
+          <div class="payment-summary">
+            <div class="summary-item">
+              <span class="summary-label">{{ 'Total del pedido' | translate }}:</span>
+              <span class="summary-value total">{{pedido?.totalPedididoConDescuento | currency:'USD':'symbol':'1.0-0'}}</span>
             </div>
-            <div *ngIf="valorExcedido" class="alert alert-danger">
-                {{ 'El valor ingresado es mayor que el valor que falta por pagar que es' | translate }}: {{ pedido.faltaPorPagar | currency }}.
+            <div class="summary-item">
+              <span class="summary-label">{{ 'Pagado' | translate }}:</span>
+              <span class="summary-value paid">{{pedido?.anticipo | currency:'USD':'symbol':'1.0-0'}}</span>
             </div>
+            <div class="summary-item">
+              <span class="summary-label">{{ 'Falta por pagar' | translate }}:</span>
+              <span class="summary-value pending">{{pedido?.faltaPorPagar | currency:'USD':'symbol':'1.0-0'}}</span>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-            <label for="numeroComprobante">{{ 'Número de comprobante' | translate }}:</label>
-            <input type="text" id="numeroComprobante" formControlName="numeroComprobante" class="form-control">
-            <div *ngIf="transaccionForm.get('numeroComprobante').touched && transaccionForm.get('numeroComprobante').errors"
-                class="alert alert-danger">
-                <div *ngIf="transaccionForm.get('numeroComprobante').errors.required">{{ 'El número de comprobante es requerido' | translate }}.</div>
+        <form [formGroup]="transaccionForm" class="modern-form">
+          <div class="form-grid">
+            <!-- Fecha -->
+            <div class="form-group">
+              <label class="form-label" for="fecha">
+                <i class="pi pi-calendar"></i>
+                {{ 'Fecha de la transacción' | translate }}
+                <span class="required">*</span>
+              </label>
+              <input type="date" 
+                     id="fecha" 
+                     formControlName="fecha" 
+                     class="form-control"
+                     [class.is-invalid]="transaccionForm.get('fecha')?.touched && transaccionForm.get('fecha')?.errors">
+              <div class="invalid-feedback" 
+                   *ngIf="transaccionForm.get('fecha')?.touched && transaccionForm.get('fecha')?.errors?.['required']">
+                {{ 'La fecha de la transacción es requerida' | translate }}
+              </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="archivo">{{ 'Agregar archivo' | translate }}:</label>
-            <input type="file" id="archivo" class="form-control" (change)="onFileChange($event)">
-        </div>
-
-        <div class="form-group">
-            <label for="notas">{{ 'Notas' | translate }}:</label>
-            <textarea id="notas" formControlName="notas" class="form-control"></textarea>
-            <div *ngIf="transaccionForm.get('notas').touched && transaccionForm.get('notas').errors"
-                class="alert alert-danger">
-                <div *ngIf="transaccionForm.get('notas').errors.required">{{ 'Las notas son requeridas' | translate }}.</div>
+            <!-- Forma de Pago -->
+            <div class="form-group">
+              <label class="form-label" for="formaPago">
+                <i class="pi pi-wallet"></i>
+                {{ 'Forma de pago' | translate }}
+                <span class="required">*</span>
+              </label>
+              <select id="formaPago" 
+                      formControlName="formaPago" 
+                      class="form-control"
+                      [class.is-invalid]="transaccionForm.get('formaPago')?.touched && transaccionForm.get('formaPago')?.errors">
+                <option value="">{{ 'Seleccionar forma de pago' | translate }}</option>
+                <option *ngFor="let formaPago of formasPago" [value]="formaPago.id">
+                  {{formaPago.nombre}}
+                </option>
+              </select>
+              <div class="invalid-feedback" 
+                   *ngIf="transaccionForm.get('formaPago')?.touched && transaccionForm.get('formaPago')?.errors?.['required']">
+                {{ 'La forma de pago es requerida' | translate }}
+              </div>
             </div>
-        </div>
 
-        <button type="submit" (click)="registrarTransaccion()" class="btn btn-primary">{{ 'Registrar transacción' | translate }}</button>
-    </form>
-</p-tabPanel>
-</p-tabView>
+            <!-- Valor -->
+            <div class="form-group">
+              <label class="form-label" for="valor">
+                <i class="pi pi-dollar"></i>
+                {{ 'Valor' | translate }}
+                <span class="required">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" 
+                       id="valor" 
+                       formControlName="valor" 
+                       class="form-control"
+                       [class.is-invalid]="(transaccionForm.get('valor')?.touched && transaccionForm.get('valor')?.errors) || valorExcedido"
+                       placeholder="0.00"
+                       step="0.01"
+                       min="0">
+              </div>
+              <div class="invalid-feedback" 
+                   *ngIf="transaccionForm.get('valor')?.touched && transaccionForm.get('valor')?.errors?.['required']">
+                {{ 'El valor es requerido' | translate }}
+              </div>
+              <div class="alert alert-warning mt-2" *ngIf="valorExcedido">
+                <i class="pi pi-exclamation-triangle"></i>
+                {{ 'El valor ingresado es mayor que el valor que falta por pagar que es' | translate }}: 
+                <strong>{{ pedido?.faltaPorPagar | currency:'USD':'symbol':'1.0-0' }}</strong>
+              </div>
+            </div>
+
+            <!-- Número de Comprobante -->
+            <div class="form-group">
+              <label class="form-label" for="numeroComprobante">
+                <i class="pi pi-file-o"></i>
+                {{ 'Número de comprobante' | translate }}
+                <span class="required">*</span>
+              </label>
+              <input type="text" 
+                     id="numeroComprobante" 
+                     formControlName="numeroComprobante" 
+                     class="form-control"
+                     [class.is-invalid]="transaccionForm.get('numeroComprobante')?.touched && transaccionForm.get('numeroComprobante')?.errors"
+                     placeholder="{{ 'Ingrese el número de comprobante' | translate }}">
+              <div class="invalid-feedback" 
+                   *ngIf="transaccionForm.get('numeroComprobante')?.touched && transaccionForm.get('numeroComprobante')?.errors?.['required']">
+                {{ 'El número de comprobante es requerido' | translate }}
+              </div>
+            </div>
+
+            <!-- Archivo -->
+            <div class="form-group full-width">
+              <label class="form-label" for="archivo">
+                <i class="pi pi-upload"></i>
+                {{ 'Agregar archivo' | translate }}
+                <span class="required">*</span>
+              </label>
+              <div class="file-upload-area" 
+                   [class.has-file]="selectedFile"
+                   (dragover)="onDragOver($event)"
+                   (dragleave)="onDragLeave($event)"
+                   (drop)="onDrop($event)">
+                <input type="file" 
+                       id="archivo" 
+                       class="file-input" 
+                       (change)="onFileChange($event)"
+                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                <div class="upload-content" *ngIf="!selectedFile">
+                  <i class="pi pi-cloud-upload upload-icon"></i>
+                  <p class="upload-text">{{ 'Arrastra un archivo aquí o haz clic para seleccionar' | translate }}</p>
+                  <small class="upload-hint">{{ 'Formatos permitidos: PDF, JPG, PNG, DOC' | translate }}</small>
+                </div>
+                <div class="file-selected" *ngIf="selectedFile">
+                  <i class="pi pi-file"></i>
+                  <span class="file-name">{{selectedFile.name}}</span>
+                  <button type="button" class="btn-remove-file" (click)="removeFile()">
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notas -->
+            <div class="form-group full-width">
+              <label class="form-label" for="notas">
+                <i class="pi pi-comment"></i>
+                {{ 'Notas' | translate }}
+                <span class="required">*</span>
+              </label>
+              <textarea id="notas" 
+                        formControlName="notas" 
+                        class="form-control"
+                        [class.is-invalid]="transaccionForm.get('notas')?.touched && transaccionForm.get('notas')?.errors"
+                        rows="3"
+                        placeholder="{{ 'Ingrese observaciones o comentarios sobre este pago' | translate }}"></textarea>
+              <div class="invalid-feedback" 
+                   *ngIf="transaccionForm.get('notas')?.touched && transaccionForm.get('notas')?.errors?.['required']">
+                {{ 'Las notas son requeridas' | translate }}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="cancelar()">
+              <i class="pi pi-times"></i>
+              {{ 'Cancelar' | translate }}
+            </button>
+            <button type="submit" 
+                    class="btn btn-primary"
+                    (click)="registrarTransaccion()"
+                    [disabled]="!transaccionForm.valid || valorExcedido || !selectedFile">
+              <i class="pi pi-check"></i>
+              {{ 'Registrar transacción' | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>

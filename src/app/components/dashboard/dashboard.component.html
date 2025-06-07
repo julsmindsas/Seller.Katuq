@@ -83,13 +83,43 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="text-center mb-3">
-                                        <button class="btn btn-secondary" (click)="analizar('VentasMes')">
-                                            <i class="fas fa-magic me-1"></i>
-                                            Analizar
+                                        <button 
+                                            class="btn btn-secondary" 
+                                            (click)="analizar('VentasMes')"
+                                            [disabled]="isAnalyzing">
+                                            <i class="fas fa-magic me-1" *ngIf="!isAnalyzing"></i>
+                                            <div class="spinner-border spinner-border-sm me-1" role="status" *ngIf="isAnalyzing">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            {{ isAnalyzing ? ('Analizando...' | translate) : ('Analizar' | translate) }}
                                         </button>
                                     </div>
-                                    <div *ngIf="ventasMesCheck" class="analysis-result">
-                                        <div class="p-3 bg-light rounded" [innerHtml]="ventasRes"></div>
+                                    
+                                    <!-- Estado de carga -->
+                                    <div *ngIf="isAnalyzing" class="analysis-loading">
+                                        <div class="spinner-border text-secondary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span class="ms-2">{{ 'Generando análisis inteligente...' | translate }}</span>
+                                    </div>
+                                    
+                                    <!-- Resultado del análisis -->
+                                    <div *ngIf="ventasMesCheck && !isAnalyzing" class="analysis-result">
+                                        <div class="alert alert-info mb-2" role="alert">
+                                            <i class="fas fa-lightbulb me-1"></i>
+                                            <small>{{ 'Análisis generado por K.A.I. basado en los datos del período seleccionado' | translate }}</small>
+                                        </div>
+                                        <div 
+                                            class="p-3 bg-light rounded" 
+                                            [innerHtml]="ventasRes"
+                                            style="max-height: 250px; overflow-y: auto;">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Estado inicial -->
+                                    <div *ngIf="!ventasMesCheck && !isAnalyzing" class="text-center text-muted">
+                                        <i class="fas fa-chart-line fa-2x mb-2 opacity-50"></i>
+                                        <p class="mb-0">{{ 'Haz clic en "Analizar" para obtener insights inteligentes sobre tus ventas' | translate }}</p>
                                     </div>
                                 </div>
                             </div>
