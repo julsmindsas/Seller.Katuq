@@ -271,88 +271,6 @@
   }
 }
 
-/* Estilos para campos específicos colombianos */
-.estrato-field {
-  .form-select {
-    text-align: center;
-    font-weight: 600;
-  }
-}
-
-.barrio-field {
-  .form-select, .form-control {
-    background-color: #fff;
-    border-color: #28a745;
-    
-    &:focus {
-      border-color: #20c997;
-      box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-    }
-  }
-}
-
-/* Indicadores visuales para referencias */
-.referencias-field {
-  textarea {
-    background-color: #fff8e1;
-    border-color: #ffc107;
-    
-    &:focus {
-      border-color: #ffb300;
-      box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
-    }
-    
-    &::placeholder {
-      color: #856404;
-      font-style: italic;
-    }
-  }
-}
-
-/* Botones de acción del formulario */
-.form-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  
-  .btn-sm {
-    padding: 0.25rem 0.75rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    border-radius: 0.2rem;
-    
-    i {
-      margin-right: 0.25rem;
-    }
-  }
-}
-
-/* Mejoras para campos de vivienda específica */
-.vivienda-especifica {
-  background-color: #e7f3ff;
-  border-radius: 4px;
-  padding: 0.75rem;
-  border: 1px solid #b3d9ff;
-  
-  .form-label {
-    color: #0056b3;
-    font-size: 0.9rem;
-  }
-}
-
-/* Estilos para información adicional */
-.info-adicional {
-  background-color: #fff3e0;
-  border-radius: 4px;
-  padding: 0.75rem;
-  border: 1px solid #ffcc80;
-  
-  .form-label {
-    color: #ef6c00;
-    font-size: 0.9rem;
-  }
-}
-
 /* Responsive para dispositivos móviles */
 @media (max-width: 767.98px) {
   .col-md-5, .col-md-7 {
@@ -392,11 +310,6 @@
     p {
       font-size: 0.9rem;
     }
-  }
-  
-  .form-actions {
-    justify-content: center;
-    margin-top: 1rem;
   }
 }
 
