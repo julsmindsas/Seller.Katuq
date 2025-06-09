@@ -1729,13 +1729,19 @@ export class DespachosComponent implements OnInit {
       this.ordenEnvioForm.reset()
       this.metodoEnvio = undefined
       this.pedidosSeleccionados = []
+      // Limpiar variables de estado de orden de envío
+      this.nroShippingOrder = null
+      this.nuevaOrdenEnvio = null
+      this.transportadorSeleccionado = null
     }
     this.modalRef = this.modalService.open(content, { size: 'xl', fullscreen: true });
     this.modalRef.result.then(
       (result) => {
+        this.limpiarEstadoOrdenEnvio(); // Limpiar estado al cerrar modal
         this.refrescarDatos(); // Lógica a ejecutar cuando se cierra el modal
       },
       (reason) => {
+        this.limpiarEstadoOrdenEnvio(); // Limpiar estado al cerrar modal
         this.refrescarDatos(); // Lógica a ejecutar cuando se cierra el modal
       }
     );
@@ -3195,6 +3201,22 @@ export class DespachosComponent implements OnInit {
     } else {
       return 0;
     }
+  }
+  
+  // Método para limpiar completamente el estado de orden de envío
+  private limpiarEstadoOrdenEnvio(): void {
+    this.nroShippingOrder = null;
+    this.nuevaOrdenEnvio = null;
+    this.transportadorSeleccionado = null;
+    this.pedidosSeleccionados = [];
+    this.metodoEnvio = undefined;
+    
+    // Resetear formularios si existen
+    if (this.ordenEnvioForm) {
+      this.ordenEnvioForm.reset();
+    }
+    
+    console.log('Estado de orden de envío limpiado completamente');
   }
 }
 
