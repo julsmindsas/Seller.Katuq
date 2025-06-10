@@ -73,63 +73,7 @@
         </form>
       </p-tabPanel>
       
-      <!-- NOTAS CLIENTE -->
-      <p-tabPanel header="Cliente" leftIcon="fa fa-user">
-        <form [formGroup]="notasClienteForm" (ngSubmit)="onSubmitCliente()" class="notes-form">
-          <div class="row mb-3">
-            <div class="col-lg-12">
-              <div class="note-input-container">
-                <div class="note-metadata mb-2">
-                  <i class="fa fa-calendar me-1"></i> {{ fecha | date:'dd/MM/yyyy HH:mm' }}
-                </div>
-                <div class="input-group">
-                  <textarea id="notaCliente" class="form-control" formControlName="nota"
-                    placeholder="Escribir nota al cliente" rows="3"></textarea>
-                  <button class="btn btn-primary" type="submit" [disabled]="notasClienteForm.invalid">
-                    <i class="fa fa-paper-plane"></i>
-                  </button>
-                </div>
-                <div *ngIf="notasClienteForm.get('nota')?.invalid && notasClienteForm.get('nota')?.touched"
-                  class="text-danger mt-1">
-                  <small><i class="fa fa-exclamation-circle me-1"></i>La nota es requerida</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
-        
-        <div class="notes-list mt-4" *ngIf="pedido?.notasPedido?.notasCliente?.length > 0">
-          <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> Notas Anteriores</h6>
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th style="width: 180px">Fecha</th>
-                  <th>Nota</th>
-                  <th style="width: 60px">Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let nota of pedido.notasPedido?.notasCliente; let i = index">
-                  <td>{{nota.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
-                  <td>{{nota.nota}}</td>
-                  <td>
-                    <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i,'cliente')">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        
-        <div class="empty-notes" *ngIf="!pedido?.notasPedido?.notasCliente?.length">
-          <i class="fa fa-sticky-note mb-2"></i>
-          <p>No hay notas para el cliente</p>
-        </div>
-      </p-tabPanel>
-      
+
       <!-- NOTAS DESPACHOS -->
       <p-tabPanel header="Despacho" leftIcon="fa fa-truck">
         <form [formGroup]="notasDespachoForm" (ngSubmit)="onSubmitDespachos()" class="notes-form">

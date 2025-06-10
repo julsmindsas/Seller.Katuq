@@ -94,12 +94,12 @@
                           </button>
                           <button class="btn btn-outline-info btn-sm"
                                   (click)="mostrarNotasExistentes(itemCarrito)"
-                                  [disabled]="!itemCarrito.notaProduccion || itemCarrito.notaProduccion.length === 0"
+                                  [disabled]="contarNotasDelProducto(itemCarrito) === 0"
                                   title="Ver notas de producción">
                             <i class="pi pi-list"></i>
-                            <span *ngIf="itemCarrito.notaProduccion && itemCarrito.notaProduccion.length > 0" 
+                            <span *ngIf="contarNotasDelProducto(itemCarrito) > 0" 
                                   class="badge bg-danger rounded-pill ms-1">
-                              {{itemCarrito.notaProduccion.length}}
+                              {{contarNotasDelProducto(itemCarrito)}}
                             </span>
                           </button>
                         </div>

@@ -11,11 +11,15 @@
                 <div>
                   <h4 class="mb-0 fc-secondary">Crear Venta</h4>
                   <div class="d-flex align-items-center mt-1">
-                    <span class="badge bg-light text-primary me-2">Preventa #{{pedidoGral.nroPedido}}</span>
+                    <span class="badge bg-light text-primary me-2">Preventa #{{pedidoGral?.nroPedido || 'TEMP-000000'}}</span>
                     <span *ngIf="pedidoGral?.cliente" class="badge bg-light text-dark">
                       <i class="fa fa-user me-1"></i>{{pedidoGral?.cliente.nombres_completos}}
                       {{pedidoGral?.cliente.apellidos_completos}}
                     </span>
+                    <!-- Botón temporal para limpiar caché -->
+                    <button class="btn btn-sm btn-warning ms-2" (click)="limpiarCacheCompleto()" title="Limpiar caché y reiniciar">
+                      <i class="fa fa-broom me-1"></i>Reset
+                    </button>
                   </div>
                 </div>
               </div>
@@ -52,7 +56,7 @@
         </div>
 
         <div class="card-body">
-          <aw-wizard #wizard id="wizard" name="wizard" *ngIf="showSteper" navBarLayout="large-filled-symbols"
+          <aw-wizard #wizard id="wizard" name="wizard" *ngIf="showSteper && pedidoGral" navBarLayout="large-filled-symbols"
             class="simplified-wizard">
             <!-- PASO 1: CATÁLOGO -->
             <aw-wizard-step [navigationSymbol]="{ symbol: '1' }">
@@ -96,11 +100,11 @@
               <div class="wizard-footer-container">
                 <div class="d-flex justify-content-end">
                   <button class="btn btn-success" type="button" awNextStep
-                    [disabled]="!(pedidoGral?.carrito && pedidoGral.carrito.length > 0)">
+                    [disabled]="!(pedidoGral?.carrito && pedidoGral?.carrito?.length > 0)">
                     <i class="fa fa-shopping-cart me-1"></i> Continuar al Carrito
                   </button>
                 </div>
-                <div *ngIf="!(pedidoGral?.carrito && pedidoGral.carrito.length > 0)" class="alert alert-warning mt-3">
+                <div *ngIf="!(pedidoGral?.carrito && pedidoGral?.carrito?.length > 0)" class="alert alert-warning mt-3">
                   <i class="fa fa-exclamation-triangle me-2"></i>
                   Debe agregar productos al carrito para continuar
                 </div>
@@ -121,7 +125,7 @@
                   <h5 class="mb-0"><i class="fa fa-shopping-cart me-2 text-primary"></i>Productos seleccionados</h5>
                 </div>
                 <div class="card-body p-0">
-                  <app-carrito #carrito [pedido]="pedidoGral" (notaAgregada)="onNotaAgregada($event)"></app-carrito>
+                  <app-carrito #carrito [pedido]="pedidoGral" (notaAgregada)="onNotaAgregada($event)" *ngIf="pedidoGral"></app-carrito>
                 </div>
               </div>
 
@@ -130,8 +134,8 @@
                   <h5 class="mb-0"><i class="fa fa-sticky-note me-2 text-primary"></i>Notas del pedido</h5>
                 </div>
                 <div class="card-body">
-                  <app-notas #notaspedidos [pedido]="pedidoGral" [carrito]="carrito1"
-                    (notasActualizadas)="onNotasActualizadas($event)"></app-notas>
+                  <app-notas #notaspedidos [pedido]="pedidoGral" [carrito]="carrito1" [isEdit]="true"
+                    (notasActualizadas)="onNotasActualizadas($event)" *ngIf="pedidoGral"></app-notas>
                 </div>
               </div>
 
@@ -213,7 +217,7 @@
                       <i class="fa fa-check-circle me-2"></i>
                       {{ clienteRecienCreado ? '¡Cliente Creado Exitosamente!' : 'Cliente Encontrado' }}
                     </h5>
-                    <button class="btn btn-light btn-sm" (click)="mostrarFormularioCliente = true">
+                    <button class="btn btn-light btn-sm" (click)="abrirFormularioEdicion()">
                       <i class="fa fa-edit me-1"></i> Editar
                     </button>
                   </div>
@@ -387,7 +391,7 @@
 
                     <!-- Botones de acción -->
                     <div class="d-flex justify-content-end gap-2">
-                      <button type="button" class="btn btn-light" (click)="mostrarFormularioCliente = false">
+                      <button type="button" class="btn btn-light" (click)="cancelarEdicionCliente()">
                         <i class="fa fa-times me-1"></i> Cancelar
                       </button>
                       <button *ngIf="!encontrado" type="button" class="btn btn-success" (click)="crearClienteRapido()"
@@ -405,13 +409,78 @@
                 </div>
               </div>
 
+              <!-- Sección de Notas del Cliente -->
+              <div *ngIf="encontrado" class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0"><i class="fa fa-sticky-note me-2 text-primary"></i>Notas del Cliente</h5>
+                </div>
+                <div class="card-body">
+                  <!-- Formulario para agregar nueva nota -->
+                  <form [formGroup]="notasClienteForm" (ngSubmit)="onSubmitCliente()" class="notes-form mb-4">
+                    <div class="row mb-3">
+                      <div class="col-lg-12">
+                        <div class="note-input-container">
+                          <div class="note-metadata mb-2">
+                            <i class="fa fa-calendar me-1"></i> {{ fechaActual | date:'dd/MM/yyyy HH:mm' }}
+                          </div>
+                          <div class="input-group">
+                            <textarea id="notaCliente" class="form-control" formControlName="nota"
+                              placeholder="Escribir nota al cliente" rows="3"></textarea>
+                            <button class="btn btn-primary" type="submit" [disabled]="notasClienteForm.invalid">
+                              <i class="fa fa-paper-plane"></i>
+                            </button>
+                          </div>
+                          <div *ngIf="notasClienteForm.get('nota')?.invalid && notasClienteForm.get('nota')?.touched"
+                            class="text-danger mt-1">
+                            <small><i class="fa fa-exclamation-circle me-1"></i>La nota es requerida</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                  
+                  <!-- Lista de notas anteriores -->
+                  <div class="notes-list" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length > 0">
+                    <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> Notas Anteriores</h6>
+                    <div class="table-responsive">
+                      <table class="table table-hover">
+                        <thead>
+                          <tr>
+                            <th style="width: 180px">Fecha</th>
+                            <th>Nota</th>
+                            <th style="width: 60px">Acción</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let nota of pedidoGral.notasPedido?.notasCliente; let i = index">
+                            <td>{{nota.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
+                            <td>{{nota.nota}}</td>
+                            <td>
+                              <button class="btn btn-sm btn-outline-danger" (click)="eliminarNotaCliente(i)">
+                                <i class="fa fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  <!-- Mensaje cuando no hay notas -->
+                  <div class="empty-notes text-center" *ngIf="!pedidoGral?.notasPedido?.notasCliente?.length">
+                    <i class="fa fa-sticky-note mb-2 text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted">No hay notas para el cliente</p>
+                  </div>
+                </div>
+              </div>
+
               <!-- Botones de navegación -->
               <div class="wizard-footer-container">
                 <div class="d-flex justify-content-between">
                   <button class="btn btn-outline-secondary" type="button" awPreviousStep>
                     <i class="fa fa-arrow-left me-1"></i> Volver
                   </button>
-                  <button class="btn btn-success" type="button" awNextStep [disabled]="!encontrado"
+                  <button class="btn btn-success" type="button" awNextStep [disabled]="!encontrado || !pedidoGral"
                     (click)="reviewStepAndExecute(3)">
                     <i class="fa fa-truck me-1"></i> Datos Envío
                   </button>
@@ -443,7 +512,7 @@
                     [direccionEntrega]="direccion_facturacion" [paisInicial]="pais" [departamentoInicial]="departamento"
                     [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
                     [datosEntregaNoEncontradosParaCiudadSeleccionada]="datosEntregaNoEncontradosParaCiudadSeleccionada"
-                    (overridePedido)="overridePedido($event)" [activeIndex]="0">
+                    (overridePedido)="overridePedido($event)" [activeIndex]="0" *ngIf="pedidoGral">
                   </pedido-entrega>
                 </div>
               </div>
@@ -455,7 +524,7 @@
                     <i class="fa fa-arrow-left me-1"></i> Volver
                   </button>
                   <button class="btn btn-success" type="button" awNextStep (click)="reviewStepAndExecute(4)"
-                    [disabled]="!pedidoGral?.envio">
+                    [disabled]="!pedidoGral?.envio || !pedidoGral">
                     <i class="fa fa-file-invoice me-1"></i> Facturación
                   </button>
                 </div>
@@ -485,7 +554,7 @@
                     [direccionFacturacion]="direccion_facturacion" [paisInicial]="pais"
                     [departamentoInicial]="departamento" [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
                     (overridePedido)="overridePedido($event)" [generarFactura]="generarFacturaElectronica"
-                    [documentoBusqueda]="documentoBuscar" [activeIndex]="0">
+                    [documentoBusqueda]="documentoBuscar" [activeIndex]="0" *ngIf="pedidoGral">
                   </app-pedido-facturacion>
                 </div>
               </div>
@@ -497,7 +566,7 @@
                     <i class="fa fa-arrow-left me-1"></i> Volver
                   </button>
                   <button class="btn btn-success" type="button" awNextStep (click)="reviewStepAndExecute(5)"
-                    [disabled]="!pedidoGral?.facturacion">
+                    [disabled]="!pedidoGral?.facturacion || !pedidoGral">
                     <i class="fa fa-check-circle me-1"></i> Resumen y Pago
                   </button>
                 </div>
@@ -523,7 +592,7 @@
                 </div>
                 <div class="card-body">
                   <app-checkout #resumen [pedido]="pedidoGral" [allBillingZone]="allBillingZone"
-                    (comprarYPagar)="comprarYPagar($event)"></app-checkout>
+                    (comprarYPagar)="comprarYPagar($event)" *ngIf="pedidoGral"></app-checkout>
                 </div>
               </div>
 
@@ -555,12 +624,12 @@
                   <div class="card-header bg-success text-white">
                     <div class="d-flex justify-content-between align-items-center">
                       <h4 class="mb-0"><i class="fa fa-check-circle me-2"></i>¡Pedido Procesado Exitosamente!</h4>
-                      <span class="badge bg-light text-dark">Pedido #{{pedidoGral?.nroPedido}}</span>
+                      <span class="badge bg-light text-dark">Pedido #{{pedidoGral?.nroPedido || 'N/A'}}</span>
                     </div>
                   </div>
                   <div class="card-body">
                     <!-- Componente de confirmación que muestra el HTML del pedido -->
-                    <app-confirm [pedido]="pedidoGral"></app-confirm>
+                    <app-confirm [pedido]="pedidoGral" *ngIf="pedidoGral"></app-confirm>
 
                     <div class="d-flex justify-content-center mt-4">
                       <button class="btn btn-primary me-2" (click)="imprimirPedido()">

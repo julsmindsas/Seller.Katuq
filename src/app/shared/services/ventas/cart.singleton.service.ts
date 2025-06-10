@@ -6,54 +6,55 @@ import { BehaviorSubject } from "rxjs";
   providedIn: "root",
 })
 export class CartSingletonService {
-  public productInCart: BehaviorSubject<any[]> = new BehaviorSubject(this.getProductsFromLocalStorage());
+  public productInCart: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
 
   // Suscripción para detectar cambios en el carrito
   productInCartChanges$ = this.productInCart.asObservable();
 
   constructor(private httpClient: HttpClient) {
-    this.refreshCart();  // Asegura que el BehaviorSubject esté inicializado correctamente
+    // Solo inicializar con array vacío, sin localStorage
   }
 
-  private getProductsFromLocalStorage(): any[] {
-    return JSON.parse(localStorage.getItem('carrito') || '[]');
-  }
-
-  // Obtener productos del carrito y refrescar el estado del BehaviorSubject
+  // Refrescar el estado del BehaviorSubject
   refreshCart() {
-    const products = this.getProductsFromLocalStorage();
-    this.productInCart.next(products);
     return this.productInCart.asObservable();
   }
 
   // Agregar producto al carrito
   addToCart(productoCompra: any) {
-    const carrito = this.getProductsFromLocalStorage();
+    const carrito = this.productInCart.value;
     carrito.push(productoCompra);
-    localStorage.setItem('carrito', JSON.stringify(carrito));
-    this.productInCart.next(carrito); // Actualizar BehaviorSubject
+    this.productInCart.next([...carrito]); // Crear nuevo array para triggering change
   }
 
   // Remover producto
   removeProduct(producto: any) {
-    let products = this.getProductsFromLocalStorage();
+    let products = this.productInCart.value;
     const index = products.findIndex((p: any) => p.producto.crearProducto.cd === producto.producto.crearProducto.cd);
     if (index !== -1) {
       products.splice(index, 1);
-      localStorage.setItem("carrito", JSON.stringify(products));
-      this.productInCart.next(products); // Actualizar BehaviorSubject
+      this.productInCart.next([...products]); // Crear nuevo array para triggering change
+    }
+  }
+
+  // Actualizar cantidad de producto
+  updateProductQuantity(producto: any) {
+    const products = this.productInCart.value;
+    const index = products.findIndex((p: any) => p.producto.crearProducto.cd === producto.producto.crearProducto.cd);
+    if (index !== -1) {
+      products[index] = producto;
+      this.productInCart.next([...products]); // Crear nuevo array para triggering change
     }
   }
 
   // Limpiar carrito
   clearCart() {
-    localStorage.removeItem("carrito");
     this.productInCart.next([]); // Actualizar BehaviorSubject
   }
 
   // Calcular total del carrito
   calculateTotal(): number {
-    const products = this.getProductsFromLocalStorage();
+    const products = this.productInCart.value;
     return products.reduce((total, p) => total + p.producto.crearProducto.precio, 0);
   }
 }

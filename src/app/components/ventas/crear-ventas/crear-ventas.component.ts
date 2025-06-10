@@ -198,6 +198,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   public selectedCity: string = '';
   public bodega: any = null;
   isChannelManual: boolean = true;
+  
+  // Formulario y propiedades para notas de cliente
+  notasClienteForm: FormGroup;
+  fechaActual: Date;
 
 
   constructor(
@@ -222,20 +226,10 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
     this.maxDate = new Date();
     this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
-    console.log("empresa", this.empresaActual);
-    this.pedidoGral = {
-      referencia: "",
-      company: this.empresaActual.nomComercial,
-      cliente: undefined,
-      notasPedido: undefined,
-      carrito: undefined,
-      facturacion: undefined,
-      envio: undefined,
-      estadoPago: EstadoPago.Pendiente,
-      estadoProceso: EstadoProceso.SinProducir
-    }
 
-    this.newPedido();
+    
+    // Inicializar pedidoGral inmediatamente para evitar errores de null
+    this.initializePedidoGral();
 
     this.pedidoPrm = this.route.snapshot.queryParamMap.get('pedido') || '';
     this.numberProduct = this.route.snapshot.queryParamMap.get('product') || '';
@@ -244,9 +238,11 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.pedidoGral = JSON.parse(this.pedidoPrm)
     }
     else {
+      this.newPedido();
+      
       if (this.numberProduct) {
         this.ventasService.getProductByNumber(this.numberProduct).subscribe((res: any) => {
-          console.log(res);
+
           this.productos.isOpenModalDirect = true;
           this.productos.productos = res;
           this.productos.obtenerFiltros();
@@ -260,37 +256,95 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['pedidoGral']) {
-      console.log('pedidogral', this.pedidoGral)
-      this.guardarPrePedido(this.pedidoGral);
+
+      // Eliminar el guardado automático del pre-pedido
     }
   }
 
 
+  private initializePedidoGral() {
+    this.pedidoGral = {
+      referencia: "",
+      nroPedido: "TEMP-000000",
+      company: this.empresaActual.nomComercial,
+      cliente: undefined,
+      notasPedido: {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      },
+      carrito: undefined,
+      facturacion: undefined,
+      envio: undefined,
+      estadoPago: EstadoPago.Pendiente,
+      estadoProceso: EstadoProceso.SinProducir
+    };
+  }
+
   private newPedido() {
     this.pedidoSinGuardar = true;
     this.formulario.reset();
+    
+    // Limpiar completamente el caché
+    this.limpiarCacheCompleto();
+    
     this.cartService.clearCart();
     this.ventasService.getNextRef(this.empresaActual.nomComercial).subscribe((res: any) => {
       const texto = this.empresaActual.nomComercial.toString();
       const ultimasLetras = texto.substring(texto.length - 3);
-      this.pedidoGral = {
-        referencia: "",
-        nroPedido: ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0'),
-        company: this.empresaActual.nomComercial,
-        cliente: undefined,
-        notasPedido: undefined,
-        carrito: undefined,
-        facturacion: undefined,
-        envio: undefined,
-        estadoPago: EstadoPago.Pendiente,
-        estadoProceso: EstadoProceso.SinProducir
-      };
+      this.pedidoGral.nroPedido = ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0');
+      this.pedidoGral.referencia = "";
     });
   }
 
-  guardarPrePedido(pedido: any): void {
-    this.ventasService.savePreOrders(pedido);
+  // Método para limpiar completamente el caché y empezar de cero
+  public limpiarCacheCompleto(): void {
+
+    
+    // Limpiar localStorage
+    localStorage.removeItem('carrito');
+    localStorage.removeItem('selectedCity');
+    localStorage.removeItem('warehouse');
+    
+    // Limpiar sessionStorage
+    sessionStorage.removeItem('pedidoTemporal');
+    sessionStorage.removeItem('cliente');
+    
+    // Resetear variables del componente
+    this.encontrado = false;
+    this.mostrarFormularioCliente = false;
+    this.clienteRecienCreado = false;
+    this.creandoCliente = false;
+    this.selectedCity = '';
+    this.selectedWarehouse = '';
+    this.bodega = null;
+    
+    // Limpiar arrays de datos
+    this.datosEntregas = [];
+    this.datosFacturacionElectronica = [];
+    this.originalDataEntregas = [];
+    this.originalDataFacturacionElectronica = [];
+    
+    // Re-inicializar pedidoGral para evitar errores de null
+    this.initializePedidoGral();
+    
+
+    
+    // Mostrar feedback al usuario
+    this.toastrService.success('Caché limpiado completamente. Sistema reiniciado.', 'Reset Exitoso', {
+      closeButton: true,
+      timeOut: 3000
+    });
+    
+    // Forzar detección de cambios después de que pedidoGral esté inicializado
+    setTimeout(() => {
+      this.ref.detectChanges();
+    }, 0);
   }
+
+
 
   ngAfterViewChecked(): void {
 
@@ -413,7 +467,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         this.allBillingZone = JSON.parse(zonasGuardadas);
         console.log('Zonas de cobro cargadas desde sessionStorage');
       } catch (e) {
-        console.error('Error al parsear zonas de cobro guardadas', e);
+
         this.cargarZonasCobroDesdeServicio();
       }
     } else {
@@ -434,7 +488,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             try {
               this.allBillingZone = JSON.parse(jsonStr);
             } catch (e) {
-              console.error('Error al parsear zonas de cobro:', e);
+
               this.allBillingZone = [];
             }
           } else if (Array.isArray(zonas)) {
@@ -445,7 +499,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             try {
               this.allBillingZone = JSON.parse(zonas);
             } catch (e) {
-              console.error('Error al parsear string de zonas:', e);
               this.allBillingZone = [];
             }
           } else {
@@ -453,19 +506,16 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             try {
               this.allBillingZone = Array.isArray(zonas) ? zonas : [];
             } catch (e) {
-              console.error('Error al procesar zonas de cobro:', e);
               this.allBillingZone = [];
             }
           }
           // Guardar en sessionStorage para acceso más rápido en el futuro
           sessionStorage.setItem('allBillingZone', JSON.stringify(this.allBillingZone));
-          console.log('Zonas de cobro cargadas desde servicio');
         } else {
           this.allBillingZone = [];
         }
       },
       error: (err) => {
-        console.error('Error al cargar zonas de cobro:', err);
         this.allBillingZone = [];
       }
     });
@@ -482,6 +532,14 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.departamento = "Antioquia";
     this.identificarDepto(); // Para cargar los departamentos de Colombia
     this.identificarCiu();   // Para cargar las ciudades de Antioquia
+
+    // Inicializar formulario de notas de cliente
+    this.notasClienteForm = this.formBuilder.group({
+      nota: ['', Validators.required]
+    });
+
+    // Establecer fecha actual
+    this.fechaActual = new Date();
 
     // Resto del código de inicialización del formulario
     this.firstFormGroup = this.formBuilder.group({
@@ -507,6 +565,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.formulario = this.formBuilder.group({
       // Datos del comprador
       nombres_completos: ["", Validators.required],
+      apellidos_completos: ["", Validators.required],
       tipo_documento_comprador: ["", Validators.required],
       documento: ["", Validators.required],
       indicativo_celular_comprador: ["57", Validators.required], // Valor por defecto: Colombia +57
@@ -554,16 +613,29 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       };
       this.service.getClientByDocument(data).subscribe((res: any) => {
         sessionStorage.setItem("cliente", JSON.stringify(res));
-        this.formulario.patchValue(res);
+        this.formulario.patchValue({
+          nombres_completos: res.nombres_completos,
+          apellidos_completos: res.apellidos_completos,
+          tipo_documento_comprador: res.tipo_documento_comprador,
+          documento: res.documento,
+          indicativo_celular_comprador: res.indicativo_celular_comprador,
+          numero_celular_comprador: res.numero_celular_comprador,
+          indicativo_celular_whatsapp: res.indicativo_celular_whatsapp,
+          numero_celular_whatsapp: res.numero_celular_whatsapp,
+          correo_electronico_comprador: res.correo_electronico_comprador,
+          estado: res.estado || 'activo'
+        });
         this.datos = res;
         this.documentoBuscar = this.formulario.value.documento; // Guardar el documento para futuras referencias
 
         // Si se ingresaron dirección, país, departamento, ciudad y código postal, heredarlos a facturación y entrega
+        // Asegurar que los apellidos se incluyan en la creación de datos iniciales
         if (this.direccion_facturacion && this.pais && this.departamento && this.ciudad_municipio) {
           // Crear datos iniciales de facturación usando los datos del cliente
           const datoFacturacionInicial = {
             alias: "Principal",
             nombres: this.formulario.value.nombres_completos,
+            apellidos: this.formulario.value.apellidos_completos,
             tipoDocumento: this.formulario.value.tipo_documento_comprador,
             documento: this.formulario.value.documento,
             indicativoCel: this.formulario.value.indicativo_celular_comprador,
@@ -580,7 +652,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           const datoEntregaInicial = {
             alias: "Principal",
             nombres: this.formulario.value.nombres_completos,
-            apellidos: "",
+            apellidos: this.formulario.value.apellidos_completos || "",
             indicativoCel: this.formulario.value.indicativo_celular_comprador,
             celular: this.formulario.value.numero_celular_comprador,
             direccionEntrega: this.direccion_facturacion,
@@ -614,45 +686,176 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     });
   }
   editarCliente() {
+    // Verificar si el formulario es válido antes de proceder
+    if (this.formulario.invalid) {
+      Swal.fire({
+        title: "Formulario Incompleto",
+        text: "Por favor complete todos los campos requeridos antes de guardar.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
 
-    //crear un confirm
+    // Confirmar la edición
     Swal.fire({
       title: "Editar Cliente",
-      text: "¿Desea editar el cliente?",
+      text: "¿Desea guardar los cambios realizados al cliente?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Editar",
+      confirmButtonText: "Sí, guardar cambios",
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        const data = {
-          documento: this.documentoBusqueda.nativeElement.value,
+        // Preparar datos del cliente con la información actual del formulario
+        const clienteData = {
+          ...this.formulario.value,
+          datosFacturacionElectronica: this.datosFacturacionElectronica || [],
+          datosEntrega: this.datosEntregas || [],
+          notas: this.formulario.value.notas || [],
+          estado: this.formulario.value.estado || "activo"
         };
 
-        this.service.getClientByDocument(data).subscribe((res: any) => {
-          this.formulario.controls["datosFacturacionElectronica"].setValue(
-            res.datosFacturacionElectronica
-          );
-          this.formulario.controls["datosEntrega"].setValue(res.datosEntrega);
-          this.formulario.controls["notas"].setValue(res.notas);
-          this.formulario.controls["estado"].setValue(res.estado);
-          this.service.editClient(this.formulario.value).subscribe((r) => {
-            console.log(r);
+        // Guardar los cambios
+        this.service.editClient(clienteData).subscribe({
+          next: (r) => {
+            // Actualizar el pedido con los datos del cliente editado
+            this.pedidoGral.cliente = clienteData;
+            this.ref.markForCheck();
+            
+            // Actualizar sessionStorage con los nuevos datos
+            sessionStorage.setItem("cliente", JSON.stringify(clienteData));
+            
+            // Ocultar el formulario de edición y mantener el estado encontrado
+            this.mostrarFormularioCliente = false;
+            this.encontrado = true;
+            
+            // Actualizar arrays de datos
+            this.originalDataEntregas = this.utils.deepClone(this.datosEntregas) || [];
+            
+            // Preservar notas existentes y actualizar solo las del cliente
+            if (!this.pedidoGral.notasPedido) {
+              this.pedidoGral.notasPedido = {
+                notasCliente: clienteData.notas as Notas[],
+                notasDespachos: [] as Notas[],
+                notasEntregas: [] as Notas[],
+                notasProduccion: [] as Notas[],
+                notasFacturacionPagos: [] as Notas[]
+              };
+            } else {
+              // Solo actualizar las notas del cliente sin tocar las demás
+              this.pedidoGral.notasPedido.notasCliente = clienteData.notas as Notas[];
+            }
+            
+            // Verificar estado del cliente
+            this.bloqueado = clienteData.estado === "Bloqueado";
+            
+            // Forzar detección de cambios
+            this.ref.detectChanges();
+
+            // Mostrar mensaje de éxito
             Swal.fire({
-              title: "Editado!",
-              text: "Usuario editado con exito",
+              title: "¡Cliente actualizado!",
+              text: "Los datos del cliente se han guardado exitosamente.",
               icon: "success",
               confirmButtonText: "Ok",
             });
-          });
+
+            // Mostrar toast de confirmación
+            this.toastrService.success(
+              `Cliente ${clienteData.nombres_completos} ${clienteData.apellidos_completos || ''} actualizado correctamente`,
+              'Cliente Actualizado',
+              {
+                closeButton: true,
+                timeOut: 3000
+              }
+            );
+          },
+          error: (error) => {
+            Swal.fire({
+              title: "Error al actualizar",
+              text: "Ha ocurrido un error al actualizar el cliente. Por favor, intente nuevamente.",
+              icon: "error",
+              confirmButtonText: "Ok",
+            });
+          }
         });
       }
     });
-
   }
 
+  /**
+   * Método para abrir el formulario de edición con los datos actuales del cliente
+   */
+  abrirFormularioEdicion() {
+    if (this.pedidoGral?.cliente) {
+      // Llenar el formulario con los datos actuales del cliente
+      this.formulario.patchValue({
+        nombres_completos: this.pedidoGral.cliente.nombres_completos,
+        apellidos_completos: this.pedidoGral.cliente.apellidos_completos,
+        tipo_documento_comprador: this.pedidoGral.cliente.tipo_documento_comprador,
+        documento: this.pedidoGral.cliente.documento,
+        indicativo_celular_comprador: this.pedidoGral.cliente.indicativo_celular_comprador,
+        numero_celular_comprador: this.pedidoGral.cliente.numero_celular_comprador,
+        indicativo_celular_whatsapp: this.pedidoGral.cliente.indicativo_celular_whatsapp,
+        numero_celular_whatsapp: this.pedidoGral.cliente.numero_celular_whatsapp,
+        correo_electronico_comprador: this.pedidoGral.cliente.correo_electronico_comprador,
+        estado: this.pedidoGral.cliente.estado || 'activo'
+      });
+
+      // Asegurar que los datos de facturación y entrega estén disponibles
+      this.datosFacturacionElectronica = this.pedidoGral.cliente.datosFacturacionElectronica || [];
+      this.datosEntregas = this.pedidoGral.cliente.datosEntrega || [];
+      this.originalDataEntregas = this.utils.deepClone(this.datosEntregas) || [];
+
+      // Mostrar el formulario de edición
+      this.mostrarFormularioCliente = true;
+      
+      // Forzar detección de cambios
+      this.ref.detectChanges();
+    }
+  }
+
+  /**
+   * Método para cancelar la edición del cliente y volver al estado anterior
+   */
+  cancelarEdicionCliente() {
+    // Si hay un cliente encontrado, volver a mostrar sus datos sin el formulario
+    if (this.encontrado && this.pedidoGral?.cliente) {
+      // Restaurar el formulario con los datos originales del cliente
+      this.formulario.patchValue({
+        nombres_completos: this.pedidoGral.cliente.nombres_completos,
+        apellidos_completos: this.pedidoGral.cliente.apellidos_completos,
+        tipo_documento_comprador: this.pedidoGral.cliente.tipo_documento_comprador,
+        documento: this.pedidoGral.cliente.documento,
+        indicativo_celular_comprador: this.pedidoGral.cliente.indicativo_celular_comprador,
+        numero_celular_comprador: this.pedidoGral.cliente.numero_celular_comprador,
+        indicativo_celular_whatsapp: this.pedidoGral.cliente.indicativo_celular_whatsapp,
+        numero_celular_whatsapp: this.pedidoGral.cliente.numero_celular_whatsapp,
+        correo_electronico_comprador: this.pedidoGral.cliente.correo_electronico_comprador,
+        estado: this.pedidoGral.cliente.estado || 'activo'
+      });
+
+      // Restaurar datos de facturación y entrega originales
+      this.datosFacturacionElectronica = this.pedidoGral.cliente.datosFacturacionElectronica || [];
+      this.datosEntregas = this.pedidoGral.cliente.datosEntrega || [];
+      this.originalDataEntregas = this.utils.deepClone(this.datosEntregas) || [];
+    } else {
+      // Si no hay cliente encontrado, limpiar el formulario
+      this.formulario.reset();
+      this.datosFacturacionElectronica = [];
+      this.datosEntregas = [];
+      this.originalDataEntregas = [];
+    }
+
+    // Ocultar el formulario de edición
+    this.mostrarFormularioCliente = false;
+    
+    // Forzar detección de cambios
+    this.ref.detectChanges();
+  }
 
   verDatosEntrega() {
 
@@ -680,7 +883,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     if (this.buscarPor.nativeElement.value == "CC-NIT") {
       const data = { documento: this.documentoBusqueda.nativeElement.value };
       this.service.getClientByDocument(data).subscribe((res: any) => {
-        console.log(res);
+        console.log('🔍 Respuesta del servicio getClientByDocument:', res);
         if (res.length == 0) {
           // Cliente no encontrado: se muestra el formulario de creación (incluyendo facturación y entrega)
           this.formulario.controls["documento"].setValue(this.documentoBusqueda.nativeElement.value);
@@ -696,17 +899,53 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           });
         } else {
           // Cliente encontrado: se oculta el formulario de creación
+          console.log('📋 Campos disponibles en el cliente encontrado:', Object.keys(res));
+          console.log('👤 Datos del cliente:', {
+            nombres: res.nombres_completos,
+            apellidos: res.apellidos_completos,
+            documento: res.documento
+          });
           this.pedidoGral.cliente = res;
           this.ref.markForCheck();
           sessionStorage.setItem("cliente", JSON.stringify(res));
-          this.formulario.patchValue(res);
-          this.pedidoGral.notasPedido = {
-            notasCliente: this.formulario.value.notas as Notas[],
-            notasDespachos: [] as Notas[],
-            notasEntregas: [] as Notas[],
-            notasProduccion: [] as Notas[],
-            notasFacturacionPagos: [] as Notas[]
-          };
+          this.formulario.patchValue({
+            nombres_completos: res.nombres_completos,
+            apellidos_completos: res.apellidos_completos,
+            tipo_documento_comprador: res.tipo_documento_comprador,
+            documento: res.documento,
+            indicativo_celular_comprador: res.indicativo_celular_comprador,
+            numero_celular_comprador: res.numero_celular_comprador,
+            indicativo_celular_whatsapp: res.indicativo_celular_whatsapp,
+            numero_celular_whatsapp: res.numero_celular_whatsapp,
+            correo_electronico_comprador: res.correo_electronico_comprador,
+            estado: res.estado || 'activo'
+          });
+          // Preservar notas existentes si ya existen, sino inicializar con las del cliente
+          if (!this.pedidoGral.notasPedido) {
+            this.pedidoGral.notasPedido = {
+              notasCliente: this.formulario.value.notas as Notas[],
+              notasDespachos: [] as Notas[],
+              notasEntregas: [] as Notas[],
+              notasProduccion: [] as Notas[],
+              notasFacturacionPagos: [] as Notas[]
+            };
+          } else {
+            // Solo actualizar las notas del cliente sin tocar las demás
+            this.pedidoGral.notasPedido.notasCliente = this.formulario.value.notas as Notas[];
+            // Asegurar que las demás categorías existan pero sin sobrescribirlas
+            if (!this.pedidoGral.notasPedido.notasDespachos) {
+              this.pedidoGral.notasPedido.notasDespachos = [];
+            }
+            if (!this.pedidoGral.notasPedido.notasEntregas) {
+              this.pedidoGral.notasPedido.notasEntregas = [];
+            }
+            if (!this.pedidoGral.notasPedido.notasProduccion) {
+              this.pedidoGral.notasPedido.notasProduccion = [];
+            }
+            if (!this.pedidoGral.notasPedido.notasFacturacionPagos) {
+              this.pedidoGral.notasPedido.notasFacturacionPagos = [];
+            }
+          }
           this.datos = res;
           this.identificarDepto();
           this.identificarCiu();
@@ -739,7 +978,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       confirmButtonText: "Ok",
     });
 
-    console.log(this.pedidoGral)
+
   }
   seleccionarDireccionEntrega(index) {
     this.pedidoGral.envio = this.datosEntregas[index];
@@ -750,7 +989,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       icon: "success",
       confirmButtonText: "Ok",
     });
-    console.log(this.pedidoGral)
+
   }
   editarDatosEntrega() {
     const datosEntreg = {
@@ -785,7 +1024,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
-        console.log(r);
+
         Swal.fire({
           title: "Editado!",
           text: "Editado con exito",
@@ -837,7 +1076,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
-        console.log(r);
+
         Swal.fire({
           title: "Editado!",
           text: "Editado con exito",
@@ -914,7 +1153,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       const ws = workbook.Sheets[wsName];
       const json = XLSX.utils.sheet_to_json(ws);
       this.jsonData = json
-      console.log('Datos del archivo Excel:', this.jsonData);
+
       this.jsonData.map((x: any) => {
         const datosEntreg = {
           alias: x.RefDatEntrega,
@@ -952,7 +1191,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         this.formulario.controls["notas"].setValue(res.notas);
         this.formulario.controls["estado"].setValue(res.estado);
         this.service.editClient(this.formulario.value).subscribe((r) => {
-          console.log(r);
+
           Swal.fire({
             title: "Guardado!",
             text: "Guardado con exito",
@@ -961,7 +1200,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           });
         })
       })
-      console.log('Datos del archivo Excel:', this.jsonData);
+
 
     };
     reader.readAsBinaryString(this.file);
@@ -1008,7 +1247,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         res.datosEntrega.map((x) => {
           this.datosEntregas.push(x);
         });
-        console.log(r);
+
         Swal.fire({
           title: "Guardado!",
           text: "Guardado con exito",
@@ -1063,7 +1302,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
-        console.log(r);
+
         Swal.fire({
           title: "Guardado!",
           text: "Guardado con exito",
@@ -1120,7 +1359,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     );
   }
   replicarWhatsApp(event) {
-    console.log(event)
     if (this.whatsapp.nativeElement.checked === true) {
       this.formulario.controls['indicativo_celular_whatsapp'].setValue(this.formulario.value.indicativo_celular_comprador)
       this.formulario.controls['numero_celular_whatsapp'].setValue(this.formulario.value.numero_celular_comprador)
@@ -1172,7 +1410,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
-        console.log(r);
+
         Swal.fire({
           title: "Eliminado!",
           text: "Eliminado con exito",
@@ -1196,7 +1434,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
-        console.log(r);
+
         Swal.fire({
           title: "Eliminado!",
           text: "Eliminado con exito",
@@ -1234,7 +1472,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     // Guardar la ciudad seleccionada en localStorage
     localStorage.setItem('selectedCity', value);
 
-    console.log(`Ciudad seleccionada: ${this.pedidoGral.envio?.ciudad}`);
+
 
     // Filtrar direcciones de entrega por la ciudad seleccionada
     if (this.originalDataEntregas) {
@@ -1266,33 +1504,32 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     this.col = val;
   }
   enterStep($event: MovingDirection, index: number) {
-    console.log('Entrando al paso:', index);
-
-    // Intentar cargar datos del pedido desde sessionStorage
-    try {
-      const pedidoTemporal = sessionStorage.getItem('pedidoTemporal');
-      if (pedidoTemporal) {
-        const pedidoGuardado = JSON.parse(pedidoTemporal);
-
-        // Asegurarse de que no perdemos las notas
-        if (pedidoGuardado.notasPedido) {
-          if (!this.pedidoGral.notasPedido) {
-            // Si no existe notasPedido en el pedido actual, inicializarlo con el guardado
-            this.pedidoGral.notasPedido = pedidoGuardado.notasPedido;
-          } else {
-            // Preservar todas las categorías de notas
-            this.pedidoGral.notasPedido.notasProduccion = pedidoGuardado.notasPedido.notasProduccion || [];
-            this.pedidoGral.notasPedido.notasCliente = pedidoGuardado.notasPedido.notasCliente || [];
-            this.pedidoGral.notasPedido.notasDespachos = pedidoGuardado.notasPedido.notasDespachos || [];
-            this.pedidoGral.notasPedido.notasEntregas = pedidoGuardado.notasPedido.notasEntregas || [];
-            this.pedidoGral.notasPedido.notasFacturacionPagos = pedidoGuardado.notasPedido.notasFacturacionPagos || [];
-          }
-
-          console.log('Notas cargadas desde sessionStorage:', this.pedidoGral.notasPedido);
-        }
+    // Inicializar notasPedido si no existe, pero preservar las existentes
+    if (!this.pedidoGral.notasPedido) {
+      this.pedidoGral.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
+    } else {
+      // Asegurar que todas las categorías existan
+      if (!this.pedidoGral.notasPedido.notasProduccion) {
+        this.pedidoGral.notasPedido.notasProduccion = [];
       }
-    } catch (error) {
-      console.error('Error al cargar pedido desde sessionStorage:', error);
+      if (!this.pedidoGral.notasPedido.notasCliente) {
+        this.pedidoGral.notasPedido.notasCliente = [];
+      }
+      if (!this.pedidoGral.notasPedido.notasDespachos) {
+        this.pedidoGral.notasPedido.notasDespachos = [];
+      }
+      if (!this.pedidoGral.notasPedido.notasEntregas) {
+        this.pedidoGral.notasPedido.notasEntregas = [];
+      }
+      if (!this.pedidoGral.notasPedido.notasFacturacionPagos) {
+        this.pedidoGral.notasPedido.notasFacturacionPagos = [];
+      }
     }
 
     // Verificar si debemos saltar el paso de envío (4) cuando la forma de entrega es "recoge"
@@ -1306,7 +1543,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           if (carritoObj && carritoObj.length > 0) {
             const formaEntrega = carritoObj[0]?.configuracion?.datosEntrega?.formaEntrega?.toString().toLowerCase();
             if (formaEntrega && formaEntrega.includes('recoge')) {
-              console.log('Forma de entrega es "recoge", se saltará el paso de envío');
 
               // Crear datos de envío simplificados para recogida en tienda
               const envioRecoge = {
@@ -1351,7 +1587,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           }
         }
       } catch (error) {
-        console.error('Error al procesar carrito para verificar forma de entrega:', error);
       }
     }
 
@@ -1415,7 +1650,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             }
           },
           error: (err) => {
-            console.error('Error al cargar datos de entrega:', err);
+
             this.originalDataEntregas = [];
             this.datosEntregas = [];
             this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
@@ -1445,7 +1680,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
               }
             },
             error: (err) => {
-              console.error('Error al cargar datos de facturación:', err);
             }
           });
         }
@@ -1464,8 +1698,8 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     // Forzar la detección de cambios para actualizar la vista
     this.ref.detectChanges();
 
-    // Al finalizar cualquier cambio de paso, guardar el estado actual
-    this.guardarEstadoPedidoEnSession();
+    // Al finalizar cualquier cambio de paso, forzar detección de cambios
+    this.ref.detectChanges();
   }
 
 
@@ -1502,7 +1736,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   }
 
   private reviewStepAndExecute(index: number) {
-    console.log(`Revisando paso ${index}`);
+
 
     if (index == 3) {
       // Paso del cliente - Validar que existe un cliente
@@ -1553,7 +1787,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             this.ref.detectChanges();
           },
           error: (err) => {
-            console.error('Error al cargar datos de entrega:', err);
             this.originalDataEntregas = [];
             this.datosEntregas = [];
             this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
@@ -1684,7 +1917,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           }
         }
       } catch (e) {
-        console.error('Error al procesar carrito:', e);
       }
     }
   }
@@ -1692,7 +1924,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   // Método para preparar el pago llamando primero al método del checkout
   prepararPago() {
     if (!this.resumen) {
-      console.error('Error: No se encontró la referencia al componente de checkout');
       Swal.fire({
         title: 'Error',
         text: 'No se pudo acceder al formulario de pago. Intente nuevamente.',
@@ -1703,11 +1934,9 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
     // Llamar al método del checkout para preparar los datos del pedido
     this.resumen.gotToPaymentOrder().then(() => {
-      console.log('Pago preparado por el componente checkout');
       // El evento comprarYPagar será emitido por el checkout y capturado 
       // mediante el binding (comprarYPagar)="comprarYPagar($event)" en el HTML
     }).catch(error => {
-      console.error('Error al preparar el pago:', error);
       Swal.fire({
         title: 'Error',
         text: 'Ocurrió un error al preparar el pago. Verifique los datos e intente nuevamente.',
@@ -1718,7 +1947,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
   // Método para procesar el pago después de recibir los datos completos del checkout
   comprarYPagar(pedidoProcesado: Pedido) {
-    console.log('Pedido recibido desde checkout:', pedidoProcesado);
 
     // Asegurarnos de mantener la información correcta del pedido
     this.pedidoGral = { ...pedidoProcesado };
@@ -1745,8 +1973,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       return;
     }
 
-    // Log para depuración
-    console.log("Pedido final a procesar:", this.pedidoGral);
+
 
     // Actualizar estado según los productos
     this.cambiarEstadoSegunLosProductos();
@@ -1777,7 +2004,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
               });
             }
           }).catch(error => {
-            console.error("Error en el proceso de pago con Wompi:", error);
             Swal.fire({
               title: "Error en el pago",
               text: "Ocurrió un error durante el proceso de pago. El pedido ha sido guardado con estado pendiente.",
@@ -1820,7 +2046,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             if (res.order?.pagoInformation) {
               // Actualizar con información adicional que pueda haber agregado el backend
               this.pedidoGral = { ...this.pedidoGral, ...res.order };
-              console.log("Información de pago actualizada:", res.order.pagoInformation);
             }
             context.cartService.clearCart();
             context.pedidoSinGuardar = false;
@@ -1838,7 +2063,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
             this.mywizard.goToNextStep();
           },
           error: (err: any) => {
-            console.error("Error al crear el pedido:", err);
             Swal.fire({
               title: "Error",
               text: "No se pudo crear el pedido. Por favor intente nuevamente.",
@@ -1852,7 +2076,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         this.mywizard.goToNextStep();
       },
       error: (err) => {
-        console.error("Error al validar número de pedido:", err);
         Swal.fire({
           title: "Error",
           text: "No se pudo validar el número de pedido. Por favor intente nuevamente.",
@@ -1989,7 +2212,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   }
 
   idBillingZone(zona_cobro: any) {
-    console.log(this.ciudad_municipio_entrega)
+
     const ciudad = this.ciudad_municipio_entrega
     const context = this;
     context.filteredResults = context.allBillingZone.filter(item => item.ciudad === ciudad);
@@ -2018,6 +2241,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       const datoFacturacion = {
         alias: "Principal",
         nombres: this.formulario.value.nombres_completos,
+        apellidos: this.formulario.value.apellidos_completos || "",
         tipoDocumento: this.formulario.value.tipo_documento_comprador,
         documento: this.formulario.value.documento,
         indicativoCel: this.formulario.value.indicativo_celular_comprador,
@@ -2038,7 +2262,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       const datoEntrega = {
         alias: "Principal",
         nombres: this.formulario.value.nombres_completos,
-        apellidos: "",
+        apellidos: this.formulario.value.apellidos_completos || "",
         indicativoCel: this.formulario.value.indicativo_celular_comprador,
         celular: this.formulario.value.numero_celular_comprador,
         direccionEntrega: this.direccion_facturacion,
@@ -2075,7 +2299,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           title: "¡Cliente creado exitosamente!",
           html: `
             <div class="text-start">
-              <strong>Cliente:</strong> ${this.formulario.value.nombres_completos}<br>
+              <strong>Cliente:</strong> ${this.formulario.value.nombres_completos} ${this.formulario.value.apellidos_completos || ''}<br>
               <strong>Documento:</strong> ${this.formulario.value.documento}<br>
               <strong>El cliente ha sido guardado y está listo para continuar.</strong>
             </div>
@@ -2088,7 +2312,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
         // Mostrar notificación toast adicional
         this.toastrService.success(
-          `Cliente ${this.formulario.value.nombres_completos} creado correctamente`, 
+          `Cliente ${this.formulario.value.nombres_completos} ${this.formulario.value.apellidos_completos || ''} creado correctamente`, 
           'Cliente Creado', 
           { 
             closeButton: true, 
@@ -2135,7 +2359,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         // }
       },
       error: (error) => {
-        console.error('Error al cargar bodegas:', error);
         this.toastrService.error('Error al cargar las bodegas', 'Error');
       }
     });
@@ -2201,19 +2424,17 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
                 context.pedidoGral = res.order;
                 context.pedidoGral = { ...context.pedidoGral };
 
-                console.log("Información de pago:", res.order.pagoInformation);
+
               }
               context.pedidoSinGuardar = false;
               resolve(true); // Pedido guardado exitosamente
             },
             error: (err: any) => {
-              console.error("Error al crear el pedido:", err);
               resolve(false); // Error al guardar el pedido
             }
           });
         },
         error: (err) => {
-          console.error("Error al validar número de pedido:", err);
           resolve(false); // Error al validar el número de pedido
         },
       });
@@ -2234,7 +2455,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
     // Usamos el método editOrder en lugar de updateOrder
     this.ventasService.editOrder(this.pedidoGral).subscribe({
       next: (res: any) => {
-        console.log("Pedido actualizado completamente con nuevo estado:", estadoPago);
 
         // Opcionalmente, también podemos enviar el correo de confirmación si es necesario
         const htmlSanizado = this.pyamentService.getHtmlContent(this.pedidoGral);
@@ -2243,15 +2463,12 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           emailHtml: htmlSanizado
         }).subscribe({
           next: (emailRes: any) => {
-            console.log("Correo de confirmación enviado con el nuevo estado de pago");
           },
           error: (emailErr: any) => {
-            console.error("Error al enviar correo de confirmación:", emailErr);
           }
         });
       },
       error: (err: any) => {
-        console.error("Error al actualizar el pedido completo:", err);
       }
     });
   }
@@ -2286,7 +2503,6 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       try {
         // NUEVA IMPLEMENTACIÓN: Utiliza el link de pago proporcionado por el backend
         if (!this.pedidoGral.pagoInformation || !this.pedidoGral.pagoInformation.linkPago) {
-          console.error('No se encontró el link de pago en la información del pedido');
           reject(new Error('Link de pago no disponible'));
           return;
         }
@@ -2300,14 +2516,73 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
         resolve(true);
 
       } catch (error) {
-        console.error('Error al procesar el pago:', error);
         reject(error);
       }
     });
   }
 
   public onNotaAgregada(event: any): void {
-    // Asegurarse de que notasPedido existe
+    // El evento ahora viene con la estructura completa del carrito actualizado
+    if (event && event.pedido) {
+      // Actualizar el pedido completo con las notas actualizadas
+      this.pedidoGral = { ...event.pedido };
+      
+      // Forzar detección de cambios
+      this.ref.detectChanges();
+    }
+  }
+
+  /**
+   * Maneja el evento notasActualizadas del componente de notas
+   * @param event Información actualizada de notas
+   */
+  public onNotasActualizadas(event: any): void {
+    // Verificar que el evento tenga la información necesaria
+    if (event && event.notasPedido) {
+      // Preservar notas existentes y actualizar solo las que vienen en el evento
+      if (!this.pedidoGral.notasPedido) {
+        this.pedidoGral.notasPedido = event.notasPedido;
+      } else {
+        // Actualizar cada categoría individualmente para preservar las que no vienen en el evento
+        if (event.notasPedido.notasProduccion !== undefined) {
+          this.pedidoGral.notasPedido.notasProduccion = event.notasPedido.notasProduccion;
+        }
+        if (event.notasPedido.notasCliente !== undefined) {
+          this.pedidoGral.notasPedido.notasCliente = event.notasPedido.notasCliente;
+        }
+        if (event.notasPedido.notasDespachos !== undefined) {
+          this.pedidoGral.notasPedido.notasDespachos = event.notasPedido.notasDespachos;
+        }
+        if (event.notasPedido.notasEntregas !== undefined) {
+          this.pedidoGral.notasPedido.notasEntregas = event.notasPedido.notasEntregas;
+        }
+        if (event.notasPedido.notasFacturacionPagos !== undefined) {
+          this.pedidoGral.notasPedido.notasFacturacionPagos = event.notasPedido.notasFacturacionPagos;
+        }
+      }
+
+      // Si el evento incluye el carrito actualizado, actualizar también el carrito
+      if (event.carrito) {
+        this.pedidoGral.carrito = event.carrito;
+      }
+
+      // Forzar detección de cambios
+      this.ref.detectChanges();
+    }
+  }
+
+  /**
+   * Método para manejar el envío de nuevas notas de cliente
+   */
+  onSubmitCliente(): void {
+    if (this.notasClienteForm.invalid) {
+      return;
+    }
+
+    const nota = this.notasClienteForm.value;
+    nota.fecha = new Date();
+
+    // Inicializar notasPedido si no existe
     if (!this.pedidoGral.notasPedido) {
       this.pedidoGral.notasPedido = {
         notasProduccion: [],
@@ -2318,74 +2593,66 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       };
     }
 
-    // Transferir la nota de producción del producto al objeto notasPedido
-    if (event && event.notaProduccion && event.notaProduccion.length > 0) {
-      // Obtener la última nota agregada (la más reciente)
-      const nuevaNota = event.notaProduccion[event.notaProduccion.length - 1];
-
-      // Crear una nota estructurada para el pedido
-      const notaProduccion = {
-        fecha: new Date().toISOString(),
-        descripcion: nuevaNota,
-        usuario: this.formulario.value.nombres_completos || 'Usuario',
-        producto: event.producto?.crearProducto?.titulo || 'Producto sin nombre'
-      };
-
-      // Agregar la nota al array de notasProduccion
-      this.pedidoGral.notasPedido.notasProduccion.push(notaProduccion);
+    // Inicializar notasCliente si no existe
+    if (!this.pedidoGral.notasPedido.notasCliente) {
+      this.pedidoGral.notasPedido.notasCliente = [];
     }
 
-    // Actualizar el carrito en el localStorage
-    localStorage.setItem('carrito', JSON.stringify(this.pedidoGral.carrito));
+    // Agregar la nueva nota al inicio del array
+    this.pedidoGral.notasPedido.notasCliente.unshift(nota);
 
-    // Guardar el estado del pedido en sessionStorage para persistencia entre pasos
-    this.guardarEstadoPedidoEnSession();
+    // Limpiar el formulario
+    this.notasClienteForm.reset();
 
-    // Opcional: mostrar un mensaje de éxito
-    console.log('Nota de producción agregada:', event);
+    // Forzar detección de cambios
+    this.ref.detectChanges();
+
+    // Mostrar mensaje de confirmación
+    this.toastrService.success('Nota del cliente agregada exitosamente', 'Nota Agregada', {
+      closeButton: true,
+      timeOut: 3000
+    });
+
+
   }
 
   /**
-   * Maneja el evento notasActualizadas del componente de notas
-   * @param event Información actualizada de notas
+   * Método para eliminar una nota de cliente
+   * @param index Índice de la nota a eliminar
    */
-  public onNotasActualizadas(event: any): void {
-    // Verificar que el evento tenga la información necesaria
-    if (event && event.notasPedido) {
-      // Actualizar las notas del pedido
-      this.pedidoGral.notasPedido = event.notasPedido;
+  eliminarNotaCliente(index: number): void {
+    if (!this.pedidoGral?.notasPedido?.notasCliente) {
+      return;
+    }
 
-      // Si el evento incluye el carrito actualizado, actualizar también el carrito
-      if (event.carrito) {
-        this.pedidoGral.carrito = event.carrito;
+    // Confirmar eliminación
+    Swal.fire({
+      title: '¿Eliminar nota?',
+      text: '¿Está seguro de que desea eliminar esta nota del cliente?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Eliminar la nota del array
+        this.pedidoGral.notasPedido.notasCliente.splice(index, 1);
+
+        // Forzar detección de cambios
+        this.ref.detectChanges();
+
+        // Mostrar mensaje de confirmación
+        this.toastrService.success('Nota eliminada exitosamente', 'Nota Eliminada', {
+          closeButton: true,
+          timeOut: 3000
+        });
+
+
       }
-
-      // Guardar el pedido completo en sessionStorage para persistencia entre pasos
-      this.guardarEstadoPedidoEnSession();
-
-      // Actualizar localStorage
-      localStorage.setItem('carrito', JSON.stringify(this.pedidoGral.carrito));
-
-      // Log detallado para verificar todas las categorías de notas
-      console.log('Notas actualizadas recibidas del componente de notas:');
-      console.log('- Producción:', this.pedidoGral.notasPedido?.notasProduccion?.length || 0, 'notas');
-      console.log('- Cliente:', this.pedidoGral.notasPedido?.notasCliente?.length || 0, 'notas');
-      console.log('- Despachos:', this.pedidoGral.notasPedido?.notasDespachos?.length || 0, 'notas');
-      console.log('- Entregas:', this.pedidoGral.notasPedido?.notasEntregas?.length || 0, 'notas');
-      console.log('- Facturación:', this.pedidoGral.notasPedido?.notasFacturacionPagos?.length || 0, 'notas');
-    }
+    });
   }
 
-  /**
-   * Guarda el estado actual del pedido en sessionStorage para mantener persistencia entre pasos
-   */
-  private guardarEstadoPedidoEnSession(): void {
-    try {
-      // Crear una copia limpia del pedido para evitar referencias circulares
-      const pedidoGuardado = JSON.parse(JSON.stringify(this.pedidoGral));
-      sessionStorage.setItem('pedidoTemporal', JSON.stringify(pedidoGuardado));
-    } catch (error) {
-      console.error('Error al guardar el pedido en sessionStorage:', error);
-    }
-  }
+
 }

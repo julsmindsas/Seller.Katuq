@@ -469,30 +469,34 @@ export class PaymentService extends BaseService {
     let tarjetaIndex = 0;
     // pedido.totalImpuesto = 0; // El cálculo de IVA total se hace en checkIVAPrice
 
-    // --- Generación HTML Notas-- -
-    //   Notas de Producción(asociadas a cada item del carrito)
-    (pedido.carrito ?? []).forEach((item, index) => {
-      // Asumiendo que notaProduccion es un array de Notas
-      (item.notaProduccion ?? []).forEach(nota => {
+    // --- Generación HTML Notas de Producción (Fuente Única) ---
+    (pedido.notasPedido?.notasProduccion ?? []).forEach(nota => {
+      const fechaNota = nota.fecha ? this.customFormatDateHour(nota.fecha) : this.customFormatDateHour(new Date().toISOString());
+      
+      // Manejar diferentes formatos de notas para compatibilidad
+      let descripcion = '';
+      let producto = 'General';
+      
+      if (typeof nota === 'string') {
+        descripcion = nota;
+      } else if (nota && typeof nota === 'object') {
+        descripcion = nota.descripcion || nota.nota || '';
+        producto = nota.producto || 'General';
+      }
+      
+      // Solo agregar la fila si hay una descripción válida
+      if (descripcion && descripcion.trim() !== '') {
         notasProduccionHtml += `
           <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(new Date().toISOString())}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota ?? ''}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${producto}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${fechaNota}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${descripcion}</td>
           </tr>
         `;
-      });
-      // Si no hay nota específica pero quieres una fila por producto:
-      // if (!item.notaProduccion || item.notaProduccion.length === 0) {
-      //   notasProduccionHtml += `
-      //      <tr>
-      //        <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">Producto ${index + 1}: ${item.producto?.crearProducto?.titulo ?? 'N/A'}</td>
-      //        <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.obtenerFechaHoy()}</td>
-      //        <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">(Sin nota específica)</td>
-      //      </tr>
-      //    `;
-      // }
+      }
     });
+
+
 
 
     // Notas Generales del Pedido
@@ -785,6 +789,8 @@ export class PaymentService extends BaseService {
          </tbody>
        </table>
      </div>` : '';
+
+
 
 
     const htmlNotasDespachos = !isComanda && notasDespachosHtml ? `

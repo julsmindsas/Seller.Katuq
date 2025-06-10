@@ -186,6 +186,11 @@ export interface Entrega {
 export interface Notas {
     fecha?: string,
     nota?: string,
+    descripcion?: string,
+    producto?: string,
+    usuario?: string,
+    productoId?: string,
+    fromFormulario?: boolean,
 }
 
 export interface Envio {

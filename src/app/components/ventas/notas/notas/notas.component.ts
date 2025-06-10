@@ -19,15 +19,17 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   fecha: Date
   notasProduccion: any[] = [];
   notasCliente: any[] = [];
+
   notasDespachos: any[] = [];
   notasEntregas: any[] = [];
   notasFacturacionPagos: any[] = [];
   notasProduccionForm: FormGroup;
-  notasClienteForm: FormGroup;
+
   notasDespachoForm: FormGroup;
   notasEntregasForm: FormGroup;
   notasFacturacionPagosForm: FormGroup;
   bandera: boolean = true;
+
   notasClienteOrdenadas: Notas[] = [];
   notasDespachosOrdenadas: Notas[] = [];
   notasEntregasOrdenadas: Notas[] = [];
@@ -38,33 +40,72 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   ngAfterContentInit(): void {
     if (!this.isEdit) {
-      // Limpiar todas las notas si no estamos en modo edición (creando algo nuevo)
+      // Solo inicializar notasPedido si no existe, preservando notas existentes
       if (this.pedido) { // Asegurarse que el pedido exista
-        this.pedido.notasPedido = {
-          notasProduccion: [],
-          notasCliente: [],
-          notasDespachos: [],
-          notasEntregas: [],
-          notasFacturacionPagos: []
-        };
-        // Limpiar también las notas de producción dentro de cada item del carrito
+        if (!this.pedido.notasPedido) {
+          this.pedido.notasPedido = {
+            notasProduccion: [],
+            notasCliente: [],
+            notasDespachos: [],
+            notasEntregas: [],
+            notasFacturacionPagos: []
+          };
+        } else {
+          // Asegurar que todas las categorías existan
+          if (!this.pedido.notasPedido.notasProduccion) {
+            this.pedido.notasPedido.notasProduccion = [];
+          }
+          if (!this.pedido.notasPedido.notasCliente) {
+            this.pedido.notasPedido.notasCliente = [];
+          }
+          if (!this.pedido.notasPedido.notasDespachos) {
+            this.pedido.notasPedido.notasDespachos = [];
+          }
+          if (!this.pedido.notasPedido.notasEntregas) {
+            this.pedido.notasPedido.notasEntregas = [];
+          }
+          if (!this.pedido.notasPedido.notasFacturacionPagos) {
+            this.pedido.notasPedido.notasFacturacionPagos = [];
+          }
+        }
+        
+        // Solo limpiar notas de producción dentro del carrito si no hay notas centralizadas
         if (this.pedido.carrito && this.pedido.carrito.length > 0) {
           this.pedido.carrito.forEach(prod => {
-            prod.notaProduccion = [];
+            if (prod.notaProduccion) {
+              delete prod.notaProduccion;
+            }
           });
         }
       }
-      // Limpiar las propiedades locales usadas para mostrar/ordenar
-      this.notasClienteOrdenadas = [];
-      this.notasDespachosOrdenadas = [];
-      this.notasEntregasOrdenadas = [];
-      this.notasFacturacionPagosOrdenadas = [];
-      // Limpiar las propiedades locales que podrían haber sido cargadas si isEdit hubiera sido true
-      this.notasProduccion = [];
-      this.notasCliente = [];
-      this.notasDespachos = [];
-      this.notasEntregas = [];
-      this.notasFacturacionPagos = [];
+      
+      // Limpiar las propiedades locales solo si no hay notas existentes
+      if (this.pedido?.notasPedido?.notasDespachos?.length > 0) {
+        this.notasDespachosOrdenadas = [...this.pedido.notasPedido.notasDespachos].sort((a, b) =>
+          new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+      } else { 
+        this.notasDespachosOrdenadas = []; 
+      }
+
+      if (this.pedido?.notasPedido?.notasEntregas?.length > 0) {
+        this.notasEntregasOrdenadas = [...this.pedido.notasPedido.notasEntregas].sort((a, b) =>
+          new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+      } else { 
+        this.notasEntregasOrdenadas = []; 
+      }
+
+      if (this.pedido?.notasPedido?.notasFacturacionPagos?.length > 0) {
+        this.notasFacturacionPagosOrdenadas = [...this.pedido.notasPedido.notasFacturacionPagos].sort((a, b) =>
+          new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+      } else { 
+        this.notasFacturacionPagosOrdenadas = []; 
+      }
+
+      // Asignar las notas existentes a las variables locales
+      this.notasProduccion = this.pedido?.notasPedido?.notasProduccion || [];
+      this.notasDespachos = this.pedido?.notasPedido?.notasDespachos || [];
+      this.notasEntregas = this.pedido?.notasPedido?.notasEntregas || [];
+      this.notasFacturacionPagos = this.pedido?.notasPedido?.notasFacturacionPagos || [];
 
     } else { // Modo Edición (isEdit = true)
       if (this.pedido) { // Solo proceder si el pedido existe
@@ -80,10 +121,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         }
 
         // Cargar y ordenar notas existentes del pedido
-        if (this.pedido.notasPedido?.notasCliente?.length > 0) {
-          this.notasClienteOrdenadas = [...this.pedido.notasPedido.notasCliente].sort((a, b) =>
-            new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
-        } else { this.notasClienteOrdenadas = []; }
 
         if (this.pedido.notasPedido?.notasDespachos?.length > 0) {
           this.notasDespachosOrdenadas = [...this.pedido.notasPedido.notasDespachos].sort((a, b) =>
@@ -103,19 +140,16 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         // Asignar a variables locales si estamos en modo edición
         // Estas variables se usan en el template para mostrar las notas de forma no editable o para otros propósitos.
         this.notasProduccion = this.pedido.notasPedido.notasProduccion || [];
-        this.notasCliente = this.pedido.notasPedido.notasCliente || [];
         this.notasDespachos = this.pedido.notasPedido.notasDespachos || [];
         this.notasEntregas = this.pedido.notasPedido.notasEntregas || [];
         this.notasFacturacionPagos = this.pedido.notasPedido.notasFacturacionPagos || [];
         
       } else {
         // Si this.pedido es undefined, asegurar que las propiedades locales estén vacías
-        this.notasClienteOrdenadas = [];
         this.notasDespachosOrdenadas = [];
         this.notasEntregasOrdenadas = [];
         this.notasFacturacionPagosOrdenadas = [];
         this.notasProduccion = [];
-        this.notasCliente = [];
         this.notasDespachos = [];
         this.notasEntregas = [];
         this.notasFacturacionPagos = [];
@@ -127,6 +161,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   ngOnInit(): void {
     this.fecha = new Date();
+    
+    // Limpiar datos fantasma al inicializar
+    this.limpiarDatosFantasmaNotas();
+    
     this.initFormularios();
 
     // Suscribirse a cambios en el carrito
@@ -140,10 +178,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   initFormularios(): void {
     // Inicializar formularios
-    this.notasClienteForm = this.formBuilder.group({
-      nota: ['', Validators.required]
-    });
-
     this.notasDespachoForm = this.formBuilder.group({
       nota: ['', Validators.required]
     });
@@ -165,7 +199,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.carrito || changes.pedido) {
-      // Si cambia el pedido o el carrito, actualizar las notas
+      // Si cambia el pedido o el carrito, actualizar las notas pero preservar las existentes
       if (this.pedido?.notasPedido?.notasProduccion) {
         // Ordenar las notas de producción por fecha (más recientes primero)
         this.pedido.notasPedido.notasProduccion = [...this.pedido.notasPedido.notasProduccion].sort((a, b) => {
@@ -175,35 +209,31 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         });
       }
 
-      // Refrescar el carrito y actualizar el formulario
+      // Refrescar el carrito y actualizar el formulario solo si es necesario
       this.singleton.refreshCart().subscribe((data: any) => {
         if (data) {
-          let carritoParaFormulario = data;
-          if (!this.isEdit && Array.isArray(data)) {
-            // Si NO estamos editando y 'data' es un array (el carrito)
-            // limpiamos las notaProduccion de cada producto antes de pasarlo al formulario.
-            carritoParaFormulario = data.map(prod => {
-              // Clonar el producto para no modificar el original en el singleton directamente aquí,
-              // aunque el singleton podría devolver una copia ya.
-              // Lo importante es que el 'notaProduccion' para el formulario esté limpio.
-              return {
-                ...prod,
-                notaProduccion: [] // Limpiar notas de producción para el formulario
-              };
-            });
-          }
-          // Asignar el carrito (potencialmente limpio de notas de prod.) al pedido del componente
-          if (this.pedido) { // Asegurarse de que this.pedido exista antes de asignarle el carrito
-            this.pedido.carrito = carritoParaFormulario;
-          } else {
-            // Si this.pedido es undefined, esto podría indicar un problema de ciclo de vida o de inicialización.
-            // Por ahora, al menos evitamos un error, pero esto debería revisarse si ocurre.
-            console.warn('NotasComponent: this.pedido es undefined en ngOnChanges al intentar asignar carrito.');
-            // Podríamos crear un pedido básico aquí si fuera necesario, o manejarlo según la lógica de negocio.
-          }
+          // Limpiar datos fantasma del carrito antes de procesarlo
+          let carritoLimpio = Array.isArray(data) ? data.map(prod => {
+            const prodLimpio = { ...prod };
+            // Eliminar propiedades obsoletas
+            if (prodLimpio.notaProduccion) {
+              delete prodLimpio.notaProduccion;
+            }
+            return prodLimpio;
+          }) : data;
           
-          // Reinicializar el formulario con los datos actualizados (ahora limpios si !isEdit)
-          this.initFormularios();
+          // Asignar el carrito limpio al pedido solo si es diferente
+          if (this.pedido) {
+            const carritoAnterior = JSON.stringify(this.pedido.carrito || []);
+            const carritoNuevo = JSON.stringify(carritoLimpio);
+            
+            if (carritoAnterior !== carritoNuevo) {
+              this.pedido.carrito = carritoLimpio;
+              
+              // Solo reinicializar el formulario si el carrito cambió realmente
+              this.initFormularios();
+            }
+          }
         }
       });
     }
@@ -217,15 +247,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     const productos = this.notasProduccionForm.get('productos') as FormArray;
     productos.clear();
 
-    this.pedido.carrito.forEach(prod => {
-      // Si no existe notaProduccion, inicializarlo como array vacío
-      if (!prod.notaProduccion) {
-        prod.notaProduccion = [];
-      }
-
+    this.pedido.carrito.forEach((prod, index) => {
+      // Obtener las notas existentes para este producto desde la fuente centralizada
+      const notasDelProducto = this.obtenerNotasDelProducto(prod);
+      
       // Crear FormArray para las notas de este producto
       const notasArray = this.formBuilder.array(
-        prod.notaProduccion.map(nota => this.formBuilder.control(nota))
+        notasDelProducto.map(nota => this.formBuilder.control(nota.descripcion || nota.nota || ''))
       );
 
       // Añadir al FormArray principal con el identificador del producto
@@ -235,13 +263,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         titulo: [prod.producto?.crearProducto?.titulo || 'Producto sin nombre']
       }));
     });
-
-    // Verificar si hay notas generales de producción en el pedido
-    if (this.pedido && this.pedido.notasPedido && this.pedido.notasPedido.notasProduccion &&
-      this.pedido.notasPedido.notasProduccion.length > 0) {
-      // Las notas ya están en el pedido
-      console.log('Notas de producción encontradas en el pedido:', this.pedido.notasPedido.notasProduccion);
-    }
   }
 
   get notasFormArray() {
@@ -267,11 +288,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       }
     } else {
       switch (tipo) {
-        case 'cliente':
-          if (this.pedido?.notasPedido?.notasCliente) {
-            this.pedido.notasPedido.notasCliente.splice(notaIndex, 1);
-          }
-          break;
+
         case 'despachos':
           if (this.pedido?.notasPedido?.notasDespachos) {
             this.pedido.notasPedido.notasDespachos.splice(notaIndex, 1);
@@ -289,11 +306,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           break;
       }
       
-      // Para cualquier tipo que no sea producción, guardar y emitir el evento
+      // Para cualquier tipo que no sea producción, emitir el evento
       if (tipo !== 'produccion') {
-        // Guardar en sessionStorage
-        this.guardarPedidoEnSessionStorage();
-        
         // Emitir evento al componente padre
         this.notasActualizadas.emit({
           carrito: this.pedido.carrito,
@@ -305,112 +319,78 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   }
 
   guardarNotas() {
-    if (!this.notasFormArray) return;
+    if (!this.notasFormArray) {
+      return;
+    }
     
     this.carritoActualizado = true;
     const notasActualizadas = this.notasFormArray.value;
     
-    // Asignar las notas a cada producto en el carrito
     if (this.pedido?.carrito) {
-      // Preservar las notas generales de producción (las que vienen del carrito)
-      const notasGenerales = this.pedido.notasPedido?.notasProduccion?.filter(nota => 
-        // Filtrar solo las notas que tienen estructura de nota general
-        // Usando casting porque la interfaz Notas no tiene estas propiedades
-        (nota as any).descripcion && ((nota as any).producto || (nota as any).usuario)
-      ) || [];
-      
-      // Actualizar las notas en cada producto del carrito
-      this.pedido.carrito.forEach((producto, index) => {
-        if (index < notasActualizadas.length) {
-          producto.notaProduccion = notasActualizadas[index].notas;
-        }
-      });
-      
-      // Actualizar las notas de producción en el pedido, combinando las generales con las del formulario
-      if (this.pedido?.notasPedido) {
-        // Convertir las notas del formulario al formato adecuado para notasProduccion
-        const notasDelFormulario: any[] = [];
-        
-        // Recorrer los productos y sus notas
-        notasActualizadas.forEach((producto, pIndex) => {
-          if (producto.notas && producto.notas.length > 0) {
-            // Para cada nota del producto, crear una entrada de nota estructurada
-            producto.notas.forEach((textoNota: string) => {
-              if (textoNota && textoNota.trim() !== '') {
-                const tituloProducto = this.pedido?.carrito?.[pIndex]?.producto?.crearProducto?.titulo;
-                notasDelFormulario.push({
-                  fecha: new Date().toISOString(),
-                  descripcion: textoNota,
-                  producto: tituloProducto || 'Producto',
-                  usuario: 'Usuario' // O tomar el usuario de donde corresponda
-                });
-              }
-            });
-          }
-        });
-        
-        // Combinar ambas colecciones de notas
-        this.pedido.notasPedido.notasProduccion = [...notasGenerales, ...notasDelFormulario];
-        
-        // Guardar el pedido completo en sessionStorage para persistencia entre pasos
-        try {
-          // Crear una copia limpia del pedido para evitar referencias circulares
-          const pedidoGuardado = JSON.parse(JSON.stringify(this.pedido));
-          sessionStorage.setItem('pedidoTemporal', JSON.stringify(pedidoGuardado));
-        } catch (error) {
-          console.error('Error al guardar el pedido en sessionStorage:', error);
+      // Inicializar notasPedido si no existe, preservando notas existentes
+      if (!this.pedido.notasPedido) {
+        this.pedido.notasPedido = {
+          notasProduccion: [],
+          notasCliente: [],
+          notasDespachos: [],
+          notasEntregas: [],
+          notasFacturacionPagos: []
+        };
+      } else {
+        // Asegurar que la categoría de producción existe
+        if (!this.pedido.notasPedido.notasProduccion) {
+          this.pedido.notasPedido.notasProduccion = [];
         }
       }
+
+      // Limpiar solo las notas que vienen del formulario (mantener las demás)
+      this.pedido.notasPedido.notasProduccion = this.pedido.notasPedido.notasProduccion.filter(nota => 
+        !(nota as any).fromFormulario
+      );
       
-      // Actualizar el localStorage y notificar cambios
-      localStorage.setItem('carrito', JSON.stringify(this.pedido.carrito));
-      
-      // Emitir el pedido completo, no solo el carrito, para asegurar que se comuniquen las notas
+      // Agregar las nuevas notas del formulario
+      let notasAgregadas = 0;
+      notasActualizadas.forEach((producto, pIndex) => {
+        if (producto.notas && producto.notas.length > 0) {
+          const tituloProducto = this.pedido?.carrito?.[pIndex]?.producto?.crearProducto?.titulo;
+          const productoId = this.pedido?.carrito?.[pIndex]?.producto?.identificacion?.referencia;
+          
+          producto.notas.forEach((textoNota: string) => {
+            if (textoNota && textoNota.trim() !== '') {
+              this.pedido.notasPedido.notasProduccion.push({
+                fecha: new Date().toISOString(),
+                descripcion: textoNota,
+                producto: tituloProducto || 'Producto',
+                usuario: 'Usuario',
+                productoId: productoId || '',
+                fromFormulario: true
+              } as any);
+              notasAgregadas++;
+            }
+          });
+        }
+      });
+        
+      // Emitir el pedido completo actualizado con todas las notas preservadas
       this.notasActualizadas.emit({
         carrito: this.pedido.carrito,
         notasPedido: this.pedido.notasPedido,
         pedidoCompleto: this.pedido
       });
-      
-      // Actualizar el cart singleton para mantener sincronizados todos los componentes
-      this.singleton.refreshCart();
    
-      this.notasFormArray.reset();
+      // Limpiar correctamente el formulario
+      this.limpiarFormularioMantenendoNotas();
 
       Swal.fire({
         icon: 'success',
         title: 'Notas Guardadas Con Éxito',
-        text: 'Se han guardado con éxito las notas de producción para los productos',
+        text: `Se han guardado ${notasAgregadas} notas de producción para los productos`,
         confirmButtonText: 'Aceptar'
       });
     }
   }
 
-  onSubmitCliente() {
-    const nota = this.notasClienteForm.value;
-    nota.fecha = new Date();
 
-    if (!this.pedido?.notasPedido?.notasCliente) {
-      if (this.pedido?.notasPedido) {
-        this.pedido.notasPedido.notasCliente = [];
-      }
-    }
-
-    if (this.pedido?.notasPedido?.notasCliente) {
-      this.pedido.notasPedido.notasCliente.unshift(nota);
-      
-      // Guardar en sessionStorage
-      this.guardarPedidoEnSessionStorage();
-      
-      // Emitir evento al componente padre
-      this.notasActualizadas.emit({
-        carrito: this.pedido.carrito,
-        notasPedido: this.pedido.notasPedido,
-        pedidoCompleto: this.pedido
-      });
-    }
-    this.notasClienteForm.reset();
-  }
 
   onSubmitDespachos() {
     const notaDespachos = this.notasDespachoForm.value;
@@ -424,9 +404,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     if (this.pedido?.notasPedido?.notasDespachos) {
       this.pedido.notasPedido.notasDespachos.unshift(notaDespachos);
-      
-      // Guardar en sessionStorage
-      this.guardarPedidoEnSessionStorage();
       
       // Emitir evento al componente padre
       this.notasActualizadas.emit({
@@ -451,9 +428,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (this.pedido?.notasPedido?.notasEntregas) {
       this.pedido.notasPedido.notasEntregas.unshift(notaEntrega);
       
-      // Guardar en sessionStorage
-      this.guardarPedidoEnSessionStorage();
-      
       // Emitir evento al componente padre
       this.notasActualizadas.emit({
         carrito: this.pedido.carrito,
@@ -477,9 +451,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (this.pedido?.notasPedido?.notasFacturacionPagos) {
       this.pedido.notasPedido.notasFacturacionPagos.unshift(notaFacturacionPagos);
       
-      // Guardar en sessionStorage
-      this.guardarPedidoEnSessionStorage();
-      
       // Emitir evento al componente padre
       this.notasActualizadas.emit({
         carrito: this.pedido.carrito,
@@ -490,14 +461,75 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     this.notasFacturacionPagosForm.reset();
   }
 
-  // Método auxiliar para guardar en sessionStorage
-  private guardarPedidoEnSessionStorage(): void {
+
+
+  // Método para limpiar el formulario sin perder las notas ya guardadas
+  private limpiarFormularioMantenendoNotas(): void {
+    if (!this.notasProduccionForm || !this.pedido?.carrito?.length) {
+      this.initFormularios();
+      return;
+    }
+
+    const productos = this.notasProduccionForm.get('productos') as FormArray;
+    productos.clear();
+
+    // Recrear el formulario con campos vacíos pero manteniendo la estructura
+    this.pedido.carrito.forEach((prod) => {
+      // Crear FormArray vacío para las notas de este producto
+      const notasArray = this.formBuilder.array([]);
+
+      // Añadir al FormArray principal con la información del producto
+      productos.push(this.formBuilder.group({
+        notas: notasArray,
+        productoId: [prod.producto?.identificacion?.referencia || ''],
+        titulo: [prod.producto?.crearProducto?.titulo || 'Producto sin nombre']
+      }));
+    });
+  }
+
+  // Obtener notas específicas de un producto desde la fuente centralizada
+  private obtenerNotasDelProducto(producto: any): any[] {
+    if (!this.pedido?.notasPedido?.notasProduccion) {
+      return [];
+    }
+
+    const productoId = producto?.producto?.identificacion?.referencia;
+    const productoTitulo = producto?.producto?.crearProducto?.titulo;
+
+    const notasEncontradas = this.pedido.notasPedido.notasProduccion.filter(nota => {
+      // Filtrar por ID del producto o por título si no hay ID
+      return (nota as any).productoId === productoId || 
+             (nota as any).producto === productoTitulo;
+    });
+    
+    return notasEncontradas;
+  }
+
+  // Método para limpiar datos fantasma de sessionStorage y localStorage
+  private limpiarDatosFantasmaNotas(): void {
+    // Limpiar sessionStorage si tiene datos corruptos
     try {
-      // Crear una copia limpia del pedido para evitar referencias circulares
-      const pedidoGuardado = JSON.parse(JSON.stringify(this.pedido));
-      sessionStorage.setItem('pedidoTemporal', JSON.stringify(pedidoGuardado));
+      const pedidoTemporal = sessionStorage.getItem('pedidoTemporal');
+      if (pedidoTemporal) {
+        const pedido = JSON.parse(pedidoTemporal);
+        if (pedido && pedido.carrito && Array.isArray(pedido.carrito)) {
+          let huboLimpieza = false;
+          
+          // Limpiar propiedades obsoletas del carrito en sessionStorage
+          pedido.carrito.forEach((producto: any) => {
+            if (producto.notaProduccion) {
+              delete producto.notaProduccion;
+              huboLimpieza = true;
+            }
+          });
+          
+          if (huboLimpieza) {
+            sessionStorage.setItem('pedidoTemporal', JSON.stringify(pedido));
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error al guardar el pedido en sessionStorage:', error);
+      sessionStorage.removeItem('pedidoTemporal');
     }
   }
 

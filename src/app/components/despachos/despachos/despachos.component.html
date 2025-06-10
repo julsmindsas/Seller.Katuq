@@ -415,6 +415,21 @@
                         </div>
                     </div>
 
+                    <!-- Card adicional de Total Envío -->
+                    <div class="row g-3 p-3 mb-2">
+                        <div class="col-md-12">
+                            <div class="stat-card stat-info">
+                                <div class="stat-icon">
+                                    <i class="pi pi-truck"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">{{ 'Total Envío' | translate }}</div>
+                                    <div class="stat-value">{{ calculateTotalEnvio() | currency }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Sección de mapa de ubicaciones -->
                     <div class="row g-3 p-3 mb-2" *ngIf="metricasLogistica?.pedidosEnRuta > 0 || metricasLogistica?.pedidosDespacho > 0">
                         <div class="col-12">

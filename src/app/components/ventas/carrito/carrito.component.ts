@@ -39,6 +39,9 @@ export class CarritoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Limpiar datos fantasma al inicializar
+    this.limpiarDatosFantasma();
+    
     this.refreshCartWithProducts();
     
     // Inicializar formulario de notas
@@ -50,6 +53,17 @@ export class CarritoComponent implements OnInit {
   refreshCartWithProducts(): void {
     this.carsingleton.productInCartChanges$.subscribe((data) => {
       this.productos = Array.isArray(data) ? [...data] : [];
+      
+      // Limpiar propiedades notaProduccion de productos individuales
+      this.productos.forEach(producto => {
+        if (producto.notaProduccion) {
+          console.log('🧹 Limpiando notaProduccion obsoleta del producto:', producto.producto?.crearProducto?.titulo);
+          delete producto.notaProduccion;
+        }
+      });
+      
+      // Actualizar localStorage sin las propiedades obsoletas
+      localStorage.setItem('carrito', JSON.stringify(this.productos));
     });
   }
 
@@ -95,20 +109,35 @@ export class CarritoComponent implements OnInit {
   }
   
   guardarNotaProduccion(producto: any, nota: string): void {
-    // Inicializar el array de notas si no existe
-    if (!producto.notaProduccion) {
-      producto.notaProduccion = [];
+    // Inicializar notasPedido si no existe
+    if (!this.pedido?.notasPedido) {
+      this.pedido.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
     }
+
+    // Crear nota estructurada para el pedido
+    const nuevaNota = {
+      fecha: new Date().toISOString(),
+      descripcion: nota,
+      producto: producto?.producto?.crearProducto?.titulo || 'Producto',
+      usuario: 'Usuario', // Se puede obtener del contexto de usuario actual
+      productoId: producto?.producto?.identificacion?.referencia || ''
+    };
+
+    // Agregar a las notas de producción del pedido
+    this.pedido.notasPedido.notasProduccion.push(nuevaNota);
     
-    // Agregar la nueva nota
-    producto.notaProduccion.push(nota);
-    
-    // Actualizar localStorage y carrito
-    localStorage.setItem('carrito', JSON.stringify(this.productos));
-    this.carsingleton.refreshCart();
-    
-    // Emitir evento de nota agregada
-    this.notaAgregada.emit(producto);
+    // Emitir evento de nota agregada con toda la información del pedido
+    this.notaAgregada.emit({
+      pedido: this.pedido,
+      nuevaNota: nuevaNota,
+      producto: producto
+    });
     
     // Mostrar mensaje de éxito
     this.toastrService.success('Nota de producción agregada correctamente', 'Éxito');
@@ -201,8 +230,8 @@ export class CarritoComponent implements OnInit {
   }
 
   private updateCartAndCheckPriceScale(itemCarrito: any): void {
-    localStorage.setItem("carrito", JSON.stringify(this.productos));
-    this.refreshCartWithProducts();
+    // Solo actualizar el carrito singleton, no localStorage
+    this.carsingleton.updateProductQuantity(itemCarrito);
 
     const rangoActual = this.getCurrentPriceRange(itemCarrito);
     if (rangoActual?.numeroUnidadesInicial && 
@@ -262,13 +291,19 @@ export class CarritoComponent implements OnInit {
   
   // Método para mostrar las notas existentes
   mostrarNotasExistentes(producto: any): void {
-    if (!producto.notaProduccion || producto.notaProduccion.length === 0) {
+    // Obtener notas del producto desde el pedido centralizado
+    const notasDelProducto = this.obtenerNotasDelProducto(producto);
+    
+    if (!notasDelProducto || notasDelProducto.length === 0) {
       this.toastrService.info('Este producto no tiene notas de producción', 'Información');
       return;
     }
     
     let notasHtml = '';
-    producto.notaProduccion.forEach((nota, index) => {
+    notasDelProducto.forEach((nota, index) => {
+      const descripcion = nota.descripcion || nota.nota || '';
+      const fecha = nota.fecha ? new Date(nota.fecha).toLocaleString() : '';
+      
       notasHtml += `
         <div class="note-item mb-2 p-2 border-bottom">
           <div class="d-flex justify-content-between">
@@ -279,7 +314,8 @@ export class CarritoComponent implements OnInit {
               </button>
             </span>
           </div>
-          <div class="note-content mt-1">${nota}</div>
+          <div class="note-content mt-1">${descripcion}</div>
+          ${fecha ? `<div class="note-date text-muted"><small>${fecha}</small></div>` : ''}
         </div>
       `;
     });
@@ -310,17 +346,82 @@ export class CarritoComponent implements OnInit {
       }
     });
   }
+
+  // Obtener notas específicas de un producto desde el pedido centralizado
+  private obtenerNotasDelProducto(producto: any): any[] {
+    if (!this.pedido?.notasPedido?.notasProduccion) {
+      return [];
+    }
+
+    const productoId = producto?.producto?.identificacion?.referencia;
+    const productoTitulo = producto?.producto?.crearProducto?.titulo;
+
+    return this.pedido.notasPedido.notasProduccion.filter(nota => {
+      // Filtrar por ID del producto o por título si no hay ID
+      return (nota as any).productoId === productoId || 
+             (nota as any).producto === productoTitulo;
+    });
+  }
+
+  // Contar notas de un producto específico
+  contarNotasDelProducto(producto: any): number {
+    return this.obtenerNotasDelProducto(producto).length;
+  }
   
   eliminarNotaProduccion(producto: any, index: number): void {
-    if (!producto.notaProduccion) return;
+    const notasDelProducto = this.obtenerNotasDelProducto(producto);
+    if (index < 0 || index >= notasDelProducto.length) return;
+
+    // Encontrar el índice real en el array completo de notas
+    const notaAEliminar = notasDelProducto[index];
+    const indiceRealEnPedido = this.pedido.notasPedido.notasProduccion.findIndex(nota => nota === notaAEliminar);
     
-    producto.notaProduccion.splice(index, 1);
+    if (indiceRealEnPedido !== -1) {
+      this.pedido.notasPedido.notasProduccion.splice(indiceRealEnPedido, 1);
+    }
     
-    // Actualizar localStorage y carrito
-    localStorage.setItem('carrito', JSON.stringify(this.productos));
-    this.carsingleton.refreshCart();
+    // Emitir evento de actualización
+    this.notaAgregada.emit({
+      pedido: this.pedido,
+      accion: 'eliminar',
+      producto: producto
+    });
     
     // Mostrar mensaje de éxito
     this.toastrService.success('Nota de producción eliminada correctamente', 'Éxito');
+  }
+
+  // Método para limpiar datos fantasma del localStorage
+  private limpiarDatosFantasma(): void {
+    console.log('🧹 Limpiando datos fantasma del carrito...');
+    
+    const carritoGuardado = localStorage.getItem('carrito');
+    if (carritoGuardado) {
+      try {
+        const carrito = JSON.parse(carritoGuardado);
+        if (Array.isArray(carrito)) {
+          let huboLimpieza = false;
+          
+          // Limpiar propiedades obsoletas de cada producto
+          carrito.forEach(producto => {
+            if (producto.notaProduccion) {
+              console.log('🧹 Removiendo notaProduccion obsoleta de:', producto.producto?.crearProducto?.titulo);
+              delete producto.notaProduccion;
+              huboLimpieza = true;
+            }
+          });
+          
+          // Si hubo limpieza, actualizar localStorage
+          if (huboLimpieza) {
+            localStorage.setItem('carrito', JSON.stringify(carrito));
+            console.log('✅ Datos fantasma del carrito limpiados');
+          }
+        }
+      } catch (error) {
+        console.error('Error al limpiar datos fantasma:', error);
+        // Si hay error, limpiar completamente el carrito
+        localStorage.removeItem('carrito');
+      }
+    }
   }
 }
