@@ -51,7 +51,7 @@
                   <div *ngFor="let notaCtrl of notasFormArray.at(i).get('notas')?.controls; let j = index" class="mb-2">
                     <div class="input-group">
                       <textarea [formControlName]="j" class="form-control" placeholder="Escribe una nota de producción..."></textarea>
-                      <button class="btn btn-outline-danger" type="button" (click)="eliminarNota(i, j, 'produccion')">
+                      <button class="btn btn-outline-danger" type="button" (click)="eliminarNota(j, 'produccion', i)">
                         <i class="fa fa-times"></i>
                       </button>
                     </div>
@@ -115,7 +115,7 @@
                   <td>{{nota.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
                   <td>{{nota.nota}}</td>
                   <td>
-                    <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i,'despachos')">
+                    <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i, 'despachos')">
                       <i class="fa fa-trash"></i>
                     </button>
                   </td>
@@ -172,7 +172,7 @@
                   <td>{{nota.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
                   <td>{{nota.nota}}</td>
                   <td>
-                    <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i,'entregas')">
+                    <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i, 'entregas')">
                       <i class="fa fa-trash"></i>
                     </button>
                   </td>
@@ -229,7 +229,7 @@
                   <td>{{nota.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
                   <td>{{nota.nota}}</td>
                   <td>
-                    <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i,'facturacionPagos')">
+                    <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i, 'facturacionPagos')">
                       <i class="fa fa-trash"></i>
                     </button>
                   </td>

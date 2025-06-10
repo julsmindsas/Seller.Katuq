@@ -130,11 +130,23 @@ export class AsentarpagomanualComponent implements OnInit {
 
   registrarTransaccion(): void {
     if (this.transaccionForm.valid) {
+      
+      // DEBUG: Log inicial para debug
+      console.log('🔍 ANTES DEL PAGO:');
+      console.log('Total del pedido:', this.pedido.totalPedididoConDescuento);
+      console.log('Falta por pagar antes:', this.pedido.faltaPorPagar);
+      console.log('Anticipo antes:', this.pedido.anticipo);
+      console.log('Pagos existentes:', this.pedido.PagosAsentados?.length || 0);
+      console.log('Nuevo valor a registrar:', this.transaccionForm.value.valor);
 
-      if ((this.pedido.faltaPorPagar-this.transaccionForm.value.valor) <= 0) {
-        this.pedido.estadoPago = EstadoPago.Aprobado
-      } else if ((this.pedido.faltaPorPagar-this.transaccionForm.value.valor) > 0 && (this.pedido.faltaPorPagar-this.transaccionForm.value.valor) < this.pedido.totalPedididoConDescuento) {
-            this.pedido.estadoPago = EstadoPago.PreAprobado
+      // Calcular nuevo estado de pago
+      const valorNuevoPago = this.transaccionForm.value.valor;
+      const nuevaFaltaPorPagar = this.pedido.faltaPorPagar - valorNuevoPago;
+      
+      if (nuevaFaltaPorPagar <= 0) {
+        this.pedido.estadoPago = EstadoPago.Aprobado;
+      } else if (nuevaFaltaPorPagar > 0 && nuevaFaltaPorPagar < this.pedido.totalPedididoConDescuento) {
+        this.pedido.estadoPago = EstadoPago.PreAprobado;
       }
       if (this.selectedFile) {
         // Muestra una alerta con una barra de carga
@@ -171,7 +183,7 @@ export class AsentarpagomanualComponent implements OnInit {
                 fechaTransaccion: new Date().toISOString(),
                 valorTotalVenta: this.pedido.totalPedididoConDescuento,
                 valorRegistrado: this.transaccionForm.get('valor')?.value,
-                valorRestante: this.pedido.totalPedididoConDescuento - ((this.pedido?.PagosAsentados != undefined ? this.pedido?.PagosAsentados?.reduce((a, b) => a + b.valor, 0) : 0) + this.transaccionForm.get('valor')?.value),
+                valorRestante: Math.max(0, this.pedido.totalPedididoConDescuento - ((this.pedido?.PagosAsentados != undefined ? this.pedido?.PagosAsentados?.reduce((a, b) => a + (b.valor || 0), 0) : 0) + this.transaccionForm.get('valor')?.value)),
                 archivoEvidencia: '',
                 usuarioRegistro: (JSON.parse(localStorage.getItem('user')) as UserLite).name,
                 estadoVerificacion: 'Pendiente',
@@ -187,9 +199,32 @@ export class AsentarpagomanualComponent implements OnInit {
               }
 
               order.PagosAsentados.push(transacionPago);
-              order.faltaPorPagar = order.totalPedididoConDescuento - order.PagosAsentados.reduce((acc, pago) => acc + pago.valor, 0);
-              order.anticipo = order.PagosAsentados.reduce((acc, pago) => acc + pago.valor, 0);
-              order.estadoPago = order.faltaPorPagar <= 0 ? EstadoPago.Aprobado : EstadoPago.PreAprobado;
+              
+              // Recalcular valores con mayor precisión
+              const totalPagosAsentados = order.PagosAsentados.reduce((acc, pago) => acc + (pago.valor || 0), 0);
+              order.anticipo = totalPagosAsentados;
+              order.faltaPorPagar = Math.max(0, order.totalPedididoConDescuento - totalPagosAsentados);
+              
+              // Actualizar estado basado en los nuevos cálculos
+              if (order.faltaPorPagar <= 0) {
+                order.estadoPago = EstadoPago.Aprobado;
+              } else if (order.faltaPorPagar > 0 && order.faltaPorPagar < order.totalPedididoConDescuento) {
+                order.estadoPago = EstadoPago.PreAprobado;
+              } else {
+                order.estadoPago = EstadoPago.Pendiente;
+              }
+
+              // MARCAR que este pedido tiene cálculos hechos en frontend
+              (order as any)._estadoCalculadoEnFrontend = true;
+              (order as any)._timestamp = new Date().getTime();
+
+              // DEBUG: Log después del cálculo
+              console.log('🔍 DESPUÉS DEL PAGO:');
+              console.log('Total pagos asentados:', totalPagosAsentados);
+              console.log('Nuevo anticipo:', order.anticipo);
+              console.log('Nueva falta por pagar:', order.faltaPorPagar);
+              console.log('Nuevo estado de pago:', order.estadoPago);
+              console.log('✅ Pedido marcado como calculado en frontend');
 
 
 
@@ -264,12 +299,47 @@ export class AsentarpagomanualComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
+        
+        // DEBUG: Log antes de eliminar
+        console.log('🗑️ ANTES DE ELIMINAR PAGO:');
+        console.log('Valor del pago a eliminar:', pago.valor);
+        console.log('Anticipo actual:', this.pedido.anticipo);
+        console.log('Falta por pagar actual:', this.pedido.faltaPorPagar);
+        
         // Elimina el archivo de Firebase Storage
         this.storage.refFromURL(pago.archivo).delete().subscribe(() => {
           // Actualiza los PagosAsentados una vez que el archivo se ha eliminado
-          this.pedido.PagosAsentados = this.pedido.PagosAsentados.filter(x => x.fechaHoraCarga != pago.fechaHoraCarga && x.valor != pago.valor && x.numeroComprobante != pago.numeroComprobante);
-          this.pedido.faltaPorPagar = this.pedido.totalPedididoConDescuento - this.pedido.PagosAsentados.reduce((acc, pago) => acc + pago.valor, 0);
-          this.pedido.anticipo = this.pedido.PagosAsentados.reduce((acc, pago) => acc + pago.valor, 0);
+          this.pedido.PagosAsentados = this.pedido.PagosAsentados.filter(x => 
+            x.fechaHoraCarga != pago.fechaHoraCarga && 
+            x.valor != pago.valor && 
+            x.numeroComprobante != pago.numeroComprobante
+          );
+          
+          // Recalcular valores después de eliminar
+          const totalPagosAsentados = this.pedido.PagosAsentados.reduce((acc, pago) => acc + (pago.valor || 0), 0);
+          this.pedido.anticipo = totalPagosAsentados;
+          this.pedido.faltaPorPagar = Math.max(0, this.pedido.totalPedididoConDescuento - totalPagosAsentados);
+          
+          // Actualizar estado de pago
+          if (this.pedido.faltaPorPagar <= 0) {
+            this.pedido.estadoPago = EstadoPago.Aprobado;
+          } else if (this.pedido.faltaPorPagar > 0 && this.pedido.faltaPorPagar < this.pedido.totalPedididoConDescuento) {
+            this.pedido.estadoPago = EstadoPago.PreAprobado;
+          } else {
+            this.pedido.estadoPago = EstadoPago.Pendiente;
+          }
+
+          // MARCAR que este pedido tiene cálculos hechos en frontend
+          (this.pedido as any)._estadoCalculadoEnFrontend = true;
+          (this.pedido as any)._timestamp = new Date().getTime();
+          
+          // DEBUG: Log después de eliminar
+          console.log('🗑️ DESPUÉS DE ELIMINAR PAGO:');
+          console.log('Nuevo anticipo:', this.pedido.anticipo);
+          console.log('Nueva falta por pagar:', this.pedido.faltaPorPagar);
+          console.log('Nuevo estado:', this.pedido.estadoPago);
+          console.log('✅ Pedido marcado como calculado en frontend');
+          
           this.modalService.dismissAll(this.pedido);
         });
       }

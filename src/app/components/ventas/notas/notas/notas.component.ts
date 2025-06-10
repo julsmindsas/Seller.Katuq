@@ -311,9 +311,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }
   }
 
-  eliminarNota(productoIndex: number, notaIndex: number, tipo: string) {
+  eliminarNota(notaIndex: number, tipo: string, productoIndex?: number) {
     if (tipo === 'produccion') {
-      if (!this.notasFormArray) return;
+      if (!this.notasFormArray || productoIndex === undefined) return;
 
       const notasArray = this.notasFormArray.at(productoIndex).get('notas') as FormArray;
       if (notasArray) {
@@ -321,20 +321,28 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       }
     } else {
       switch (tipo) {
-
         case 'despachos':
           if (this.pedido?.notasPedido?.notasDespachos) {
             this.pedido.notasPedido.notasDespachos.splice(notaIndex, 1);
+            // Actualizar también la lista ordenada
+            this.notasDespachosOrdenadas = [...this.pedido.notasPedido.notasDespachos].sort((a, b) =>
+              new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
           }
           break;
         case 'entregas':
           if (this.pedido?.notasPedido?.notasEntregas) {
             this.pedido.notasPedido.notasEntregas.splice(notaIndex, 1);
+            // Actualizar también la lista ordenada
+            this.notasEntregasOrdenadas = [...this.pedido.notasPedido.notasEntregas].sort((a, b) =>
+              new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
           }
           break;
         case 'facturacionPagos':
           if (this.pedido?.notasPedido?.notasFacturacionPagos) {
             this.pedido.notasPedido.notasFacturacionPagos.splice(notaIndex, 1);
+            // Actualizar también la lista ordenada
+            this.notasFacturacionPagosOrdenadas = [...this.pedido.notasPedido.notasFacturacionPagos].sort((a, b) =>
+              new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
           }
           break;
       }
@@ -347,6 +355,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           notasPedido: this.pedido.notasPedido,
           pedidoCompleto: this.pedido
         });
+        
+        // Mostrar confirmación
+        console.log(`✅ Nota de ${tipo} eliminada correctamente`);
       }
     }
   }
@@ -469,6 +480,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (this.pedido?.notasPedido?.notasDespachos) {
       this.pedido.notasPedido.notasDespachos.unshift(notaDespachos);
       
+      // Actualizar también la lista ordenada
+      this.notasDespachosOrdenadas = [...this.pedido.notasPedido.notasDespachos].sort((a, b) =>
+        new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+      
       // Emitir evento al componente padre
       this.notasActualizadas.emit({
         carrito: this.pedido.carrito,
@@ -492,6 +507,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (this.pedido?.notasPedido?.notasEntregas) {
       this.pedido.notasPedido.notasEntregas.unshift(notaEntrega);
       
+      // Actualizar también la lista ordenada
+      this.notasEntregasOrdenadas = [...this.pedido.notasPedido.notasEntregas].sort((a, b) =>
+        new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
+      
       // Emitir evento al componente padre
       this.notasActualizadas.emit({
         carrito: this.pedido.carrito,
@@ -514,6 +533,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     if (this.pedido?.notasPedido?.notasFacturacionPagos) {
       this.pedido.notasPedido.notasFacturacionPagos.unshift(notaFacturacionPagos);
+      
+      // Actualizar también la lista ordenada
+      this.notasFacturacionPagosOrdenadas = [...this.pedido.notasPedido.notasFacturacionPagos].sort((a, b) =>
+        new Date(b.fecha || new Date()).getTime() - new Date(a.fecha || new Date()).getTime());
       
       // Emitir evento al componente padre
       this.notasActualizadas.emit({

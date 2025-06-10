@@ -595,10 +595,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
           order.totalEnvio -
           order.totalDescuento;
         order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
-        if (order.anticipo == null || order.anticipo == undefined) {
+        
+        // Calcular anticipo basado en PagosAsentados si existen
+        if (order.PagosAsentados && order.PagosAsentados.length > 0) {
+          order.anticipo = order.PagosAsentados.reduce((acc, pago) => acc + (pago.valor || 0), 0);
+        } else if (order.anticipo == null || order.anticipo == undefined) {
           order.anticipo = 0;
         }
-        order.faltaPorPagar = order.totalPedididoConDescuento - order.anticipo;
+        
+        // Calcular falta por pagar basado en el total y anticipo real
+        order.faltaPorPagar = Math.max(0, order.totalPedididoConDescuento - order.anticipo);
+        
+        // Actualizar estado de pago basado en los cálculos reales
+        // SOLO recalcular estado si no viene ya calculado del frontend
+        if (!order._estadoCalculadoEnFrontend && order.estadoPago !== 'Precancelado' && order.estadoPago !== 'Cancelado') {
+          if (order.faltaPorPagar <= 0) {
+            order.estadoPago = 'Aprobado';
+          } else if (order.faltaPorPagar > 0 && order.faltaPorPagar < order.totalPedididoConDescuento) {
+            order.estadoPago = 'PreAprobado';
+          } else if (order.preAprobadoManual) {
+            order.estadoPago = 'PreAprobado';
+          } else {
+            order.estadoPago = 'Pendiente';
+          }
+        }
         // if (order.estadoPago != 'Precancelado' && order.estadoPago != 'Cancelado') {
         //   if (order.faltaPorPagar <= 0) {
         //     order.estadoPago = EstadoPago.Aprobado
@@ -755,10 +775,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   calculateFaltaPorPagar() {
-    return this.orders.reduce(
-      (acc, pedido: any) => acc + pedido.faltaPorPagar,
-      0,
-    );
+    return this.orders.reduce((acc, pedido: any) => {
+      // Recalcular falta por pagar basado en pagos asentados
+      const anticipoReal = pedido.PagosAsentados && pedido.PagosAsentados.length > 0 
+        ? pedido.PagosAsentados.reduce((sum, pago) => sum + (pago.valor || 0), 0)
+        : (pedido.anticipo || 0);
+      const faltaPorPagar = (pedido.totalPedididoConDescuento || 0) - anticipoReal;
+      return acc + Math.max(0, faltaPorPagar); // Evitar valores negativos
+    }, 0);
   }
 
   calculateTotalEnvio() {
@@ -766,7 +790,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   calculateAnticipo() {
-    return this.orders.reduce((acc, pedido: any) => acc + pedido.anticipo, 0);
+    return this.orders.reduce((acc, pedido: any) => {
+      // Calcular anticipo basado en PagosAsentados si existen
+      const anticipoReal = pedido.PagosAsentados && pedido.PagosAsentados.length > 0 
+        ? pedido.PagosAsentados.reduce((sum, pago) => sum + (pago.valor || 0), 0)
+        : (pedido.anticipo || 0);
+      return acc + anticipoReal;
+    }, 0);
   }
 
   calculateSubtotal() {
@@ -1023,6 +1053,55 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         showConfirmButton: false,
         timer: 1500,
       });
+    });
+  }
+
+  // NUEVO MÉTODO ESPECÍFICO PARA PAGOS: Actualizar solo información de pagos
+  private updatePagosOnly(order: Pedido) {
+    console.log('💰 ACTUALIZANDO PAGOS EN BACKEND');
+    console.log('Pagos a enviar:', order.PagosAsentados?.length || 0);
+    console.log('Anticipo calculado:', order.anticipo);
+    console.log('Falta por pagar:', order.faltaPorPagar);
+    console.log('Estado de pago:', order.estadoPago);
+
+    // Crear objeto con solo los campos relacionados a pagos
+    const pagosUpdate = {
+      _id: order._id,
+      nroPedido: order.nroPedido,
+      PagosAsentados: order.PagosAsentados || [],
+      anticipo: order.anticipo,
+      faltaPorPagar: order.faltaPorPagar,
+      estadoPago: order.estadoPago,
+      // Incluir campos mínimos para identificación
+      totalPedididoConDescuento: order.totalPedididoConDescuento
+    };
+
+    this.ventasService.editOrder(pagosUpdate as any).subscribe({
+      next: (data) => {
+        console.log('✅ Pagos actualizados en backend exitosamente');
+        
+        // Actualizar el pedido en la lista SIN recargar todo
+        const index = this.orders.findIndex(p => p.nroPedido === order.nroPedido);
+        if (index !== -1) {
+          this.orders[index] = { ...this.orders[index], ...pagosUpdate };
+        }
+        
+        Swal.fire({
+          icon: "success",
+          title: "Pagos actualizados correctamente",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      },
+      error: (error) => {
+        console.error('❌ Error actualizando pagos:', error);
+        Swal.fire({
+          icon: "error",
+          title: "Error al actualizar pagos",
+          text: "No se pudieron guardar los cambios en el servidor",
+          confirmButtonText: "Reintentar"
+        });
+      }
     });
   }
 
@@ -1431,7 +1510,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
             return;
           }
 
-          this.editOrder(reason);
+          // El reason contiene el pedido actualizado con los pagos
+          if (reason && reason.nroPedido) {
+            // Actualizar el pedido en la lista inmediatamente
+            const index = this.orders.findIndex(p => p.nroPedido === reason.nroPedido);
+            if (index !== -1) {
+              this.orders[index] = { ...reason };
+              console.log('✅ Pedido actualizado en lista con pagos:', reason.PagosAsentados?.length || 0);
+            }
+            
+            // Usar método específico para pagos en lugar de editOrder general
+            this.updatePagosOnly(reason);
+          }
         },
       );
   }
