@@ -262,18 +262,9 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
     this.service.getTotalProducts().subscribe((x: any) => {
       this.totalProducts = x.totalItems;
-      if (sessionStorage.getItem("infoForms") == null) {
-        this.identificacion.controls["referencia"].setValue(
-          this.ultimasLetras +
-          "-" +
-          (this.totalProducts + 1).toString().padStart(6, "0"),
-        );
-        this.identificacion.controls["codigoBarras"].setValue(
-          this.ultimasLetras +
-          "-" +
-          (this.totalProducts + 1).toString().padStart(6, "0"),
-        );
-        this.generarCodigoBarras();
+      // Solo generar referencias automáticas si no estamos en modo edición
+      if (!this.isEditMode()) {
+        this.generateAutoReference();
       }
     });
 
@@ -290,14 +281,9 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.subs.add(
       this.identificacion.get("tipoReferencia").valueChanges.subscribe((tipo) => {
         if (tipo == "propio") {
-          if (sessionStorage.getItem("infoForms") == null) {
+          if (!this.isEditMode()) {
             this.identificacion.controls["referencia"].disable();
-            this.identificacion.controls["referencia"].setValue(
-              this.ultimasLetras +
-              "-" +
-              (this.totalProducts + 1).toString().padStart(6, "0"),
-            );
-            this.generarCodigoBarras();
+            this.generateAutoReference();
           } else {
             this.identificacion.controls["referencia"].disable();
             const referencia = this.edit.identificacion?.referencia
@@ -409,30 +395,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
             this.precio.get("precioUnitarioConIva").setValue("0");
           }
 
-          if (!this.preciosPorVolumen) {
-            this.preciosPorVolumen = this.precio.get(
-              "preciosVolumen",
-            ) as FormArray;
-          }
-
-          if (this.preciosPorVolumen.length == 0) {
-            var newItem = this.crearPreciosPorVolumen();
-            newItem.get("numeroUnidadesInicial").setValue(1);
-            newItem.get("numeroUnidadesInicial").disable();
-            newItem.get("numeroUnidadesLimite").setValue(1);
-            newItem.get("valorIVAPorVolumen").setValue(0);
-            newItem
-              .get("valorUnitarioPorVolumenSinIVA")
-              .setValue(calculo + precioUnitarioSinIva);
-            newItem
-              .get("valorUnitarioPorVolumenConIVA")
-              .setValue(calculo + precioUnitarioSinIva);
-            this.preciosPorVolumen.push(newItem);
-          } else {
-            this.preciosPorVolumen.controls[0]
-              .get("valorUnitarioPorVolumenSinIVA")
-              .setValue(precioUnitarioSinIva);
-          }
+          this.initializePreciosPorVolumenIfNeeded(precioUnitarioSinIva, calculo);
         })
     );
 
@@ -548,50 +511,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   async fileChangeEvent(event: any, tipoImagen: string): Promise<void> {
     const selectedFiles: FileList = event.target.files;
-    // Confirmación al usuario
-    const result = await Swal.fire({
-      title:
-        "¿Está seguro? estas imágenes se subirán de inmediato a la base de datos",
-      text: "¡No podrás revertir esto!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, súbelas!",
-      cancelButtonText: "Cancelar",
-    });
-
-    if (!result.isConfirmed) {
-      // Restablecer estados si cancela
-      this.fileImg = [];
-      this.carrouselImg = [];
-      this.filesNames = [];
-      event.target.value = "";
+    
+    if (!selectedFiles || selectedFiles.length === 0) {
       return;
     }
 
-    // Procesamos archivo por archivo de forma secuencial para simplificar el uso de await
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const originalFile = selectedFiles[i];
-      // Convertir a WebP si aplica
-      const processedFile = await this.convertToWebP(originalFile);
-
-      // Guardar meta-información
-      this.fileImg.push({ img: processedFile, tipo: tipoImagen });
-      this.filesNames.push(processedFile.name);
-
-      // Base64 para el carrusel de vista previa
-      await new Promise((resolvePreview) => {
-        const reader = new FileReader();
-        reader.onload = (ev: any) => {
-          this.carrouselImg.push(ev.target.result);
-          resolvePreview(null);
-        };
-        reader.readAsDataURL(processedFile);
-      });
+    const confirmed = await this.confirmImageUpload();
+    if (!confirmed) {
+      this.resetImageStates(event);
+      return;
     }
 
-    // Una vez procesados todos los archivos lanzamos la subida
+    await this.processSelectedFiles(selectedFiles, tipoImagen);
     this.uploadImgAndSave();
     this.cdr.detectChanges();
   }
@@ -767,196 +698,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   };
 
   ngOnInit(): void {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
-    const texto = this.empresaActual.nomComercial.toString().replace(" ", "");
-    this.ultimasLetras = texto.substring(0, 3);
-    this.procesoComercial.valueChanges.subscribe((valor: any) => { });
-    this.categoriasForm.valueChanges.subscribe((valor: any) => {
-      this.pathParentRoute = this.construirRuta(
-        valor.categorias,
-        valor.categorias.label,
-      );
-    });
-
-    const campos = this.marketplace?.get("campos") as FormArray;
-
-    this.empresaActual?.marketPlace?.forEach((mp) => {
-      if (mp.nombreMP) {
-        campos.push(
-          this.fb.group({
-            nameMP: [mp.nombreMP],
-            activo: [false],
-          }),
-        );
-      }
-    });
-
-    this.variables = [
-      {
-        data: {
-          titulo: "",
-          subtitulo: "",
-          imagen: "",
-          valorUnitarioSinIva: 0,
-          porcentajeIva: 0,
-          valorIva: 0,
-          precioTotalConIva: 0,
-        },
-        children: [],
-      },
-    ];
-
-    this.service.getTipoEntrega().subscribe((r: any) => {
-      this.formaEntrega = r as any[];
-    });
-
-    this.service.getCategorias().subscribe((r: any) => {
-      this.categorias = parse((r as any[])[0].categoria).map((p) => {
-        return {
-          label: p.data.nombre,
-          data: p.data,
-          parent: p.parent,
-          children: p.children.map((sub) => {
-            return {
-              label: sub.data.nombre,
-              data: sub.data,
-              parent: sub.parent,
-              children: sub.children
-                ? sub.children.map((sub2) => {
-                  return {
-                    label: sub2.data.nombre,
-                    data: sub2.data,
-                    parent: sub2.parent,
-                    children: sub2.children
-                      ? sub2.children.map((sub2) => {
-                        return {};
-                      })
-                      : null,
-                  };
-                })
-                : null,
-            };
-          }),
-        };
-      });
-      console.log("categorias", this.categorias);
-    });
-
-    this.service.getTiempoEntrega().subscribe((r: any) => {
-      this.tiempoEntrega = r as any[];
-    });
-
-    this.service.consultarOcasion().subscribe((r: any) => {
-      this.ocasiones = r as any[];
-    });
-
-    this.service.consultarGenero().subscribe((r: any) => {
-      this.generos = r as any[];
-    });
-
-    this.service.consultarFormaPago().subscribe((r: any) => {
-      this.formasPago = r as any[];
-    });
-    this.edit = JSON.parse(sessionStorage.getItem("infoForms"));
-    if (this.edit != null) {
-      this.mostrarCrear = false;
-      const preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
-
-      this.cd = this.edit.cd;
-      this.crearProducto.patchValue(this.edit.crearProducto);
-      if (Array.isArray(this.edit.crearProducto.imagenesPrincipales)) {
-        this.crearProducto
-          .get("imagenesPrincipales")
-          .setValue(this.edit.crearProducto.imagenesPrincipales);
-        this.carrouselImg = [
-          ...this.carrouselImg,
-          ...this.edit.crearProducto.imagenesPrincipales.map((p) => {
-            return p.urls;
-          }),
-        ];
-      } else {
-        this.edit.crearProducto.imagenesPrincipales = [];
-        this.crearProducto.controls["imagenesPrincipales"].setValue([]);
-      }
-
-      this.cdr.detectChanges();
-      this.crearProducto.controls["paraProduccion"].setValue(
-        this.edit.crearProducto.paraProduccion,
-      );
-      this.paraProduccion = this.edit.crearProducto.paraProduccion;
-      // this.precio.patchValue(this.edit.precio)
-      this.edit.precio.preciosVolumen.forEach((precio) => {
-        preciosVolumen.push(
-          this.fb.group({
-            numeroUnidadesInicial: [precio.numeroUnidadesInicial],
-            numeroUnidadesLimite: [precio.numeroUnidadesLimite],
-            valorUnitarioPorVolumenSinIVA: [
-              precio.valorUnitarioPorVolumenSinIVA,
-            ],
-            valorUnitarioPorVolumenIva: [precio.valorUnitarioPorVolumenIva],
-            valorIVAPorVolumen: [precio.valorIVAPorVolumen],
-            valorUnitarioPorVolumenConIVA: [
-              precio.valorUnitarioPorVolumenConIVA,
-            ],
-          }),
-        );
-      });
-      this.preciosPorVolumen = preciosVolumen;
-      this.precio.patchValue(this.edit.precio);
-
-      this.Dimensiones.patchValue(this.edit.dimensiones);
-      this.disponibilidad.patchValue(this.edit.disponibilidad);
-      this.identificacion.patchValue(this.edit.identificacion);
-      this.exposicion.patchValue(this.edit.exposicion);
-      this.etiquetas = this.edit.exposicion.etiquetas;
-      this.categoriasForm.patchValue({ categorias: this.edit.categorias });
-      this.procesoComercial.patchValue(this.edit.procesoComercial);
-      // Configurar el estado de activación desde los datos editados
-      this.activar = this.edit.procesoComercial.configProcesoComercialActivo || false;
-      this.productosArticulos =
-        this.edit?.otrosProcesos?.modulosVariables?.produccion;
-
-      if (!this.productosArticulos) {
-        this.productosArticulos = [];
-      }
-      // else {
-      //   this.eliminarProcesosDisponiblesRepetidos();
-      // }
-
-      if (this.edit.categorias) {
-        this.categoriasForm.controls["categorias"].setValue(
-          parse(this.edit.categorias),
-        );
-      }
-
-      if (
-        this.edit.procesoComercial.variablesForm &&
-        this.edit.procesoComercial.variablesForm != "[]"
-      )
-        this.variables = parse(this.edit.procesoComercial.variablesForm);
-      this.variables = [...this.variables];
-      this.marketplace.patchValue(this.edit.marketplace);
-      this.ciudades.patchValue({
-        ciudadesEntrega: this.edit.ciudades.ciudadesEntrega,
-        ciudadesOrigen: this.edit.ciudades.ciudadesOrigen,
-      });
-      if (Array.isArray(this.edit.crearProducto.imagenesPrincipales)) {
-        // La variable es un array
-        this.carrouselImg = this.edit.crearProducto.imagenesPrincipales.map(
-          (p) => {
-            return p.urls;
-          },
-        );
-
-        // Aquí puedes agregar el código que deseas ejecutar si es un array
-      } else {
-        // La variable no es un array
-        console.log("imagenesPrincipales no es un array");
-        this.edit.crearProducto.imagenesPrincipales = [];
-        this.crearProducto.controls["imagenesPrincipales"].setValue([]);
-        // Aquí puedes agregar el código que deseas ejecutar si no es un array
-      }
-    }
+    this.initializeCompanyData();
+    this.setupFormSubscriptions();
+    this.initializeVariables();
+    this.loadMasterData();
+    this.handleEditMode();
   }
   eliminarProcesosDisponiblesRepetidos() {
     if (this.procesoSeleccionado) {
@@ -1230,11 +976,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    // validar si el producto si tenga imagenes
-    if (this.crearProducto.value.imagenesPrincipales.length == 0) {
+    // Validar si el producto tiene imágenes principales
+    if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
       Swal.fire(
         "Error",
-        "El producto debe tener obligatoriamente almenos una imagen",
+        "El producto debe tener obligatoriamente al menos una imagen principal",
         "error",
       );
       this.saving = false;
@@ -1315,10 +1061,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    if (this.crearProducto.value.imagenesPrincipales.length == 0) {
+    if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
       Swal.fire(
         "Error",
-        "El producto debe tener obligatoriamente almenos una imagen",
+        "El producto debe tener obligatoriamente al menos una imagen principal",
         "error",
       );
       return;
@@ -1400,111 +1146,29 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
   generarCodigoBarrasByCodigoBarras() {
-    if (sessionStorage.getItem("infoForms") == null) {
-      if (this.identificacion.get("codigoBarras").value) {
-        if (this.identificacion.get("codigoBarras").value.length > 5) {
-          this.barCodeGen = true;
-          this.valorBarCode = this.identificacion.get("codigoBarras").value;
-          this.cdr.detectChanges();
-        } else {
-          this.barCodeGen = false;
-          Swal.fire("Error", "Indique un codigo de barras valido", "error");
-        }
-      }
-      // else {
-      //   Swal.fire('Error', 'Indique una referencia valida', 'error');
-      // }
-    } else {
-      if (this.identificacion.get("tipoProducto").value == "propio") {
-        this.identificacion.controls["codigoBarras"].setValue(
-          this.edit.identificacion?.referencia,
-        );
-        if (this.identificacion.get("codigoBarras").value) {
-          if (this.identificacion.get("codigoBarras").value.length > 5) {
-            this.barCodeGen = true;
-            this.valorBarCode = this.edit.identificacion?.referencia;
-            this.identificacion.controls["codigoBarras"].setValue(
-              this.edit.identificacion?.referencia,
-            );
-            this.cdr.detectChanges();
-          } else {
-            this.barCodeGen = false;
-            Swal.fire("Error", "Indique una referencia valida", "error");
-          }
-        }
-      } else {
-        if (this.identificacion.get("codigoBarras").value) {
-          if (this.identificacion.get("codigoBarras").value.length > 5) {
-            this.barCodeGen = true;
-            this.cdr.detectChanges();
-            this.valorBarCode = this.identificacion.value.codigoBarras;
-            this.identificacion.controls["codigoBarras"].setValue(
-              this.identificacion.value.codigoBarras,
-            );
-            this.cdr.detectChanges();
-          } else {
-            this.barCodeGen = false;
-            Swal.fire("Error", "Indique una referencia valida", "error");
-          }
-        }
-      }
-    }
+    const codigoBarras = this.identificacion.get("codigoBarras").value;
+    this.generateBarcode(codigoBarras);
   }
   generarCodigoBarras() {
-    if (sessionStorage.getItem("infoForms") == null) {
-      if (this.identificacion.get("referencia").value) {
-        if (this.identificacion.get("referencia").value.length > 5) {
-          this.barCodeGen = true;
-          this.valorBarCode = this.identificacion.get("referencia").value;
-          this.identificacion.controls["codigoBarras"].setValue(
-            this.valorBarCode,
-          );
-          this.cdr.detectChanges();
-        } else {
-          this.barCodeGen = false;
-          Swal.fire("Error", "Indique una referencia valida", "error");
-        }
-      }
-      // else {
-      //   Swal.fire('Error', 'Indique una referencia valida', 'error');
-      // }
-    } else {
-      if (this.identificacion.get("tipoReferencia").value == "propio") {
-        const referencia = this.edit.identificacion?.referencia
-          ? this.edit.identificacion?.referencia
-          : this.ultimasLetras +
-          "-" +
-          (this.totalProducts + 1).toString().padStart(6, "0");
+    let referencia: string;
 
+    if (!this.isEditMode()) {
+      // Modo crear: usar referencia actual
+      referencia = this.identificacion.get("referencia").value;
+    } else {
+      // Modo editar: usar referencia existente o generar nueva
+      if (this.identificacion.get("tipoReferencia").value === "propio") {
+        referencia = this.edit.identificacion?.referencia || 
+                    this.ultimasLetras + "-" + (this.totalProducts + 1).toString().padStart(6, "0");
         this.identificacion.controls["referencia"].setValue(referencia);
-        if (this.identificacion.get("referencia").value) {
-          if (this.identificacion.get("referencia").value.length > 5) {
-            this.barCodeGen = true;
-            this.valorBarCode = this.identificacion.get("referencia").value;
-            this.identificacion.controls["codigoBarras"].setValue(
-              this.valorBarCode,
-            );
-            this.cdr.detectChanges();
-          } else {
-            this.barCodeGen = false;
-            Swal.fire("Error", "Indique una referencia valida", "error");
-          }
-        }
+      } else {
+        referencia = this.identificacion.get("referencia").value;
       }
-      // else{
-      //   this.identificacion.controls['codigoBarras'].setValue(this.edit.identificacion?.referencia);
-      //   if (this.identificacion.get('codigoBarras').value) {
-      //     if (this.identificacion.get('codigoBarras').value.length > 5) {
-      //       this.barCodeGen = true
-      //       this.valorBarCode = this.identificacion.get('referencia').value
-      //       this.identificacion.controls['codigoBarras'].setValue(this.identificacion.get('referencia').value)
-      //     } else {
-      //       this.barCodeGen = false;
-      //       Swal.fire('Error', 'Indique una referencia valida', 'error')
-      //     }
-      //   }
-      // }
     }
+
+    // Sincronizar código de barras con referencia y generar
+    this.identificacion.controls["codigoBarras"].setValue(referencia);
+    this.generateBarcode(referencia);
   }
 
   onFileChange(event) {
@@ -1698,11 +1362,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   activarProcesoComercial() {
-    if (this.activar == false) {
-      this.activar = true;
-    } else {
-      this.activar = false;
-    }
+    this.activar = !this.activar;
     // Actualizar el valor en el formulario para guardarlo en la BD
     this.procesoComercial.get('configProcesoComercialActivo').setValue(this.activar);
   }
@@ -2032,6 +1692,272 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   eliminarEtiqueta(index: number) {
     this.etiquetas.splice(index, 1);
+  }
+
+  private generateAutoReference() {
+    if (this.ultimasLetras && this.totalProducts !== undefined) {
+      const autoReference = this.ultimasLetras + "-" + (this.totalProducts + 1).toString().padStart(6, "0");
+      this.identificacion.controls["referencia"].setValue(autoReference);
+      this.identificacion.controls["codigoBarras"].setValue(autoReference);
+      this.generarCodigoBarras();
+    }
+  }
+
+  private isEditMode(): boolean {
+    return sessionStorage.getItem("infoForms") !== null;
+  }
+
+  private generateBarcode(code: string) {
+    if (!code) {
+      this.barCodeGen = false;
+      return;
+    }
+
+    if (code.length < 6) {
+      this.barCodeGen = false;
+      Swal.fire("Error", "El código debe tener al menos 6 caracteres", "error");
+      return;
+    }
+
+    this.valorBarCode = code;
+    this.barCodeGen = true;
+    this.cdr.detectChanges();
+  }
+
+  private async confirmImageUpload(): Promise<boolean> {
+    const result = await Swal.fire({
+      title: "¿Está seguro? estas imágenes se subirán de inmediato a la base de datos",
+      text: "¡No podrás revertir esto!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, súbelas!",
+      cancelButtonText: "Cancelar",
+    });
+    return result.isConfirmed;
+  }
+
+  private resetImageStates(event: any) {
+    this.fileImg = [];
+    this.carrouselImg = [];
+    this.filesNames = [];
+    event.target.value = "";
+  }
+
+  private async processSelectedFiles(selectedFiles: FileList, tipoImagen: string) {
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const originalFile = selectedFiles[i];
+      const processedFile = await this.convertToWebP(originalFile);
+
+      this.fileImg.push({ img: processedFile, tipo: tipoImagen });
+      this.filesNames.push(processedFile.name);
+
+      await this.generatePreviewImage(processedFile);
+    }
+  }
+
+  private async generatePreviewImage(file: File): Promise<void> {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev: any) => {
+        this.carrouselImg.push(ev.target.result);
+        resolve();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private initializeCompanyData() {
+    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
+    const texto = this.empresaActual?.nomComercial?.toString().replace(" ", "") || "PRD";
+    this.ultimasLetras = texto.substring(0, 3);
+    this.setupMarketplaceFields();
+  }
+
+  private setupFormSubscriptions() {
+    this.procesoComercial.valueChanges.subscribe((valor: any) => { });
+    this.categoriasForm.valueChanges.subscribe((valor: any) => {
+      this.pathParentRoute = this.construirRuta(valor.categorias, valor.categorias.label);
+    });
+  }
+
+  private setupMarketplaceFields() {
+    const campos = this.marketplace?.get("campos") as FormArray;
+    this.empresaActual?.marketPlace?.forEach((mp) => {
+      if (mp.nombreMP) {
+        campos.push(this.fb.group({
+          nameMP: [mp.nombreMP],
+          activo: [false],
+        }));
+      }
+    });
+  }
+
+  private initializeVariables() {
+    this.variables = [{
+      data: {
+        titulo: "",
+        subtitulo: "",
+        imagen: "",
+        valorUnitarioSinIva: 0,
+        porcentajeIva: 0,
+        valorIva: 0,
+        precioTotalConIva: 0,
+      },
+      children: [],
+    }];
+  }
+
+  private loadMasterData() {
+    this.service.getTipoEntrega().subscribe((r: any) => {
+      this.formaEntrega = r as any[];
+    });
+
+    this.service.getCategorias().subscribe((r: any) => {
+      this.processCategorias(r);
+    });
+
+    this.service.getTiempoEntrega().subscribe((r: any) => {
+      this.tiempoEntrega = r as any[];
+    });
+
+    this.service.consultarOcasion().subscribe((r: any) => {
+      this.ocasiones = r as any[];
+    });
+
+    this.service.consultarGenero().subscribe((r: any) => {
+      this.generos = r as any[];
+    });
+
+    this.service.consultarFormaPago().subscribe((r: any) => {
+      this.formasPago = r as any[];
+    });
+  }
+
+  private processCategorias(r: any) {
+    this.categorias = parse((r as any[])[0].categoria).map((p) => {
+      return {
+        label: p.data.nombre,
+        data: p.data,
+        parent: p.parent,
+        children: p.children.map((sub) => {
+          return {
+            label: sub.data.nombre,
+            data: sub.data,
+            parent: sub.parent,
+            children: sub.children ? sub.children.map((sub2) => {
+              return {
+                label: sub2.data.nombre,
+                data: sub2.data,
+                parent: sub2.parent,
+                children: sub2.children ? sub2.children.map((sub2) => {
+                  return {};
+                }) : null,
+              };
+            }) : null,
+          };
+        }),
+      };
+    });
+  }
+
+  private handleEditMode() {
+    this.edit = JSON.parse(sessionStorage.getItem("infoForms"));
+    if (this.edit) {
+      this.mostrarCrear = false;
+      this.loadEditData();
+    }
+  }
+
+  private loadEditData() {
+    this.cd = this.edit.cd;
+    this.loadBasicData();
+    this.loadPricingData();
+    this.loadProductionData();
+    this.loadImageData();
+  }
+
+  private loadBasicData() {
+    this.crearProducto.patchValue(this.edit.crearProducto);
+    this.Dimensiones.patchValue(this.edit.dimensiones);
+    this.disponibilidad.patchValue(this.edit.disponibilidad);
+    this.identificacion.patchValue(this.edit.identificacion);
+    this.exposicion.patchValue(this.edit.exposicion);
+    this.etiquetas = this.edit.exposicion.etiquetas;
+    this.categoriasForm.patchValue({ categorias: this.edit.categorias });
+    this.procesoComercial.patchValue(this.edit.procesoComercial);
+    this.activar = this.edit.procesoComercial.configProcesoComercialActivo || false;
+  }
+
+  private loadPricingData() {
+    const preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
+    this.edit.precio.preciosVolumen.forEach((precio) => {
+      preciosVolumen.push(this.fb.group({
+        numeroUnidadesInicial: [precio.numeroUnidadesInicial],
+        numeroUnidadesLimite: [precio.numeroUnidadesLimite],
+        valorUnitarioPorVolumenSinIVA: [precio.valorUnitarioPorVolumenSinIVA],
+        valorUnitarioPorVolumenIva: [precio.valorUnitarioPorVolumenIva],
+        valorIVAPorVolumen: [precio.valorIVAPorVolumen],
+        valorUnitarioPorVolumenConIVA: [precio.valorUnitarioPorVolumenConIVA],
+      }));
+    });
+    this.preciosPorVolumen = preciosVolumen;
+    this.precio.patchValue(this.edit.precio);
+  }
+
+  private loadProductionData() {
+    this.crearProducto.controls["paraProduccion"].setValue(this.edit.crearProducto.paraProduccion);
+    this.paraProduccion = this.edit.crearProducto.paraProduccion;
+    this.productosArticulos = this.edit?.otrosProcesos?.modulosVariables?.produccion || [];
+
+    if (this.edit.categorias) {
+      this.categoriasForm.controls["categorias"].setValue(parse(this.edit.categorias));
+    }
+
+    if (this.edit.procesoComercial.variablesForm && this.edit.procesoComercial.variablesForm !== "[]") {
+      this.variables = parse(this.edit.procesoComercial.variablesForm);
+    }
+    this.variables = [...this.variables];
+    this.marketplace.patchValue(this.edit.marketplace);
+    this.ciudades.patchValue({
+      ciudadesEntrega: this.edit.ciudades.ciudadesEntrega,
+      ciudadesOrigen: this.edit.ciudades.ciudadesOrigen,
+    });
+  }
+
+  private loadImageData() {
+    if (Array.isArray(this.edit.crearProducto.imagenesPrincipales)) {
+      this.crearProducto.get("imagenesPrincipales").setValue(this.edit.crearProducto.imagenesPrincipales);
+      this.carrouselImg = this.edit.crearProducto.imagenesPrincipales.map((p) => p.urls);
+    } else {
+      this.edit.crearProducto.imagenesPrincipales = [];
+      this.crearProducto.controls["imagenesPrincipales"].setValue([]);
+    }
+    this.cdr.detectChanges();
+  }
+
+  private initializePreciosPorVolumenIfNeeded(precioUnitarioSinIva: number, valorIva: number) {
+    if (!this.preciosPorVolumen) {
+      this.preciosPorVolumen = this.precio.get("preciosVolumen") as FormArray;
+    }
+
+    // Solo inicializar si está completamente vacío
+    if (this.preciosPorVolumen.length === 0) {
+      const newItem = this.crearPreciosPorVolumen();
+      newItem.get("numeroUnidadesInicial").setValue(1);
+      newItem.get("numeroUnidadesInicial").disable();
+      newItem.get("numeroUnidadesLimite").setValue(1);
+      newItem.get("valorIVAPorVolumen").setValue(this.precio.get("precioUnitarioIva").value || 0);
+      newItem.get("valorUnitarioPorVolumenSinIVA").setValue(precioUnitarioSinIva);
+      newItem.get("valorUnitarioPorVolumenConIVA").setValue(valorIva + precioUnitarioSinIva);
+      this.preciosPorVolumen.push(newItem);
+    } else {
+      // Solo actualizar el primer elemento si ya existe
+      this.preciosPorVolumen.controls[0]
+        .get("valorUnitarioPorVolumenSinIVA")
+        .setValue(precioUnitarioSinIva);
+    }
   }
 
   ngOnDestroy() {

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ElementRef, ChangeDetectorRef, AfterViewChecked, OnChanges, SimpleChanges } from "@angular/core";
+import { Component, Input, OnInit, ViewChild, ElementRef, ChangeDetectorRef, AfterViewChecked, OnChanges, SimpleChanges, OnDestroy } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { InfoIndicativos } from "../../../../Mock/indicativosPais";
@@ -25,6 +25,7 @@ import { FacturacionIntegracionService } from "../../../shared/services/integrac
 import { environment } from "../../../../environments/environment";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 import { InventarioService } from "../../../shared/services/inventarios/inventario.service";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-pedido",
@@ -42,7 +43,7 @@ import { InventarioService } from "../../../shared/services/inventarios/inventar
     ])
   ]
 })
-export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges {
+export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges, OnDestroy {
   @ViewChild("buscarPor") buscarPor: ElementRef;
   @ViewChild("documentoBusqueda") documentoBusqueda: ElementRef;
   @ViewChild("quickView") QuickView: QuickViewComponent;
@@ -203,6 +204,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
   notasClienteForm: FormGroup;
   fechaActual: Date;
 
+  private subscription: Subscription;
 
   constructor(
     private modalService: NgbModal,
@@ -412,6 +414,28 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
     // Cargar bodegas y verificar si hay una bodega guardada en localStorage
     this.cargarBodegas();
+
+    // **NUEVA FUNCIONALIDAD: Suscribirse a los cambios del carrito**
+    this.subscription = this.cartService.productInCartChanges$.subscribe(products => {
+      if (this.pedidoGral) {
+        // Sincronizar el carrito del pedido con el servicio de carrito
+        this.pedidoGral.carrito = products.map(item => ({
+          producto: item.producto,
+          configuracion: item.configuracion,
+          cantidad: item.cantidad || item.configuracion?.cantidad || 1,
+          // Mapear otros campos necesarios según la estructura de Carrito
+          cd: item.producto?.cd || item.producto?.crearProducto?.cd || '',
+          crearProducto: item.producto?.crearProducto,
+          precio: item.producto?.precio,
+          disponibilidad: item.producto?.disponibilidad
+        }));
+
+        // Forzar detección de cambios para actualizar la UI
+        this.ref.detectChanges();
+        
+        console.log('Carrito sincronizado:', this.pedidoGral.carrito);
+      }
+    });
 
     // Verificar si hay una ciudad seleccionada previamente en localStorage
     const ciudadGuardada = localStorage.getItem('selectedCity');
@@ -2625,7 +2649,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
    * @param index Índice de la nota a eliminar
    */
   eliminarNotaCliente(index: number): void {
-    if (!this.pedidoGral?.notasPedido?.notasCliente) {
+    if (!this.pedidoGral?.notasPedido?.notasCliente || !Array.isArray(this.pedidoGral.notasPedido.notasCliente)) {
       return;
     }
 
@@ -2640,7 +2664,7 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
-      if (result.isConfirmed) {
+      if (result.isConfirmed && this.pedidoGral?.notasPedido?.notasCliente) {
         // Eliminar la nota del array
         this.pedidoGral.notasPedido.notasCliente.splice(index, 1);
 
@@ -2652,11 +2676,15 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
           closeButton: true,
           timeOut: 3000
         });
-
-
       }
     });
   }
 
+  ngOnDestroy(): void {
+    // Limpiar la suscripción cuando el componente se destruye
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
 
 }
