@@ -69,13 +69,16 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           }
         }
         
-        // Solo limpiar notas de producción dentro del carrito si no hay notas centralizadas
-        if (this.pedido.carrito && this.pedido.carrito.length > 0) {
+        // CRÍTICO: En modo edición, NO modificar el carrito original
+        // Solo limpiar notas de producción dentro del carrito si NO estamos en modo edición
+        if (!this.isEdit && this.pedido.carrito && this.pedido.carrito.length > 0) {
           this.pedido.carrito.forEach(prod => {
             if (prod.notaProduccion) {
               delete prod.notaProduccion;
             }
           });
+        } else if (this.isEdit) {
+          console.log('🛡️ MODO EDICIÓN: Carrito preservado con', this.pedido.carrito?.length || 0, 'productos');
         }
       }
       
@@ -156,24 +159,40 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       }
     }
 
-    this.initFormularios(); // initFormularios construirá los forms basados en el estado ahora limpio/cargado de this.pedido
+    this.initFormularios(); // initFormularios construirá los forms basado en el estado ahora limpio/cargado de this.pedido
   }
 
   ngOnInit(): void {
     this.fecha = new Date();
     
-    // Limpiar datos fantasma al inicializar
-    this.limpiarDatosFantasmaNotas();
+    // VERIFICACIÓN CRÍTICA DE INTEGRIDAD DEL CARRITO
+    if (this.isEdit && this.pedido) {
+      const productosIniciales = this.pedido.carrito?.length || 0;
+      console.log('🛡️ INICIO COMPONENTE NOTAS - Productos en carrito:', productosIniciales);
+      
+      if (productosIniciales === 0) {
+        console.error('🚨 ALERTA: Carrito vacío al inicializar componente de notas');
+      }
+    }
+    
+    // CRÍTICO: Solo limpiar datos fantasma si NO estamos en modo edición
+    if (!this.isEdit) {
+      this.limpiarDatosFantasmaNotas();
+    }
     
     this.initFormularios();
 
-    // Suscribirse a cambios en el carrito
-    this.singleton.productInCartChanges$.subscribe(() => {
-      if (!this.carritoActualizado) {
-        this.llenarFormulario();
-        this.carritoActualizado = false;
-      }
-    });
+    // CRÍTICO: Solo suscribirse a cambios del singleton si NO estamos en modo edición
+    if (!this.isEdit) {
+      this.singleton.productInCartChanges$.subscribe(() => {
+        if (!this.carritoActualizado) {
+          this.llenarFormulario();
+          this.carritoActualizado = false;
+        }
+      });
+    } else {
+      console.log('🛡️ MODO EDICIÓN: No se suscribe a cambios del singleton para preservar carrito');
+    }
   }
 
   initFormularios(): void {
@@ -188,12 +207,17 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       nota: ['', Validators.required]
     });
 
-    // Inicializar formulario de producción
+    // Inicializar formulario de producción SIEMPRE que haya carrito
     if (this.pedido && this.pedido.carrito && this.pedido.carrito.length > 0) {
       this.notasProduccionForm = this.formBuilder.group({
         productos: this.formBuilder.array([])
       });
       this.llenarFormulario();
+    } else if (this.pedido && (!this.pedido.carrito || this.pedido.carrito.length === 0)) {
+      // Crear formulario vacío si no hay carrito
+      this.notasProduccionForm = this.formBuilder.group({
+        productos: this.formBuilder.array([])
+      });
     }
   }
 
@@ -209,21 +233,32 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         });
       }
 
-      // Refrescar el carrito y actualizar el formulario solo si es necesario
-      this.singleton.refreshCart().subscribe((data: any) => {
-        if (data) {
-          // Limpiar datos fantasma del carrito antes de procesarlo
-          let carritoLimpio = Array.isArray(data) ? data.map(prod => {
-            const prodLimpio = { ...prod };
-            // Eliminar propiedades obsoletas
-            if (prodLimpio.notaProduccion) {
-              delete prodLimpio.notaProduccion;
-            }
-            return prodLimpio;
-          }) : data;
-          
-          // Asignar el carrito limpio al pedido solo si es diferente
-          if (this.pedido) {
+      // CRÍTICO: En modo edición, NUNCA tocar el carrito del pedido
+      // Solo usar el carrito original del pedido que se está editando
+      if (this.isEdit) {
+        console.log('🛡️ MODO EDICIÓN: Preservando carrito original con', this.pedido?.carrito?.length || 0, 'productos');
+        // Solo reinicializar formularios con el carrito existente
+        if (this.pedido?.carrito?.length > 0) {
+          this.initFormularios();
+        }
+        return; // SALIR sin tocar el singleton
+      }
+
+      // Solo en modo creación (NO edición), usar el singleton
+      if (!this.isEdit) {
+        this.singleton.refreshCart().subscribe((data: any) => {
+          if (data && this.pedido) {
+            // Limpiar datos fantasma del carrito antes de procesarlo
+            let carritoLimpio = Array.isArray(data) ? data.map(prod => {
+              const prodLimpio = { ...prod };
+              // Eliminar propiedades obsoletas
+              if (prodLimpio.notaProduccion) {
+                delete prodLimpio.notaProduccion;
+              }
+              return prodLimpio;
+            }) : data;
+            
+            // Asignar el carrito limpio al pedido solo si es diferente
             const carritoAnterior = JSON.stringify(this.pedido.carrito || []);
             const carritoNuevo = JSON.stringify(carritoLimpio);
             
@@ -234,8 +269,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
               this.initFormularios();
             }
           }
-        }
-      });
+        });
+      }
     }
   }
 
@@ -248,13 +283,11 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     productos.clear();
 
     this.pedido.carrito.forEach((prod, index) => {
-      // Obtener las notas existentes para este producto desde la fuente centralizada
-      const notasDelProducto = this.obtenerNotasDelProducto(prod);
+      // Crear FormArray vacío para nuevas notas (las existentes se muestran en la tabla)
+      const notasArray = this.formBuilder.array([]);
       
-      // Crear FormArray para las notas de este producto
-      const notasArray = this.formBuilder.array(
-        notasDelProducto.map(nota => this.formBuilder.control(nota.descripcion || nota.nota || ''))
-      );
+      // Siempre agregar al menos un campo vacío para poder escribir nuevas notas
+      notasArray.push(this.formBuilder.control(''));
 
       // Añadir al FormArray principal con el identificador del producto
       productos.push(this.formBuilder.group({
@@ -308,7 +341,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       
       // Para cualquier tipo que no sea producción, emitir el evento
       if (tipo !== 'produccion') {
-        // Emitir evento al componente padre
+        // Emitir evento al componente padre PRESERVANDO el carrito original
         this.notasActualizadas.emit({
           carrito: this.pedido.carrito,
           notasPedido: this.pedido.notasPedido,
@@ -320,6 +353,21 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   guardarNotas() {
     if (!this.notasFormArray) {
+      return;
+    }
+    
+    // VERIFICACIÓN CRÍTICA ANTES DE GUARDAR
+    const productosAntes = this.pedido?.carrito?.length || 0;
+    console.log('🛡️ VERIFICACIÓN ANTES DE GUARDAR - Productos:', productosAntes);
+    
+    if (productosAntes === 0) {
+      console.error('🚨 ABORT GUARDAR: Carrito vacío');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error Crítico',
+        text: 'El carrito está vacío. No se pueden guardar las notas.',
+        confirmButtonText: 'Entendido'
+      });
       return;
     }
     
@@ -371,6 +419,22 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         }
       });
         
+      // VERIFICACIÓN CRÍTICA DESPUÉS DE PROCESAR
+      const productosDespues = this.pedido?.carrito?.length || 0;
+      console.log('🛡️ VERIFICACIÓN DESPUÉS DE PROCESAR - Productos:', productosDespues);
+      
+      if (productosDespues === 0 || productosDespues !== productosAntes) {
+        console.error('🚨 PÉRDIDA DE PRODUCTOS DETECTADA EN GUARDAR');
+        Swal.fire({
+          icon: 'error',
+          title: '¡PRODUCTOS PERDIDOS!',
+          text: `Se perdieron productos durante el guardado: Antes ${productosAntes}, Después ${productosDespues}`,
+          confirmButtonText: 'Recargar página',
+          preConfirm: () => window.location.reload()
+        });
+        return;
+      }
+
       // Emitir el pedido completo actualizado con todas las notas preservadas
       this.notasActualizadas.emit({
         carrito: this.pedido.carrito,
@@ -507,7 +571,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   // Método para limpiar datos fantasma de sessionStorage y localStorage
   private limpiarDatosFantasmaNotas(): void {
-    // Limpiar sessionStorage si tiene datos corruptos
+    // CRÍTICO: NO limpiar nada en modo edición para preservar datos
+    if (this.isEdit) {
+      console.log('🛡️ MODO EDICIÓN: Omitiendo limpieza de datos fantasma para preservar carrito');
+      return;
+    }
+    
+    // Limpiar sessionStorage si tiene datos corruptos SOLO en modo creación
     try {
       const pedidoTemporal = sessionStorage.getItem('pedidoTemporal');
       if (pedidoTemporal) {
@@ -529,7 +599,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         }
       }
     } catch (error) {
-      sessionStorage.removeItem('pedidoTemporal');
+      console.error('Error al limpiar datos fantasma:', error);
+      if (!this.isEdit) {
+        sessionStorage.removeItem('pedidoTemporal');
+      }
     }
   }
 

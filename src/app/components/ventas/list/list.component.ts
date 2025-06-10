@@ -963,19 +963,63 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         order.carrito[0].configuracion?.datosEntrega?.fechaEntrega;
       let horarioEntrega =
         order.carrito[0].configuracion?.datosEntrega?.horarioEntrega;
-      order.fechaEntrega = new Date(
-        fechaEntrega.year,
-        fechaEntrega.month - 1,
-        fechaEntrega.day,
-      ).toISOString();
-      order.horarioEntrega = horarioEntrega;
+      
+      // Solo actualizar fechas si existen en la configuración
+      if (fechaEntrega && fechaEntrega.year && fechaEntrega.month && fechaEntrega.day) {
+        order.fechaEntrega = new Date(
+          fechaEntrega.year,
+          fechaEntrega.month - 1,
+          fechaEntrega.day,
+        ).toISOString();
+      }
+      
+      if (horarioEntrega) {
+        order.horarioEntrega = horarioEntrega;
+      }
     }
 
     this.ventasService.editOrder(order).subscribe((data) => {
       this.refrescarDatos();
       Swal.fire({
         icon: "success",
-        title: "Pedido  actualizado correctamente",
+        title: "Pedido actualizado correctamente",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    });
+  }
+
+  // NUEVO MÉTODO SEGURO: Solo actualizar notas sin tocar carrito
+  private updateNotasOnly(order: Pedido) {
+    // VERIFICACIÓN DE INTEGRIDAD ANTES DE ENVIAR
+    if (!order.carrito || order.carrito.length === 0) {
+      console.error('🚨 ABORT: Carrito vacío, no se actualizará nada');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error Crítico',
+        text: 'El pedido no tiene productos. No se puede actualizar.',
+        confirmButtonText: 'Recargar',
+        preConfirm: () => window.location.reload()
+      });
+      return;
+    }
+
+    console.log('🛡️ VERIFICACIÓN OK: Carrito tiene', order.carrito.length, 'productos');
+    
+    // Crear objeto minimalista solo con notas para actualizar
+    const notasUpdate = {
+      _id: order._id,
+      nroPedido: order.nroPedido,
+      notasPedido: order.notasPedido,
+      // INCLUIR CARRITO COMPLETO PARA ASEGURAR QUE NO SE PIERDA
+      carrito: order.carrito
+    };
+
+    this.ventasService.editOrder(notasUpdate as any).subscribe((data) => {
+      this.refrescarDatos();
+      Swal.fire({
+        icon: "success",
+        title: "Notas actualizadas correctamente",
         showConfirmButton: false,
         timer: 1500,
       });
@@ -1042,8 +1086,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
   // edutar Notas
   editNotas(content, order: Pedido) {
+    // VERIFICACIÓN CRÍTICA ANTES DE ABRIR MODAL
+    if (!order.carrito || order.carrito.length === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se puede editar',
+        text: 'Este pedido no tiene productos en el carrito.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+    
+    console.log('🛡️ APERTURA SEGURA: Pedido tiene', order.carrito.length, 'productos');
+    
     this.clienteSeleccionado = order.cliente;
-    this.pedidoSeleccionado = order;
+    this.pedidoSeleccionado = order; // NO hacer copia, usar referencia original
     //inicializr formulario con los datos del cliente tiene las mismas propiedades
     this.initForms(this.clienteSeleccionado);
     this.modalService
@@ -1062,9 +1119,59 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
           if (reason == "Cross click") {
             return;
           }
-          this.editOrder(order);
+          // CRÍTICO: Solo actualizar las notas, NO el pedido completo
+          this.updateNotasOnly(order);
         },
       );
+  }
+
+  // Nuevo método para manejar actualizaciones de notas desde el componente
+  onNotasActualizadas(event: any) {
+    if (event.pedidoCompleto && event.notasPedido) {
+      // CRÍTICO: PRESERVAR completamente el carrito original
+      const carritoOriginalCompleto = this.pedidoSeleccionado.carrito;
+      const productosAntes = carritoOriginalCompleto?.length || 0;
+      
+      // VERIFICACIÓN DE INTEGRIDAD ANTES DE ACTUALIZAR
+      if (!carritoOriginalCompleto || productosAntes === 0) {
+        console.error('🚨 ALERTA CRÍTICA: El carrito original está vacío o corrupto');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error Crítico',
+          text: 'Se detectó un problema con los productos del pedido. No se actualizarán las notas por seguridad.',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+      
+      // Solo actualizar las notas manteniendo TODO lo demás intacto
+      this.pedidoSeleccionado = {
+        ...this.pedidoSeleccionado,
+        notasPedido: event.notasPedido,
+        // FORZAR que el carrito se mantenga exactamente igual
+        carrito: carritoOriginalCompleto
+      };
+      
+      // VERIFICACIÓN POST-ACTUALIZACIÓN
+      const productosDespues = this.pedidoSeleccionado.carrito?.length || 0;
+      
+      if (productosDespues !== productosAntes) {
+        console.error('🚨 PÉRDIDA DE PRODUCTOS DETECTADA');
+        Swal.fire({
+          icon: 'error',
+          title: '¡PRODUCTOS PERDIDOS!',
+          text: `Se perdieron productos: Antes ${productosAntes}, Después ${productosDespues}`,
+          confirmButtonText: 'Recargar página',
+          preConfirm: () => {
+            window.location.reload();
+          }
+        });
+        return;
+      }
+      
+      console.log('✅ CARRITO PRESERVADO - Productos:', productosAntes);
+      console.log('✅ NOTAS ACTUALIZADAS SEGURAMENTE');
+    }
   }
 
   convertFechaEntregaString(fechaEntrega: {

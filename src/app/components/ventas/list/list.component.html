@@ -1069,7 +1069,10 @@
         </button>
     </div>
     <div class="modal-body">
-        <app-notas #notaspedidos [pedido]="pedidoSeleccionado" [isEdit]="true"></app-notas>
+        <app-notas #notaspedidos 
+                   [pedido]="pedidoSeleccionado" 
+                   [isEdit]="true"
+                   (notasActualizadas)="onNotasActualizadas($event)"></app-notas>
     </div>
 </ng-template>
 
