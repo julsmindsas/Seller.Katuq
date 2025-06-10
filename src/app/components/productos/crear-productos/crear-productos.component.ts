@@ -1209,12 +1209,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   guardarProductos() {
-    // Evitar múltiples envíos y cambiar a modo editar inmediatamente
+    // Evitar múltiples envíos
     if (this.saving) {
       return;
     }
     this.saving = true;
-    this.mostrarCrear = false;
     //validar que todos los precios de volumen tengan precios
 
     let preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
@@ -1285,13 +1284,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
           confirmButtonText: "Ok",
         });
 
-        // Quedar en modo editar
+        // Cambiar a modo editar solo DESPUÉS de guardar exitosamente
         context.mostrarCrear = false;
       },
       error(error) {
         // Revertir estado para permitir reintento
         context.saving = false;
-        context.mostrarCrear = true;
+        // No cambiar mostrarCrear aquí, ya que nunca se cambió antes
         console.error(error);
         Swal.fire({
           title: "Error guardando!",
