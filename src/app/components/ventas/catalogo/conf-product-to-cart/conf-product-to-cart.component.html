@@ -364,8 +364,40 @@
 
             <!-- Columna derecha: Configuración del producto (SIMPLIFICADO) -->
             <div class="col-xl-6 xl-cs-35 box-col-6">
+                <!-- Alerta de error de datos maestros -->
+                <div *ngIf="errorCargaDatosMaestros" class="alert alert-danger mb-3" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <div class="flex-grow-1">
+                            <strong>{{'Error de configuración' | translate}}</strong>
+                            <p class="mb-2 mt-1">{{'No se pudieron cargar los datos de configuración necesarios para este producto.' | translate}}</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn btn-sm btn-primary" (click)="reintentarCargaDatosMaestros()">
+                            <i class="fa fa-refresh me-1"></i>
+                            {{'Reintentar' | translate}}
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" (click)="modalService.dismissAll()">
+                            <i class="fa fa-times me-1"></i>
+                            {{'Cerrar' | translate}}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Indicador de carga de datos maestros -->
+                <div *ngIf="!datosMaestrosCargados && !errorCargaDatosMaestros" class="alert alert-info mb-3" role="alert">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">{{'Cargando...' | translate}}</span>
+                        </div>
+                        <span>{{'Cargando configuración del producto...' | translate}}</span>
+                    </div>
+                </div>
+
                 <!-- TODAS LAS SECCIONES EN UNA VISTA ÚNICA -->
-                <ngb-accordion #acc="ngbAccordion" [activeIds]="activeAccordionPanel" class="custom-accordion">
+                <ngb-accordion #acc="ngbAccordion" [activeIds]="activeAccordionPanel" class="custom-accordion" 
+                               [ngClass]="{'disabled-accordion': errorCargaDatosMaestros || !datosMaestrosCargados}">
                     <!-- Sección 1: Datos entrega -->
                     <ngb-panel id="datosEntregaPanel">
                         <ng-template ngbPanelHeader>
@@ -404,10 +436,18 @@
                                     <div *ngIf="hasFechaEntrega()" class="mt-3">
                                         <h5 class="section-title">{{'2. Forma de entrega' | translate}}</h5>
                                         <div class="form-group">
+                                            <!-- Alerta cuando no hay formas de entrega -->
+                                            <div *ngIf="!formasEntregaProducto || formasEntregaProducto.length === 0" 
+                                                 class="alert alert-warning p-2 mb-2">
+                                                <i class="fa fa-exclamation-triangle me-1"></i>
+                                                <small>{{'No hay formas de entrega disponibles para este producto' | translate}}</small>
+                                            </div>
+                                            
                                             <ng-select [items]="formasEntregaProducto" bindLabel="nombre"
                                                 bindValue="nombre" placeholder="{{'Forma de entrega' | translate}}"
                                                 class="form-control" [ngClass]="{'is-invalid': datosEntrega.get('formaEntrega')?.invalid && datosEntrega.get('formaEntrega')?.touched}"
                                                 style="font-family: roboto;" [closeOnSelect]="true"
+                                                [disabled]="!formasEntregaProducto || formasEntregaProducto.length === 0"
                                                 formControlName="formaEntrega" (change)="changeTipoEntrega($event)">
                                             </ng-select>
                                             <div *ngIf="datosEntrega.get('formaEntrega')?.invalid && datosEntrega.get('formaEntrega')?.touched" class="invalid-feedback d-block">
@@ -838,7 +878,8 @@
                                 [class]="getCompactCartButtonClass()">
                             <i class="fa fa-shopping-basket"></i>
                             <span class="d-none d-sm-inline ms-1">
-                                {{isEdit ? 'Actualizar' : (isStockUnavailable() ? 'Sin stock' : 'Agregar') | translate}}
+                                {{errorCargaDatosMaestros ? 'Error de configuración' : 
+                                  (isEdit ? 'Actualizar' : (isStockUnavailable() ? 'Sin stock' : 'Agregar')) | translate}}
                             </span>
                         </button>
                     </div>
@@ -861,11 +902,22 @@
 
                     <!-- Mensajes de error/información -->
                     <div *ngIf="isCartButtonDisabled() && !isCartMinimized" class="cart-error-info">
-                        <div class="error-message" *ngIf="isStockUnavailable()">
+                        <div class="error-message" *ngIf="errorCargaDatosMaestros">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            <span>{{'Error de configuración' | translate}}</span>
+                            <button (click)="reintentarCargaDatosMaestros()" class="btn-debug" title="{{'Reintentar carga' | translate}}">
+                                <i class="fa fa-refresh"></i>
+                            </button>
+                        </div>
+                        <div class="error-message" *ngIf="isStockUnavailable() && !errorCargaDatosMaestros">
                             <i class="fa fa-exclamation-triangle"></i>
                             <span>{{'Sin stock' | translate}}</span>
                         </div>
-                        <div class="error-message" *ngIf="!isStockUnavailable()">
+                        <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (!formasEntregaProducto || formasEntregaProducto.length === 0) && producto?.procesoComercial?.llevaCalendario">
+                            <i class="fa fa-truck"></i>
+                            <span class="d-none d-sm-inline">{{'Sin formas de entrega' | translate}}</span>
+                        </div>
+                        <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (formasEntregaProducto && formasEntregaProducto.length > 0)">
                             <i class="fa fa-info-circle"></i>
                             <span class="d-none d-sm-inline">{{'Faltan campos' | translate}}</span>
                             <button (click)="showDebugInfo()" class="btn-debug">

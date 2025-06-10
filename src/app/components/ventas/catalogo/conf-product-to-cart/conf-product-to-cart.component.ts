@@ -64,6 +64,10 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   public garantiasRevisadas: boolean = false;
   public condicionesRevisadas: boolean = false;
   
+  // Propiedades para validar datos maestros
+  public datosMaestrosCargados: boolean = false;
+  public errorCargaDatosMaestros: boolean = false;
+  
   // Propiedades computadas para verificar las propiedades no definidas en la interfaz
   get hasAceptaGenero(): boolean {
     if (!this.producto?.procesoComercial) return false;
@@ -185,38 +189,60 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
     if (this.generos == undefined || this.ocasiones == undefined || this.tipoEntrega == undefined) {
 
-      this.pedidoUtilService.getAllMaestro$().subscribe((r: any) => {
-        if (this.tipoEntrega == undefined && this.tiemposEntrega == undefined && this.generos == undefined && this.formasEntrega == undefined) {
-          if (r.tipoEntrega && r.tiempoEntrega && r.generos && r.ocasiones && r.formaEntrega) {
-            this.tipoEntrega = r.tipoEntrega;
-            this.tiemposEntrega = r.tiempoEntrega;
-            this.generos = producto.procesoComercial?.genero ? r.generos?.filter((p: { id: number }) => producto.procesoComercial!.genero.find((g: number) => g == p.id)) : [];
-            this.ocasiones = producto.procesoComercial?.ocasion ? r.ocasiones?.filter((p: { id: string }) => producto.procesoComercial!.ocasion.find((g: string) => g == p.id)) : [];
-            this.formasEntrega = r.formaEntrega;
-            this.adicionesPreferencias = r.adiciones.filter(p => p.esPreferencia);
-            this.adicionesrows = (r.adiciones as any[]).filter(p => p.esAdicion).sort((a, b) => {
-              const nameA = parseInt(a.posicion); // ignore upper and lowercase
-              const nameB = parseInt(b.posicion); // ignore upper and lowercase
-              if (nameA < nameB) {
-                return -1;
-              }
-              if (nameA > nameB) {
-                return 1;
+      this.pedidoUtilService.getAllMaestro$().subscribe({
+          next: (r: any) => {
+            if (this.tipoEntrega == undefined && this.tiemposEntrega == undefined && this.generos == undefined && this.formasEntrega == undefined) {
+              // Validar que los datos maestros estén completos
+              if (!this.validarDatosMaestros(r)) {
+                this.errorCargaDatosMaestros = true;
+                this.datosMaestrosCargados = false;
+                this.mostrarErrorDatosMaestros(r);
+                return;
               }
 
-              // names must be equal
-              return 0;
+              if (r.tipoEntrega && r.tiempoEntrega && r.generos && r.ocasiones && r.formaEntrega) {
+                this.tipoEntrega = r.tipoEntrega;
+                this.tiemposEntrega = r.tiempoEntrega;
+                this.generos = producto.procesoComercial?.genero ? r.generos?.filter((p: { id: number }) => producto.procesoComercial!.genero.find((g: number) => g == p.id)) : [];
+                this.ocasiones = producto.procesoComercial?.ocasion ? r.ocasiones?.filter((p: { id: string }) => producto.procesoComercial!.ocasion.find((g: string) => g == p.id)) : [];
+                this.formasEntrega = r.formaEntrega;
+                this.adicionesPreferencias = r.adiciones.filter(p => p.esPreferencia);
+                this.adicionesrows = (r.adiciones as any[]).filter(p => p.esAdicion).sort((a, b) => {
+                  const nameA = parseInt(a.posicion); // ignore upper and lowercase
+                  const nameB = parseInt(b.posicion); // ignore upper and lowercase
+                  if (nameA < nameB) {
+                    return -1;
+                  }
+                  if (nameA > nameB) {
+                    return 1;
+                  }
+
+                  // names must be equal
+                  return 0;
+                });
+
+                this.rowsinicialesSinMod = JSON.stringify(this.adicionesrows)
+
+                this.loadFormasEntregaConfiguracionProducto();
+                this.variables = producto.procesoComercial?.variablesForm ? parse(producto.procesoComercial.variablesForm) : null;
+                this.configurarProducto(producto);
+              
+                this.datosMaestrosCargados = true;
+                this.errorCargaDatosMaestros = false;
+              }
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar datos maestros:', error);
+            this.errorCargaDatosMaestros = true;
+            this.datosMaestrosCargados = false;
+            this.toastrService.error('Error al cargar la configuración del producto. Por favor, intente nuevamente.', 'Error de Carga', {
+              timeOut: 6000,
+              progressBar: true,
+              positionClass: 'toast-bottom-right'
             });
-
-            this.rowsinicialesSinMod = JSON.stringify(this.adicionesrows)
-
-            this.loadFormasEntregaConfiguracionProducto();
-            this.variables = producto.procesoComercial?.variablesForm ? parse(producto.procesoComercial.variablesForm) : null;
-            this.configurarProducto(producto);
-
           }
-        }
-      });
+        });
 
     }
 
@@ -941,9 +967,38 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
 
   loadFormasEntregaConfiguracionProducto() {
-    const tipoEntrega = this.tipoEntrega.filter((p: any) => p.nombreInterno.toLowerCase() == this.producto.disponibilidad.tipoEntrega.toLowerCase())[0];
-    // this.tipoEntrega = event.value;
-    this.formasEntregaProducto = this.formasEntrega.filter((p: any) => tipoEntrega.formaEntrega.find((g: string) => g.toLowerCase() == p.nombre.toLowerCase()));
+    try {
+      if (!this.tipoEntrega || this.tipoEntrega.length === 0) {
+        console.error('No hay tipos de entrega disponibles');
+        this.toastrService.error('No se encontraron tipos de entrega configurados', 'Error de Configuración');
+        return;
+      }
+
+      if (!this.formasEntrega || this.formasEntrega.length === 0) {
+        console.error('No hay formas de entrega disponibles');
+        this.toastrService.error('No se encontraron formas de entrega configuradas', 'Error de Configuración');
+        return;
+      }
+
+      const tipoEntrega = this.tipoEntrega.filter((p: any) => p.nombreInterno.toLowerCase() == this.producto.disponibilidad.tipoEntrega.toLowerCase())[0];
+      
+      if (!tipoEntrega) {
+        console.error('No se encontró el tipo de entrega del producto:', this.producto.disponibilidad.tipoEntrega);
+        this.toastrService.warning(`El tipo de entrega "${this.producto.disponibilidad.tipoEntrega}" no está configurado`, 'Configuración Incompleta');
+        this.formasEntregaProducto = [];
+        return;
+      }
+
+      this.formasEntregaProducto = this.formasEntrega.filter((p: any) => tipoEntrega.formaEntrega.find((g: string) => g.toLowerCase() == p.nombre.toLowerCase()));
+      
+      if (!this.formasEntregaProducto || this.formasEntregaProducto.length === 0) {
+        console.error('No se encontraron formas de entrega para el tipo:', tipoEntrega.nombreInterno);
+        this.toastrService.warning('No hay formas de entrega disponibles para este producto', 'Sin Opciones de Entrega');
+      }
+    } catch (error) {
+      console.error('Error al cargar formas de entrega:', error);
+      this.toastrService.error('Error al configurar las opciones de entrega', 'Error de Configuración');
+    }
   }
 
   getTituloTiempoEntrega() {
@@ -1509,6 +1564,16 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
    * @returns true si el botón debe estar habilitado, false en caso contrario
    */
   isCartButtonDisabled(): boolean {
+    // Verificar si hay error en la carga de datos maestros
+    if (this.errorCargaDatosMaestros) {
+      return true;
+    }
+
+    // Verificar si no hay formas de entrega disponibles
+    if (this.producto?.procesoComercial?.llevaCalendario && (!this.formasEntregaProducto || this.formasEntregaProducto.length === 0)) {
+      return true;
+    }
+
     // Verificar formulario datosEntrega pero solo los campos que aplican según la configuración
     let datosEntregaInvalid = false;
     
@@ -1573,6 +1638,26 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     // Construir mensaje de diagnóstico
     let debugMessage = '<strong>Diagnóstico de validación:</strong><br><br>';
     let errorEncontrado = false;
+    
+    // Verificar estado de datos maestros primero
+    debugMessage += '<strong>Estado de datos maestros:</strong><br>';
+    debugMessage += `- Datos maestros cargados: ${this.datosMaestrosCargados ? '<span class="text-success">Sí</span>' : '<span class="text-danger">No</span>'}<br>`;
+    debugMessage += `- Error en carga: ${this.errorCargaDatosMaestros ? '<span class="text-danger">Sí</span>' : '<span class="text-success">No</span>'}<br>`;
+    debugMessage += `- Tipos de entrega: ${this.tipoEntrega && this.tipoEntrega.length > 0 ? '<span class="text-success">Cargados (' + this.tipoEntrega.length + ')</span>' : '<span class="text-danger">No cargados</span>'}<br>`;
+    debugMessage += `- Formas de entrega: ${this.formasEntrega && this.formasEntrega.length > 0 ? '<span class="text-success">Cargadas (' + this.formasEntrega.length + ')</span>' : '<span class="text-danger">No cargadas</span>'}<br>`;
+    debugMessage += `- Formas de entrega del producto: ${this.formasEntregaProducto && this.formasEntregaProducto.length > 0 ? '<span class="text-success">Disponibles (' + this.formasEntregaProducto.length + ')</span>' : '<span class="text-danger">No disponibles</span>'}<br>`;
+    debugMessage += `- Géneros: ${this.generos && this.generos.length > 0 ? '<span class="text-success">Cargados (' + this.generos.length + ')</span>' : '<span class="text-warning">No cargados</span>'}<br>`;
+    debugMessage += `- Ocasiones: ${this.ocasiones && this.ocasiones.length > 0 ? '<span class="text-success">Cargadas (' + this.ocasiones.length + ')</span>' : '<span class="text-warning">No cargadas</span>'}<br><br>`;
+    
+    if (this.errorCargaDatosMaestros) {
+      debugMessage += '→ <span class="text-danger"><strong>Los datos maestros no se han cargado correctamente. Esto impide la configuración del producto.</strong></span><br><br>';
+      errorEncontrado = true;
+    }
+    
+    if (this.producto?.procesoComercial?.llevaCalendario && (!this.formasEntregaProducto || this.formasEntregaProducto.length === 0)) {
+      debugMessage += '→ <span class="text-danger"><strong>No hay formas de entrega disponibles para este producto.</strong></span><br><br>';
+      errorEncontrado = true;
+    }
     
     // Verificar datosEntrega pero solo campos que son realmente requeridos
     debugMessage += '<strong>Configuración del producto:</strong><br>';
@@ -1703,9 +1788,12 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       debugMessage += '<br>';
     }
     
-    if (!errorEncontrado) {
+    if (!errorEncontrado && !this.errorCargaDatosMaestros) {
       debugMessage += '<br><strong class="text-success">No se encontraron errores específicos. Posible problema de validación interna.</strong><br>';
       debugMessage += '<button id="swal-try-fix" class="btn btn-sm btn-primary mt-2">Intentar arreglar automáticamente</button>';
+    } else if (this.errorCargaDatosMaestros) {
+      debugMessage += '<br><strong class="text-danger">Error principal: Datos maestros no cargados</strong><br>';
+      debugMessage += '<button id="swal-retry-masters" class="btn btn-sm btn-warning mt-2">Reintentar carga de datos maestros</button>';
     }
     
     // Agregar un resumen del estado de validación
@@ -1716,7 +1804,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     Swal.fire({
       title: 'Información de depuración',
       html: debugMessage,
-      icon: 'info',
+      icon: this.errorCargaDatosMaestros ? 'error' : 'info',
       confirmButtonText: 'Cerrar',
       didOpen: () => {
         // Agregar event listener al botón de arreglo automático
@@ -1724,6 +1812,15 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
         if (fixButton) {
           fixButton.addEventListener('click', () => {
             this.tryToFixFormAutomatically();
+            Swal.close();
+          });
+        }
+        
+        // Agregar event listener al botón de reintentar datos maestros
+        const retryButton = document.getElementById('swal-retry-masters');
+        if (retryButton) {
+          retryButton.addEventListener('click', () => {
+            this.reintentarCargaDatosMaestros();
             Swal.close();
           });
         }
@@ -1979,6 +2076,124 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     } else {
       return 'btn-compact-cart primary';
     }
+  }
+
+  /**
+   * Valida que los datos maestros estén completos
+   */
+  private validarDatosMaestros(datos: any): boolean {
+    const camposRequeridos = ['tipoEntrega', 'tiempoEntrega', 'generos', 'ocasiones', 'formaEntrega'];
+    const camposFaltantes: string[] = [];
+
+    camposRequeridos.forEach(campo => {
+      if (!datos[campo] || (Array.isArray(datos[campo]) && datos[campo].length === 0)) {
+        camposFaltantes.push(campo);
+      }
+    });
+
+    if (camposFaltantes.length > 0) {
+      console.error('Faltan datos maestros:', camposFaltantes);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Muestra un error detallado cuando faltan datos maestros
+   */
+  private mostrarErrorDatosMaestros(datos: any): void {
+    const camposRequeridos = ['tipoEntrega', 'tiempoEntrega', 'generos', 'ocasiones', 'formaEntrega'];
+    const camposFaltantes: string[] = [];
+
+    camposRequeridos.forEach(campo => {
+      if (!datos[campo] || (Array.isArray(datos[campo]) && datos[campo].length === 0)) {
+        camposFaltantes.push(campo);
+      }
+    });
+
+    let mensaje = 'No se pudieron cargar los datos de configuración necesarios. ';
+    
+    if (camposFaltantes.includes('formaEntrega')) {
+      mensaje += 'Las formas de entrega no están disponibles. ';
+    }
+    
+    if (camposFaltantes.includes('tipoEntrega')) {
+      mensaje += 'Los tipos de entrega no están disponibles. ';
+    }
+
+    mensaje += 'Por favor, contacte al administrador o intente recargar la página.';
+
+    this.toastrService.error(mensaje, 'Error de Configuración', {
+      timeOut: 8000,
+      progressBar: true,
+      positionClass: 'toast-bottom-right',
+      closeButton: true
+    });
+
+    // También mostrar un Swal para mayor visibilidad
+    Swal.fire({
+      title: 'Error de Configuración',
+      html: `
+        <div class="text-start">
+          <p>No se pudieron cargar los datos de configuración del producto:</p>
+          <ul class="text-start">
+            ${camposFaltantes.map(campo => `<li>${this.getNombreCampo(campo)}</li>`).join('')}
+          </ul>
+          <p class="mt-3"><strong>¿Qué puedes hacer?</strong></p>
+          <ul class="text-start">
+            <li>Recargar la página</li>
+            <li>Contactar al administrador</li>
+            <li>Intentar con otro producto</li>
+          </ul>
+        </div>
+      `,
+      icon: 'error',
+      confirmButtonText: 'Recargar Página',
+      showCancelButton: true,
+      cancelButtonText: 'Cerrar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.reload();
+      }
+    });
+  }
+
+  /**
+   * Obtiene el nombre legible de un campo
+   */
+  private getNombreCampo(campo: string): string {
+    const nombres = {
+      'tipoEntrega': 'Tipos de entrega',
+      'tiempoEntrega': 'Tiempos de entrega',
+      'generos': 'Géneros',
+      'ocasiones': 'Ocasiones',
+      'formaEntrega': 'Formas de entrega',
+      'adiciones': 'Adiciones'
+    };
+    
+    return nombres[campo] || campo;
+  }
+
+  /**
+   * Método para reintentar la carga de datos maestros
+   */
+  public reintentarCargaDatosMaestros(): void {
+    this.errorCargaDatosMaestros = false;
+    this.datosMaestrosCargados = false;
+    
+    this.toastrService.info('Reintentando cargar configuración...', 'Reintentando');
+    
+    // Reinicializar variables
+    this.tipoEntrega = undefined;
+    this.tiemposEntrega = undefined;
+    this.generos = undefined;
+    this.formasEntrega = undefined;
+    
+    // Volver a intentar la carga
+    this.inicializacionConfigurarProducto(this.producto);
   }
 
 }

@@ -1474,22 +1474,15 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
 
 
 
-    // Filtrar direcciones de entrega por la ciudad seleccionada
-    if (this.originalDataEntregas) {
-      this.datosEntregas = this.originalDataEntregas?.filter(x => x.ciudad === this.selectedCity) || [];
-      if (this.datosEntregas.length === 0) {
-        Swal.fire({
-          title: "No encontrado!",
-          text: "No se ha encontrado la ciudad en los datos de entrega, recuerda registrarla",
-          icon: "warning",
-          confirmButtonText: "Ok",
-        });
-        this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-        this.activarDatosEntrega = true;
-      } else {
-        this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
-        this.activarDatosEntrega = false;
-      }
+    // Filtrar direcciones de entrega por la ciudad seleccionada silenciosamente
+    if (this.originalDataEntregas && this.originalDataEntregas.length > 0) {
+      this.datosEntregas = this.originalDataEntregas.filter(x => x.ciudad === this.selectedCity) || [];
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = this.datosEntregas.length === 0;
+      this.activarDatosEntrega = this.datosEntregaNoEncontradosParaCiudadSeleccionada;
+    } else {
+      // Si no hay datos de entrega originales, no hacer validaciones aquí
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+      this.activarDatosEntrega = false;
     }
   }
 
@@ -1636,9 +1629,20 @@ export class CrearVentasComponent implements OnInit, AfterViewChecked, OnChanges
                   this.datosEntregas = direccionesFiltradas;
                   this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
                 } else {
-                  // Si no hay direcciones para la ciudad seleccionada, mostrar todas pero indicar que no hay específicas
+                  // Si no hay direcciones para la ciudad seleccionada, mostrar un mensaje informativo
                   this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
                   this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+                  
+                  // Mostrar mensaje informativo solo en el paso de envío
+                  this.toastrService.info(
+                    `No se encontraron direcciones registradas para ${this.selectedCity}. Puede usar una dirección existente o crear una nueva.`,
+                    'Información de Entrega',
+                    {
+                      closeButton: true,
+                      timeOut: 5000,
+                      positionClass: 'toast-bottom-right'
+                    }
+                  );
                 }
               }
               this.ref.detectChanges();
