@@ -36,9 +36,12 @@ import { UserLite } from "../../../shared/models/User/UserLite";
 import { FilterService } from "primeng/api";
 import { ServiciosService } from "../../../shared/services/servicios.service";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
+import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
+import { ToastrService } from "ngx-toastr";
 
 import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
+import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 
 @Component({
   selector: "app-list-orders",
@@ -67,6 +70,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   pedidoSeleccionado: Pedido;
   estadosPago = Object.values(EstadoPago);
   ciudadSeleccionada: any;
+
+  // ------ NUEVAS PROPIEDADES PARA FILTRAR POR BODEGA Y CIUDAD EN RECOMPRA ------
+  public bodegas: any[] = [];
+  public selectedWarehouse: any = null; // objeto de bodega seleccionado
+  @ViewChild('recompra', { static: false }) recompraCmp: EcomerceProductsComponent;
 
   ngAfterViewInit() {
     // Limpiar funciones del menú anterior
@@ -120,7 +128,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       "danielmauriciogarcia@hotmail.com",
       "dgarciar@gmail.com",
     ];
-    return (
+    return !!(
       this.UserLogged?.email && authorizedEmails.includes(this.UserLogged.email)
     );
   }
@@ -323,6 +331,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     private formBuilder: FormBuilder,
     private pedidoUtilService: PedidosUtilService,
     private maestroService: MaestroService,
+    private bodegaService: BodegaService,
+    private toastrService: ToastrService,
   ) {
     this.registerCustomFilters();
 
@@ -351,6 +361,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     this.fechaFinal = new Date().toISOString().split("T")[0];
 
     this.UserLogged = JSON.parse(localStorage.getItem("user")!) as UserLogged;
+
+    this.cargando = false;
+
+    // Cargar listado de bodegas disponibles para el modal de recompra
+    this.cargarBodegas();
   }
 
   ngOnInit(): void {
@@ -2027,5 +2042,36 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       this.saveFiltersState();
     }
     this.refrescarDatos();
+  }
+
+  // ==================== BODEGAS ====================
+  private cargarBodegas(): void {
+    this.bodegaService.getBodegasByChannelName('Venta Asistida').subscribe({
+      next: (bodegas) => {
+        this.bodegas = bodegas;
+      },
+      error: () => {
+        console.error('Error cargando bodegas');
+      }
+    });
+  }
+
+  onWarehouseChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const selectedId = target.value;
+    const selected = this.bodegas.find(b => b.idBodega === selectedId);
+
+    if (selected) {
+      this.selectedWarehouse = selected;
+
+      if (this.recompraCmp) {
+        this.recompraCmp.bodega = selected.idBodega;
+        if (typeof this.recompraCmp.filtrarProductos === 'function') {
+          this.recompraCmp.filtrarProductos();
+        }
+      }
+    } else {
+      this.selectedWarehouse = null;
+    }
   }
 }

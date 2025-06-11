@@ -961,39 +961,6 @@
                                 </td>
                             </tr>
                         </ng-template>
-
-                        <!-- FOOTER para totales, si no es producción -->
-                        <ng-template pTemplate="footer" *ngIf="!isFromProduction">
-                            <tr style="font-size: 0.85em; background-color: #f8f9fa;">
-                                <!-- Celdas vacías para columnas antes de los valores monetarios -->
-                                <td *ngIf="isColumnVisible('detalles')"></td>
-                                <td *ngIf="isColumnVisible('nroPedido')"></td>
-                                <td *ngIf="isColumnVisible('fechaEntrega')"></td>
-                                <td *ngIf="isColumnVisible('opciones')"></td>
-                                <td *ngIf="isColumnVisible('estadoPago')"></td>
-                                <td *ngIf="isColumnVisible('estadoProceso')"></td>
-                                <td *ngIf="isColumnVisible('validacion')"></td>
-                                <td *ngIf="isColumnVisible('cliente')" class="text-right fw-bold">{{'Total' | translate}}</td>
-
-                                <!-- Valores monetarios -->
-                                <td *ngIf="isColumnVisible('valorBruto')" class="td-money fw-bold">{{ calculateValorBruto() | currency }}</td>
-                                <td *ngIf="isColumnVisible('descuento')" class="td-money fw-bold">{{ calculateDescuento() | currency }}</td>
-                                <td *ngIf="isColumnVisible('domicilio')" class="td-money fw-bold">{{ calculateEnvio() | currency }}</td>
-                                <td *ngIf="isColumnVisible('subtotal')" class="td-money fw-bold">{{ calculateSubtotal() | currency }}</td>
-                                <td *ngIf="isColumnVisible('iva')" class="td-money fw-bold">{{ calculateTotalImpuestos() | currency }}</td>
-                                <td *ngIf="isColumnVisible('total')" class="td-money fw-bold">{{ calculateTotal() | currency }}</td>
-                                <td *ngIf="isColumnVisible('anticipo')" class="td-money fw-bold">{{ calculateAnticipo() | currency }}</td>
-                                <td *ngIf="isColumnVisible('faltaPorPagar')" class="td-money fw-bold">{{ calculateFaltaPorPagar() | currency }}</td>
-
-                                <!-- Celdas vacías para las columnas restantes -->
-                                <td *ngIf="isColumnVisible('fechaCreacion')"></td>
-                                <td *ngIf="isColumnVisible('ciudad')"></td>
-                                <td *ngIf="isColumnVisible('zonaCobro')"></td>
-                                <td *ngIf="isColumnVisible('formaEntrega')"></td>
-                                <td *ngIf="isColumnVisible('horarioEntrega')"></td>
-                                <td *ngIf="isColumnVisible('vendedor')"></td>
-                            </tr>
-                        </ng-template>
                         </p-table>
                     </div>
                 </div>
@@ -1121,7 +1088,36 @@
         </button>
     </div>
     <div class="modal-body">
-        <app-ecomerce-products #recompra [ciudad]="ciudadSeleccionada" [isRebuy]="true"></app-ecomerce-products>
+
+        <!-- Selector de Bodega (similar al de crear-ventas) -->
+        <div class="warehouse-selector mb-3" *ngIf="bodegas?.length > 0">
+            <div class="row align-items-center g-2">
+                <div class="col-auto">
+                    <div class="select-header">
+                        <i class="fa fa-warehouse me-1"></i>
+                        <span class="warehouse-title">{{ 'Bodega' | translate }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="position-relative">
+                        <select class="form-select custom-select" (change)="onWarehouseChange($event)">
+                            <option value="">{{ 'Seleccione una bodega' | translate }}</option>
+                            <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+                                {{ bodega.nombre }} ({{ bodega.idBodega }})
+                            </option>
+                        </select>
+                        <i class="fa fa-warehouse select-icon"></i>
+                    </div>
+                </div>
+                <div class="col-auto" *ngIf="selectedWarehouse">
+                    <span class="selected-warehouse">
+                        <i class="fa fa-check-circle me-1"></i><strong>{{ selectedWarehouse?.nombre }}</strong>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <app-ecomerce-products #recompra [ciudad]="ciudadSeleccionada" [bodega]="selectedWarehouse?.idBodega" [isRebuy]="true"></app-ecomerce-products>
     </div>
 </ng-template>
 

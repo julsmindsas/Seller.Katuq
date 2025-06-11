@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { QuickViewComponent } from '../../quick-view/quick-view.component';
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import Swal from 'sweetalert2';
@@ -19,7 +19,7 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './ecomerce-products.component.html',
   styleUrls: ['./ecomerce-products.component.scss']
 })
-export class EcomerceProductsComponent implements OnInit, AfterViewInit {
+export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChanges {
 
   @Input() public ciudad: string;
   @Input() public bodega: string;
@@ -520,5 +520,25 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit {
     
     // Emitir el evento con el valor seleccionado
     this.citySelected.emit(selectedValue);
+  }
+
+  /**
+   * Detecta cambios en los @Input bodega o ciudad y vuelve a aplicar filtros
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    const bodegaChanged = changes['bodega'] && !changes['bodega'].firstChange;
+    const ciudadChanged = changes['ciudad'] && !changes['ciudad'].firstChange;
+
+    if ((bodegaChanged || ciudadChanged) && this.filterForm) {
+      // Actualizar campos del formulario de filtros antes de filtrar
+      if (bodegaChanged) {
+        // El filtro se aplica dentro de filtrarProductos con this.bodega
+      }
+      if (ciudadChanged) {
+        // selectedCity controla visualización del selector
+        this.selectedCity = this.ciudad;
+      }
+      this.filtrarProductos();
+    }
   }
 }
