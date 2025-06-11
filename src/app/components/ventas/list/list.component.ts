@@ -1327,6 +1327,33 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
           if (index !== -1) {
             order.carrito[index] = configuracionResult;
           }
+
+          // ===== NUEVO: Recalcular valor de envío (domicilio) =====
+          // Si alguna línea del carrito tiene una forma de entrega que incluya la palabra "domicilio",
+          // se calcula el envío con base en la zona de cobro; de lo contrario se pone en 0 (recoge en tienda).
+          const tieneDomicilio = (order.carrito ?? []).some(car => {
+            const forma = car?.configuracion?.datosEntrega?.formaEntrega || '';
+            return forma.toLowerCase().includes('domicilio');
+          });
+
+          if (tieneDomicilio) {
+            // Utilizar el servicio utilitario para obtener el costo de envío según la zona
+            this.pedidoUtilService.pedido = order;
+            try {
+              order.totalEnvio = Number(this.pedidoUtilService.getShippingCost(this.allBillingZone));
+            } catch (e) {
+              // Fallback si las zonas no están aún en memoria
+              const zonas = this.allBillingZone || JSON.parse(sessionStorage.getItem('allBillingZone') || '[]');
+              order.totalEnvio = Number(this.pedidoUtilService.getShippingCost(zonas));
+            }
+          } else {
+            // Forma de entrega tipo "recoge"  →  sin costos de domicilio
+            order.totalEnvio = 0;
+          }
+
+          // Recalcular totales dependientes del valor de envío, descuentos, etc.
+          order = this.actualizarValoresPedido(order);
+
           this.editOrder(order);
         },
       );

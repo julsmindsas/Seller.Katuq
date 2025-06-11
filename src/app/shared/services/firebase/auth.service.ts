@@ -133,8 +133,26 @@ export class AuthService implements OnInit {
     this.translate.use(lang.code);
   }
 
-  ForgotPassword(passwordResetEmail: string): void {
-    // Implementar lógica para restablecer contraseña
+  ForgotPassword(passwordResetEmail: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const resetData = {
+        email: passwordResetEmail.toLowerCase()
+      };
+
+      this.services.forgotPassword(resetData).subscribe({
+        next: (result: any) => {
+          if (result.success) {
+            resolve(result);
+          } else {
+            reject(result.message || 'Error al enviar email de recuperación');
+          }
+        },
+        error: (error) => {
+          console.error('Error in forgot password:', error);
+          reject('Error al enviar email de recuperación');
+        }
+      });
+    });
   }
 
   AuthLogin(provider: any): void {

@@ -12,6 +12,7 @@ import { RegisterImageOneComponent } from './register/image-one/image-one.compon
 import { RegisterImageTwoComponent } from './register/image-two/image-two.component';
 import { UnlockUserComponent } from './unlock-user/unlock-user.component';
 import { ForgetPasswordComponent } from './forget-password/forget-password.component';
+import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 
 const routes: Routes = [
@@ -67,6 +68,10 @@ const routes: Routes = [
   },
   {
     path: 'forgot-password',
+    component: ForgotPasswordComponent,
+  },
+  {
+    path: 'forget-password',
     component: ForgetPasswordComponent,
   },
   {

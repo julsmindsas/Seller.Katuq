@@ -5,13 +5,12 @@ import { AuthService } from '../../../shared/services/firebase/auth.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
-  selector: 'app-forget-password',
-  templateUrl: './forget-password.component.html',
-  styleUrls: ['./forget-password.component.scss']
+  selector: 'app-forgot-password',
+  templateUrl: './forgot-password.component.html',
+  styleUrls: ['./forgot-password.component.scss']
 })
-export class ForgetPasswordComponent implements OnInit {
+export class ForgotPasswordComponent implements OnInit {
 
-  public show: boolean = false;
   public forgotPasswordForm: FormGroup;
   public isLoading: boolean = false;
   public emailSent: boolean = false;
@@ -32,10 +31,6 @@ export class ForgetPasswordComponent implements OnInit {
     if (this.authService.isLoggedIn) {
       this.router.navigate(['/dashboard']);
     }
-  }
-
-  showPassword() {
-    this.show = !this.show;
   }
 
   onSubmit(): void {

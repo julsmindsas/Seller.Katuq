@@ -49,6 +49,11 @@
                     {{ 'Ingresar' | translate }}
                   </span>
                 </button>
+                <div class="text-center mt-3 mb-3">
+                  <a [routerLink]="'/authentication/forgot-password'" class="forgot-password-link">
+                    {{ '¿Olvidaste tu contraseña?' | translate }}
+                  </a>
+                </div>
                 <h5 class="text-center mt-5">V. {{version}}</h5>
               </div>
             </form>
@@ -101,6 +106,11 @@
                     {{ 'Ingresar' | translate }}
                   </span>
                 </button>
+                <div class="text-center mt-3 mb-3">
+                  <a [routerLink]="'/authentication/forgot-password'" class="forgot-password-link fs-16">
+                    {{ '¿Olvidaste tu contraseña?' | translate }}
+                  </a>
+                </div>
                 <h5 class="text-center mt-5">Versión: {{version}}</h5>
               </div>
             </form>

@@ -29,6 +29,10 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'authentication',
+    loadChildren: () => import('./pages/authentication/authentication.module').then(m => m.AuthenticationModule)
+  },
+  {
     path: 'nuevo-registro', // antes era 'diagnostic-survey'
     component: BlankComponent,
     children: [

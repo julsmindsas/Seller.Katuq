@@ -259,6 +259,21 @@ export class ServiciosService {
     return this.httpClient.post(this.url + '/v1/authentication', datos);
   }
 
+  // Forgot password
+  forgotPassword(datos: any) {
+    return this.httpClient.post(this.url + '/v1/authentication/forgot-password', datos);
+  }
+
+  // Verify reset token
+  verifyResetToken(datos: any) {
+    return this.httpClient.post(this.url + '/v1/authentication/verify-reset-token', datos);
+  }
+
+  // Reset password
+  resetPassword(datos: any) {
+    return this.httpClient.post(this.url + '/v1/authentication/reset-password', datos);
+  }
+
   // Sign out
   signOut() {
     this.router.routeReuseStrategy.shouldReuseRoute = function () {

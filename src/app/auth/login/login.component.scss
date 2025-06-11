@@ -40,3 +40,63 @@
     content: "Loading...";
   }
 }
+
+// Forgot password link styles
+.forgot-password-link {
+  color: #6c757d;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 400;
+  transition: all 0.3s ease;
+  display: inline-block;
+  position: relative;
+  padding: 0.25rem 0;
+  
+  &:hover {
+    color: #007bff;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+  
+  &:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+    color: #007bff;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    bottom: 0;
+    left: 50%;
+    background-color: #007bff;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+  }
+  
+  &:hover::after {
+    width: 100%;
+  }
+}
+
+// Mobile specific styles
+.login-main-mobile .forgot-password-link {
+  font-size: 1rem;
+  color: #495057;
+}
+
+// Desktop specific styles  
+.login-main .forgot-password-link {
+  font-size: 1rem;
+  color: #495057;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .forgot-password-link {
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+  }
+}

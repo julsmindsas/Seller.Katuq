@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { SharedModule } from "../../shared/shared.module";
 
 import { AuthenticationRoutingModule } from './authentication-routing.module';
@@ -16,10 +17,13 @@ import { RegisterImageTwoComponent } from './register/image-two/image-two.compon
 import { UnlockUserComponent } from './unlock-user/unlock-user.component';
 import { ForgetPasswordComponent } from './forget-password/forget-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 
 @NgModule({
   imports: [
     CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
     SharedModule,
     AuthenticationRoutingModule
   ],
@@ -35,7 +39,8 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
     RegisterImageTwoComponent,
     UnlockUserComponent,
     ForgetPasswordComponent,
-    ResetPasswordComponent
+    ResetPasswordComponent,
+    ForgotPasswordComponent
   ]
 })
 export class AuthenticationModule { }
