@@ -361,6 +361,49 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     this.refreshCartWithProducts();
     console.log(this.productos);
 
+    // -------------------------------------------------------
+    // HEREDAR DATOS DE ENTREGA DEL PRIMER PRODUCTO DEL PEDIDO
+    // -------------------------------------------------------
+    if (this.isRebuy && !this.isEdit) {
+      const pedidoBase: any = this.pedidoUtilService?.pedido;
+
+      if (pedidoBase?.carrito?.length > 0) {
+        const datosEntregaBase = pedidoBase.carrito[0]?.configuracion?.datosEntrega;
+
+        if (datosEntregaBase) {
+          // Convertir y parchear sólo los campos que existan en el formulario
+          const patch: any = {};
+
+          if (datosEntregaBase.tipoEntrega !== undefined) {
+            patch.tipoEntrega = datosEntregaBase.tipoEntrega;
+          }
+          if (datosEntregaBase.formaEntrega !== undefined) {
+            patch.formaEntrega = datosEntregaBase.formaEntrega;
+          }
+          if (datosEntregaBase.fechaEntrega !== undefined) {
+            patch.fechaEntrega = datosEntregaBase.fechaEntrega; // Se asume formato {year, month, day}
+          }
+          if (datosEntregaBase.horarioEntrega !== undefined) {
+            patch.horarioEntrega = datosEntregaBase.horarioEntrega;
+          }
+          if (datosEntregaBase.genero !== undefined) {
+            patch.genero = datosEntregaBase.genero;
+          }
+          if (datosEntregaBase.ocasion !== undefined) {
+            patch.ocasion = datosEntregaBase.ocasion;
+          }
+          if (datosEntregaBase.colores !== undefined) {
+            patch.colores = datosEntregaBase.colores;
+          }
+          if (datosEntregaBase.observaciones !== undefined) {
+            patch.observaciones = datosEntregaBase.observaciones;
+          }
+
+          this.datosEntrega.patchValue(patch);
+        }
+      }
+    }
+
     // this.initForm();
     // this.getAdiciones();
     this.datosEntrega.get('fechaEntrega')?.valueChanges.subscribe(valor => {

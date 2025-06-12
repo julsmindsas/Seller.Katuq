@@ -1397,6 +1397,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   addProductToCart(content: any, order: Pedido) {
+    // Guardar referencia al pedido actual para que la configuración del nuevo producto
+    // pueda heredar datos de entrega (forma, fecha, horario, etc.)
+    this.pedidoUtilService.pedido = order;
     this.ciudadSeleccionada = order.envio?.ciudad;
     this.modalService
       .open(content, {
