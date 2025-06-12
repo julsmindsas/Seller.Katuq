@@ -76,6 +76,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   public selectedWarehouse: any = null; // objeto de bodega seleccionado
   @ViewChild('recompra', { static: false }) recompraCmp: EcomerceProductsComponent;
 
+  // --- Ciudades de entrega para el selector en el modal de recompra ---
+  public ciudadesEntrega: any[] = [];
+
   ngAfterViewInit() {
     // Limpiar funciones del menú anterior
   }
@@ -366,6 +369,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
     // Cargar listado de bodegas disponibles para el modal de recompra
     this.cargarBodegas();
+
+    // Cargar ciudades de entrega disponibles (igual que en Crear-Ventas)
+    try {
+      const currentCompany = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
+      if (currentCompany?.ciudadess?.ciudadesEntrega) {
+        this.ciudadesEntrega = currentCompany.ciudadess.ciudadesEntrega;
+      }
+    } catch (e) {
+      console.error('No se pudo obtener ciudadesEntrega de currentCompany', e);
+    }
+
+    // Fallback: intentar vía servicio util si no existen
+    if (this.ciudadesEntrega.length === 0) {
+      this.pedidoUtilService.getAllMaestro$().subscribe((data: any) => {
+        if (data?.empresaActual?.ciudadess?.ciudadesEntrega) {
+          this.ciudadesEntrega = data.empresaActual.ciudadess.ciudadesEntrega;
+        }
+      });
+    }
   }
 
   ngOnInit(): void {
@@ -2065,13 +2087,23 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       this.selectedWarehouse = selected;
 
       if (this.recompraCmp) {
-        this.recompraCmp.bodega = selected.idBodega;
+        // Pasar objeto completo de bodega para mantener formato de filtro en e-commerce (igual que Crear-Ventas)
+        this.recompraCmp.bodega = selected;
         if (typeof this.recompraCmp.filtrarProductos === 'function') {
           this.recompraCmp.filtrarProductos();
         }
       }
     } else {
       this.selectedWarehouse = null;
+    }
+  }
+
+  // === Maneja el evento citySelected proveniente de app-ecomerce-products ===
+  onCitySelect(ciudad: any): void {
+    if (ciudad && ciudad !== 'seleccione') {
+      this.ciudadSeleccionada = ciudad;
+    } else {
+      this.ciudadSeleccionada = '';
     }
   }
 }

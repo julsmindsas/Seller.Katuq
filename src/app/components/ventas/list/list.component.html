@@ -1117,7 +1117,14 @@
             </div>
         </div>
 
-        <app-ecomerce-products #recompra [ciudad]="ciudadSeleccionada" [bodega]="selectedWarehouse?.idBodega" [isRebuy]="true"></app-ecomerce-products>
+        <app-ecomerce-products #recompra 
+                              [ciudadSelector]="ciudadesEntrega" 
+                              [selectedCity]="ciudadSeleccionada"
+                              [ciudad]="ciudadSeleccionada" 
+                              [bodega]="selectedWarehouse" 
+                              [isRebuy]="true"
+                              (citySelected)="onCitySelect($event)">
+        </app-ecomerce-products>
     </div>
 </ng-template>
 
