@@ -2,7 +2,7 @@
   <img class="b-r-10" [src]="user.image ? user.image : 'assets/images/user/user.png'" alt="profile" style="max-height: 50px; width: auto;">
   <div class="media-body">
     <span>{{user.name}}</span><i class="middle fa fa-angle-down"></i>
-    <p class="mb-0 font-roboto">{{user?.company }} </p>
+    <p class="mb-0 font-roboto">{{user?.company === '' ? 'Sin empresa' : (user?.company === 'La Tartaleria' ? 'La Tartaleteria' : user?.company) }} </p>
     <p class="mb-0 font-roboto">{{user?.rol }}</p>
   </div>
 </div>
