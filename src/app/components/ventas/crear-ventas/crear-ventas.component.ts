@@ -2420,8 +2420,47 @@ export class CrearVentasComponent
     }
   }
 
+  // NUEVO MÉTODO: Mostrar formulario para crear nuevo cliente
+  mostrarFormularioNuevoCliente() {
+    // Limpiar el formulario
+    this.formulario.reset();
+
+    // Establecer valores por defecto
+    this.formulario.patchValue({
+      tipo_documento_comprador: "CC-NIT",
+      indicativo_celular_comprador: "57",
+      indicativo_celular_whatsapp: "57",
+    });
+
+    // Limpiar arrays de datos
+    this.datosFacturacionElectronica = [];
+    this.datosEntregas = [];
+
+    // Resetear estados
+    this.encontrado = false;
+    this.clienteRecienCreado = false;
+    this.creandoCliente = false;
+
+    // Mostrar el formulario
+    this.mostrarFormularioCliente = true;
+
+    // Forzar detección de cambios
+    this.ref.detectChanges();
+  }
+
   // NUEVO MÉTODO: Crear cliente de forma rápida usando los datos mínimos del formulario
   crearClienteRapido() {
+    // Validar que el formulario sea válido antes de proceder
+    if (this.formulario.invalid) {
+      Swal.fire({
+        title: "Formulario Incompleto",
+        text: "Por favor complete todos los campos requeridos antes de guardar el cliente.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
     // Activar indicador de carga
     this.creandoCliente = true;
 
