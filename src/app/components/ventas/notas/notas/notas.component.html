@@ -47,24 +47,62 @@
 
         <!-- Formulario de notas de producción -->
         <form *ngIf="pedido?.carrito?.length && notasProduccionForm" [formGroup]="notasProduccionForm" class="notes-form">
-          <div class="alert alert-success mb-3" *ngIf="notasFormArray?.length > 0">
+          <!-- Mensaje cuando hay productos en modo edición -->
+          <div class="alert alert-info mb-3" *ngIf="isEdit && notasFormArray?.length > 0">
+            <i class="fa fa-edit me-2"></i>
+            <strong>Modo Edición:</strong> Solo puedes agregar nuevas notas. Las notas existentes se muestran abajo.
+          </div>
+
+          <!-- Mensaje cuando hay productos en modo creación -->
+          <div class="alert alert-success mb-3" *ngIf="!isEdit && notasFormArray?.length > 0">
             <i class="fa fa-check-circle me-2"></i>
-            <strong>¡Listo para notas de producción!</strong> Se han habilitado campos para {{notasFormArray?.length}} producto(s) en tu carrito.
+            <strong>¡Productos listos para notas!</strong> {{notasFormArray?.length}} producto(s) en tu carrito.
           </div>
 
           <div formArrayName="productos">
             <div *ngFor="let productoCtrl of notasFormArray?.controls; let i = index" class="product-note mb-4">
               <div [formGroupName]="i">
-                <div class="note-header mb-2">
+                <div class="note-header mb-3">
                   <span class="date-label"><i class="fa fa-calendar me-1"></i>{{ fecha | date: 'dd/MM/yyyy' }}</span>
                   <span class="product-label">
                     <i class="fa fa-box me-1"></i>
                     {{ pedido.carrito[i]?.producto?.crearProducto?.titulo || 'Producto' }}
                   </span>
-                  <span class="badge bg-primary ms-2">Nuevo</span>
+                  <span class="badge bg-info ms-2" *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length > 0">
+                    {{obtenerNotasDelProducto(pedido.carrito[i]).length}} nota(s) existente(s)
+                  </span>
+                  <span class="badge bg-success ms-2" *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length === 0">
+                    {{ isEdit ? 'Sin notas previas' : 'Nuevo - Sin notas' }}
+                  </span>
                 </div>
 
-                <div formArrayName="notas">
+                <!-- Mostrar notas existentes del producto (SOLO LECTURA en modo edición) -->
+                <div *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length > 0" class="existing-notes mb-3">
+                  <h6 class="existing-notes-title">
+                    <i class="fa fa-history me-1"></i>Notas Existentes {{ isEdit ? '(Solo lectura)' : '' }}
+                  </h6>
+                  <div class="existing-note-item" *ngFor="let notaExistente of obtenerNotasDelProducto(pedido.carrito[i]); let idx = index">
+                    <div class="existing-note-header">
+                      <span class="note-date">{{getFechaFormateada(notaExistente) | date:'dd/MM/yyyy HH:mm'}}</span>
+                      <!-- Solo mostrar botón eliminar en modo creación -->
+                      <button *ngIf="!isEdit"
+                              class="btn btn-sm btn-outline-danger ms-2"
+                              (click)="eliminarNotaExistente(pedido.carrito[i], idx)"
+                              title="Eliminar nota existente">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                      <span *ngIf="isEdit" class="badge bg-secondary ms-2">Solo lectura</span>
+                    </div>
+                    <div class="existing-note-content">{{getDescripcionNota(notaExistente)}}</div>
+                  </div>
+                </div>
+
+                <!-- Campos para nuevas notas -->
+                <div formArrayName="notas" *ngIf="notasFormArray.at(i).get('notas')?.controls.length > 0">
+                  <h6 class="new-notes-title">
+                    <i class="fa fa-plus-circle me-1"></i>
+                    {{ obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'Agregar Nueva Nota' : 'Nueva Nota' }}
+                  </h6>
                   <div *ngFor="let notaCtrl of notasFormArray.at(i).get('notas')?.controls; let j = index" class="mb-2">
                     <div class="input-group">
                       <span class="input-group-text bg-light">
@@ -87,16 +125,32 @@
                     <i class="fa fa-plus me-1"></i> Agregar Otra Nota
                   </button>
                 </div>
+
+                <!-- Botón para agregar primera nota cuando no hay campos -->
+                <div *ngIf="notasFormArray.at(i).get('notas')?.controls.length === 0" class="add-note-section">
+                  <button class="btn btn-sm btn-success" type="button" (click)="agregarNota(i)">
+                    <i class="fa fa-plus me-1"></i>
+                    {{ obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'Agregar Nueva Nota' : 'Agregar Primera Nota' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
+          <!-- BOTÓN GUARDAR - SIEMPRE VISIBLE cuando hay productos -->
           <div class="d-flex justify-content-between mt-4">
             <div class="text-muted">
-              <small><i class="fa fa-info-circle me-1"></i>Las notas se guardarán junto con el pedido</small>
+              <small>
+                <i class="fa fa-info-circle me-1"></i>
+                {{ isEdit ? 'Solo se guardarán las nuevas notas agregadas' : 'Las notas se guardarán junto con el pedido' }}
+              </small>
             </div>
-            <button class="btn btn-success" type="button" (click)="guardarNotas()">
-              <i class="fa fa-save me-1"></i> Guardar Todas las Notas
+            <button class="btn btn-success"
+                    type="button"
+                    (click)="guardarNotas()"
+                    [disabled]="!hayNotasParaGuardar()">
+              <i class="fa fa-save me-1"></i>
+              {{ isEdit ? 'Guardar Nuevas Notas' : 'Guardar Todas las Notas' }}
             </button>
           </div>
         </form>

@@ -7,6 +7,7 @@ import {
   OnInit,
   Output,
   EventEmitter,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { FormGroup, FormBuilder, Validators, FormArray } from "@angular/forms";
 import { CartSingletonService } from "../../../../shared/services/ventas/cart.singleton.service";
@@ -49,9 +50,21 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     private singleton: CartSingletonService,
     private formBuilder: FormBuilder,
     private modalService: NgbModal,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngAfterContentInit(): void {
+    // En modo edición, asegurar que el formulario se inicialice SIEMPRE
+    if (this.isEdit && this.pedido?.carrito?.length > 0) {
+      console.log(
+        "🔧 MODO EDICIÓN: Inicializando formulario con",
+        this.pedido.carrito.length,
+        "productos",
+      );
+      this.initFormularios();
+      return; // Salir temprano para evitar la lógica de modo creación
+    }
+
     if (!this.isEdit) {
       // Solo inicializar notasPedido si no existe, preservando notas existentes
       if (this.pedido) {
@@ -258,6 +271,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
         // Actualizar el carrito del pedido si no estamos en modo edición
         if (!this.isEdit && this.pedido) {
+          // PRESERVAR notas de producción existentes antes de actualizar carrito
+          const notasExistentes =
+            this.pedido.notasPedido?.notasProduccion || [];
+
           this.pedido.carrito = productos.map((item) => ({
             producto: item.producto,
             configuracion: item.configuracion,
@@ -267,14 +284,29 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
             precio: item.producto?.precio,
             disponibilidad: item.producto?.disponibilidad,
           }));
+
+          // RESTAURAR las notas de producción existentes
+          if (!this.pedido.notasPedido) {
+            this.pedido.notasPedido = {
+              notasProduccion: notasExistentes,
+              notasCliente: [],
+              notasDespachos: [],
+              notasEntregas: [],
+              notasFacturacionPagos: [],
+            };
+          } else {
+            this.pedido.notasPedido.notasProduccion = notasExistentes;
+          }
         }
 
-        // Reinicializar formulario con los nuevos productos
-        this.initFormularios();
+        // Reinicializar formulario con los nuevos productos PRESERVANDO notas existentes
+        this.initFormulariosPreservandoNotas();
         this.carritoActualizado = false;
 
         console.log(
-          "✅ NOTAS: Formulario de producción actualizado automáticamente",
+          "✅ NOTAS: Formulario actualizado preservando",
+          this.pedido?.notasPedido?.notasProduccion?.length || 0,
+          "notas existentes",
         );
       }
     });
@@ -308,6 +340,37 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     } else {
       console.log(
         "📝 NOTAS: Formulario inicializado vacío - esperando productos",
+      );
+    }
+  }
+
+  // Nuevo método para inicializar formularios preservando notas existentes
+  initFormulariosPreservandoNotas(): void {
+    // Inicializar formularios básicos (no cambian)
+    this.notasDespachoForm = this.formBuilder.group({
+      nota: ["", Validators.required],
+    });
+    this.notasEntregasForm = this.formBuilder.group({
+      nota: ["", Validators.required],
+    });
+    this.notasFacturacionPagosForm = this.formBuilder.group({
+      nota: ["", Validators.required],
+    });
+
+    // PRESERVAR formulario de producción existente o crear uno nuevo
+    if (!this.notasProduccionForm) {
+      this.notasProduccionForm = this.formBuilder.group({
+        productos: this.formBuilder.array([]),
+      });
+    }
+
+    // Llenar formulario preservando notas existentes
+    if (this.pedido && this.pedido.carrito && this.pedido.carrito.length > 0) {
+      this.llenarFormularioPreservandoNotas();
+      console.log(
+        "📝 NOTAS: Formulario actualizado preservando notas existentes con",
+        this.pedido.carrito.length,
+        "productos",
       );
     }
   }
@@ -362,12 +425,31 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
             const carritoNuevo = JSON.stringify(carritoLimpio);
 
             if (carritoAnterior !== carritoNuevo) {
+              // PRESERVAR notas existentes antes de actualizar carrito
+              const notasExistentes =
+                this.pedido.notasPedido?.notasProduccion || [];
+
               this.pedido.carrito = carritoLimpio;
 
-              // Reinicializar formulario cuando cambie el carrito
-              this.initFormularios();
+              // RESTAURAR notas después de actualizar carrito
+              if (!this.pedido.notasPedido) {
+                this.pedido.notasPedido = {
+                  notasProduccion: notasExistentes,
+                  notasCliente: [],
+                  notasDespachos: [],
+                  notasEntregas: [],
+                  notasFacturacionPagos: [],
+                };
+              } else {
+                this.pedido.notasPedido.notasProduccion = notasExistentes;
+              }
+
+              // Reinicializar formulario PRESERVANDO notas existentes
+              this.initFormulariosPreservandoNotas();
               console.log(
-                "📝 NOTAS: Formulario actualizado por cambio en carrito",
+                "📝 NOTAS: Formulario actualizado preservando",
+                notasExistentes.length,
+                "notas existentes",
               );
             }
           }
@@ -401,7 +483,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       // Crear FormArray con un campo vacío para nueva nota
       const notasArray = this.formBuilder.array([]);
 
-      // Siempre agregar al menos un campo vacío para poder escribir nuevas notas
+      // SIEMPRE agregar un campo vacío, independientemente del modo
+      // Esto asegura que el botón guardar aparezca
       notasArray.push(this.formBuilder.control("", Validators.required));
 
       // Añadir al FormArray principal con el identificador del producto
@@ -416,13 +499,76 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       );
 
       console.log(
-        "📝 NOTAS: Campo de nota habilitado para:",
+        "📝 NOTAS: Campo habilitado para:",
         prod.producto?.crearProducto?.titulo,
       );
     });
 
     console.log(
       "✅ NOTAS: Formulario llenado con",
+      this.pedido.carrito.length,
+      "productos",
+    );
+  }
+
+  // Nuevo método para llenar formulario preservando notas existentes
+  llenarFormularioPreservandoNotas() {
+    if (!this.notasProduccionForm) {
+      console.log(
+        "⚠️ NOTAS: No se puede llenar formulario - notasProduccionForm no inicializado",
+      );
+      return;
+    }
+
+    if (!this.pedido?.carrito?.length) {
+      console.log(
+        "📝 NOTAS: No hay productos en el carrito para llenar formulario",
+      );
+      // Limpiar formulario si no hay productos
+      const productos = this.notasProduccionForm.get("productos") as FormArray;
+      productos.clear();
+      return;
+    }
+
+    const productos = this.notasProduccionForm.get("productos") as FormArray;
+    productos.clear();
+
+    this.pedido.carrito.forEach((prod, index) => {
+      // Crear FormArray con un campo vacío para nueva nota
+      const notasArray = this.formBuilder.array([]);
+
+      // Solo agregar un campo vacío si NO hay notas existentes para este producto
+      const notasExistentesProducto = this.obtenerNotasDelProducto(prod);
+      if (notasExistentesProducto.length === 0) {
+        // Si no hay notas existentes, agregar campo vacío para nueva nota
+        notasArray.push(this.formBuilder.control("", Validators.required));
+        console.log(
+          "📝 NOTAS: Campo nuevo habilitado para:",
+          prod.producto?.crearProducto?.titulo,
+        );
+      } else {
+        console.log(
+          "🔒 NOTAS: Producto ya tiene",
+          notasExistentesProducto.length,
+          "notas existentes:",
+          prod.producto?.crearProducto?.titulo,
+        );
+      }
+
+      // Añadir al FormArray principal con el identificador del producto
+      productos.push(
+        this.formBuilder.group({
+          notas: notasArray,
+          productoId: [prod.producto?.identificacion?.referencia || ""],
+          titulo: [
+            prod.producto?.crearProducto?.titulo || "Producto sin nombre",
+          ],
+        }),
+      );
+    });
+
+    console.log(
+      "✅ NOTAS: Formulario actualizado preservando notas existentes con",
       this.pedido.carrito.length,
       "productos",
     );
@@ -462,6 +608,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         case "despachos":
           if (this.pedido?.notasPedido?.notasDespachos) {
             this.pedido.notasPedido.notasDespachos.splice(notaIndex, 1);
+
             // Actualizar también la lista ordenada
             this.notasDespachosOrdenadas = [
               ...this.pedido.notasPedido.notasDespachos,
@@ -470,11 +617,14 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
                 new Date(b.fecha || new Date()).getTime() -
                 new Date(a.fecha || new Date()).getTime(),
             );
+            // **FORZAR DETECCIÓN**
+            this.cdr.detectChanges();
           }
           break;
         case "entregas":
           if (this.pedido?.notasPedido?.notasEntregas) {
             this.pedido.notasPedido.notasEntregas.splice(notaIndex, 1);
+
             // Actualizar también la lista ordenada
             this.notasEntregasOrdenadas = [
               ...this.pedido.notasPedido.notasEntregas,
@@ -483,11 +633,14 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
                 new Date(b.fecha || new Date()).getTime() -
                 new Date(a.fecha || new Date()).getTime(),
             );
+            // **FORZAR DETECCIÓN**
+            this.cdr.detectChanges();
           }
           break;
         case "facturacionPagos":
           if (this.pedido?.notasPedido?.notasFacturacionPagos) {
             this.pedido.notasPedido.notasFacturacionPagos.splice(notaIndex, 1);
+
             // Actualizar también la lista ordenada
             this.notasFacturacionPagosOrdenadas = [
               ...this.pedido.notasPedido.notasFacturacionPagos,
@@ -496,9 +649,14 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
                 new Date(b.fecha || new Date()).getTime() -
                 new Date(a.fecha || new Date()).getTime(),
             );
+            // **FORZAR DETECCIÓN**
+            this.cdr.detectChanges();
           }
           break;
       }
+
+      // **FORZAR DETECCIÓN ANTES DE EMITIR**
+      this.cdr.detectChanges();
 
       // Para cualquier tipo que no sea producción, emitir el evento
       if (tipo !== "produccion") {
@@ -542,7 +700,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     const notasActualizadas = this.notasFormArray.value;
 
     if (this.pedido?.carrito) {
-      // Inicializar notasPedido si no existe, preservando notas existentes
+      // Inicializar notasPedido si no existe
       if (!this.pedido.notasPedido) {
         this.pedido.notasPedido = {
           notasProduccion: [],
@@ -551,21 +709,19 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           notasEntregas: [],
           notasFacturacionPagos: [],
         };
-      } else {
-        // Asegurar que la categoría de producción existe
-        if (!this.pedido.notasPedido.notasProduccion) {
-          this.pedido.notasPedido.notasProduccion = [];
-        }
+      } else if (!this.pedido.notasPedido.notasProduccion) {
+        this.pedido.notasPedido.notasProduccion = [];
       }
 
-      // Limpiar solo las notas que vienen del formulario (mantener las demás)
-      this.pedido.notasPedido.notasProduccion =
-        this.pedido.notasPedido.notasProduccion.filter(
-          (nota) => !(nota as any).fromFormulario,
-        );
+      // **CRÍTICO: PRESERVAR todas las notas existentes**
+      const notasExistentes = [
+        ...(this.pedido.notasPedido.notasProduccion || []),
+      ];
 
-      // Agregar las nuevas notas del formulario
+      // Solo agregar nuevas notas (no reemplazar)
       let notasAgregadas = 0;
+      const nuevasNotas: any[] = [];
+
       notasActualizadas.forEach((producto, pIndex) => {
         if (producto.notas && producto.notas.length > 0) {
           const tituloProducto =
@@ -576,7 +732,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
           producto.notas.forEach((textoNota: string) => {
             if (textoNota && textoNota.trim() !== "") {
-              this.pedido.notasPedido.notasProduccion.push({
+              nuevasNotas.push({
                 fecha: new Date().toISOString(),
                 descripcion: textoNota,
                 producto: tituloProducto || "Producto",
@@ -589,6 +745,15 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           });
         }
       });
+
+      // **MANTENER las notas existentes + agregar las nuevas**
+      this.pedido.notasPedido.notasProduccion = [
+        ...notasExistentes,
+        ...nuevasNotas,
+      ];
+
+      // **FORZAR DETECCIÓN DE CAMBIOS**
+      this.cdr.detectChanges();
 
       // VERIFICACIÓN CRÍTICA DESPUÉS DE PROCESAR
       const productosDespues = this.pedido?.carrito?.length || 0;
@@ -609,23 +774,56 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         return;
       }
 
-      // Emitir el pedido completo actualizado con todas las notas preservadas
+      // Emitir el pedido actualizado
       this.notasActualizadas.emit({
         carrito: this.pedido.carrito,
         notasPedido: this.pedido.notasPedido,
         pedidoCompleto: this.pedido,
       });
 
-      // Limpiar correctamente el formulario
-      this.limpiarFormularioMantenendoNotas();
+      // **FORZAR DETECCIÓN NUEVAMENTE**
+      this.cdr.detectChanges();
 
-      Swal.fire({
-        icon: "success",
-        title: "Notas Guardadas Con Éxito",
-        text: `Se han guardado ${notasAgregadas} notas de producción para los productos`,
-        confirmButtonText: "Aceptar",
-      });
+      // Limpiar solo los campos del formulario, no las notas guardadas
+      this.limpiarCamposFormulario();
+
+      // **FORZAR DETECCIÓN FINAL**
+      this.cdr.detectChanges();
+
+      if (notasAgregadas > 0) {
+        Swal.fire({
+          icon: "success",
+          title: "Notas Agregadas",
+          text: `Se agregaron ${notasAgregadas} nueva(s) nota(s). Total: ${this.pedido.notasPedido.notasProduccion.length}`,
+          confirmButtonText: "Aceptar",
+        });
+      } else {
+        Swal.fire({
+          icon: "info",
+          title: "Sin Nuevas Notas",
+          text: "No se escribieron nuevas notas para guardar.",
+          confirmButtonText: "Aceptar",
+        });
+      }
     }
+  }
+
+  // Nuevo método para limpiar solo los campos del formulario
+  private limpiarCamposFormulario(): void {
+    if (!this.notasFormArray) return;
+
+    // Limpiar solo los valores de los campos, mantener la estructura
+    this.notasFormArray.controls.forEach((productoControl) => {
+      const notasArray = productoControl.get("notas") as FormArray;
+      if (notasArray) {
+        notasArray.controls.forEach((control) => {
+          control.setValue("");
+          control.markAsUntouched();
+        });
+      }
+    });
+
+    console.log("🧹 NOTAS: Campos del formulario limpiados");
   }
 
   onSubmitDespachos() {
@@ -649,6 +847,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           new Date(b.fecha || new Date()).getTime() -
           new Date(a.fecha || new Date()).getTime(),
       );
+
+      // **FORZAR DETECCIÓN**
+      this.cdr.detectChanges();
 
       // Emitir evento al componente padre
       this.notasActualizadas.emit({
@@ -681,6 +882,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           new Date(b.fecha || new Date()).getTime() -
           new Date(a.fecha || new Date()).getTime(),
       );
+
+      // **FORZAR DETECCIÓN**
+      this.cdr.detectChanges();
 
       // Emitir evento al componente padre
       this.notasActualizadas.emit({
@@ -716,6 +920,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           new Date(a.fecha || new Date()).getTime(),
       );
 
+      // **FORZAR DETECCIÓN**
+      this.cdr.detectChanges();
+
       // Emitir evento al componente padre
       this.notasActualizadas.emit({
         carrito: this.pedido.carrito,
@@ -724,6 +931,21 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       });
     }
     this.notasFacturacionPagosForm.reset();
+  }
+
+  // Verificar si hay notas nuevas para guardar
+  hayNotasParaGuardar(): boolean {
+    if (!this.notasFormArray) return false;
+
+    return this.notasFormArray.controls.some((productoControl) => {
+      const notasArray = productoControl.get("notas") as FormArray;
+      return (
+        notasArray &&
+        notasArray.controls.some(
+          (nota) => nota.value && nota.value.trim() !== "",
+        )
+      );
+    });
   }
 
   // Método para limpiar el formulario sin perder las notas ya guardadas
@@ -736,10 +958,18 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     const productos = this.notasProduccionForm.get("productos") as FormArray;
     productos.clear();
 
-    // Recrear el formulario con campos vacíos pero manteniendo la estructura
+    // Recrear el formulario preservando la lógica de notas existentes
     this.pedido.carrito.forEach((prod) => {
-      // Crear FormArray vacío para las notas de este producto
+      // Crear FormArray para nuevas notas
       const notasArray = this.formBuilder.array([]);
+
+      // Solo agregar un campo vacío si NO hay notas existentes para este producto
+      const notasExistentesProducto = this.obtenerNotasDelProducto(prod);
+      if (notasExistentesProducto.length === 0) {
+        // Si no hay notas existentes, agregar campo vacío para nueva nota
+        notasArray.push(this.formBuilder.control("", Validators.required));
+      }
+      // Si hay notas existentes, no agregar campos vacíos (se mostrarán las existentes)
 
       // Añadir al FormArray principal con la información del producto
       productos.push(
@@ -752,10 +982,12 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         }),
       );
     });
+
+    console.log("🧹 NOTAS: Formulario limpiado preservando notas existentes");
   }
 
   // Obtener notas específicas de un producto desde la fuente centralizada
-  private obtenerNotasDelProducto(producto: any): any[] {
+  obtenerNotasDelProducto(producto: any): any[] {
     if (!this.pedido?.notasPedido?.notasProduccion) {
       return [];
     }
@@ -765,11 +997,12 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     const notasEncontradas = this.pedido.notasPedido.notasProduccion.filter(
       (nota) => {
-        // Filtrar por ID del producto o por título si no hay ID
-        return (
-          (nota as any).productoId === productoId ||
-          (nota as any).producto === productoTitulo
-        );
+        // Priorizar filtrado por ID del producto, y solo usar título como fallback
+        if (productoId && (nota as any).productoId) {
+          return (nota as any).productoId === productoId;
+        }
+        // Solo usar título si no hay ID disponible
+        return (nota as any).producto === productoTitulo;
       },
     );
 
@@ -839,5 +1072,65 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       return nota.nota;
     }
     return "Sin descripción";
+  }
+
+  // Método para eliminar una nota existente específica de un producto
+  eliminarNotaExistente(producto: any, indiceNota: number): void {
+    const notasDelProducto = this.obtenerNotasDelProducto(producto);
+    if (indiceNota < 0 || indiceNota >= notasDelProducto.length) return;
+
+    // Confirmar eliminación
+    Swal.fire({
+      title: "¿Eliminar nota existente?",
+      text: "¿Está seguro de que desea eliminar esta nota de producción?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Encontrar el índice real en el array completo de notas de producción
+        const notaAEliminar = notasDelProducto[indiceNota];
+        const indiceRealEnPedido =
+          this.pedido.notasPedido.notasProduccion.findIndex(
+            (nota) => nota === notaAEliminar,
+          );
+
+        if (indiceRealEnPedido !== -1) {
+          // Eliminar la nota específica
+          this.pedido.notasPedido.notasProduccion.splice(indiceRealEnPedido, 1);
+
+          // Emitir evento de actualización
+          this.notasActualizadas.emit({
+            carrito: this.pedido.carrito,
+            notasPedido: this.pedido.notasPedido,
+            pedidoCompleto: this.pedido,
+          });
+
+          // Mostrar mensaje de éxito
+          console.log("✅ Nota de producción eliminada correctamente");
+
+          // Si después de eliminar no quedan notas para este producto, habilitar campo para nueva nota
+          const notasRestantes = this.obtenerNotasDelProducto(producto);
+          if (notasRestantes.length === 0) {
+            // Buscar el índice del producto en el carrito
+            const indiceProducto = this.pedido.carrito.findIndex(
+              (p) =>
+                p.producto?.identificacion?.referencia ===
+                  producto.producto?.identificacion?.referencia ||
+                p.producto?.crearProducto?.titulo ===
+                  producto.producto?.crearProducto?.titulo,
+            );
+
+            if (indiceProducto !== -1) {
+              // Agregar un campo vacío para nueva nota
+              this.agregarNota(indiceProducto);
+            }
+          }
+        }
+      }
+    });
   }
 }
