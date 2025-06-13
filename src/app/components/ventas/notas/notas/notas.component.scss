@@ -1,17 +1,17 @@
 .fa {
-    cursor: pointer !important;
+  cursor: pointer !important;
 }
 
 // Estilos para el componente de notas
 .notes-card {
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  
+
   .card-header {
     background-color: #fff;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     padding: 1rem;
-    
+
     i {
       color: #607d8b;
     }
@@ -24,34 +24,34 @@
     .p-tabview-nav {
       li {
         margin-right: 0.25rem;
-        
+
         .p-tabview-nav-link {
           padding: 0.75rem 1rem;
           border-radius: 0.25rem 0.25rem 0 0;
           transition: all 0.3s ease;
-          
+
           &:not(.p-disabled):focus {
             box-shadow: none;
           }
-          
+
           i {
             margin-right: 0.5rem;
           }
         }
-        
+
         &.p-highlight .p-tabview-nav-link {
           background-color: #f8f9fa;
           border-color: #dee2e6;
           color: var(--primary);
           border-bottom-color: #f8f9fa;
-          
+
           i {
             color: var(--primary);
           }
         }
       }
     }
-    
+
     .p-tabview-panels {
       background-color: #f8f9fa;
       border: 1px solid #dee2e6;
@@ -69,31 +69,57 @@
     border-radius: 0.375rem;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    
+
     .note-metadata {
       color: #6c757d;
       font-size: 0.875rem;
-      
+
       i {
         color: #6c757d;
       }
     }
-    
+
     .input-group {
       textarea {
         resize: none;
         border-right: none;
-        
+
         &:focus {
           box-shadow: none;
           border-color: #ced4da;
         }
       }
-      
+
       button {
         width: 50px;
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
+      }
+    }
+  }
+
+  // Nuevos estilos para formulario de producción
+  .alert {
+    border-radius: 0.375rem;
+    padding: 0.75rem 1rem;
+
+    &.alert-success {
+      background-color: rgba(40, 167, 69, 0.1);
+      border-color: rgba(40, 167, 69, 0.2);
+      color: #155724;
+
+      i {
+        color: #28a745;
+      }
+    }
+
+    &.alert-info {
+      background-color: rgba(23, 162, 184, 0.1);
+      border-color: rgba(23, 162, 184, 0.2);
+      color: #0c5460;
+
+      i {
+        color: #17a2b8;
       }
     }
   }
@@ -102,30 +128,118 @@
 // Estilo para el encabezado de notas de producto
 .product-note {
   background-color: #fff;
-  border-radius: 0.375rem;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(40, 167, 69, 0.2);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
   .note-header {
     display: flex;
     justify-content: space-between;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    margin-bottom: 0.75rem;
-    
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(40, 167, 69, 0.2);
+    margin-bottom: 1rem;
+
     .date-label {
       color: #6c757d;
       font-size: 0.875rem;
-      
+      font-weight: 500;
+
       i {
-        color: #6c757d;
+        color: #28a745;
       }
     }
-    
+
     .product-label {
       font-weight: 600;
-      color: #495057;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+
+      i {
+        color: #28a745;
+      }
     }
+
+    .badge {
+      &.bg-primary {
+        background-color: #28a745 !important;
+        color: white;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        animation: pulse 2s infinite;
+      }
+    }
+  }
+
+  .input-group {
+    margin-bottom: 0.75rem;
+
+    .input-group-text {
+      background-color: #f8f9fa;
+      border-color: #ced4da;
+      color: #495057;
+
+      i {
+        color: #28a745;
+      }
+    }
+
+    textarea {
+      border-color: #ced4da;
+      transition: all 0.3s ease;
+
+      &:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+      }
+
+      &::placeholder {
+        color: #adb5bd;
+        font-style: italic;
+      }
+    }
+
+    .btn-outline-danger {
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .btn-outline-primary {
+    background-color: transparent;
+    border-color: #28a745;
+    color: #28a745;
+
+    &:hover {
+      background-color: #28a745;
+      border-color: #28a745;
+      color: white;
+    }
+  }
+}
+
+// Animación de pulso para el badge "Nuevo"
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
   }
 }
 
@@ -136,17 +250,17 @@
     font-weight: 600;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    
+
     i {
       color: #607d8b;
     }
   }
-  
+
   table {
     background-color: #fff;
     border-radius: 0.375rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    
+
     thead th {
       background-color: #f8f9fa;
       border-top: none;
@@ -156,12 +270,12 @@
       font-size: 0.875rem;
       padding: 0.75rem 1rem;
     }
-    
+
     tbody td {
       padding: 0.75rem 1rem;
       vertical-align: middle;
       border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-      
+
       .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
@@ -176,20 +290,47 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 0;
-  background-color: #fff;
-  border-radius: 0.375rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  
+  padding: 3rem 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px dashed #ced4da;
+
   i {
-    font-size: 2.5rem;
-    color: #dee2e6;
+    font-size: 3rem;
+    color: #28a745;
     margin-bottom: 1rem;
+    animation: bounce 2s infinite;
   }
-  
+
   p {
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  small {
     color: #6c757d;
-    margin-bottom: 0;
+    text-align: center;
+    line-height: 1.4;
+  }
+}
+
+// Animación de rebote para el icono del carrito
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
   }
 }
 
@@ -201,18 +342,54 @@
       font-size: 0.875rem;
     }
   }
-  
+
   .notes-list {
     table {
       thead th {
         font-size: 0.75rem;
         padding: 0.5rem 0.75rem;
       }
-      
+
       tbody td {
         padding: 0.5rem 0.75rem;
         font-size: 0.875rem;
       }
+    }
+  }
+
+  .product-note {
+    padding: 1rem;
+
+    .note-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+
+      .product-label {
+        font-size: 0.9rem;
+      }
+
+      .badge {
+        align-self: flex-end;
+      }
+    }
+
+    .input-group {
+      textarea {
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .empty-notes {
+    padding: 2rem 1rem;
+
+    i {
+      font-size: 2rem;
+    }
+
+    p {
+      font-size: 1rem;
     }
   }
 }

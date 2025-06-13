@@ -74,7 +74,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   // ------ NUEVAS PROPIEDADES PARA FILTRAR POR BODEGA Y CIUDAD EN RECOMPRA ------
   public bodegas: any[] = [];
   public selectedWarehouse: any = null; // objeto de bodega seleccionado
-  @ViewChild('recompra', { static: false }) recompraCmp: EcomerceProductsComponent;
+  @ViewChild("recompra", { static: false })
+  recompraCmp: EcomerceProductsComponent;
 
   // --- Ciudades de entrega para el selector en el modal de recompra ---
   public ciudadesEntrega: any[] = [];
@@ -372,12 +373,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
     // Cargar ciudades de entrega disponibles (igual que en Crear-Ventas)
     try {
-      const currentCompany = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
+      const currentCompany = JSON.parse(
+        sessionStorage.getItem("currentCompany") || "{}",
+      );
       if (currentCompany?.ciudadess?.ciudadesEntrega) {
         this.ciudadesEntrega = currentCompany.ciudadess.ciudadesEntrega;
       }
     } catch (e) {
-      console.error('No se pudo obtener ciudadesEntrega de currentCompany', e);
+      console.error("No se pudo obtener ciudadesEntrega de currentCompany", e);
     }
 
     // Fallback: intentar vía servicio util si no existen
@@ -632,28 +635,41 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
           order.totalEnvio -
           order.totalDescuento;
         order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
-        
+
         // Calcular anticipo basado en PagosAsentados si existen
         if (order.PagosAsentados && order.PagosAsentados.length > 0) {
-          order.anticipo = order.PagosAsentados.reduce((acc, pago) => acc + (pago.valor || 0), 0);
+          order.anticipo = order.PagosAsentados.reduce(
+            (acc, pago) => acc + (pago.valor || 0),
+            0,
+          );
         } else if (order.anticipo == null || order.anticipo == undefined) {
           order.anticipo = 0;
         }
-        
+
         // Calcular falta por pagar basado en el total y anticipo real
-        order.faltaPorPagar = Math.max(0, order.totalPedididoConDescuento - order.anticipo);
-        
+        order.faltaPorPagar = Math.max(
+          0,
+          order.totalPedididoConDescuento - order.anticipo,
+        );
+
         // Actualizar estado de pago basado en los cálculos reales
         // SOLO recalcular estado si no viene ya calculado del frontend
-        if (!order._estadoCalculadoEnFrontend && order.estadoPago !== 'Precancelado' && order.estadoPago !== 'Cancelado') {
+        if (
+          !order._estadoCalculadoEnFrontend &&
+          order.estadoPago !== "Precancelado" &&
+          order.estadoPago !== "Cancelado"
+        ) {
           if (order.faltaPorPagar <= 0) {
-            order.estadoPago = 'Aprobado';
-          } else if (order.faltaPorPagar > 0 && order.faltaPorPagar < order.totalPedididoConDescuento) {
-            order.estadoPago = 'PreAprobado';
+            order.estadoPago = "Aprobado";
+          } else if (
+            order.faltaPorPagar > 0 &&
+            order.faltaPorPagar < order.totalPedididoConDescuento
+          ) {
+            order.estadoPago = "PreAprobado";
           } else if (order.preAprobadoManual) {
-            order.estadoPago = 'PreAprobado';
+            order.estadoPago = "PreAprobado";
           } else {
-            order.estadoPago = 'Pendiente';
+            order.estadoPago = "Pendiente";
           }
         }
         // if (order.estadoPago != 'Precancelado' && order.estadoPago != 'Cancelado') {
@@ -814,10 +830,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   calculateFaltaPorPagar() {
     return this.orders.reduce((acc, pedido: any) => {
       // Recalcular falta por pagar basado en pagos asentados
-      const anticipoReal = pedido.PagosAsentados && pedido.PagosAsentados.length > 0 
-        ? pedido.PagosAsentados.reduce((sum, pago) => sum + (pago.valor || 0), 0)
-        : (pedido.anticipo || 0);
-      const faltaPorPagar = (pedido.totalPedididoConDescuento || 0) - anticipoReal;
+      const anticipoReal =
+        pedido.PagosAsentados && pedido.PagosAsentados.length > 0
+          ? pedido.PagosAsentados.reduce(
+              (sum, pago) => sum + (pago.valor || 0),
+              0,
+            )
+          : pedido.anticipo || 0;
+      const faltaPorPagar =
+        (pedido.totalPedididoConDescuento || 0) - anticipoReal;
       return acc + Math.max(0, faltaPorPagar); // Evitar valores negativos
     }, 0);
   }
@@ -829,9 +850,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   calculateAnticipo() {
     return this.orders.reduce((acc, pedido: any) => {
       // Calcular anticipo basado en PagosAsentados si existen
-      const anticipoReal = pedido.PagosAsentados && pedido.PagosAsentados.length > 0 
-        ? pedido.PagosAsentados.reduce((sum, pago) => sum + (pago.valor || 0), 0)
-        : (pedido.anticipo || 0);
+      const anticipoReal =
+        pedido.PagosAsentados && pedido.PagosAsentados.length > 0
+          ? pedido.PagosAsentados.reduce(
+              (sum, pago) => sum + (pago.valor || 0),
+              0,
+            )
+          : pedido.anticipo || 0;
       return acc + anticipoReal;
     }, 0);
   }
@@ -1000,15 +1025,27 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
   editDatosClientes(content, order: Pedido) {
     this.clienteSeleccionado = order.cliente;
-    this.modalService
-      .open(content, {
+    this.pedidoSeleccionado = order;
+
+    // Inicializar formulario con los datos del cliente (igual que en editDatosEntrega y editDatosFacturacion)
+    this.initForms(this.clienteSeleccionado);
+
+    // Pequeño delay para evitar conflictos entre cierre de modal de opciones y apertura de modal de cliente
+    setTimeout(() => {
+      const modalRef = this.modalService.open(content, {
         size: "xl",
         scrollable: true,
         centered: true,
         fullscreen: false,
         ariaLabelledBy: "modal-basic-title",
-      })
-      .result.then(
+      });
+
+      // Después de que el modal se abra, inicializar el componente clientes
+      setTimeout(() => {
+        this.inicializarComponenteClientes();
+      }, 500);
+
+      modalRef.result.then(
         (result) => {
           console.log(result);
         },
@@ -1022,6 +1059,58 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
           this.editOrder(order);
         },
       );
+    }, 100);
+  }
+
+  private inicializarComponenteClientes(): void {
+    // Intentar inicializar el componente clientes con reintentos
+    let intentos = 0;
+    const maxIntentos = 10;
+
+    const inicializar = () => {
+      intentos++;
+
+      if (
+        this.clientes &&
+        this.clientes.documentoBusqueda &&
+        this.clientes.documentoBusqueda.nativeElement &&
+        this.clienteSeleccionado?.documento
+      ) {
+        console.log(
+          "🎯 Inicializando componente clientes con documento:",
+          this.clienteSeleccionado.documento,
+        );
+
+        // Setear el documento en el campo de búsqueda
+        this.clientes.documentoBusqueda.nativeElement.value =
+          this.clienteSeleccionado.documento;
+
+        // Llamar directamente al método buscar del componente
+        this.clientes.buscar();
+
+        console.log("✅ Componente clientes inicializado correctamente");
+      } else if (intentos < maxIntentos) {
+        console.log(
+          `⏳ Intento ${intentos}/${maxIntentos} - Esperando inicialización del componente clientes...`,
+        );
+        setTimeout(inicializar, 200);
+      } else {
+        console.error(
+          "❌ No se pudo inicializar el componente clientes después de",
+          maxIntentos,
+          "intentos",
+        );
+        console.log("Estado del componente:", {
+          clientes: !!this.clientes,
+          documentoBusqueda: !!this.clientes?.documentoBusqueda,
+          nativeElement: !!this.clientes?.documentoBusqueda?.nativeElement,
+          clienteSeleccionado: !!this.clienteSeleccionado,
+          documento: this.clienteSeleccionado?.documento,
+        });
+      }
+    };
+
+    inicializar();
   }
 
   private editOrder(order: Pedido) {
@@ -1030,16 +1119,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         order.carrito[0].configuracion?.datosEntrega?.fechaEntrega;
       let horarioEntrega =
         order.carrito[0].configuracion?.datosEntrega?.horarioEntrega;
-      
+
       // Solo actualizar fechas si existen en la configuración
-      if (fechaEntrega && fechaEntrega.year && fechaEntrega.month && fechaEntrega.day) {
+      if (
+        fechaEntrega &&
+        fechaEntrega.year &&
+        fechaEntrega.month &&
+        fechaEntrega.day
+      ) {
         order.fechaEntrega = new Date(
           fechaEntrega.year,
           fechaEntrega.month - 1,
           fechaEntrega.day,
         ).toISOString();
       }
-      
+
       if (horarioEntrega) {
         order.horarioEntrega = horarioEntrega;
       }
@@ -1060,26 +1154,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   private updateNotasOnly(order: Pedido) {
     // VERIFICACIÓN DE INTEGRIDAD ANTES DE ENVIAR
     if (!order.carrito || order.carrito.length === 0) {
-      console.error('🚨 ABORT: Carrito vacío, no se actualizará nada');
+      console.error("🚨 ABORT: Carrito vacío, no se actualizará nada");
       Swal.fire({
-        icon: 'error',
-        title: 'Error Crítico',
-        text: 'El pedido no tiene productos. No se puede actualizar.',
-        confirmButtonText: 'Recargar',
-        preConfirm: () => window.location.reload()
+        icon: "error",
+        title: "Error Crítico",
+        text: "El pedido no tiene productos. No se puede actualizar.",
+        confirmButtonText: "Recargar",
+        preConfirm: () => window.location.reload(),
       });
       return;
     }
 
-    console.log('🛡️ VERIFICACIÓN OK: Carrito tiene', order.carrito.length, 'productos');
-    
+    console.log(
+      "🛡️ VERIFICACIÓN OK: Carrito tiene",
+      order.carrito.length,
+      "productos",
+    );
+
     // Crear objeto minimalista solo con notas para actualizar
     const notasUpdate = {
       _id: order._id,
       nroPedido: order.nroPedido,
       notasPedido: order.notasPedido,
       // INCLUIR CARRITO COMPLETO PARA ASEGURAR QUE NO SE PIERDA
-      carrito: order.carrito
+      carrito: order.carrito,
     };
 
     this.ventasService.editOrder(notasUpdate as any).subscribe((data) => {
@@ -1095,11 +1193,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
   // NUEVO MÉTODO ESPECÍFICO PARA PAGOS: Actualizar solo información de pagos
   private updatePagosOnly(order: Pedido) {
-    console.log('💰 ACTUALIZANDO PAGOS EN BACKEND');
-    console.log('Pagos a enviar:', order.PagosAsentados?.length || 0);
-    console.log('Anticipo calculado:', order.anticipo);
-    console.log('Falta por pagar:', order.faltaPorPagar);
-    console.log('Estado de pago:', order.estadoPago);
+    console.log("💰 ACTUALIZANDO PAGOS EN BACKEND");
+    console.log("Pagos a enviar:", order.PagosAsentados?.length || 0);
+    console.log("Anticipo calculado:", order.anticipo);
+    console.log("Falta por pagar:", order.faltaPorPagar);
+    console.log("Estado de pago:", order.estadoPago);
 
     // Crear objeto con solo los campos relacionados a pagos
     const pagosUpdate = {
@@ -1110,19 +1208,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       faltaPorPagar: order.faltaPorPagar,
       estadoPago: order.estadoPago,
       // Incluir campos mínimos para identificación
-      totalPedididoConDescuento: order.totalPedididoConDescuento
+      totalPedididoConDescuento: order.totalPedididoConDescuento,
     };
 
     this.ventasService.editOrder(pagosUpdate as any).subscribe({
       next: (data) => {
-        console.log('✅ Pagos actualizados en backend exitosamente');
-        
+        console.log("✅ Pagos actualizados en backend exitosamente");
+
         // Actualizar el pedido en la lista SIN recargar todo
-        const index = this.orders.findIndex(p => p.nroPedido === order.nroPedido);
+        const index = this.orders.findIndex(
+          (p) => p.nroPedido === order.nroPedido,
+        );
         if (index !== -1) {
           this.orders[index] = { ...this.orders[index], ...pagosUpdate };
         }
-        
+
         Swal.fire({
           icon: "success",
           title: "Pagos actualizados correctamente",
@@ -1131,14 +1231,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         });
       },
       error: (error) => {
-        console.error('❌ Error actualizando pagos:', error);
+        console.error("❌ Error actualizando pagos:", error);
         Swal.fire({
           icon: "error",
           title: "Error al actualizar pagos",
           text: "No se pudieron guardar los cambios en el servidor",
-          confirmButtonText: "Reintentar"
+          confirmButtonText: "Reintentar",
         });
-      }
+      },
     });
   }
 
@@ -1205,16 +1305,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // VERIFICACIÓN CRÍTICA ANTES DE ABRIR MODAL
     if (!order.carrito || order.carrito.length === 0) {
       Swal.fire({
-        icon: 'error',
-        title: 'No se puede editar',
-        text: 'Este pedido no tiene productos en el carrito.',
-        confirmButtonText: 'Entendido'
+        icon: "error",
+        title: "No se puede editar",
+        text: "Este pedido no tiene productos en el carrito.",
+        confirmButtonText: "Entendido",
       });
       return;
     }
-    
-    console.log('🛡️ APERTURA SEGURA: Pedido tiene', order.carrito.length, 'productos');
-    
+
+    console.log(
+      "🛡️ APERTURA SEGURA: Pedido tiene",
+      order.carrito.length,
+      "productos",
+    );
+
     this.clienteSeleccionado = order.cliente;
     this.pedidoSeleccionado = order; // NO hacer copia, usar referencia original
     //inicializr formulario con los datos del cliente tiene las mismas propiedades
@@ -1247,46 +1351,48 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       // CRÍTICO: PRESERVAR completamente el carrito original
       const carritoOriginalCompleto = this.pedidoSeleccionado.carrito;
       const productosAntes = carritoOriginalCompleto?.length || 0;
-      
+
       // VERIFICACIÓN DE INTEGRIDAD ANTES DE ACTUALIZAR
       if (!carritoOriginalCompleto || productosAntes === 0) {
-        console.error('🚨 ALERTA CRÍTICA: El carrito original está vacío o corrupto');
+        console.error(
+          "🚨 ALERTA CRÍTICA: El carrito original está vacío o corrupto",
+        );
         Swal.fire({
-          icon: 'error',
-          title: 'Error Crítico',
-          text: 'Se detectó un problema con los productos del pedido. No se actualizarán las notas por seguridad.',
-          confirmButtonText: 'Entendido'
+          icon: "error",
+          title: "Error Crítico",
+          text: "Se detectó un problema con los productos del pedido. No se actualizarán las notas por seguridad.",
+          confirmButtonText: "Entendido",
         });
         return;
       }
-      
+
       // Solo actualizar las notas manteniendo TODO lo demás intacto
       this.pedidoSeleccionado = {
         ...this.pedidoSeleccionado,
         notasPedido: event.notasPedido,
         // FORZAR que el carrito se mantenga exactamente igual
-        carrito: carritoOriginalCompleto
+        carrito: carritoOriginalCompleto,
       };
-      
+
       // VERIFICACIÓN POST-ACTUALIZACIÓN
       const productosDespues = this.pedidoSeleccionado.carrito?.length || 0;
-      
+
       if (productosDespues !== productosAntes) {
-        console.error('🚨 PÉRDIDA DE PRODUCTOS DETECTADA');
+        console.error("🚨 PÉRDIDA DE PRODUCTOS DETECTADA");
         Swal.fire({
-          icon: 'error',
-          title: '¡PRODUCTOS PERDIDOS!',
+          icon: "error",
+          title: "¡PRODUCTOS PERDIDOS!",
           text: `Se perdieron productos: Antes ${productosAntes}, Después ${productosDespues}`,
-          confirmButtonText: 'Recargar página',
+          confirmButtonText: "Recargar página",
           preConfirm: () => {
             window.location.reload();
-          }
+          },
         });
         return;
       }
-      
-      console.log('✅ CARRITO PRESERVADO - Productos:', productosAntes);
-      console.log('✅ NOTAS ACTUALIZADAS SEGURAMENTE');
+
+      console.log("✅ CARRITO PRESERVADO - Productos:", productosAntes);
+      console.log("✅ NOTAS ACTUALIZADAS SEGURAMENTE");
     }
   }
 
@@ -1368,20 +1474,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
           // ===== NUEVO: Recalcular valor de envío (domicilio) =====
           // Si alguna línea del carrito tiene una forma de entrega que incluya la palabra "domicilio",
           // se calcula el envío con base en la zona de cobro; de lo contrario se pone en 0 (recoge en tienda).
-          const tieneDomicilio = (order.carrito ?? []).some(car => {
-            const forma = car?.configuracion?.datosEntrega?.formaEntrega || '';
-            return forma.toLowerCase().includes('domicilio');
+          const tieneDomicilio = (order.carrito ?? []).some((car) => {
+            const forma = car?.configuracion?.datosEntrega?.formaEntrega || "";
+            return forma.toLowerCase().includes("domicilio");
           });
 
           if (tieneDomicilio) {
             // Utilizar el servicio utilitario para obtener el costo de envío según la zona
             this.pedidoUtilService.pedido = order;
             try {
-              order.totalEnvio = Number(this.pedidoUtilService.getShippingCost(this.allBillingZone));
+              order.totalEnvio = Number(
+                this.pedidoUtilService.getShippingCost(this.allBillingZone),
+              );
             } catch (e) {
               // Fallback si las zonas no están aún en memoria
-              const zonas = this.allBillingZone || JSON.parse(sessionStorage.getItem('allBillingZone') || '[]');
-              order.totalEnvio = Number(this.pedidoUtilService.getShippingCost(zonas));
+              const zonas =
+                this.allBillingZone ||
+                JSON.parse(sessionStorage.getItem("allBillingZone") || "[]");
+              order.totalEnvio = Number(
+                this.pedidoUtilService.getShippingCost(zonas),
+              );
             }
           } else {
             // Forma de entrega tipo "recoge"  →  sin costos de domicilio
@@ -1580,12 +1692,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
           // El reason contiene el pedido actualizado con los pagos
           if (reason && reason.nroPedido) {
             // Actualizar el pedido en la lista inmediatamente
-            const index = this.orders.findIndex(p => p.nroPedido === reason.nroPedido);
+            const index = this.orders.findIndex(
+              (p) => p.nroPedido === reason.nroPedido,
+            );
             if (index !== -1) {
               this.orders[index] = { ...reason };
-              console.log('✅ Pedido actualizado en lista con pagos:', reason.PagosAsentados?.length || 0);
+              console.log(
+                "✅ Pedido actualizado en lista con pagos:",
+                reason.PagosAsentados?.length || 0,
+              );
             }
-            
+
             // Usar método específico para pagos en lugar de editOrder general
             this.updatePagosOnly(reason);
           }
@@ -2071,20 +2188,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
   // ==================== BODEGAS ====================
   private cargarBodegas(): void {
-    this.bodegaService.getBodegasByChannelName('Venta Asistida').subscribe({
+    this.bodegaService.getBodegasByChannelName("Venta Asistida").subscribe({
       next: (bodegas) => {
         this.bodegas = bodegas;
       },
       error: () => {
-        console.error('Error cargando bodegas');
-      }
+        console.error("Error cargando bodegas");
+      },
     });
   }
 
   onWarehouseChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     const selectedId = target.value;
-    const selected = this.bodegas.find(b => b.idBodega === selectedId);
+    const selected = this.bodegas.find((b) => b.idBodega === selectedId);
 
     if (selected) {
       this.selectedWarehouse = selected;
@@ -2092,7 +2209,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       if (this.recompraCmp) {
         // Pasar objeto completo de bodega para mantener formato de filtro en e-commerce (igual que Crear-Ventas)
         this.recompraCmp.bodega = selected;
-        if (typeof this.recompraCmp.filtrarProductos === 'function') {
+        if (typeof this.recompraCmp.filtrarProductos === "function") {
           this.recompraCmp.filtrarProductos();
         }
       }
@@ -2103,10 +2220,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
   // === Maneja el evento citySelected proveniente de app-ecomerce-products ===
   onCitySelect(ciudad: any): void {
-    if (ciudad && ciudad !== 'seleccione') {
+    if (ciudad && ciudad !== "seleccione") {
       this.ciudadSeleccionada = ciudad;
     } else {
-      this.ciudadSeleccionada = '';
+      this.ciudadSeleccionada = "";
     }
   }
 }

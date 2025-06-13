@@ -23,26 +23,26 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <label class="form-label mb-1 small">
                                 <i class="fa fa-search text-primary me-1"></i>
                                 <span>{{ 'Buscar productos' | translate }}</span>
                             </label>
                             <div class="input-group input-group-sm">
-                                <input class="form-control" type="search" 
-                                    placeholder="{{ 'Buscar..' | translate }}" 
+                                <input class="form-control" type="search"
+                                    placeholder="{{ 'Buscar..' | translate }}"
                                     (keyup)='updateFilter($event)'>
                                 <span class="input-group-text"><i class="fa fa-search"></i></span>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-3">
                             <label class="form-label mb-1 small">
                                 <i class="fa fa-th text-primary me-1"></i>
                                 <span>{{ 'Productos por página' | translate }}</span>
                             </label>
-                            <select class="form-select form-select-sm" 
+                            <select class="form-select form-select-sm"
                                 (change)="cambiarProductosPorPagina(+$event.target.value)">
                                 <option value="4">4</option>
                                 <option value="8" selected>8</option>
@@ -54,7 +54,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="row">
                 <div class="col-md-6 products-total">
                     <div class="square-product-setting d-inline-block" (click)="toggleListView(false)">
@@ -103,8 +103,8 @@
                 </div>
 
                 <div class="col-md-6 text-right">
-                    <span class="f-w-600 m-r-5">{{ 'Mostrando productos' | translate }} 
-                        {{ (paginaActual - 1) * productosPorPagina + 1 }} - 
+                    <span class="f-w-600 m-r-5">{{ 'Mostrando productos' | translate }}
+                        {{ (paginaActual - 1) * productosPorPagina + 1 }} -
                         {{ Math.min(paginaActual * productosPorPagina, productosCompletos?.length || 0) }}
                         {{ 'de' | translate }} {{ productosCompletos?.length || 0 }}
                         {{ 'Resultados' | translate }}</span>
@@ -276,7 +276,40 @@
             </form>
         </div>
 
-        <div class="product-wrapper-grid" [class.list-view]="listView">
+        <!-- Mensajes informativos cuando faltan datos -->
+        <div *ngIf="!bodega || !bodega.idBodega" class="alert alert-warning mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fa fa-warehouse fa-2x me-3 text-warning"></i>
+                <div>
+                    <h6 class="mb-1">{{ 'Bodega requerida' | translate }}</h6>
+                    <p class="mb-0">{{ 'Por favor seleccione una bodega para ver los productos disponibles' | translate }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="bodega && bodega.idBodega && (!ciudad || ciudad === 'seleccione' || ciudad.trim() === '')" class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fa fa-map-marker-alt fa-2x me-3 text-info"></i>
+                <div>
+                    <h6 class="mb-1">{{ 'Ciudad de entrega requerida' | translate }}</h6>
+                    <p class="mb-0">{{ 'Por favor seleccione una ciudad de entrega para filtrar los productos disponibles' | translate }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje cuando no hay productos -->
+        <div *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosCompletos.length === 0" class="alert alert-secondary mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fa fa-box-open fa-2x me-3 text-secondary"></i>
+                <div>
+                    <h6 class="mb-1">{{ 'No hay productos disponibles' | translate }}</h6>
+                    <p class="mb-0">{{ 'No se encontraron productos para la bodega y ciudad seleccionadas' | translate }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-wrapper-grid" [class.list-view]="listView"
+             *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosCompletos.length > 0">
             <div class="row">
                 <div [class]="'col-xl-'+col+' col-sm-'+col" [class.col-xl-12]="listView"
                     *ngFor="let producto of productosPaginados">
@@ -289,7 +322,7 @@
                                     [src]="producto.crearProducto.imagenesPrincipales[0].urls"
                                     [alt]="producto.crearProducto.titulo" appImageOptimizer [quality]="0.3" [width]="300"
                                     [height]="300" [lazy]="true" loading="lazy" priority>
-                                
+
                                 <!-- Badge de disponibilidad -->
                                 <span class="badge stock-badge"
                                       [ngClass]="{
@@ -298,11 +331,11 @@
                                         'bg-danger': producto.disponibilidad?.inventariable && (!producto.disponibilidad?.cantidadDisponible || producto.disponibilidad?.cantidadDisponible <= 0),
                                         'bg-info': !producto.disponibilidad?.inventariable
                                       }">
-                                    {{ producto.disponibilidad?.inventariable ? 
-                                       'Disponible: ' + (producto.disponibilidad?.cantidadDisponible || 0) : 
+                                    {{ producto.disponibilidad?.inventariable ?
+                                       'Disponible: ' + (producto.disponibilidad?.cantidadDisponible || 0) :
                                        'No inventariable' }}
                                 </span>
-                                
+
                                 <div class="product-hover">
                                     <ul>
                                         <li>
@@ -344,47 +377,47 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="pagination-wrapper mt-4">
                 <div class="row">
                     <div class="col-12">
                         <nav aria-label="Page navigation" class="d-flex justify-content-end">
                             <ul class="pagination pagination-primary">
                                 <li class="page-item" [class.disabled]="paginaActual === 1">
-                                    <a class="page-link" href="javascript:void(0);" 
+                                    <a class="page-link" href="javascript:void(0);"
                                        (click)="cambiarPagina(1)" aria-label="First">
                                         <span aria-hidden="true">«</span>
                                     </a>
                                 </li>
                                 <li class="page-item" [class.disabled]="paginaActual === 1">
-                                    <a class="page-link" href="javascript:void(0);" 
+                                    <a class="page-link" href="javascript:void(0);"
                                        (click)="paginaAnterior()" aria-label="Previous">
                                         <span aria-hidden="true">‹</span>
                                     </a>
                                 </li>
-                                
+
                                 <!-- Páginas numéricas -->
                                 <ng-container *ngFor="let page of [].constructor(totalPaginas); let i = index">
-                                    <li class="page-item" [class.active]="paginaActual === i+1" 
-                                        *ngIf="(i+1 >= paginaActual - 1 && i+1 <= paginaActual + 1) || 
+                                    <li class="page-item" [class.active]="paginaActual === i+1"
+                                        *ngIf="(i+1 >= paginaActual - 1 && i+1 <= paginaActual + 1) ||
                                                i+1 === 1 || i+1 === totalPaginas">
-                                        <a class="page-link" href="javascript:void(0);" 
+                                        <a class="page-link" href="javascript:void(0);"
                                            (click)="cambiarPagina(i+1)">{{i+1}}</a>
                                     </li>
-                                    <li class="page-item disabled" *ngIf="(i+1 === paginaActual - 2 && i+1 > 1) || 
+                                    <li class="page-item disabled" *ngIf="(i+1 === paginaActual - 2 && i+1 > 1) ||
                                                                            (i+1 === paginaActual + 2 && i+1 < totalPaginas)">
                                         <a class="page-link" href="javascript:void(0);">...</a>
                                     </li>
                                 </ng-container>
-                                
+
                                 <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
-                                    <a class="page-link" href="javascript:void(0);" 
+                                    <a class="page-link" href="javascript:void(0);"
                                        (click)="paginaSiguiente()" aria-label="Next">
                                         <span aria-hidden="true">›</span>
                                     </a>
                                 </li>
                                 <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
-                                    <a class="page-link" href="javascript:void(0);" 
+                                    <a class="page-link" href="javascript:void(0);"
                                        (click)="cambiarPagina(totalPaginas)" aria-label="Last">
                                         <span aria-hidden="true">»</span>
                                     </a>

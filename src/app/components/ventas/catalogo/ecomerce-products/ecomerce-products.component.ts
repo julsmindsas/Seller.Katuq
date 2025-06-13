@@ -1,33 +1,51 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
-import { QuickViewComponent } from '../../quick-view/quick-view.component';
-import { VentasService } from '../../../../shared/services/ventas/ventas.service';
-import Swal from 'sweetalert2';
-import { Producto } from '../../../../shared/models/productos/Producto';
-import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
-import { parse, stringify } from 'flatted';
-import { FormGroup, FormControl, FormArray, FormBuilder, AbstractControl } from '@angular/forms';
-import { ConfProductToCartComponent } from '../conf-product-to-cart/conf-product-to-cart.component';
-import { After } from 'v8';
-import { forkJoin } from 'rxjs';
-import { PedidosUtilService } from '../../service/pedidos.util.service';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { CartSingletonService } from '../../../../shared/services/ventas/cart.singleton.service';
-import { ToastrService } from 'ngx-toastr';
+import {
+  AfterViewInit,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  TemplateRef,
+  ViewChild,
+  OnChanges,
+  SimpleChanges,
+} from "@angular/core";
+import { QuickViewComponent } from "../../quick-view/quick-view.component";
+import { VentasService } from "../../../../shared/services/ventas/ventas.service";
+import Swal from "sweetalert2";
+import { Producto } from "../../../../shared/models/productos/Producto";
+import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
+import { parse, stringify } from "flatted";
+import {
+  FormGroup,
+  FormControl,
+  FormArray,
+  FormBuilder,
+  AbstractControl,
+} from "@angular/forms";
+import { ConfProductToCartComponent } from "../conf-product-to-cart/conf-product-to-cart.component";
+import { After } from "v8";
+import { forkJoin } from "rxjs";
+import { PedidosUtilService } from "../../service/pedidos.util.service";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { CartSingletonService } from "../../../../shared/services/ventas/cart.singleton.service";
+import { ToastrService } from "ngx-toastr";
 
 @Component({
-  selector: 'app-ecomerce-products',
-  templateUrl: './ecomerce-products.component.html',
-  styleUrls: ['./ecomerce-products.component.scss']
+  selector: "app-ecomerce-products",
+  templateUrl: "./ecomerce-products.component.html",
+  styleUrls: ["./ecomerce-products.component.scss"],
 })
-export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChanges {
-
+export class EcomerceProductsComponent
+  implements OnInit, AfterViewInit, OnChanges
+{
   @Input() public ciudad: string;
   @Input() public bodega: any;
   @Output() onRender = new EventEmitter<void>();
 
   // Nuevos inputs y outputs para el selector de ciudad
   @Input() ciudadSelector: any[] = [];
-  @Input() selectedCity: string = '';
+  @Input() selectedCity: string = "";
   @Output() citySelected = new EventEmitter<any>();
 
   openSidebar: boolean = false;
@@ -50,7 +68,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
   productoSeleccionado: Producto;
   @Input() isRebuy: boolean = false;
   temp: Producto[];
-  
+
   // Propiedades para la paginación
   productosCompletos: Producto[] = []; // Almacena todos los productos
   productosPaginados: Producto[] = []; // Almacena los productos de la página actual
@@ -58,15 +76,15 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
   productosPorPagina: number = 8; // Cantidad de productos por página
   totalPaginas: number = 0;
   Math = Math; // Exponer Math para usarlo en la plantilla
-  
+
   constructor(
-    private ventasService: VentasService, 
-    private modalService: NgbModal, 
-    private maestroService: MaestroService, 
-    private fb: FormBuilder, 
+    private ventasService: VentasService,
+    private modalService: NgbModal,
+    private maestroService: MaestroService,
+    private fb: FormBuilder,
     private pedidoUtilService: PedidosUtilService,
     private cartService: CartSingletonService,
-    private toastrService: ToastrService
+    private toastrService: ToastrService,
   ) {
     this.initForm();
   }
@@ -79,26 +97,40 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
 
   public cargarTodo() {
     this.initForm();
-    this.filtrarProductos();
     this.listView = false;
-    this.col = '2';
+    this.col = "2";
     this.obtenerFiltros();
+
+    // Solo filtrar si tenemos bodega y ciudad
+    if (
+      this.bodega &&
+      this.bodega.idBodega &&
+      this.ciudad &&
+      this.ciudad !== "seleccione" &&
+      this.ciudad.trim() !== ""
+    ) {
+      this.filtrarProductos();
+    } else {
+      console.log(
+        "cargarTodo: Esperando selección de bodega y ciudad para filtrar productos",
+      );
+    }
   }
 
   get genres(): FormArray {
-    return this.filterForm.get('genres') as FormArray;
+    return this.filterForm.get("genres") as FormArray;
   }
 
   get occasions(): FormArray {
-    return this.filterForm.get('occasions') as FormArray;
+    return this.filterForm.get("occasions") as FormArray;
   }
 
   get deliveryTimes(): FormArray {
-    return this.filterForm.get('deliveryTimes') as FormArray;
+    return this.filterForm.get("deliveryTimes") as FormArray;
   }
 
   onGenreChange(event: any, index: number) {
-    const genres = this.filterForm.get('genres') as FormGroup;
+    const genres = this.filterForm.get("genres") as FormGroup;
 
     if (event.target.checked) {
       // Si la ocasión está seleccionada, establecer su valor en el objeto a true.
@@ -111,9 +143,8 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
     this.filtrarProductos();
   }
 
-
   onOccasionChange(event: any, index: number) {
-    const occasions = this.filterForm.get('occasions') as FormGroup;
+    const occasions = this.filterForm.get("occasions") as FormGroup;
 
     if (event.target.checked) {
       // Si la ocasión está seleccionada, establecer su valor en el objeto a true.
@@ -126,10 +157,10 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
     this.filtrarProductos();
   }
 
-
-
   onDeliveryTimeChange(event: any, index: number) {
-    const deliveryTimesArray = this.filterForm.get('deliveryTimes') as FormArray;
+    const deliveryTimesArray = this.filterForm.get(
+      "deliveryTimes",
+    ) as FormArray;
 
     if (event.target.checked) {
       deliveryTimesArray.push(new FormControl(event.target.value));
@@ -147,7 +178,6 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
     this.filtrarProductos();
   }
 
-
   private initForm() {
     this.filterForm = this.fb.group({
       genres: this.fb.group({}),
@@ -159,10 +189,9 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
       isOnSale: [false],
       hasFreeShipping: [false],
       priceRange: [[this.minPrice, this.maxPrice]],
-      category: [''],
-      deliveryCity: [[]]
+      category: [""],
+      deliveryCity: [[]],
     });
-
   }
 
   ngOnInit(): void {
@@ -186,9 +215,10 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
     });
   }
 
-
   getAllFilters() {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
+    this.empresaActual = JSON.parse(
+      sessionStorage.getItem("currentCompany") || "{}",
+    );
 
     forkJoin([
       this.maestroService.getFormaEntrega(),
@@ -197,7 +227,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
       this.maestroService.consultarOcasion(),
       this.maestroService.consultarGenero(),
       this.maestroService.consultarFormaPago(),
-      this.maestroService.getCategorias()
+      this.maestroService.getCategorias(),
     ]).subscribe({
       next: (results: any[]) => {
         this.formaEntrega = results[0];
@@ -206,28 +236,30 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
         this.ocasiones = results[3];
         this.generos = results[4];
         this.formasPago = results[5];
-        this.categorias = parse((results[6] as any[])[0].categoria).map(p => {
+        this.categorias = parse((results[6] as any[])[0].categoria).map((p) => {
           return {
             label: p.data.nombre,
             data: p.data,
-            children: p.children.map(sub => {
+            children: p.children.map((sub) => {
               return {
                 label: sub.data.nombre,
                 data: sub.data,
-                children: sub.children ? sub.children.map(sub2 => {
-                  return {
-                    label: sub2.data.nombre,
-                    data: sub2.data,
-                    children: sub2.children ? sub2.children.map(sub2 => {
+                children: sub.children
+                  ? sub.children.map((sub2) => {
                       return {
-
-                      }
-                    }) : null
-                  }
-                }) : null
-              }
-            })
-          }
+                        label: sub2.data.nombre,
+                        data: sub2.data,
+                        children: sub2.children
+                          ? sub2.children.map((sub2) => {
+                              return {};
+                            })
+                          : null,
+                      };
+                    })
+                  : null,
+              };
+            }),
+          };
         });
 
         if (this.isOpenModalDirect) {
@@ -236,12 +268,12 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
       },
       error: (error) => {
         Swal.fire({
-          title: 'Error!',
-          text: 'Error al cargar los datos' + error,
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
+          title: "Error!",
+          text: "Error al cargar los datos" + error,
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
-      }
+      },
     });
   }
 
@@ -254,78 +286,117 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
         this.productos = data; // Mantener esta asignación para compatibilidad
 
         const precios = this.productos
-          .filter(p => p.precio)
+          .filter((p) => p.precio)
           .map((producto) => producto.precio?.precioUnitarioConIva || 0);
-          
+
         if (precios.length > 0) {
-          this.minPrice = precios.reduce((min, precio) => (precio < min ? precio : min), precios[0]);
-          this.maxPrice = precios.reduce((max, precio) => (precio > max ? precio : max), precios[0]);
-          const priceControl = this.filterForm.get('priceRange');
+          this.minPrice = precios.reduce(
+            (min, precio) => (precio < min ? precio : min),
+            precios[0],
+          );
+          this.maxPrice = precios.reduce(
+            (max, precio) => (precio > max ? precio : max),
+            precios[0],
+          );
+          const priceControl = this.filterForm.get("priceRange");
           if (priceControl) {
             priceControl.setValue([this.minPrice, this.maxPrice]);
           }
         }
-        
+
         // Configurar paginación
         this.configurarPaginacion();
       },
       error: (error) => {
         Swal.fire({
-          title: 'Error!',
-          text: 'Error al cargar los productos' + error,
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
+          title: "Error!",
+          text: "Error al cargar los productos" + error,
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
-      }
+      },
     });
   }
-  
+
   limpiarFiltros() {
     this.initForm();
 
     this.tiempoEntrega.forEach((tiempo) => {
       tiempo.checked = false;
-      const checkbox = document.getElementById("tiempo-" + tiempo.nombreInterno) as HTMLInputElement;
+      const checkbox = document.getElementById(
+        "tiempo-" + tiempo.nombreInterno,
+      ) as HTMLInputElement;
       if (checkbox) {
         checkbox.checked = false;
       }
     });
 
     this.ocasiones.forEach((ocasion) => {
-      const checkbox = document.getElementById("ocasion-" + ocasion.id) as HTMLInputElement;
+      const checkbox = document.getElementById(
+        "ocasion-" + ocasion.id,
+      ) as HTMLInputElement;
       if (checkbox) {
         checkbox.checked = false;
       }
     });
 
     this.generos.forEach((genero) => {
-      const checkbox = document.getElementById("genero-" + genero.id) as HTMLInputElement;
+      const checkbox = document.getElementById(
+        "genero-" + genero.id,
+      ) as HTMLInputElement;
       if (checkbox) {
         checkbox.checked = false;
       }
     });
-    
-    const priceControl = this.filterForm.get('priceRange');
-    const categoryControl = this.filterForm.get('category');
-    
+
+    const priceControl = this.filterForm.get("priceRange");
+    const categoryControl = this.filterForm.get("category");
+
     if (priceControl) {
       priceControl.setValue([this.minPrice, this.maxPrice]);
     }
-    
+
     if (categoryControl) {
-      categoryControl.setValue('');
+      categoryControl.setValue("");
     }
 
     this.filtrarProductos();
   }
-  
+
   filtrarProductos() {
+    // Validar que tengamos bodega y ciudad antes de hacer la petición
+    if (!this.bodega || !this.bodega.idBodega) {
+      console.warn("No hay bodega seleccionada para filtrar productos");
+      return;
+    }
+
+    if (
+      !this.ciudad ||
+      this.ciudad === "seleccione" ||
+      this.ciudad.trim() === ""
+    ) {
+      console.warn("No hay ciudad seleccionada para filtrar productos");
+      // Mostrar mensaje al usuario si es necesario
+      this.toastrService.warning(
+        "Por favor seleccione una ciudad antes de buscar productos",
+        "Ciudad requerida",
+      );
+      return;
+    }
+
     const filter = this.filterForm.value;
     filter.deliveryCity = { label: this.ciudad, value: this.ciudad };
     filter.category = stringify(filter.category);
     filter.bodega = this.bodega;
-    filter.bodegaId = this.bodega;
+    filter.bodegaId = this.bodega.idBodega || this.bodega;
     filter.isChannelManual = true;
+
+    console.log("Filtrando productos con:", {
+      ciudad: this.ciudad,
+      bodega: this.bodega?.nombre || this.bodega?.idBodega,
+      filtros: filter,
+    });
+
     this.ventasService.getProductsByFilter(filter).subscribe({
       next: (data) => {
         console.log(data);
@@ -333,25 +404,26 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
         this.productosCompletos = data;
         this.productos = data; // Mantener para compatibilidad
         this.temp = [...data];
-        
+
         // Reiniciar paginación y actualizar los productos paginados
         this.paginaActual = 1;
         this.configurarPaginacion();
       },
       error: (error) => {
+        console.error("Error al filtrar productos:", error);
         Swal.fire({
-          title: 'Error!',
-          text: 'Error al cargar los productos' + error,
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
+          title: "Error!",
+          text: "Error al cargar los productos. Verifique que haya seleccionado una bodega y ciudad válidas.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
-      }
+      },
     });
   }
-  
+
   sidebarToggle() {
     this.openSidebar = !this.openSidebar;
-    this.col = '3';
+    this.col = "3";
   }
 
   toggleListView(val) {
@@ -361,14 +433,15 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
   gridColumn(val) {
     this.col = val;
   }
-  @Input('icon') public icon;
+  @Input("icon") public icon;
 
-  public col1: string = '4';
-  public col2: string = '6';
+  public col1: string = "4";
+  public col2: string = "6";
 
   @ViewChild("quickView") QuickView: QuickViewComponent;
   @ViewChild("confProduct") confProduct: ConfProductToCartComponent;
-  @ViewChild("confProductToCartModal", { static: false }) confProductToCartModal: TemplateRef<any>;
+  @ViewChild("confProductToCartModal", { static: false })
+  confProductToCartModal: TemplateRef<any>;
 
   /**
    * Maneja la acción de comprar un producto
@@ -378,13 +451,13 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
    */
   comprarProducto(producto: Producto) {
     // if (producto.procesoComercial?.configProcesoComercialActivo) {
-    if(true) {
+    if (true) {
       // Abrir modal de configuración
       this.configurarProducto(producto);
     } else {
       // Añadir directamente al carrito
       const cantidadMinima = producto.disponibilidad?.cantidadMinVenta || 1;
-      
+
       // Crear un objeto básico para añadir al carrito
       const productoCompra = {
         producto: producto,
@@ -394,17 +467,17 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
           cantidad: cantidadMinima,
           preferencias: [],
           adiciones: [],
-          tarjetas: []
+          tarjetas: [],
         },
         cantidad: cantidadMinima,
       };
-      
+
       this.cartService.addToCart(productoCompra);
-      
-      this.toastrService.success('Producto agregado al carrito', 'Éxito', {
+
+      this.toastrService.success("Producto agregado al carrito", "Éxito", {
         timeOut: 5000,
         progressBar: true,
-        positionClass: 'toast-bottom-right'
+        positionClass: "toast-bottom-right",
       });
     }
   }
@@ -413,21 +486,26 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
   configurarProducto(producto: Producto) {
     this.productoSeleccionado = producto;
 
-    this.modalService.open(this.confProductToCartModal, {
-      centered: true,
-      size: 'xl',
-      keyboard: true,
-      animation: true,
-      scrollable: true,
-      fullscreen: false,
-      windowClass: 'modal-fullscreen',
-    }).result.then((result) => {
-      `Result ${result}`
-    }, (reason) => {
-      if (this.isRebuy) {
-        this.modalService.dismissAll(reason);
-      }
-    });
+    this.modalService
+      .open(this.confProductToCartModal, {
+        centered: true,
+        size: "xl",
+        keyboard: true,
+        animation: true,
+        scrollable: true,
+        fullscreen: false,
+        windowClass: "modal-fullscreen",
+      })
+      .result.then(
+        (result) => {
+          `Result ${result}`;
+        },
+        (reason) => {
+          if (this.isRebuy) {
+            this.modalService.dismissAll(reason);
+          }
+        },
+      );
   }
 
   updateFilter(event: any) {
@@ -438,30 +516,41 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
       return (
         (d.crearProducto?.titulo?.toLowerCase().includes(val) ?? false) ||
         (d.crearProducto?.descripcion?.toLowerCase().includes(val) ?? false) ||
-        (d.identificacion?.referencia?.toString().toLowerCase().includes(val) ?? false) ||
-        (d.disponibilidad?.cantidadDisponible?.toString().toLowerCase().includes(val) ?? false) ||
-        (d.precio?.precioUnitarioSinIva?.toString().toLowerCase().includes(val) ?? false) ||
+        (d.identificacion?.referencia?.toString().toLowerCase().includes(val) ??
+          false) ||
+        (d.disponibilidad?.cantidadDisponible
+          ?.toString()
+          .toLowerCase()
+          .includes(val) ??
+          false) ||
+        (d.precio?.precioUnitarioSinIva
+          ?.toString()
+          .toLowerCase()
+          .includes(val) ??
+          false) ||
         (d.date_edit?.toLowerCase().includes(val) ?? false)
       );
     });
-    
+
     // Actualizar productos y paginación
     this.productosCompletos = productosFiltrados;
     this.productos = productosFiltrados; // Para mantener compatibilidad
     this.paginaActual = 1;
     this.configurarPaginacion();
   }
-  
+
   // Métodos nuevos para paginación
-  
+
   /**
    * Configura la paginación
    */
   configurarPaginacion() {
-    this.totalPaginas = Math.ceil(this.productosCompletos.length / this.productosPorPagina);
+    this.totalPaginas = Math.ceil(
+      this.productosCompletos.length / this.productosPorPagina,
+    );
     this.cambiarPagina(this.paginaActual);
   }
-  
+
   /**
    * Cambia a la página especificada
    * @param pagina Número de página
@@ -469,17 +558,23 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
   cambiarPagina(pagina: number) {
     if (pagina < 1) pagina = 1;
     if (pagina > this.totalPaginas) pagina = this.totalPaginas;
-    
+
     this.paginaActual = pagina;
-    
+
     // Calcular índices para la página actual
     const indiceInicial = (pagina - 1) * this.productosPorPagina;
-    const indiceFinal = Math.min(indiceInicial + this.productosPorPagina, this.productosCompletos.length);
-    
+    const indiceFinal = Math.min(
+      indiceInicial + this.productosPorPagina,
+      this.productosCompletos.length,
+    );
+
     // Actualizar productos paginados
-    this.productosPaginados = this.productosCompletos.slice(indiceInicial, indiceFinal);
+    this.productosPaginados = this.productosCompletos.slice(
+      indiceInicial,
+      indiceFinal,
+    );
   }
-  
+
   /**
    * Avanza a la siguiente página
    */
@@ -488,7 +583,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
       this.cambiarPagina(this.paginaActual + 1);
     }
   }
-  
+
   /**
    * Retrocede a la página anterior
    */
@@ -497,7 +592,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
       this.cambiarPagina(this.paginaActual - 1);
     }
   }
-  
+
   /**
    * Cambia la cantidad de productos por página
    * @param cantidad Nueva cantidad de productos por página
@@ -510,15 +605,29 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
   // Función para emitir la ciudad seleccionada
   onCityChange(event: any) {
     const selectedValue = event.target.value;
-    
-    if (selectedValue !== 'seleccione') {
+
+    if (selectedValue !== "seleccione") {
       this.ciudad = selectedValue;
-      // Filtrar productos por la ciudad seleccionada
-      this.filtrarProductos();
+      this.selectedCity = selectedValue;
+
+      // Solo filtrar si también tenemos bodega seleccionada
+      if (this.bodega && this.bodega.idBodega) {
+        this.filtrarProductos();
+      } else {
+        console.warn(
+          "Bodega no seleccionada, esperando selección de bodega para filtrar productos",
+        );
+      }
     } else {
-      this.ciudad = '';
+      this.ciudad = "";
+      this.selectedCity = "";
+      // Limpiar productos si no hay ciudad seleccionada
+      this.productosCompletos = [];
+      this.productos = [];
+      this.productosPaginados = [];
+      this.configurarPaginacion();
     }
-    
+
     // Emitir el evento con el valor seleccionado
     this.citySelected.emit(selectedValue);
   }
@@ -527,19 +636,48 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnChang
    * Detecta cambios en los @Input bodega o ciudad y vuelve a aplicar filtros
    */
   ngOnChanges(changes: SimpleChanges): void {
-    const bodegaChanged = changes['bodega'] && !changes['bodega'].firstChange;
-    const ciudadChanged = changes['ciudad'] && !changes['ciudad'].firstChange;
+    const bodegaChanged = changes["bodega"] && !changes["bodega"].firstChange;
+    const ciudadChanged = changes["ciudad"] && !changes["ciudad"].firstChange;
 
     if ((bodegaChanged || ciudadChanged) && this.filterForm) {
       // Actualizar campos del formulario de filtros antes de filtrar
       if (bodegaChanged) {
-        // El filtro se aplica dentro de filtrarProductos con this.bodega
+        console.log("Bodega cambiada a:", this.bodega);
+        // Limpiar productos si no hay ciudad para evitar peticiones inválidas
+        if (
+          !this.ciudad ||
+          this.ciudad === "seleccione" ||
+          this.ciudad.trim() === ""
+        ) {
+          console.warn("Bodega cambiada pero no hay ciudad seleccionada");
+          this.productosCompletos = [];
+          this.productos = [];
+          this.productosPaginados = [];
+          this.configurarPaginacion();
+          return;
+        }
       }
       if (ciudadChanged) {
+        console.log("Ciudad cambiada a:", this.ciudad);
         // selectedCity controla visualización del selector
         this.selectedCity = this.ciudad;
       }
-      this.filtrarProductos();
+
+      // Solo filtrar si tenemos tanto bodega como ciudad
+      if (
+        this.bodega &&
+        this.bodega.idBodega &&
+        this.ciudad &&
+        this.ciudad !== "seleccione" &&
+        this.ciudad.trim() !== ""
+      ) {
+        this.filtrarProductos();
+      } else {
+        console.warn("No se puede filtrar: faltan bodega o ciudad", {
+          bodega: this.bodega?.idBodega || "NO_DEFINIDA",
+          ciudad: this.ciudad || "NO_DEFINIDA",
+        });
+      }
     }
   }
 }

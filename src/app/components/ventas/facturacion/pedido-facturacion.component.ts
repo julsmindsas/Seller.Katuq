@@ -1,16 +1,22 @@
-import { AfterContentInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import Swal from 'sweetalert2';
-import { Pedido } from '../modelo/pedido';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { InfoIndicativos } from 'src/Mock/indicativosPais';
-import { InfoPaises } from 'src/Mock/pais-estado-ciudad';
-import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import {
+  AfterContentInit,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from "@angular/core";
+import Swal from "sweetalert2";
+import { Pedido } from "../modelo/pedido";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { InfoIndicativos } from "src/Mock/indicativosPais";
+import { InfoPaises } from "src/Mock/pais-estado-ciudad";
+import { MaestroService } from "src/app/shared/services/maestros/maestro.service";
 
 @Component({
-  selector: 'app-pedido-facturacion',
-  templateUrl: 'pedido-facturacion.component.html'
+  selector: "app-pedido-facturacion",
+  templateUrl: "pedido-facturacion.component.html",
 })
-
 export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   // datosFacturacionElectronica: any[];
   alias_facturacion: any;
@@ -31,15 +37,22 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   @Input() documentoBusqueda: any;
   @Input() formulario: any;
   @Input() isEdit: boolean = false;
-  @Input() generarFactura: boolean = false
+  @Input() generarFactura: boolean = false;
   @Input() activeIndex: number = 0;
-  @Input() direccionFacturacion = '';
-  @Input() paisInicial: string = '';
-  @Input() departamentoInicial: string = '';
-  @Input() ciudad: string = '';
-  @Input() codigoPostal: string = '';
+  @Input() direccionFacturacion = "";
+  @Input() paisInicial: string = "";
+  @Input() departamentoInicial: string = "";
+  @Input() ciudad: string = "";
+  @Input() codigoPostal: string = "";
   paises: string[];
-  indicativos: { nombre: string; name: string; nom: string; iso2: string; iso3: string; phone_code: string; }[];
+  indicativos: {
+    nombre: string;
+    name: string;
+    nom: string;
+    iso2: string;
+    iso3: string;
+    phone_code: string;
+  }[];
   departamentos: string[];
   ciudades: string[];
   ciudadesOrigen: any;
@@ -59,8 +72,12 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   valor_zona_cobro: string;
   codigo_postal_entrega: string;
   pais_entrega: string;
-  constructor(private inforPaises: InfoPaises, private modalService: NgbModal, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
-
+  constructor(
+    private inforPaises: InfoPaises,
+    private modalService: NgbModal,
+    private service: MaestroService,
+    private infoIndicativo: InfoIndicativos,
+  ) {
     this.paises = this.inforPaises.paises.map((x) => {
       return x.Pais;
     });
@@ -69,7 +86,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   ngAfterContentInit(): void {
     if (this.isEdit) {
       const data = {
-        documento: this.documentoBusqueda
+        documento: this.documentoBusqueda,
       };
       this.datosFacturacionElectronica = [];
       this.service.getClientByDocument(data).subscribe((res: any) => {
@@ -77,17 +94,24 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
           this.datosFacturacionElectronica.push(x);
         });
 
-
+        // Agregar el consumidor final si no existe cuando se abre desde la lista
+        if (!this.existeConsumidorFinal()) {
+          this.agregarConsumidorFinal();
+        }
       });
-
     }
   }
 
   ngOnInit() {
-
     // Si se reciben valores por herencia y no hay datos de facturación, crear uno nuevo
-    if (this.paisInicial && this.departamentoInicial && this.ciudad && this.direccionFacturacion &&
-      (!this.datosFacturacionElectronica || this.datosFacturacionElectronica.length === 0)) {
+    if (
+      this.paisInicial &&
+      this.departamentoInicial &&
+      this.ciudad &&
+      this.direccionFacturacion &&
+      (!this.datosFacturacionElectronica ||
+        this.datosFacturacionElectronica.length === 0)
+    ) {
       this.pais = this.paisInicial;
       this.departamento = this.departamentoInicial;
       this.ciudad_municipio = this.ciudad;
@@ -102,12 +126,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       if (!this.datosFacturacionElectronica) {
         this.datosFacturacionElectronica = [];
       }
-
-
     }
   }
-
-
 
   guardarDatosFacturacionElectronica() {
     this.datosFacturacionElectronica = [];
@@ -135,7 +155,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       });
       this.datosFacturacionElectronica.push(datosFacturacionElec);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
-        this.datosFacturacionElectronica
+        this.datosFacturacionElectronica,
       );
       this.formulario.controls["datosEntrega"].setValue(res.datosEntrega);
       this.formulario.controls["notas"].setValue(res.notas);
@@ -177,8 +197,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
     if (this.isEdit) {
       this.modalService.dismissAll();
-    }
-    else {
+    } else {
       this.overridePedido.emit(this.pedidoGral);
     }
   }
@@ -238,11 +257,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         this.formulario.value.numero_celular_comprador;
       this.correo_electronico_facturacion =
         this.formulario.value.correo_electronico_comprador;
-      this.direccion_facturacion = this.direccionFacturacion || '';
-      this.pais = this.paisInicial || '';
-      this.departamento = this.departamentoInicial || '';
-      this.ciudad_municipio = this.ciudad || '';
-      this.codigo_postal = this.codigoPostal || '';
+      this.direccion_facturacion = this.direccionFacturacion || "";
+      this.pais = this.paisInicial || "";
+      this.departamento = this.departamentoInicial || "";
+      this.ciudad_municipio = this.ciudad || "";
+      this.codigo_postal = this.codigoPostal || "";
     } else {
       this.razon_social = "";
       this.tipo_documento_facturacion = "";
@@ -282,7 +301,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       () => {
         // Esto se ejecutará cuando el modal se cierre sin completarse (por ejemplo, al hacer clic fuera del modal)
         this.limpiarVariables();
-      }
+      },
     );
   }
   eliminarDato(index: number): void {
@@ -293,7 +312,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     };
     this.service.getClientByDocument(data).subscribe((res: any) => {
       this.formulario.controls["datosFacturacionElectronica"].setValue(
-        this.datosFacturacionElectronica
+        this.datosFacturacionElectronica,
       );
       this.formulario.controls["datosEntrega"].setValue(res.datosEntrega);
       this.formulario.controls["notas"].setValue(res.notas);
@@ -327,12 +346,12 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     this.datosFacturacionElectronica[this.idenxFacturacion] =
       datosFacturacionElec;
     const data = {
-      documento: this.documentoBusqueda
+      documento: this.documentoBusqueda,
     };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
       this.formulario.controls["datosFacturacionElectronica"].setValue(
-        this.datosFacturacionElectronica
+        this.datosFacturacionElectronica,
       );
       this.formulario.controls["datosEntrega"].setValue(res.datosEntregas);
       this.formulario.controls["notas"].setValue(res.notas);
@@ -389,5 +408,43 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     this.departamento = "";
     this.ciudad_municipio = "";
     this.codigo_postal = "";
+  }
+
+  // Método para verificar si ya existe un consumidor final en la lista
+  existeConsumidorFinal(): boolean {
+    if (!this.datosFacturacionElectronica) return false;
+    return this.datosFacturacionElectronica.some(
+      (item) => item.documento === "222222222222",
+    );
+  }
+
+  // Método para agregar un consumidor final a la lista de facturación
+  agregarConsumidorFinal(): void {
+    // Obtener datos del cliente actual desde el formulario o pedido para usar datos reales
+    const clienteActual = this.formulario?.value || {};
+    const envioActual = this.pedidoGral?.envio || ({} as any);
+
+    const consumidorFinal = {
+      alias: "Consumidor Final",
+      nombres: "Consumidor Final",
+      tipoDocumento: "CC-NIT",
+      documento: "222222222222",
+      indicativoCel: clienteActual.indicativo_celular_comprador || "",
+      celular: clienteActual.numero_celular_comprador || "",
+      correoElectronico: clienteActual.correo_electronico_comprador || "",
+      direccion: this.direccionFacturacion || envioActual?.direccion || "N/A",
+      pais: this.paisInicial || envioActual?.pais || "Colombia",
+      departamento: this.departamentoInicial || envioActual?.departamento || "",
+      ciudad: this.ciudad || envioActual?.ciudad || "",
+      codigoPostal: this.codigoPostal || envioActual?.codigoPostal || "",
+    };
+
+    // Si la lista no está inicializada, crearla
+    if (!this.datosFacturacionElectronica) {
+      this.datosFacturacionElectronica = [];
+    }
+
+    // Agregar el consumidor final al INICIO de la lista para que aparezca de primero
+    this.datosFacturacionElectronica.unshift(consumidorFinal);
   }
 }

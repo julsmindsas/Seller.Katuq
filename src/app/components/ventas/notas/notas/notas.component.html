@@ -10,12 +10,13 @@
       <!-- NOTAS PRODUCCIÓN -->
       <p-tabPanel header="Producción" leftIcon="fa fa-cogs">
         <div *ngIf="!pedido?.carrito?.length && (!pedido?.notasPedido?.notasProduccion || pedido?.notasPedido?.notasProduccion.length === 0)" class="empty-notes text-center p-4">
-          <i class="fa fa-info-circle fa-2x mb-3 text-muted"></i>
-          <p class="text-muted">No hay productos en el carrito ni notas de producción</p>
+          <i class="fa fa-shopping-cart fa-2x mb-3 text-muted"></i>
+          <p class="text-muted mb-2">Agrega productos al carrito</p>
+          <small class="text-muted">Los campos de notas de producción aparecerán automáticamente cuando agregues productos</small>
         </div>
-        
+
         <!-- Notas generales de producción -->
-        <div *ngIf="pedido?.notasPedido?.notasProduccion && pedido.notasPedido.notasProduccion.length > 0" 
+        <div *ngIf="pedido?.notasPedido?.notasProduccion && pedido.notasPedido.notasProduccion.length > 0"
           class="notes-list mt-3 mb-4">
           <h6 class="list-header mb-3"><i class="fa fa-sticky-note me-1"></i> Notas de Producción Generales</h6>
           <div class="table-responsive">
@@ -37,42 +38,70 @@
             </table>
           </div>
         </div>
-        
+
+        <!-- Mensaje cuando hay productos pero no hay formulario -->
+        <div *ngIf="pedido?.carrito?.length && !notasProduccionForm" class="alert alert-info">
+          <i class="fa fa-spinner fa-spin me-2"></i>
+          Preparando campos de notas para los productos...
+        </div>
+
+        <!-- Formulario de notas de producción -->
         <form *ngIf="pedido?.carrito?.length && notasProduccionForm" [formGroup]="notasProduccionForm" class="notes-form">
+          <div class="alert alert-success mb-3" *ngIf="notasFormArray?.length > 0">
+            <i class="fa fa-check-circle me-2"></i>
+            <strong>¡Listo para notas de producción!</strong> Se han habilitado campos para {{notasFormArray?.length}} producto(s) en tu carrito.
+          </div>
+
           <div formArrayName="productos">
             <div *ngFor="let productoCtrl of notasFormArray?.controls; let i = index" class="product-note mb-4">
               <div [formGroupName]="i">
                 <div class="note-header mb-2">
                   <span class="date-label"><i class="fa fa-calendar me-1"></i>{{ fecha | date: 'dd/MM/yyyy' }}</span>
-                  <span class="product-label">{{ pedido.carrito[i]?.producto?.crearProducto?.titulo || 'Producto' }}</span>
+                  <span class="product-label">
+                    <i class="fa fa-box me-1"></i>
+                    {{ pedido.carrito[i]?.producto?.crearProducto?.titulo || 'Producto' }}
+                  </span>
+                  <span class="badge bg-primary ms-2">Nuevo</span>
                 </div>
-                
+
                 <div formArrayName="notas">
                   <div *ngFor="let notaCtrl of notasFormArray.at(i).get('notas')?.controls; let j = index" class="mb-2">
                     <div class="input-group">
-                      <textarea [formControlName]="j" class="form-control" placeholder="Escribe una nota de producción..."></textarea>
-                      <button class="btn btn-outline-danger" type="button" (click)="eliminarNota(j, 'produccion', i)">
+                      <span class="input-group-text bg-light">
+                        <i class="fa fa-pencil-alt"></i>
+                      </span>
+                      <textarea [formControlName]="j"
+                                class="form-control"
+                                placeholder="Escribe instrucciones especiales para la producción de este producto..."
+                                rows="2"></textarea>
+                      <button class="btn btn-outline-danger"
+                              type="button"
+                              (click)="eliminarNota(j, 'produccion', i)"
+                              *ngIf="notasFormArray.at(i).get('notas')?.controls.length > 1">
                         <i class="fa fa-times"></i>
                       </button>
                     </div>
                   </div>
-                  
+
                   <button class="btn btn-sm btn-outline-primary mt-2" type="button" (click)="agregarNota(i)">
-                    <i class="fa fa-plus me-1"></i> Agregar Nota
+                    <i class="fa fa-plus me-1"></i> Agregar Otra Nota
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          
-          <div class="d-flex justify-content-end mt-3">
-            <button class="btn btn-primary" type="button" (click)="guardarNotas()">
-              <i class="fa fa-save me-1"></i> Guardar Notas
+
+          <div class="d-flex justify-content-between mt-4">
+            <div class="text-muted">
+              <small><i class="fa fa-info-circle me-1"></i>Las notas se guardarán junto con el pedido</small>
+            </div>
+            <button class="btn btn-success" type="button" (click)="guardarNotas()">
+              <i class="fa fa-save me-1"></i> Guardar Todas las Notas
             </button>
           </div>
         </form>
       </p-tabPanel>
-      
+
 
       <!-- NOTAS DESPACHOS -->
       <p-tabPanel header="Despacho" leftIcon="fa fa-truck">
@@ -98,7 +127,7 @@
             </div>
           </div>
         </form>
-        
+
         <div class="notes-list mt-4" *ngIf="pedido?.notasPedido?.notasDespachos?.length > 0">
           <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> Notas Anteriores</h6>
           <div class="table-responsive">
@@ -124,13 +153,13 @@
             </table>
           </div>
         </div>
-        
+
         <div class="empty-notes" *ngIf="!pedido?.notasPedido?.notasDespachos?.length">
           <i class="fa fa-truck mb-2"></i>
           <p>No hay notas para despachos</p>
         </div>
       </p-tabPanel>
-      
+
       <!-- NOTAS ENTREGAS -->
       <p-tabPanel header="Entrega" leftIcon="fa fa-box">
         <form [formGroup]="notasEntregasForm" (ngSubmit)="onSubmitEntregas()" class="notes-form">
@@ -155,7 +184,7 @@
             </div>
           </div>
         </form>
-        
+
         <div class="notes-list mt-4" *ngIf="pedido?.notasPedido?.notasEntregas?.length > 0">
           <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> Notas Anteriores</h6>
           <div class="table-responsive">
@@ -181,13 +210,13 @@
             </table>
           </div>
         </div>
-        
+
         <div class="empty-notes" *ngIf="!pedido?.notasPedido?.notasEntregas?.length">
           <i class="fa fa-box mb-2"></i>
           <p>No hay notas para entregas</p>
         </div>
       </p-tabPanel>
-      
+
       <!-- NOTAS FACTURACIÓN -->
       <p-tabPanel header="Facturación" leftIcon="fa fa-file-invoice">
         <form [formGroup]="notasFacturacionPagosForm" (ngSubmit)="onSubmitFacturacionPagos()" class="notes-form">
@@ -212,7 +241,7 @@
             </div>
           </div>
         </form>
-        
+
         <div class="notes-list mt-4" *ngIf="pedido?.notasPedido?.notasFacturacionPagos?.length > 0">
           <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> Notas Anteriores</h6>
           <div class="table-responsive">
@@ -238,7 +267,7 @@
             </table>
           </div>
         </div>
-        
+
         <div class="empty-notes" *ngIf="!pedido?.notasPedido?.notasFacturacionPagos?.length">
           <i class="fa fa-file-invoice mb-2"></i>
           <p>No hay notas para facturación</p>
