@@ -31,18 +31,20 @@ $light-color: #f8f9fa;
   border-radius: 6px;
   overflow: hidden;
   border: none;
-  
+
   &:hover {
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    box-shadow:
+      0 3px 6px rgba(0, 0, 0, 0.16),
+      0 3px 6px rgba(0, 0, 0, 0.23);
   }
-  
+
   .card-title {
     font-size: 1.1rem;
     font-weight: 500;
     margin-bottom: 0.75rem;
     color: #495057;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
@@ -51,28 +53,29 @@ $light-color: #f8f9fa;
 // Estilos para formularios
 .form-group {
   margin-bottom: 1.25rem;
-  
+
   label {
     font-weight: 500;
     margin-bottom: 0.5rem;
     color: #495057;
   }
-  
-  .form-select, .form-control {
+
+  .form-select,
+  .form-control {
     border-radius: 4px;
     border: 1px solid #ced4da;
     padding: 0.375rem 0.75rem;
-    
+
     &:focus {
       border-color: $primary-color;
       box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
     }
-    
+
     &.is-invalid {
       border-color: $danger-color;
     }
   }
-  
+
   .text-danger {
     margin-top: 0.25rem;
     font-size: 0.8rem;
@@ -83,21 +86,22 @@ $light-color: #f8f9fa;
 .table {
   margin-bottom: 0;
   font-size: 0.9rem;
-  
+
   th {
     font-weight: 600;
     background-color: $light-color;
   }
-  
-  td, th {
+
+  td,
+  th {
     padding: 0.75rem;
     vertical-align: middle;
   }
-  
+
   tbody tr {
     transition: background-color 0.2s;
   }
-  
+
   tfoot {
     font-weight: 600;
     background-color: rgba(0, 0, 0, 0.03);
@@ -113,16 +117,16 @@ $light-color: #f8f9fa;
 .alert {
   border-radius: 4px;
   padding: 0.75rem 1.25rem;
-  
+
   &.alert-info {
     background-color: rgba($primary-color, 0.1);
     border-color: rgba($primary-color, 0.2);
     color: darken($primary-color, 20%);
-    
+
     .pi-info-circle {
       color: $primary-color;
     }
-    
+
     .small {
       margin-top: 0.25rem;
       opacity: 0.8;
@@ -136,23 +140,23 @@ $light-color: #f8f9fa;
   padding: 0.5em 0.85em;
   border-radius: 30px;
   font-size: 0.75rem;
-  
+
   &.bg-primary {
     background-color: $primary-color !important;
   }
-  
+
   &.bg-warning {
     background-color: $warning-color !important;
     color: #000 !important;
-    
+
     .pi-exclamation-triangle {
       color: darken($warning-color, 30%);
     }
   }
-  
+
   &.bg-success {
     background-color: $success-color !important;
-    
+
     .pi-check {
       color: lighten($success-color, 20%);
     }
@@ -165,81 +169,81 @@ $light-color: #f8f9fa;
   padding: 0.375rem 0.75rem;
   border-radius: 4px;
   transition: all 0.2s;
-  
+
   &.btn-sm {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
   }
-  
+
   &.btn-primary {
     background-color: $primary-color;
     border-color: $primary-color;
-    
+
     &:hover {
       background-color: darken($primary-color, 10%);
       border-color: darken($primary-color, 10%);
     }
-    
+
     &:disabled {
       background-color: rgba($primary-color, 0.5);
       border-color: rgba($primary-color, 0.5);
     }
   }
-  
+
   &.btn-secondary {
     background-color: $secondary-color;
     border-color: $secondary-color;
-    
+
     &:hover {
       background-color: darken($secondary-color, 10%);
       border-color: darken($secondary-color, 10%);
     }
   }
-  
+
   &.btn-success {
     background-color: $success-color;
     border-color: $success-color;
-    
+
     &:hover {
       background-color: darken($success-color, 10%);
       border-color: darken($success-color, 10%);
     }
   }
-  
+
   &.btn-warning {
     background-color: $warning-color;
     border-color: $warning-color;
-    
+
     &:hover {
       background-color: darken($warning-color, 10%);
       border-color: darken($warning-color, 10%);
     }
   }
-  
+
   &.btn-outline-primary {
     color: $primary-color;
     border-color: $primary-color;
-    
+
     &:hover {
       background-color: $primary-color;
       color: white;
     }
   }
-  
+
   &.btn-outline-danger {
     color: $danger-color;
     border-color: $danger-color;
-    
+
     &:hover {
       background-color: $danger-color;
       color: white;
     }
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    
+
     &:hover {
       background-color: initial;
       color: initial;
@@ -254,14 +258,14 @@ $light-color: #f8f9fa;
     height: 35px;
     font-size: 0.875rem;
   }
-  
+
   .input-group-text {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
     background-color: #f8f9fa;
     border-left: none;
   }
-  
+
   i.pi-calendar {
     font-size: 0.875rem;
     color: #495057;
@@ -275,18 +279,18 @@ $light-color: #f8f9fa;
       padding: 0.5rem;
       background: #f8f9fa;
     }
-    
+
     .p-datatable-thead > tr > th {
       padding: 0.5rem 0.5rem;
       font-size: 0.875rem;
       background: #f8f9fa;
     }
-    
+
     .p-datatable-tbody > tr > td {
       padding: 0.4rem 0.5rem;
       font-size: 0.875rem;
     }
-    
+
     .p-paginator {
       padding: 0.3rem;
       .p-paginator-element {
@@ -295,22 +299,22 @@ $light-color: #f8f9fa;
       }
     }
   }
-  
+
   /* Ajustes del selector de columnas */
   .p-multiselect {
     min-width: 180px;
     font-size: 0.875rem;
-    
+
     .p-multiselect-label {
       padding: 0.4rem 0.75rem;
     }
-    
+
     .p-multiselect-item {
       padding: 0.4rem 0.75rem;
       font-size: 0.875rem;
     }
   }
-  
+
   /* Ajustes para los botones */
   .btn-sm {
     padding: 0.25rem 0.5rem;
@@ -330,17 +334,17 @@ $light-color: #f8f9fa;
     height: 1rem;
     background-color: #dee2e6;
     border: none;
-    
+
     &:checked {
       background-color: $primary-color;
       border-color: $primary-color;
     }
-    
+
     &:focus {
       box-shadow: 0 0 0 0.25rem rgba($primary-color, 0.25);
     }
   }
-  
+
   .form-check-label {
     font-size: 0.875rem;
     color: #495057;
@@ -353,7 +357,8 @@ $light-color: #f8f9fa;
   font-size: 0.85rem;
 }
 
-.form-select-sm, .form-control-sm {
+.form-select-sm,
+.form-control-sm {
   height: 35px;
   font-size: 0.875rem;
   padding: 0.25rem 0.5rem;
@@ -368,7 +373,7 @@ $light-color: #f8f9fa;
 .badge.bg-info {
   background-color: #0dcaf0 !important;
   color: #000 !important;
-  
+
   .pi-refresh {
     color: #087990;
   }
@@ -378,13 +383,13 @@ $light-color: #f8f9fa;
 .btn-outline-info {
   color: #0dcaf0;
   border-color: #0dcaf0;
-  
+
   &:hover {
     background-color: #0dcaf0;
     color: white;
     border-color: #0dcaf0;
   }
-  
+
   &.btn-sm {
     font-size: 0.7rem;
     padding: 0.2rem 0.4rem;
@@ -396,7 +401,7 @@ $light-color: #f8f9fa;
   background-color: rgba(255, 193, 7, 0.1);
   border-color: rgba(255, 193, 7, 0.3);
   color: #856404;
-  
+
   .pi-exclamation-triangle {
     color: #ffc107;
   }
@@ -405,7 +410,7 @@ $light-color: #f8f9fa;
 /* Mejoras para la columna de estado en orden */
 .d-flex.flex-column.gap-1 {
   min-width: 120px;
-  
+
   .btn {
     white-space: nowrap;
     overflow: hidden;
@@ -431,19 +436,332 @@ $light-color: #f8f9fa;
   }
 }
 
+/* Estilos para el modal de detalles del pedido */
+.modal-xl {
+  max-width: 1200px;
+}
+
+/* Header del modal con gradiente */
+.bg-gradient-primary {
+  background: linear-gradient(
+    135deg,
+    $primary-color 0%,
+    darken($primary-color, 15%) 100%
+  ) !important;
+  border: none;
+}
+
+/* Estilos para las pestañas */
+.nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+
+  .nav-link {
+    border: none;
+    padding: 0.75rem 1.5rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: transparent;
+      color: $primary-color;
+      background-color: rgba($primary-color, 0.1);
+    }
+
+    &.active {
+      color: $primary-color;
+      background-color: rgba($primary-color, 0.1);
+      border-bottom: 3px solid $primary-color;
+      font-weight: 600;
+    }
+
+    i {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+/* Información estructurada */
+.info-item {
+  margin-bottom: 1rem;
+
+  .info-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+
+  .info-value {
+    font-size: 0.95rem;
+    color: #495057;
+    font-weight: 500;
+
+    i {
+      font-size: 0.85rem;
+    }
+  }
+}
+
+/* Bloque de dirección */
+.address-block {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 4px solid $primary-color;
+}
+
+/* Miniaturas de productos */
+.product-thumbnail {
+  width: 50px;
+  height: 50px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 6px;
+  border: 2px solid #e9ecef;
+  flex-shrink: 0;
+}
+
+/* Resumen de entrega */
+.delivery-summary {
+  .delivery-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    .delivery-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+
+    .delivery-content {
+      flex-grow: 1;
+
+      .delivery-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+      }
+
+      .delivery-value {
+        font-size: 0.95rem;
+        color: #495057;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+/* Resumen de pagos */
+.payment-summary {
+  .payment-item {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f3f4;
+
+    .payment-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    .payment-value {
+      font-size: 0.95rem;
+      color: #495057;
+      font-weight: 600;
+    }
+  }
+
+  .payment-item-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-top: 2px solid #dee2e6;
+    margin-top: 0.5rem;
+
+    .payment-label {
+      font-size: 1rem;
+      color: #495057;
+      font-weight: 600;
+    }
+
+    .payment-value-total {
+      font-size: 1.1rem;
+      color: #495057;
+      font-weight: 700;
+    }
+  }
+}
+
+/* Sección de pago pendiente */
+.payment-pending {
+  .pending-amount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Card con gradiente de advertencia */
+.bg-gradient-warning {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.15) 0%,
+    rgba(255, 193, 7, 0.05) 100%
+  ) !important;
+  border: 1px solid rgba(255, 193, 7, 0.3) !important;
+}
+
+/* Estilos para las tablas en el modal */
+.modal-body .table {
+  font-size: 0.85rem;
+
+  th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #495057;
+    background-color: rgba($primary-color, 0.05);
+    border-color: rgba($primary-color, 0.1);
+  }
+
+  td {
+    vertical-align: middle;
+    border-color: #f1f3f4;
+  }
+
+  tfoot th {
+    background-color: rgba($success-color, 0.05);
+    border-color: rgba($success-color, 0.1);
+    color: $success-color;
+  }
+}
+
+/* Animaciones suaves */
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mejoras para badges en el modal */
+.modal-body .badge {
+  font-size: 0.7rem;
+  padding: 0.4em 0.8em;
+
+  &.bg-primary {
+    background-color: $primary-color !important;
+  }
+
+  &.bg-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
+  }
+
+  &.bg-light {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+    border: 1px solid #dee2e6;
+  }
+}
+
+/* Footer del modal */
+.modal-footer.bg-light {
+  background-color: #f8f9fa !important;
+  border-top: 1px solid #dee2e6;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .d-flex.flex-column.gap-1 {
     min-width: 100px;
-    
+
     .btn-sm {
       font-size: 0.65rem;
       padding: 0.15rem 0.3rem;
     }
   }
-  
+
   .badge {
     font-size: 0.65rem;
     padding: 0.25em 0.5em;
+  }
+
+  /* Ajustes para modal en móviles */
+  .modal-xl {
+    max-width: 95%;
+  }
+
+  .nav-tabs .nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .delivery-summary .delivery-item {
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 1rem;
+
+    .delivery-icon {
+      margin-right: 0;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  .payment-pending .pending-amount {
+    font-size: 1.5rem;
+  }
+
+  .product-thumbnail {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Scroll personalizado para el modal */
+.modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+
+    &:hover {
+      background: #a8a8a8;
+    }
   }
 }

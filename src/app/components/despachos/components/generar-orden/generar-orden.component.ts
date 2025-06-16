@@ -1,8 +1,8 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EstadoProceso, Pedido } from '../../../ventas/modelo/pedido';
-import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
-import Swal from 'sweetalert2';
+import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { EstadoProceso, Pedido } from "../../../ventas/modelo/pedido";
+import { LogisticaServiceV2 } from "../../../../shared/services/despachos/logistica.service.v2";
+import Swal from "sweetalert2";
 
 interface ColumnDefinition {
   field: string;
@@ -11,9 +11,9 @@ interface ColumnDefinition {
 }
 
 @Component({
-  selector: 'app-generar-orden',
-  templateUrl: './generar-orden.component.html',
-  styleUrls: ['./generar-orden.component.scss']
+  selector: "app-generar-orden",
+  templateUrl: "./generar-orden.component.html",
+  styleUrls: ["./generar-orden.component.scss"],
 })
 export class GenerarOrdenComponent implements OnInit {
   @Input() orders: Pedido[] = [];
@@ -37,16 +37,16 @@ export class GenerarOrdenComponent implements OnInit {
 
   // Definición de columnas para la tabla de pedidos disponibles
   displayedColumns: ColumnDefinition[] = [
-    { field: 'nroPedido', header: 'Nro. Pedido', visible: true },
-    { field: 'cliente', header: 'Cliente', visible: true },
-    { field: 'ciudad', header: 'Ciudad', visible: true },
-    { field: 'direccionEntrega', header: 'Dirección', visible: true },
-    { field: 'faltaPorPagar', header: 'Valor a Cobrar', visible: true },
-    { field: 'enOrden', header: 'Estado en Orden', visible: true },
-    { field: 'horarioEntrega', header: 'Horario Entrega', visible: false },
-    { field: 'formaEntrega', header: 'Forma Entrega', visible: false },
-    { field: 'estadoProceso', header: 'Estado', visible: false },
-    { field: 'accion', header: 'Acción', visible: true }
+    { field: "nroPedido", header: "Nro. Pedido", visible: true },
+    { field: "cliente", header: "Cliente", visible: true },
+    { field: "ciudad", header: "Ciudad", visible: true },
+    { field: "direccionEntrega", header: "Dirección", visible: true },
+    { field: "faltaPorPagar", header: "Valor a Cobrar", visible: true },
+    { field: "enOrden", header: "Estado en Orden", visible: true },
+    { field: "horarioEntrega", header: "Horario Entrega", visible: false },
+    { field: "formaEntrega", header: "Forma Entrega", visible: false },
+    { field: "estadoProceso", header: "Estado", visible: false },
+    { field: "accion", header: "Acción", visible: true },
   ];
 
   selectedColumns: ColumnDefinition[] = [];
@@ -54,26 +54,27 @@ export class GenerarOrdenComponent implements OnInit {
   mostrarPedidosEnOrdenes: boolean = false; // Controla si mostrar pedidos que ya están en órdenes
   pedidosMovidos: Map<string, string> = new Map(); // Mapa para rastrear pedidos movidos: nroPedido -> ordenAnterior
   hayPedidosMovidos: boolean = false; // Flag para indicar si hay pedidos movidos
+  pedidoSeleccionadoDetalle: Pedido | null = null; // Pedido seleccionado para mostrar detalles
 
   constructor(
     private formBuilder: FormBuilder,
-    private logisticaService: LogisticaServiceV2
-  ) { }
+    private logisticaService: LogisticaServiceV2,
+  ) {}
 
   ngOnInit(): void {
     this.initForm();
-    this.selectedColumns = this.displayedColumns.filter(col => col.visible);
+    this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
     this.cargarOrdenesExistentes();
 
     // Inicializar datos según el modo (creación o edición)
     if (this.isEditMode && this.nuevaOrdenEnvio) {
       // En modo edición, cargar los datos de la orden existente
-      this.metodoEnvio = 'mensajeroPropio'; // O el valor correspondiente según los datos
+      this.metodoEnvio = "mensajeroPropio"; // O el valor correspondiente según los datos
 
       // Inicializar el formulario con los valores de la orden existente
       this.ordenEnvioForm.patchValue({
         fechaEnvio: this.formatDateForInput(this.nuevaOrdenEnvio.fecha),
-        metodoEnvio: 'mensajeroPropio' // O el valor que corresponda
+        metodoEnvio: "mensajeroPropio", // O el valor que corresponda
       });
 
       // Refrescar la lista de pedidos disponibles
@@ -89,18 +90,17 @@ export class GenerarOrdenComponent implements OnInit {
 
   private initForm(): void {
     this.ordenEnvioForm = this.formBuilder.group({
-      fechaEnvio: ['', Validators.required],
-      metodoEnvio: ['', Validators.required]
+      fechaEnvio: ["", Validators.required],
+      metodoEnvio: ["", Validators.required],
     });
 
     // Suscribirse a cambios en metodoEnvio
-    this.ordenEnvioForm.get('metodoEnvio')?.valueChanges
-      .subscribe(value => {
-        this.metodoEnvio = value;
-        if (value && this.ordenEnvioForm.get('fechaEnvio')?.valid) {
-          this.actualizarPedidosDisponibles();
-        }
-      });
+    this.ordenEnvioForm.get("metodoEnvio")?.valueChanges.subscribe((value) => {
+      this.metodoEnvio = value;
+      if (value && this.ordenEnvioForm.get("fechaEnvio")?.valid) {
+        this.actualizarPedidosDisponibles();
+      }
+    });
 
     // Cargar transportadores
     this.cargarTransportadores();
@@ -112,8 +112,8 @@ export class GenerarOrdenComponent implements OnInit {
         this.transportadores = data;
       },
       (error) => {
-        console.error('Error al cargar transportadores:', error);
-      }
+        console.error("Error al cargar transportadores:", error);
+      },
     );
   }
 
@@ -122,19 +122,22 @@ export class GenerarOrdenComponent implements OnInit {
     this.logisticaService.getShippingOrders().subscribe(
       (ordenes) => {
         this.ordenesExistentes = ordenes || [];
-        console.log('Órdenes existentes cargadas:', this.ordenesExistentes.length);
+        console.log(
+          "Órdenes existentes cargadas:",
+          this.ordenesExistentes.length,
+        );
       },
       (error) => {
-        console.error('Error al cargar órdenes existentes:', error);
+        console.error("Error al cargar órdenes existentes:", error);
         this.ordenesExistentes = [];
         Swal.fire({
-          icon: 'warning',
-          title: 'Advertencia',
-          text: 'No se pudieron cargar las órdenes existentes. Algunas funciones pueden no estar disponibles.',
+          icon: "warning",
+          title: "Advertencia",
+          text: "No se pudieron cargar las órdenes existentes. Algunas funciones pueden no estar disponibles.",
           timer: 3000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
-      }
+      },
     );
   }
 
@@ -143,35 +146,31 @@ export class GenerarOrdenComponent implements OnInit {
   }
 
   loadPedidosDisponibles(): Pedido[] {
-    const fechaEnvioValue = this.ordenEnvioForm.get('fechaEnvio')?.value;
+    const fechaEnvioValue = this.ordenEnvioForm.get("fechaEnvio")?.value;
     if (!fechaEnvioValue) {
       return [];
     }
 
-
-
     try {
       // Para evitar problemas con timezone, vamos a trabajar solo con la parte del string de fecha
       // El formato del input date es 'YYYY-MM-DD'
-      let fechaSeleccionada = '';
-      if (typeof fechaEnvioValue === 'string') {
+      let fechaSeleccionada = "";
+      if (typeof fechaEnvioValue === "string") {
         // Si es string, tomamos solo la parte de la fecha (YYYY-MM-DD)
-        fechaSeleccionada = fechaEnvioValue.split('T')[0];
+        fechaSeleccionada = fechaEnvioValue.split("T")[0];
       } else {
         // Si es un objeto Date, lo convertimos a string en formato YYYY-MM-DD
         const d = new Date(fechaEnvioValue);
         // Usamos UTC para evitar problemas de timezone
         fechaSeleccionada = [
           d.getFullYear(),
-          ('0' + (d.getMonth() + 1)).slice(-2), // Mes en formato 01-12
-          ('0' + d.getDate()).slice(-2)         // Día en formato 01-31
-        ].join('-');
+          ("0" + (d.getMonth() + 1)).slice(-2), // Mes en formato 01-12
+          ("0" + d.getDate()).slice(-2), // Día en formato 01-31
+        ].join("-");
       }
 
-
-
       // Usamos la fecha seleccionada directamente como string para comparar
-      const pedidosFiltrados = this.orders.filter(o => {
+      const pedidosFiltrados = this.orders.filter((o) => {
         try {
           // Verificar si la fecha de entrega existe
           if (!o.fechaEntrega) {
@@ -179,57 +178,66 @@ export class GenerarOrdenComponent implements OnInit {
           }
 
           // Normalizar la fecha del pedido a formato YYYY-MM-DD
-          let fechaPedidoStr = '';
+          let fechaPedidoStr = "";
 
-          if (typeof o.fechaEntrega === 'string') {
+          if (typeof o.fechaEntrega === "string") {
             // Si es un string ISO (2023-05-15T00:00:00.000Z)
-            fechaPedidoStr = o.fechaEntrega.split('T')[0];
+            fechaPedidoStr = o.fechaEntrega.split("T")[0];
           } else {
             // Si es un objeto Date
             const fechaPedido = new Date(o.fechaEntrega);
             fechaPedidoStr = [
               fechaPedido.getFullYear(),
-              ('0' + (fechaPedido.getMonth() + 1)).slice(-2),
-              ('0' + fechaPedido.getDate()).slice(-2)
-            ].join('-');
+              ("0" + (fechaPedido.getMonth() + 1)).slice(-2),
+              ("0" + fechaPedido.getDate()).slice(-2),
+            ].join("-");
           }
 
-
-
           // Verificar si el pedido ya está seleccionado en la orden actual
-          const yaSeleccionado = this.pedidosSeleccionados.some(p => p.nroPedido === o.nroPedido);
+          const yaSeleccionado = this.pedidosSeleccionados.some(
+            (p) => p.nroPedido === o.nroPedido,
+          );
 
           // Verificar todas las condiciones
           const fechasCoinciden = fechaPedidoStr === fechaSeleccionada;
-          const estadoValido = (o.estadoProceso !== EstadoProceso.Entregado && o.estadoProceso !== EstadoProceso.Despachado && o.estadoProceso !== EstadoProceso.SinProducir);
-          const formaEntregaValida = (o.carrito ? o.carrito[0].configuracion?.datosEntrega.formaEntrega.toLocaleUpperCase().includes('DOMICILIO') : false);
-
-
+          const estadoValido =
+            o.estadoProceso !== EstadoProceso.Entregado &&
+            o.estadoProceso !== EstadoProceso.Despachado &&
+            o.estadoProceso !== EstadoProceso.SinProducir;
+          const formaEntregaValida = o.carrito
+            ? o.carrito[0].configuracion?.datosEntrega.formaEntrega
+                .toLocaleUpperCase()
+                .includes("DOMICILIO")
+            : false;
 
           // Verificar si el pedido existe en otra orden
           const existeEnOtraOrden = this.pedidoExisteEnOrden(o);
-          
+
           // Si no queremos mostrar pedidos en órdenes y este pedido está en una orden, ocultarlo
           if (!this.mostrarPedidosEnOrdenes && existeEnOtraOrden) {
             return false;
           }
-          
-          return fechasCoinciden && estadoValido && formaEntregaValida && !yaSeleccionado;
+
+          return (
+            fechasCoinciden &&
+            estadoValido &&
+            formaEntregaValida &&
+            !yaSeleccionado
+          );
         } catch (err) {
           Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Error al procesar pedido: ' + o.nroPedido + ' - ' + err
+            icon: "error",
+            title: "Error",
+            text: "Error al procesar pedido: " + o.nroPedido + " - " + err,
           });
-          console.error('Error al procesar pedido:', o.nroPedido, err);
+          console.error("Error al procesar pedido:", o.nroPedido, err);
           return false;
         }
       });
 
-
       return pedidosFiltrados;
     } catch (err) {
-      console.error('Error general en loadPedidosDisponibles:', err);
+      console.error("Error general en loadPedidosDisponibles:", err);
       return [];
     }
   }
@@ -247,7 +255,7 @@ export class GenerarOrdenComponent implements OnInit {
       // Actualizar flag de pedidos movidos
       this.hayPedidosMovidos = this.pedidosMovidos.size > 0;
     }
-    
+
     this.onRemoveOrder.emit(pedido);
     // Actualizar pedidos disponibles después de retirar uno
     this.actualizarPedidosDisponibles();
@@ -273,18 +281,21 @@ export class GenerarOrdenComponent implements OnInit {
     // Si hay pedidos movidos, mostrar confirmación adicional
     if (this.hayPedidosMovidos) {
       const listaPedidosMovidos = Array.from(this.pedidosMovidos.entries())
-        .map(([nroPedido, ordenAnterior]) => `#${nroPedido} (desde orden ${ordenAnterior})`)
-        .join(', ');
+        .map(
+          ([nroPedido, ordenAnterior]) =>
+            `#${nroPedido} (desde orden ${ordenAnterior})`,
+        )
+        .join(", ");
 
       Swal.fire({
-        title: 'Confirmar cambios',
+        title: "Confirmar cambios",
         html: `
           <div class="text-start">
             <p>Esta acción realizará los siguientes cambios:</p>
             <ul>
               <li><strong>Pedidos movidos:</strong> ${listaPedidosMovidos}</li>
               <li>Estos pedidos serán removidos de sus órdenes anteriores</li>
-              <li>Se ${this.nroShippingOrder ? 'actualizará' : 'creará'} la orden actual</li>
+              <li>Se ${this.nroShippingOrder ? "actualizará" : "creará"} la orden actual</li>
             </ul>
             <div class="alert alert-warning mt-3">
               <i class="pi pi-exclamation-triangle me-2"></i>
@@ -292,10 +303,10 @@ export class GenerarOrdenComponent implements OnInit {
             </div>
           </div>
         `,
-        icon: 'warning',
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonText: 'Sí, guardar cambios',
-        cancelButtonText: 'Cancelar'
+        confirmButtonText: "Sí, guardar cambios",
+        cancelButtonText: "Cancelar",
       }).then((result) => {
         if (result.isConfirmed) {
           this.ejecutarGuardarOrden();
@@ -310,10 +321,12 @@ export class GenerarOrdenComponent implements OnInit {
     const ordenData = {
       ...this.ordenEnvioForm.value,
       pedidos: this.pedidosSeleccionados,
-      pedidosMovidos: Array.from(this.pedidosMovidos.entries()).map(([nroPedido, ordenAnterior]) => ({
-        nroPedido,
-        ordenAnterior
-      }))
+      pedidosMovidos: Array.from(this.pedidosMovidos.entries()).map(
+        ([nroPedido, ordenAnterior]) => ({
+          nroPedido,
+          ordenAnterior,
+        }),
+      ),
     };
 
     this.onSave.emit(ordenData);
@@ -330,49 +343,57 @@ export class GenerarOrdenComponent implements OnInit {
   shouldDisplayPedido(pedido: any): boolean {
     return (
       (pedido.transportador === undefined || pedido.transportador === null) &&
-      pedido.formaEntrega === 'Envío a Domicilio' &&
-      !this.pedidosSeleccionados.some(p => p.nroPedido === pedido.nroPedido)
+      pedido.formaEntrega === "Envío a Domicilio" &&
+      !this.pedidosSeleccionados.some((p) => p.nroPedido === pedido.nroPedido)
     );
   }
 
   // Método para facilitar el acceso a propiedades anidadas para la tabla
   getNestedProperty(pedido: any, field: string): any {
     switch (field) {
-      case 'cliente':
-        return pedido.cliente?.nombres_completos ||
+      case "cliente":
+        return (
+          pedido.cliente?.nombres_completos ||
           pedido.cliente?.nombres ||
-          (pedido.cliente ? `${pedido.cliente.nombres || ''} ${pedido.cliente.apellidos || ''}` : 'N/A');
-      case 'ciudad':
-        return pedido.envio?.ciudad || 'N/A';
-      case 'direccionEntrega':
-        return pedido.envio?.direccionEntrega || 'N/A';
-      case 'nroPedido':
-      case 'formaEntrega':
-      case 'horarioEntrega':
-      case 'estadoProceso':
-      case 'faltaPorPagar':
-        return pedido[field] || 'N/A';
+          (pedido.cliente
+            ? `${pedido.cliente.nombres || ""} ${pedido.cliente.apellidos || ""}`
+            : "N/A")
+        );
+      case "ciudad":
+        return pedido.envio?.ciudad || "N/A";
+      case "direccionEntrega":
+        return pedido.envio?.direccionEntrega || "N/A";
+      case "nroPedido":
+      case "formaEntrega":
+      case "horarioEntrega":
+      case "estadoProceso":
+      case "faltaPorPagar":
+        return pedido[field] || "N/A";
       default:
-        return 'N/A';
+        return "N/A";
     }
   }
 
   // Método para actualizar la selección de columnas
   onColumnSelectionChange(): void {
-    this.displayedColumns.forEach(col => {
-      col.visible = this.selectedColumns.some(selected => selected.field === col.field);
+    this.displayedColumns.forEach((col) => {
+      col.visible = this.selectedColumns.some(
+        (selected) => selected.field === col.field,
+      );
     });
     this.updateActionColumnVisible();
   }
 
   // Método para verificar si la columna de acción está visible
   updateActionColumnVisible(): void {
-    this.actionColumnVisible = this.selectedColumns.some(col => col.field === 'accion');
+    this.actionColumnVisible = this.selectedColumns.some(
+      (col) => col.field === "accion",
+    );
   }
 
   // Método para verificar si una columna específica está visible
   isColumnVisible(field: string): boolean {
-    return this.selectedColumns.some(col => col.field === field);
+    return this.selectedColumns.some((col) => col.field === field);
   }
 
   // Método específico para verificar si la columna de acción está visible
@@ -387,26 +408,34 @@ export class GenerarOrdenComponent implements OnInit {
     }
 
     try {
-      const existe = this.ordenesExistentes.some(orden => {
+      const existe = this.ordenesExistentes.some((orden) => {
         // Obtener el número de orden correctamente - maneja múltiples formatos
         const numeroOrden = this.getNumeroOrdenFromObject(orden);
-        
+
         // Excluir la orden actual si estamos en modo edición
-        if (this.isEditMode && String(numeroOrden) === String(this.nroShippingOrder)) {
+        if (
+          this.isEditMode &&
+          String(numeroOrden) === String(this.nroShippingOrder)
+        ) {
           return false;
         }
 
         // Verificar si el pedido está en esta orden - maneja múltiples formatos
         const pedidosOrden = this.getPedidosFromOrden(orden);
         return pedidosOrden.some((p: any) => {
-          const nroPedidoOrden = p.nroPedido || p.numero || p.id || p.orderNumber;
+          const nroPedidoOrden =
+            p.nroPedido || p.numero || p.id || p.orderNumber;
           return String(nroPedidoOrden) === String(pedido.nroPedido);
         });
       });
 
       return existe;
     } catch (error) {
-      console.error('Error verificando si pedido existe en orden:', error, pedido);
+      console.error(
+        "Error verificando si pedido existe en orden:",
+        error,
+        pedido,
+      );
       return false;
     }
   }
@@ -414,55 +443,67 @@ export class GenerarOrdenComponent implements OnInit {
   // Método para obtener el número de orden donde existe el pedido
   getNumeroOrdenPedido(pedido: Pedido): string {
     if (!this.ordenesExistentes || this.ordenesExistentes.length === 0) {
-      return '';
+      return "";
     }
 
     try {
-      const ordenEncontrada = this.ordenesExistentes.find(orden => {
+      const ordenEncontrada = this.ordenesExistentes.find((orden) => {
         // Obtener el número de orden correctamente
         const numeroOrden = this.getNumeroOrdenFromObject(orden);
-        
+
         // Excluir la orden actual si estamos en modo edición
-        if (this.isEditMode && String(numeroOrden) === String(this.nroShippingOrder)) {
+        if (
+          this.isEditMode &&
+          String(numeroOrden) === String(this.nroShippingOrder)
+        ) {
           return false;
         }
 
         // Verificar si el pedido está en esta orden
         const pedidosOrden = this.getPedidosFromOrden(orden);
         return pedidosOrden.some((p: any) => {
-          const nroPedidoOrden = p.nroPedido || p.numero || p.id || p.orderNumber;
+          const nroPedidoOrden =
+            p.nroPedido || p.numero || p.id || p.orderNumber;
           return String(nroPedidoOrden) === String(pedido.nroPedido);
         });
       });
 
-      return ordenEncontrada ? String(this.getNumeroOrdenFromObject(ordenEncontrada)) : '';
+      return ordenEncontrada
+        ? String(this.getNumeroOrdenFromObject(ordenEncontrada))
+        : "";
     } catch (error) {
-      console.error('Error obteniendo número de orden para pedido:', error, pedido);
-      return '';
+      console.error(
+        "Error obteniendo número de orden para pedido:",
+        error,
+        pedido,
+      );
+      return "";
     }
   }
 
   // Método para mover un pedido de una orden existente a la orden actual
   moverPedidoDeOrden(pedido: Pedido): void {
-    if (this.pedidosSeleccionados.some(p => p.nroPedido === pedido.nroPedido)) {
+    if (
+      this.pedidosSeleccionados.some((p) => p.nroPedido === pedido.nroPedido)
+    ) {
       Swal.fire({
-        icon: 'info',
-        title: 'Pedido ya agregado',
-        text: 'Este pedido ya está en la lista de pedidos seleccionados.'
+        icon: "info",
+        title: "Pedido ya agregado",
+        text: "Este pedido ya está en la lista de pedidos seleccionados.",
       });
       return;
     }
 
     const ordenAnterior = this.getNumeroOrdenPedido(pedido);
-    
+
     Swal.fire({
-      title: 'Mover pedido entre órdenes',
+      title: "Mover pedido entre órdenes",
       html: `
         <div class="text-start">
           <p>¿Estás seguro de que deseas mover el pedido <strong>#${pedido.nroPedido}</strong>?</p>
           <p class="text-muted">
             <strong>Desde:</strong> Orden ${ordenAnterior}<br>
-            <strong>Hacia:</strong> ${this.nroShippingOrder ? 'Orden ' + this.nroShippingOrder : 'Nueva orden'}
+            <strong>Hacia:</strong> ${this.nroShippingOrder ? "Orden " + this.nroShippingOrder : "Nueva orden"}
           </p>
           <div class="alert alert-warning mt-3">
             <i class="pi pi-exclamation-triangle me-2"></i>
@@ -470,29 +511,29 @@ export class GenerarOrdenComponent implements OnInit {
           </div>
         </div>
       `,
-      icon: 'question',
+      icon: "question",
       showCancelButton: true,
-      confirmButtonText: 'Sí, mover pedido',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0d6efd'
+      confirmButtonText: "Sí, mover pedido",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#0d6efd",
     }).then((result) => {
       if (result.isConfirmed) {
         // Marcar el pedido como movido
         this.pedidosMovidos.set(pedido.nroPedido, ordenAnterior);
         this.hayPedidosMovidos = true;
-        
+
         // Agregar el pedido a la lista de seleccionados
         this.pedidosSeleccionados.push(pedido);
-        
+
         // Actualizar la lista de pedidos disponibles
         this.actualizarPedidosDisponibles();
-        
+
         Swal.fire({
-          icon: 'success',
-          title: 'Pedido movido',
+          icon: "success",
+          title: "Pedido movido",
           text: `El pedido #${pedido.nroPedido} ha sido movido exitosamente.`,
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
       }
     });
@@ -505,7 +546,7 @@ export class GenerarOrdenComponent implements OnInit {
 
   // Método para obtener la orden anterior de un pedido movido
   getOrdenAnteriorPedido(pedido: Pedido): string {
-    return this.pedidosMovidos.get(pedido.nroPedido) || '';
+    return this.pedidosMovidos.get(pedido.nroPedido) || "";
   }
 
   // Método para contar pedidos movidos
@@ -515,86 +556,99 @@ export class GenerarOrdenComponent implements OnInit {
 
   // Métodos auxiliares para manejar diferentes estructuras de datos
   private getNumeroOrdenFromObject(orden: any): string {
-    return orden.nroShippingOrder || 
-           orden.nroOrden || 
-           orden.numero || 
-           orden.id || 
-           orden.orderNumber || 
-           orden.shippingOrderNumber || 
-           '';
+    return (
+      orden.nroShippingOrder ||
+      orden.nroOrden ||
+      orden.numero ||
+      orden.id ||
+      orden.orderNumber ||
+      orden.shippingOrderNumber ||
+      ""
+    );
   }
 
   private getPedidosFromOrden(orden: any): any[] {
-    return orden.pedidos || 
-           orden.orders || 
-           orden.orderItems || 
-           orden.items || 
-           [];
+    return (
+      orden.pedidos || orden.orders || orden.orderItems || orden.items || []
+    );
   }
-
-
 
   // Método para ver detalles de la orden existente donde está el pedido
   verDetallesOrdenExistente(pedido: Pedido): void {
-    
     const numeroOrden = this.getNumeroOrdenPedido(pedido);
-    
+
     if (!numeroOrden) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo encontrar la orden donde está el pedido.'
+        icon: "error",
+        title: "Error",
+        text: "No se pudo encontrar la orden donde está el pedido.",
       });
       return;
     }
 
-    const ordenEncontrada = this.ordenesExistentes.find(orden => {
+    const ordenEncontrada = this.ordenesExistentes.find((orden) => {
       const numeroOrdenActual = this.getNumeroOrdenFromObject(orden);
       return String(numeroOrdenActual) === String(numeroOrden);
     });
 
     if (!ordenEncontrada) {
-      
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
+        icon: "error",
+        title: "Error",
         html: `
           <div class="text-start">
             <p>No se pudieron cargar los detalles de la orden <strong>${numeroOrden}</strong>.</p>
             <p class="small text-muted">
-              Órdenes disponibles: ${this.ordenesExistentes.map(o => 
-                this.getNumeroOrdenFromObject(o)
-              ).filter(n => n).join(', ') || 'Ninguna'}
+              Órdenes disponibles: ${
+                this.ordenesExistentes
+                  .map((o) => this.getNumeroOrdenFromObject(o))
+                  .filter((n) => n)
+                  .join(", ") || "Ninguna"
+              }
             </p>
           </div>
-        `
+        `,
       });
       return;
     }
 
     const pedidosEnOrden = this.getPedidosFromOrden(ordenEncontrada);
     const totalPedidos = pedidosEnOrden.length;
-    const totalValor = pedidosEnOrden.reduce((sum: number, p: any) => sum + (p.faltaPorPagar || p.valor || p.amount || 0), 0);
+    const totalValor = pedidosEnOrden.reduce(
+      (sum: number, p: any) =>
+        sum + (p.faltaPorPagar || p.valor || p.amount || 0),
+      0,
+    );
 
-    const listaPedidos = pedidosEnOrden.map((p: any) => {
-      const nombreCliente = p.cliente?.nombres_completos || 
-                           p.cliente?.nombres || 
-                           (p.cliente ? `${p.cliente.nombres || ''} ${p.cliente.apellidos || ''}`.trim() : '') ||
-                           p.customerName ||
-                           p.clientName ||
-                           'Sin nombre';
-      
-      const nroPedido = p.nroPedido || p.numero || p.id || p.orderNumber || 'S/N';
-      const valor = p.faltaPorPagar || p.valor || p.amount || 0;
-      
-      return `<li>#${nroPedido} - ${nombreCliente} - ${valor.toLocaleString('es-CO', {style: 'currency', currency: 'COP'})}</li>`;
-    }).join('');
+    const listaPedidos = pedidosEnOrden
+      .map((p: any) => {
+        const nombreCliente =
+          p.cliente?.nombres_completos ||
+          p.cliente?.nombres ||
+          (p.cliente
+            ? `${p.cliente.nombres || ""} ${p.cliente.apellidos || ""}`.trim()
+            : "") ||
+          p.customerName ||
+          p.clientName ||
+          "Sin nombre";
 
-    const fechaOrden = ordenEncontrada.fecha || ordenEncontrada.fechaEnvio || ordenEncontrada.fechaCreacion;
-    const transportadorInfo = ordenEncontrada.transportador || 
-                             ordenEncontrada.metodoEnvio || 
-                             ordenEncontrada.vendor || 
-                             'No asignado';
+        const nroPedido =
+          p.nroPedido || p.numero || p.id || p.orderNumber || "S/N";
+        const valor = p.faltaPorPagar || p.valor || p.amount || 0;
+
+        return `<li>#${nroPedido} - ${nombreCliente} - ${valor.toLocaleString("es-CO", { style: "currency", currency: "COP" })}</li>`;
+      })
+      .join("");
+
+    const fechaOrden =
+      ordenEncontrada.fecha ||
+      ordenEncontrada.fechaEnvio ||
+      ordenEncontrada.fechaCreacion;
+    const transportadorInfo =
+      ordenEncontrada.transportador ||
+      ordenEncontrada.metodoEnvio ||
+      ordenEncontrada.vendor ||
+      "No asignado";
 
     Swal.fire({
       title: `Detalles de la Orden ${numeroOrden}`,
@@ -610,7 +664,7 @@ export class GenerarOrdenComponent implements OnInit {
               <span class="badge bg-info">${totalPedidos}</span>
             </div>
           </div>
-          
+
           <div class="row mb-3">
             <div class="col-6">
               <strong>Transportador/Método:</strong><br>
@@ -618,33 +672,33 @@ export class GenerarOrdenComponent implements OnInit {
             </div>
             <div class="col-6">
               <strong>Valor total:</strong><br>
-              <span class="badge bg-success">${totalValor.toLocaleString('es-CO', {style: 'currency', currency: 'COP'})}</span>
+              <span class="badge bg-success">${totalValor.toLocaleString("es-CO", { style: "currency", currency: "COP" })}</span>
             </div>
           </div>
 
           <div class="mb-3">
             <strong>Fecha:</strong><br>
-            ${fechaOrden ? new Date(fechaOrden).toLocaleDateString('es-CO') : 'No especificada'}
+            ${fechaOrden ? new Date(fechaOrden).toLocaleDateString("es-CO") : "No especificada"}
           </div>
 
           <hr>
-          
+
           <h6>Pedidos en esta orden:</h6>
           <ul class="list-unstyled" style="max-height: 200px; overflow-y: auto;">
-            ${listaPedidos || '<li>No hay pedidos en esta orden</li>'}
+            ${listaPedidos || "<li>No hay pedidos en esta orden</li>"}
           </ul>
         </div>
       `,
-      width: '600px',
-      confirmButtonText: 'Cerrar'
+      width: "600px",
+      confirmButtonText: "Cerrar",
     });
   }
 
   // Método auxiliar para formatear fechas para inputs de tipo date
   private formatDateForInput(dateString: string): string {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   }
 
   // Método para resetear el formulario y limpiar estado
@@ -655,5 +709,205 @@ export class GenerarOrdenComponent implements OnInit {
     this.actualizarPedidosDisponibles();
   }
 
+  // ============= MÉTODOS PARA MODAL DE DETALLES DEL PEDIDO =============
 
-} 
+  verDetallesPedido(pedido: Pedido): void {
+    this.pedidoSeleccionadoDetalle = pedido;
+
+    // Mostrar el modal usando Bootstrap
+    const modalElement = document.getElementById("detallesPedidoModal");
+    if (modalElement) {
+      const modal = new (window as any).bootstrap.Modal(modalElement);
+      modal.show();
+    }
+  }
+
+  cerrarDetallesPedido(): void {
+    this.pedidoSeleccionadoDetalle = null;
+
+    // Ocultar el modal usando Bootstrap
+    const modalElement = document.getElementById("detallesPedidoModal");
+    if (modalElement) {
+      const modal = (window as any).bootstrap.Modal.getInstance(modalElement);
+      if (modal) {
+        modal.hide();
+      }
+    }
+  }
+
+  agregarPedidoDesdeDetalle(): void {
+    if (
+      this.pedidoSeleccionadoDetalle &&
+      !this.pedidoExisteEnOrden(this.pedidoSeleccionadoDetalle)
+    ) {
+      this.agregarPedido(this.pedidoSeleccionadoDetalle);
+      this.cerrarDetallesPedido();
+    }
+  }
+
+  // Métodos para obtener información del pedido
+  getProductosCount(): number {
+    return this.pedidoSeleccionadoDetalle?.carrito?.length || 0;
+  }
+
+  getProductImage(item: any): string {
+    return (
+      item.producto?.crearProducto?.imagenes?.[0]?.url ||
+      item.producto?.imagenes?.[0]?.url ||
+      ""
+    );
+  }
+
+  getProductTitle(item: any): string {
+    return (
+      item.producto?.crearProducto?.titulo ||
+      item.producto?.titulo ||
+      item.producto?.nombre ||
+      "Producto sin título"
+    );
+  }
+
+  getProductReference(item: any): string {
+    return (
+      item.producto?.identificacion?.referencia ||
+      item.producto?.referencia ||
+      "Sin referencia"
+    );
+  }
+
+  getProductVariations(item: any): string {
+    const configuracion = item.configuracion;
+    if (!configuracion) return "";
+
+    const variations = [];
+
+    if (configuracion.color) {
+      variations.push(`Color: ${configuracion.color}`);
+    }
+    if (configuracion.talla) {
+      variations.push(`Talla: ${configuracion.talla}`);
+    }
+    if (configuracion.material) {
+      variations.push(`Material: ${configuracion.material}`);
+    }
+
+    return variations.join(", ");
+  }
+
+  getProductPrice(item: any): number {
+    return (
+      item.precio ||
+      item.producto?.precio ||
+      item.producto?.crearProducto?.precio ||
+      0
+    );
+  }
+
+  getProductSubtotal(item: any): number {
+    const precio = this.getProductPrice(item);
+    const cantidad = item.cantidad || 1;
+    return precio * cantidad;
+  }
+
+  getProductsTotalValue(): number {
+    if (!this.pedidoSeleccionadoDetalle?.carrito) return 0;
+
+    return this.pedidoSeleccionadoDetalle.carrito.reduce((total, item) => {
+      return total + this.getProductSubtotal(item);
+    }, 0);
+  }
+
+  getDeliveryRecipient(): string {
+    const envio = this.pedidoSeleccionadoDetalle?.envio;
+    if (!envio) return "N/A";
+
+    const nombres = envio.nombres || "";
+    const apellidos = envio.apellidos || "";
+
+    if (nombres || apellidos) {
+      return `${nombres} ${apellidos}`.trim();
+    }
+
+    // Fallback al cliente
+    const cliente = this.pedidoSeleccionadoDetalle?.cliente;
+    return cliente?.nombres_completos || cliente?.apellidos_completos || "N/A";
+  }
+
+  getDeliveryPhone(): string {
+    const envio = this.pedidoSeleccionadoDetalle?.envio;
+    return (
+      envio?.celular ||
+      envio?.otroNumero ||
+      this.pedidoSeleccionadoDetalle?.cliente?.numero_celular_comprador ||
+      "N/A"
+    );
+  }
+
+  getFullAddress(): string {
+    const envio = this.pedidoSeleccionadoDetalle?.envio;
+    if (!envio) return "N/A";
+
+    const addressParts = [
+      envio.direccionEntrega,
+      envio.nombreUnidad,
+      envio.especificacionesInternas,
+      envio.barrio,
+    ].filter((part) => part && part.trim());
+
+    return addressParts.length > 0 ? addressParts.join(", ") : "N/A";
+  }
+
+  getEstadoProcesoClass(estado: string): string {
+    switch (estado) {
+      case "SinProducir":
+        return "bg-secondary";
+      case "ProducidoTotalmente":
+      case "Producido":
+        return "bg-info";
+      case "Empacado":
+        return "bg-warning text-dark";
+      case "Despachado":
+        return "bg-primary";
+      case "Entregado":
+        return "bg-success";
+      case "Rechazado":
+        return "bg-danger";
+      default:
+        return "bg-light text-dark";
+    }
+  }
+
+  getEstadoPagoClass(estado: string): string {
+    switch (estado) {
+      case "Pendiente":
+        return "bg-warning text-dark";
+      case "PreAprobado":
+        return "bg-info";
+      case "Aprobado":
+        return "bg-success";
+      case "Rechazado":
+        return "bg-danger";
+      case "Cancelado":
+        return "bg-secondary";
+      default:
+        return "bg-light text-dark";
+    }
+  }
+
+  formatDate(dateString: string): string {
+    if (!dateString) return "N/A";
+
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("es-CO", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      return "Fecha inválida";
+    }
+  }
+}
