@@ -341,8 +341,9 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
    * @param datosEntreg Los datos de entrega a guardar
    */
   private procederConGuardado(datosEntreg: any) {
-    this.datosEntregas = [];
-    this.datosEntregas.push(datosEntreg);
+    // Preparar array temporal con todas las direcciones
+    const todasLasDirecciones = [];
+    todasLasDirecciones.push(datosEntreg);
 
     let data = {
       documento: "",
@@ -358,47 +359,78 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     }
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
+      // Agregar las direcciones existentes del backend
       res.datosEntrega.map((x) => {
-        this.datosEntregas.push(x);
+        todasLasDirecciones.push(x);
       });
+
+      // Actualizar el formulario con todas las direcciones
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         res.datosFacturacionElectronica,
       );
-      this.formulario.controls["datosEntrega"].setValue(this.datosEntregas);
+      this.formulario.controls["datosEntrega"].setValue(todasLasDirecciones);
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
+
       this.service.editClient(this.formulario.value).subscribe((r) => {
-        this.datosEntregas = this.datosEntregas.filter((x) => {
+        // Actualizar el array principal con todas las direcciones (sin filtrar)
+        this.datosEntregas = [...todasLasDirecciones];
+
+        // Notificar al componente padre sobre la actualización
+        this.notificarActualizacionDatos();
+
+        // Verificar si hay direcciones para la ciudad seleccionada
+        const direccionesCiudadSeleccionada = this.datosEntregas.filter((x) => {
           return x.ciudad == (this.pedidoGral?.envio?.ciudad || "");
         });
 
-        if (this.datosEntregas.length == 0) {
+        if (direccionesCiudadSeleccionada.length == 0) {
           this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-          //informar al usuario que no se encontraron datos de entrega para la ciudad seleccionada
+          // Mostrar todas las direcciones disponibles
           Swal.fire({
-            title: "Advertencia!",
-            text:
-              "Se guardo éxito, pero recuerda que debes tener una dirección de entrega para la ciudad seleccionada (" +
-              (this.pedidoGral?.envio?.ciudad || "seleccionada") +
-              ") y posiblemente la que se creo no se vea reflejada en la lista de direcciones de entrega.",
-            icon: "warning",
+            title: "¡Dirección guardada!",
+            html: `
+              <div class="text-start">
+                <p>La dirección se ha guardado exitosamente.</p>
+                <div class="alert alert-info mt-3">
+                  <i class="fa fa-info-circle me-2"></i>
+                  <strong>Nota:</strong> La dirección creada es para "${datosEntreg.ciudad}"
+                  pero la ciudad seleccionada en el pedido es "${this.pedidoGral?.envio?.ciudad || "ninguna"}".
+                  <br><br>
+                  Puedes seleccionar esta dirección o cambiar la ciudad del pedido si es necesario.
+                </div>
+              </div>
+            `,
+            icon: "success",
             confirmButtonText: "Ok",
           });
         } else {
+          this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
           Swal.fire({
-            title: "Guardado!",
-            text: "Guardado con exito",
+            title: "¡Dirección guardada!",
+            text: "La dirección se ha creado exitosamente y está disponible para seleccionar.",
             icon: "success",
             confirmButtonText: "Ok",
             timer: 2000,
+            timerProgressBar: true,
           });
-
-          this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
         }
 
         this.limpiarFormularioEntrega();
       });
     });
+  }
+
+  /**
+   * Notifica al componente padre sobre cambios en los datos de entrega
+   */
+  private notificarActualizacionDatos() {
+    // Emitir evento para que el componente padre actualice sus datos
+    if (this.pedidoGral && this.overridePedido) {
+      // Crear una copia del pedido para forzar detección de cambios
+      const pedidoActualizado = { ...this.pedidoGral };
+      this.overridePedido.emit(pedidoActualizado);
+    }
   }
 
   /**
@@ -424,19 +456,72 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   }
 
   seleccionarDireccionEntrega(index) {
-    this.pedidoGral.envio = this.datosEntregas[index];
+    // Validar que el índice sea válido
+    if (index < 0 || index >= this.datosEntregas.length) {
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo seleccionar la dirección. Por favor, intente nuevamente.",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    const direccionSeleccionada = this.datosEntregas[index];
+
+    // Actualizar el pedido con la dirección seleccionada
+    this.pedidoGral.envio = { ...direccionSeleccionada };
     this.pedidoGral = { ...this.pedidoGral };
+
+    // Mostrar información detallada de la dirección seleccionada
     Swal.fire({
-      title: "Direccion Seleccionada!",
-      text: this.datosEntregas[index].direccionEntrega,
+      title: "¡Dirección Seleccionada!",
+      html: `
+        <div class="text-start">
+          <div class="alert alert-success">
+            <i class="fa fa-check-circle me-2"></i>
+            <strong>Dirección:</strong> ${direccionSeleccionada.direccionEntrega}
+          </div>
+          <div class="row mt-3">
+            <div class="col-6">
+              <small class="text-muted">Destinatario:</small><br>
+              <strong>${direccionSeleccionada.nombres} ${direccionSeleccionada.apellidos || ""}</strong>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Ciudad:</small><br>
+              <strong>${direccionSeleccionada.ciudad}</strong>
+            </div>
+          </div>
+          ${
+            direccionSeleccionada.observaciones
+              ? `
+            <div class="mt-2">
+              <small class="text-muted">Observaciones:</small><br>
+              <em>${direccionSeleccionada.observaciones}</em>
+            </div>
+          `
+              : ""
+          }
+        </div>
+      `,
       icon: "success",
-      confirmButtonText: "Ok",
+      confirmButtonText: "Continuar",
+      timer: 3000,
+      timerProgressBar: true,
     });
 
+    // Notificar al componente padre sobre la selección
     if (this.isEdit) {
       this.modalService.dismissAll();
     } else {
       this.overridePedido.emit(this.pedidoGral);
+    }
+
+    // Cambiar a la siguiente pestaña automáticamente si estamos en el tab de direcciones
+    if (this.activeIndex === 0) {
+      setTimeout(() => {
+        this.activeIndex = 1; // Cambiar al tab de crear dirección por si necesita modificaciones
+      }, 3000);
     }
   }
   editarDatosEntrega() {

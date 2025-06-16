@@ -1735,65 +1735,7 @@ export class CrearVentasComponent
         this.documentoBuscar = this.pedidoGral.cliente.documento;
 
         // Verificar si se necesitan cargar datos de entrega
-        this.service
-          .getClientByDocument({ documento: this.documentoBuscar })
-          .subscribe({
-            next: (res: any) => {
-              if (res && res.datosEntrega && res.datosEntrega.length > 0) {
-                // Guardar todos los datos de entrega originales
-                this.originalDataEntregas = this.utils.deepClone(
-                  res.datosEntrega,
-                );
-
-                // Si no hay ciudad seleccionada, mostrar todas las direcciones
-                if (!this.selectedCity || this.selectedCity === "") {
-                  this.datosEntregas = this.utils.deepClone(
-                    this.originalDataEntregas,
-                  );
-                  this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
-                } else {
-                  // Si hay ciudad seleccionada, filtrar por esa ciudad
-                  const direccionesFiltradas = this.originalDataEntregas.filter(
-                    (x) => x.ciudad === this.selectedCity,
-                  );
-                  if (direccionesFiltradas.length > 0) {
-                    this.datosEntregas = direccionesFiltradas;
-                    this.datosEntregaNoEncontradosParaCiudadSeleccionada =
-                      false;
-                  } else {
-                    // Si no hay direcciones para la ciudad seleccionada, mostrar un mensaje informativo
-                    this.datosEntregas = this.utils.deepClone(
-                      this.originalDataEntregas,
-                    );
-                    this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-
-                    // Mostrar mensaje informativo solo en el paso de envío
-                    this.toastrService.info(
-                      `No se encontraron direcciones registradas para ${this.selectedCity}. Puede usar una dirección existente o crear una nueva.`,
-                      "Información de Entrega",
-                      {
-                        closeButton: true,
-                        timeOut: 5000,
-                        positionClass: "toast-bottom-right",
-                      },
-                    );
-                  }
-                }
-                this.ref.detectChanges();
-              } else {
-                this.originalDataEntregas = [];
-                this.datosEntregas = [];
-                this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-                this.ref.detectChanges();
-              }
-            },
-            error: (err) => {
-              this.originalDataEntregas = [];
-              this.datosEntregas = [];
-              this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-              this.ref.detectChanges();
-            },
-          });
+        this.cargarDatosEntregaCliente();
       }
     }
 
@@ -1898,53 +1840,8 @@ export class CrearVentasComponent
         this.documentoBuscar = this.pedidoGral.cliente.documento;
 
         // Siempre cargar los datos de entrega actualizados para asegurar que estén disponibles
-        this.service
-          .getClientByDocument({ documento: this.documentoBuscar })
-          .subscribe({
-            next: (res: any) => {
-              if (res && res.datosEntrega && res.datosEntrega.length > 0) {
-                // Guardar todos los datos originales primero
-                this.originalDataEntregas = this.utils.deepClone(
-                  res.datosEntrega,
-                );
-
-                // Si no hay ciudad seleccionada, mostrar todas las direcciones
-                if (!this.selectedCity || this.selectedCity === "") {
-                  this.datosEntregas = this.utils.deepClone(
-                    this.originalDataEntregas,
-                  );
-                  this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
-                } else {
-                  // Si hay ciudad seleccionada, filtrar por esa ciudad
-                  const filtradas = this.originalDataEntregas.filter(
-                    (x) => x.ciudad === this.selectedCity,
-                  );
-                  if (filtradas.length > 0) {
-                    this.datosEntregas = filtradas;
-                    this.datosEntregaNoEncontradosParaCiudadSeleccionada =
-                      false;
-                  } else {
-                    // No hay direcciones para esta ciudad específica
-                    this.datosEntregas = this.utils.deepClone(
-                      this.originalDataEntregas,
-                    ); // Mostrar todas las direcciones igualmente
-                    this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-                  }
-                }
-              } else {
-                this.originalDataEntregas = [];
-                this.datosEntregas = [];
-                this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-              }
-              this.ref.detectChanges();
-            },
-            error: (err) => {
-              this.originalDataEntregas = [];
-              this.datosEntregas = [];
-              this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-              this.ref.detectChanges();
-            },
-          });
+        // Verificar si se necesitan cargar datos de entrega
+        this.cargarDatosEntregaCliente();
       }
     }
 
@@ -2287,6 +2184,12 @@ export class CrearVentasComponent
   overridePedido(event: Pedido) {
     this.pedidoGral = event;
     console.log(this.pedidoGral);
+
+    // Recargar datos de entrega cuando se actualiza el pedido
+    if (this.pedidoGral?.cliente?.documento) {
+      this.documentoBuscar = this.pedidoGral.cliente.documento;
+      this.cargarDatosEntregaCliente();
+    }
 
     // Usar operadores de acceso seguro para evitar errores
     if (
@@ -2953,6 +2856,88 @@ export class CrearVentasComponent
         );
       }
     });
+  }
+
+  /**
+   * Carga los datos de entrega del cliente y maneja el filtrado por ciudad
+   */
+  private cargarDatosEntregaCliente(): void {
+    if (!this.documentoBuscar) return;
+
+    this.service
+      .getClientByDocument({ documento: this.documentoBuscar })
+      .subscribe({
+        next: (res: any) => {
+          this.procesarDatosEntregaCliente(res);
+        },
+        error: (err) => {
+          this.originalDataEntregas = [];
+          this.datosEntregas = [];
+          this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+          this.ref.detectChanges();
+        },
+      });
+  }
+
+  /**
+   * Procesa los datos de entrega del cliente y aplica filtros
+   */
+  private procesarDatosEntregaCliente(res: any): void {
+    if (res && res.datosEntrega && res.datosEntrega.length > 0) {
+      // Guardar todos los datos de entrega originales
+      this.originalDataEntregas = this.utils.deepClone(res.datosEntrega);
+
+      // Aplicar filtro por ciudad si está seleccionada
+      this.aplicarFiltroCiudadEntrega();
+    } else {
+      this.originalDataEntregas = [];
+      this.datosEntregas = [];
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+    }
+    this.ref.detectChanges();
+  }
+
+  /**
+   * Aplica el filtro de ciudad a las direcciones de entrega
+   */
+  private aplicarFiltroCiudadEntrega(): void {
+    if (!this.originalDataEntregas || this.originalDataEntregas.length === 0) {
+      this.datosEntregas = [];
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+      return;
+    }
+
+    // Si no hay ciudad seleccionada, mostrar todas las direcciones
+    if (!this.selectedCity || this.selectedCity === "") {
+      this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+      return;
+    }
+
+    // Filtrar por ciudad seleccionada
+    const direccionesFiltradas = this.originalDataEntregas.filter(
+      (x) => x.ciudad === this.selectedCity,
+    );
+
+    if (direccionesFiltradas.length > 0) {
+      this.datosEntregas = direccionesFiltradas;
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+    } else {
+      // Si no hay direcciones para la ciudad seleccionada, mostrar todas
+      this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
+
+      // Mostrar mensaje informativo
+      this.toastrService.info(
+        `No se encontraron direcciones registradas para ${this.selectedCity}. Se muestran todas las direcciones disponibles.`,
+        "Información de Entrega",
+        {
+          closeButton: true,
+          timeOut: 5000,
+          positionClass: "toast-bottom-right",
+        },
+      );
+    }
   }
 
   ngOnDestroy(): void {
