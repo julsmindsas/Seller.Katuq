@@ -1435,11 +1435,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   cambiarEstadoPago(order: Pedido) {
-    // this.editOrder(order);
-    // if(order.estadoPago=='PreAprobado'){
-    //   order.preAprobadoManual=true
-    // }
+    // Marcar como calculado en frontend para evitar recálculo automático
+    (order as any)._estadoCalculadoEnFrontend = true;
+
+    // Si se marca como PreAprobado manualmente, establecer la bandera
+    if (order.estadoPago === "PreAprobado") {
+      (order as any).preAprobadoManual = true;
+    }
+
+    // Actualizar el pedido
+    this.editOrder(order);
+
+    // Cerrar el modal
     this.modalService.dismissAll();
+
+    // Mostrar mensaje de confirmación
+    Swal.fire({
+      icon: "success",
+      title: "Estado de pago actualizado",
+      text: `El estado se cambió a: ${order.estadoPago}`,
+      showConfirmButton: false,
+      timer: 1500,
+    });
   }
 
   confProductToCart(content, carritoConfiguracion: Carrito, order: Pedido) {

@@ -1,17 +1,17 @@
 // Variables
-$primary-color: #2196F3;
-$success-color: #4CAF50;
-$warning-color: #FFC107;
-$danger-color: #F44336;
-$info-color: #03A9F4;
-$secondary-color: #78909C;
+$primary-color: #2196f3;
+$success-color: #4caf50;
+$warning-color: #ffc107;
+$danger-color: #f44336;
+$info-color: #03a9f4;
+$secondary-color: #78909c;
 $border-radius: 8px;
 
 // ESTILOS MODERNOS PARA LA TABLA CON COLUMNAS FIJAS
 :host ::ng-deep .p-datatable {
   width: 100%;
   table-layout: fixed;
-  
+
   .p-datatable-thead > tr > th,
   .p-datatable-tbody > tr > td,
   .p-datatable-tfoot > tr > td {
@@ -19,32 +19,80 @@ $border-radius: 8px;
     text-overflow: ellipsis;
     white-space: nowrap;
     padding: 0.75rem 0.5rem !important;
-    
+
     // Anchos específicos para cada columna
-    &:nth-child(1) { width: 5%; min-width: 60px; }   // Detalles
-    &:nth-child(2) { width: 8%; min-width: 100px; }  // # Pedido
-    &:nth-child(3) { width: 8%; min-width: 100px; }  // Fecha Entrega
-    &:nth-child(4) { width: 7%; min-width: 80px; }   // Opciones
-    &:nth-child(5) { width: 10%; min-width: 120px; } // Estado Pago
-    &:nth-child(6) { width: 10%; min-width: 120px; } // Estado Proceso
-    &:nth-child(7) { width: 6%; min-width: 70px; }   // Validación
-    &:nth-child(8) { width: 12%; min-width: 150px; } // Cliente
-    &:nth-child(9) { width: 8%; min-width: 100px; }  // Valor Bruto
-    &:nth-child(10) { width: 7%; min-width: 90px; }  // Descuento
-    &:nth-child(11) { width: 7%; min-width: 90px; }  // Domicilio
-    &:nth-child(12) { width: 7%; min-width: 90px; }  // Subtotal
-    &:nth-child(13) { width: 6%; min-width: 80px; }  // IVA
-    &:nth-child(14) { width: 8%; min-width: 100px; } // Total
-    &:nth-child(15) { width: 7%; min-width: 90px; }  // Anticipo
-    &:nth-child(16) { width: 8%; min-width: 100px; } // Falta por Pagar
+    &:nth-child(1) {
+      width: 5%;
+      min-width: 60px;
+    } // Detalles
+    &:nth-child(2) {
+      width: 8%;
+      min-width: 100px;
+    } // # Pedido
+    &:nth-child(3) {
+      width: 8%;
+      min-width: 100px;
+    } // Fecha Entrega
+    &:nth-child(4) {
+      width: 7%;
+      min-width: 80px;
+    } // Opciones
+    &:nth-child(5) {
+      width: 10%;
+      min-width: 120px;
+    } // Estado Pago
+    &:nth-child(6) {
+      width: 10%;
+      min-width: 120px;
+    } // Estado Proceso
+    &:nth-child(7) {
+      width: 6%;
+      min-width: 70px;
+    } // Validación
+    &:nth-child(8) {
+      width: 12%;
+      min-width: 150px;
+    } // Cliente
+    &:nth-child(9) {
+      width: 8%;
+      min-width: 100px;
+    } // Valor Bruto
+    &:nth-child(10) {
+      width: 7%;
+      min-width: 90px;
+    } // Descuento
+    &:nth-child(11) {
+      width: 7%;
+      min-width: 90px;
+    } // Domicilio
+    &:nth-child(12) {
+      width: 7%;
+      min-width: 90px;
+    } // Subtotal
+    &:nth-child(13) {
+      width: 6%;
+      min-width: 80px;
+    } // IVA
+    &:nth-child(14) {
+      width: 8%;
+      min-width: 100px;
+    } // Total
+    &:nth-child(15) {
+      width: 7%;
+      min-width: 90px;
+    } // Anticipo
+    &:nth-child(16) {
+      width: 8%;
+      min-width: 100px;
+    } // Falta por Pagar
   }
-  
+
   .p-datatable-header {
     padding: 0.5rem;
     background-color: white;
     border-bottom: 1px solid #f0f0f0;
   }
-  
+
   .p-datatable-thead > tr > th {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border: none !important;
@@ -58,14 +106,12 @@ $border-radius: 8px;
     position: sticky;
     top: 0;
     z-index: 10;
-    
+
     .p-column-filter {
       margin-left: 0.5rem;
     }
-    
-
   }
-  
+
   .p-datatable-tbody > tr {
     td {
       border: none !important;
@@ -74,10 +120,10 @@ $border-radius: 8px;
       font-size: 0.85rem;
       color: #666;
       padding: 0.5rem;
-      
+
       .p-button-text {
         padding: 0.375rem;
-        
+
         &:focus {
           box-shadow: none;
         }
@@ -91,23 +137,23 @@ $border-radius: 8px;
       z-index: 1000;
     }
   }
-  
+
   .p-row-toggler {
     width: 2rem;
     height: 2rem;
-    
+
     &.p-link:focus {
       box-shadow: none;
     }
   }
-  
+
   .p-rowexpansion-content {
     background-color: #f9f9f9;
-    box-shadow: inset 0 3px 6px rgba(0,0,0,0.05);
-    
+    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.05);
+
     .expanded-table {
       box-shadow: none;
-      
+
       .p-datatable-thead > tr > th {
         background-color: #f8f9fa;
         font-size: 0.8rem;
@@ -115,7 +161,7 @@ $border-radius: 8px;
         color: #495057;
         border-bottom: 1px solid #dee2e6;
       }
-      
+
       .p-datatable-tbody > tr > td {
         font-size: 0.8rem;
         padding: 0.5rem 0.6rem;
@@ -140,24 +186,29 @@ $border-radius: 8px;
   position: relative;
   overflow: hidden;
   cursor: default;
-  
+
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
     transition: left 0.5s;
   }
-  
+
   &:hover::before {
     left: 100%;
   }
-  
+
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 2px;
     right: 2px;
@@ -168,80 +219,80 @@ $border-radius: 8px;
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  
+
   &:hover::after {
     opacity: 1;
     animation: pulse 1.5s infinite;
   }
-  
+
   .status-icon {
     font-size: 0.6rem;
     margin-right: 0.2rem;
     animation: pulse 2s infinite;
     flex-shrink: 0;
   }
-  
+
   // Estados de Pago
   &.badge-success {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;
     border: 2px solid rgba(40, 167, 69, 0.3);
-    
+
     .status-icon {
       color: rgba(255, 255, 255, 0.9);
     }
   }
-  
+
   &.badge-warning {
     background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
     color: #212529;
     border: 2px solid rgba(255, 193, 7, 0.3);
-    
+
     .status-icon {
       color: rgba(33, 37, 41, 0.8);
     }
   }
-  
+
   &.badge-danger {
     background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
     color: white;
     border: 2px solid rgba(220, 53, 69, 0.3);
-    
+
     .status-icon {
       color: rgba(255, 255, 255, 0.9);
     }
   }
-  
+
   &.badge-info {
     background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%);
     color: white;
     border: 2px solid rgba(23, 162, 184, 0.3);
-    
+
     .status-icon {
       color: rgba(255, 255, 255, 0.9);
     }
   }
-  
+
   &.badge-primary {
     background: linear-gradient(135deg, $primary-color 0%, #6610f2 100%);
     color: white;
     border: 2px solid rgba($primary-color, 0.3);
-    
+
     .status-icon {
       color: rgba(255, 255, 255, 0.9);
     }
   }
-  
+
   &.badge-secondary {
     background: linear-gradient(135deg, #6c757d 0%, #95a5a6 100%);
     color: white;
     border: 2px solid rgba(108, 117, 125, 0.3);
-    
+
     .status-icon {
       color: rgba(255, 255, 255, 0.9);
     }
   }
-  
+
   // Badge especial para validación
   &.validation-badge {
     padding: 0.3rem 0.6rem;
@@ -252,12 +303,16 @@ $border-radius: 8px;
 // ESTILOS PARA CELDAS ESPECÍFICAS
 .pedido-number-cell {
   text-align: center !important;
-  
+
   .pedido-number {
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     font-weight: 600;
     color: $primary-color;
-    background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($primary-color, 0.05) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba($primary-color, 0.1) 0%,
+      rgba($primary-color, 0.05) 100%
+    );
     padding: 0.25rem 0.5rem;
     border-radius: 6px;
     border: 1px solid rgba($primary-color, 0.2);
@@ -268,7 +323,7 @@ $border-radius: 8px;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-    
+
     &:hover {
       box-shadow: 0 2px 6px rgba($primary-color, 0.2);
       transform: translateY(-1px);
@@ -281,10 +336,10 @@ $border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 500;
   position: relative;
-  
+
   &::before {
-    content: '\e93c';
-    font-family: 'primeicons';
+    content: "\e93c";
+    font-family: "primeicons";
     font-size: 0.7rem;
     color: $info-color;
     margin-right: 0.5rem;
@@ -307,20 +362,20 @@ $border-radius: 8px;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     max-width: 100%;
-    
+
     &::before {
-      content: '\e923';
-      font-family: 'primeicons';
+      content: "\e923";
+      font-family: "primeicons";
       font-size: 0.6rem;
       color: #6c757d;
       margin-right: 0.3rem;
       transition: color 0.2s ease;
     }
-    
+
     &:hover {
       background: rgba($primary-color, 0.05);
       color: $primary-color;
-      
+
       &::before {
         color: $primary-color;
       }
@@ -330,21 +385,25 @@ $border-radius: 8px;
 
 .money-cell {
   font-weight: 600 !important;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: #495057;
   text-align: right !important;
   transition: all 0.2s ease;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  
+
   &:hover {
     color: $success-color;
   }
-  
+
   &.total-cell {
     .total-amount {
-      background: linear-gradient(135deg, rgba($success-color, 0.15) 0%, rgba($success-color, 0.08) 100%);
+      background: linear-gradient(
+        135deg,
+        rgba($success-color, 0.15) 0%,
+        rgba($success-color, 0.08) 100%
+      );
       padding: 0.3rem 0.6rem;
       border-radius: 6px;
       border: 1px solid rgba($success-color, 0.3);
@@ -356,22 +415,27 @@ $border-radius: 8px;
       position: relative;
       overflow: hidden;
       font-size: 0.9rem;
-      
+
       &::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
         transition: left 0.4s ease;
       }
-      
+
       &:hover::before {
         left: 100%;
       }
-      
+
       &:hover {
         box-shadow: 0 4px 12px rgba($success-color, 0.25);
         transform: translateY(-1px);
@@ -383,7 +447,7 @@ $border-radius: 8px;
 .estado-cell {
   text-align: center !important;
   vertical-align: middle !important;
-  
+
   .modern-badge {
     display: inline-flex;
     align-items: center;
@@ -394,7 +458,7 @@ $border-radius: 8px;
     margin: 0 auto;
     font-size: 0.7rem;
     padding: 0.3rem 0.5rem;
-    
+
     .status-icon {
       margin-right: 0.2rem;
       font-size: 0.6rem;
@@ -446,8 +510,10 @@ $border-radius: 8px;
   .form-control {
     border-radius: 6px;
     border: 1px solid #ced4da;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    
+    transition:
+      border-color 0.15s ease-in-out,
+      box-shadow 0.15s ease-in-out;
+
     &:focus {
       border-color: $primary-color;
       box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
@@ -460,42 +526,42 @@ $border-radius: 8px;
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
   border-radius: 6px;
-  
+
   &.btn-primary {
     background-color: $primary-color;
     border-color: $primary-color;
-    
+
     &:hover {
       background-color: darken($primary-color, 10%);
       border-color: darken($primary-color, 10%);
     }
   }
-  
+
   &.btn-secondary {
     background-color: $secondary-color;
     border-color: $secondary-color;
-    
+
     &:hover {
       background-color: darken($secondary-color, 10%);
       border-color: darken($secondary-color, 10%);
     }
   }
-  
+
   &.btn-success {
     background-color: $success-color;
     border-color: $success-color;
-    
+
     &:hover {
       background-color: darken($success-color, 10%);
       border-color: darken($success-color, 10%);
     }
   }
-  
+
   &.btn-tertiary {
     background-color: #6c757d;
     border-color: #6c757d;
     color: white;
-    
+
     &:hover {
       background-color: darken(#6c757d, 10%);
       border-color: darken(#6c757d, 10%);
@@ -586,7 +652,7 @@ $border-radius: 8px;
   background-color: $primary-color;
   border-color: $primary-color;
   border-radius: 6px;
-  
+
   &:hover {
     background-color: darken($primary-color, 10%);
     border-color: darken($primary-color, 10%);
@@ -618,7 +684,7 @@ $border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.2s;
-  
+
   &:hover {
     background-color: darken($primary-color, 15%);
   }
@@ -657,7 +723,7 @@ $border-radius: 8px;
   border: 1px solid #ddd;
   border-radius: 6px 6px 0 0;
   transition: background-color 0.2s;
-  
+
   &:hover {
     background: #e9ecef;
   }
@@ -676,12 +742,12 @@ $border-radius: 8px;
   animation: fadeIn 0.5s ease-in-out;
 }
 
-.tabs input:checked+label {
+.tabs input:checked + label {
   background: #fff;
   border-bottom: 1px solid #fff;
 }
 
-.tabs input:checked+label+.content section {
+.tabs input:checked + label + .content section {
   display: block;
 }
 
@@ -747,7 +813,7 @@ $border-radius: 8px;
 }
 
 // Responsive para acciones en móvil
-@media(max-width: 480px) {
+@media (max-width: 480px) {
   .actions-mb {
     display: block;
   }
@@ -760,7 +826,7 @@ $border-radius: 8px;
 // Menú desplegable mejorado (tres puntos)
 .hover-container {
   display: inline-block;
-  
+
   .btn-hover {
     display: inline-flex;
     align-items: center;
@@ -773,18 +839,18 @@ $border-radius: 8px;
     cursor: pointer;
     position: relative;
     z-index: 1002 !important;
-    
+
     &:hover {
       background-color: #f8f9fa;
       border-color: #ced4da;
     }
-    
+
     .icon-more-alt {
       font-size: 1rem;
       color: #6c757d;
     }
   }
-  
+
   .list-actions {
     position: fixed;
     width: 200px;
@@ -796,11 +862,11 @@ $border-radius: 8px;
     z-index: 9999;
     display: none;
     border: 1px solid #e9ecef;
-    
+
     &.popup {
       display: none;
     }
-    
+
     li {
       padding: 0.6rem 1rem;
       cursor: pointer;
@@ -808,11 +874,11 @@ $border-radius: 8px;
       display: flex;
       align-items: center;
       border: none;
-      
+
       &:hover {
         background-color: rgba(0, 123, 255, 0.08);
       }
-      
+
       i {
         margin-right: 0.75rem;
         font-size: 0.9rem;
@@ -820,7 +886,7 @@ $border-radius: 8px;
         text-align: center;
         color: #6c757d;
       }
-      
+
       span {
         color: #212529;
         font-weight: 400;
@@ -829,7 +895,7 @@ $border-radius: 8px;
       &.disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        
+
         &:hover {
           background-color: transparent;
         }
@@ -859,12 +925,12 @@ $border-radius: 8px;
 }
 
 // Estilos para filtros de columna mejorados
-:host ::ng-deep .p-column-filter-menu-button, 
+:host ::ng-deep .p-column-filter-menu-button,
 :host ::ng-deep .p-column-filter-clear-button {
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 4px;
-  
+
   .pi {
     font-size: 0.75rem;
   }
@@ -875,22 +941,22 @@ $border-radius: 8px;
   background-color: #f8f9fa;
   border-top: 1px solid #e9ecef;
   padding: 0.75rem 1rem;
-  
+
   .p-paginator-pages .p-paginator-page {
     min-width: 2.5rem;
     height: 2.5rem;
     border-radius: 4px;
     margin: 0 0.125rem;
-    
+
     &.p-highlight {
       background-color: $primary-color;
       border-color: $primary-color;
     }
   }
-  
-  .p-paginator-first, 
-  .p-paginator-prev, 
-  .p-paginator-next, 
+
+  .p-paginator-first,
+  .p-paginator-prev,
+  .p-paginator-next,
   .p-paginator-last {
     min-width: 2.5rem;
     height: 2.5rem;
@@ -903,11 +969,11 @@ $border-radius: 8px;
 :host ::ng-deep .p-multiselect-panel .p-multiselect-items .p-multiselect-item {
   font-size: 0.85rem;
   padding: 0.5rem 0.75rem;
-  
+
   &:hover {
     background-color: rgba($primary-color, 0.08);
   }
-  
+
   &.p-highlight {
     background-color: $primary-color;
   }
@@ -942,7 +1008,7 @@ $border-radius: 8px;
   border: none;
   border-radius: $border-radius;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  
+
   .card-body {
     padding: 1.5rem;
   }
@@ -977,21 +1043,21 @@ $border-radius: 8px;
   border: 1px solid #e9ecef;
   margin-bottom: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  
+
   .filters-compact-header {
     padding: 1rem;
     border-bottom: 1px solid #f0f0f0;
-    
+
     .filter-toggle-section {
       display: flex;
       align-items: center;
       transition: all 0.2s ease;
-      
+
       &:hover {
         color: $primary-color;
       }
     }
-    
+
     .quick-actions {
       .header-quick-filters {
         .shortcuts-label {
@@ -999,17 +1065,17 @@ $border-radius: 8px;
           color: #6c757d;
           font-weight: 500;
         }
-        
+
         .shortcuts-group {
           gap: 0.25rem;
-          
+
           .shortcut-btn {
             padding: 0.3rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
             border: 1px solid #dee2e6;
             transition: all 0.2s ease;
-            
+
             &:hover {
               transform: translateY(-1px);
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -1017,22 +1083,22 @@ $border-radius: 8px;
           }
         }
       }
-      
+
       .vertical-separator {
         width: 1px;
         height: 2rem;
         background-color: #dee2e6;
       }
-      
+
       .actions-group {
         gap: 0.25rem;
-        
+
         .action-btn {
           padding: 0.4rem 0.6rem;
           border-radius: 4px;
           font-size: 0.8rem;
           transition: all 0.2s ease;
-          
+
           &:hover {
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -1041,22 +1107,22 @@ $border-radius: 8px;
       }
     }
   }
-  
+
   .filters-expanded-content {
     padding: 1rem;
-    
+
     .active-filters-summary {
       background-color: rgba($primary-color, 0.05);
       padding: 0.75rem;
       border-radius: 6px;
       border: 1px solid rgba($primary-color, 0.1);
-      
+
       .filter-indicator-label {
         font-size: 0.85rem;
         font-weight: 600;
         color: $primary-color;
       }
-      
+
       .filter-tag {
         background-color: $primary-color;
         color: white;
@@ -1066,33 +1132,33 @@ $border-radius: 8px;
         font-weight: 500;
         display: inline-flex;
         align-items: center;
-        
+
         i {
           cursor: pointer;
           margin-left: 0.25rem;
           opacity: 0.8;
           transition: opacity 0.2s ease;
-          
+
           &:hover {
             opacity: 1;
           }
         }
       }
     }
-    
+
     .main-filters-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
       margin-top: 1rem;
-      
+
       .filter-group {
         background-color: white;
         border: 1px solid #e9ecef;
         border-radius: 8px;
         padding: 1rem;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        
+
         .filter-group-header {
           display: flex;
           align-items: center;
@@ -1101,7 +1167,7 @@ $border-radius: 8px;
           color: #495057;
           font-size: 0.9rem;
         }
-        
+
         .filter-group-content {
           .filter-label {
             display: block;
@@ -1110,7 +1176,7 @@ $border-radius: 8px;
             color: #6c757d;
             font-size: 0.8rem;
           }
-          
+
           .modern-date-input,
           .modern-autocomplete input {
             border: 1px solid #ced4da;
@@ -1118,34 +1184,34 @@ $border-radius: 8px;
             padding: 0.5rem 0.75rem;
             font-size: 0.85rem;
             transition: all 0.2s ease;
-            
+
             &:focus {
               border-color: $primary-color;
               box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
               outline: none;
             }
           }
-          
+
           .date-range-container {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            
+
             .date-input-wrapper {
               flex: 1;
             }
-            
+
             .date-separator {
               color: #6c757d;
               font-size: 0.9rem;
             }
           }
-          
+
           .status-chips {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
-            
+
             .status-chip {
               padding: 0.4rem 0.8rem;
               border: 1px solid #dee2e6;
@@ -1158,49 +1224,49 @@ $border-radius: 8px;
               transition: all 0.2s ease;
               display: flex;
               align-items: center;
-              
+
               &:hover {
                 border-color: $primary-color;
                 color: $primary-color;
                 transform: translateY(-1px);
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
               }
-              
+
               &.active {
                 background-color: $primary-color;
                 border-color: $primary-color;
                 color: white;
                 box-shadow: 0 2px 8px rgba($primary-color, 0.3);
               }
-              
+
               &.status-success.active {
                 background-color: $success-color;
                 border-color: $success-color;
               }
-              
+
               &.status-warning.active {
                 background-color: $warning-color;
                 border-color: $warning-color;
                 color: #212529;
               }
-              
+
               &.status-info.active {
                 background-color: $info-color;
                 border-color: $info-color;
               }
-              
+
               &.status-secondary.active {
                 background-color: $secondary-color;
                 border-color: $secondary-color;
               }
             }
           }
-          
+
           .action-buttons {
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
-            
+
             .action-btn {
               flex: 1;
               min-width: 120px;
@@ -1223,6 +1289,128 @@ $border-radius: 8px;
   justify-content: center;
   color: white;
   font-size: 18px;
+}
+
+// Estilos para el Modal de Cambio de Estado de Pago
+#cambioEstadoPagoModal {
+  .modal-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+
+    .modal-title {
+      color: #495057;
+      font-weight: 600;
+
+      i {
+        color: $primary-color;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+
+    .alert {
+      border-radius: 8px;
+      border: none;
+      padding: 1rem;
+
+      &.alert-info {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        color: #0d47a1;
+        border-left: 4px solid #2196f3;
+      }
+
+      &.alert-warning {
+        background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 20%);
+        color: #e65100;
+        border-left: 4px solid #ff9800;
+      }
+
+      &.alert-danger {
+        background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+        color: #c62828;
+        border-left: 4px solid #f44336;
+      }
+
+      i {
+        font-size: 1.1rem;
+        opacity: 0.8;
+      }
+    }
+
+    .form-label {
+      color: #495057;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-select {
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+
+      &:focus {
+        border-color: $primary-color;
+        box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+        outline: none;
+      }
+
+      &:hover {
+        border-color: #ced4da;
+      }
+    }
+  }
+
+  .modal-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+
+    .btn {
+      border-radius: 6px;
+      padding: 0.5rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+
+      &.btn-primary {
+        background: linear-gradient(
+          135deg,
+          $primary-color 0%,
+          darken($primary-color, 10%) 100%
+        );
+        border: none;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba($primary-color, 0.3);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          transform: none;
+          box-shadow: none;
+        }
+      }
+
+      &.btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+
+        &:hover {
+          background: #6c757d;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.85rem;
+      }
+    }
+  }
 }
 
 .options-grid {
@@ -1249,16 +1437,16 @@ $border-radius: 8px;
     border-color: #007bff;
     background: #f8f9ff;
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
   }
 
   &.danger-btn {
     border-color: #dc3545;
-    
+
     &:hover {
       border-color: #dc3545;
       background: #fff5f5;
-      box-shadow: 0 2px 8px rgba(220,53,69,0.15);
+      box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
     }
   }
 }
@@ -1275,17 +1463,39 @@ $border-radius: 8px;
   color: white;
 }
 
-.pdf-icon { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
-.production-icon { background: linear-gradient(135deg, #a55eea, #8b2cf5); }
-.client-icon { background: linear-gradient(135deg, #26d0ce, #1dd1a1); }
-.address-icon { background: linear-gradient(135deg, #feca57, #ff9ff3); }
-.billing-icon { background: linear-gradient(135deg, #48dbfb, #0abde3); }
-.notes-icon { background: linear-gradient(135deg, #ff9ff3, #f368e0); }
-.payment-icon { background: linear-gradient(135deg, #54a0ff, #2e86de); }
-.cart-icon { background: linear-gradient(135deg, #5f27cd, #341f97); }
-.seller-icon { background: linear-gradient(135deg, #00d2d3, #01a3a4); }
-.history-icon { background: linear-gradient(135deg, #ff6348, #e17055); }
-.delete-icon { background: linear-gradient(135deg, #ff3838, #ff4757); }
+.pdf-icon {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+}
+.production-icon {
+  background: linear-gradient(135deg, #a55eea, #8b2cf5);
+}
+.client-icon {
+  background: linear-gradient(135deg, #26d0ce, #1dd1a1);
+}
+.address-icon {
+  background: linear-gradient(135deg, #feca57, #ff9ff3);
+}
+.billing-icon {
+  background: linear-gradient(135deg, #48dbfb, #0abde3);
+}
+.notes-icon {
+  background: linear-gradient(135deg, #ff9ff3, #f368e0);
+}
+.payment-icon {
+  background: linear-gradient(135deg, #54a0ff, #2e86de);
+}
+.cart-icon {
+  background: linear-gradient(135deg, #5f27cd, #341f97);
+}
+.seller-icon {
+  background: linear-gradient(135deg, #00d2d3, #01a3a4);
+}
+.history-icon {
+  background: linear-gradient(135deg, #ff6348, #e17055);
+}
+.delete-icon {
+  background: linear-gradient(135deg, #ff3838, #ff4757);
+}
 
 .option-content {
   flex: 1;
@@ -1308,7 +1518,7 @@ $border-radius: 8px;
   .modal-content {
     border: none;
     border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   }
 
   .modal-header {
@@ -1338,7 +1548,7 @@ $border-radius: 8px;
 .options-grid::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
-  
+
   &:hover {
     background: #a8a8a8;
   }
@@ -1370,23 +1580,27 @@ $border-radius: 8px;
 .custom-modal-content {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   border: none;
   position: relative;
   z-index: 1055;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { 
+  from {
     opacity: 0;
     transform: scale(0.95) translateY(-10px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
@@ -1439,21 +1653,21 @@ $border-radius: 8px;
   .options-grid {
     max-height: 60vh;
   }
-  
+
   .option-btn {
     padding: 10px 12px;
   }
-  
+
   .option-icon {
     width: 32px;
     height: 32px;
     font-size: 14px;
   }
-  
+
   .option-title {
     font-size: 14px;
   }
-  
+
   .option-description {
     font-size: 11px;
   }

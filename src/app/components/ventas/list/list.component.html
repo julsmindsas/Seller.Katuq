@@ -687,8 +687,8 @@
 
                                             <!-- Columna Opciones -->
                                             <td *ngIf="isColumnVisible('opciones')" class="text-center options-cell" style="width: 5rem; padding: 0.5rem 0.25rem;">
-                                                <button class="btn btn-outline-primary btn-sm" 
-                                                        type="button" 
+                                                <button class="btn btn-outline-primary btn-sm"
+                                                        type="button"
                                                         (click)="openOptionsModal(pedido)"
                                                         [title]="'Opciones del pedido' | translate">
                                                     <i class="pi pi-cog"></i>
@@ -1036,8 +1036,8 @@
         </button>
     </div>
     <div class="modal-body">
-        <app-notas #notaspedidos 
-                   [pedido]="pedidoSeleccionado" 
+        <app-notas #notaspedidos
+                   [pedido]="pedidoSeleccionado"
                    [isEdit]="true"
                    (notasActualizadas)="onNotasActualizadas($event)"></app-notas>
     </div>
@@ -1045,23 +1045,57 @@
 
 <ng-template #cambioEstadoPagoModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">{{'Cambiar estado de pago' | translate}}</h4>
+        <h4 class="modal-title" id="modal-basic-title">
+            <i class="fa fa-credit-card-alt me-2"></i>
+            {{'Cambiar estado de pago' | translate}}
+        </h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
     <div class="modal-body">
-        <p>{{'Estás a punto de cambiar el estado de pago. Por favor, selecciona el nuevo estado de pago:' | translate}}
-        </p>
-        <select class="form-control" [(ngModel)]="pedidoSeleccionado.estadoPago">
-            <option *ngFor="let estado of estadosPago" [value]="estado">{{estado}}</option>
-        </select>
+        <div class="alert alert-info d-flex align-items-center mb-3">
+            <i class="fa fa-info-circle me-2"></i>
+            <div>
+                <strong>{{ 'Pedido #' | translate }}{{ pedidoSeleccionado?.nroPedido }}</strong>
+                <br>
+                <small>{{ 'Estado actual: ' | translate }}{{ pedidoSeleccionado?.estadoPago }}</small>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">{{ 'Nuevo estado de pago:' | translate }}</label>
+            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoPago">
+                <option *ngFor="let estado of estadosPago" [value]="estado">
+                    {{ estado }}
+                </option>
+            </select>
+        </div>
+
+        <div class="alert alert-warning" *ngIf="pedidoSeleccionado?.estadoPago === 'PreAprobado'">
+            <i class="fa fa-exclamation-triangle me-2"></i>
+            <strong>{{ 'Nota:' | translate }}</strong>
+            {{ 'Al seleccionar PreAprobado, se marcará como aprobación manual.' | translate }}
+        </div>
+
+        <div class="alert alert-danger" *ngIf="pedidoSeleccionado?.estadoPago === 'Cancelado' || pedidoSeleccionado?.estadoPago === 'Rechazado'">
+            <i class="fa fa-exclamation-triangle me-2"></i>
+            <strong>{{ 'Advertencia:' | translate }}</strong>
+            {{ 'Este cambio afectará el estado del pedido permanentemente.' | translate }}
+        </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">{{'Cancelar' |
-            translate}}</button>
-        <button type="button" class="btn btn-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)">{{'Confirmar' |
-            translate}}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
+            <i class="fa fa-times me-1"></i>
+            {{'Cancelar' | translate}}
+        </button>
+        <button type="button"
+                class="btn btn-primary"
+                (click)="cambiarEstadoPago(pedidoSeleccionado)"
+                [disabled]="!pedidoSeleccionado?.estadoPago">
+            <i class="fa fa-check me-1"></i>
+            {{'Confirmar cambio' | translate}}
+        </button>
     </div>
 </ng-template>
 
@@ -1117,11 +1151,11 @@
             </div>
         </div>
 
-        <app-ecomerce-products #recompra 
-                              [ciudadSelector]="ciudadesEntrega" 
+        <app-ecomerce-products #recompra
+                              [ciudadSelector]="ciudadesEntrega"
                               [selectedCity]="ciudadSeleccionada"
-                              [ciudad]="ciudadSeleccionada" 
-                              [bodega]="selectedWarehouse" 
+                              [ciudad]="ciudadSeleccionada"
+                              [bodega]="selectedWarehouse"
                               [isRebuy]="true"
                               (citySelected)="onCitySelect($event)">
         </app-ecomerce-products>
@@ -1163,7 +1197,7 @@
       <!-- Modal Body -->
       <div class="modal-body pt-2">
         <div class="options-grid">
-          
+
           <!-- Imprimir PDF -->
           <button class="option-btn" type="button" (click)="pdfOrder(modalContent, selectedOrder); closeOptionsModal()">
             <div class="option-icon pdf-icon">
