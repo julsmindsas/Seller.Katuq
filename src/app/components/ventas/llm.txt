@@ -247,3 +247,358 @@ export interface Envio {
 - RxJS para programación reactiva
 - Firebase para backend y hosting
 - SCSS para estilos
+
+---
+
+# CÓMO FUNCIONAN LAS VENTAS EN KATUQ
+
+## FLUJOS DE VENTA PRINCIPALES
+
+Katuq maneja **5 flujos principales de venta**, cada uno optimizado para diferentes escenarios:
+
+### 1. **CREAR VENTAS (Wizard de Creación Tradicional)**
+**Ubicación:** `/crear-ventas`
+**Uso:** Pedidos detallados con múltiples configuraciones
+
+#### **Proceso paso a paso:**
+1. **Inicialización**
+   - Sistema de wizard con `angular-archwizard`
+   - Validación obligatoria de bodega desde localStorage
+   - Limpieza de estados previos
+
+2. **Paso 1: Cliente**
+   - Búsqueda por documento con autocompletado
+   - Opción de crear cliente nuevo con modal
+   - Validación de datos obligatorios (documento, nombre, email)
+
+3. **Paso 2: Productos**
+   - Catálogo filtrado por ciudad y bodega
+   - Búsqueda por nombre, referencia o código de barras
+   - Verificación de stock en tiempo real
+   - Modal de configuración por producto (preferencias, adiciones, tarjetas)
+
+4. **Paso 3: Carrito**
+   - Gestión visual de productos seleccionados
+   - Modificación de cantidades con límites de stock
+   - Cálculos dinámicos (subtotal, impuestos, descuentos)
+   - Sistema de notas de producción por producto
+
+5. **Paso 4: Facturación**
+   - Formulario completo de datos fiscales
+   - Validación de NIT y datos tributarios
+   - Opción de usar datos del cliente existente
+
+6. **Paso 5: Entrega**
+   - Configuración de dirección estructurada colombiana
+   - Validación de zonas de cobro y cobertura
+   - Cálculo automático de costos de envío
+   - Selección de método de entrega
+
+7. **Paso 6: Notas**
+   - Sistema estructurado de notas por categorías:
+     - **Producción:** Especificaciones técnicas
+     - **Cliente:** Observaciones del cliente
+     - **Despachos:** Instrucciones de envío
+     - **Entregas:** Detalles de entrega
+     - **Facturación:** Notas fiscales
+
+8. **Paso 7: Checkout y Pago**
+   - Resumen completo del pedido
+   - Selección de método de pago
+   - Integración con gateways (Wompi, PSE, etc.)
+   - Cálculo final de totales
+
+9. **Paso 8: Confirmación**
+   - Generación de número de pedido único
+   - Envío de correo de confirmación
+   - Creación en base de datos con estado inicial
+
+#### **Estados del Pedido:**
+- **EstadoPago:** Pendiente → PreAprobado → Aprobado/Rechazado
+- **EstadoProceso:** SinProducir → Producido → Empacado → Despachado → Entregado
+
+### 2. **POS (Punto de Venta)**
+**Ubicación:** `/pos2`
+**Uso:** Ventas rápidas presenciales
+
+#### **Proceso simplificado:**
+1. **Inicialización Limpia**
+   - Auto-limpieza del carrito al entrar
+   - Selección de bodega de trabajo
+   - Estado fresco para nueva venta
+
+2. **Selección de Productos**
+   - Navegación por categorías visuales
+   - Grid de productos con imágenes
+   - Búsqueda rápida por nombre/código
+   - Adición directa al carrito (1 click)
+
+3. **Gestión de Carrito**
+   - Carrito lateral en tiempo real
+   - Modificación rápida de cantidades
+   - Cálculos automáticos
+
+4. **Cliente (Opcional)**
+   - Búsqueda rápida por nombre/documento
+   - Opción "Consumidor Final" por defecto
+   - Creación express de cliente nuevo
+
+5. **Pago Inmediato**
+   - Selector visual de métodos de pago
+   - **Efectivo:** Cálculo de cambio automático
+   - **Tarjeta:** Integración con datáfono
+   - **E-wallet:** Códigos QR o transferencias
+
+6. **Cierre de Venta**
+   - Impresión automática de factura/recibo
+   - Registro inmediato en sistema
+   - Limpieza para siguiente venta
+
+#### **Características Especiales POS:**
+- **Cierre de Caja:** Arqueo automático al final del día
+- **Historial de Cierres:** Registro de movimientos de efectivo
+- **Selector de Bodega:** Persistente durante la sesión
+- **Creación Rápida de Clientes:** Modal simplificado
+
+### 3. **VENTA ASISTIDA**
+**Ubicación:** `/venta-asistida`
+**Uso:** Ventas guiadas con asesor
+
+#### **Proceso integrado:**
+1. **Búsqueda de Cliente**
+   - Autocompletado por nombre o documento
+   - Creación rápida de cliente nuevo
+   - Carga automática de datos previos
+
+2. **Selección de Productos**
+   - Grid de productos con filtros
+   - Búsqueda avanzada por múltiples criterios
+   - Vista de stock disponible por bodega
+   - Adición con configuraciones básicas
+
+3. **Vista de Carrito Integrada**
+   - Preview del carrito en tiempo real
+   - Modificación de cantidades
+   - Cálculos dinámicos de precios
+
+4. **Datos de Facturación**
+   - Formulario embebido en la misma pantalla
+   - Auto-completado con datos del cliente
+   - Validación en tiempo real
+
+5. **Datos de Entrega**
+   - Gestión de direcciones múltiples
+   - Validación de cobertura automática
+   - Cálculo de costos de envío
+
+6. **Método de Pago**
+   - Selección única de método
+   - Categorización visual (Online/Offline)
+   - Información de comisiones
+
+7. **Confirmación Final**
+   - Resumen completo en una pantalla
+   - Validación integral antes de crear
+   - Creación directa del pedido
+
+#### **Ventajas de Venta Asistida:**
+- **Flujo único:** Todo en una pantalla
+- **Búsqueda inteligente:** Productos con filtros avanzados
+- **Validación continua:** Errores detectados en tiempo real
+- **Experiencia guiada:** Ideal para asesores comerciales
+
+### 4. **CHECKOUT (Proceso de Pago)**
+**Ubicación:** `/checkout`
+**Uso:** Finalización de pedidos desde carrito
+
+#### **Proceso por acordeón:**
+1. **Cliente (Acordeón 1)**
+   - Validación de datos mínimos
+   - Edición inline si es necesario
+   - Estado visual de completitud
+
+2. **Envío (Acordeón 2)**
+   - Selección de dirección de entrega
+   - Método de envío disponible
+   - Cálculo de costos
+
+3. **Facturación (Acordeón 3)**
+   - Datos fiscales completos
+   - Opción de factura electrónica
+   - Validación de información tributaria
+
+4. **Entrega (Acordeón 4)**
+   - Configuración final de entrega
+   - Horarios disponibles
+   - Instrucciones especiales
+
+5. **Pago (Acordeón 5)**
+   - Métodos organizados por categoría:
+     - **Online:** Wompi, PSE, Tarjetas
+     - **Offline:** Efectivo, Transferencias
+     - **Billeteras:** Nequi, Daviplata
+   - Procesamiento según método seleccionado
+
+#### **Características del Checkout:**
+- **Navegación libre:** Saltar entre acordeones
+- **Validación progresiva:** Cada sección debe estar completa
+- **Cálculos dinámicos:** Actualización automática de totales
+- **Múltiples gateways:** Integración con diversos proveedores
+
+### 5. **CARRITO (Gestión Central)**
+**Ubicación:** `/carrito`
+**Uso:** Gestión de productos antes del checkout
+
+#### **Funcionalidades:**
+1. **Sincronización Reactiva**
+   - Integración con `CartSingletonService`
+   - Estado compartido entre componentes
+   - Persistencia en localStorage
+
+2. **Gestión de Cantidades**
+   - Incremento/decremento con botones
+   - Validación de stock disponible
+   - Límites de cantidad mínima
+
+3. **Cálculos Avanzados**
+   - Precios por volumen automáticos
+   - Aplicación de descuentos por producto
+   - Cálculo de impuestos por línea
+
+4. **Sistema de Notas**
+   - Notas de producción por producto
+   - Categorización automática
+   - Persistencia en estructura del pedido
+
+5. **Cupones de Descuento**
+   - Validación de cupones activos
+   - Aplicación automática de descuentos
+   - Cálculo de totales finales
+
+---
+
+## SERVICIOS CLAVE QUE SOPORTAN LAS VENTAS
+
+### **CartSingletonService**
+**Patrón:** Singleton con BehaviorSubject
+**Función:** Estado global reactivo del carrito
+
+```typescript
+// Operaciones principales:
+- addToCart(producto, cantidad, configuracion)
+- removeFromCart(index)
+- updateQuantity(index, nuevaCantidad)
+- clearCart()
+- getCartObservable() // Para suscripciones reactivas
+```
+
+**Características:**
+- Sincronización automática entre todos los componentes
+- Persistencia en localStorage
+- Cálculos automáticos de totales
+- Validaciones de stock en tiempo real
+
+### **VentasService**
+**Función:** CRUD de pedidos y validaciones de negocio
+
+**Operaciones principales:**
+- `createOrder(pedido)` - Creación de pedidos
+- `getOrders(filtros)` - Consulta con filtros
+- `updateOrderStatus(id, estado)` - Cambio de estados
+- `validateCoupon(codigo)` - Validación de cupones
+- `calculateTotals(carrito)` - Cálculos de precios
+
+### **PosCheckoutService**
+**Función:** Flujo específico para POS
+
+**Características especiales:**
+- Gestión de métodos de pago presencial
+- Integración con datáfonos/terminales
+- Cálculos de cambio para efectivo
+- Persistencia de bodega seleccionada
+
+### **PedidosUtilService**
+**Función:** Utilidades y cálculos complejos
+
+**Operaciones:**
+- Cálculo de impuestos colombianos
+- Gestión de zonas de cobro
+- Validación de direcciones
+- Cálculo de costos de envío
+
+---
+
+## ESTADOS Y FLUJO DE VIDA DE UN PEDIDO
+
+### **Estados de Pago:**
+```typescript
+enum EstadoPago {
+  Pendiente = "Pendiente",         // Creado, esperando pago
+  Pospendiente = "Pospendiente",   // Pago diferido
+  PreAprobado = "PreAprobado",     // Pago recibido, no verificado
+  Aprobado = "Aprobado",           // Pago confirmado
+  Rechazado = "Rechazado",         // Pago fallido/rechazado
+  Precancelado = "Precancelado",   // En proceso de cancelación
+  Cancelado = "Cancelado"          // Pedido cancelado
+}
+```
+
+### **Estados de Proceso:**
+```typescript
+enum EstadoProceso {
+  SinProducir = "SinProducir",           // Esperando producción
+  Producido = "Producido",               // Productos terminados
+  ProducidoTotalmente = "ProducidoTotalmente",
+  ProducidoParcialmente = "ProducidoParcialmente",
+  Empacado = "Empacado",                 // Listo para envío
+  ParaDespachar = "ParaDespachar",       // Autorizado para despacho
+  Despachado = "Despachado",             // En tránsito
+  Entregado = "Entregado",               // Entregado al cliente
+  Rechazado = "Rechazado",               // Rechazado en algún punto
+  Cerrado = "Cerrado"                    // Proceso completado
+}
+```
+
+### **Flujo Típico de un Pedido:**
+1. **Creación:** `EstadoPago: Pendiente` + `EstadoProceso: SinProducir`
+2. **Pago:** `EstadoPago: PreAprobado` → `Aprobado`
+3. **Producción:** `EstadoProceso: Producido` (total o parcial)
+4. **Empaque:** `EstadoProceso: Empacado`
+5. **Despacho:** `EstadoProceso: Despachado`
+6. **Entrega:** `EstadoProceso: Entregado`
+7. **Cierre:** `EstadoProceso: Cerrado`
+
+---
+
+## INTEGRACIONES Y CARACTERÍSTICAS ESPECIALES
+
+### **Integración con Gateways de Pago:**
+- **Wompi:** Principal gateway para tarjetas y PSE
+- **Efectivo:** Gestión manual de pagos
+- **Transferencias:** Registro con comprobantes
+- **Billeteras digitales:** Códigos QR y referencias
+
+### **Sistema de Notas Estructurado:**
+```typescript
+interface NotasPedido {
+  notasDespachos: Notas[];      // Instrucciones de envío
+  notasEntregas: Notas[];       // Detalles de entrega
+  notasCliente: Notas[];        // Observaciones del cliente
+  notasProduccion: Notas[];     // Especificaciones técnicas
+  notasFacturacionPagos: Notas[]; // Notas fiscales
+}
+```
+
+### **Gestión de Direcciones Colombianas:**
+- Estructura de direcciones siguiendo estándares colombianos
+- Validación de cobertura por zonas
+- Cálculo automático de costos de envío
+- Integración con datos geográficos (departamentos, ciudades)
+
+### **Funcionalidades Multicanal:**
+- **Online:** Desde catálogo web
+- **Presencial:** A través de POS
+- **Telefónica:** Con venta asistida
+- **Híbrida:** Combinación de canales
+
+Este sistema permite a Katuq manejar desde ventas simples en POS hasta pedidos complejos con múltiples configuraciones, manteniendo coherencia en el modelo de datos y facilitando el seguimiento integral del ciclo de vida de cada venta.
