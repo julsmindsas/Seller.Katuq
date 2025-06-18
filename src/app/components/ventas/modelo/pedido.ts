@@ -106,6 +106,7 @@ export enum EstadoProceso {
   ProducidoTotalmente = "ProducidoTotalmente",
   ProducidoParcialmente = "ProducidoParcialmente",
   ParaDespachar = "ParaDespachar",
+  Cerrado = "Cerrado",
 }
 
 export enum EstadoProcesoFiltros {
@@ -117,6 +118,7 @@ export enum EstadoProcesoFiltros {
   ProducidoTotalmente = "ProducidoTotalmente",
   ProducidoParcialmente = "ProducidoParcialmente",
   ParaDespachar = "ParaDespachar",
+  Cerrado = "Cerrado",
 }
 
 export interface Cliente {

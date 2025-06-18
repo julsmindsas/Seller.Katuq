@@ -459,6 +459,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       fechaInicial: fechaInicial,
       fechaFinal: fechaFinal,
       estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
+      estadoProceso: ['En proceso', 'En ensamble'],
       company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
 

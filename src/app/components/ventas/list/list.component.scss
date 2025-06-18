@@ -1672,3 +1672,172 @@ $border-radius: 8px;
     font-size: 11px;
   }
 }
+
+// Estilos para pedidos congelados
+.frozen-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  padding: 0.2rem 0.4rem;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #2196f3;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #1976d2;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  animation: pulse 2s infinite;
+
+  .frozen-icon {
+    font-size: 0.7rem;
+    color: #2196f3;
+    animation: rotate 3s linear infinite;
+  }
+
+  .frozen-text {
+    font-size: 0.6rem;
+  }
+}
+
+.estado-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+// Estilos para botones deshabilitados en el modal de opciones
+.option-btn {
+  &.disabled-option {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f8f9fa !important;
+    border-color: #e9ecef !important;
+    
+    &:hover {
+      transform: none !important;
+      box-shadow: none !important;
+      background-color: #f8f9fa !important;
+    }
+
+    .option-icon {
+      opacity: 0.5;
+      
+      &.frozen-icon {
+        position: relative;
+        
+        .frozen-lock {
+          position: absolute;
+          top: 2px;
+          right: 2px;
+          font-size: 0.6em;
+          color: #dc3545;
+          background: white;
+          border-radius: 50%;
+          padding: 1px;
+        }
+      }
+    }
+
+    .option-title {
+      color: #6c757d !important;
+    }
+
+    .text-warning {
+      color: #fd7e14 !important;
+      font-weight: 500;
+    }
+  }
+}
+
+// Estilos para botones deshabilitados en la tabla
+.disabled-btn {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  
+  &:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+// Badge para estado Cerrado
+.modern-badge {
+  &.badge-dark {
+    background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    color: white;
+    border: 2px solid rgba(52, 58, 64, 0.3);
+
+    .status-icon {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+}
+
+// Animaciones para elementos congelados
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Indicadores visuales adicionales para pedidos congelados
+.frozen-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 1px solid #ffc107;
+  color: #856404;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .warning-icon {
+    color: #ffc107;
+    font-size: 1rem;
+  }
+}
+
+// Tooltips mejorados para elementos congelados
+.frozen-tooltip {
+  position: relative;
+  
+  &:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #343a40;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+  }
+}

@@ -9,13 +9,13 @@ export class SecurityService {
     constructor() { }
 
     // Get company information from session storage usin behaviorsubject
-    public companyInformation$ : BehaviorSubject<CompanyInformation> = new BehaviorSubject<CompanyInformation>(null);
+    public companyInformation$ : BehaviorSubject<CompanyInformation | null> = new BehaviorSubject<CompanyInformation | null>(null);
 
     // Set company information in session storage
     setCompanyInformationLogged(companyInformation: CompanyInformation) {
         sessionStorage.setItem('currentCompany', JSON.stringify(companyInformation));
-        companyInformation = this.getCompanyInformationLogged();
-        this.companyInformation$.next(companyInformation);
+        const updatedInfo = this.getCompanyInformationLogged();
+        this.companyInformation$.next(updatedInfo);
     }
 
     getCompanyInformationLogged$(){
@@ -23,35 +23,67 @@ export class SecurityService {
         return this.companyInformation$.asObservable();
     }
 
-
     // Get company information from session storage
-    getCompanyInformationLogged(): CompanyInformation {
+    getCompanyInformationLogged(): CompanyInformation | null {
         const currentCompany = sessionStorage.getItem('currentCompany');
         if (currentCompany) {
-            const empresa: Empresa = JSON.parse(currentCompany);
-            return {
-                nombreComercio: empresa.nomComercial,
-                imgUrlLogo: empresa.logo,
-                razonSocial: empresa.nombre
-            };
+            try {
+                const empresa: Empresa = JSON.parse(currentCompany);
+                return {
+                    nombreComercio: empresa.nomComercial,
+                    imgUrlLogo: empresa.logo,
+                    razonSocial: empresa.nombre
+                };
+            } catch (error) {
+                console.error('Error parsing company information:', error);
+                // Intentar obtener del localStorage como respaldo
+                return this.getCompanyInformationFromLocalStorage();
+            }
+        }
+        // Si no hay en sessionStorage, intentar obtener del localStorage
+        return this.getCompanyInformationFromLocalStorage();
+    }
 
+    private getCompanyInformationFromLocalStorage(): CompanyInformation | null {
+        try {
+            const user = localStorage.getItem('user');
+            if (user) {
+                const userData = JSON.parse(user);
+                if (userData.company) {
+                    // Recrear la información de la empresa desde los datos del usuario
+                    return {
+                        nombreComercio: userData.company,
+                        imgUrlLogo: undefined, // Se usará el logo por defecto
+                        razonSocial: userData.company
+                    };
+                }
+            }
+        } catch (error) {
+            console.error('Error getting company info from localStorage:', error);
+        }
+        return null;
+    }
+
+    // Método para proteger la información de la empresa durante limpiezas
+    preserveCompanyInformation() {
+        const companyInfo = this.getCompanyInformationLogged();
+        if (companyInfo) {
+            // Almacenar temporalmente en localStorage como respaldo
+            localStorage.setItem('tempCompanyInfo', JSON.stringify(companyInfo));
         }
     }
 
-
-    // getCompanyInformationLogged(): CompanyInformation {
-    //     const currentCompany = sessionStorage.getItem('currentCompany');
-    //     if (currentCompany) {
-    //         const empresa: Empresa = JSON.parse(currentCompany);
-    //         return {
-    //             nombreComercio: empresa.nomComercial,
-    //             imgUrlLogo: empresa.logo,
-    //             razonSocial: empresa.nombre
-    //         };
-
-    //     }
-
-
-    // }
-
+    // Método para restaurar la información de la empresa después de limpiezas
+    restoreCompanyInformation() {
+        const tempCompanyInfo = localStorage.getItem('tempCompanyInfo');
+        if (tempCompanyInfo) {
+            try {
+                const companyInfo = JSON.parse(tempCompanyInfo);
+                this.setCompanyInformationLogged(companyInfo);
+                localStorage.removeItem('tempCompanyInfo');
+            } catch (error) {
+                console.error('Error restoring company information:', error);
+            }
+        }
+    }
 }

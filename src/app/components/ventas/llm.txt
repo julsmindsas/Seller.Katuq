@@ -1,0 +1,249 @@
+# CONTEXTO MÓDULO DE VENTAS - KATUQ SELLER
+
+## DESCRIPCIÓN GENERAL
+Este es el módulo de ventas de Katuq Seller, una plataforma Angular 14 para gestión de e-commerce. El módulo maneja creación de pedidos, gestión de clientes, punto de venta (POS), y todo el flujo de ventas.
+
+## ESTRUCTURA PRINCIPAL DE MODELOS
+
+### PRODUCTO (Interface Principal)
+```typescript
+export interface Producto {
+  dimensiones?: Dimensiones;
+  disponibilidad?: Disponibilidad;
+  marketplace?: Marketplace;
+  exposicion?: Exposicion;
+  categorias?: Categoria;
+  identificacion?: Identificacion;
+  procesoComercial?: ProcesoComercial;
+  ciudades?: Ciudades;
+  cd?: string;
+  crearProducto?: CrearProducto;
+  precio?: Precio;
+  date_edit?: string;
+  variableForm?: string;
+  rating?: number;
+  otrosProcesos?: OtrosProcesos;
+  bodegaId?: string;
+}
+```
+
+### IDENTIFICACIÓN DEL PRODUCTO
+```typescript
+export interface Identificacion {
+  marca: string;
+  tipoProducto: string;
+  tipoReferencia: string;
+  codigoBarras: string;
+  referencia: string;
+}
+```
+
+### PRECIOS
+```typescript
+export interface Precio {
+  precioUnitarioConIva?: number;
+  precioIvaPorVolumen?: string;
+  preciosVolumen?: any[];
+  valorIva?: number;
+  precioPorVolumenSinIva?: string;
+  precioUnitarioSinIva?: number;
+  precioUnitarioIva?: string;
+  precioTotalVolumenConIva?: string;
+}
+```
+
+### DISPONIBILIDAD
+```typescript
+export interface Disponibilidad {
+  inventarioSeguridad: number;
+  tiempoEntrega: string;
+  tipoEntrega: string;
+  cantidadMinVenta: number;
+  cantidadDisponible: number;
+  inventariable: boolean;
+  cantidadReservada?: number;
+  totalVentas?: number;
+}
+```
+
+### CATEGORÍAS
+```typescript
+export interface Categoria {
+  data: CategoriaData;
+  children: CategoriaData[];
+  label: string;
+}
+```
+
+## MODELO DE PEDIDO (VENTAS)
+
+### PEDIDO PRINCIPAL
+```typescript
+export interface Pedido {
+  _id?: string;
+  nroPedido?: string;
+  referencia: string;
+  cliente?: Cliente;
+  carrito?: Carrito[];
+  estadoProceso: EstadoProceso;
+  estadoPago: EstadoPago;
+  formaDePago?: string;
+  totalPedidoSinDescuento?: number;
+  totalDescuento?: number;
+  totalEnvio?: number;
+  subtotal?: number;
+  facturacion?: Facturacion;
+  envio?: Envio;
+  asesorAsignado?: UserLite;
+  fechaCreacion?: string;
+  // ... más campos específicos
+}
+```
+
+### ESTADOS DEL PEDIDO
+```typescript
+export enum EstadoPago {
+  Pendiente = "Pendiente",
+  Pospendiente = "Pospendiente", 
+  PreAprobado = "PreAprobado",
+  Aprobado = "Aprobado",
+  Rechazado = "Rechazado",
+  Precancelado = "Precancelado",
+  Cancelado = "Cancelado"
+}
+
+export enum EstadoProceso {
+  SinProducir = "SinProducir",
+  Producido = "Producido", 
+  Empacado = "Empacado",
+  Despachado = "Despachado",
+  Rechazado = "Rechazado",
+  Entregado = "Entregado",
+  ProducidoTotalmente = "ProducidoTotalmente",
+  ProducidoParcialmente = "ProducidoParcialmente",
+  ParaDespachar = "ParaDespachar"
+}
+```
+
+### CLIENTE
+```typescript
+export interface Cliente {
+  documento?: string;
+  nombres_completos?: string;
+  correo_electronico_comprador?: string;
+  numero_celular_comprador?: string;
+  datosFacturacionElectronica?: Facturacion;
+  datosEntrega?: Entrega;
+  notas?: Notas;
+}
+```
+
+### CARRITO (ITEMS DEL PEDIDO)
+```typescript
+export interface Carrito {
+  estadoProcesoProducto?: EstadoProceso;
+  producto?: Producto;
+  configuracion?: Configuracion;
+  cantidad?: number;
+  notaProduccion?: Notas[];
+}
+```
+
+### FACTURACIÓN
+```typescript
+export interface Facturacion {
+  tipoDocumento: string;
+  codigoPostal: string;
+  indicativoCel: string;
+  ciudad: string;
+  direccion: string;
+  alias: string;
+  documento: string;
+  celular: string;
+  departamento: string;
+  correoElectronico: string;
+  nombres: string;
+  pais: string;
+}
+```
+
+### ENTREGA/ENVÍO
+```typescript
+export interface Envio {
+  apellidos: string;
+  barrio: string;
+  direccionEntrega: string;
+  ciudad: string;
+  departamento: string;
+  pais: string;
+  celular: string;
+  observaciones: string;
+  // ... más campos de entrega
+}
+```
+
+## COMPONENTES PRINCIPALES DEL MÓDULO
+
+### ESTRUCTURA DE CARPETAS
+- **crear-ventas/** - Wizard de creación de pedidos
+- **list/** - Listado y gestión de pedidos
+- **clientes/** - Gestión de clientes
+- **pos2/** - Punto de venta (POS)
+- **venta-asistida/** - Proceso de venta asistida
+- **carrito/** - Gestión del carrito de compras
+- **checkout/** - Proceso de checkout
+- **confirm/** - Confirmación de pedidos
+
+### COMPONENTES POS (PUNTO DE VENTA)
+- **product-category/** - Navegación por categorías
+- **customer-section/** - Selección de clientes
+- **cart-summary/** - Resumen del carrito
+- **payment-selector/** - Selección de método de pago
+- **cash-payment/, card-payment/, ewallet-payment/** - Procesadores de pago
+- **cash-closing/** - Cierre de caja
+
+### SERVICIOS PRINCIPALES
+- **VentasService** - Gestión de ventas y pedidos
+- **CartSingletonService** - Estado global del carrito
+- **PosCheckoutService** - Operaciones específicas del POS
+- **PedidosUtilService** - Utilidades y cálculos de pedidos
+
+## FUNCIONALIDADES CLAVE
+
+### MULTI-CANAL DE VENTAS
+- Creación tradicional de pedidos por wizard
+- Interfaz de punto de venta para retail
+- Venta asistida para ventas guiadas
+- Carga masiva de ventas
+
+### INTEGRACIÓN DE PAGOS
+- Múltiples métodos de pago (efectivo, tarjeta, billetera)
+- Integración con gateway Wompi
+- Registro manual de pagos
+- Cierre de caja diario
+
+### CARACTERÍSTICAS ESPECÍFICAS COLOMBIA
+- Estructura de direcciones colombianas
+- Facturación electrónica
+- Métodos de pago locales
+- Cálculo de impuestos según regulación colombiana
+
+### FILTROS Y BÚSQUEDA AVANZADA
+- Filtros multi-criterio para pedidos
+- Búsqueda en tiempo real
+- Exportación (Excel, PDF)
+- Rangos de fechas personalizados
+
+## PUNTOS DE INTEGRACIÓN
+- **Sistema de Inventarios** - Disponibilidad en tiempo real
+- **Módulo de Producción** - Seguimiento del ciclo de vida
+- **Módulo de Despachos** - Envío y cumplimiento
+- **Dashboard de Analytics** - Reportes y KPIs de ventas
+- **Gateways de Pago** - Procesamiento de pagos electrónicos
+
+## TECNOLOGÍAS UTILIZADAS
+- Angular 14 con TypeScript
+- PrimeNG para componentes UI
+- RxJS para programación reactiva
+- Firebase para backend y hosting
+- SCSS para estilos

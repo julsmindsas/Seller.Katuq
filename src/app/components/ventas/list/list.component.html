@@ -715,24 +715,34 @@
 
                                             <!-- Columna Estado de Proceso -->
                                             <td *ngIf="isColumnVisible('estadoProceso')" class="estado-cell text-center">
-                                                <span class="modern-badge" [ngClass]="{
-                                                    'badge-secondary': pedido?.estadoProceso === 'SinProducir',
-                                                    'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                                    'badge-primary': pedido?.estadoProceso === 'Empacado',
-                                                    'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                                    'badge-success': pedido?.estadoProceso === 'Entregado',
-                                                    'badge-danger': pedido?.estadoProceso === 'Rechazado'
-                                                }">
-                                                    <i class="status-icon pi" [ngClass]="{
-                                                        'pi-circle': pedido?.estadoProceso === 'SinProducir',
-                                                        'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                                        'pi-box': pedido?.estadoProceso === 'Empacado',
-                                                        'pi-truck': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                                        'pi-check-circle': pedido?.estadoProceso === 'Entregado',
-                                                        'pi-times-circle': pedido?.estadoProceso === 'Rechazado'
-                                                    }"></i>
-                                                    {{ pedido?.estadoProceso }}
-                                                </span>
+                                                <div class="estado-container">
+                                                    <span class="modern-badge" [ngClass]="{
+                                                        'badge-secondary': pedido?.estadoProceso === 'SinProducir',
+                                                        'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                        'badge-primary': pedido?.estadoProceso === 'Empacado',
+                                                        'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                        'badge-success': pedido?.estadoProceso === 'Entregado',
+                                                        'badge-danger': pedido?.estadoProceso === 'Rechazado',
+                                                        'badge-dark': pedido?.estadoProceso === 'Cerrado'
+                                                    }">
+                                                        <i class="status-icon pi" [ngClass]="{
+                                                            'pi-circle': pedido?.estadoProceso === 'SinProducir',
+                                                            'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                            'pi-box': pedido?.estadoProceso === 'Empacado',
+                                                            'pi-truck': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                            'pi-check-circle': pedido?.estadoProceso === 'Entregado',
+                                                            'pi-times-circle': pedido?.estadoProceso === 'Rechazado',
+                                                            'pi-lock': pedido?.estadoProceso === 'Cerrado'
+                                                        }"></i>
+                                                        {{ pedido?.estadoProceso }}
+                                                    </span>
+                                                    <!-- Indicador de pedido congelado -->
+                                                    <div *ngIf="isPedidoCongelado(pedido)" class="frozen-indicator" 
+                                                         [title]="'Pedido congelado - No se pueden modificar productos'">
+                                                        <i class="fa fa-snowflake-o frozen-icon"></i>
+                                                        <span class="frozen-text">Congelado</span>
+                                                    </div>
+                                                </div>
                                             </td>
 
                                             <!-- Columna Validación -->
@@ -854,10 +864,14 @@
                                             <td>{{ item.cantidad }}</td>
                                             <td *ngIf="!isFromProduction">
                                                 <button type="button" pButton pRipple
+                                                    [disabled]="!canModifyProducts(pedido)"
+                                                    [title]="canModifyProducts(pedido) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
                                                     (click)="confProductToCart(confProductToCartModal,item,pedido)"
                                                     class="p-button-text p-button-rounded p-button-plain"
+                                                    [ngClass]="{'disabled-btn': !canModifyProducts(pedido)}"
                                                     style="font-size: 0.8em;">
                                                     <i class="fa fa-cogs"></i>
+                                                    <i *ngIf="!canModifyProducts(pedido)" class="fa fa-lock" style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -1060,6 +1074,8 @@
                 <strong>{{ 'Pedido #' | translate }}{{ pedidoSeleccionado?.nroPedido }}</strong>
                 <br>
                 <small>{{ 'Estado actual: ' | translate }}{{ pedidoSeleccionado?.estadoPago }}</small>
+                <br>
+                <small>{{ 'Estado proceso: ' | translate }}{{ pedidoSeleccionado?.estadoProceso }}</small>
             </div>
         </div>
 
@@ -1072,10 +1088,28 @@
             </select>
         </div>
 
+        <div class="mb-3">
+            <label class="form-label fw-bold">{{ 'Estado de proceso:' | translate }}</label>
+            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso">
+                <option *ngFor="let estado of estadosProcesos" [value]="estado">
+                    {{ estado }}
+                </option>
+            </select>
+            <small class="form-text text-muted">
+                {{ 'Estados que congelan el pedido: ProducidoParcialmente, Cerrado, Entregado' | translate }}
+            </small>
+        </div>
+
         <div class="alert alert-warning" *ngIf="pedidoSeleccionado?.estadoPago === 'PreAprobado'">
             <i class="fa fa-exclamation-triangle me-2"></i>
             <strong>{{ 'Nota:' | translate }}</strong>
             {{ 'Al seleccionar PreAprobado, se marcará como aprobación manual.' | translate }}
+        </div>
+
+        <div class="alert alert-warning" *ngIf="isPedidoCongelado(pedidoSeleccionado)">
+            <i class="fa fa-snowflake-o me-2"></i>
+            <strong>{{ 'Advertencia:' | translate }}</strong>
+            {{ 'Este pedido estará congelado y no se podrán modificar productos.' | translate }}
         </div>
 
         <div class="alert alert-danger" *ngIf="pedidoSeleccionado?.estadoPago === 'Cancelado' || pedidoSeleccionado?.estadoPago === 'Rechazado'">
@@ -1221,35 +1255,53 @@
           </button>
 
           <!-- Editar Cliente -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editDatosClientes(clientesModal, selectedOrder); closeOptionsModal()">
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" 
+                  [disabled]="!canModifyBasicData(selectedOrder)"
+                  [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
+                  (click)="editDatosClientes(clientesModal, selectedOrder); closeOptionsModal()">
             <div class="option-icon client-icon">
               <i class="fa fa-user"></i>
             </div>
             <div class="option-content">
               <span class="option-title">{{ 'Editar Cliente' | translate }}</span>
-              <small class="option-description">{{ 'Modificar datos del cliente' | translate }}</small>
+              <small class="option-description">
+                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar datos del cliente' | translate }}</span>
+                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible - Pedido entregado' | translate }}</span>
+              </small>
             </div>
           </button>
 
           <!-- Editar Dirección -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editDatosEntrega(datosEnregaModal, selectedOrder); closeOptionsModal()">
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" 
+                  [disabled]="!canModifyBasicData(selectedOrder)"
+                  [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
+                  (click)="editDatosEntrega(datosEnregaModal, selectedOrder); closeOptionsModal()">
             <div class="option-icon address-icon">
               <i class="fa fa-map-marker"></i>
             </div>
             <div class="option-content">
               <span class="option-title">{{ 'Editar Dirección' | translate }}</span>
-              <small class="option-description">{{ 'Modificar dirección de entrega' | translate }}</small>
+              <small class="option-description">
+                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar dirección de entrega' | translate }}</span>
+                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible - Pedido entregado' | translate }}</span>
+              </small>
             </div>
           </button>
 
           <!-- Editar Facturación -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder); closeOptionsModal()">
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" 
+                  [disabled]="!canModifyBasicData(selectedOrder)"
+                  [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
+                  (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder); closeOptionsModal()">
             <div class="option-icon billing-icon">
               <i class="fa fa-credit-card"></i>
             </div>
             <div class="option-content">
               <span class="option-title">{{ 'Editar Facturación' | translate }}</span>
-              <small class="option-description">{{ 'Modificar datos de facturación' | translate }}</small>
+              <small class="option-description">
+                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar datos de facturación' | translate }}</span>
+                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible - Pedido entregado' | translate }}</span>
+              </small>
             </div>
           </button>
 
@@ -1276,13 +1328,23 @@
           </button>
 
           <!-- Agregar Productos -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="addProductToCart(recompraModal, selectedOrder); closeOptionsModal()">
-            <div class="option-icon cart-icon">
+          <button *ngIf="!isFromProduction" class="option-btn" type="button" 
+                  [disabled]="!canModifyProducts(selectedOrder)"
+                  [ngClass]="{'disabled-option': !canModifyProducts(selectedOrder)}"
+                  (click)="addProductToCart(recompraModal, selectedOrder); closeOptionsModal()">
+            <div class="option-icon cart-icon" [ngClass]="{'frozen-icon': !canModifyProducts(selectedOrder)}">
               <i class="fa fa-shopping-cart"></i>
+              <i *ngIf="!canModifyProducts(selectedOrder)" class="fa fa-lock frozen-lock"></i>
             </div>
             <div class="option-content">
               <span class="option-title">{{ 'Agregar Productos' | translate }}</span>
-              <small class="option-description">{{ 'Añadir más productos al pedido' | translate }}</small>
+              <small class="option-description">
+                <span *ngIf="canModifyProducts(selectedOrder)">{{ 'Añadir más productos al pedido' | translate }}</span>
+                <span *ngIf="!canModifyProducts(selectedOrder)" class="text-warning">
+                  <i class="fa fa-lock me-1"></i>
+                  {{ 'Pedido congelado - Estado: ' + selectedOrder?.estadoProceso | translate }}
+                </span>
+              </small>
             </div>
           </button>
 

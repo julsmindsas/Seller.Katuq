@@ -137,6 +137,49 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     );
   }
 
+  /**
+   * Verifica si el pedido está congelado y no permite modificaciones de productos
+   * Un pedido está congelado si:
+   * - Estado es ProducidoParcialmente
+   * - Estado es Cerrado
+   * - Estado es Entregado
+   * @param order Pedido a verificar
+   * @returns true si está congelado, false si permite modificaciones
+   */
+  isPedidoCongelado(order: Pedido): boolean {
+    if (!order || !order.estadoProceso) {
+      return false;
+    }
+
+    const estadosCongelados = [
+      'ProducidoParcialmente',
+      'Cerrado', 
+      'Entregado'
+    ];
+
+    return estadosCongelados.includes(order.estadoProceso);
+  }
+
+  /**
+   * Verifica si se pueden modificar productos del pedido
+   * @param order Pedido a verificar
+   * @returns true si se pueden modificar productos, false si no
+   */
+  canModifyProducts(order: Pedido): boolean {
+    return !this.isPedidoCongelado(order);
+  }
+
+  /**
+   * Verifica si se pueden modificar datos básicos del pedido (cliente, entrega, facturación)
+   * Los datos básicos pueden modificarse incluso en pedidos congelados
+   * @param order Pedido a verificar  
+   * @returns true si se pueden modificar datos básicos
+   */
+  canModifyBasicData(order: Pedido): boolean {
+    // Solo se prohíbe modificar datos básicos si el pedido está entregado
+    return order?.estadoProceso !== 'Entregado';
+  }
+
   confirmDeleteOrder(order: any) {
     if (confirm(`¿Está seguro de eliminar el pedido #${order.nroPedido}?`)) {
       this.deleteOrder(order);
@@ -1024,6 +1067,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   editDatosClientes(content, order: Pedido) {
+    // Verificar si se pueden modificar datos básicos
+    if (!this.canModifyBasicData(order)) {
+      this.toastrService.warning(
+        'No se pueden modificar los datos del cliente en pedidos entregados',
+        'Pedido No Modificable'
+      );
+      return;
+    }
+
     this.clienteSeleccionado = order.cliente;
     this.pedidoSeleccionado = order;
 
@@ -1460,6 +1512,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   confProductToCart(content, carritoConfiguracion: Carrito, order: Pedido) {
+    // Verificar si se pueden modificar productos
+    if (!this.canModifyProducts(order)) {
+      this.toastrService.warning(
+        `No se pueden modificar productos. El pedido está en estado: ${order.estadoProceso}`,
+        'Pedido Congelado'
+      );
+      return;
+    }
+
     this.configuracionCarritoSeleccionado = carritoConfiguracion;
 
     this.modalService
@@ -1526,6 +1587,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   addProductToCart(content: any, order: Pedido) {
+    // Verificar si se pueden modificar productos
+    if (!this.canModifyProducts(order)) {
+      this.toastrService.warning(
+        `No se pueden agregar productos. El pedido está en estado: ${order.estadoProceso}`,
+        'Pedido Congelado'
+      );
+      return;
+    }
+
     // Guardar referencia al pedido actual para que la configuración del nuevo producto
     // pueda heredar datos de entrega (forma, fecha, horario, etc.)
     this.pedidoUtilService.pedido = order;
