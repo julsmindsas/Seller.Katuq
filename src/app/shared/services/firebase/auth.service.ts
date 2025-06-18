@@ -174,25 +174,151 @@ export class AuthService implements OnInit {
     this.router.navigateByUrl('/login');
   }
 
+  // Constantes para la validación de sesión
+  private readonly SESSION_DURATION_HOURS = 24;
+  private readonly REQUIRED_USER_FIELDS = ['token', 'email', 'rol'];
+
   get isLoggedIn(): boolean {
-    const user = localStorage.getItem("user");
-    const loginTime = localStorage.getItem("loginTime");
-    if (!user || !loginTime) {
+    try {
+      // Validar existencia de datos básicos
+      const user = localStorage.getItem("user");
+      const loginTime = localStorage.getItem("loginTime");
+      
+      if (!user || !loginTime || user.trim() === '' || loginTime.trim() === '') {
+        this.clearInvalidSession();
+        return false;
+      }
+
+      // Validar formato JSON del usuario
+      let parsedUser: any;
+      try {
+        parsedUser = JSON.parse(user);
+      } catch (parseError) {
+        console.error("Error parsing user JSON from localStorage:", parseError);
+        this.clearInvalidSession();
+        return false;
+      }
+
+      // Validar estructura del objeto usuario
+      if (!this.isValidUserObject(parsedUser)) {
+        console.warn("Invalid user object structure");
+        this.clearInvalidSession();
+        return false;
+      }
+
+      // Validar token
+      if (!this.isValidToken(parsedUser.token)) {
+        console.warn("Invalid or missing token");
+        this.clearInvalidSession();
+        return false;
+      }
+
+      // Validar tiempo de sesión
+      if (!this.isValidSessionTime(loginTime)) {
+        console.warn("Session expired");
+        this.clearInvalidSession();
+        return false;
+      }
+
+      return true;
+
+    } catch (error) {
+      console.error("Unexpected error in isLoggedIn:", error);
+      this.clearInvalidSession();
+      return false;
+    }
+  }
+
+  /**
+   * Valida si el objeto usuario tiene la estructura requerida
+   */
+  private isValidUserObject(user: any): boolean {
+    if (!user || typeof user !== 'object') {
       return false;
     }
 
-    try {
-      const parsedUser = JSON.parse(user);
-      const token = parsedUser.token;
-      const loginDate = new Date(loginTime);
-      const currentDate = new Date();
-      const timeDifference =
-        (currentDate.getTime() - loginDate.getTime()) / (1000 * 60 * 60); // Diferencia en horas
+    // Verificar campos requeridos
+    for (const field of this.REQUIRED_USER_FIELDS) {
+      if (!user.hasOwnProperty(field) || 
+          user[field] === null || 
+          user[field] === undefined || 
+          (typeof user[field] === 'string' && user[field].trim() === '')) {
+        return false;
+      }
+    }
 
-      return token != null && token !== "" && timeDifference <= 24;
-    } catch (error) {
-      console.error("Error parsing user from localStorage", error);
+    return true;
+  }
+
+  /**
+   * Valida si el token tiene un formato válido
+   */
+  private isValidToken(token: any): boolean {
+    if (!token || typeof token !== 'string') {
       return false;
+    }
+
+    // Verificar que no esté vacío y tenga una longitud mínima
+    const trimmedToken = token.trim();
+    if (trimmedToken === '' || trimmedToken.length < 10) {
+      return false;
+    }
+
+    // Validar formato básico del token (puedes ajustar según tu formato específico)
+    // Asumiendo que es un token JWT o similar
+    const tokenParts = trimmedToken.split('.');
+    if (tokenParts.length !== 3) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Valida si el tiempo de sesión no ha expirado
+   */
+  private isValidSessionTime(loginTime: string): boolean {
+    try {
+      const loginDate = new Date(loginTime);
+      
+      // Verificar que la fecha sea válida
+      if (isNaN(loginDate.getTime())) {
+        return false;
+      }
+
+      const currentDate = new Date();
+      
+      // Verificar que la fecha de login no sea futura
+      if (loginDate.getTime() > currentDate.getTime()) {
+        return false;
+      }
+
+      // Calcular diferencia en horas
+      const timeDifferenceMs = currentDate.getTime() - loginDate.getTime();
+      const timeDifferenceHours = timeDifferenceMs / (1000 * 60 * 60);
+
+      return timeDifferenceHours >= 0 && timeDifferenceHours <= this.SESSION_DURATION_HOURS;
+
+    } catch (error) {
+      console.error("Error validating session time:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Limpia la sesión inválida del localStorage
+   */
+  private clearInvalidSession(): void {
+    try {
+      localStorage.removeItem('user');
+      localStorage.removeItem('loginTime');
+      localStorage.removeItem('authorizedMenuItems');
+      localStorage.removeItem('company');
+      localStorage.removeItem('warehousePOS');
+      localStorage.removeItem('warehouse');
+      sessionStorage.removeItem('currentCompany');
+    } catch (error) {
+      console.error("Error clearing invalid session:", error);
     }
   }
 }

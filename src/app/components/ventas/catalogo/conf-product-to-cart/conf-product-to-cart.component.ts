@@ -295,13 +295,13 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       let rangoActual = this.producto.precio.preciosVolumen.find(x =>
         this.cantidad >= x.numeroUnidadesInicial && this.cantidad <= x.numeroUnidadesLimite
       );
-      let precioFormateado
+      let precioFormateado;
       if (rangoActual == undefined) {
-        precioFormateado = this.producto.precio.precioUnitarioConIva.toLocaleString('es-CO', {
+        precioFormateado = this.producto?.precio?.precioUnitarioConIva?.toLocaleString('es-CO', {
           style: 'currency',
           currency: 'COP',
           minimumFractionDigits: 2,
-        });
+        }) || '0';
       } else {
         precioFormateado = rangoActual.valorUnitarioPorVolumenConIVA.toLocaleString('es-CO', {
           style: 'currency',
@@ -1023,11 +1023,11 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
         return;
       }
 
-      const tipoEntrega = this.tipoEntrega.filter((p: any) => p.nombreInterno.toLowerCase() == this.producto.disponibilidad.tipoEntrega.toLowerCase())[0];
+      const tipoEntrega = this.tipoEntrega.filter((p: any) => p.nombreInterno.toLowerCase() == this.producto?.disponibilidad?.tipoEntrega.toLowerCase())[0];
       
       if (!tipoEntrega) {
-        console.error('No se encontró el tipo de entrega del producto:', this.producto.disponibilidad.tipoEntrega);
-        this.toastrService.warning(`El tipo de entrega "${this.producto.disponibilidad.tipoEntrega}" no está configurado`, 'Configuración Incompleta');
+        console.error('No se encontró el tipo de entrega del producto:', this.producto?.disponibilidad?.tipoEntrega);
+        this.toastrService.warning(`El tipo de entrega "${this.producto?.disponibilidad?.tipoEntrega}" no está configurado`, 'Configuración Incompleta');
         this.formasEntregaProducto = [];
         return;
       }
@@ -1179,7 +1179,7 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
           });
           for (let index = 0; index < this.selectedFiles.length; index++) {
             const file = this.selectedFiles[index];
-            const filePath = `almara/configuracionProducto/${this.producto.crearProducto.titulo.replace(/\s+/g, '')}/preferencia/${file.name}`;
+            const filePath = `almara/configuracionProducto/${this.producto?.crearProducto?.titulo.replace(/\s+/g, '')}/preferencia/${file.name}`;
 
             const fileRef = this.storage.ref(filePath);
             const task = this.storage.upload(filePath, file);
@@ -1293,11 +1293,10 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   isValidFile(file: File): boolean {
     const allowedExtensions = ["png", "jpg", "webp", "jpeg"];
     const fileName = file.name;
-    const fileExtension = fileName.split(".").pop().toLowerCase();
+    const fileExtension = fileName.split(".").pop()?.toLowerCase();
 
-    return (
-      allowedExtensions.filter((extison) => extison == fileExtension).length > 0
-    );
+    return fileExtension ? 
+      allowedExtensions.filter((extension) => extension === fileExtension).length > 0 : false;
   }
   getVariablesControls() {
     return (this.formulario.get('variables') as FormArray).controls;
@@ -1492,14 +1491,13 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     }
 
   }
-
   checkPriceScale() {
-    if (this.producto.precio.preciosVolumen.length > 0) {
-      const cantidad = parseInt(this.cantidadControl?.nativeElement?.value);
+    if (this.producto?.precio?.preciosVolumen && this.producto.precio.preciosVolumen.length > 0) {
+      const cantidad = parseInt(this.cantidadControl?.nativeElement?.value || '0');
       const precioVolumen = this.producto.precio.preciosVolumen.find(x => cantidad >= x.numeroUnidadesInicial && cantidad <= x.numeroUnidadesLimite);
-      this.precioproducto = precioVolumen ? precioVolumen.valorUnitarioPorVolumenConIVA : this.producto.precio.precioUnitarioConIva;
+      this.precioproducto = precioVolumen ? precioVolumen.valorUnitarioPorVolumenConIVA : this.producto.precio?.precioUnitarioConIva;
     } else {
-      this.precioproducto = this.producto.precio.precioUnitarioConIva;
+      this.precioproducto = this.producto?.precio?.precioUnitarioConIva;
     }
     return this.precioproducto;
   }
@@ -1519,8 +1517,8 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       quantity = 1
     }
 
-    this.sumaTotalProducto = this.producto?.precio?.precioUnitarioConIva * quantity
-    this.sumaTotalAdiciones = (this.getBigTotalProductWithPreferenceAndAdictions() - this.producto?.precio?.precioUnitarioConIva) * quantity
+    this.sumaTotalProducto = (this.producto?.precio?.precioUnitarioConIva || 0) * quantity
+    this.sumaTotalAdiciones = (this.getBigTotalProductWithPreferenceAndAdictions() - (this.producto?.precio?.precioUnitarioConIva || 0)) * quantity
 
     this.sumaTotal = (this.getBigTotalProductWithPreferenceAndAdictions()) * quantity
 
@@ -2228,13 +2226,11 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     this.datosMaestrosCargados = false;
     
     this.toastrService.info('Reintentando cargar configuración...', 'Reintentando');
-    
     // Reinicializar variables
-    this.tipoEntrega = undefined;
-    this.tiemposEntrega = undefined;
-    this.generos = undefined;
-    this.formasEntrega = undefined;
-    
+    this.tipoEntrega = [];
+    this.tiemposEntrega = [];
+    this.generos = [];
+    this.formasEntrega = [];
     // Volver a intentar la carga
     this.inicializacionConfigurarProducto(this.producto);
   }
