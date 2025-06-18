@@ -10,10 +10,14 @@ export class CacheService {
   private cacheExpiry: Map<string, number> = new Map();
   private clearCache$ = new Subject<void>();
   private DEFAULT_CACHE_TIME = 5 * 60 * 1000; // 5 minutos por defecto
+  private readonly CLEANUP_INTERVAL = 5 * 60 * 1000; // Limpiar caché cada 5 minutos
 
   constructor() {
     // Recuperar caché del localStorage al iniciar
     this.loadCacheFromStorage();
+    
+    // Configurar limpieza automática de caché expirado
+    this.setupAutomaticCleanup();
     
     // Guardar caché en localStorage antes de cerrar
     window.addEventListener('beforeunload', () => {
@@ -68,6 +72,43 @@ export class CacheService {
     this.clearCache$.next();
     localStorage.removeItem('app_cache');
     localStorage.removeItem('app_cache_expiry');
+  }
+
+  /**
+   * Configura la limpieza automática de caché expirado
+   */
+  private setupAutomaticCleanup(): void {
+    setInterval(() => {
+      this.cleanupExpiredCache();
+    }, this.CLEANUP_INTERVAL);
+  }
+
+  /**
+   * Limpia las entradas de caché que han expirado
+   */
+  private cleanupExpiredCache(): void {
+    const now = Date.now();
+    const expiredKeys: string[] = [];
+
+    // Identificar claves expiradas
+    this.cacheExpiry.forEach((expiry, key) => {
+      if (now >= expiry) {
+        expiredKeys.push(key);
+      }
+    });
+
+    // Remover entradas expiradas
+    expiredKeys.forEach(key => {
+      this.cache.delete(key);
+      this.cacheExpiry.delete(key);
+      console.log(`🧹 Entrada de caché expirada removida: ${key}`);
+    });
+
+    // Actualizar localStorage si se removieron elementos
+    if (expiredKeys.length > 0) {
+      this.saveCacheToStorage();
+      console.log(`🧹 Limpieza automática completada: ${expiredKeys.length} entradas removidas`);
+    }
   }
 
   private loadCacheFromStorage(): void {

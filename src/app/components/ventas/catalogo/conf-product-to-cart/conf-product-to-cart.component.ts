@@ -6,7 +6,7 @@ import { CarouselLibConfig, Image } from '@ks89/angular-modal-gallery';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { Form, FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
-import { finalize, Subscription } from 'rxjs';
+import { finalize, Subscription, timer, Subject } from 'rxjs';
 import { CartSingletonService } from '../../../../shared/services/ventas/cart.singleton.service';
 import { Carrito } from '../../modelo/pedido';
 import { MovingDirection } from 'angular-archwizard';
@@ -14,6 +14,7 @@ import { PedidosUtilService } from '../../service/pedidos.util.service';
 import { parse } from 'flatted';
 import { ToastrService } from "ngx-toastr";
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { takeUntil, switchMap, tap, catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-conf-product-to-cart',
   templateUrl: './conf-product-to-cart.component.html',
@@ -22,6 +23,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 export class ConfProductToCartComponent implements OnInit, AfterContentChecked, AfterContentInit, AfterViewInit, OnDestroy {
   active = 1;
   private subs: Subscription[] = [];
+  private destroy$ = new Subject<void>();
   productPreference: any = [];
   temp: any[];
   adicionesrows: any[];
@@ -67,6 +69,10 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   // Propiedades para validar datos maestros
   public datosMaestrosCargados: boolean = false;
   public errorCargaDatosMaestros: boolean = false;
+  public maestrosCargando: boolean = false;
+  public maestrosState: any = null;
+  public reintentosCarga: number = 0;
+  public maxReintentos: number = 3;
   
   // Propiedades computadas para verificar las propiedades no definidas en la interfaz
   get hasAceptaGenero(): boolean {
@@ -90,6 +96,10 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     localStorage.setItem('condicionesRevisadas', this.condicionesRevisadas.toString());
     localStorage.setItem('mostrarCaracteristicas', this.mostrarCaracteristicas.toString());
 
+    // Completar el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
+    
     this.subs.forEach((sub) => sub.unsubscribe());
   }
 
@@ -185,67 +195,159 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
 
   }
 
-  inicializacionConfigurarProducto(producto: Producto) {
-
-    if (this.generos == undefined || this.ocasiones == undefined || this.tipoEntrega == undefined) {
-
-      this.pedidoUtilService.getAllMaestro$().subscribe({
-          next: (r: any) => {
-            if (this.tipoEntrega == undefined && this.tiemposEntrega == undefined && this.generos == undefined && this.formasEntrega == undefined) {
-              // Validar que los datos maestros estén completos
-              if (!this.validarDatosMaestros(r)) {
-                this.errorCargaDatosMaestros = true;
-                this.datosMaestrosCargados = false;
-                this.mostrarErrorDatosMaestros(r);
-                return;
-              }
-
-              if (r.tipoEntrega && r.tiempoEntrega && r.generos && r.ocasiones && r.formaEntrega) {
-                this.tipoEntrega = r.tipoEntrega;
-                this.tiemposEntrega = r.tiempoEntrega;
-                this.generos = producto.procesoComercial?.genero ? r.generos?.filter((p: { id: number }) => producto.procesoComercial!.genero.find((g: number) => g == p.id)) : [];
-                this.ocasiones = producto.procesoComercial?.ocasion ? r.ocasiones?.filter((p: { id: string }) => producto.procesoComercial!.ocasion.find((g: string) => g == p.id)) : [];
-                this.formasEntrega = r.formaEntrega;
-                this.adicionesPreferencias = r.adiciones.filter(p => p.esPreferencia);
-                this.adicionesrows = (r.adiciones as any[]).filter(p => p.esAdicion).sort((a, b) => {
-                  const nameA = parseInt(a.posicion); // ignore upper and lowercase
-                  const nameB = parseInt(b.posicion); // ignore upper and lowercase
-                  if (nameA < nameB) {
-                    return -1;
-                  }
-                  if (nameA > nameB) {
-                    return 1;
-                  }
-
-                  // names must be equal
-                  return 0;
-                });
-
-                this.rowsinicialesSinMod = JSON.stringify(this.adicionesrows)
-
-                this.loadFormasEntregaConfiguracionProducto();
-                this.variables = producto.procesoComercial?.variablesForm ? parse(producto.procesoComercial.variablesForm) : null;
-                this.configurarProducto(producto);
-              
-                this.datosMaestrosCargados = true;
-                this.errorCargaDatosMaestros = false;
-              }
-            }
-          },
-          error: (error) => {
-            console.error('Error al cargar datos maestros:', error);
-            this.errorCargaDatosMaestros = true;
-            this.datosMaestrosCargados = false;
-            this.toastrService.error('Error al cargar la configuración del producto. Por favor, intente nuevamente.', 'Error de Carga', {
-              timeOut: 6000,
-              progressBar: true,
-              positionClass: 'toast-bottom-right'
-            });
-          }
+  /**
+   * 🔄 Inicializa el monitoreo del estado de maestros
+   */
+  private initializeMaestrosStateMonitoring(): void {
+    this.pedidoUtilService.getMaestrosState().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (state) => {
+        this.maestrosState = state;
+        this.maestrosCargando = state.loading;
+        this.datosMaestrosCargados = state.loaded && !state.error;
+        this.errorCargaDatosMaestros = state.error;
+        
+        // 📊 Log de estado para debugging
+        console.log('🎯 Estado maestros actualizado:', {
+          loading: state.loading,
+          loaded: state.loaded,
+          error: state.error,
+          lastUpdate: state.lastUpdate
         });
+      },
+      error: (error) => {
+        console.error('❌ Error monitoreando estado maestros:', error);
+      }
+    });
+  }
 
+  inicializacionConfigurarProducto(producto: Producto) {
+    // 🚀 Usar la nueva lógica mejorada del servicio
+    if (this.generos == undefined || this.ocasiones == undefined || this.tipoEntrega == undefined) {
+      this.maestrosCargando = true;
+      this.reintentosCarga++;
+      
+      console.log(`🔄 Cargando maestros (intento ${this.reintentosCarga}/${this.maxReintentos})`);
+
+      this.pedidoUtilService.getAllMaestro$().pipe(
+        tap(() => console.log('📦 Datos maestros recibidos')),
+        catchError((error) => {
+          console.error('❌ Error en getAllMaestro$:', error);
+          this.handleMaestrosError(error, producto);
+          throw error;
+        }),
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (r: any) => {
+          this.maestrosCargando = false;
+          
+          if (this.tipoEntrega == undefined && this.tiemposEntrega == undefined && this.generos == undefined && this.formasEntrega == undefined) {
+            // ✅ Validar que los datos maestros estén completos
+            if (!this.validarDatosMaestros(r)) {
+              this.errorCargaDatosMaestros = true;
+              this.datosMaestrosCargados = false;
+              this.mostrarErrorDatosMaestros(r);
+              return;
+            }
+
+            if (r.tipoEntrega && r.tiempoEntrega && r.generos && r.ocasiones && r.formaEntrega) {
+              this.procesarDatosMaestros(r, producto);
+              
+              // 🎉 Éxito en la carga
+              this.datosMaestrosCargados = true;
+              this.errorCargaDatosMaestros = false;
+              this.reintentosCarga = 0; // Reset contador
+              
+              this.toastrService.success('Configuración del producto cargada correctamente', 'Éxito', {
+                timeOut: 3000,
+                progressBar: true,
+                positionClass: 'toast-bottom-right'
+              });
+            }
+          }
+        },
+        error: (error) => {
+          this.maestrosCargando = false;
+          this.handleMaestrosError(error, producto);
+        }
+      });
     }
+  }
 
+  /**
+   * 🔧 Procesa los datos maestros recibidos
+   */
+  private procesarDatosMaestros(r: any, producto: Producto): void {
+    try {
+      this.tipoEntrega = r.tipoEntrega;
+      this.tiemposEntrega = r.tiempoEntrega;
+      this.generos = producto.procesoComercial?.genero ? r.generos?.filter((p: { id: number }) => producto.procesoComercial!.genero.find((g: number) => g == p.id)) : [];
+      this.ocasiones = producto.procesoComercial?.ocasion ? r.ocasiones?.filter((p: { id: string }) => producto.procesoComercial!.ocasion.find((g: string) => g == p.id)) : [];
+      this.formasEntrega = r.formaEntrega;
+      this.adicionesPreferencias = r.adiciones.filter(p => p.esPreferencia);
+      this.adicionesrows = (r.adiciones as any[]).filter(p => p.esAdicion).sort((a, b) => {
+        const nameA = parseInt(a.posicion);
+        const nameB = parseInt(b.posicion);
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+        return 0;
+      });
+
+      this.rowsinicialesSinMod = JSON.stringify(this.adicionesrows);
+
+      this.loadFormasEntregaConfiguracionProducto();
+      this.variables = producto.procesoComercial?.variablesForm ? parse(producto.procesoComercial.variablesForm) : null;
+      this.configurarProducto(producto);
+      
+      console.log('✅ Datos maestros procesados exitosamente');
+    } catch (error) {
+      console.error('❌ Error procesando datos maestros:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 🛡️ Maneja errores en la carga de maestros con lógica de reintento
+   */
+  private handleMaestrosError(error: any, producto: Producto): void {
+    console.error('❌ Error al cargar datos maestros:', error);
+    this.errorCargaDatosMaestros = true;
+    this.datosMaestrosCargados = false;
+    
+    if (this.reintentosCarga < this.maxReintentos) {
+      // 🔄 Reintentar automáticamente
+      this.toastrService.warning(
+        `Error al cargar configuración. Reintentando... (${this.reintentosCarga}/${this.maxReintentos})`, 
+        'Reintentando', 
+        {
+          timeOut: 3000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        }
+      );
+      
+      // Reintentar después de un breve delay
+      timer(2000).subscribe(() => {
+        this.inicializacionConfigurarProducto(producto);
+      });
+    } else {
+      // 💥 Máximo de reintentos alcanzado
+      this.toastrService.error(
+        'No se pudo cargar la configuración del producto después de varios intentos. Por favor, recargue la página.', 
+        'Error Crítico', 
+        {
+          timeOut: 8000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right',
+          closeButton: true
+        }
+      );
+    }
   }
 
   ngAfterContentChecked(): void {
@@ -360,6 +462,9 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   ngOnInit(): void {
     this.refreshCartWithProducts();
     console.log(this.productos);
+    
+    // 🔄 Suscribirse al estado de los maestros para monitoreo en tiempo real
+    this.initializeMaestrosStateMonitoring();
 
     // -------------------------------------------------------
     // HEREDAR DATOS DE ENTREGA DEL PRIMER PRODUCTO DEL PEDIDO
@@ -2219,20 +2324,186 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   }
 
   /**
-   * Método para reintentar la carga de datos maestros
+   * 🔄 Método mejorado para reintentar la carga de datos maestros
    */
   public reintentarCargaDatosMaestros(): void {
+    console.log('🔄 Reintentando carga de datos maestros...');
+    
+    // Reset del estado
     this.errorCargaDatosMaestros = false;
     this.datosMaestrosCargados = false;
+    this.maestrosCargando = true;
+    this.reintentosCarga = 0; // Reset contador
     
-    this.toastrService.info('Reintentando cargar configuración...', 'Reintentando');
+    // Limpiar caché y forzar recarga
+    this.pedidoUtilService.clearMaestrosCache();
+    
+    this.toastrService.info('🔄 Reintentando cargar configuración...', 'Reintentando');
+    
     // Reinicializar variables
     this.tipoEntrega = [];
     this.tiemposEntrega = [];
     this.generos = [];
     this.formasEntrega = [];
-    // Volver a intentar la carga
-    this.inicializacionConfigurarProducto(this.producto);
+    
+    // Usar el método mejorado de recarga forzada
+    this.pedidoUtilService.forceReloadMaestros().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (data) => {
+        console.log('✅ Recarga forzada exitosa');
+        this.procesarDatosMaestros(data, this.producto);
+        this.datosMaestrosCargados = true;
+        this.errorCargaDatosMaestros = false;
+        this.maestrosCargando = false;
+        
+        this.toastrService.success('✅ Configuración recargada exitosamente', 'Éxito');
+      },
+      error: (error) => {
+        console.error('❌ Error en recarga forzada:', error);
+        this.handleMaestrosError(error, this.producto);
+      }
+    });
+  }
+
+  /**
+   * 📊 Obtiene información de diagnóstico de los maestros
+   */
+  public getMaestrosDiagnosticInfo(): any {
+    return {
+      // Estado actual
+      datosMaestrosCargados: this.datosMaestrosCargados,
+      errorCargaDatosMaestros: this.errorCargaDatosMaestros,
+      maestrosCargando: this.maestrosCargando,
+      reintentosCarga: this.reintentosCarga,
+      
+      // Estado del servicio
+      maestrosState: this.maestrosState,
+      
+      // Datos cargados
+      tipoEntregaCount: this.tipoEntrega?.length || 0,
+      tiemposEntregaCount: this.tiemposEntrega?.length || 0,
+      generosCount: this.generos?.length || 0,
+      ocasionesCount: this.ocasiones?.length || 0,
+      formasEntregaCount: this.formasEntrega?.length || 0,
+      formasEntregaProductoCount: this.formasEntregaProducto?.length || 0,
+      adicionesCount: this.adicionesrows?.length || 0,
+      
+      // Timestamp
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * 🔧 Método de debugging para mostrar información detallada
+   */
+  public showMaestrosDebugInfo(): void {
+    const diagnosticInfo = this.getMaestrosDiagnosticInfo();
+    
+    let debugMessage = '<div class="text-start">';
+    debugMessage += '<h6>🔍 Información de Diagnóstico de Maestros</h6>';
+    debugMessage += '<hr>';
+    
+    // Estado actual
+    debugMessage += '<strong>📊 Estado Actual:</strong><br>';
+    debugMessage += `- Datos cargados: ${diagnosticInfo.datosMaestrosCargados ? '<span class="text-success">✅ Sí</span>' : '<span class="text-danger">❌ No</span>'}<br>`;
+    debugMessage += `- Error de carga: ${diagnosticInfo.errorCargaDatosMaestros ? '<span class="text-danger">❌ Sí</span>' : '<span class="text-success">✅ No</span>'}<br>`;
+    debugMessage += `- Cargando: ${diagnosticInfo.maestrosCargando ? '<span class="text-warning">🔄 Sí</span>' : '<span class="text-secondary">⏸️ No</span>'}<br>`;
+    debugMessage += `- Reintentos: ${diagnosticInfo.reintentosCarga}/${this.maxReintentos}<br><br>`;
+    
+    // Estado del servicio
+    if (diagnosticInfo.maestrosState) {
+      debugMessage += '<strong>🏗️ Estado del Servicio:</strong><br>';
+      debugMessage += `- Loading: ${diagnosticInfo.maestrosState.loading ? '🔄' : '⏸️'}<br>`;
+      debugMessage += `- Loaded: ${diagnosticInfo.maestrosState.loaded ? '✅' : '❌'}<br>`;
+      debugMessage += `- Error: ${diagnosticInfo.maestrosState.error ? '❌' : '✅'}<br>`;
+      debugMessage += `- Última actualización: ${diagnosticInfo.maestrosState.lastUpdate ? new Date(diagnosticInfo.maestrosState.lastUpdate).toLocaleString() : 'N/A'}<br><br>`;
+    }
+    
+    // Conteo de datos
+    debugMessage += '<strong>📊 Datos Disponibles:</strong><br>';
+    debugMessage += `- Tipos de entrega: ${diagnosticInfo.tipoEntregaCount}<br>`;
+    debugMessage += `- Tiempos de entrega: ${diagnosticInfo.tiemposEntregaCount}<br>`;
+    debugMessage += `- Géneros: ${diagnosticInfo.generosCount}<br>`;
+    debugMessage += `- Ocasiones: ${diagnosticInfo.ocasionesCount}<br>`;
+    debugMessage += `- Formas de entrega: ${diagnosticInfo.formasEntregaCount}<br>`;
+    debugMessage += `- Formas entrega producto: ${diagnosticInfo.formasEntregaProductoCount}<br>`;
+    debugMessage += `- Adiciones: ${diagnosticInfo.adicionesCount}<br><br>`;
+    
+    // Acciones disponibles
+    debugMessage += '<strong>🔧 Acciones Disponibles:</strong><br>';
+    debugMessage += '<button id="swal-force-reload" class="btn btn-sm btn-primary me-2 mb-2">🔄 Recargar Maestros</button>';
+    debugMessage += '<button id="swal-clear-cache" class="btn btn-sm btn-warning me-2 mb-2">🧹 Limpiar Caché</button>';
+    debugMessage += '<button id="swal-test-service" class="btn btn-sm btn-info mb-2">🧪 Probar Servicio</button>';
+    
+    debugMessage += '</div>';
+    
+    Swal.fire({
+      title: '🔍 Debug: Maestros',
+      html: debugMessage,
+      icon: 'info',
+      confirmButtonText: 'Cerrar',
+      width: '600px',
+      didOpen: () => {
+        // Event listeners para botones
+        document.getElementById('swal-force-reload')?.addEventListener('click', () => {
+          this.reintentarCargaDatosMaestros();
+          Swal.close();
+        });
+        
+        document.getElementById('swal-clear-cache')?.addEventListener('click', () => {
+          this.pedidoUtilService.clearMaestrosCache();
+          this.toastrService.info('🧹 Caché limpiado', 'Cache');
+          Swal.close();
+        });
+        
+        document.getElementById('swal-test-service')?.addEventListener('click', () => {
+          this.testMaestrosService();
+          Swal.close();
+        });
+      }
+    });
+  }
+
+  /**
+   * 🧪 Prueba el servicio de maestros
+   */
+  private testMaestrosService(): void {
+    this.toastrService.info('🧪 Probando servicio de maestros...', 'Testing');
+    
+    this.pedidoUtilService.getAllMaestro$().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (data) => {
+        this.toastrService.success('✅ Servicio funcionando correctamente', 'Test OK');
+        console.log('🧪 Test del servicio exitoso:', data);
+      },
+      error: (error) => {
+        this.toastrService.error('❌ Error en el servicio', 'Test Failed');
+        console.error('🧪 Test del servicio falló:', error);
+      }
+    });
+  }
+
+  /**
+   * 🎯 Verifica si el componente está listo para usar
+   */
+  public isComponentReady(): boolean {
+    return this.datosMaestrosCargados && 
+           !this.errorCargaDatosMaestros && 
+           !this.maestrosCargando &&
+           this.formasEntregaProducto?.length > 0;
+  }
+
+  /**
+   * 📊 Obtiene el estado actual del componente
+   */
+  public getComponentStatus(): string {
+    if (this.maestrosCargando) return 'loading';
+    if (this.errorCargaDatosMaestros) return 'error';
+    if (this.datosMaestrosCargados && this.formasEntregaProducto?.length > 0) return 'ready';
+    if (this.datosMaestrosCargados && this.formasEntregaProducto?.length === 0) return 'no-delivery-options';
+    return 'unknown';
   }
 
 }

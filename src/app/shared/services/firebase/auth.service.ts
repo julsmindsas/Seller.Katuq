@@ -5,6 +5,7 @@ import { ServiciosService } from "../servicios.service";
 import { TranslateService } from "@ngx-translate/core";
 import Swal from "sweetalert2";
 import { NavService } from "../nav.service";
+import { InitializationService } from "../initialization.service";
 import { BehaviorSubject } from 'rxjs';
 
 export interface User {
@@ -30,7 +31,8 @@ export class AuthService implements OnInit {
     public ngZone: NgZone,
     public toster: ToastrService,
     private translate: TranslateService,
-    private navServices: NavService
+    private navServices: NavService,
+    private initializationService: InitializationService
   ) { }
 
   ngOnInit(): void { }
@@ -80,6 +82,9 @@ export class AuthService implements OnInit {
       localStorage.setItem("user", JSON.stringify(result));
       localStorage.setItem("loginTime", new Date().toISOString());
 
+      // Inicializar datos maestros en segundo plano después del login exitoso
+      this.initializeBackgroundServices();
+
       if (result.mustChangePassword) {
         this.router.navigate(["/change-password"]);
         this.services.getEmpresaByName({ company: result.company });
@@ -107,6 +112,24 @@ export class AuthService implements OnInit {
       this.showErrorAlert("¡ Datos incorrectos !");
       this.ngZone.run(() => this.router.navigate(["/login"]));
     }
+  }
+
+  /**
+   * Inicializa servicios en segundo plano después del login
+   */
+  private initializeBackgroundServices(): void {
+    this.initializationService.initializeAppServices().subscribe({
+      next: (success) => {
+        if (success) {
+          console.log('🎉 Servicios inicializados correctamente en segundo plano');
+        } else {
+          console.warn('⚠️ Algunos servicios no se pudieron inicializar');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error inicializando servicios en segundo plano:', error);
+      }
+    });
   }
 
   setMenu(menu: any) {
@@ -165,12 +188,18 @@ export class AuthService implements OnInit {
 
   SignOut(): void {
     this.showLoader = false;
+    
+    // Resetear servicios de inicialización
+    this.initializationService.resetInitialization();
+    
+    // Limpiar datos de localStorage y sessionStorage
     localStorage.removeItem('user');
     sessionStorage.removeItem('currentCompany');
     localStorage.removeItem('authorizedMenuItems');
     localStorage.removeItem('company');
     localStorage.removeItem('warehousePOS');
     localStorage.removeItem('warehouse');
+    
     this.router.navigateByUrl('/login');
   }
 

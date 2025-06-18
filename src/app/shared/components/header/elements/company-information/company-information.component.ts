@@ -21,9 +21,6 @@ export class CompanyInformationComponent implements OnInit {
             if (!companyInformation) {
                 companyInformation = this.securityService.getCompanyInformationLogged();
             }
-            else if (!companyInformation?.imgUrlLogo) {
-                this.authService.SignOut();
-            }
             this.companyInformation = companyInformation as CompanyInformation;
         });
     }
