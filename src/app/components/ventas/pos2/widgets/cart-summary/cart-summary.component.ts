@@ -8,6 +8,7 @@ import { CartService } from '../../../../../shared/services/cart.service';
 })
 export class CartSummaryComponent {
   couponCode: string = '';
+  public defaultImage: string = 'assets/images/placeholders/product-not-found.svg';
 
   constructor(public cartService: CartService) { }
 
@@ -22,5 +23,23 @@ export class CartSummaryComponent {
     
     // Reiniciar el código del cupón
     this.couponCode = '';
+  }
+
+  /**
+   * Obtiene la URL de la imagen del item del carrito de forma segura
+   * @param item El item del carrito del cual obtener la imagen
+   * @returns URL de la imagen o imagen por defecto si no existe
+   */
+  getCartItemImageUrl(item: any): string {
+    // Verificar que existan todas las propiedades necesarias
+    if (item?.crearProducto?.imagenesPrincipales && 
+        Array.isArray(item.crearProducto.imagenesPrincipales) &&
+        item.crearProducto.imagenesPrincipales.length > 0 &&
+        item.crearProducto.imagenesPrincipales[0]?.urls) {
+      return item.crearProducto.imagenesPrincipales[0].urls;
+    }
+    
+    // Si no hay imagen disponible, retornar imagen por defecto
+    return this.defaultImage;
   }
 } 

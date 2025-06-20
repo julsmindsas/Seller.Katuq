@@ -75,18 +75,23 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
   public maxReintentos: number = 3;
   
   // Propiedades computadas para verificar las propiedades no definidas en la interfaz
+  /**
+   * Indica si este producto requiere que el usuario seleccione un género.
+   * A partir de ahora únicamente nos basamos en la bandera `aceptaGenero` y
+   * no en la presencia del arreglo `genero`, para evitar exigir el campo
+   * cuando el negocio solo usa la lista como filtro pero no como dato
+   * obligatorio.
+   */
   get hasAceptaGenero(): boolean {
-    if (!this.producto?.procesoComercial) return false;
-    const aceptaGenero = (this.producto.procesoComercial as any)['aceptaGenero'];
-    const tieneGeneros = this.producto.procesoComercial.genero && this.producto.procesoComercial.genero.length > 0;
-    return aceptaGenero || tieneGeneros;
+    return !!this.producto?.procesoComercial?.aceptaGenero;
   }
-  
+
+  /**
+   * Indica si este producto requiere que el usuario seleccione una ocasión.
+   * Solo depende de la bandera `aceptaOcasion`.
+   */
   get hasAceptaOcasion(): boolean {
-    if (!this.producto?.procesoComercial) return false;
-    const aceptaOcasion = (this.producto.procesoComercial as any)['aceptaOcasion'];
-    const tieneOcasiones = this.producto.procesoComercial.ocasion && this.producto.procesoComercial.ocasion.length > 0;
-    return aceptaOcasion || tieneOcasiones;
+    return !!this.producto?.procesoComercial?.aceptaOcasion;
   }
 
   ngOnDestroy(): void {
@@ -303,6 +308,20 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       this.loadFormasEntregaConfiguracionProducto();
       this.variables = producto.procesoComercial?.variablesForm ? parse(producto.procesoComercial.variablesForm) : null;
       this.configurarProducto(producto);
+      
+      // 🔧 Ajustar validadores dinámicamente según necesidad
+      if (!this.hasAceptaGenero) {
+        this.datosEntrega.get('genero')?.clearValidators();
+        this.datosEntrega.get('genero')?.updateValueAndValidity();
+      }
+
+      if (!this.hasAceptaOcasion) {
+        this.datosEntrega.get('ocasion')?.clearValidators();
+        this.datosEntrega.get('ocasion')?.updateValueAndValidity();
+      }
+      
+      // 🗓️ Asignar datos de entrega por defecto si el producto NO lleva calendario
+      this.asignarDatosEntregaPorDefecto();
       
       console.log('✅ Datos maestros procesados exitosamente');
     } catch (error) {
@@ -916,6 +935,16 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
       this.productoConfiguradoForm.controls.adiciones.setValue(this.productPreference.filter(preference => preference.tipo === 'adicion'));
       this.productoConfiguradoForm.controls.tarjetas.setValue(this.tarjetas.value);
 
+      // Log para depuración del género y ocasión
+      console.log('🔍 Debug configuración antes de crear ProductoCompra:', {
+        datosEntregaForm: this.datosEntrega.value,
+        datosEntregaFinal: this.productoConfiguradoForm.controls.datosEntrega.value,
+        generoSeleccionado: this.datosEntrega.value.genero,
+        ocasionSeleccionada: this.datosEntrega.value.ocasion,
+        generosDisponibles: this.generos,
+        ocasionesDisponibles: this.ocasiones
+      });
+
       let ProductoCompra: Carrito = {
         producto: this.producto,
         configuracion: this.productoConfiguradoForm.value,
@@ -1426,6 +1455,18 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     const ocasionx = this.ocasiones.find(x => x.id == this.datosEntrega.value.ocasion)
     const generosx = this.generos.find(x => x.id == this.datosEntrega.value.genero)
     const observacionesx = this.datosEntrega.value.observaciones
+
+    // Log para depuración
+    console.log('🔍 Debug addOpcionesPersonalizacion:', {
+      datosEntrega: this.datosEntrega.value,
+      ocasionId: this.datosEntrega.value.ocasion,
+      generoId: this.datosEntrega.value.genero,
+      ocasionx: ocasionx,
+      generosx: generosx,
+      observacionesx: observacionesx,
+      ocasionesDisponibles: this.ocasiones,
+      generosDisponibles: this.generos
+    });
 
     //generar texto con ocasion y genero
     if (ocasionx == null) {
@@ -2228,7 +2269,17 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
    * Valida que los datos maestros estén completos
    */
   private validarDatosMaestros(datos: any): boolean {
-    const camposRequeridos = ['tipoEntrega', 'tiempoEntrega', 'generos', 'ocasiones', 'formaEntrega'];
+    // Siempre son indispensables para cualquier producto
+    const camposRequeridos: string[] = ['tipoEntrega', 'tiempoEntrega', 'formaEntrega'];
+
+    // Coincidir con la misma lógica de `validarDatosMaestros`
+    if (this.hasAceptaGenero) {
+      camposRequeridos.push('generos');
+    }
+    if (this.hasAceptaOcasion) {
+      camposRequeridos.push('ocasiones');
+    }
+
     const camposFaltantes: string[] = [];
 
     camposRequeridos.forEach(campo => {
@@ -2504,6 +2555,55 @@ export class ConfProductToCartComponent implements OnInit, AfterContentChecked, 
     if (this.datosMaestrosCargados && this.formasEntregaProducto?.length > 0) return 'ready';
     if (this.datosMaestrosCargados && this.formasEntregaProducto?.length === 0) return 'no-delivery-options';
     return 'unknown';
+  }
+
+  /**
+   * Asigna valores estándar a los datos de entrega cuando el producto no requiere calendario
+   * • Fecha de entrega   → hoy
+   * • Forma de entrega  → "Envío a Domicilio" (o primera coincidencia disponible)
+   * • Horario de entrega → primer horario que incluya 8-6 pm o, en su defecto, primer horario disponible
+   */
+  private asignarDatosEntregaPorDefecto(): void {
+    if (this.producto?.procesoComercial?.llevaCalendario) {
+      return; // solo aplica cuando NO lleva calendario
+    }
+
+    // No sobre-escribir si el usuario ya seleccionó valores
+    if (this.datosEntrega.get('fechaEntrega')?.value ||
+        this.datosEntrega.get('formaEntrega')?.value ||
+        this.datosEntrega.get('horarioEntrega')?.value) {
+      return;
+    }
+
+    const hoy = new Date();
+    const fechaObj = { day: hoy.getDate(), month: hoy.getMonth() + 1, year: hoy.getFullYear() };
+
+    // Buscar forma "Envío a Domicilio" (case-insensitive)
+    let formaDefault = this.formasEntregaProducto?.find((f: any) =>
+      typeof f?.nombre === 'string' && f.nombre.toLowerCase().includes('domicilio'));
+    if (!formaDefault && this.formasEntregaProducto?.length) {
+      formaDefault = this.formasEntregaProducto[0];
+    }
+
+    // Horario: buscar rango 8-6pm o similar
+    let horarioDefault: any = null;
+    if (formaDefault?.horariosSeleccionados?.length) {
+      const horariosDisponibles: string[] = formaDefault.horariosSeleccionados;
+      
+      // Prioridad 1: Buscar un horario que contenga "8" y "6".
+      horarioDefault = horariosDisponibles.find(h => typeof h === 'string' && h.includes('8') && h.includes('6')) || null;
+
+      // Prioridad 2: Si no se encuentra, buscar el primer horario que parezca válido (contiene números) para evitar textos como "domicilio".
+      if (!horarioDefault) {
+          horarioDefault = horariosDisponibles.find(h => typeof h === 'string' && /\d/.test(h)) || null;
+      }
+    }
+
+    this.datosEntrega.patchValue({
+      fechaEntrega: fechaObj,
+      formaEntrega: formaDefault?.nombre || formaDefault,
+      horarioEntrega: horarioDefault // Si no se encuentra un horario válido, será null y el select quedará en "Seleccionar"
+    });
   }
 
 }

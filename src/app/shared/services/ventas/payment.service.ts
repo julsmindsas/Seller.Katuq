@@ -745,8 +745,13 @@ export class PaymentService extends BaseService {
       if (configuracion?.datosEntrega) {
         const datosEntrega = configuracion.datosEntrega;
         // Buscar nombres en maestros usando IDs
-        const ocasionId = datosEntrega.ocasion; // Asumiendo que es el ID
-        const generoId = datosEntrega.genero?.[0]; // Asumiendo que es un array y tomamos el primero
+        const ocasionId = datosEntrega.ocasion; // Es el ID directo
+        
+        // El género puede ser un ID directo o un array, verificamos ambos casos
+        let generoId: any = datosEntrega.genero;
+        if (Array.isArray(datosEntrega.genero)) {
+          generoId = datosEntrega.genero[0]; // Si es array, tomamos el primero
+        }
 
         const ocasionObj = this.maestros.ocasiones?.find(
           (o) => o.id == ocasionId,
@@ -756,6 +761,15 @@ export class PaymentService extends BaseService {
         const ocasionName = ocasionObj?.name ?? null; // Obtener nombre o null
         const generoName = generoObj?.name ?? null; // Obtener nombre o null
         const observaciones = datosEntrega.observaciones ?? "";
+
+        // Log para depuración del género
+        console.log('🔍 Debug género en payment.service:', {
+          datosEntrega: datosEntrega,
+          generoId: generoId,
+          generoObj: generoObj,
+          generoName: generoName,
+          maestrosGeneros: this.maestros.generos
+        });
 
         // Solo mostrar la sección si hay ocasión, género u observaciones
         if (ocasionName || generoName || observaciones) {

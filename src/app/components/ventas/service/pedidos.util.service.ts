@@ -204,37 +204,37 @@ export class PedidosUtilService {
                         return of([]);
                     })
                 )
-            }).pipe(
-                map((results: RawMaestrosData): MaestrosData => {
-                    const processedResults: MaestrosData = {
-                        formaEntrega: Array.isArray(results.formaEntrega) ? results.formaEntrega : [],
-                        tiempoEntrega: Array.isArray(results.tiempoEntrega) ? results.tiempoEntrega : [],
-                        tipoEntrega: Array.isArray(results.tipoEntrega) ? results.tipoEntrega : [],
-                        ocasiones: Array.isArray(results.ocasiones) ? results.ocasiones : [],
-                        generos: Array.isArray(results.generos) ? results.generos : [],
-                        formasPago: Array.isArray(results.formasPago) ? results.formasPago : [],
-                        adiciones: Array.isArray(results.adiciones) ? results.adiciones : [],
-                        categorias: []
-                    };
+        }).pipe(
+            map((results: RawMaestrosData): MaestrosData => {
+                const processedResults: MaestrosData = {
+                    formaEntrega: Array.isArray(results.formaEntrega) ? results.formaEntrega : [],
+                    tiempoEntrega: Array.isArray(results.tiempoEntrega) ? results.tiempoEntrega : [],
+                    tipoEntrega: Array.isArray(results.tipoEntrega) ? results.tipoEntrega : [],
+                    ocasiones: Array.isArray(results.ocasiones) ? results.ocasiones : [],
+                    generos: Array.isArray(results.generos) ? results.generos : [],
+                    formasPago: Array.isArray(results.formasPago) ? results.formasPago : [],
+                    adiciones: Array.isArray(results.adiciones) ? results.adiciones : [],
+                    categorias: []
+                };
 
-                    try {
-                        const categoriasData = results.categorias;
-                        if (Array.isArray(categoriasData) && categoriasData.length > 0) {
-                            const categoriasRaw = categoriasData[0]?.categoria;
-                            if (categoriasRaw) {
-                                processedResults.categorias = parse(categoriasRaw).map(p => this.mapCategoria(p));
-                            }
+                try {
+                    const categoriasData = results.categorias;
+                    if (Array.isArray(categoriasData) && categoriasData.length > 0) {
+                        const categoriasRaw = categoriasData[0]?.categoria;
+                        if (categoriasRaw) {
+                            processedResults.categorias = parse(categoriasRaw).map(p => this.mapCategoria(p));
                         }
-                    } catch (e) {
-                        console.error('Error procesando categorías:', e);
-                        processedResults.categorias = [];
                     }
+                } catch (e) {
+                    console.error('Error procesando categorías:', e);
+                        processedResults.categorias = [];
+                }
 
-                    return processedResults;
-                }),
+                return processedResults;
+            }),
                 retry(this.RETRY_ATTEMPTS),
                 shareReplay(1)
-            );
+        );
         };
 
         return this.cacheService.get(
@@ -301,7 +301,7 @@ export class PedidosUtilService {
     }
 
     private showErrorNotification(): void {
-        Swal.fire({
+                Swal.fire({
             title: 'Error de Conexión',
             text: 'No se pudieron cargar los datos maestros. Se reintentará automáticamente.',
             icon: 'warning',

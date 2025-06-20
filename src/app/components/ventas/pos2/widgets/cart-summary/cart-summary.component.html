@@ -13,14 +13,14 @@
             <div class="order-details-wrapper">
               <div class="left-details">
                 <div class="order-img widget-hover">
-                  <img [src]="item.crearProducto.imagenesPrincipales[0].urls" [alt]="item.product_name">
+                  <img [src]="getCartItemImageUrl(item)" [alt]="item.crearProducto?.titulo || 'Producto'">
                 </div>
               </div>
               <div class="category-details">
                 <div class="order-details-right">
-                  <h6 class="f-14 f-w-500 mb-2">{{ item.crearProducto.titulo }}</h6>
+                  <h6 class="f-14 f-w-500 mb-2">{{ item.crearProducto?.titulo || 'Producto sin nombre' }}</h6>
                   <div class="last-order-detail">
-                    <h6 class="txt-primary">${{ item.precio.precioUnitarioConIva | number:'1.2-2' }}</h6>
+                                          <h6 class="txt-primary">${{ item.precio?.precioUnitarioConIva | number:'1.2-2' }}</h6>
                     <a href="javascript:void(0)">
                       <i class="fa fa-trash trash-remove" (click)="cartService.posRemoveCartItem(item)"></i>
                     </a>

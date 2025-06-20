@@ -113,11 +113,12 @@ export class ProductComponent implements OnInit {
 
   async precargarImagenes(productos: any[]) {
     for (const producto of productos) {
-      if (producto.crearProducto?.imagenesPrincipales?.[0]?.urls) {
-        const url = producto.crearProducto.imagenesPrincipales[0].urls;
+      const imageUrl = this.getProductImageUrl(producto);
+      // Solo precargar si no es la imagen por defecto
+      if (imageUrl !== this.defaultImage) {
         try {
           // Intentar obtener del caché
-          const cachedDataUrl = await this.imageCacheService.getCachedImage(url);
+          const cachedDataUrl = await this.imageCacheService.getCachedImage(imageUrl);
           if (cachedDataUrl) {
             // Si está en caché, precargar
             const img = new Image();
@@ -396,5 +397,23 @@ export class ProductComponent implements OnInit {
    */
   nextPage() {
     this.goToPage(this.currentPage + 1);
+  }
+
+  /**
+   * Obtiene la URL de la imagen del producto de forma segura
+   * @param product El producto del cual obtener la imagen
+   * @returns URL de la imagen o imagen por defecto si no existe
+   */
+  getProductImageUrl(product: any): string {
+    // Verificar que existan todas las propiedades necesarias
+    if (product?.crearProducto?.imagenesPrincipales && 
+        Array.isArray(product.crearProducto.imagenesPrincipales) &&
+        product.crearProducto.imagenesPrincipales.length > 0 &&
+        product.crearProducto.imagenesPrincipales[0]?.urls) {
+      return product.crearProducto.imagenesPrincipales[0].urls;
+    }
+    
+    // Si no hay imagen disponible, retornar imagen por defecto
+    return this.defaultImage;
   }
 }
