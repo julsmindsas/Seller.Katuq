@@ -749,7 +749,146 @@ export class SidebarComponent implements OnInit, OnDestroy {
       'Monitoreo': 'fa-desktop',
       'Auditoría': 'fa-search',
       'Backup': 'fa-cloud-upload',
-      'Importar/Exportar': 'fa-exchange'
+      'Importar/Exportar': 'fa-exchange',
+      // === LOGÍSTICA Y TRANSPORTE ===
+      'truck': 'fa-truck',
+      // Iconos adicionales mapeados para compatibilidad
+      'map-pin': 'fa-map-marker',
+      'user-check': 'fa-user',
+      'layers': 'fa-th-large',
+      'grid': 'fa-th',
+      'shipping': 'fa-truck',
+      'map': 'fa-map-o',
+      'route': 'fa-road',
+      'location': 'fa-map-marker',
+      'gps': 'fa-crosshairs',
+      'tracking': 'fa-location-arrow',
+      'logistics': 'fa-truck',
+      
+      // === ESTADOS Y ALERTAS ===
+      'check': 'fa-check',
+      'success': 'fa-check-circle',
+      'times': 'fa-times',
+      'error': 'fa-times-circle',
+      'exclamation': 'fa-exclamation-triangle',
+      'warning': 'fa-exclamation-triangle',
+      'info': 'fa-info-circle',
+      'question': 'fa-question-circle',
+      'help': 'fa-question-circle',
+      'alert': 'fa-exclamation',
+      'pending': 'fa-clock-o',
+      'processing': 'fa-spinner',
+      'completed': 'fa-check',
+      'status': 'fa-circle',
+      
+      // === ACCIONES ===
+      'plus': 'fa-plus',
+      'add': 'fa-plus',
+      'create': 'fa-plus',
+      'new': 'fa-plus',
+      'minus': 'fa-minus',
+      'remove': 'fa-minus',
+      'edit': 'fa-edit',
+      'modify': 'fa-edit',
+      'update': 'fa-edit',
+      'delete': 'fa-trash',
+      'trash': 'fa-trash-o',
+      'save': 'fa-save',
+      'download': 'fa-download',
+      'upload': 'fa-upload',
+      'import': 'fa-download',
+      'export': 'fa-upload',
+      'print': 'fa-print',
+      'copy': 'fa-copy',
+      'duplicate': 'fa-copy',
+      'move': 'fa-arrows',
+      'sync': 'fa-refresh',
+      'refresh': 'fa-refresh',
+      'reload': 'fa-repeat',
+      
+      // === BÚSQUEDA Y FILTROS ===
+      'search': 'fa-search',
+      'find': 'fa-search',
+      'filter': 'fa-filter',
+      'sort': 'fa-sort',
+      'sort-asc': 'fa-sort-up',
+      'sort-desc': 'fa-sort-down',
+      'view': 'fa-eye',
+      'hide': 'fa-eye-slash',
+      'show': 'fa-eye',
+      
+      // === TIEMPO Y CALENDARIO ===
+      'calendar': 'fa-calendar',
+      'date': 'fa-calendar-o',
+      'time': 'fa-clock-o',
+      'schedule': 'fa-calendar-check-o',
+      'appointment': 'fa-calendar-plus-o',
+      'event': 'fa-calendar',
+      'deadline': 'fa-hourglass-end',
+      'timer': 'fa-clock-o',
+      'history': 'fa-history',
+      
+      // === EMPRESARIAL Y NEGOCIOS ===
+      'building': 'fa-building',
+      'company': 'fa-building',
+      'office': 'fa-building',
+      'industry': 'fa-industry',
+      'factory': 'fa-industry',
+      'handshake': 'fa-handshake-o',
+      'deal': 'fa-handshake-o',
+      'partnership': 'fa-handshake-o',
+      'briefcase': 'fa-briefcase',
+      'business': 'fa-briefcase',
+      'calculator': 'fa-calculator',
+      'accounting': 'fa-calculator',
+      'finance': 'fa-dollar',
+      'budget': 'fa-money',
+      'investment': 'fa-line-chart',
+      'profit': 'fa-arrow-up',
+      'loss': 'fa-arrow-down',
+      
+      // === CALIDAD Y CERTIFICACIONES ===
+      'quality': 'fa-star',
+      'medal': 'fa-star',
+      'trophy': 'fa-trophy',
+      'badge': 'fa-certificate',
+      'verification': 'fa-check-circle',
+      'approval': 'fa-check-square-o',
+      'signature': 'fa-pencil-square-o',
+      
+      // === SEGURIDAD ===
+      'security': 'fa-shield',
+      'shield': 'fa-shield',
+      'lock': 'fa-lock',
+      'unlock': 'fa-unlock',
+      'key': 'fa-key',
+      'password': 'fa-key',
+      'encryption': 'fa-user-secret',
+      'privacy': 'fa-user-secret',
+      'backup': 'fa-cloud-upload',
+      'restore': 'fa-cloud-download',
+      
+      // === TECNOLOGÍA ===
+      'computer': 'fa-desktop',
+      'laptop': 'fa-laptop',
+      'mobile': 'fa-mobile',
+      'tablet': 'fa-tablet',
+      'wifi': 'fa-wifi',
+      'bluetooth': 'fa-bluetooth-b',
+      'usb': 'fa-usb',
+      'cloud': 'fa-cloud',
+      'network': 'fa-sitemap',
+      'internet': 'fa-globe',
+      
+      // === GENÉRICOS MEJORADOS ===
+      'circle': 'fa-circle',
+      'dot': 'fa-circle',
+      'point': 'fa-map-marker',
+      'marker': 'fa-map-marker',
+      'flag': 'fa-flag',
+      'tag': 'fa-tag',
+      'label': 'fa-tag',
+      'external-link': 'fa-external-link',
     };
     return iconMap[sectionTitle] || 'fa-folder-open-o';
   }
@@ -801,6 +940,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       // === USUARIOS Y PERSONAS ===
       'user': 'fa-user',
       'users': 'fa-users',
+      'user-check': 'fa-user',
       'user-tie': 'fa-user',
       'user-cog': 'fa-user',
       'user-friends': 'fa-users',
@@ -820,6 +960,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       // === INVENTARIO Y PRODUCTOS ===
       'box': 'fa-cube',
       'boxes': 'fa-cubes',
+      'layers': 'fa-th-large',
       'cube': 'fa-cube',
       'cubes': 'fa-cubes',
       'warehouse': 'fa-building-o',
@@ -1058,6 +1199,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       'tag': 'fa-tag',
       'label': 'fa-tag',
       'external-link': 'fa-external-link',
+      'map-pin': 'fa-map-marker',
     };
 
     // Intentar mapear el icono
@@ -1240,20 +1382,25 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   // Método para buscar en el menú
   searchMenu(): void {
-    this.isSearchActive = this.searchTerm.length > 0;
-    
+    // Eliminar espacios innecesarios y normalizar término
+    const term = this.searchTerm.trim().toLowerCase();
+
+    // Activar/desactivar modo búsqueda según exista término
+    this.isSearchActive = term.length > 0;
+
     if (!this.isSearchActive) {
       this.searchResults = [];
       return;
     }
-    
-    const term = this.searchTerm.toLowerCase();
-    this.searchResults = this.getAllMenuItems().filter(item => {
-      // Buscar tanto en el título como en posibles palabras clave
-      const titleMatch = item.title?.toLowerCase().includes(term);
-      const pathMatch = item.path?.toLowerCase().includes(term);
-      return titleMatch || pathMatch;
-    }).slice(0, 8); // Limitar a 8 resultados para mejor performance
+
+    // Filtrar por coincidencia en título o ruta
+    this.searchResults = this.getAllMenuItems()
+      .filter(item => {
+        const titleMatch = item.title?.toLowerCase().includes(term);
+        const pathMatch = item.path?.toLowerCase().includes(term);
+        return titleMatch || pathMatch;
+      })
+      .slice(0, 8); // Limitar resultados para performance
   }
 
   // Método para limpiar la búsqueda
