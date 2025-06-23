@@ -328,3 +328,73 @@
     transform: translateY(0);
   }
 }
+
+/* Estilos específicos para selección de ubicación geográfica */
+.alert-success {
+  background-color: #d1edff;
+  border-color: #b8daff;
+  color: #0c5460;
+  border-radius: 6px;
+  border-left: 4px solid #28a745;
+  
+  i.pi-map-marker {
+    color: #28a745;
+    font-size: 1.1rem;
+  }
+  
+  strong {
+    color: #155724;
+  }
+  
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+/* Mejorar la apariencia de los selectores de departamento y municipio */
+.form-select {
+  transition: all 0.15s ease-in-out;
+  
+  &:hover:not(:disabled) {
+    border-color: #86b7fe;
+  }
+  
+  &:disabled {
+    background-color: #e9ecef;
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+/* Estilo para texto de ayuda */
+.form-text {
+  font-size: 0.825rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+  
+  &.text-muted {
+    font-style: italic;
+  }
+}
+
+/* Animación para la información de ubicación seleccionada */
+@keyframes slideInFromTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mejoras responsivas adicionales para móviles */
+@media (max-width: 768px) {
+  .alert-success {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .form-text {
+    font-size: 0.75rem;
+  }
+}

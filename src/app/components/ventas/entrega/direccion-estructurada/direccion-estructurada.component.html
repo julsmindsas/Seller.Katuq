@@ -135,15 +135,57 @@
           </div>
         </div>
 
-        <!-- Ciudad (común para ambos tipos) -->
+        <!-- Ubicación geográfica (común para ambos tipos) -->
+        <!-- Departamento -->
         <div class="mb-3">
-          <label class="form-label">Ciudad *</label>
+          <label class="form-label">Departamento *</label>
+          <select class="form-select" 
+                  [(ngModel)]="departamentoSeleccionado" 
+                  (change)="onDepartamentoChange($event.target.value)"
+                  [ngModelOptions]="{standalone: true}">
+            <option value="">Selecciona un departamento</option>
+            <option *ngFor="let departamento of departamentos" [value]="departamento">
+              {{ departamento }}
+            </option>
+          </select>
+          <small class="form-text text-muted">
+            Selecciona primero el departamento para filtrar los municipios
+          </small>
+        </div>
+
+        <!-- Municipio -->
+        <div class="mb-3">
+          <label class="form-label">Municipio *</label>
+          <div class="row g-2">
+            <div class="col-8">
+              <select class="form-select" 
+                      [(ngModel)]="municipioSeleccionado" 
+                      (change)="onMunicipioChange($event.target.value)"
+                      [ngModelOptions]="{standalone: true}"
+                      [disabled]="!departamentoSeleccionado">
+                <option value="">{{ departamentoSeleccionado ? 'Selecciona un municipio' : 'Primero selecciona un departamento' }}</option>
+                <option *ngFor="let municipio of getMunicipiosDepartamento()" [value]="municipio">
+                  {{ municipio }}
+                </option>
+              </select>
+            </div>
+            <div class="col-4">
+              <div class="text-center">
+                <small class="text-muted">O busca directamente:</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Búsqueda directa de ciudad -->
+        <div class="mb-3">
+          <label class="form-label">Búsqueda directa de ciudad</label>
           <div class="position-relative">
             <input type="text" 
                    class="form-control" 
                    [class.is-valid]="ciudadValida"
                    [class.is-invalid]="ciudadInvalida"
-                   placeholder="Ej: Bogotá, Medellín, Cali..." 
+                   placeholder="Escribe para buscar: Bogotá, Medellín, Cali..." 
                    formControlName="ciudad"
                    (input)="validarCiudadEnTiempoReal($event)"
                    autocomplete="off">
@@ -163,6 +205,20 @@
             </div>
             <div class="invalid-feedback" *ngIf="ciudadInvalida">
               <i class="pi pi-times"></i> Ciudad no encontrada. Verifica el nombre.
+            </div>
+          </div>
+          <small class="form-text text-muted">
+            Esta búsqueda auto-seleccionará el departamento correspondiente
+          </small>
+        </div>
+
+        <!-- Información de ubicación seleccionada -->
+        <div *ngIf="departamentoSeleccionado && municipioSeleccionado" class="mb-3">
+          <div class="alert alert-success d-flex align-items-center" role="alert">
+            <i class="pi pi-map-marker me-2"></i>
+            <div>
+              <strong>Ubicación seleccionada:</strong><br>
+              {{ municipioSeleccionado }}, {{ departamentoSeleccionado }}
             </div>
           </div>
         </div>

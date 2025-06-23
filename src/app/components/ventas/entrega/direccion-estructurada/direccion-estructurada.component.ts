@@ -16,6 +16,7 @@ import {
   ColombiaAddressService,
   BarrioInfo,
 } from "../../../../shared/services/colombia-address.service";
+import { InfoPaises } from "../../../../../Mock/pais-estado-ciudad";
 
 @Component({
   selector: "app-direccion-estructurada",
@@ -184,15 +185,14 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   ciudadInvalida = false;
   sugerenciasCiudad: string[] = [];
 
-  // Lista de ciudades principales de Colombia
-  ciudadesColombianas = [
-    'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Cúcuta', 'Soledad', 'Ibagué',
-    'Bucaramanga', 'Soacha', 'Santa Marta', 'Villavicencio', 'Valledupar', 'Pereira', 'Montería',
-    'Itagüí', 'Pasto', 'Manizales', 'Neiva', 'Palmira', 'Popayán', 'Buenaventura', 'Tuluá',
-    'Dosquebradas', 'Envigado', 'Cartago', 'Bello', 'Florencia', 'Sincelejo', 'Malambo',
-    'Barrancas', 'Apartadó', 'Turbo', 'Riohacha', 'Girardot', 'Ubaté', 'Zipaquirá', 'Facatativá',
-    'Chía', 'Mosquera', 'Madrid', 'Funza', 'Cajicá', 'La Calera', 'Sopó', 'Tocancipá', 'Gachancipá'
-  ];
+  // Datos geográficos de Colombia completos
+  departamentos: string[] = [];
+  municipios: string[] = [];
+  departamentoSeleccionado: string = "";
+  municipioSeleccionado: string = "";
+  
+  // Datos completos de Colombia
+  datosColombiaCompletos: any[] = [];
 
   // Suscripciones para liberar en OnDestroy
   private suscripciones: Subscription[] = [];
@@ -202,7 +202,11 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     public activeModal: NgbActiveModal,
     private geocodingService: GeocodingService,
     private colombiaAddressService: ColombiaAddressService,
-  ) {}
+    private infoPaises: InfoPaises
+  ) {
+    // Inicializar datos de Colombia
+    this.inicializarDatosGeograficos();
+  }
 
   ngOnInit(): void {
     this.inicializarFormulario();
@@ -248,6 +252,10 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       letraCruce: [""],
       complementoCruce: [""],
       numeroCasa: ["", Validators.required],
+
+      // Ubicación geográfica
+      departamento: [""],
+      municipio: [""],
 
       // Ciudad requerida
       ciudad: [this.ciudadActual || "", Validators.required],
@@ -753,11 +761,31 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       esRural: false,
       tipoNomenclaturaRural: "Vereda",
       ciudad: this.ciudadActual || "",
+      departamento: "",
+      municipio: ""
     });
+
+    // Limpiar selecciones
+    this.departamentoSeleccionado = "";
+    this.municipioSeleccionado = "";
+    this.ciudadSeleccionada = "";
+    this.ciudadValida = false;
+    this.ciudadInvalida = false;
+    this.sugerenciasCiudad = [];
 
     this.esDireccionRural = false;
     this.actualizarValidadores();
     this.actualizarVistaPrevia();
+
+    // Restaurar lista completa de municipios
+    const colombia = this.infoPaises.paises.find(p => p.Pais === 'Colombia');
+    if (colombia && colombia.Regiones) {
+      this.municipios = [];
+      colombia.Regiones.forEach(region => {
+        this.municipios.push(...region.ciudades);
+      });
+      this.municipios = [...new Set(this.municipios)].sort();
+    }
   }
 
   // Cierra el modal sin aplicar cambios
@@ -783,12 +811,12 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     }
 
     // Buscar coincidencias
-    this.sugerenciasCiudad = this.ciudadesColombianas
+    this.sugerenciasCiudad = this.municipios
       .filter(c => c.toLowerCase().includes(ciudad.toLowerCase()))
       .slice(0, 5);
 
     // Validar si es una ciudad exacta
-    const ciudadExacta = this.ciudadesColombianas.find(c => 
+    const ciudadExacta = this.municipios.find(c => 
       c.toLowerCase() === ciudad.toLowerCase()
     );
 
@@ -803,5 +831,103 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     this.ciudadValida = true;
     this.ciudadInvalida = false;
     this.sugerenciasCiudad = [];
+    
+    // Auto-seleccionar departamento basado en la ciudad
+    this.autoSeleccionarDepartamento(ciudad);
+  }
+
+  // Manejar cambio de departamento
+  onDepartamentoChange(departamento: string): void {
+    this.departamentoSeleccionado = departamento;
+    this.municipioSeleccionado = '';
+    
+    // Actualizar lista de municipios para el departamento seleccionado
+    const regionSeleccionada = this.datosColombiaCompletos.find(
+      region => region.departamento === departamento
+    );
+    
+    if (regionSeleccionada) {
+      this.municipios = regionSeleccionada.ciudades;
+    }
+    
+    // Limpiar ciudad seleccionada si no pertenece al nuevo departamento
+    if (this.direccionForm.get('ciudad')?.value) {
+      this.validarCiudadDepartamento();
+    }
+  }
+
+  // Manejar cambio de municipio
+  onMunicipioChange(municipio: string): void {
+    this.municipioSeleccionado = municipio;
+    this.direccionForm.get('ciudad')?.setValue(municipio);
+    this.ciudadSeleccionada = municipio;
+    this.ciudadValida = true;
+    this.ciudadInvalida = false;
+    this.sugerenciasCiudad = [];
+  }
+
+  // Auto-seleccionar departamento basado en la ciudad
+  private autoSeleccionarDepartamento(ciudad: string): void {
+    const regionEncontrada = this.datosColombiaCompletos.find(
+      region => region.ciudades.includes(ciudad)
+    );
+    
+    if (regionEncontrada) {
+      this.departamentoSeleccionado = regionEncontrada.departamento;
+      this.municipioSeleccionado = ciudad;
+      
+      // Actualizar municipios del departamento
+      this.municipios = regionEncontrada.ciudades;
+    }
+  }
+
+  // Validar que la ciudad pertenezca al departamento seleccionado
+  private validarCiudadDepartamento(): void {
+    const ciudadActual = this.direccionForm.get('ciudad')?.value;
+    
+    if (ciudadActual && this.departamentoSeleccionado) {
+      const regionSeleccionada = this.datosColombiaCompletos.find(
+        region => region.departamento === this.departamentoSeleccionado
+      );
+      
+      if (regionSeleccionada && !regionSeleccionada.ciudades.includes(ciudadActual)) {
+        // La ciudad no pertenece al departamento, limpiar
+        this.direccionForm.get('ciudad')?.setValue('');
+        this.ciudadSeleccionada = '';
+        this.municipioSeleccionado = '';
+        this.ciudadValida = false;
+        this.ciudadInvalida = false;
+      }
+    }
+  }
+
+  // Obtener municipios del departamento seleccionado
+  getMunicipiosDepartamento(): string[] {
+    if (!this.departamentoSeleccionado) {
+      return [];
+    }
+    
+    const regionSeleccionada = this.datosColombiaCompletos.find(
+      region => region.departamento === this.departamentoSeleccionado
+    );
+    
+    return regionSeleccionada ? regionSeleccionada.ciudades : [];
+  }
+
+  // Inicializar datos geográficos de Colombia
+  private inicializarDatosGeograficos(): void {
+    const colombia = this.infoPaises.paises.find(p => p.Pais === 'Colombia');
+    if (colombia && colombia.Regiones) {
+      this.datosColombiaCompletos = colombia.Regiones;
+      this.departamentos = colombia.Regiones.map(region => region.departamento);
+      
+      // Obtener todos los municipios únicos
+      this.municipios = [];
+      colombia.Regiones.forEach(region => {
+        this.municipios.push(...region.ciudades);
+      });
+      // Eliminar duplicados y ordenar
+      this.municipios = [...new Set(this.municipios)].sort();
+    }
   }
 }

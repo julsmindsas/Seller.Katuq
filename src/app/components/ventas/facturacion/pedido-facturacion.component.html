@@ -1,5 +1,5 @@
 <p-tabView [activeIndex]="activeIndex">
-  <p-tabPanel header="{{ 'Mis Direcciones de Facturación' | translate}}">
+  <p-tabPanel header="{{ 'Mis Datos de Facturación' | translate}}">
     <div class="alert alert-info">
       {{ 'Por favor, seleccione o ingrese los datos de Facturación Electrónica.' | translate}}
     </div>
@@ -16,8 +16,8 @@
         </div>
       </div>
       <div class="row">
-        <h3>
-          {{ 'Dirección de facturacion seleccionada:' | translate}} {{ pedidoGral?.facturacion?.direccion}}
+        <h3>  
+          {{ 'Datos de facturacion seleccionada:' | translate}} {{ pedidoGral?.facturacion?.direccion}}
         </h3>
       </div>
     </div>
@@ -66,7 +66,7 @@
       </table>
     </div>
   </p-tabPanel>
-  <p-tabPanel header="{{ 'Crear Dirección de Facturación' | translate}}">
+  <p-tabPanel header="{{ 'Crear Datos de Facturación' | translate}}">
     <input [(ngModel)]="facturacionElectronica" type="checkbox" (change)="datosFacElect($event)" />
     <label class="form-label" for="razon_social">
       {{ 'Los datos de facturacion electronica son iguales a los del cliente' | translate}}

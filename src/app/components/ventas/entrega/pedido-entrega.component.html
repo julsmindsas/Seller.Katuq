@@ -37,110 +37,54 @@
       </div>
     </div>
     <div *ngIf="datosEntregaNoEncontradosParaCiudadSeleccionada" class="alert alert-warning mb-3">
-      <i class="fa fa-exclamation-triangle me-2"></i>
-      <strong>Atención:</strong> No hay direcciones registradas para la ciudad seleccionada en el pedido
-      <span *ngIf="pedidoGral?.envio?.ciudad">({{ pedidoGral.envio.ciudad }})</span>.
-      <br>
-      Se muestran todas las direcciones disponibles. Puede seleccionar una existente o crear una nueva para la ciudad requerida.
+      <i class="fa fa-exclamation-triangle me-2"></i> No hay direcciones registradas para la ciudad seleccionada. 
+      Se muestran todas las direcciones disponibles. Seleccione una o cree una nueva.
     </div>
     <div *ngIf="datosEntregas && datosEntregas.length > 0">
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead class="table-light">
-            <tr>
-              <th style="width: 150px;">Acción</th>
-              <th>Referencia</th>
-              <th>Destinatario</th>
-              <th>Dirección</th>
-              <th>Ciudad</th>
-              <th style="width: 100px;">Opciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of datosEntregas; let i = index"
-                [class.table-success]="pedidoGral?.envio?.direccionEntrega === item.direccionEntrega"
-                [class.table-warning]="pedidoGral?.envio?.ciudad && item.ciudad !== pedidoGral.envio.ciudad">
-              <td>
-                <button class="btn btn-sm"
-                        [class.btn-success]="pedidoGral?.envio?.direccionEntrega !== item.direccionEntrega"
-                        [class.btn-outline-success]="pedidoGral?.envio?.direccionEntrega === item.direccionEntrega"
-                        (click)="seleccionarDireccionEntrega(i)">
-                  <i class="fa" [class.fa-check]="pedidoGral?.envio?.direccionEntrega === item.direccionEntrega"
-                     [class.fa-plus]="pedidoGral?.envio?.direccionEntrega !== item.direccionEntrega"></i>
-                  {{ pedidoGral?.envio?.direccionEntrega === item.direccionEntrega ? 'Seleccionada' : 'Seleccionar' }}
-                </button>
-              </td>
-              <td>
-                <span class="badge bg-light text-dark">{{ item.alias || 'Sin alias' }}</span>
-              </td>
-              <td>
-                <strong>{{ item.nombres }} {{ item.apellidos }}</strong>
-                <br>
-                <small class="text-muted">
-                  <i class="fa fa-phone"></i> +{{ item.indicativoCel }} {{ item.celular }}
-                </small>
-              </td>
-              <td>
-                <div class="fw-bold">{{ item.direccionEntrega }}</div>
-                <small class="text-muted" *ngIf="item.observaciones">
-                  <i class="fa fa-info-circle"></i> {{ item.observaciones }}
-                </small>
-              </td>
-              <td>
-                <span class="badge"
-                      [class.bg-success]="pedidoGral?.envio?.ciudad === item.ciudad"
-                      [class.bg-warning]="pedidoGral?.envio?.ciudad && pedidoGral.envio.ciudad !== item.ciudad"
-                      [class.bg-secondary]="!pedidoGral?.envio?.ciudad">
-                  {{ item.ciudad }}
-                </span>
-                <br>
-                <small class="text-muted" *ngIf="item.zonaCobro">
-                  Zona: {{ item.zonaCobro }}
-                </small>
-              </td>
-              <td>
-                <div class="btn-group-vertical btn-group-sm">
-                  <button class="btn btn-outline-primary btn-sm"
-                          ngbTooltip="Editar dirección"
-                          (click)="editarDatos(entrega, i)">
-                    <i class="fa fa-edit"></i>
-                  </button>
-                  <button class="btn btn-outline-danger btn-sm"
-                          ngbTooltip="Eliminar dirección"
-                          (click)="eliminarDato1(i)">
-                    <i class="fa fa-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Referencia</th>
+            <th>Nombres/Razon Social</th>
 
-      <!-- Información adicional -->
-      <div class="mt-3">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="alert alert-info" *ngIf="pedidoGral?.envio?.direccionEntrega">
-              <i class="fa fa-check-circle me-2"></i>
-              <strong>Dirección seleccionada:</strong> {{ pedidoGral.envio.direccionEntrega }}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="alert alert-secondary" *ngIf="pedidoGral?.envio?.ciudad">
-              <i class="fa fa-map-marker-alt me-2"></i>
-              <strong>Ciudad del pedido:</strong> {{ pedidoGral.envio.ciudad }}
-            </div>
-          </div>
-        </div>
-      </div>
+            <th>Direccion</th>
+            <th>Opciones</th>
+
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of datosEntregas; let i = index">
+            <td>
+              <button class="btn btn-primary" (click)="seleccionarDireccionEntrega(i)">
+                Usar Esta Direccion
+              </button>
+            </td>
+            <td>{{ item.alias }}</td>
+            <td>{{ item.nombres }} {{ item.apellidos }}</td>
+
+            <td>{{ item.direccionEntrega }}</td>
+
+            <td>
+              <i placement="top" ngbTooltip="{{ 'Editar' | translate }}" style="
+                    font-size: 18px;
+                    margin-left: 10px;
+                    color: cornflowerblue;
+                    cursor: pointer;
+                  " class="icofont icofont-pencil-alt-5" (click)="editarDatos(entrega, i)"></i>
+              <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}" style="
+                    font-size: 18px;
+                    margin-left: 10px;
+                    color: cornflowerblue;
+                    cursor: pointer;
+                  " class="icofont icofont icofont-trash" (click)="eliminarDato1(i)"></i>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <div *ngIf="!datosEntregas || datosEntregas.length === 0" class="alert alert-info">
-      <i class="fa fa-info-circle me-2"></i>
-      <strong>No hay direcciones de entrega registradas.</strong>
-      <br>
-      Para continuar con el pedido, necesita crear al menos una dirección de entrega.
-      Use la pestaña "Crear Dirección de Entrega" para agregar una nueva dirección.
+      <i class="fa fa-info-circle me-2"></i> No hay direcciones de entrega registradas. Por favor cree una nueva dirección.
     </div>
   </p-tabPanel>
   <p-tabPanel header="Crear Dirección de Entrega">
@@ -214,7 +158,7 @@
       </div>
       <div class="col-sm-6">
         <div class="input-group">
-          <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega"
+          <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" 
                  placeholder="Haz clic para crear una dirección estructurada" (click)="abrirModalDireccion()" readonly />
           <div class="input-group-append">
             <span class="input-group-text bg-light">
@@ -227,7 +171,7 @@
     <div class="row">
       <div class="col-sm-6">
         <label class="form-label" for="observaciones">Nombre de la Unidad o Edificio</label>
-        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="nombreUnidad" />
+        <input class="form-control" type="text" id="nombre_unidad_entrega" [(ngModel)]="nombreUnidad" />
       </div>
       <div class="col-sm-6">
         <label class="form-label" for="observaciones">Especificaciones Internas: Torre, Apto,
@@ -246,7 +190,7 @@
     <div class="row">
       <div class="col-sm-12">
         <label class="form-label" for="observaciones">Barrio/Sector</label>
-        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="barrio" />
+        <input class="form-control" type="text" id="barrio_entrega" [(ngModel)]="barrio" />
       </div>
     </div>
     <div class="row">
@@ -291,9 +235,9 @@
       <div class="col-sm-4">
         <label class="form-label" class="form-label" for="validationCustom01">Zona Cobro</label>
       </div>
-      <div class="col-sm-4">
+      <!-- <div class="col-sm-4">
         <label class="form-label" for="codigo_postal_entrega">Código Postal:</label>
-      </div>
+      </div> -->
 
     </div>
     <div class="row">
@@ -309,7 +253,7 @@
           </option>
         </select>
       </div>
-      <div class="col-md-4">
+      <!-- <div class="col-md-4">
 
         <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="codigo_postal_entrega" />
       </div>
@@ -317,7 +261,7 @@
         <button class="btn btn-primary" (click)="redirectToPostalCode()">
           Conoce Tu Codigo Postal
         </button>
-      </div>
+      </div> -->
     </div>
     <div class="row">
       <button type="button" class="btn btn-primary" (click)="guardarDatosEntrega()">
@@ -401,7 +345,7 @@
       </div>
       <div class="col-sm-6">
         <div class="input-group">
-          <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega"
+          <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" 
                  placeholder="Haz clic para crear una dirección estructurada" (click)="abrirModalDireccion()" readonly />
           <div class="input-group-append">
             <span class="input-group-text bg-light">
@@ -414,7 +358,7 @@
     <div class="row">
       <div class="col-sm-6">
         <label class="form-label" for="observaciones">Nombre de la Unidad o Edificio</label>
-        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="nombreUnidad" />
+        <input class="form-control" type="text" id="nombre_unidad_entrega" [(ngModel)]="nombreUnidad" />
       </div>
       <div class="col-sm-6">
         <label class="form-label" for="observaciones">Especificaciones Internas: Torre, Apto, Oficina</label>
@@ -431,7 +375,7 @@
     <div class="row">
       <div class="col-sm-12">
         <label class="form-label" for="observaciones">Barrio/Sector</label>
-        <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="barrio" />
+        <input class="form-control" type="text" id="barrio_entrega" [(ngModel)]="barrio" />
       </div>
     </div>
     <div class="row">
@@ -473,9 +417,9 @@
       <div class="col-sm-4">
         <label class="form-label" class="form-label" for="validationCustom01">Zona Cobro</label>
       </div>
-      <div class="col-sm-4">
+      <!-- <div class="col-sm-4">
         <label class="form-label" for="codigo_postal_entrega">Código Postal:</label>
-      </div>
+      </div> -->
     </div>
     <div class="row">
       <div class="col-md-4 mb-3">
@@ -490,14 +434,14 @@
           </option>
         </select>
       </div>
-      <div class="col-md-4">
+      <!-- <div class="col-md-4">
         <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="codigo_postal_entrega" />
       </div>
       <div class="col-md-4 mb-3">
         <button class="btn btn-primary" (click)="redirectToPostalCode()">
           Conoce Tu Codigo Postal
         </button>
-      </div>
+      </div> -->
     </div>
   </div>
   <div class="modal-footer">
