@@ -5,68 +5,22 @@
 </div>
 <div class="modal-body">
   <div class="payment-methods-container">
-    <!-- Tarjetas de crédito/débito -->
-    <div class="payment-category">
-      <h5><i class="fa fa-credit-card"></i> Tarjetas de Crédito/Débito</h5>
-      <div class="payment-options-grid">
-        <div class="payment-option" (click)="selectPaymentMethod('Tarjeta de Crédito')">
-          <div class="payment-option-icon">
-            <img src="assets/images/payment/credit-card.svg" alt="Tarjeta de Crédito">
+    <ng-container *ngIf="paymentCategories && paymentCategories.length; else sinFormasPago">
+      <div class="payment-category" *ngFor="let cat of paymentCategories">
+        <h5><i [ngClass]="getCategoryIcon(cat.categoria)"></i> {{ cat.categoria }}</h5>
+        <div class="payment-options-grid">
+          <div class="payment-option" *ngFor="let metodo of cat.formasPago" (click)="selectPaymentMethod(metodo.nombre)">
+            <div class="payment-option-icon">
+              <img [src]="getPaymentIconPath(metodo)" [alt]="metodo.nombre" (error)="onImgError($event)">
+            </div>
+            <div class="payment-option-name">{{ metodo.nombre }}</div>
           </div>
-          <div class="payment-option-name">Tarjeta de Crédito</div>
-        </div>
-        <div class="payment-option" (click)="selectPaymentMethod('Tarjeta de Débito')">
-          <div class="payment-option-icon">
-            <img src="assets/images/payment/debit-card.svg" alt="Tarjeta de Débito">
-          </div>
-          <div class="payment-option-name">Tarjeta de Débito</div>
         </div>
       </div>
-    </div>
-
-    <!-- Pasarelas de pago -->
-    <div class="payment-category">
-      <h5><i class="fa fa-globe"></i> Pasarelas de Pago</h5>
-      <div class="payment-options-grid">
-        <div class="payment-option" (click)="selectPaymentMethod('Wompi')">
-          <div class="payment-option-icon">
-            <img src="assets/images/payment/wompi.svg" alt="Wompi">
-          </div>
-          <div class="payment-option-name">Wompi</div>
-        </div>
-        <div class="payment-option" (click)="selectPaymentMethod('ePayco')">
-          <div class="payment-option-icon">
-            <img src="assets/images/payment/epayco.svg" alt="ePayco">
-          </div>
-          <div class="payment-option-name">ePayco</div>
-        </div>
-        <div class="payment-option" (click)="selectPaymentMethod('PayPal')">
-          <div class="payment-option-icon">
-            <img src="assets/images/payment/paypal.svg" alt="PayPal">
-          </div>
-          <div class="payment-option-name">PayPal</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transferencias bancarias -->
-    <div class="payment-category">
-      <h5><i class="fa fa-university"></i> Transferencias Bancarias</h5>
-      <div class="payment-options-grid">
-        <div class="payment-option" (click)="selectPaymentMethod('PSE')">
-          <div class="payment-option-icon">
-            <img src="assets/images/payment/pse.svg" alt="PSE">
-          </div>
-          <div class="payment-option-name">PSE</div>
-        </div>
-        <div class="payment-option" (click)="selectPaymentMethod('Transferencia Bancaria')">
-          <div class="payment-option-icon">
-            <img src="assets/images/payment/bank-transfer.svg" alt="Transferencia Bancaria">
-          </div>
-          <div class="payment-option-name">Transferencia Bancaria</div>
-        </div>
-      </div>
-    </div>
+    </ng-container>
+    <ng-template #sinFormasPago>
+      <p>No se encontraron métodos de pago disponibles.</p>
+    </ng-template>
   </div>
 </div>
 <div class="modal-footer">

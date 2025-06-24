@@ -149,6 +149,17 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
         next: (res: any) => {
           const htmlSanizado = this.paymentService.getHtmlContent(pedido);
 
+          pedido.formaEntrega = 'Recoge en tienda';
+          pedido.fechaEntrega = new Date();
+          pedido.horarioEntrega = 'ENTRE LAS 8:00 Y 17:00';
+          pedido.carrito.forEach((item: any) => {
+            item.configuracion.datosEntrega.forEach((entrega: any) => {
+              entrega.formaEntrega = 'Recoge en tienda';
+              entrega.fechaEntrega = new Date();
+              entrega.horarioEntrega = 'ENTRE LAS 8:00 Y 17:00';
+            });
+          });
+
           // Guardar pedido con estado de pago pendiente
           this.ventasService.createOrder({ order: pedido, emailHtml: htmlSanizado }).subscribe({
             next: (res: any) => {
