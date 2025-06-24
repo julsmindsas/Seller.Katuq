@@ -58,14 +58,14 @@ export class CashClosingComponent {
   }
 
   calcularInforme() {
-    const fechaInicio = new Date(this.fechaCierre);
-    fechaInicio.setHours(0, 0, 0, 0);
-    const fechaFin = new Date(this.fechaFin);
-    fechaFin.setHours(23, 59, 59, 999);
+    // Crear fechas sin conversión de zona horaria UTC
+    const fechaInicio = new Date(this.fechaCierre + 'T00:00:00');
+    const fechaFin = new Date(this.fechaFin + 'T23:59:59.999');
     
     const filter = {
-      fechaInicial: fechaInicio.toISOString(),
-      fechaFinal: fechaFin.toISOString(),
+      fechaInicial: this.fechaCierre + 'T00:00:00.000Z',
+      fechaFinal: this.fechaFin + 'T23:59:59.999Z',
+      fechaFin: this.fechaFin + 'T23:59:59.999Z',
       company: this.empresa,
       estadoProceso: ['Todos'],
       origenConsulta: 'POS'

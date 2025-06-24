@@ -121,19 +121,17 @@ export class CashClosingHistoryComponent implements OnInit {
     const fechaInicioValue = this.filtroForm.get('fechaInicio')?.value || this.fechaInicioModel;
     const fechaFinValue = this.filtroForm.get('fechaFin')?.value || this.fechaFinModel;
     
-    const fechaInicio = this.toDate(fechaInicioValue);
-    const fechaFin = this.toDate(fechaFinValue);
-    
-    // Establecer las horas para incluir todo el día
-    fechaInicio.setHours(0, 0, 0, 0);
-    fechaFin.setHours(23, 59, 59, 999);
+    // Construir fechas en formato ISO sin conversión UTC
+    const fechaInicioStr = `${fechaInicioValue.year}-${fechaInicioValue.month.toString().padStart(2, '0')}-${fechaInicioValue.day.toString().padStart(2, '0')}`;
+    const fechaFinStr = `${fechaFinValue.year}-${fechaFinValue.month.toString().padStart(2, '0')}-${fechaFinValue.day.toString().padStart(2, '0')}`;
 
     // Crear objeto de filtro
     const filter = {
       company: JSON.parse(sessionStorage.getItem('currentCompany') || '{}').nomComercial,
       origenConsulta: 'POS',
-      fechaInicio: fechaInicio.toISOString(),
-      fechaFin: fechaFin.toISOString()
+      fechaInicio: fechaInicioStr + 'T00:00:00.000Z',
+      fechaFin: fechaFinStr + 'T23:59:59.999Z',
+      fechaFinal: fechaFinStr + 'T23:59:59.999Z'
     };
 
     // Realizar la consulta
