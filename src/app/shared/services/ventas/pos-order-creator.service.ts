@@ -41,15 +41,32 @@ export class PosOrderCreatorService {
       carrito: this.cartService.posCartItems.map(item => ({
         producto: item,
         cantidad: item.cantidad,
-        estadoProcesoProducto: EstadoProceso.SinProducir
+        estadoProcesoProducto: EstadoProceso.SinProducir,
+        // Configuración por defecto para POS: entrega en tienda el mismo día
+        configuracion: {
+          producto: item,
+          datosEntrega: {
+            tipoEntrega: 'SOLO RECOGE',
+            formaEntrega: 'Recoge en tienda',
+            fechaEntrega: this.formatDateStruct(new Date()),
+            horarioEntrega: 'ENTRE LAS 8:00 Y 17:00',
+            genero: [],
+            ocasion: '',
+            colores: [],
+            observaciones: ''
+          },
+          preferencias: [],
+          adiciones: [],
+          tarjetas: []
+        }
       })),
       formaDePago: paymentMethod,
       estadoProceso: EstadoProceso.SinProducir,
       estadoPago: EstadoPago.PreAprobado,
       fechaCreacion: new Date().toISOString(),
-      formaEntrega: "RECOGE",
+      formaEntrega: 'Recoge en tienda',
       fechaEntrega: new Date().toISOString(),
-      horarioEntrega: "08:00 - 18:00",
+      horarioEntrega: 'ENTRE LAS 8:00 Y 17:00',
       subtotal: parseFloat(this.cartService.getPOSSubTotal()?.replace('$', '') || '0'),
       totalPedidoSinDescuento: parseFloat(this.cartService.getPOSSubTotal()?.replace('$', '') || '0'),
       totalPedididoConDescuento: parseFloat(this.cartService.getPOSSubTotal()?.replace('$', '') || '0'),
@@ -263,5 +280,16 @@ export class PosOrderCreatorService {
       icon: 'error',
       confirmButtonText: 'Ok',
     });
+  }
+
+  /**
+   * Convierte una fecha JS a estructura {day, month, year} similar al DateStruct usado en configuraciones.
+   */
+  private formatDateStruct(date: Date): { day: number; month: number; year: number } {
+    return {
+      day: date.getDate(),
+      month: date.getMonth() + 1,
+      year: date.getFullYear()
+    };
   }
 } 

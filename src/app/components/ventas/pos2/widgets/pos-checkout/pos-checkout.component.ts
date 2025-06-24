@@ -153,7 +153,15 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
           pedido.fechaEntrega = new Date();
           pedido.horarioEntrega = 'ENTRE LAS 8:00 Y 17:00';
           pedido.carrito.forEach((item: any) => {
-            item.configuracion.datosEntrega.forEach((entrega: any) => {
+            if (!item?.configuracion?.datosEntrega) return;
+
+            // datosEntrega puede ser objeto o arreglo; normalizar
+            const entregas = Array.isArray(item.configuracion.datosEntrega)
+              ? item.configuracion.datosEntrega
+              : [item.configuracion.datosEntrega];
+
+            entregas.forEach((entrega: any) => {
+              if (!entrega) return;
               entrega.formaEntrega = 'Recoge en tienda';
               entrega.fechaEntrega = new Date();
               entrega.horarioEntrega = 'ENTRE LAS 8:00 Y 17:00';
