@@ -55,6 +55,8 @@ import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos
 import { BaseService } from './services/base.service';
 import { CacheService } from './services/cache/cache.service';
 import { ProduccionService } from './services/produccion/produccion.service';
+import { TourButtonComponent } from './components/tour-button/tour-button.component';
+import { TourService } from './services/tour/tour.service';
 
 @NgModule({
   declarations: [
@@ -88,7 +90,8 @@ import { ProduccionService } from './services/produccion/produccion.service';
     BlankComponent,
     PageNotFoundComponent,
     SharedChangePasswordComponent,
-    PlanSelectorComponent
+    PlanSelectorComponent,
+    TourButtonComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],
@@ -115,7 +118,8 @@ import { ProduccionService } from './services/produccion/produccion.service';
     POSPedidosUtilService,
     BaseService,
     CacheService,
-    ProduccionService
+    ProduccionService,
+    TourService
   ],
   exports: [
     NgbModule,
@@ -135,6 +139,7 @@ import { ProduccionService } from './services/produccion/produccion.service';
     ImagesManagerComponent,
     KatuqIntelligenceComponent,
     SharedChangePasswordComponent,
+    TourButtonComponent,
     CarouselModule
     // FloatingButtonComponent,
     // ChatFormComponent

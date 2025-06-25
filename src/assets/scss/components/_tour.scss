@@ -1,0 +1,332 @@
+// ===================================================
+// ESTILOS GLOBALES PARA DRIVER.JS
+// ===================================================
+
+// Importar Driver.js styles
+@import '~driver.js/dist/driver.css';
+
+// Variables de tema
+$katuq-primary: #007bff;
+$katuq-secondary: #6c757d;
+$katuq-success: #28a745;
+$katuq-warning: #ffc107;
+$katuq-danger: #dc3545;
+
+// ===================================================
+// OVERLAY PERSONALIZADO
+// ===================================================
+.driver-overlay {
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(2px);
+}
+
+// ===================================================
+// POPOVER PERSONALIZADO
+// ===================================================
+.katuq-tour-popover {
+  &.driver-popover {
+    background: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+    padding: 0 !important;
+    max-width: 320px !important;
+    font-family: inherit !important;
+
+    // Para tema oscuro
+    .dark & {
+      background: #2d3748 !important;
+      color: white !important;
+    }
+
+    // Flecha del popover
+    &[data-popper-placement^="top"] > .driver-popover-arrow {
+      border-top-color: white !important;
+      
+      .dark & {
+        border-top-color: #2d3748 !important;
+      }
+    }
+
+    &[data-popper-placement^="bottom"] > .driver-popover-arrow {
+      border-bottom-color: white !important;
+      
+      .dark & {
+        border-bottom-color: #2d3748 !important;
+      }
+    }
+
+    &[data-popper-placement^="left"] > .driver-popover-arrow {
+      border-left-color: white !important;
+      
+      .dark & {
+        border-left-color: #2d3748 !important;
+      }
+    }
+
+    &[data-popper-placement^="right"] > .driver-popover-arrow {
+      border-right-color: white !important;
+      
+      .dark & {
+        border-right-color: #2d3748 !important;
+      }
+    }
+  }
+
+  // Header del popover
+  .driver-popover-title {
+    background: linear-gradient(135deg, $katuq-primary 0%, lighten($katuq-primary, 10%) 100%) !important;
+    color: white !important;
+    padding: 16px 20px !important;
+    margin: 0 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 12px 12px 0 0 !important;
+    border-bottom: none !important;
+  }
+
+  // Descripción del popover
+  .driver-popover-description {
+    padding: 20px !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: #333 !important;
+
+    .dark & {
+      color: #e2e8f0 !important;
+    }
+
+    // Emojis en el contenido
+    .emoji {
+      font-size: 1.2em;
+      margin-right: 6px;
+    }
+  }
+
+  // Pie del popover
+  .driver-popover-footer {
+    padding: 12px 20px 20px 20px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+    margin: 0 !important;
+
+    .dark & {
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+  }
+
+  // Progress indicator
+  .driver-popover-progress-text {
+    font-size: 12px !important;
+    color: $katuq-secondary !important;
+    font-weight: 500 !important;
+
+    .dark & {
+      color: #a0aec0 !important;
+    }
+  }
+
+  // Botones del popover
+  .driver-popover-navigation-btns {
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .driver-popover-prev-btn,
+  .driver-popover-next-btn,
+  .driver-popover-close-btn {
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .driver-popover-prev-btn {
+    background: #f8f9fa !important;
+    color: $katuq-secondary !important;
+    border: 1px solid #dee2e6 !important;
+
+    &:hover {
+      background: #e9ecef !important;
+      transform: translateY(-1px) !important;
+    }
+
+    .dark & {
+      background: #4a5568 !important;
+      color: #e2e8f0 !important;
+      border-color: #2d3748 !important;
+
+      &:hover {
+        background: #2d3748 !important;
+      }
+    }
+  }
+
+  .driver-popover-next-btn {
+    background: $katuq-primary !important;
+    color: white !important;
+
+    &:hover {
+      background: darken($katuq-primary, 10%) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3) !important;
+    }
+  }
+
+  .driver-popover-close-btn {
+    background: $katuq-danger !important;
+    color: white !important;
+    padding: 8px 12px !important;
+
+    &:hover {
+      background: darken($katuq-danger, 10%) !important;
+      transform: translateY(-1px) !important;
+    }
+  }
+}
+
+// ===================================================
+// ELEMENTO DESTACADO
+// ===================================================
+.driver-highlighted-element {
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 4px $katuq-primary, 0 0 0 8px rgba(0, 123, 255, 0.2) !important;
+  animation: highlight-pulse 2s ease-in-out infinite !important;
+  position: relative !important;
+  z-index: 10000 !important;
+}
+
+// Elemento anterior destacado (más sutil)
+.driver-prev-element {
+  opacity: 0.7 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+// ===================================================
+// NO POINTER
+// ===================================================
+.driver-no-pointer {
+  pointer-events: none !important;
+}
+
+// ===================================================
+// ANIMACIONES PERSONALIZADAS
+// ===================================================
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 4px $katuq-primary, 0 0 0 8px rgba(0, 123, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px $katuq-primary, 0 0 0 12px rgba(0, 123, 255, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 4px $katuq-primary, 0 0 0 8px rgba(0, 123, 255, 0.2);
+  }
+}
+
+// Animación de entrada para el popover
+.driver-popover {
+  animation: tour-popover-in 0.3s ease-out !important;
+}
+
+@keyframes tour-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// ===================================================
+// ESTADOS ESPECIALES
+// ===================================================
+
+// Para elementos que son botones o enlaces importantes
+.driver-highlighted-element.btn,
+.driver-highlighted-element.nav-link {
+  box-shadow: 0 0 0 4px $katuq-warning, 0 0 0 8px rgba(255, 193, 7, 0.2) !important;
+}
+
+// Para elementos de navegación
+.driver-highlighted-element.sidebar-container,
+.driver-highlighted-element .menu-link {
+  box-shadow: 0 0 0 4px $katuq-success, 0 0 0 8px rgba(40, 167, 69, 0.2) !important;
+}
+
+// ===================================================
+// RESPONSIVE
+// ===================================================
+@media (max-width: 768px) {
+  .katuq-tour-popover.driver-popover {
+    max-width: calc(100vw - 40px) !important;
+    
+    .driver-popover-title {
+      padding: 12px 16px !important;
+      font-size: 15px !important;
+    }
+
+    .driver-popover-description {
+      padding: 16px !important;
+      font-size: 13px !important;
+    }
+
+    .driver-popover-footer {
+      padding: 10px 16px 16px 16px !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+    }
+
+    .driver-popover-navigation-btns {
+      width: 100% !important;
+      justify-content: space-between !important;
+    }
+
+    .driver-popover-prev-btn,
+    .driver-popover-next-btn,
+    .driver-popover-close-btn {
+      flex: 1 !important;
+      justify-content: center !important;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .katuq-tour-popover.driver-popover {
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  .driver-highlighted-element {
+    border-radius: 4px !important;
+    box-shadow: 0 0 0 2px $katuq-primary, 0 0 0 6px rgba(0, 123, 255, 0.2) !important;
+  }
+}
+
+// ===================================================
+// MEJORAS DE ACCESIBILIDAD
+// ===================================================
+.driver-popover {
+  // Mejorar contraste para usuarios con problemas de visión
+  .driver-popover-title {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  // Focus visible para botones
+  .driver-popover-prev-btn:focus,
+  .driver-popover-next-btn:focus,
+  .driver-popover-close-btn:focus {
+    outline: 2px solid $katuq-primary !important;
+    outline-offset: 2px !important;
+  }
+} 

@@ -1,0 +1,160 @@
+<!-- Botón principal del tour -->
+<div class="tour-button-container" data-tour="tour-button">
+  <button 
+    class="tour-button" 
+    [class.tour-active]="isActive"
+    [class.tour-has-new]="hasNewTours()"
+    (click)="toggleMenu()"
+    [title]="getContextMessage()">
+    
+    <i class="fa fa-question-circle" [class.fa-spin]="isActive"></i>
+    
+    <!-- Badge de tours nuevos -->
+    <span class="tour-badge" *ngIf="hasNewTours() && !isActive">
+      {{getNewToursCount()}}
+    </span>
+    
+    <!-- Indicador de tour activo -->
+    <span class="tour-active-indicator" *ngIf="isActive">
+      <i class="fa fa-pause"></i>
+    </span>
+  </button>
+
+  <!-- Mensaje flotante cuando hay tour activo -->
+  <div class="tour-active-message" *ngIf="isActive" (click)="toggleMenu()">
+    <span>{{ getContextMessage() }}</span>
+    <i class="fa fa-times ml-2"></i>
+  </div>
+
+  <!-- Menú desplegable mejorado -->
+  <div class="tour-menu" *ngIf="showMenu && !isActive" (click)="$event.stopPropagation()">
+    
+    <!-- Header del menú -->
+    <div class="tour-menu-header">
+      <h5 class="tour-menu-title">
+        <i class="fa fa-graduation-cap mr-2"></i>
+        Tours Disponibles
+      </h5>
+      <button class="tour-menu-close" (click)="closeMenu()">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Información contextual -->
+    <div class="tour-context-info">
+      <p class="tour-context-message">{{ getContextMessage() }}</p>
+      <div class="tour-route-info" *ngIf="currentRoute">
+        <i class="fa fa-map-marker-alt mr-1"></i>
+        <small>{{ currentRoute }}</small>
+      </div>
+    </div>
+
+    <!-- Tour de bienvenida destacado -->
+    <div class="tour-welcome-section" *ngIf="hasWelcomeTour()">
+      <button class="tour-welcome-button" (click)="startWelcomeTour()">
+        <div class="tour-welcome-icon">
+          <i class="fa fa-star"></i>
+        </div>
+        <div class="tour-welcome-content">
+          <h6>¡Bienvenido a Katuq!</h6>
+          <p>Descubre las funcionalidades principales</p>
+        </div>
+        <div class="tour-welcome-arrow">
+          <i class="fa fa-play"></i>
+        </div>
+      </button>
+    </div>
+
+    <!-- Tours organizados por categorías -->
+    <div class="tour-categories" *ngIf="getAvailableCategories().length > 0">
+      <div class="tour-category" *ngFor="let category of getAvailableCategories()">
+        
+        <!-- Header de categoría -->
+        <div class="tour-category-header" 
+             [style.border-left-color]="getCategoryInfo(category).color">
+          <div class="tour-category-info">
+            <i class="fa" [ngClass]="getCategoryInfo(category).icon" 
+               [style.color]="getCategoryInfo(category).color"></i>
+            <span class="tour-category-name">{{ getCategoryInfo(category).name }}</span>
+          </div>
+          <div class="tour-category-count">
+            {{ getCategoryTours(category).length }} tour{{getCategoryTours(category).length !== 1 ? 's' : ''}}
+          </div>
+        </div>
+
+        <!-- Lista de tours de la categoría -->
+        <div class="tour-category-items">
+          <div class="tour-item" 
+               *ngFor="let tour of getCategoryTours(category)" 
+               (click)="startTour(tour.id)"
+               [class.tour-completed]="isTourCompleted(tour.id)"
+               [class.tour-new]="isTourNew(tour.id)">
+            
+            <!-- Icono del tour -->
+            <div class="tour-item-icon">
+              <i class="fa" [ngClass]="getTourIcon(tour.id)"></i>
+            </div>
+            
+            <!-- Contenido del tour -->
+            <div class="tour-item-content">
+              <div class="tour-item-title">
+                {{ tour.name }}
+                <span class="tour-new-badge" *ngIf="isTourNew(tour.id)">NUEVO</span>
+                <span class="tour-completed-badge" *ngIf="isTourCompleted(tour.id)">
+                  <i class="fa fa-check"></i>
+                </span>
+              </div>
+              <div class="tour-item-description">{{ tour.description }}</div>
+              <div class="tour-item-meta">
+                <span class="tour-item-steps">{{ tour.steps.length }} pasos</span>
+                <span class="tour-item-difficulty" 
+                      [style.color]="getDifficultyColor(tour.difficulty)">
+                  <i class="fa fa-signal mr-1"></i>
+                  {{ getDifficultyText(tour.difficulty) }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Flecha de acción -->
+            <div class="tour-item-arrow">
+              <i class="fa fa-play"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando no hay tours -->
+    <div class="tour-empty-state" *ngIf="availableTours.length === 0">
+      <div class="tour-empty-icon">
+        <i class="fa fa-map"></i>
+      </div>
+      <h6>No hay tours disponibles</h6>
+      <p>Navega a diferentes secciones para descubrir tours específicos</p>
+    </div>
+
+    <!-- Footer del menú -->
+    <div class="tour-menu-footer">
+      <div class="tour-progress-info">
+        <span class="tour-completed-count">
+          {{ availableTours.length - getNewToursCount() }} completados
+        </span>
+        <span class="tour-total-count">
+          de {{ availableTours.length }} total
+        </span>
+      </div>
+      
+      <!-- Botón de reset para desarrollo -->
+      <button class="tour-reset-button" 
+              (click)="resetAllTours()" 
+              title="Reiniciar todos los tours">
+        <i class="fa fa-redo"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay para cerrar menú al hacer clic fuera -->
+<div class="tour-overlay" 
+     *ngIf="showMenu" 
+     (click)="closeMenu()"></div> 
