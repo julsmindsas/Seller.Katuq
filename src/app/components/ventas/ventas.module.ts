@@ -54,6 +54,7 @@ import { CartSummaryComponent } from './pos2/widgets/cart-summary/cart-summary.c
 import { PaymentSelectorComponent } from './pos2/widgets/payment-selector/payment-selector.component';
 import { PosCheckoutService, POS_CHECKOUT_SERVICE } from '../../shared/services/ventas/pos-checkout.service';
 import { VentaAsistidaModule } from './venta-asistida/venta-asistida.module';
+import { ReporteCierreComponent } from './pos2/widgets/cash-closing/reporte-cierre/reporte-cierre.component';
 
 @NgModule({
   imports: [
@@ -108,6 +109,7 @@ import { VentaAsistidaModule } from './venta-asistida/venta-asistida.module';
     WarehouseSelectorComponent,
     CashClosingComponent,
     CashClosingHistoryComponent,
+    ReporteCierreComponent,
     DireccionEstructuradaComponent,
     CustomerSectionComponent,
     CartSummaryComponent,

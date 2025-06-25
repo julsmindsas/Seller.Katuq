@@ -3,9 +3,14 @@
     <div class="card-header d-flex justify-content-between align-items-center">
       <h4><i class="bi bi-cash-stack me-2"></i>Cierre de Caja</h4>
       <div class="header-actions" *ngIf="informe.totalVentas > 0">
-        <button type="button" class="btn btn-outline-primary btn-sm" (click)="imprimir()">
-          <i class="bi bi-printer me-1"></i> Imprimir
-        </button>
+        <div class="btn-group">
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="imprimir()">
+            <i class="bi bi-printer me-1"></i> Imprimir PC
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="imprimirPOS()">
+            <i class="bi bi-receipt me-1"></i> Imprimir POS
+          </button>
+        </div>
       </div>
     </div>
     <div class="card-body">
@@ -76,9 +81,12 @@
           <!-- Encabezado para impresión -->
           <div class="print-header d-none">
             <h3>CIERRE DE CAJA</h3>
-            <p>Empresa: <strong>{{empresa}}</strong></p>
-            <p>Período: <strong>{{fechaFormateada(fechaCierre)}} al {{fechaFormateada(fechaFin)}}</strong></p>
-            <p>Fecha de emisión: <strong>{{fechaActualFormateada()}}</strong></p>
+            <div class="empresa-info">
+              <p><strong>{{empresa}}</strong></p>
+              <p>Período: <strong>{{resumenPeriodo}}</strong></p>
+              <p>Fecha de emisión: <strong>{{fechaHoraReporte()}}</strong></p>
+            </div>
+            <div class="separator-line"></div>
           </div>
           
           <div class="panel-header">

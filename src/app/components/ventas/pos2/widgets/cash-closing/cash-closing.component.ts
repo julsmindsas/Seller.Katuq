@@ -3,6 +3,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { VentasService } from '../../../../../shared/services/ventas/ventas.service';
 import Swal from 'sweetalert2';
 import { Pedido } from '../../../modelo/pedido';
+import { ReporteCierreComponent } from './reporte-cierre/reporte-cierre.component';
 
 interface CierreData {
   efectivoInicial: number;
@@ -139,8 +140,88 @@ export class CashClosingComponent {
     return this.productosVendidos.reduce((sum, p) => sum + p.total, 0);
   }
 
-  imprimir() {
-    window.print();
+  /**
+   * Abre el modal de reporte para imprimir
+   */
+  imprimir(): void {
+    this.abrirModalReporte();
+  }
+
+  /**
+   * Abre el modal de reporte en modo POS
+   */
+  imprimirPOS(): void {
+    this.abrirModalReporte(true);
+  }
+
+  /**
+   * Abre el modal del reporte de cierre
+   */
+  private abrirModalReporte(modoPos: boolean = false): void {
+    const datosCierre = {
+      fechaCierre: this.fechaCierre,
+      fechaFin: this.fechaFin,
+      efectivoInicial: this.efectivoInicial,
+      efectivoFinal: this.efectivoFinal,
+      observaciones: this.observaciones,
+      formasPago: this.formasPago,
+      productosVendidos: this.productosVendidos,
+      informe: this.informe,
+      empresa: this.empresa
+    };
+
+    const modalRef = this.modal.open(ReporteCierreComponent, {
+      centered: true,
+      size: 'xl',
+      backdrop: 'static',
+      keyboard: false
+    });
+
+    modalRef.componentInstance.datosCierre = datosCierre;
+
+    // Si es modo POS, aplicar estilos específicos
+    if (modoPos) {
+      modalRef.componentInstance.ngAfterViewInit = () => {
+        document.body.classList.add('pos-print-mode');
+        setTimeout(() => {
+          window.print();
+          setTimeout(() => {
+            document.body.classList.remove('pos-print-mode');
+          }, 1000);
+        }, 500);
+      };
+    }
+  }
+
+  /**
+   * Obtiene la fecha y hora actual formateada para el reporte
+   */
+  fechaHoraReporte(): string {
+    const ahora = new Date();
+    return ahora.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+
+  /**
+   * Obtiene el total de ventas en efectivo
+   */
+  get totalEfectivo(): number {
+    return this.formasPago.find(fp => fp.nombre === 'Efectivo')?.total || 0;
+  }
+
+  /**
+   * Obtiene el resumen del período
+   */
+  get resumenPeriodo(): string {
+    const inicio = this.fechaFormateada(this.fechaCierre);
+    const fin = this.fechaFormateada(this.fechaFin);
+    return inicio === fin ? inicio : `${inicio} al ${fin}`;
   }
 
   fechaFormateada(fecha: string): string {
@@ -200,14 +281,20 @@ export class CashClosingComponent {
           title: 'Cierre de Caja Exitoso',
           text: 'El cierre de caja se ha realizado exitosamente',
           icon: 'success',
-          confirmButtonText: 'Imprimir Resumen',
+          showConfirmButton: true,
+          confirmButtonText: 'Imprimir',
+          showDenyButton: true,
+          denyButtonText: 'Imprimir POS',
           showCancelButton: true,
           cancelButtonText: 'Cerrar'
         }).then((result) => {
           if (result.isConfirmed) {
             this.imprimir();
+          } else if (result.isDenied) {
+            this.imprimirPOS();
           }
-          this.modal.dismissAll();
+          // No cerrar el modal principal automáticamente, 
+          // dejar que el usuario decida desde el reporte
         });
       },
       (error) => {

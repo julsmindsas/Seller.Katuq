@@ -351,7 +351,8 @@ export class NavService implements OnDestroy {
 		},
 		{
 			title: 'Pagos', icon: 'credit-card', type: 'sub', active: false, children: [
-				{ path: 'extras/formasPago', title: 'Métodos de pago', type: 'link' }
+				{ path: 'extras/formasPago', title: 'Métodos de pago', type: 'link' },
+				{ path: 'extras/pos/formasPago', title: 'Métodos de pago POS', type: 'link' }
 			]
 		},
 		{
