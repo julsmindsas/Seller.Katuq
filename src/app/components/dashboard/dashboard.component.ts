@@ -8,8 +8,15 @@ import { AnalyticsService } from '../../shared/services/dashboard/analytics.serv
 import { 
   DashboardCoreResponse, 
   DashboardDetailsResponse,
+  FlujoEstadosResponse,
+  TiemposProcesamientoResponse,
+  PerformanceEntregasResponse,
+  AnalisisGeograficoResponse,
   EstadoCarga,
-  COLORES_DEFAULT
+  COLORES_DEFAULT,
+  COLORES_ESTADOS,
+  getNombreEstadoAmigable,
+  calcularPorcentajeProgreso
 } from './model/dashboard-interfaces';
 
 @Component({
@@ -24,6 +31,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   estadoCarga: EstadoCarga = {
     core: true,
     details: true,
+    pedidos: false,
+    logistica: false,
     error: null
   };
 
@@ -48,6 +57,23 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   // === Datos de la nueva arquitectura ===
   coreData: DashboardCoreResponse | null = null;
   detailsData: DashboardDetailsResponse | null = null;
+  
+  // === Nuevos datos de módulos específicos ===
+  pedidosData: {
+    flujoEstados: FlujoEstadosResponse | null;
+    tiemposProcesamiento: TiemposProcesamientoResponse | null;
+  } = {
+    flujoEstados: null,
+    tiemposProcesamiento: null
+  };
+  
+  logisticaData: {
+    performanceEntregas: PerformanceEntregasResponse | null;
+    analisisGeografico: AnalisisGeograficoResponse | null;
+  } = {
+    performanceEntregas: null,
+    analisisGeografico: null
+  };
 
   // === Datos legacy (mantener compatibilidad) ===
   topProductsMasVendidos: any[] = [];
@@ -159,6 +185,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 2. CARGA DIFERIDA - Datos detallados
     this.loadDetailsData();
+
+    // 3. CARGA DE MÓDULOS ESPECÍFICOS - Solo si están expandidos
+    if (this.modulosExpandidos.ventas) {
+      this.loadPedidosData();
+    }
+    
+    if (this.modulosExpandidos.logistica) {
+      this.loadLogisticaData();
+    }
   }
 
   private loadCoreData(): void {
@@ -202,6 +237,80 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           if (error.status !== 401 && error.status !== 403) {
             this.loadFallbackData();
           }
+        }
+      });
+  }
+
+  private loadPedidosData(): void {
+    this.estadoCarga.pedidos = true;
+
+    console.log(`🚀 Cargando datos de pedidos...`);
+
+    // Cargar flujo de estados
+    this.analyticsService
+      .getPedidosFlujoEstados(this.fechaInicial, this.fechaFinal)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.pedidosData.flujoEstados = data;
+          console.log('✅ Datos de flujo de estados cargados:', data);
+          this.renderPedidosCharts();
+        },
+        error: (error) => {
+          console.error('❌ Error loading pedidos flujo estados:', error);
+        }
+      });
+
+    // Cargar tiempos de procesamiento
+    this.analyticsService
+      .getPedidosTiemposProcesamiento(this.fechaInicial, this.fechaFinal)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.pedidosData.tiemposProcesamiento = data;
+          console.log('✅ Datos de tiempos de procesamiento cargados:', data);
+          this.estadoCarga.pedidos = false;
+        },
+        error: (error) => {
+          console.error('❌ Error loading pedidos tiempos procesamiento:', error);
+          this.estadoCarga.pedidos = false;
+        }
+      });
+  }
+
+  private loadLogisticaData(): void {
+    this.estadoCarga.logistica = true;
+
+    console.log(`🚀 Cargando datos de logística...`);
+
+    // Cargar performance de entregas
+    this.analyticsService
+      .getLogisticaPerformanceEntregas(this.fechaInicial, this.fechaFinal)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.logisticaData.performanceEntregas = data;
+          console.log('✅ Datos de performance de entregas cargados:', data);
+          this.renderLogisticaCharts();
+        },
+        error: (error) => {
+          console.error('❌ Error loading logistica performance entregas:', error);
+        }
+      });
+
+    // Cargar análisis geográfico
+    this.analyticsService
+      .getLogisticaAnalisisGeografico(this.fechaInicial, this.fechaFinal)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.logisticaData.analisisGeografico = data;
+          console.log('✅ Datos de análisis geográfico cargados:', data);
+          this.estadoCarga.logistica = false;
+        },
+        error: (error) => {
+          console.error('❌ Error loading logistica analisis geografico:', error);
+          this.estadoCarga.logistica = false;
         }
       });
   }
@@ -296,10 +405,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ([masVendidos, menosVendidos, ventasPorDia]) => {
-          this.topProductsMasVendidos = masVendidos || [];
-          this.topProductosMenosVendidos = menosVendidos || [];
-          this.topVentasPorDia = ventasPorDia || {};
-          
+        this.topProductsMasVendidos = masVendidos || [];
+        this.topProductosMenosVendidos = menosVendidos || [];
+        this.topVentasPorDia = ventasPorDia || {};
+        
           this.renderAllChartsLegacy();
           console.log('✅ Fallback data loaded successfully');
         },
@@ -335,9 +444,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const options = {
-      chart: { 
-        type: 'area', 
-        height: 350, 
+      chart: {
+        type: 'area',
+        height: 350,
         toolbar: { 
           show: true,
           tools: {
@@ -437,7 +546,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       grid: { 
         borderColor: '#e2e8f0', 
         strokeDashArray: 3,
-        xaxis: {
+      xaxis: {
           lines: {
             show: false
           }
@@ -512,7 +621,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           }],
           xaxis: {
             categories: this.topProductsMasVendidos.map(p => p.nombre || p.referencia || 'Sin nombre'),
-            labels: { 
+        labels: {
               show: true,
               rotate: -45,
               style: {
@@ -527,10 +636,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             },
             axisTicks: {
               show: false
-            }
-          },
-          yaxis: {
-            labels: {
+        }
+      },
+      yaxis: {
+        labels: {
               style: {
                 colors: '#64748b',
                 fontSize: '12px',
@@ -545,9 +654,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
               horizontal: false,
               columnWidth: '75%',
               borderRadiusApplication: 'end'
-            } 
-          },
-          tooltip: { 
+        }
+      },
+      tooltip: {
             theme: 'light',
             style: {
               fontSize: '14px',
@@ -558,9 +667,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
               title: {
                 formatter: () => 'Vendidas: '
               }
-            }
-          },
-          grid: {
+        }
+      },
+      grid: {
             borderColor: '#e2e8f0',
             strokeDashArray: 3,
             yaxis: {
@@ -639,7 +748,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const options = {
-      chart: { 
+      chart: {
         type: 'donut', 
         height: 350,
         animations: {
@@ -676,15 +785,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             size: '60%',
             labels: {
               show: true,
-              name: {
+            name: {
                 show: true,
                 fontSize: '16px',
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 600,
                 color: '#1f2937',
                 offsetY: -10
-              },
-              value: {
+            },
+            value: {
                 show: true,
                 fontSize: '24px',
                 fontFamily: 'Inter, sans-serif',
@@ -699,7 +808,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
                 label: 'Total',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
-                fontWeight: 600,
+              fontWeight: 600,
                 color: '#64748b',
                 formatter: () => '100%'
               }
@@ -916,7 +1025,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         if (diasDiferencia <= 7) {
           this.modulosExpandidos = { ...this.modulosExpandidos, ...preferencias.modulosExpandidos };
           console.log('📂 Preferencias de acordeón cargadas:', this.modulosExpandidos);
-        } else {
+    } else {
           console.log('🗑️ Preferencias de acordeón expiradas, usando valores por defecto');
         }
       }
@@ -936,9 +1045,20 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           this.renderTopProductsCharts();
           this.renderCategoriasChart();
           this.renderMetodosPagoChart();
+          // Cargar datos de pedidos si no están cargados
+          if (!this.pedidosData.flujoEstados && !this.estadoCarga.pedidos) {
+            this.loadPedidosData();
+          } else {
+            this.renderPedidosCharts();
+          }
           break;
         case 'logistica':
-          // Los módulos de logística no tienen gráficos que requieran re-render
+          // Cargar datos de logística si no están cargados
+          if (!this.logisticaData.performanceEntregas && !this.estadoCarga.logistica) {
+            this.loadLogisticaData();
+          } else {
+            this.renderLogisticaCharts();
+          }
           break;
         case 'produccion':
         case 'financiero':
@@ -946,6 +1066,42 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           break;
       }
     }, 300); // Dar tiempo para que la animación CSS termine
+  }
+
+  /**
+   * Renderiza gráficos específicos del módulo de pedidos
+   */
+  private renderPedidosCharts(): void {
+    if (!this.pedidosData.flujoEstados) return;
+
+    console.log('📊 Renderizando gráficos de pedidos...');
+    
+    // Aquí se implementarían los gráficos de flujo de estados
+    // Por ahora solo loggeamos los datos para debug
+    console.log('📈 Datos de flujo de estados disponibles:', this.pedidosData.flujoEstados);
+    
+    // TODO: Implementar gráficos de:
+    // - Distribución de estados (donut chart)
+    // - Tiempos promedio por estado (bar chart)
+    // - Cuellos de botella (funnel chart)
+  }
+
+  /**
+   * Renderiza gráficos específicos del módulo de logística
+   */
+  private renderLogisticaCharts(): void {
+    if (!this.logisticaData.performanceEntregas) return;
+
+    console.log('🚚 Renderizando gráficos de logística...');
+    
+    // Aquí se implementarían los gráficos de logística
+    // Por ahora solo loggeamos los datos para debug
+    console.log('📈 Datos de performance de entregas disponibles:', this.logisticaData.performanceEntregas);
+    
+    // TODO: Implementar gráficos de:
+    // - Performance de transportadores (bar chart)
+    // - Zonas de entrega (pie chart)
+    // - Horarios de entrega (line chart)
   }
 
   // === EVENTOS DE UI ===
@@ -978,12 +1134,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('Analizando ventas con K.A.I.');
     
     this.resetAnalysis();
-    this.isAnalyzing = true;
+        this.isAnalyzing = true;
 
-    const item = {
-      "startDate": this.fechaInicial + 'T00:00:00.000Z',
-      "endDate": this.fechaFinal + 'T23:59:59.000Z',
-      "tipo": "ventas"
+        const item = {
+          "startDate": this.fechaInicial + 'T00:00:00.000Z',
+          "endDate": this.fechaFinal + 'T23:59:59.000Z',
+          "tipo": "ventas"
     };
 
     this.katuqintelligenceService.getAnalitycsGraphs(item)
@@ -992,35 +1148,35 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         next: (data: any) => {
           try {
             console.log('Respuesta K.A.I.:', data);
-            
-            let valor = data.result;
-            
-            if (valor.includes('```json')) {
-              valor = valor.replace(/```json/g, '').replace(/```/g, '').trim();
-            }
-            
-            if (valor.startsWith('{') || valor.startsWith('[')) {
-              const parsedData = JSON.parse(valor);
-              valor = parsedData.respuesta || parsedData.resultado || valor;
-            }
-            
+              
+              let valor = data.result;
+              
+              if (valor.includes('```json')) {
+                valor = valor.replace(/```json/g, '').replace(/```/g, '').trim();
+              }
+              
+              if (valor.startsWith('{') || valor.startsWith('[')) {
+                const parsedData = JSON.parse(valor);
+                valor = parsedData.respuesta || parsedData.resultado || valor;
+              }
+              
             this.ventasRes = this.formatAnalysisHTML(valor);
-            this.ventasMesCheck = true;
-            
-          } catch (error) {
+              this.ventasMesCheck = true;
+              
+            } catch (error) {
             console.error('Error procesando respuesta K.A.I.:', error);
-            this.ventasRes = '<p class="text-danger">Error al procesar el análisis. Por favor, intenta nuevamente.</p>';
-            this.ventasMesCheck = true;
-          } finally {
-            this.isAnalyzing = false;
-          }
-        },
+              this.ventasRes = '<p class="text-danger">Error al procesar el análisis. Por favor, intenta nuevamente.</p>';
+              this.ventasMesCheck = true;
+            } finally {
+              this.isAnalyzing = false;
+            }
+          },
         error: (error) => {
           console.error('Error en petición K.A.I.:', error);
-          this.ventasRes = '<p class="text-danger">Error al obtener el análisis. Verifica tu conexión e intenta nuevamente.</p>';
-          this.ventasMesCheck = true;
-          this.isAnalyzing = false;
-        }
+            this.ventasRes = '<p class="text-danger">Error al obtener el análisis. Verifica tu conexión e intenta nuevamente.</p>';
+            this.ventasMesCheck = true;
+            this.isAnalyzing = false;
+          }
       });
   }
 
@@ -1076,6 +1232,32 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log('🔄 Actualizando datos automáticamente...');
         this.cargarDatos();
       });
+  }
+
+  // === MÉTODOS HELPER PARA EL TEMPLATE ===
+
+  /**
+   * Obtiene el color asociado a un estado de proceso
+   */
+  getColorByEstado(estado: any): string {
+    if (!estado || typeof estado !== 'string') return COLORES_DEFAULT.primary;
+    return COLORES_ESTADOS[estado as keyof typeof COLORES_ESTADOS] || COLORES_DEFAULT.primary;
+  }
+
+  /**
+   * Obtiene el nombre amigable de un estado
+   */
+  getNombreEstadoAmigable(estado: any): string {
+    if (!estado || typeof estado !== 'string') return 'Desconocido';
+    return getNombreEstadoAmigable(estado as any);
+  }
+
+  /**
+   * Calcula el porcentaje de progreso para un estado
+   */
+  calcularPorcentajeProgreso(estado: any): number {
+    if (!estado || typeof estado !== 'string') return 0;
+    return calcularPorcentajeProgreso(estado as any);
   }
 
   // === MÉTODOS LEGACY (mantener compatibilidad) ===

@@ -39,6 +39,18 @@ GET ${BASE_URL}/pedidos/tiempos-procesamiento?fechaInicio=YYYY-MM-DD&fechaFin=YY
 GET ${BASE_URL}/pedidos/analisis-clientes?fechaInicio=YYYY-MM-DD&fechaFin=YYYY-MM-DD&company=optional
 ```
 
+### **Módulo Logística**
+```typescript
+// Performance de entregas y transportadores
+GET ${BASE_URL}/logistica/performance-entregas?fechaInicio=YYYY-MM-DD&fechaFin=YYYY-MM-DD&company=optional
+
+// Análisis geográfico de cobertura
+GET ${BASE_URL}/logistica/analisis-geografico?fechaInicio=YYYY-MM-DD&fechaFin=YYYY-MM-DD&company=optional
+
+// Optimización de rutas y consolidación
+GET ${BASE_URL}/logistica/optimizacion-rutas?fechaInicio=YYYY-MM-DD&fechaFin=YYYY-MM-DD&company=optional
+```
+
 ---
 
 ## <a name="interfaces"></a>📝 **Interfaces TypeScript para Angular**
@@ -285,6 +297,253 @@ export interface InsightsClientes {
 }
 ```
 
+### **Módulo Logística**
+```typescript
+// shared/interfaces/logistica-analytics.interface.ts
+export interface PerformanceEntregasResponse {
+  periodo: PeriodoInfo;
+  resumen: ResumenPerformanceEntregas;
+  estadisticasTiempos: EstadisticasTiemposEntrega;
+  performanceTransportadores: PerformanceTransportador[];
+  performanceZonas: PerformanceZona[];
+  performanceHorarios: PerformanceHorario[];
+  performanceFormasEntrega: PerformanceFormaEntrega[];
+  insights: InsightsPerformanceEntregas;
+}
+
+export interface ResumenPerformanceEntregas {
+  totalOrdenes: number;
+  ordenesEntregadas: number;
+  ordenesEnProceso: number;
+  tasaEntrega: number;
+  totalVentas: number;
+  ventasEntregadas: number;
+  ventaPromedioPorEntrega: number;
+}
+
+export interface EstadisticasTiemposEntrega {
+  general: EstadisticasTiempo;
+  entregasATiempo: AnalisisTiempo;
+  entregasTardias: AnalisisTiempo;
+}
+
+export interface AnalisisTiempo {
+  cantidad: number;
+  porcentaje: number;
+  estadisticas: EstadisticasTiempo;
+}
+
+export interface PerformanceTransportador {
+  id: string;
+  nombre: string;
+  placa: string;
+  totalEntregas: number;
+  ventasEntregadas: number;
+  ventaPromedio: number;
+  tiempoPromedio: number;
+  tasaExito: number;
+  entregasATiempo: number;
+  entregasTardias: number;
+}
+
+export interface PerformanceZona {
+  id: string;
+  nombre: string;
+  costoBase: number;
+  totalEntregas: number;
+  ventasEntregadas: number;
+  ventaPromedio: number;
+  tiempoPromedio: number;
+  eficiencia: number;
+  porcentaje: number;
+}
+
+export interface PerformanceHorario {
+  horario: string;
+  totalOrdenes: number;
+  entregadas: number;
+  tasaEntrega: number;
+  tiempoPromedio: number;
+  ventas: number;
+  ventaPromedio: number;
+}
+
+export interface PerformanceFormaEntrega {
+  forma: string;
+  totalOrdenes: number;
+  entregadas: number;
+  tasaEntrega: number;
+  ventas: number;
+  ventaPromedio: number;
+}
+
+export interface InsightsPerformanceEntregas {
+  mejorTransportador: PerformanceTransportador | null;
+  mejorZona: PerformanceZona | null;
+  horarioMasEficiente: PerformanceHorario | null;
+  tiempoPromedioGeneral: number;
+  porcentajeEntregasATiempo: number;
+}
+
+export interface AnalisisGeograficoResponse {
+  periodo: PeriodoInfo;
+  resumen: ResumenGeografico;
+  distribucionPorZona: DistribucionZona[];
+  densidadPorCiudad: DensidadCiudad[];
+  coberturaPorBodega: CoberturaBodega[];
+  insights: InsightsGeograficos;
+}
+
+export interface ResumenGeografico {
+  totalEntregasAnalizadas: number;
+  ordenesConUbicacion: number;
+  porcentajeConUbicacion: number;
+  zonasActivas: number;
+  ciudadesAtendidas: number;
+  bodegasActivas: number;
+}
+
+export interface DistribucionZona {
+  zonaId: string;
+  nombreZona: string;
+  costoBase: number;
+  totalEntregas: number;
+  totalVentas: number;
+  ventaPromedio: number;
+  densidad: number;
+  eficiencia: number;
+  porcentaje: number;
+}
+
+export interface DensidadCiudad {
+  ciudad: string;
+  totalEntregas: number;
+  totalVentas: number;
+  ventaPromedio: number;
+  direccionesUnicas: number;
+  densidad: number;
+  porcentaje: number;
+}
+
+export interface CoberturaBodega {
+  bodegaId: string;
+  totalEntregas: number;
+  totalVentas: number;
+  zonasAtendidas: number;
+  cobertura: number;
+  ventaPromedio: number;
+}
+
+export interface InsightsGeograficos {
+  zonaMasActiva: DistribucionZona | null;
+  ciudadMasDensa: DensidadCiudad | null;
+  bodegaMasEficiente: CoberturaBodega | null;
+  recomendaciones: string[];
+}
+
+export interface OptimizacionRutasResponse {
+  periodo: PeriodoInfo;
+  resumen: ResumenOptimizacionRutas;
+  consolidacionShipping: ConsolidacionShipping[];
+  eficienciaPorTransportador: EficienciaTransportador[];
+  eficienciaPorZona: EficienciaZona[];
+  oportunidadesMejora: OportunidadesMejora;
+  insights: InsightsOptimizacion;
+}
+
+export interface ResumenOptimizacionRutas {
+  totalOrdenes: number;
+  ordenesConsolidadas: number;
+  ordenesIndividuales: number;
+  tasaConsolidacion: number;
+  rutasGeneradas: number;
+  promedioOrdenesPorRuta: number;
+}
+
+export interface ConsolidacionShipping {
+  shippingOrderId: string;
+  nroShippingOrder: string;
+  transportador: string;
+  totalOrdenes: number;
+  totalVentas: number;
+  zonas: number;
+  ventaPromedio: number;
+  eficiencia: number;
+  fechaCreacion: string;
+}
+
+export interface EficienciaTransportador {
+  transportadorId: string;
+  totalRutas: number;
+  ordenesTotales: number;
+  ventasTotales: number;
+  zonasAtendidas: number;
+  promedioOrdenesPorRuta: number;
+  eficienciaConsolidacion: number;
+  ventaPromedio: number;
+}
+
+export interface EficienciaZona {
+  zonaId: string;
+  totalOrdenes: number;
+  ordenesConsolidadas: number;
+  ordenesIndividuales: number;
+  totalVentas: number;
+  rutasGeneradas: number;
+  eficienciaConsolidacion: number;
+  promedioOrdenesPorRuta: number;
+  ventaPromedio: number;
+  oportunidadMejora: number;
+}
+
+export interface OportunidadesMejora {
+  zonasConBajaConsolidacion: EficienciaZona[];
+  transportadoresSubutilizados: EficienciaTransportador[];
+  potencialAhorro: PotencialAhorro;
+}
+
+export interface PotencialAhorro {
+  ordenesIndividualesPorZona: number;
+  porcentajeMejorable: number;
+}
+
+export interface InsightsOptimizacion {
+  mejorTransportador: EficienciaTransportador | null;
+  zonaMasEficiente: EficienciaZona | null;
+  rutaMasGrande: ConsolidacionShipping | null;
+  recomendaciones: string[];
+}
+
+// Coordenada geográfica para mapas
+export interface Coordenada {
+  lat: number;
+  lng: number;
+}
+
+// Tipos específicos de logística
+export type EstadoLogistico = 
+  | 'Empacado'
+  | 'Despachado'
+  | 'ParaDespachar'
+  | 'Entregado'
+  | 'EnTransito';
+
+export type FormaEntrega = 
+  | 'Domicilio'
+  | 'Recogida'
+  | 'Contraentrega'
+  | 'Express'
+  | 'Estandar';
+
+export type RangoHorario = 
+  | '8:00 AM - 12:00 PM'
+  | '12:00 PM - 5:00 PM'
+  | '5:00 PM - 8:00 PM'
+  | 'Todo el día'
+  | 'Mañana'
+  | 'Tarde';
+```
+
 ---
 
 ## <a name="servicios"></a>🔧 **Servicios Angular**
@@ -370,6 +629,57 @@ export class PedidosAnalyticsService {
   getAnalisisClientes(filtros: FiltrosAnalytics): Observable<AnalisisClientesResponse> {
     const params = this.buildParams(filtros);
     return this.http.get<AnalisisClientesResponse>(`${this.baseUrl}/analisis-clientes`, { params });
+  }
+
+  private buildParams(filtros: FiltrosAnalytics): HttpParams {
+    let params = new HttpParams()
+      .set('fechaInicio', filtros.fechaInicio)
+      .set('fechaFin', filtros.fechaFin);
+
+    if (filtros.company) {
+      params = params.set('company', filtros.company);
+    }
+
+    return params;
+  }
+}
+```
+
+### **Servicio de Analytics de Logística**
+```typescript
+// services/logistica-analytics.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { 
+  PerformanceEntregasResponse,
+  AnalisisGeograficoResponse,
+  OptimizacionRutasResponse,
+  FiltrosAnalytics 
+} from '../interfaces/logistica-analytics.interface';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class LogisticaAnalyticsService {
+  private readonly baseUrl = `${environment.apiUrl}/v1/analytics/logistica`;
+
+  constructor(private http: HttpClient) {}
+
+  getPerformanceEntregas(filtros: FiltrosAnalytics): Observable<PerformanceEntregasResponse> {
+    const params = this.buildParams(filtros);
+    return this.http.get<PerformanceEntregasResponse>(`${this.baseUrl}/performance-entregas`, { params });
+  }
+
+  getAnalisisGeografico(filtros: FiltrosAnalytics): Observable<AnalisisGeograficoResponse> {
+    const params = this.buildParams(filtros);
+    return this.http.get<AnalisisGeograficoResponse>(`${this.baseUrl}/analisis-geografico`, { params });
+  }
+
+  getOptimizacionRutas(filtros: FiltrosAnalytics): Observable<OptimizacionRutasResponse> {
+    const params = this.buildParams(filtros);
+    return this.http.get<OptimizacionRutasResponse>(`${this.baseUrl}/optimizacion-rutas`, { params });
   }
 
   private buildParams(filtros: FiltrosAnalytics): HttpParams {

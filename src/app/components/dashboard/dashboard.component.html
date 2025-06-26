@@ -237,44 +237,44 @@
                                                 <img src="assets/icons/dashboard/robot-ai.svg" class="chart-icon me-2" alt="K.A.I.">
                                                 {{ 'K.A.I. Insights' | translate }}
                                             </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="text-center mb-3">
-                                                <button 
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <button 
                                                     class="btn btn-secondary btn-sm" 
-                                                    (click)="analizar('VentasMes')"
-                                                    [disabled]="isAnalyzing">
-                                                    <i class="fas fa-magic me-1" *ngIf="!isAnalyzing"></i>
-                                                    <div class="spinner-border spinner-border-sm me-1" role="status" *ngIf="isAnalyzing">
-                                                        <span class="visually-hidden">Loading...</span>
-                                                    </div>
+                                            (click)="analizar('VentasMes')"
+                                            [disabled]="isAnalyzing">
+                                            <i class="fas fa-magic me-1" *ngIf="!isAnalyzing"></i>
+                                            <div class="spinner-border spinner-border-sm me-1" role="status" *ngIf="isAnalyzing">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
                                                     {{ isAnalyzing ? ('Analizando...' | translate) : ('Analizar Ventas' | translate) }}
-                                                </button>
-                                            </div>
-                                            
-                                            <!-- Estado de carga -->
-                                            <div *ngIf="isAnalyzing" class="analysis-loading">
-                                                <div class="spinner-border text-secondary" role="status">
-                                                    <span class="visually-hidden">Loading...</span>
-                                                </div>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Estado de carga -->
+                                    <div *ngIf="isAnalyzing" class="analysis-loading">
+                                        <div class="spinner-border text-secondary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
                                                 <span class="ms-2">{{ 'Analizando...' | translate }}</span>
-                                            </div>
-                                            
-                                            <!-- Resultado del análisis -->
-                                            <div *ngIf="ventasMesCheck && !isAnalyzing" class="analysis-result">
-                                                <div class="alert alert-info mb-2" role="alert">
-                                                    <i class="fas fa-lightbulb me-1"></i>
+                                    </div>
+                                    
+                                    <!-- Resultado del análisis -->
+                                    <div *ngIf="ventasMesCheck && !isAnalyzing" class="analysis-result">
+                                        <div class="alert alert-info mb-2" role="alert">
+                                            <i class="fas fa-lightbulb me-1"></i>
                                                     <small>{{ 'Análisis por K.A.I.' | translate }}</small>
-                                                </div>
-                                                <div 
-                                                    class="p-3 bg-light rounded" 
-                                                    [innerHtml]="ventasRes"
+                                        </div>
+                                        <div 
+                                            class="p-3 bg-light rounded" 
+                                            [innerHtml]="ventasRes"
                                                     style="max-height: 200px; overflow-y: auto;">
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Estado inicial -->
-                                            <div *ngIf="!ventasMesCheck && !isAnalyzing" class="text-center text-muted">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Estado inicial -->
+                                    <div *ngIf="!ventasMesCheck && !isAnalyzing" class="text-center text-muted">
                                                 <i class="fas fa-brain fa-2x mb-2 opacity-50"></i>
                                                 <p class="mb-0 small">{{ 'Obtén insights inteligentes sobre tus ventas' | translate }}</p>
                                             </div>
@@ -370,7 +370,7 @@
                     </div>
 
                     <!-- 2. MÓDULO DE LOGÍSTICA -->
-                    <div class="operational-module mb-5" *ngIf="modulosHabilitados.logistica && detailsData?.metricas && !estadoCarga.details">
+                    <div class="operational-module mb-5" *ngIf="modulosHabilitados.logistica">
                         <div class="module-header mb-4" (click)="toggleModule('logistica')" [attr.aria-expanded]="modulosExpandidos.logistica">
                             <div class="row align-items-center">
                                 <div class="col">
@@ -395,36 +395,46 @@
 
                         <div class="module-content" [class.collapsed]="!modulosExpandidos.logistica">
                             <div class="row g-4">
-                                <!-- Métricas de Entrega -->
-                                <div class="col-md-6">
+                                <!-- Estado de carga para logística -->
+                                <div class="col-12" *ngIf="estadoCarga.logistica">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-warning" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">{{ 'Cargando análisis de logística...' | translate }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Performance de Entregas -->
+                                <div class="col-md-6" *ngIf="!estadoCarga.logistica && logisticaData.performanceEntregas">
                                     <div class="card metric-card-enhanced h-100">
                                         <div class="card-header bg-gradient-warning text-dark">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-stopwatch me-2"></i>
-                                                {{ 'Eficiencia de Entregas' | translate }}
+                                                <i class="fas fa-tachometer-alt me-2"></i>
+                                                {{ 'Performance de Entregas' | translate }}
                                             </h5>
                                         </div>
                                         <div class="card-body">
                                             <div class="row g-3 text-center">
                                                 <div class="col-6">
                                                     <div class="metric-item">
-                                                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
-                                                        <h3 class="metric-value">{{ detailsData.metricas.tiempoPromedioEntrega | number:'1.1-1' }}</h3>
-                                                        <small class="text-muted">Días promedio de entrega</small>
+                                                        <i class="fas fa-percentage fa-2x text-success mb-2"></i>
+                                                        <h3 class="metric-value">{{ logisticaData.performanceEntregas.resumen.tasaEntrega | number:'1.1-1' }}%</h3>
+                                                        <small class="text-muted">Tasa de entrega</small>
                                                         <div class="progress mt-2">
-                                                            <div class="progress-bar bg-primary" 
-                                                                 [style.width.%]="(5 - detailsData.metricas.tiempoPromedioEntrega) * 20"></div>
+                                                            <div class="progress-bar bg-success" 
+                                                                 [style.width.%]="logisticaData.performanceEntregas.resumen.tasaEntrega"></div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="metric-item">
-                                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                                                        <h3 class="metric-value">{{ detailsData.metricas.pedidosEntregados }}</h3>
-                                                        <small class="text-muted">Pedidos entregados</small>
+                                                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                                        <h3 class="metric-value">{{ logisticaData.performanceEntregas.insights.tiempoPromedioGeneral | number:'1.1-1' }}</h3>
+                                                        <small class="text-muted">Días promedio</small>
                                                         <div class="progress mt-2">
-                                                            <div class="progress-bar bg-success" 
-                                                                 [style.width.%]="(detailsData.metricas.pedidosEntregados / totalPedidos) * 100"></div>
+                                                            <div class="progress-bar bg-primary" 
+                                                                 [style.width.%]="(5 - logisticaData.performanceEntregas.insights.tiempoPromedioGeneral) * 20"></div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -433,10 +443,10 @@
                                     </div>
                                 </div>
 
-                                <!-- Cobertura Geográfica -->
-                                <div class="col-md-6">
+                                <!-- Análisis Geográfico -->
+                                <div class="col-md-6" *ngIf="!estadoCarga.logistica && logisticaData.analisisGeografico">
                                     <div class="card metric-card-enhanced h-100">
-                                        <div class="card-header bg-gradient-danger text-white">
+                                        <div class="card-header bg-gradient-info text-white">
                                             <h5 class="card-title mb-0">
                                                 <i class="fas fa-map-marked-alt me-2"></i>
                                                 {{ 'Cobertura Geográfica' | translate }}
@@ -445,13 +455,71 @@
                                         <div class="card-body">
                                             <div class="text-center">
                                                 <div class="coverage-circle">
-                                                    <i class="fas fa-map-marker-alt fa-3x text-danger mb-3"></i>
-                                                    <h2 class="metric-value text-danger">{{ detailsData.metricas.ciudadesAtendidas }}</h2>
+                                                    <i class="fas fa-map-marker-alt fa-3x text-info mb-3"></i>
+                                                    <h2 class="metric-value text-info">{{ logisticaData.analisisGeografico.resumen.ciudadesAtendidas }}</h2>
                                                     <p class="text-muted mb-0">Ciudades cubiertas</p>
                                                     <small class="text-success">
-                                                        <i class="fas fa-arrow-up me-1"></i>
-                                                        Expandiendo cobertura
+                                                        <i class="fas fa-building me-1"></i>
+                                                        {{ logisticaData.analisisGeografico.resumen.bodegasActivas }} bodegas activas
                                                     </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mejores Transportadores -->
+                                <div class="col-md-6" *ngIf="!estadoCarga.logistica && logisticaData.performanceEntregas?.insights?.mejorTransportador">
+                                    <div class="card metric-card-enhanced h-100">
+                                        <div class="card-header bg-gradient-success text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-truck me-2"></i>
+                                                {{ 'Mejor Transportador' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="text-center">
+                                                <h4 class="text-success">{{ logisticaData.performanceEntregas.insights.mejorTransportador.nombre }}</h4>
+                                                <p class="text-muted mb-2">{{ logisticaData.performanceEntregas.insights.mejorTransportador.placa }}</p>
+                                                <div class="row g-2 text-center">
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">Entregas</small>
+                                                        <strong>{{ logisticaData.performanceEntregas.insights.mejorTransportador.totalEntregas }}</strong>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">Tasa éxito</small>
+                                                        <strong>{{ logisticaData.performanceEntregas.insights.mejorTransportador.tasaExito | number:'1.1-1' }}%</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fallback con métricas básicas -->
+                                <div class="col-md-6" *ngIf="!estadoCarga.logistica && !logisticaData.performanceEntregas && detailsData?.metricas">
+                                    <div class="card metric-card-enhanced h-100">
+                                        <div class="card-header bg-gradient-warning text-dark">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-stopwatch me-2"></i>
+                                                {{ 'Métricas Básicas' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3 text-center">
+                                                <div class="col-6">
+                                                    <div class="metric-item">
+                                                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                                        <h3 class="metric-value">{{ detailsData.metricas.tiempoPromedioEntrega | number:'1.1-1' }}</h3>
+                                                        <small class="text-muted">Días promedio</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="metric-item">
+                                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                                        <h3 class="metric-value">{{ detailsData.metricas.pedidosEntregados }}</h3>
+                                                        <small class="text-muted">Entregados</small>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -461,7 +529,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. MÓDULO DE PRODUCCIÓN (Placeholder para futuras implementaciones) -->
+                    <!-- 3. MÓDULO DE PRODUCCIÓN (Flujo de Estados de Pedidos) -->
                     <div class="operational-module mb-5" *ngIf="modulosHabilitados.produccion">
                         <div class="module-header mb-4" (click)="toggleModule('produccion')" [attr.aria-expanded]="modulosExpandidos.produccion">
                             <div class="row align-items-center">
@@ -473,13 +541,13 @@
                            [class.rotated]="modulosExpandidos.produccion"></i>
                     </h3>
                                     <p class="module-description text-muted">
-                                        {{ 'Control de inventarios, stock y optimización de recursos' | translate }}
+                                        {{ 'Flujo de estados de pedidos y análisis de procesos productivos' | translate }}
                                     </p>
                                 </div>
                                 <div class="col-auto">
                                     <div class="module-badge bg-info text-white px-3 py-1 rounded-pill">
                                         <i class="fas fa-cogs me-1"></i>
-                                        {{ 'Operaciones' | translate }}
+                                        {{ 'Procesos' | translate }}
                                     </div>
                                 </div>
                             </div>
@@ -487,36 +555,118 @@
 
                         <div class="module-content" [class.collapsed]="!modulosExpandidos.produccion">
                             <div class="row g-4">
-                            <!-- Indicadores de Producción -->
-                            <div class="col-md-12">
-                                <div class="card coming-soon-card">
-                                    <div class="card-body text-center py-5">
-                                        <i class="fas fa-wrench fa-3x text-info mb-3 opacity-50"></i>
-                                        <h4 class="text-info">{{ 'Próximamente' | translate }}</h4>
-                                        <p class="text-muted mb-3">
-                                            {{ 'Módulo de producción en desarrollo. Incluirá métricas de inventario, control de stock y optimización de recursos.' | translate }}
-                                        </p>
-                                        <div class="feature-list text-start d-inline-block">
-                                            <div class="feature-item mb-2">
-                                                <i class="fas fa-check text-success me-2"></i>
-                                                Control de inventarios en tiempo real
+                                <!-- Estado de carga para pedidos -->
+                                <div class="col-12" *ngIf="estadoCarga.pedidos">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-info" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">{{ 'Cargando análisis de procesos...' | translate }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Resumen de Flujo de Estados -->
+                                <div class="col-md-4" *ngIf="!estadoCarga.pedidos && pedidosData.flujoEstados">
+                                    <div class="card metric-card-enhanced h-100">
+                                        <div class="card-header bg-gradient-info text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-stream me-2"></i>
+                                                {{ 'Resumen de Procesos' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <h3 class="metric-value text-info">{{ pedidosData.flujoEstados.resumen.totalPedidos }}</h3>
+                                                <small class="text-muted">Total de pedidos</small>
                                             </div>
-                                            <div class="feature-item mb-2">
-                                                <i class="fas fa-check text-success me-2"></i>
-                                                Alertas de stock mínimo
+                                            <div class="mb-3">
+                                                <h4 class="metric-value text-success">{{ pedidosData.flujoEstados.insights.porcentajeCompletados | number:'1.1-1' }}%</h4>
+                                                <small class="text-muted">Completados</small>
                                             </div>
-                                            <div class="feature-item mb-2">
-                                                <i class="fas fa-check text-success me-2"></i>
-                                                Optimización de recursos productivos
-                                            </div>
-                                            <div class="feature-item">
-                                                <i class="fas fa-check text-success me-2"></i>
-                                                Análisis de eficiencia operativa
+                                            <div>
+                                                <strong class="text-primary">{{ pedidosData.flujoEstados.insights.tiempoPromedioCompleto | number:'1.1-1' }}</strong>
+                                                <small class="text-muted d-block">Días promedio completo</small>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+
+                                <!-- Estado Más Frecuente -->
+                                <div class="col-md-4" *ngIf="!estadoCarga.pedidos && pedidosData.flujoEstados?.insights?.estadoMasFrecuente">
+                                    <div class="card metric-card-enhanced h-100">
+                                        <div class="card-header bg-gradient-warning text-dark">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-chart-bar me-2"></i>
+                                                {{ 'Estado Predominante' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <div class="estado-badge mb-3" 
+                                                 [style.background-color]="getColorByEstado(pedidosData.flujoEstados.insights.estadoMasFrecuente)">
+                                                <h4 class="text-white mb-0">{{ getNombreEstadoAmigable(pedidosData.flujoEstados.insights.estadoMasFrecuente) }}</h4>
+                                            </div>
+                                            <p class="text-muted">Estado con mayor concentración de pedidos</p>
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar" 
+                                                     [style.background-color]="getColorByEstado(pedidosData.flujoEstados.insights.estadoMasFrecuente)"
+                                                     [style.width.%]="calcularPorcentajeProgreso(pedidosData.flujoEstados.insights.estadoMasFrecuente)"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tiempos de Procesamiento -->
+                                <div class="col-md-4" *ngIf="!estadoCarga.pedidos && pedidosData.tiemposProcesamiento">
+                                    <div class="card metric-card-enhanced h-100">
+                                        <div class="card-header bg-gradient-success text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-stopwatch me-2"></i>
+                                                {{ 'Tiempos de Proceso' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-2 text-center">
+                                                <div class="col-4">
+                                                    <small class="text-muted d-block">Empacado</small>
+                                                    <strong class="text-primary">{{ pedidosData.tiemposProcesamiento.estadisticas.empacado.promedio | number:'1.1-1' }}</strong>
+                                                    <small class="text-muted d-block">días</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted d-block">Despacho</small>
+                                                    <strong class="text-warning">{{ pedidosData.tiemposProcesamiento.estadisticas.despacho.promedio | number:'1.1-1' }}</strong>
+                                                    <small class="text-muted d-block">días</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted d-block">Entrega</small>
+                                                    <strong class="text-success">{{ pedidosData.tiemposProcesamiento.estadisticas.entrega.promedio | number:'1.1-1' }}</strong>
+                                                    <small class="text-muted d-block">días</small>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="text-center">
+                                                <small class="text-muted">Entregas rápidas</small>
+                                                <h5 class="text-success">{{ pedidosData.tiemposProcesamiento.insights.porcentajeEntregasRapidas | number:'1.1-1' }}%</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fallback: Próximamente -->
+                                <div class="col-md-12" *ngIf="!estadoCarga.pedidos && !pedidosData.flujoEstados && !pedidosData.tiemposProcesamiento">
+                                    <div class="card coming-soon-card">
+                                        <div class="card-body text-center py-5">
+                                            <i class="fas fa-wrench fa-3x text-info mb-3 opacity-50"></i>
+                                            <h4 class="text-info">{{ 'Análisis de Procesos Disponible' | translate }}</h4>
+                                            <p class="text-muted mb-3">
+                                                {{ 'Expande este módulo para ver el análisis detallado del flujo de estados de pedidos.' | translate }}
+                                            </p>
+                                            <button class="btn btn-info" (click)="toggleModule('produccion')" *ngIf="!modulosExpandidos.produccion">
+                                                <i class="fas fa-expand me-1"></i>
+                                                {{ 'Expandir Módulo' | translate }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -551,10 +701,10 @@
                             <div class="col-md-6" *ngIf="detailsData?.metricas && !estadoCarga.details">
                                 <div class="card metric-card-enhanced h-100">
                                     <div class="card-header bg-gradient-success text-white">
-                                        <h5 class="card-title mb-0">
+                                    <h5 class="card-title mb-0">
                                             <i class="fas fa-hand-holding-usd me-2"></i>
                                             {{ 'Gestión de Descuentos' | translate }}
-                                        </h5>
+                                    </h5>
                                     </div>
                                     <div class="card-body">
                                         <div class="text-center">

@@ -5,7 +5,11 @@ import { tap, catchError } from 'rxjs/operators';
 import { 
   DashboardCoreResponse, 
   DashboardDetailsResponse, 
-  FiltrosDashboard 
+  FiltrosDashboard,
+  FlujoEstadosResponse,
+  TiemposProcesamientoResponse,
+  PerformanceEntregasResponse,
+  AnalisisGeograficoResponse
 } from '../../../components/dashboard/model/dashboard-interfaces';
 import { environment } from '../../../../environments/environment';
 
@@ -141,5 +145,177 @@ export class AnalyticsService {
    */
   get apiBaseUrl(): string {
     return this.baseUrl;
+  }
+
+  // ============================================================================
+  // NUEVOS ENDPOINTS: ANÁLISIS DE PEDIDOS
+  // ============================================================================
+
+  /**
+   * Obtiene el análisis de flujo de estados de pedidos
+   * Incluye distribución por estados, transiciones, cuellos de botella
+   */
+  getPedidosFlujoEstados(fechaInicio: string, fechaFin: string, company?: string): Observable<FlujoEstadosResponse> {
+    let params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin);
+
+    if (company) {
+      params = params.set('company', company);
+    }
+
+    return this.http.get<FlujoEstadosResponse>(`${this.baseUrl}/pedidos/flujo-estados`, { params });
+  }
+
+  /**
+   * Obtiene el análisis de tiempos de procesamiento de pedidos
+   * Incluye estadísticas de empacado, despacho y entrega
+   */
+  getPedidosTiemposProcesamiento(fechaInicio: string, fechaFin: string, company?: string): Observable<TiemposProcesamientoResponse> {
+    let params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin);
+
+    if (company) {
+      params = params.set('company', company);
+    }
+
+    return this.http.get<TiemposProcesamientoResponse>(`${this.baseUrl}/pedidos/tiempos-procesamiento`, { params });
+  }
+
+  // ============================================================================
+  // NUEVOS ENDPOINTS: ANÁLISIS DE LOGÍSTICA
+  // ============================================================================
+
+  /**
+   * Obtiene el análisis de performance de entregas
+   * Incluye transportadores, zonas, horarios y formas de entrega
+   */
+  getLogisticaPerformanceEntregas(fechaInicio: string, fechaFin: string, company?: string): Observable<PerformanceEntregasResponse> {
+    let params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin);
+
+    if (company) {
+      params = params.set('company', company);
+    }
+
+    return this.http.get<PerformanceEntregasResponse>(`${this.baseUrl}/logistica/performance-entregas`, { params });
+  }
+
+  /**
+   * Obtiene el análisis geográfico de cobertura
+   * Incluye distribución por zonas, densidad por ciudades, cobertura por bodegas
+   */
+  getLogisticaAnalisisGeografico(fechaInicio: string, fechaFin: string, company?: string): Observable<AnalisisGeograficoResponse> {
+    let params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin);
+
+    if (company) {
+      params = params.set('company', company);
+    }
+
+    return this.http.get<AnalisisGeograficoResponse>(`${this.baseUrl}/logistica/analisis-geografico`, { params });
+  }
+
+  // ============================================================================
+  // MÉTODOS DE CONVENIENCIA
+  // ============================================================================
+
+  /**
+   * Construye parámetros HTTP desde el objeto de filtros
+   */
+  private buildParamsFromFilters(filtros: FiltrosDashboard): HttpParams {
+    let params = new HttpParams()
+      .set('fechaInicio', filtros.fechaInicio)
+      .set('fechaFin', filtros.fechaFin);
+
+    if (filtros.company) {
+      params = params.set('company', filtros.company);
+    }
+
+    return params;
+  }
+
+  /**
+   * Versión con objeto de filtros para flujo de estados
+   */
+  getPedidosFlujoEstadosWithFilters(filtros: FiltrosDashboard): Observable<FlujoEstadosResponse> {
+    const params = this.buildParamsFromFilters(filtros);
+    return this.http.get<FlujoEstadosResponse>(`${this.baseUrl}/pedidos/flujo-estados`, { params });
+  }
+
+  /**
+   * Versión con objeto de filtros para tiempos de procesamiento
+   */
+  getPedidosTiemposProcesamientoWithFilters(filtros: FiltrosDashboard): Observable<TiemposProcesamientoResponse> {
+    const params = this.buildParamsFromFilters(filtros);
+    return this.http.get<TiemposProcesamientoResponse>(`${this.baseUrl}/pedidos/tiempos-procesamiento`, { params });
+  }
+
+  /**
+   * Versión con objeto de filtros para performance de entregas
+   */
+  getLogisticaPerformanceEntregasWithFilters(filtros: FiltrosDashboard): Observable<PerformanceEntregasResponse> {
+    const params = this.buildParamsFromFilters(filtros);
+    return this.http.get<PerformanceEntregasResponse>(`${this.baseUrl}/logistica/performance-entregas`, { params });
+  }
+
+  /**
+   * Versión con objeto de filtros para análisis geográfico
+   */
+  getLogisticaAnalisisGeograficoWithFilters(filtros: FiltrosDashboard): Observable<AnalisisGeograficoResponse> {
+    const params = this.buildParamsFromFilters(filtros);
+    return this.http.get<AnalisisGeograficoResponse>(`${this.baseUrl}/logistica/analisis-geografico`, { params });
+  }
+
+  // ============================================================================
+  // MÉTODOS DE DEBUGGING Y UTILIDADES
+  // ============================================================================
+
+  /**
+   * Obtiene información de la configuración actual del servicio
+   */
+  getConfigInfo(): any {
+    return {
+      apiBaseUrl: this.baseUrl,
+      environmentUrl: environment.urlApi,
+      endpoints: {
+        dashboardCore: `${this.baseUrl}/dashboard-core`,
+        dashboardDetails: `${this.baseUrl}/dashboard-details`,
+        pedidosFlujoEstados: `${this.baseUrl}/pedidos/flujo-estados`,
+        pedidosTiemposProcesamiento: `${this.baseUrl}/pedidos/tiempos-procesamiento`,
+        logisticaPerformanceEntregas: `${this.baseUrl}/logistica/performance-entregas`,
+        logisticaAnalisisGeografico: `${this.baseUrl}/logistica/analisis-geografico`
+      }
+    };
+  }
+
+  /**
+   * Valida que los parámetros de fecha sean correctos
+   */
+  validarParametrosFecha(fechaInicio: string, fechaFin: string): { valido: boolean; error?: string } {
+    if (!fechaInicio || !fechaFin) {
+      return { valido: false, error: 'Las fechas de inicio y fin son requeridas' };
+    }
+
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+
+    if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
+      return { valido: false, error: 'Las fechas no tienen un formato válido' };
+    }
+
+    if (inicio > fin) {
+      return { valido: false, error: 'La fecha de inicio no puede ser mayor que la fecha de fin' };
+    }
+
+    const diasDiferencia = (fin.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24);
+    if (diasDiferencia > 365) {
+      return { valido: false, error: 'El rango de fechas no puede ser mayor a 365 días' };
+    }
+
+    return { valido: true };
   }
 } 

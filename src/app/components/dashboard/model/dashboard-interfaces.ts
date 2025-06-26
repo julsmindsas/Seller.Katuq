@@ -7,6 +7,10 @@
  * Endpoints:
  * - GET /v1/analytics/dashboard-core
  * - GET /v1/analytics/dashboard-details
+ * - GET /v1/analytics/pedidos/flujo-estados
+ * - GET /v1/analytics/pedidos/tiempos-procesamiento
+ * - GET /v1/analytics/logistica/performance-entregas
+ * - GET /v1/analytics/logistica/analisis-geografico
  */
 
 // ============================================================================
@@ -135,6 +139,269 @@ export interface MetricasAdicionales {
 }
 
 // ============================================================================
+// NUEVOS MÓDULOS: ANÁLISIS DE PEDIDOS
+// ============================================================================
+
+export type EstadoProceso = 
+  | 'SinProducir'
+  | 'Producido'
+  | 'ProducidoParcialmente' 
+  | 'ProducidoTotalmente'
+  | 'Empacado'
+  | 'Despachado'
+  | 'ParaDespachar'
+  | 'Entregado'
+  | 'Rechazado'
+  | 'Cerrado';
+
+/**
+ * Análisis de flujo de estados de pedidos
+ */
+export interface FlujoEstadosResponse {
+  periodo: PeriodoInfo;
+  resumen: ResumenFlujoEstados;
+  distribucionEstados: DistribucionEstado[];
+  transicionesEstados: TransicionEstado[];
+  tiemposPromedio: TiempoPromedioEstado[];
+  cuellosBottle: CuelloBottle[];
+  insights: InsightsFlujoEstados;
+}
+
+export interface ResumenFlujoEstados {
+  totalPedidos: number;
+  totalVentas: number;
+  ventaPromedioPorPedido: number;
+}
+
+export interface DistribucionEstado {
+  estado: EstadoProceso;
+  cantidad: number;
+  porcentaje: number;
+  ventas: number;
+  ventasPromedio: number;
+}
+
+export interface TransicionEstado {
+  transicion: string;
+  cantidad: number;
+  porcentaje: number;
+}
+
+export interface TiempoPromedioEstado {
+  estado: EstadoProceso;
+  tiempoPromedioDias: number;
+  cantidadMuestras: number;
+}
+
+export interface CuelloBottle {
+  estado: EstadoProceso;
+  cantidad: number;
+  porcentaje: number;
+  ventas: number;
+}
+
+export interface InsightsFlujoEstados {
+  estadoMasFrecuente: EstadoProceso | null;
+  porcentajeCompletados: number;
+  tiempoPromedioCompleto: number;
+}
+
+/**
+ * Análisis de tiempos de procesamiento
+ */
+export interface TiemposProcesamientoResponse {
+  periodo: PeriodoInfo;
+  estadisticas: EstadisticasTiempos;
+  distribucionTiempos: DistribucionTiempo[];
+  muestras: MuestrasTiempos;
+  insights: InsightsTiempos;
+}
+
+export interface EstadisticasTiempos {
+  empacado: EstadisticasTiempo;
+  despacho: EstadisticasTiempo;
+  entrega: EstadisticasTiempo;
+}
+
+export interface EstadisticasTiempo {
+  promedio: number;
+  mediana: number;
+  min: number;
+  max: number;
+}
+
+export interface DistribucionTiempo {
+  rango: string;
+  cantidad: number;
+  porcentaje: number;
+  ventas: number;
+  ventaPromedio: number;
+}
+
+export interface MuestrasTiempos {
+  empacado: number;
+  despacho: number;
+  entrega: number;
+}
+
+export interface InsightsTiempos {
+  tiempoPromedioTotal: number;
+  rangoMasFrecuente: string | null;
+  porcentajeEntregasRapidas: number;
+}
+
+// ============================================================================
+// NUEVOS MÓDULOS: ANÁLISIS DE LOGÍSTICA
+// ============================================================================
+
+/**
+ * Performance de entregas y transportadores
+ */
+export interface PerformanceEntregasResponse {
+  periodo: PeriodoInfo;
+  resumen: ResumenPerformanceEntregas;
+  estadisticasTiempos: EstadisticasTiemposEntrega;
+  performanceTransportadores: PerformanceTransportador[];
+  performanceZonas: PerformanceZona[];
+  performanceHorarios: PerformanceHorario[];
+  performanceFormasEntrega: PerformanceFormaEntrega[];
+  insights: InsightsPerformanceEntregas;
+}
+
+export interface ResumenPerformanceEntregas {
+  totalOrdenes: number;
+  ordenesEntregadas: number;
+  ordenesEnProceso: number;
+  tasaEntrega: number;
+  totalVentas: number;
+  ventasEntregadas: number;
+  ventaPromedioPorEntrega: number;
+}
+
+export interface EstadisticasTiemposEntrega {
+  general: EstadisticasTiempo;
+  entregasATiempo: AnalisisTiempo;
+  entregasTardias: AnalisisTiempo;
+}
+
+export interface AnalisisTiempo {
+  cantidad: number;
+  porcentaje: number;
+  estadisticas: EstadisticasTiempo;
+}
+
+export interface PerformanceTransportador {
+  id: string;
+  nombre: string;
+  placa: string;
+  totalEntregas: number;
+  ventasEntregadas: number;
+  ventaPromedio: number;
+  tiempoPromedio: number;
+  tasaExito: number;
+  entregasATiempo: number;
+  entregasTardias: number;
+}
+
+export interface PerformanceZona {
+  id: string;
+  nombre: string;
+  costoBase: number;
+  totalEntregas: number;
+  ventasEntregadas: number;
+  ventaPromedio: number;
+  tiempoPromedio: number;
+  eficiencia: number;
+  porcentaje: number;
+}
+
+export interface PerformanceHorario {
+  horario: string;
+  totalOrdenes: number;
+  entregadas: number;
+  tasaEntrega: number;
+  tiempoPromedio: number;
+  ventas: number;
+  ventaPromedio: number;
+}
+
+export interface PerformanceFormaEntrega {
+  forma: string;
+  totalOrdenes: number;
+  entregadas: number;
+  tasaEntrega: number;
+  ventas: number;
+  ventaPromedio: number;
+}
+
+export interface InsightsPerformanceEntregas {
+  mejorTransportador: PerformanceTransportador | null;
+  mejorZona: PerformanceZona | null;
+  horarioMasEficiente: PerformanceHorario | null;
+  tiempoPromedioGeneral: number;
+  porcentajeEntregasATiempo: number;
+}
+
+/**
+ * Análisis geográfico de cobertura
+ */
+export interface AnalisisGeograficoResponse {
+  periodo: PeriodoInfo;
+  resumen: ResumenGeografico;
+  distribucionPorZona: DistribucionZona[];
+  densidadPorCiudad: DensidadCiudad[];
+  coberturaPorBodega: CoberturaBodega[];
+  insights: InsightsGeograficos;
+}
+
+export interface ResumenGeografico {
+  totalEntregasAnalizadas: number;
+  ordenesConUbicacion: number;
+  porcentajeConUbicacion: number;
+  zonasActivas: number;
+  ciudadesAtendidas: number;
+  bodegasActivas: number;
+}
+
+export interface DistribucionZona {
+  zonaId: string;
+  nombreZona: string;
+  costoBase: number;
+  totalEntregas: number;
+  totalVentas: number;
+  ventaPromedio: number;
+  densidad: number;
+  eficiencia: number;
+  porcentaje: number;
+}
+
+export interface DensidadCiudad {
+  ciudad: string;
+  totalEntregas: number;
+  totalVentas: number;
+  ventaPromedio: number;
+  direccionesUnicas: number;
+  densidad: number;
+  porcentaje: number;
+}
+
+export interface CoberturaBodega {
+  bodegaId: string;
+  totalEntregas: number;
+  totalVentas: number;
+  zonasAtendidas: number;
+  cobertura: number;
+  ventaPromedio: number;
+}
+
+export interface InsightsGeograficos {
+  zonaMasActiva: DistribucionZona | null;
+  ciudadMasDensa: DensidadCiudad | null;
+  bodegaMasEficiente: CoberturaBodega | null;
+  recomendaciones: string[];
+}
+
+// ============================================================================
 // INTERFACES AUXILIARES PARA FRONTEND
 // ============================================================================
 
@@ -148,11 +415,13 @@ export interface FiltrosDashboard {
 }
 
 /**
- * Estado de carga del dashboard
+ * Estado de carga del dashboard ampliado para nuevos módulos
  */
 export interface EstadoCarga {
   core: boolean;                // Si están cargando los datos críticos
   details: boolean;             // Si están cargando los datos detallados
+  pedidos: boolean;             // Si están cargando los datos de pedidos
+  logistica: boolean;           // Si están cargando los datos de logística
   error: string | null;         // Mensaje de error si ocurre alguno
 }
 
@@ -207,7 +476,7 @@ export interface RespuestaError {
 /**
  * Tipos de gráficos disponibles
  */
-export type TipoGrafico = 'line' | 'area' | 'bar' | 'pie' | 'donut' | 'map';
+export type TipoGrafico = 'line' | 'area' | 'bar' | 'pie' | 'donut' | 'map' | 'funnel' | 'heatmap';
 
 /**
  * Estados posibles de los pedidos
@@ -226,6 +495,27 @@ export type MetodosPagoDisponibles =
   | 'Nequi' 
   | 'Daviplata' 
   | 'No especificado';
+
+/**
+ * Formas de entrega disponibles
+ */
+export type FormaEntrega = 
+  | 'Domicilio'
+  | 'Recogida'
+  | 'Contraentrega'
+  | 'Express'
+  | 'Estandar';
+
+/**
+ * Rangos horarios para entregas
+ */
+export type RangoHorario = 
+  | '8:00 AM - 12:00 PM'
+  | '12:00 PM - 5:00 PM'
+  | '5:00 PM - 8:00 PM'
+  | 'Todo el día'
+  | 'Mañana'
+  | 'Tarde';
 
 // ============================================================================
 // CONSTANTES ÚTILES
@@ -308,6 +598,73 @@ export function calcularDiferenciaDias(inicio: string, fin: string): number {
  */
 export function esRespuestaError(respuesta: any): respuesta is RespuestaError {
   return respuesta && respuesta.success === false && respuesta.error;
+}
+
+// ============================================================================
+// UTILIDADES PARA ESTADOS DE PEDIDOS
+// ============================================================================
+
+/**
+ * Mapeo de colores para estados de pedidos
+ */
+export const COLORES_ESTADOS: Record<EstadoProceso, string> = {
+  'SinProducir': '#FF4560',      // Rojo - Sin iniciar
+  'Producido': '#008FFB',        // Azul - En proceso
+  'ProducidoParcialmente': '#FEB019', // Amarillo - Parcial
+  'ProducidoTotalmente': '#00E396',   // Verde - Completo
+  'Empacado': '#775DD0',         // Púrpura - Listo para envío
+  'Despachado': '#20E647',       // Verde brillante - En tránsito
+  'ParaDespachar': '#F77B00',    // Naranja - Pendiente despacho
+  'Entregado': '#0CC27E',        // Verde oscuro - Completado
+  'Rechazado': '#E74C3C',        // Rojo oscuro - Rechazado
+  'Cerrado': '#6C757D'           // Gris - Cerrado
+};
+
+/**
+ * Obtiene el nombre amigable de un estado de proceso
+ */
+export function getNombreEstadoAmigable(estado: EstadoProceso): string {
+  const nombres: Record<EstadoProceso, string> = {
+    'SinProducir': 'Sin Producir',
+    'Producido': 'Producido',
+    'ProducidoParcialmente': 'Producido Parcialmente',
+    'ProducidoTotalmente': 'Producido Totalmente',
+    'Empacado': 'Empacado',
+    'Despachado': 'Despachado',
+    'ParaDespachar': 'Para Despachar',
+    'Entregado': 'Entregado',
+    'Rechazado': 'Rechazado',
+    'Cerrado': 'Cerrado'
+  };
+  
+  return nombres[estado] || estado;
+}
+
+/**
+ * Determina si un estado es final (no puede cambiar)
+ */
+export function esEstadoFinal(estado: EstadoProceso): boolean {
+  return ['Entregado', 'Rechazado', 'Cerrado'].includes(estado);
+}
+
+/**
+ * Calcula el porcentaje de progreso de un estado
+ */
+export function calcularPorcentajeProgreso(estado: EstadoProceso): number {
+  const progreso: Record<EstadoProceso, number> = {
+    'SinProducir': 0,
+    'Producido': 20,
+    'ProducidoParcialmente': 40,
+    'ProducidoTotalmente': 60,
+    'Empacado': 80,
+    'ParaDespachar': 85,
+    'Despachado': 90,
+    'Entregado': 100,
+    'Rechazado': 0,
+    'Cerrado': 100
+  };
+  
+  return progreso[estado] || 0;
 }
 
 // ============================================================================
