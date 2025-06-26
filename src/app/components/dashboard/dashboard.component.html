@@ -49,108 +49,550 @@
                                         {{ 'Mes anterior' | translate }}
                                     </button>
                                 </div>
+                                
+                                <!-- Controles de Acordeón -->
+                                <div class="accordion-controls">
+                                    <div class="btn-group" role="group" aria-label="Controles de módulos">
+                                        <button class="btn btn-sm btn-outline-secondary" 
+                                                (click)="expandAll()" 
+                                                title="Expandir todos los módulos">
+                                            <i class="fas fa-expand-alt me-1"></i>
+                                            {{ 'Expandir Todo' | translate }}
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" 
+                                                (click)="collapseAll()" 
+                                                title="Colapsar todos los módulos">
+                                            <i class="fas fa-compress-alt me-1"></i>
+                                            {{ 'Colapsar Todo' | translate }}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Charts Section -->
-                <div class="dashboard-content p-4">
-                    <div class="row g-4">
-                        <!-- Ventas del Mes -->
-                        <div class="col-md-6">
-                            <div class="card chart-card h-100">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="card-title mb-0">
-                                        <i class="fas fa-chart-bar me-2"></i>
-                                        {{ 'Ventas del Mes' | translate }}
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="chart3" class="apex-chart"></div>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Error Section -->
+                <div *ngIf="estadoCarga.error" class="alert alert-warning m-4" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ estadoCarga.error }}
+                </div>
 
-                        <!-- Análisis K.A.I. -->
-                        <div class="col-md-6">
-                            <div class="card chart-card h-100">
-                                <div class="card-header bg-secondary text-white">
-                                    <h5 class="card-title mb-0">
-                                        <i class="fas fa-robot me-2"></i>
-                                        {{ 'Análisis de K.A.I.' | translate }}
-                                    </h5>
-                                </div>
+                <!-- KPI Cards Section - Carga inmediata -->
+                <div class="dashboard-content p-4">
+                    <div class="row g-4 mb-4">
+                        <!-- KPI Cards -->
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card kpi-card gradient-primary text-white h-100">
                                 <div class="card-body">
-                                    <div class="text-center mb-3">
-                                        <button 
-                                            class="btn btn-secondary" 
-                                            (click)="analizar('VentasMes')"
-                                            [disabled]="isAnalyzing">
-                                            <i class="fas fa-magic me-1" *ngIf="!isAnalyzing"></i>
-                                            <div class="spinner-border spinner-border-sm me-1" role="status" *ngIf="isAnalyzing">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                            {{ isAnalyzing ? ('Analizando...' | translate) : ('Analizar' | translate) }}
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Estado de carga -->
-                                    <div *ngIf="isAnalyzing" class="analysis-loading">
-                                        <div class="spinner-border text-secondary" role="status">
+                                    <div *ngIf="estadoCarga.core" class="text-center">
+                                        <div class="spinner-border spinner-border-sm" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
-                                        <span class="ms-2">{{ 'Generando análisis inteligente...' | translate }}</span>
+                                        <span class="ms-2">Cargando...</span>
                                     </div>
-                                    
-                                    <!-- Resultado del análisis -->
-                                    <div *ngIf="ventasMesCheck && !isAnalyzing" class="analysis-result">
-                                        <div class="alert alert-info mb-2" role="alert">
-                                            <i class="fas fa-lightbulb me-1"></i>
-                                            <small>{{ 'Análisis generado por K.A.I. basado en los datos del período seleccionado' | translate }}</small>
+                                    <div *ngIf="!estadoCarga.core">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ 'Ventas Totales' | translate }}</h6>
+                                                <h3 class="mb-0">{{ totalVentas | currency:'COP':'symbol':'1.0-0' }}</h3>
+                                                <small class="text-white-50">
+                                                    <i class="fas fa-arrow-up me-1" *ngIf="crecimientoVentas > 0"></i>
+                                                    <i class="fas fa-arrow-down me-1" *ngIf="crecimientoVentas < 0"></i>
+                                                    {{ crecimientoVentas }}% vs período anterior
+                                                </small>
+                                            </div>
+                                            <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
                                         </div>
-                                        <div 
-                                            class="p-3 bg-light rounded" 
-                                            [innerHtml]="ventasRes"
-                                            style="max-height: 250px; overflow-y: auto;">
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Estado inicial -->
-                                    <div *ngIf="!ventasMesCheck && !isAnalyzing" class="text-center text-muted">
-                                        <i class="fas fa-chart-line fa-2x mb-2 opacity-50"></i>
-                                        <p class="mb-0">{{ 'Haz clic en "Analizar" para obtener insights inteligentes sobre tus ventas' | translate }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Top Products -->
-                        <div class="col-md-6">
-                            <div class="card chart-card h-100">
-                                <div class="card-header bg-danger text-white">
-                                    <h5 class="card-title mb-0">
-                                        <i class="fas fa-arrow-down me-2"></i>
-                                        {{ 'Top 10 Menos Vendidos' | translate }}
-                                    </h5>
-                                </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card kpi-card gradient-secondary text-white h-100">
                                 <div class="card-body">
-                                    <div id="chart1" class="apex-chart"></div>
+                                    <div *ngIf="estadoCarga.core" class="text-center">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span class="ms-2">Cargando...</span>
+                                    </div>
+                                    <div *ngIf="!estadoCarga.core">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ 'Ticket Promedio' | translate }}</h6>
+                                                <h3 class="mb-0">{{ promedioTicket | currency:'COP':'symbol':'1.0-0' }}</h3>
+                                                <small class="text-white-50">Por pedido aprobado</small>
+                                            </div>
+                                            <i class="fas fa-ticket-alt fa-2x opacity-75"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="card chart-card h-100">
-                                <div class="card-header bg-success text-white">
-                                    <h5 class="card-title mb-0">
-                                        <i class="fas fa-arrow-up me-2"></i>
-                                        {{ 'Top 10 Más Vendidos' | translate }}
-                                    </h5>
-                                </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card kpi-card gradient-success text-white h-100">
                                 <div class="card-body">
-                                    <div id="chart2" class="apex-chart"></div>
+                                    <div *ngIf="estadoCarga.core" class="text-center">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span class="ms-2">Cargando...</span>
+                                    </div>
+                                    <div *ngIf="!estadoCarga.core">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ 'Tasa Conversión' | translate }}</h6>
+                                                <h3 class="mb-0">{{ tasaConversion }}%</h3>
+                                                <small class="text-white-50">{{ pedidosAprobados }} de {{ totalPedidos }} pedidos</small>
+                                            </div>
+                                            <i class="fas fa-percentage fa-2x opacity-75"></i>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card kpi-card gradient-dark text-white h-100">
+                                <div class="card-body">
+                                    <div *ngIf="estadoCarga.core" class="text-center">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span class="ms-2">Cargando...</span>
+                                    </div>
+                                    <div *ngIf="!estadoCarga.core">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ 'Total Pedidos' | translate }}</h6>
+                                                <h3 class="mb-0">{{ totalPedidos }}</h3>
+                                                <small class="text-white-50">{{ pedidosAprobados }} aprobados</small>
+                                            </div>
+                                            <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Módulos Operativos del Dashboard -->
+                    <!-- ========================================= -->
+                    
+                    <!-- 1. MÓDULO DE VENTAS -->
+                    <div class="operational-module mb-5" *ngIf="modulosHabilitados.ventas">
+                        <div class="module-header mb-4" (click)="toggleModule('ventas')" [attr.aria-expanded]="modulosExpandidos.ventas">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                                        <h3 class="module-title clickable">
+                        <img src="assets/icons/dashboard/sales-chart.svg" class="module-icon me-2" alt="Ventas">
+                        {{ 'Módulo de Ventas' | translate }}
+                        <i class="fas fa-chevron-down ms-2 collapse-icon" 
+                           [class.rotated]="modulosExpandidos.ventas"></i>
+                    </h3>
+                                    <p class="module-description text-muted">
+                                        {{ 'Análisis de ventas, productos y comportamiento comercial' | translate }}
+                                    </p>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="module-badge bg-primary text-white px-3 py-1 rounded-pill">
+                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        {{ 'Comercial' | translate }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-content" [class.collapsed]="!modulosExpandidos.ventas">
+                            <div class="row g-4">
+                                <!-- Tendencia de Ventas -->
+                                <div class="col-md-8">
+                                    <div class="card chart-card h-100">
+                                        <div class="card-header bg-gradient-primary text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-chart-area me-2"></i>
+                                                {{ 'Tendencia de Ventas del Período' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div *ngIf="estadoCarga.core" class="text-center py-5">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Cargando tendencia de ventas...</p>
+                                            </div>
+                                            <div id="chart3" class="apex-chart" *ngIf="!estadoCarga.core"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Análisis K.A.I. Ventas -->
+                                <div class="col-md-4">
+                                    <div class="card chart-card h-100">
+                                        <div class="card-header bg-gradient-secondary text-white">
+                                            <h5 class="card-title mb-0">
+                                                <img src="assets/icons/dashboard/robot-ai.svg" class="chart-icon me-2" alt="K.A.I.">
+                                                {{ 'K.A.I. Insights' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="text-center mb-3">
+                                                <button 
+                                                    class="btn btn-secondary btn-sm" 
+                                                    (click)="analizar('VentasMes')"
+                                                    [disabled]="isAnalyzing">
+                                                    <i class="fas fa-magic me-1" *ngIf="!isAnalyzing"></i>
+                                                    <div class="spinner-border spinner-border-sm me-1" role="status" *ngIf="isAnalyzing">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    {{ isAnalyzing ? ('Analizando...' | translate) : ('Analizar Ventas' | translate) }}
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- Estado de carga -->
+                                            <div *ngIf="isAnalyzing" class="analysis-loading">
+                                                <div class="spinner-border text-secondary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <span class="ms-2">{{ 'Analizando...' | translate }}</span>
+                                            </div>
+                                            
+                                            <!-- Resultado del análisis -->
+                                            <div *ngIf="ventasMesCheck && !isAnalyzing" class="analysis-result">
+                                                <div class="alert alert-info mb-2" role="alert">
+                                                    <i class="fas fa-lightbulb me-1"></i>
+                                                    <small>{{ 'Análisis por K.A.I.' | translate }}</small>
+                                                </div>
+                                                <div 
+                                                    class="p-3 bg-light rounded" 
+                                                    [innerHtml]="ventasRes"
+                                                    style="max-height: 200px; overflow-y: auto;">
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Estado inicial -->
+                                            <div *ngIf="!ventasMesCheck && !isAnalyzing" class="text-center text-muted">
+                                                <i class="fas fa-brain fa-2x mb-2 opacity-50"></i>
+                                                <p class="mb-0 small">{{ 'Obtén insights inteligentes sobre tus ventas' | translate }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Productos Más Vendidos -->
+                                <div class="col-md-6">
+                                    <div class="card chart-card h-100">
+                                        <div class="card-header bg-gradient-success text-white">
+                                            <h5 class="card-title mb-0">
+                                                <img src="assets/icons/dashboard/trophy-star.svg" class="chart-icon me-2" alt="Top Productos">
+                                                {{ 'Top 10 Productos Estrella' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div *ngIf="estadoCarga.details" class="text-center py-5">
+                                                <div class="spinner-border text-success" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Cargando productos estrella...</p>
+                                            </div>
+                                            <div id="chart2" class="apex-chart" *ngIf="!estadoCarga.details"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Productos Con Oportunidad -->
+                                <div class="col-md-6">
+                                    <div class="card chart-card h-100">
+                                        <div class="card-header bg-gradient-warning text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                {{ 'Productos Con Oportunidad' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div *ngIf="estadoCarga.details" class="text-center py-5">
+                                                <div class="spinner-border text-warning" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Cargando oportunidades...</p>
+                                            </div>
+                                            <div id="chart1" class="apex-chart" *ngIf="!estadoCarga.details"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Categorías de Productos -->
+                                <div class="col-md-6" *ngIf="detailsData?.categorias && detailsData.categorias.length > 0">
+                                    <div class="card chart-card h-100">
+                                        <div class="card-header bg-gradient-info text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-chart-pie me-2"></i>
+                                                {{ 'Distribución por Categorías' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div *ngIf="estadoCarga.details" class="text-center py-5">
+                                                <div class="spinner-border text-info" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Cargando categorías...</p>
+                                            </div>
+                                            <div id="chart4" class="apex-chart" *ngIf="!estadoCarga.details"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Métodos de Pago -->
+                                <div class="col-md-6" *ngIf="detailsData?.metodosPago && detailsData.metodosPago.length > 0">
+                                    <div class="card chart-card h-100">
+                                        <div class="card-header bg-gradient-purple text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-credit-card me-2"></i>
+                                                {{ 'Comportamiento de Pago' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div *ngIf="estadoCarga.details" class="text-center py-5">
+                                                <div class="spinner-border text-purple" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Cargando métodos de pago...</p>
+                                            </div>
+                                            <div id="chart5" class="apex-chart" *ngIf="!estadoCarga.details"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. MÓDULO DE LOGÍSTICA -->
+                    <div class="operational-module mb-5" *ngIf="modulosHabilitados.logistica && detailsData?.metricas && !estadoCarga.details">
+                        <div class="module-header mb-4" (click)="toggleModule('logistica')" [attr.aria-expanded]="modulosExpandidos.logistica">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                                        <h3 class="module-title clickable">
+                        <img src="assets/icons/dashboard/logistics-truck.svg" class="module-icon me-2" alt="Logística">
+                        {{ 'Módulo de Logística' | translate }}
+                        <i class="fas fa-chevron-down ms-2 collapse-icon" 
+                           [class.rotated]="modulosExpandidos.logistica"></i>
+                    </h3>
+                                    <p class="module-description text-muted">
+                                        {{ 'Gestión de entregas, tiempos y distribución geográfica' | translate }}
+                                    </p>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="module-badge bg-warning text-dark px-3 py-1 rounded-pill">
+                                        <i class="fas fa-shipping-fast me-1"></i>
+                                        {{ 'Distribución' | translate }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-content" [class.collapsed]="!modulosExpandidos.logistica">
+                            <div class="row g-4">
+                                <!-- Métricas de Entrega -->
+                                <div class="col-md-6">
+                                    <div class="card metric-card-enhanced h-100">
+                                        <div class="card-header bg-gradient-warning text-dark">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-stopwatch me-2"></i>
+                                                {{ 'Eficiencia de Entregas' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3 text-center">
+                                                <div class="col-6">
+                                                    <div class="metric-item">
+                                                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                                        <h3 class="metric-value">{{ detailsData.metricas.tiempoPromedioEntrega | number:'1.1-1' }}</h3>
+                                                        <small class="text-muted">Días promedio de entrega</small>
+                                                        <div class="progress mt-2">
+                                                            <div class="progress-bar bg-primary" 
+                                                                 [style.width.%]="(5 - detailsData.metricas.tiempoPromedioEntrega) * 20"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="metric-item">
+                                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                                        <h3 class="metric-value">{{ detailsData.metricas.pedidosEntregados }}</h3>
+                                                        <small class="text-muted">Pedidos entregados</small>
+                                                        <div class="progress mt-2">
+                                                            <div class="progress-bar bg-success" 
+                                                                 [style.width.%]="(detailsData.metricas.pedidosEntregados / totalPedidos) * 100"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Cobertura Geográfica -->
+                                <div class="col-md-6">
+                                    <div class="card metric-card-enhanced h-100">
+                                        <div class="card-header bg-gradient-danger text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-map-marked-alt me-2"></i>
+                                                {{ 'Cobertura Geográfica' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="text-center">
+                                                <div class="coverage-circle">
+                                                    <i class="fas fa-map-marker-alt fa-3x text-danger mb-3"></i>
+                                                    <h2 class="metric-value text-danger">{{ detailsData.metricas.ciudadesAtendidas }}</h2>
+                                                    <p class="text-muted mb-0">Ciudades cubiertas</p>
+                                                    <small class="text-success">
+                                                        <i class="fas fa-arrow-up me-1"></i>
+                                                        Expandiendo cobertura
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. MÓDULO DE PRODUCCIÓN (Placeholder para futuras implementaciones) -->
+                    <div class="operational-module mb-5" *ngIf="modulosHabilitados.produccion">
+                        <div class="module-header mb-4" (click)="toggleModule('produccion')" [attr.aria-expanded]="modulosExpandidos.produccion">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                                        <h3 class="module-title clickable">
+                        <img src="assets/icons/dashboard/production-gear.svg" class="module-icon me-2" alt="Producción">
+                        {{ 'Módulo de Producción' | translate }}
+                        <i class="fas fa-chevron-down ms-2 collapse-icon" 
+                           [class.rotated]="modulosExpandidos.produccion"></i>
+                    </h3>
+                                    <p class="module-description text-muted">
+                                        {{ 'Control de inventarios, stock y optimización de recursos' | translate }}
+                                    </p>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="module-badge bg-info text-white px-3 py-1 rounded-pill">
+                                        <i class="fas fa-cogs me-1"></i>
+                                        {{ 'Operaciones' | translate }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-content" [class.collapsed]="!modulosExpandidos.produccion">
+                            <div class="row g-4">
+                            <!-- Indicadores de Producción -->
+                            <div class="col-md-12">
+                                <div class="card coming-soon-card">
+                                    <div class="card-body text-center py-5">
+                                        <i class="fas fa-wrench fa-3x text-info mb-3 opacity-50"></i>
+                                        <h4 class="text-info">{{ 'Próximamente' | translate }}</h4>
+                                        <p class="text-muted mb-3">
+                                            {{ 'Módulo de producción en desarrollo. Incluirá métricas de inventario, control de stock y optimización de recursos.' | translate }}
+                                        </p>
+                                        <div class="feature-list text-start d-inline-block">
+                                            <div class="feature-item mb-2">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                Control de inventarios en tiempo real
+                                            </div>
+                                            <div class="feature-item mb-2">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                Alertas de stock mínimo
+                                            </div>
+                                            <div class="feature-item mb-2">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                Optimización de recursos productivos
+                                            </div>
+                                            <div class="feature-item">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                Análisis de eficiencia operativa
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. MÓDULO FINANCIERO (Placeholder) -->
+                    <div class="operational-module mb-5" *ngIf="modulosHabilitados.financiero">
+                        <div class="module-header mb-4" (click)="toggleModule('financiero')" [attr.aria-expanded]="modulosExpandidos.financiero">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                                        <h3 class="module-title clickable">
+                        <img src="assets/icons/dashboard/financial-chart.svg" class="module-icon me-2" alt="Financiero">
+                        {{ 'Módulo Financiero' | translate }}
+                        <i class="fas fa-chevron-down ms-2 collapse-icon" 
+                           [class.rotated]="modulosExpandidos.financiero"></i>
+                    </h3>
+                                    <p class="module-description text-muted">
+                                        {{ 'Análisis financiero, rentabilidad y gestión de costos' | translate }}
+                                    </p>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="module-badge bg-success text-white px-3 py-1 rounded-pill">
+                                        <i class="fas fa-calculator me-1"></i>
+                                        {{ 'Finanzas' | translate }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-content" [class.collapsed]="!modulosExpandidos.financiero">
+                            <div class="row g-4">
+                            <!-- Análisis Financiero -->
+                            <div class="col-md-6" *ngIf="detailsData?.metricas && !estadoCarga.details">
+                                <div class="card metric-card-enhanced h-100">
+                                    <div class="card-header bg-gradient-success text-white">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-hand-holding-usd me-2"></i>
+                                            {{ 'Gestión de Descuentos' | translate }}
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center">
+                                            <i class="fas fa-percentage fa-3x text-success mb-3"></i>
+                                            <h3 class="metric-value text-success">{{ detailsData.metricas.totalDescuentos | currency:'COP':'symbol':'1.0-0' }}</h3>
+                                            <p class="text-muted mb-2">Total en descuentos aplicados</p>
+                                            <small class="text-warning">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                {{ ((detailsData.metricas.totalDescuentos / totalVentas) * 100) | number:'1.1-1' }}% de las ventas totales
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Próximas funcionalidades financieras -->
+                            <div class="col-md-6">
+                                <div class="card coming-soon-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-chart-line fa-3x text-success mb-3 opacity-50"></i>
+                                        <h5 class="text-success">{{ 'Análisis Avanzado' | translate }}</h5>
+                                        <p class="text-muted mb-3 small">
+                                            {{ 'Próximamente: análisis de rentabilidad, flujo de caja y ROI' | translate }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado de información del período -->
+                    <div class="row mt-4" *ngIf="coreData?.periodo">
+                        <div class="col-12">
+                            <div class="alert alert-light border" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Período analizado:</strong> 
+                                {{ coreData.periodo.inicio | date:'dd/MM/yyyy' }} - {{ coreData.periodo.fin | date:'dd/MM/yyyy' }}
+                                ({{ coreData.periodo.dias }} días)
                             </div>
                         </div>
                     </div>

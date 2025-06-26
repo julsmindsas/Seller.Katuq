@@ -602,3 +602,65 @@ interface NotasPedido {
 - **Híbrida:** Combinación de canales
 
 Este sistema permite a Katuq manejar desde ventas simples en POS hasta pedidos complejos con múltiples configuraciones, manteniendo coherencia en el modelo de datos y facilitando el seguimiento integral del ciclo de vida de cada venta.
+
+---
+
+## MODELOS BACKEND – ENDPOINT `/productos`
+
+A continuación se documentan los modelos utilizados por el backend de Katuq Seller para el recurso **`/productos`**. Estos modelos extienden la información que maneja el frontend e incluyen campos de auditoría y relaciones con la empresa.
+
+```typescript
+import { Document } from "mongoose";
+import { Dimensiones, Disponibilidad, Categoria, Precio, Imagen, Identificacion, Exposicion, Marketplace, Ciudades, ProcesoComercial, OtrosProcesos } from "@/app/shared/models/productos";
+
+export interface ProductoBD extends Document {
+  _id: string;               // Identificador único MongoDB
+  company: string;           // Empresa propietaria
+  bodegaId?: string;         // Bodega asociada
+  sku: string;               // SKU interno
+  identificacion: Identificacion;      // Datos de identificación comercial
+  dimensiones: Dimensiones;           // Medidas físicas
+  disponibilidad: Disponibilidad;     // Control de inventario
+  precio: Precio;                       // Información de precios
+  categorias: Categoria[];             // Jerarquía de categorías
+  exposicion: Exposicion;              // Flags de exposición en catálogos
+  marketplace?: Marketplace;           // Configuración Marketplace
+  ciudades?: Ciudades;                 // Ciudades de origen/entrega
+  procesoComercial?: ProcesoComercial; // Configuración comercial
+  otrosProcesos?: OtrosProcesos;       // Procesos de producción
+  imagenesPrincipales: Imagen[];       // Imágenes principales
+  imagenesSecundarias: Imagen[];       // Galería adicional
+  activo: boolean;                     // Estado lógico
+  createdAt: Date;                     // Fecha de creación
+  updatedAt: Date;                     // Última actualización
+  createdBy: string;                   // Usuario creador (cd)
+  updatedBy?: string;                  // Último usuario que modificó
+}
+```
+
+### Sub-modelos auxiliares
+
+```typescript
+// Historial de cambios de precios
+export interface HistorialPrecio {
+  _id?: string;
+  productoId: string;
+  precioAnterior: number;
+  precioNuevo: number;
+  fechaCambio: Date;
+  usuario: string; // cd del usuario
+}
+
+// Movimientos de inventario asociados al producto
+export interface MovimientoInventario {
+  _id?: string;
+  productoId: string;
+  tipo: "Entrada" | "Salida" | "Ajuste";
+  cantidad: number;
+  referencia: string;  // Orden, traslado, etc.
+  fecha: Date;
+  usuario: string;
+}
+```
+
+> Estos modelos permiten al backend gestionar la trazabilidad completa de los productos, soportando operaciones CRUD robustas y generación de reportes avanzados.

@@ -1,0 +1,48 @@
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="trophy-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff8c00;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="star-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffeb3b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffc107;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="12" cy="12" r="11" fill="url(#trophy-gradient)" opacity="0.1"/>
+  
+  <!-- Trophy base -->
+  <rect x="9" y="18" width="6" height="3" rx="0.5" fill="url(#trophy-gradient)" opacity="0.8"/>
+  <rect x="8" y="20" width="8" height="1.5" rx="0.75" fill="url(#trophy-gradient)"/>
+  
+  <!-- Trophy stem -->
+  <rect x="11.25" y="16" width="1.5" height="3" fill="url(#trophy-gradient)"/>
+  
+  <!-- Trophy cup -->
+  <path d="M7 8C7 6 8 5 9 5H15C16 5 17 6 17 8V12C17 14 15 16 12 16C9 16 7 14 7 12V8Z" 
+        fill="url(#trophy-gradient)"/>
+  
+  <!-- Trophy handles -->
+  <path d="M6 9C5 9 4 9.5 4 11C4 12.5 5 13 6 13V11.5" 
+        stroke="url(#trophy-gradient)" 
+        stroke-width="1.5" 
+        fill="none"/>
+  <path d="M18 9C19 9 20 9.5 20 11C20 12.5 19 13 18 13V11.5" 
+        stroke="url(#trophy-gradient)" 
+        stroke-width="1.5" 
+        fill="none"/>
+  
+  <!-- Star on trophy -->
+  <path d="M12 7L12.9 9.5L15.5 9.5L13.5 11.2L14.1 13.8L12 12.1L9.9 13.8L10.5 11.2L8.5 9.5L11.1 9.5L12 7Z" 
+        fill="url(#star-gradient)"/>
+  
+  <!-- Sparkles -->
+  <g opacity="0.8">
+    <path d="M6 4L6.5 5.5L8 6L6.5 6.5L6 8L5.5 6.5L4 6L5.5 5.5L6 4Z" fill="url(#star-gradient)"/>
+    <path d="M18 3L18.3 4L19 4.3L18.3 4.6L18 5.3L17.7 4.6L17 4.3L17.7 4L18 3Z" fill="url(#star-gradient)"/>
+    <path d="M20 8L20.3 8.7L21 9L20.3 9.3L20 10L19.7 9.3L19 9L19.7 8.7L20 8Z" fill="url(#star-gradient)"/>
+    <path d="M4 15L4.3 15.7L5 16L4.3 16.3L4 17L3.7 16.3L3 16L3.7 15.7L4 15Z" fill="url(#star-gradient)"/>
+  </g>
+</svg> 

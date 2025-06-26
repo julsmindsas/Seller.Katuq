@@ -19,6 +19,7 @@ import { TabViewModule } from "primeng/tabview";
 import { ToastModule } from "primeng/toast";
 import { TreeSelectModule } from "primeng/treeselect";
 import { AnaliticaService } from "../../shared/services/dashboard/analiticas.services";
+import { AnalyticsService } from "../../shared/services/dashboard/analytics.service";
 
 @NgModule({
   imports: [
@@ -43,7 +44,8 @@ import { AnaliticaService } from "../../shared/services/dashboard/analiticas.ser
     MultiSelectModule,
     ToastModule,
   ],
-  providers: [AnaliticaService],
+  providers: [
+  ],
   declarations: [DashboardComponent],
 })
 export class DashboardModule {}

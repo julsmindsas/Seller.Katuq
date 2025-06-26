@@ -1,0 +1,42 @@
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="production-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#36b9cc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#258391;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="12" cy="12" r="11" fill="url(#production-gradient)" opacity="0.1"/>
+  
+  <!-- Main gear -->
+  <path d="M12 2L14.09 6.26L18.76 6.27L15.68 9.74L16.77 14.5L12 11.77L7.23 14.5L8.32 9.74L5.24 6.27L9.91 6.26L12 2Z" 
+        fill="url(#production-gradient)" 
+        opacity="0.8"/>
+  
+  <!-- Inner gear circle -->
+  <circle cx="12" cy="12" r="4" fill="url(#production-gradient)"/>
+  <circle cx="12" cy="12" r="2" fill="white"/>
+  
+  <!-- Small gear 1 -->
+  <g transform="translate(18, 6)">
+    <path d="M0 0L1.2 2.5L3.8 2.5L2.3 4L2.9 6.5L0 5L-2.9 6.5L-2.3 4L-3.8 2.5L-1.2 2.5L0 0Z" 
+          fill="url(#production-gradient)" 
+          opacity="0.6" 
+          transform="scale(0.4)"/>
+    <circle cx="0" cy="0" r="1" fill="white" opacity="0.8"/>
+  </g>
+  
+  <!-- Small gear 2 -->
+  <g transform="translate(6, 18)">
+    <path d="M0 0L1.2 2.5L3.8 2.5L2.3 4L2.9 6.5L0 5L-2.9 6.5L-2.3 4L-3.8 2.5L-1.2 2.5L0 0Z" 
+          fill="url(#production-gradient)" 
+          opacity="0.6" 
+          transform="scale(0.4)"/>
+    <circle cx="0" cy="0" r="1" fill="white" opacity="0.8"/>
+  </g>
+  
+  <!-- Connection lines -->
+  <path d="M15 9L17 7" stroke="url(#production-gradient)" stroke-width="1.5" opacity="0.5"/>
+  <path d="M9 15L7 17" stroke="url(#production-gradient)" stroke-width="1.5" opacity="0.5"/>
+</svg> 
