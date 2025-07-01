@@ -915,6 +915,180 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     );
   }
 
+  // MÉTODOS PARA LA FILA DE RESUMEN (DATOS FILTRADOS)
+  /**
+   * Obtiene los pedidos actualmente filtrados en la tabla
+   */
+  private getFilteredOrders(): any[] {
+    if (this.table && this.table.filteredValue) {
+      return this.table.filteredValue;
+    }
+    return this.orders || [];
+  }
+
+  /**
+   * Total de pedidos mostrados en la tabla filtrada
+   */
+  getTotalPedidos(): number {
+    return this.getFilteredOrders().length;
+  }
+
+  /**
+   * Conteo de pedidos por estado de pago
+   */
+  getEstadoCount(estado: string): number {
+    return this.getFilteredOrders().filter(pedido => pedido.estadoPago === estado).length;
+  }
+
+  /**
+   * Conteo de pedidos por estado de proceso
+   */
+  getProcesoCount(proceso: string): number {
+    return this.getFilteredOrders().filter(pedido => pedido.estadoProceso === proceso).length;
+  }
+
+  /**
+   * Conteo de pedidos validados
+   */
+  getValidacionCount(): number {
+    return this.getFilteredOrders().filter(pedido => pedido.validacion === true).length;
+  }
+
+  /**
+   * Conteo de clientes únicos en los pedidos filtrados
+   */
+  getClientesUnicos(): number {
+    const clientesUnicos = new Set();
+    this.getFilteredOrders().forEach(pedido => {
+      if (pedido.cliente && pedido.cliente.documento) {
+        clientesUnicos.add(pedido.cliente.documento);
+      }
+    });
+    return clientesUnicos.size;
+  }
+
+  /**
+   * Conteo de ciudades únicas en los pedidos filtrados
+   */
+  getCiudadesUnicas(): number {
+    const ciudadesUnicas = new Set();
+    this.getFilteredOrders().forEach(pedido => {
+      if (pedido.envio && pedido.envio.ciudad) {
+        ciudadesUnicas.add(pedido.envio.ciudad);
+      }
+    });
+    return ciudadesUnicas.size;
+  }
+
+  /**
+   * Conteo de vendedores únicos en los pedidos filtrados
+   */
+  getVendedoresUnicos(): number {
+    const vendedoresUnicos = new Set();
+    this.getFilteredOrders().forEach(pedido => {
+      if (pedido.asesorAsignado && pedido.asesorAsignado.name) {
+        vendedoresUnicos.add(pedido.asesorAsignado.name);
+      }
+    });
+    return vendedoresUnicos.size;
+  }
+
+  /**
+   * Total valor bruto de pedidos filtrados
+   */
+  getFilteredCalculateValorBruto(): number {
+    return this.getFilteredOrders().reduce(
+      (acc, pedido: any) => acc + (pedido.totalPedidoSinDescuento || 0),
+      0,
+    );
+  }
+
+  /**
+   * Total descuento de pedidos filtrados
+   */
+  getFilteredCalculateDescuento(): number {
+    return this.getFilteredOrders().reduce(
+      (acc, pedido: any) => acc + (pedido.totalDescuento || 0),
+      0,
+    );
+  }
+
+  /**
+   * Total envío de pedidos filtrados
+   */
+  getFilteredCalculateEnvio(): number {
+    return this.getFilteredOrders().reduce(
+      (acc, pedido: any) => acc + (pedido.totalEnvio || 0),
+      0,
+    );
+  }
+
+  /**
+   * Total subtotal de pedidos filtrados
+   */
+  getFilteredCalculateSubtotal(): number {
+    return this.getFilteredOrders().reduce(
+      (acc, pedido: any) => acc + (pedido.subtotal || 0),
+      0,
+    );
+  }
+
+  /**
+   * Total impuestos (IVA) de pedidos filtrados
+   */
+  getFilteredCalculateTotalImpuestos(): number {
+    return this.getFilteredOrders().reduce(
+      (acc, pedido: any) => acc + (pedido.totalImpuesto || 0),
+      0,
+    );
+  }
+
+  /**
+   * Total general de pedidos filtrados
+   */
+  getFilteredCalculateTotal(): number {
+    return this.getFilteredOrders().reduce(
+      (acc, pedido: any) => acc + (pedido.totalPedididoConDescuento || 0),
+      0,
+    );
+  }
+
+  /**
+   * Total anticipo de pedidos filtrados
+   */
+  getFilteredCalculateAnticipo(): number {
+    return this.getFilteredOrders().reduce((acc, pedido: any) => {
+      // Calcular anticipo basado en PagosAsentados si existen
+      const anticipoReal =
+        pedido.PagosAsentados && pedido.PagosAsentados.length > 0
+          ? pedido.PagosAsentados.reduce(
+              (sum, pago) => sum + (pago.valor || 0),
+              0,
+            )
+          : pedido.anticipo || 0;
+      return acc + anticipoReal;
+    }, 0);
+  }
+
+  /**
+   * Total falta por pagar de pedidos filtrados
+   */
+  getFilteredCalculateFaltaPorPagar(): number {
+    return this.getFilteredOrders().reduce((acc, pedido: any) => {
+      // Recalcular falta por pagar basado en pagos asentados
+      const anticipoReal =
+        pedido.PagosAsentados && pedido.PagosAsentados.length > 0
+          ? pedido.PagosAsentados.reduce(
+              (sum, pago) => sum + (pago.valor || 0),
+              0,
+            )
+          : pedido.anticipo || 0;
+      const faltaPorPagar =
+        (pedido.totalPedididoConDescuento || 0) - anticipoReal;
+      return acc + Math.max(0, faltaPorPagar); // Evitar valores negativos
+    }, 0);
+  }
+
   pdfOrder(content, order: Pedido) {
     this.pedidoSeleccionado = order;
     this.htmlModal = this.paymentService.getHtmlContent(

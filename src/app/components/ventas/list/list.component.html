@@ -975,6 +975,188 @@
                                 </td>
                             </tr>
                         </ng-template>
+
+                        <!-- FILA DE RESUMEN -->
+                        <ng-template pTemplate="summary">
+                            <tr class="summary-row" style="font-size: 0.85em; background-color: #f8f9fa; border-top: 2px solid #007bff;">
+                                <!-- Columna Detalles -->
+                                <td *ngIf="isColumnVisible('detalles')" class="summary-cell" style="width: 2.5rem; text-align: center; font-weight: bold; color: #495057;">
+                                    <i class="pi pi-chart-bar text-primary"></i>
+                                </td>
+
+                                <!-- Columna # Pedido -->
+                                <td *ngIf="isColumnVisible('nroPedido')" class="summary-cell" style="width: 8rem; text-align: center; font-weight: bold; color: #495057;">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Total Pedidos' | translate }}</div>
+                                        <div class="summary-value">{{ getTotalPedidos() }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Fecha Entrega -->
+                                <td *ngIf="isColumnVisible('fechaEntrega')" class="summary-cell" style="width: 7rem;">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Opciones -->
+                                <td *ngIf="isColumnVisible('opciones')" class="summary-cell" style="width: 5rem;">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Estado de Pago -->
+                                <td *ngIf="isColumnVisible('estadoPago')" class="summary-cell text-center">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Estados' | translate }}</div>
+                                        <div class="summary-badges">
+                                            <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                <span class="mini-badge badge-success" 
+                                                      [title]="'Aprobados: ' + getEstadoCount('Aprobado')">
+                                                    {{ getEstadoCount('Aprobado') }}
+                                                </span>
+                                                <span class="mini-badge badge-warning" 
+                                                      [title]="'Pendientes: ' + getEstadoCount('Pendiente')">
+                                                    {{ getEstadoCount('Pendiente') }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Estado de Proceso -->
+                                <td *ngIf="isColumnVisible('estadoProceso')" class="summary-cell text-center">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Procesos' | translate }}</div>
+                                        <div class="summary-badges">
+                                            <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                <span class="mini-badge badge-secondary" 
+                                                      [title]="'Sin Producir: ' + getProcesoCount('SinProducir')">
+                                                    {{ getProcesoCount('SinProducir') }}
+                                                </span>
+                                                <span class="mini-badge badge-success" 
+                                                      [title]="'Entregados: ' + getProcesoCount('Entregado')">
+                                                    {{ getProcesoCount('Entregado') }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Validación -->
+                                <td *ngIf="isColumnVisible('validacion') && !isFromProduction" class="summary-cell text-center">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Validados' | translate }}</div>
+                                        <div class="summary-value text-success">{{ getValidacionCount() }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Cliente -->
+                                <td *ngIf="isColumnVisible('cliente') && !isFromProduction" class="summary-cell">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Clientes Únicos' | translate }}</div>
+                                        <div class="summary-value">{{ getClientesUnicos() }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Valor Bruto -->
+                                <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction" class="summary-cell summary-money">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Total Bruto' | translate }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateValorBruto() | currency }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Descuento -->
+                                <td *ngIf="isColumnVisible('descuento') && !isFromProduction" class="summary-cell summary-money">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Total Desc.' | translate }}</div>
+                                        <div class="summary-value money-value text-warning">{{ getFilteredCalculateDescuento() | currency }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Domicilio -->
+                                <td *ngIf="isColumnVisible('domicilio') && !isFromProduction" class="summary-cell summary-money">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Total Envío' | translate }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateEnvio() | currency }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Subtotal -->
+                                <td *ngIf="isColumnVisible('subtotal') && !isFromProduction" class="summary-cell summary-money">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Total Subtotal' | translate }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateSubtotal() | currency }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna IVA -->
+                                <td *ngIf="isColumnVisible('iva') && !isFromProduction" class="summary-cell summary-money">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Total IVA' | translate }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateTotalImpuestos() | currency }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Total -->
+                                <td *ngIf="isColumnVisible('total') && !isFromProduction" class="summary-cell summary-money summary-total">
+                                    <div class="summary-content total-highlight">
+                                        <div class="summary-label">{{ 'TOTAL GENERAL' | translate }}</div>
+                                        <div class="summary-value total-value">{{ getFilteredCalculateTotal() | currency }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Anticipo -->
+                                <td *ngIf="isColumnVisible('anticipo') && !isFromProduction" class="summary-cell summary-money">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Total Anticipo' | translate }}</div>
+                                        <div class="summary-value money-value text-info">{{ getFilteredCalculateAnticipo() | currency }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Falta por Pagar -->
+                                <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" class="summary-cell summary-money">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Total Pendiente' | translate }}</div>
+                                        <div class="summary-value money-value text-danger">{{ getFilteredCalculateFaltaPorPagar() | currency }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Fecha de compra -->
+                                <td *ngIf="isColumnVisible('fechaCreacion')" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Ciudad -->
+                                <td *ngIf="isColumnVisible('ciudad') && !isFromProduction" class="summary-cell">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Ciudades' | translate }}</div>
+                                        <div class="summary-value">{{ getCiudadesUnicas() }}</div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna Zona de Entrega -->
+                                <td *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Forma de Entrega -->
+                                <td *ngIf="isColumnVisible('formaEntrega')" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Horario de Entrega -->
+                                <td *ngIf="isColumnVisible('horarioEntrega')" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Vendedor -->
+                                <td *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="summary-cell">
+                                    <div class="summary-content">
+                                        <div class="summary-label">{{ 'Vendedores' | translate }}</div>
+                                        <div class="summary-value">{{ getVendedoresUnicos() }}</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
                         </p-table>
                     </div>
                 </div>

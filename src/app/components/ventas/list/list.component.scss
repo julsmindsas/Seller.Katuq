@@ -1801,6 +1801,224 @@ $border-radius: 8px;
   }
 }
 
+// ESTILOS PARA LA FILA DE RESUMEN
+:host ::ng-deep .p-datatable .summary-row {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  border-top: 3px solid $primary-color !important;
+  border-bottom: 2px solid $primary-color !important;
+  font-weight: 600;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+
+  .summary-cell {
+    padding: 0.75rem 0.5rem !important;
+    vertical-align: middle !important;
+    border: none !important;
+    border-right: 1px solid rgba($primary-color, 0.1) !important;
+    background: transparent !important;
+
+    &:last-child {
+      border-right: none !important;
+    }
+  }
+
+  .summary-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+
+    .summary-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      line-height: 1.2;
+    }
+
+    .summary-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #495057;
+      line-height: 1.1;
+
+      &.money-value {
+        color: $success-color;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      &.total-value {
+        font-size: 1rem;
+        color: $primary-color;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    &.total-highlight {
+      background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($primary-color, 0.05) 100%);
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid rgba($primary-color, 0.2);
+      box-shadow: 0 2px 8px rgba($primary-color, 0.15);
+
+      .summary-label {
+        color: $primary-color;
+        font-weight: 700;
+        font-size: 0.7rem;
+      }
+
+      .summary-value {
+        font-size: 1.1rem;
+        color: $primary-color;
+        font-weight: 800;
+      }
+    }
+  }
+
+  .summary-badges {
+    .mini-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 18px;
+      border-radius: 9px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.1rem 0.3rem;
+      color: white;
+      text-align: center;
+      line-height: 1;
+
+      &.badge-success {
+        background: linear-gradient(135deg, $success-color 0%, darken($success-color, 10%) 100%);
+      }
+
+      &.badge-warning {
+        background: linear-gradient(135deg, $warning-color 0%, darken($warning-color, 10%) 100%);
+        color: #212529;
+      }
+
+      &.badge-secondary {
+        background: linear-gradient(135deg, $secondary-color 0%, darken($secondary-color, 10%) 100%);
+      }
+
+      &.badge-info {
+        background: linear-gradient(135deg, $info-color 0%, darken($info-color, 10%) 100%);
+      }
+    }
+  }
+
+  .summary-money {
+    text-align: right !important;
+
+    .summary-content {
+      align-items: flex-end;
+      text-align: right;
+    }
+  }
+
+  .summary-total {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(135deg, $primary-color 0%, darken($primary-color, 20%) 100%);
+      border-radius: 0 2px 2px 0;
+      box-shadow: 2px 0 4px rgba($primary-color, 0.3);
+    }
+  }
+
+  // Efectos hover para celdas con datos
+  .summary-cell:not(:empty) {
+    transition: all 0.2s ease;
+    cursor: default;
+
+    &:hover {
+      background: rgba($primary-color, 0.05) !important;
+      transform: translateY(-1px);
+
+      .summary-content {
+        .summary-value {
+          color: $primary-color;
+        }
+      }
+    }
+  }
+}
+
+// Responsive para la fila de resumen
+@media (max-width: 768px) {
+  :host ::ng-deep .p-datatable .summary-row {
+    .summary-cell {
+      padding: 0.5rem 0.25rem !important;
+    }
+
+    .summary-content {
+      .summary-label {
+        font-size: 0.6rem;
+      }
+
+      .summary-value {
+        font-size: 0.75rem;
+
+        &.total-value {
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    .mini-badge {
+      min-width: 16px;
+      height: 16px;
+      font-size: 0.6rem !important;
+      padding: 0.05rem 0.2rem !important;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  :host ::ng-deep .p-datatable .summary-row {
+    .summary-content {
+      gap: 0.1rem;
+
+      .summary-label {
+        font-size: 0.55rem;
+        line-height: 1.1;
+      }
+
+      .summary-value {
+        font-size: 0.7rem;
+
+        &.total-value {
+          font-size: 0.8rem;
+        }
+      }
+
+      &.total-highlight {
+        padding: 0.3rem;
+
+        .summary-label {
+          font-size: 0.6rem;
+        }
+
+        .summary-value {
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+}
+
 // Indicadores visuales adicionales para pedidos congelados
 .frozen-warning {
   background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
