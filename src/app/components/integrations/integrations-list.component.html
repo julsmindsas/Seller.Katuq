@@ -64,6 +64,10 @@
               <i class="fa fa-puzzle-piece"></i> Integraciones
             </h5>
             <div class="header-actions">
+              <div *ngIf="uiHelper.isAnyLoading()" class="loading-indicator">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Procesando...</span>
+              </div>
               <div class="btn-group mr-2">
                 <button class="btn btn-outline-primary" [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')">
                   <i class="fa fa-th-large"></i>
@@ -81,7 +85,7 @@
                   <div class="dropdown-divider"></div>
                   <button ngbDropdownItem *ngFor="let category of categories" (click)="openIntegrationConfigByCategory(category)">
                     <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-                    {{ categoryLabels[category] }}
+                    {{ getCategoryLabel(category) }}
                   </button>
                 </div>
               </div>
@@ -116,7 +120,7 @@
                 <select class="form-control" [(ngModel)]="filterCategory">
                   <option value="">Todas las categorías</option>
                   <option *ngFor="let category of categories" [value]="category">
-                    {{ categoryLabels[category] }}
+                    {{ getCategoryLabel(category) }}
                   </option>
                 </select>
               </div>
@@ -164,28 +168,44 @@
                 <h6><i class="fa fa-star"></i> Servicios populares</h6>
                 <div class="logo-slider">
                   <div class="logo-slider-item" (click)="openIntegrationConfigByType('payment', 'stripe')">
-                    <img src="assets/images/logos/stripe.png" alt="Stripe" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                    <img src="assets/images/logos/stripe.svg" alt="Stripe" 
+                         [src]="uiHelper.getLogo('stripe') || 'assets/images/logos/stripe.svg'"
+                         (error)="uiHelper.onImgError($event)">
                   </div>
                   <div class="logo-slider-item" (click)="openIntegrationConfigByType('payment', 'paypal')">
-                    <img src="assets/images/logos/paypal.png" alt="PayPal" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                    <img src="assets/images/logos/paypal.svg" alt="PayPal" 
+                         [src]="uiHelper.getLogo('paypal') || 'assets/images/logos/paypal.svg'"
+                         (error)="uiHelper.onImgError($event)">
                   </div>
                   <div class="logo-slider-item" (click)="openIntegrationConfigByType('ecommerce', 'shopify')">
-                    <img src="assets/images/logos/shopify.png" alt="Shopify" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                    <img src="assets/images/logos/shopify.svg" alt="Shopify" 
+                         [src]="uiHelper.getLogo('shopify') || 'assets/images/logos/shopify.svg'"
+                         (error)="uiHelper.onImgError($event)">
                   </div>
                   <div class="logo-slider-item" (click)="openIntegrationConfigByType('ecommerce', 'woocommerce')">
-                    <img src="assets/images/logos/woocommerce.png" alt="WooCommerce" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                    <img src="assets/images/logos/woocommerce.svg" alt="WooCommerce" 
+                         [src]="uiHelper.getLogo('woocommerce') || 'assets/images/logos/woocommerce.svg'"
+                         (error)="uiHelper.onImgError($event)">
                   </div>
                   <div class="logo-slider-item" (click)="openIntegrationConfigByType('marketing', 'mailchimp')">
-                    <img src="assets/images/logos/mailchimp.png" alt="Mailchimp" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                    <img src="assets/images/logos/mailchimp.svg" alt="Mailchimp" 
+                         [src]="uiHelper.getLogo('mailchimp') || 'assets/images/logos/mailchimp.svg'"
+                         (error)="uiHelper.onImgError($event)">
                   </div>
                   <div class="logo-slider-item" (click)="openIntegrationConfigByType('payment', 'mercadopago')">
-                    <img src="assets/images/logos/mercadopago.png" alt="MercadoPago" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                    <img src="assets/images/logos/mercadopago.svg" alt="MercadoPago" 
+                         [src]="uiHelper.getLogo('mercadopago') || 'assets/images/logos/mercadopago.svg'"
+                         (error)="uiHelper.onImgError($event)">
                   </div>
                   <div class="logo-slider-item" (click)="openIntegrationConfigByType('logistics', 'dhl')">
-                    <img src="assets/images/logos/dhl.png" alt="DHL" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                    <img src="assets/images/logos/dhl.svg" alt="DHL" 
+                         [src]="uiHelper.getLogo('dhl') || 'assets/images/logos/dhl.svg'"
+                         (error)="uiHelper.onImgError($event)">
                   </div>
                   <div class="logo-slider-item" (click)="openIntegrationConfigByType('crm', 'salesforce')">
-                    <img src="assets/images/logos/salesforce.png" alt="Salesforce" onerror="this.onerror=null; this.src='assets/images/logos/default.png'; this.classList.add('fallback-logo')">
+                    <img src="assets/images/logos/salesforce.svg" alt="Salesforce" 
+                         [src]="uiHelper.getLogo('salesforce') || 'assets/images/logos/salesforce.svg'"
+                         (error)="uiHelper.onImgError($event)">
                   </div>
                 </div>
               </div>
@@ -195,9 +215,46 @@
                   <div class="category-icon">
                     <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
                   </div>
-                  <h6>{{ categoryLabels[category] }}</h6>
+                  <h6>{{ getCategoryLabel(category) }}</h6>
                   <span class="badge badge-light">{{availableIntegrations[category]?.length || 0}} opciones</span>
                   <small>Click para explorar</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Catálogo de Integraciones Disponibles (cuando no hay configuradas) -->
+          <div *ngIf="!loading && !errorMessage && integrations.length === 0" class="available-integrations-catalog mt-4">
+            <h5 class="mb-3">
+              <i class="fa fa-store"></i> Catálogo de Integraciones Disponibles
+            </h5>
+            
+            <div *ngFor="let category of categories" class="category-section mb-4" [hidden]="!availableIntegrations[category] || availableIntegrations[category].length === 0">
+              <div class="category-header">
+                <h6>
+                  <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+                  {{ getCategoryLabel(category) }}
+                  <span class="badge badge-pill badge-light">{{availableIntegrations[category]?.length || 0}}</span>
+                </h6>
+              </div>
+              
+              <div class="row">
+                <div *ngFor="let integration of availableIntegrations[category]" class="col-md-6 col-lg-4 col-xl-3 mb-3">
+                  <div class="available-integration-card" (click)="configureIntegration(integration, category, $event)">
+                    <div class="integration-logo-container">
+                      <img [src]="uiHelper.getLogo(integration.id) || integration.logo" 
+                           [alt]="integration.name" 
+                           class="available-integration-logo"
+                           (error)="uiHelper.onImgError($event)">
+                    </div>
+                    <div class="integration-info">
+                      <h6>{{ integration.name }}</h6>
+                      <p class="integration-description">{{ integration.description }}</p>
+                      <button class="btn btn-sm btn-outline-primary">
+                        <i class="fa fa-plus"></i> Configurar
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -209,7 +266,7 @@
               <div class="category-header">
                 <h5>
                   <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-                  {{ categoryLabels[category] }}
+                  {{ getCategoryLabel(category) }}
                   <span class="badge badge-pill badge-light">{{ countIntegrationsInCategory(category) }}</span>
                 </h5>
                 <button class="btn btn-sm btn-primary" (click)="openIntegrationConfigByCategory(category)">
@@ -222,13 +279,17 @@
                   <div class="integration-card" [ngClass]="{'inactive': !integration.enabled, 'has-error': hasError(integration), 'featured': isFeatured(integration)}" (click)="openIntegrationConfig(integration)">
                     <div class="integration-card-header">
                       <div class="integration-logo-container">
-                        <img *ngIf="getIntegrationLogo(integration.type)" 
+                        <img *ngIf="getIntegrationLogo(integration.type) && !hasLogoError(integration)" 
                              [src]="getIntegrationLogo(integration.type)" 
                              [alt]="integration.name" 
                              class="integration-logo" 
-                             (error)="handleImageError($event)">
-                        <div *ngIf="!getIntegrationLogo(integration.type) || hasLogoError(integration)" class="integration-icon" [ngClass]="integration.type">
-                          <i class="fa" [ngClass]="getIntegrationIcon(integration.type)"></i>
+                             (error)="handleImageError($event)" 
+                             [attr.data-integration-id]="integration.id">
+                        <div *ngIf="!getIntegrationLogo(integration.type) || hasLogoError(integration)"
+                             class="integration-icon"
+                             [class]="integration.type"
+                             [style.background]="getCategoryColor(integration.type)">
+                          <i [class]="getIntegrationIcon(integration.type)"></i>
                         </div>
                       </div>
                       <div class="integration-status-container">
@@ -281,10 +342,29 @@
                         <button class="btn btn-icon" [ngClass]="integration.enabled ? 'btn-success' : 'btn-light'" (click)="toggleIntegrationStatus(integration, $event)" title="{{ integration.enabled ? 'Desactivar' : 'Activar' }}">
                           <i class="fa" [ngClass]="integration.enabled ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
                         </button>
-                        <button class="btn btn-icon btn-info" (click)="testIntegration(integration, $event)" title="Probar conexión">
-                          <i class="fa fa-plug"></i>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-success" 
+                                [class.loading]="isOperationLoading('test', integration.id)"
+                                [disabled]="isOperationLoading('test', integration.id)"
+                                (click)="testIntegration(integration, $event)" 
+                                title="Probar conexión">
+                          <i class="fa fa-check"></i>
                         </button>
-                        <button class="btn btn-icon btn-danger" (click)="deleteIntegration(integration, $event)" title="Eliminar">
+                        <button type="button" 
+                                class="btn btn-sm" 
+                                [class.loading]="isOperationLoading('toggle', integration.id)"
+                                [disabled]="isOperationLoading('toggle', integration.id)"
+                                [ngClass]="integration.enabled ? 'btn-warning' : 'btn-success'" 
+                                (click)="toggleIntegrationStatus(integration, $event)" 
+                                [title]="integration.enabled ? 'Desactivar' : 'Activar'">
+                          <i class="fa" [ngClass]="integration.enabled ? 'fa-pause' : 'fa-play'"></i>
+                        </button>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger" 
+                                [class.loading]="isOperationLoading('delete', integration.id)"
+                                [disabled]="isOperationLoading('delete', integration.id)"
+                                (click)="deleteIntegration(integration, $event)" 
+                                title="Eliminar">
                           <i class="fa fa-trash"></i>
                         </button>
                       </div>
@@ -328,19 +408,26 @@
                   <tr *ngFor="let integration of getSortedAndFilteredIntegrations()" (click)="openIntegrationConfig(integration)" class="integration-row">
                     <td>
                       <div class="integration-name-cell">
-                        <img *ngIf="getIntegrationLogo(integration.type)" 
+                        <img *ngIf="getIntegrationLogo(integration.type) && !hasLogoError(integration)" 
                              [src]="getIntegrationLogo(integration.type)" 
                              [alt]="integration.name" 
                              class="integration-logo-sm" 
-                             (error)="handleImageError($event)">
-                        <i *ngIf="!getIntegrationLogo(integration.type) || hasLogoError(integration)" class="fa" [ngClass]="getIntegrationIcon(integration.type)"></i>
+                             (error)="handleImageError($event)"
+                             [attr.data-integration-id]="integration.id">
+                        <div *ngIf="!getIntegrationLogo(integration.type) || hasLogoError(integration)"
+                             class="integration-icon integration-icon-sm"
+                             [class]="integration.type"
+                             [style.background]="getCategoryColor(integration.type)"
+                             style="width: 24px; height: 24px; font-size: 12px; margin-right: 8px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                          <i [class]="getIntegrationIcon(integration.type)"></i>
+                        </div>
                         <span>{{integration.name}}</span>
                       </div>
                     </td>
                     <td>{{getIntegrationTypeName(integration.type)}}</td>
                     <td>
                       <span class="category-pill" [ngClass]="'category-' + integration.category">
-                        {{ categoryLabels[integration.category] }}
+                        {{ getCategoryLabel(integration.category) }}
                       </span>
                     </td>
                     <td>
@@ -357,13 +444,29 @@
                         <button class="btn btn-sm btn-info" (click)="editIntegration(integration, $event)" title="Editar">
                           <i class="fa fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-success" (click)="testIntegration(integration, $event)" title="Probar conexión">
-                          <i class="fa fa-plug"></i>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-success" 
+                                [class.loading]="isOperationLoading('test', integration.id)"
+                                [disabled]="isOperationLoading('test', integration.id)"
+                                (click)="testIntegration(integration, $event)" 
+                                title="Probar conexión">
+                          <i class="fa fa-check"></i>
                         </button>
-                        <button class="btn btn-sm" [ngClass]="integration.enabled ? 'btn-warning' : 'btn-success'" (click)="toggleIntegrationStatus(integration, $event)" title="{{ integration.enabled ? 'Desactivar' : 'Activar' }}">
-                          <i class="fa" [ngClass]="integration.enabled ? 'fa-toggle-off' : 'fa-toggle-on'"></i>
+                        <button type="button" 
+                                class="btn btn-sm" 
+                                [class.loading]="isOperationLoading('toggle', integration.id)"
+                                [disabled]="isOperationLoading('toggle', integration.id)"
+                                [ngClass]="integration.enabled ? 'btn-warning' : 'btn-success'" 
+                                (click)="toggleIntegrationStatus(integration, $event)" 
+                                [title]="integration.enabled ? 'Desactivar' : 'Activar'">
+                          <i class="fa" [ngClass]="integration.enabled ? 'fa-pause' : 'fa-play'"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" (click)="deleteIntegration(integration, $event)" title="Eliminar">
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger" 
+                                [class.loading]="isOperationLoading('delete', integration.id)"
+                                [disabled]="isOperationLoading('delete', integration.id)"
+                                (click)="deleteIntegration(integration, $event)" 
+                                title="Eliminar">
                           <i class="fa fa-trash"></i>
                         </button>
                       </div>
@@ -401,7 +504,7 @@
               <div class="suggested-category">
                 <h6>
                   <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-                  {{ categoryLabels[category] }}
+                  {{ getCategoryLabel(category) }}
                 </h6>
                 <div class="suggested-items">
                   <div *ngFor="let integration of getTopSuggestionsForCategory(category, 3)" class="suggested-item" (click)="configureIntegration(integration, category, $event)">
@@ -480,3 +583,6 @@
     <button class="toast-close" (click)="clearToast()">×</button>
   </div>
 </div>
+
+<!-- Notificaciones de feedback -->
+<app-integration-notifications></app-integration-notifications>

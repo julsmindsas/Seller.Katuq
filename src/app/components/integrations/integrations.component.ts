@@ -2,6 +2,8 @@ import { Component, OnInit, Input } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IntegrationsService, Integration, IntegrationCategory, CATEGORY_LABELS } from './integrations.service';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { IntegrationFormValidatorService, ValidationResult } from './integration-form-validator.service';
+import { IntegrationUIHelperService } from './integration-ui-helper.service';
 
 @Component({
   selector: 'app-integrations',
@@ -42,9 +44,16 @@ export class IntegrationsComponent implements OnInit {
   
   statusMessage: { type: 'success' | 'error', message: string } | null = null;
 
+  // Nuevas propiedades para validaciones mejoradas
+  credentialStrength: ValidationResult | null = null;
+  isAnalyzingCredentials = false;
+  showAdvancedValidation = false;
+
   constructor(
     private fb: FormBuilder,
     private integrationsService: IntegrationsService,
+    private formValidator: IntegrationFormValidatorService,
+    private uiHelper: IntegrationUIHelperService,
     public activeModal?: NgbActiveModal
   ) {
     this.integrationForm = this.createShopifyForm();
@@ -71,6 +80,58 @@ export class IntegrationsComponent implements OnInit {
     } else {
       this.loadIntegrations();
     }
+
+    // Suscribirse a cambios en el formulario para validación en tiempo real
+    this.setupFormValidation();
+  }
+
+  private setupFormValidation(): void {
+    this.integrationForm.valueChanges.subscribe(formValue => {
+      if (this.shouldAnalyzeCredentials(formValue)) {
+        this.analyzeCredentialStrength(formValue);
+      }
+    });
+  }
+
+  private shouldAnalyzeCredentials(formValue: any): boolean {
+    // Solo analizar si hay credenciales mínimas
+    return !!(formValue.apiKey || formValue.publicKey || formValue.clientId);
+  }
+
+  private analyzeCredentialStrength(formValue: any): void {
+    if (this.isAnalyzingCredentials) return;
+    
+    this.isAnalyzingCredentials = true;
+    
+    // Simular análisis async (podrías hacer esto más sofisticado)
+    setTimeout(() => {
+      this.credentialStrength = this.formValidator.analyzeCredentialStrength(
+        formValue, 
+        this.selectedIntegrationType
+      );
+      this.isAnalyzingCredentials = false;
+      
+      // Mostrar feedback en UI
+      if (this.credentialStrength) {
+        this.showCredentialFeedback();
+      }
+    }, 800);
+  }
+
+  private showCredentialFeedback(): void {
+    if (!this.credentialStrength) return;
+    
+    if (this.credentialStrength.securityLevel === 'high') {
+      this.uiHelper.showSuccess(`🔒 Configuración de seguridad excelente (${this.credentialStrength.score}/100)`);
+    } else if (this.credentialStrength.securityLevel === 'medium') {
+      this.uiHelper.showWarning(`⚠️ Configuración de seguridad aceptable (${this.credentialStrength.score}/100)`);
+    } else {
+      this.uiHelper.showError(`🔓 Configuración de seguridad baja (${this.credentialStrength.score}/100) - Revisa las recomendaciones`);
+    }
+  }
+
+  toggleAdvancedValidation(): void {
+    this.showAdvancedValidation = !this.showAdvancedValidation;
   }
 
   loadIntegrations(): void {

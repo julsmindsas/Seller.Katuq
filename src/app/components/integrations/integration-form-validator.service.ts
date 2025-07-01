@@ -4,12 +4,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, timer } from 'rxjs';
 import { map, catchError, switchMap, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { IntegrationUIHelperService } from './integration-ui-helper.service';
 
 export interface ValidationResult {
   valid: boolean;
   errors?: { [key: string]: any };
   warnings?: string[];
   suggestions?: string[];
+  score?: number;
+  securityLevel?: 'low' | 'medium' | 'high';
 }
 
 export interface FieldValidationConfig {
@@ -20,6 +23,15 @@ export interface FieldValidationConfig {
   customValidator?: ValidatorFn;
   asyncValidator?: AsyncValidatorFn;
   errorMessages?: { [key: string]: string };
+  strengthCheck?: boolean;
+  environmentSpecific?: boolean;
+}
+
+export interface ValidationFeedback {
+  type: 'error' | 'warning' | 'info' | 'success';
+  message: string;
+  field?: string;
+  code?: string;
 }
 
 @Injectable({
@@ -39,7 +51,10 @@ export class IntegrationFormValidatorService {
     wompiPublicKey: /^pub_(test_|prod_)[a-zA-Z0-9]+$/,
     wompiPrivateKey: /^prv_(test_|prod_)[a-zA-Z0-9]+$/,
     stripeKey: /^pk_(test_|live_)[a-zA-Z0-9]+$/,
-    paypalClientId: /^A[a-zA-Z0-9_-]{80,}$/
+    paypalClientId: /^A[a-zA-Z0-9_-]{80,}$/,
+    // Patrones adicionales para seguridad
+    strongApiKey: /^[A-Za-z0-9!@#$%^&*()_+-=\[\]{}|;':",./<>?]{32,}$/,
+    webhookUrl: /^https:\/\/[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\/.*$/
   };
 
   // Mensajes de error personalizados
@@ -60,7 +75,10 @@ export class IntegrationFormValidatorService {
     invalidEnvironment: 'El ambiente seleccionado no es compatible con las credenciales'
   };
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private uiHelper: IntegrationUIHelperService
+  ) {}
 
   // Validadores síncronos
   createRequiredValidator(errorMessage?: string): ValidatorFn {
@@ -481,5 +499,134 @@ export class IntegrationFormValidatorService {
     });
 
     return sanitized;
+  }
+
+  // Validación en tiempo real con feedback visual
+  validateFieldWithFeedback(field: string, value: any, integrationType: string, environment?: string): Observable<ValidationFeedback | null> {
+    return this.validateFieldRealTime(field, value, integrationType, environment).pipe(
+      map(errors => {
+        if (!errors) {
+          return { type: 'success' as const, message: `✓ ${this.getFieldDisplayName(field)} válido` };
+        }
+        
+        const errorKeys = Object.keys(errors);
+        const firstError = errors[errorKeys[0]];
+        
+        return {
+          type: 'error' as const,
+          message: firstError.message || this.getErrorMessage(field, firstError),
+          field,
+          code: errorKeys[0]
+        };
+      })
+    );
+  }
+
+  // Analizar fortaleza de credenciales
+  analyzeCredentialStrength(credentials: any, integrationType: string): ValidationResult {
+    const result: ValidationResult = {
+      valid: true,
+      warnings: [],
+      suggestions: [],
+      score: 0,
+      securityLevel: 'low'
+    };
+
+    let score = 0;
+    const maxScore = 100;
+
+    // Verificar longitud de claves
+    if (credentials.apiKey && credentials.apiKey.length >= 32) {
+      score += 20;
+    } else if (credentials.apiKey) {
+      result.warnings?.push('La API Key es demasiado corta para ser segura');
+    }
+
+    // Verificar diversidad de caracteres
+    if (credentials.apiKey && this.patterns.strongApiKey.test(credentials.apiKey)) {
+      score += 25;
+    } else if (credentials.apiKey) {
+      result.suggestions?.push('Usa una API Key con mayor diversidad de caracteres');
+    }
+
+    // Verificar configuración de webhooks
+    if (credentials.webhookUrl && this.patterns.webhookUrl.test(credentials.webhookUrl)) {
+      score += 15;
+    } else if (!credentials.webhookUrl) {
+      result.suggestions?.push('Configura un webhook para recibir notificaciones en tiempo real');
+    }
+
+    // Verificar ambiente apropiado
+    if (integrationType === 'wompi' && credentials.publicKey) {
+      if (credentials.publicKey.includes('test_') && this.getCurrentEnvironment() === 'production') {
+        result.warnings?.push('Estás usando credenciales de prueba en ambiente de producción');
+        score -= 30;
+      } else if (credentials.publicKey.includes('prod_') && this.getCurrentEnvironment() === 'test') {
+        result.warnings?.push('Estás usando credenciales de producción en ambiente de prueba');
+      }
+    }
+
+    // Configuración específica por proveedor
+    score += this.getProviderSpecificScore(credentials, integrationType);
+
+    // Asignar nivel de seguridad
+    if (score >= 80) result.securityLevel = 'high';
+    else if (score >= 50) result.securityLevel = 'medium';
+    else result.securityLevel = 'low';
+
+    result.score = Math.max(0, Math.min(100, score));
+    return result;
+  }
+
+  private getProviderSpecificScore(credentials: any, integrationType: string): number {
+    switch (integrationType) {
+      case 'shopify':
+        return this.getShopifySecurityScore(credentials);
+      case 'wompi':
+        return this.getWompiSecurityScore(credentials);
+      case 'paypal':
+        return this.getPayPalSecurityScore(credentials);
+      default:
+        return 0;
+    }
+  }
+
+  private getShopifySecurityScore(credentials: any): number {
+    let score = 0;
+    if (credentials.apiVersion && credentials.apiVersion >= '2023-01') score += 10;
+    if (credentials.shopUrl && credentials.shopUrl.includes('.myshopify.com')) score += 15;
+    return score;
+  }
+
+  private getWompiSecurityScore(credentials: any): number {
+    let score = 0;
+    if (credentials.integrityKey) score += 20; // Clave de integridad es importante
+    if (credentials.eventKey) score += 10; // Para webhooks
+    return score;
+  }
+
+  private getPayPalSecurityScore(credentials: any): number {
+    let score = 0;
+    if (credentials.clientSecret && credentials.clientSecret.length >= 80) score += 15;
+    return score;
+  }
+
+  private getFieldDisplayName(field: string): string {
+    const fieldNames: { [key: string]: string } = {
+      name: 'Nombre',
+      apiKey: 'API Key',
+      apiSecret: 'API Secret',
+      shopUrl: 'URL de la tienda',
+      webhookUrl: 'URL del webhook',
+      publicKey: 'Clave pública',
+      privateKey: 'Clave privada',
+      clientId: 'Client ID',
+      clientSecret: 'Client Secret'
+    };
+    return fieldNames[field] || field;
+  }
+
+  private getCurrentEnvironment(): string {
+    return environment.production ? 'production' : 'test';
   }
 }

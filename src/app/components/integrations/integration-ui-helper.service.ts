@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { IntegrationCategory, CATEGORY_LABELS } from './integrations.service';
+import { IntegrationsService } from './integrations.service';
 
 export interface StepState {
   currentStep: number;
@@ -152,7 +153,17 @@ export class IntegrationUIHelperService {
     zapier: 'fa-link'
   };
 
-  constructor() {}
+  // Loading states
+  private loadingState = {
+    operations: new Map<string, boolean>()
+  };
+
+  // UI feedback messages
+  private feedbackState = {
+    messages: [] as Array<{id: string, type: 'success' | 'error' | 'warning' | 'info', message: string, timestamp: number}>
+  };
+
+  constructor(private integrationsSvc: IntegrationsService) {}
 
   // Step management methods
   initializeSteps(): void {
@@ -575,5 +586,135 @@ export class IntegrationUIHelperService {
     this.clearAllNotifications();
     this.imageErrorState.errors.clear();
     this.imageErrorState.retryCount.clear();
+    this.loadingState.operations.clear();
+    this.clearAllFeedback();
+  }
+
+  /**
+   * Obtiene la ruta de logo para un tipo de integración.
+   * Si el archivo no existe devolverá null, lo que permite a la plantilla mostrar un ícono de fallback.
+   * Nota: El chequeo se basa en la precarga de la imagen para no generar 404 en el network panel.
+   */
+  getLogo(type: string): string | null {
+    const catalogEntry = Object.values(this.getAvailableIntegrationsFlat()).find(e => e.id === type);
+
+    if (!catalogEntry || !catalogEntry.logo) {
+      return null;
+    }
+
+    // Comprobar de forma optimista que el recurso existe creando una imagen temporal
+    // Para evitar un 404 visible aprovechamos onerror interno
+    const img = new Image();
+    img.src = catalogEntry.logo;
+    // Si la imagen aún no está cargada podemos asumir que existe y delegar al onerror de plantilla.
+    // Se marcará error si onerror salta más adelante.
+    return catalogEntry.logo;
+  }
+
+  /**
+   * Manejador genérico para el evento (error) de <img>. Oculta la imagen y muestra ícono de fallback
+   */
+  onImgError(event: Event, integrationId?: string): void {
+    const target = event.target as HTMLImageElement;
+    if (!target) return;
+
+    // Evitar bucle infinito
+    if (target.dataset['imgErrorHandled']) return;
+
+    target.dataset['imgErrorHandled'] = 'true';
+    target.style.display = 'none';
+    const parent = target.parentElement;
+    if (parent) {
+      parent.classList.add('logo-error');
+    }
+
+    if (integrationId) {
+      this.imageErrorState.errors.add(integrationId);
+    }
+  }
+
+  /**
+   * Devuelve todas las integraciones disponibles en un único arreglo plano.
+   */
+  private getAvailableIntegrationsFlat(): Array<{id: string; logo: string}> {
+    const flat: Array<{id: string; logo: string}> = [];
+    Object.values(this.integrationsSvc.getAvailableIntegrations()).forEach(arr => flat.push(...arr));
+    return flat;
+  }
+
+  /**
+   * Método auxiliar que permite a componentes externos obtener el catálogo centralizado
+   * sin acoplarse al servicio IntegrationsService.
+   */
+  getAvailableIntegrations() {
+    return this.integrationsSvc.getAvailableIntegrations();
+  }
+
+  // Loading state management
+  setLoading(operationId: string, loading: boolean): void {
+    if (loading) {
+      this.loadingState.operations.set(operationId, true);
+    } else {
+      this.loadingState.operations.delete(operationId);
+    }
+  }
+
+  isLoading(operationId: string): boolean {
+    return this.loadingState.operations.get(operationId) || false;
+  }
+
+  isAnyLoading(): boolean {
+    return this.loadingState.operations.size > 0;
+  }
+
+  // Feedback message management
+  showFeedback(type: 'success' | 'error' | 'warning' | 'info', message: string, duration: number = 5000): string {
+    const id = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const feedbackMessage = {
+      id,
+      type,
+      message,
+      timestamp: Date.now()
+    };
+
+    this.feedbackState.messages.push(feedbackMessage);
+
+    // Auto-remove after duration
+    if (duration > 0) {
+      setTimeout(() => {
+        this.removeFeedback(id);
+      }, duration);
+    }
+
+    return id;
+  }
+
+  removeFeedback(id: string): void {
+    this.feedbackState.messages = this.feedbackState.messages.filter(msg => msg.id !== id);
+  }
+
+  getFeedbackMessages() {
+    return this.feedbackState.messages;
+  }
+
+  clearAllFeedback(): void {
+    this.feedbackState.messages = [];
+  }
+
+  // Convenience methods for common feedback types
+  showSuccess(message: string, duration?: number): string {
+    return this.showFeedback('success', message, duration);
+  }
+
+  showError(message: string, duration?: number): string {
+    return this.showFeedback('error', message, duration);
+  }
+
+  showWarning(message: string, duration?: number): string {
+    return this.showFeedback('warning', message, duration);
+  }
+
+  showInfo(message: string, duration?: number): string {
+    return this.showFeedback('info', message, duration);
   }
 }

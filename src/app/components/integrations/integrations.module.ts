@@ -4,9 +4,15 @@ import { RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { NgbModalModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { SharedModule } from '../../shared/shared.module';
 
 import { IntegrationsComponent } from './integrations.component';
 import { IntegrationsListComponent } from './integrations-list.component';
+import { IntegrationNotificationsComponent } from './integration-notifications.component';
+import { CredentialStrengthIndicatorComponent } from './credential-strength-indicator.component';
+import { IntegrationStateService } from './integration-state.service';
+import { IntegrationCacheService } from './integration-cache.service';
 
 const routes: Routes = [
   { path: '', component: IntegrationsListComponent },
@@ -16,7 +22,9 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     IntegrationsComponent,
-    IntegrationsListComponent
+    IntegrationsListComponent,
+    IntegrationNotificationsComponent,
+    CredentialStrengthIndicatorComponent
   ],
   imports: [
     CommonModule,
@@ -25,10 +33,20 @@ const routes: Routes = [
     HttpClientModule,
     NgbModalModule,
     NgbDropdownModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    NgbModule,
+    SharedModule
+  ],
+  providers: [
+    IntegrationStateService,
+    IntegrationCacheService
   ],
   entryComponents: [
     IntegrationsComponent
+  ],
+  exports: [
+    IntegrationsComponent,
+    IntegrationsListComponent
   ]
 })
 export class IntegrationsModule {}

@@ -747,3 +747,97 @@ input:checked + .slider:before {
   margin: 0;
   line-height: 1.4;
 }
+
+/* Estilos para análisis de credenciales */
+.credential-analysis-loading {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.credential-analysis-loading .spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 8px;
+}
+
+/* Mejoras para campos de formulario con validación */
+.form-control.is-valid {
+  border-color: #28a745;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 2.94 2.94-3.88-3.88L0 7.17z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 2.4 2.4m0-2.4L5.8 7'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Indicadores de validación en tiempo real */
+.field-validation-feedback {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.field-validation-feedback.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.field-validation-feedback.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.field-validation-feedback.warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+/* Animación para el análisis de fortaleza */
+@keyframes pulseAnalysis {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.credential-analysis-loading {
+  animation: pulseAnalysis 2s ease-in-out infinite;
+}
+
+/* Estilos para toggle de validación avanzada */
+.text-info {
+  color: #17a2b8 !important;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.text-info:hover {
+  color: #138496 !important;
+  text-decoration: underline;
+}
+
+.text-info i {
+  margin-right: 6px;
+  transition: transform 0.2s ease;
+}
+
+.text-info:hover i {
+  transform: scale(1.1);
+}
