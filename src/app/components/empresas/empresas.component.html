@@ -4,77 +4,337 @@
   <div class="row">
     <div class="col-sm-12">
       <br />
-      <div class="card">
 
+      <!-- Loader -->
         <div class="loader-box" *ngIf="cargando">
           <div class="loader-8"></div>
         </div>
 
-        <div class="row col-12 m-2">
-          <div class="col-6">
-              <p class="text-left fc-secondary fs-24 m-0 p-0">{{'Empresas' | translate}}</p>
-              <!-- <p class="text-left text-muted fs-18 m-0 p-0">
-                  Listado de clientes.
-              </p> -->
-          </div>
-        </div>
-
-        <div class="card-body custom-datatable" *ngIf="!cargando">
-          <div class="row">
-            <div class="col-sm-6">
-              <input type='text' class="filter-ngx form-control mb-3"
-                placeholder="{{'Escribe el texto que desees filtrar' | translate}}" (keyup)='updateFilter($event)' />
+      <div class="card" *ngIf="!cargando">
+        <!-- Header de la página -->
+        <div class="card-header bg-white">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <h4 class="mb-0 text-primary">
+                <i class="icofont icofont-building-alt me-2"></i>
+                {{ 'Empresas' | translate }}
+              </h4>
+              <p class="text-muted mb-0 small">
+                Gestión y administración de empresas del sistema
+              </p>
             </div>
-            <div *ngIf="isJulsmind" class="col-sm-6 mb-3" style="text-align: end;">
-              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearEmpresa()">
-                <span style="color: white;">{{'Crear Empresa' | translate}}</span>
-                <i placement="top" ngbTooltip="{{ 'Nuevo' | translate }}"
-                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                  class="icofont icofont-plus"></i>
+            <div class="col-md-6 text-end" *ngIf="isJulsmind">
+              <button 
+                class="btn btn-primary me-2" 
+                type="button" 
+                (click)="crearEmpresa()"
+                [disabled]="cargando">
+                <i class="icofont icofont-plus me-1"></i>
+                {{ 'Crear Empresa' | translate }}
+              </button>
+              <button 
+                class="btn btn-outline-success" 
+                type="button" 
+                (click)="exportarExcel()"
+                [disabled]="exportando || rows.length === 0">
+                <i class="icofont icofont-file-excel me-1" *ngIf="!exportando"></i>
+                <i class="icofont icofont-spinner-alt-3 icofont-spin me-1" *ngIf="exportando"></i>
+                {{ exportando ? ('Exportando...' | translate) : ('Exportar Excel' | translate) }}
               </button>
             </div>
           </div>
+        </div>
 
-          <!-- Tabla usando p-table de PrimeNG -->
-          <p-table [value]="rows" [paginator]="true" [rows]="10" [loading]="cargando" [sortField]="'nit'"
-            [sortOrder]="1">
+        <div class="card-body">
+          <!-- Panel de filtros -->
+          <div class="mb-4">
+            <!-- Filtro global y botones de acción -->
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="icofont icofont-search"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [formControl]="filtroGlobalControl"
+                    [placeholder]="'Buscar en todas las columnas...' | translate">
+                </div>
+              </div>
+              <div class="col-md-4 text-end">
+                <button 
+                  class="btn btn-outline-primary me-2" 
+                  type="button"
+                  (click)="toggleFiltrosAvanzados()">
+                  <i class="icofont icofont-filter me-1"></i>
+                  {{ 'Filtros Avanzados' | translate }}
+                  <i class="icofont" 
+                     [class.icofont-simple-up]="mostrarFiltrosAvanzados"
+                     [class.icofont-simple-down]="!mostrarFiltrosAvanzados"></i>
+                </button>
+                <button 
+                  class="btn btn-outline-secondary" 
+                  type="button"
+                  (click)="limpiarFiltros()">
+                  <i class="icofont icofont-refresh me-1"></i>
+                  {{ 'Limpiar' | translate }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Panel de filtros avanzados -->
+            <div class="collapse" [class.show]="mostrarFiltrosAvanzados">
+              <div class="card card-body bg-light">
+                <h6 class="text-primary mb-3">
+                  <i class="icofont icofont-filter me-1"></i>
+                  {{ 'Filtros Específicos' | translate }}
+                </h6>
+                
+                <div class="row g-3">
+                  <!-- Filtro por NIT -->
+                  <div class="col-md-3">
+                    <label class="form-label small">{{ 'NIT' | translate }}</label>
+                    <input 
+                      type="text" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="filtros.nit"
+                      (ngModelChange)="onFiltroChange()"
+                      [placeholder]="'Filtrar por NIT...' | translate">
+                  </div>
+
+                  <!-- Filtro por Nombre -->
+                  <div class="col-md-3">
+                    <label class="form-label small">{{ 'Razón Social' | translate }}</label>
+                    <input 
+                      type="text" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="filtros.nombre"
+                      (ngModelChange)="onFiltroChange()"
+                      [placeholder]="'Filtrar por razón social...' | translate">
+                  </div>
+
+                  <!-- Filtro por Nombre Comercial -->
+                  <div class="col-md-3">
+                    <label class="form-label small">{{ 'Nombre Comercial' | translate }}</label>
+                    <input 
+                      type="text" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="filtros.nomComercial"
+                      (ngModelChange)="onFiltroChange()"
+                      [placeholder]="'Filtrar por nombre comercial...' | translate">
+                  </div>
+
+                  <!-- Filtro por Email -->
+                  <div class="col-md-3">
+                    <label class="form-label small">{{ 'Email' | translate }}</label>
+                    <input 
+                      type="text" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="filtros.email"
+                      (ngModelChange)="onFiltroChange()"
+                      [placeholder]="'Filtrar por email...' | translate">
+                  </div>
+
+                  <!-- Filtro por Teléfono -->
+                  <div class="col-md-3">
+                    <label class="form-label small">{{ 'Teléfono' | translate }}</label>
+                    <input 
+                      type="text" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="filtros.telefono"
+                      (ngModelChange)="onFiltroChange()"
+                      [placeholder]="'Filtrar por teléfono...' | translate">
+                  </div>
+
+                  <!-- Filtro por País -->
+                  <div class="col-md-3">
+                    <label class="form-label small">{{ 'País' | translate }}</label>
+                    <p-multiSelect 
+                      [(ngModel)]="filtros.pais"
+                      [options]="paisesOptions"
+                      [placeholder]="'Seleccionar países...' | translate"
+                      (onChange)="onFiltroChange()"
+                      styleClass="w-100"
+                      [style]="{'min-height': '38px'}">
+                    </p-multiSelect>
+                  </div>
+
+                  <!-- Filtro por Estado -->
+                  <div class="col-md-3">
+                    <label class="form-label small">{{ 'Estado' | translate }}</label>
+                    <p-dropdown 
+                      [(ngModel)]="filtros.activo"
+                      [options]="estadosActivo"
+                      optionLabel="label"
+                      optionValue="value"
+                      [placeholder]="'Todos los estados' | translate"
+                      (onChange)="onFiltroChange()"
+                      styleClass="w-100">
+                    </p-dropdown>
+                  </div>
+
+                  <!-- Filtros de fecha -->
+                  <div class="col-md-3">
+                    <label class="form-label small">{{ 'Fecha Desde' | translate }}</label>
+                    <p-calendar 
+                      [(ngModel)]="filtros.fechaDesde"
+                      [placeholder]="'Fecha desde...' | translate"
+                      (onSelect)="onFiltroChange()"
+                      dateFormat="dd/mm/yy"
+                      [showIcon]="true"
+                      styleClass="w-100">
+                    </p-calendar>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de resultados -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted small">
+              {{ 'Mostrando' | translate }} {{ rows.length }} {{ 'de' | translate }} {{ totalRecords }} {{ 'empresas' | translate }}
+            </span>
+          </div>
+
+          <!-- Tabla principal -->
+          <p-table 
+            #dt
+            [value]="rows" 
+            [paginator]="true" 
+            [rows]="10"
+            [rowsPerPageOptions]="rowsPerPageOptions"
+            [loading]="cargando"
+            [sortField]="'nombre'"
+            [sortOrder]="1"
+            [responsive]="true"
+            styleClass="p-datatable-sm p-datatable-striped"
+            [globalFilterFields]="['nit', 'nombre', 'nomComercial', 'emailContactoGeneral', 'pais']">
+            
             <ng-template pTemplate="header">
               <tr>
-                <th *ngIf="!isMobile" pSortableColumn="nit">{{ 'Nit' | translate }}</th>
-                <th>{{ 'Razón Social' | translate }}</th>
-                <th>{{ 'Nombre Comercial' | translate }}</th>
-                <th>{{ 'Teléfono' | translate }}</th>
-                <th *ngIf="!isMobile">{{ 'Celular' | translate }}</th>
-                <th *ngIf="!isMobile">{{ 'Email' | translate }}</th>
-                <th *ngIf="!isMobile">{{ 'País' | translate }}</th>
-                <th *ngIf="!isMobile">{{ 'Activo' | translate }}</th>
-                <th>{{ 'Acciones' | translate }}</th>
+                <th *ngIf="!isMobile" pSortableColumn="nit" style="width: 12%">
+                  {{ 'NIT' | translate }}
+                  <p-sortIcon field="nit"></p-sortIcon>
+                </th>
+                <th pSortableColumn="nombre" [style.width]="isMobile ? '30%' : '20%'">
+                  {{ 'Razón Social' | translate }}
+                  <p-sortIcon field="nombre"></p-sortIcon>
+                </th>
+                <th pSortableColumn="nomComercial" [style.width]="isMobile ? '30%' : '18%'">
+                  {{ 'Nombre Comercial' | translate }}
+                  <p-sortIcon field="nomComercial"></p-sortIcon>
+                </th>
+                <th *ngIf="!isMobile" style="width: 10%">{{ 'Teléfono' | translate }}</th>
+                <th *ngIf="!isMobile" style="width: 15%">{{ 'Email' | translate }}</th>
+                <th *ngIf="!isMobile" style="width: 10%">{{ 'País' | translate }}</th>
+                <th *ngIf="!isMobile" style="width: 8%">{{ 'Estado' | translate }}</th>
+                <th [style.width]="isMobile ? '40%' : '7%'">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
-            <ng-template pTemplate="body" let-row>
-              <tr style="font-size: small;">
-                <td *ngIf="!isMobile">{{ row.nit }}-{{ row.digitoVerificacion }}</td>
-                <td>{{ row?.nombre }}</td>
-                <td>{{ row?.nomComercial }}</td>
-                <td>{{ row.fijo }}</td>
-                <td *ngIf="!isMobile">{{ row.celular }}</td>
-                <td *ngIf="!isMobile">{{ row?.emailContactoGeneral }}</td>
-                <td *ngIf="!isMobile">{{ row?.pais }}</td>
+
+            <ng-template pTemplate="body" let-empresa let-rowIndex="rowIndex">
+              <tr [class.table-warning]="!empresa.activo">
+                <!-- NIT -->
                 <td *ngIf="!isMobile">
-                  <p-checkbox [binary]="true" [ngModel]="row.activo ?? false" disabled></p-checkbox>
+                  <span class="fw-bold">{{ formatearNit(empresa) }}</span>
                 </td>
+                
+                <!-- Razón Social -->
                 <td>
-                  <i placement="top" ngbTooltip="{{'Edit' | translate}}"
-                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                    class="icofont icofont-pencil-alt-5" (click)="editarEmpresa(row)"></i>
+                  <div class="d-flex flex-column">
+                    <span class="fw-semibold">{{ empresa.nombre || '-' }}</span>
+                    <small class="text-muted" *ngIf="isMobile">
+                      NIT: {{ formatearNit(empresa) }}
+                    </small>
+                  </div>
+                </td>
+                
+                <!-- Nombre Comercial -->
+                <td>
+                  <div class="d-flex flex-column">
+                    <span>{{ empresa.nomComercial || '-' }}</span>
+                    <small class="text-muted" *ngIf="isMobile">
+                      {{ formatearTelefono(empresa) }}
+                    </small>
+                  </div>
+                </td>
+                
+                <!-- Teléfono -->
+                <td *ngIf="!isMobile">
+                  <span>{{ formatearTelefono(empresa) }}</span>
+                </td>
+                
+                <!-- Email -->
+                <td *ngIf="!isMobile">
+                  <a [href]="'mailto:' + empresa.emailContactoGeneral" 
+                     class="text-decoration-none"
+                     *ngIf="empresa.emailContactoGeneral">
+                    {{ empresa.emailContactoGeneral }}
+                  </a>
+                  <span *ngIf="!empresa.emailContactoGeneral">-</span>
+                </td>
+                
+                <!-- País -->
+                <td *ngIf="!isMobile">
+                  <span class="badge bg-light text-dark">{{ empresa.pais || '-' }}</span>
+                </td>
+                
+                <!-- Estado -->
+                <td *ngIf="!isMobile">
+                  <p-tag 
+                    [severity]="getEstadoSeverity(empresa.activo)"
+                    [value]="getEstadoLabel(empresa.activo)">
+                  </p-tag>
+                </td>
+                
+                <!-- Acciones -->
+                <td>
+                  <div class="d-flex gap-2" [class.flex-column]="isMobile">
+                    <button 
+                      class="btn btn-outline-primary btn-sm" 
+                      (click)="editarEmpresa(empresa)"
+                      [title]="'Editar empresa' | translate">
+                      <i class="icofont icofont-pencil-alt-5"></i>
+                      <span *ngIf="isMobile" class="ms-1">{{ 'Editar' | translate }}</span>
+                    </button>
+                    
+                    <button 
+                      class="btn btn-outline-info btn-sm" 
+                      *ngIf="isMobile"
+                      [title]="'Ver detalles' | translate">
+                      <i class="icofont icofont-eye"></i>
+                      <span class="ms-1">{{ 'Detalles' | translate }}</span>
+                    </button>
+
+                    <button 
+                      class="btn btn-outline-warning btn-sm" 
+                      (click)="toggleEstado(empresa)"
+                      [title]="empresa.activo ? ('Desactivar empresa' | translate) : ('Activar empresa' | translate)">
+                      <i class="icofont" [ngClass]="empresa.activo ? 'icofont-ban' : 'icofont-check-circled'"></i>
+                      <span *ngIf="isMobile" class="ms-1">{{ empresa.activo ? ('Desactivar' | translate) : ('Activar' | translate) }}</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td [attr.colspan]="isMobile ? 3 : 8" class="text-center py-4">
+                  <div class="text-muted">
+                    <i class="icofont icofont-search-document display-4"></i>
+                    <p class="mt-2 mb-0">{{ 'No se encontraron empresas' | translate }}</p>
+                    <small>{{ 'Intenta ajustar los filtros de búsqueda' | translate }}</small>
+                  </div>
                 </td>
               </tr>
             </ng-template>
           </p-table>
 
-          <button class="btn btn-primary" style="color: white;">
-            <i class="icofont icofont-file-excel"></i>{{ 'Excel' | translate }}
-          </button>
+          <!-- Toast para mensajes -->
+          <p-toast position="top-right"></p-toast>
         </div>
       </div>
     </div>

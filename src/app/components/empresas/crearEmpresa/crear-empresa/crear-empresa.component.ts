@@ -493,7 +493,10 @@ export class CrearEmpresaComponent implements OnInit {
         text: 'Guardado con exito',
         icon: 'success',
         confirmButtonText: 'Ok'
-      })
+      }).then(() => {
+        // Volver al listado
+        this.volverAlListado();
+      });
     });
   }
   editar() {
@@ -520,9 +523,16 @@ export class CrearEmpresaComponent implements OnInit {
           text: 'Editado con exito',
           icon: 'success',
           confirmButtonText: 'Ok'
+        }).then(() => {
+          // Volver al listado
+          this.volverAlListado();
         });
       });
     });
+  }
+
+  volverAlListado(): void {
+    this.router.navigateByUrl('empresas');
   }
 
   identificarDepto() {

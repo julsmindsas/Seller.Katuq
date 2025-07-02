@@ -282,6 +282,145 @@
                                     </div>
                                 </div>
 
+                                <!-- 🆕 NUEVAS MÉTRICAS: Ticket Promedio por Canal -->
+                                <div class="col-md-6" *ngIf="canalesData.length > 0">
+                                    <div class="card chart-card h-100">
+                                        <div class="card-header bg-gradient-success text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-store me-2"></i>
+                                                {{ 'Ticket Promedio por Canal' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div *ngIf="estadoCarga.core" class="text-center py-5">
+                                                <div class="spinner-border text-success" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Cargando canales...</p>
+                                            </div>
+                                            <div *ngIf="!estadoCarga.core">
+                                                <!-- Canal más rentable destacado -->
+                                                <div class="alert alert-success mb-3" *ngIf="canalMasRentable">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-trophy me-2"></i>
+                                                        <div>
+                                                            <strong>{{ canalMasRentable.canal }}</strong> - Canal Líder
+                                                            <br>
+                                                            <small>{{ canalMasRentable.ticketPromedio | currency:'COP':'symbol':'1.0-0' }} por pedido</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Lista de canales -->
+                                                <div class="canal-list" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="canal-item mb-3" *ngFor="let canal of canalesData; let i = index">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div class="canal-info">
+                                                                <h6 class="mb-1">
+                                                                    <i class="fas fa-circle me-2" [style.color]="getChannelColor(i)"></i>
+                                                                    {{ canal.canal }}
+                                                                </h6>
+                                                                <small class="text-muted">
+                                                                    {{ canal.pedidos }} pedidos • {{ canal.ventas | currency:'COP':'symbol':'1.0-0' }}
+                                                                </small>
+                                                            </div>
+                                                            <div class="canal-metrics text-end">
+                                                                <div class="ticket-promedio">
+                                                                    <strong>{{ canal.ticketPromedio | currency:'COP':'symbol':'1.0-0' }}</strong>
+                                                                </div>
+                                                                <div class="participacion">
+                                                                    <small class="text-muted">{{ getPorcentajeCanal(canal) | number:'1.1-1' }}%</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="progress mt-2" style="height: 4px;">
+                                                            <div class="progress-bar" 
+                                                                 [style.width.%]="getPorcentajeCanal(canal)"
+                                                                 [style.background-color]="getChannelColor(i)"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 🆕 NUEVAS MÉTRICAS: Ticket Promedio por Vendedor -->
+                                <div class="col-md-6" *ngIf="vendedoresData.length > 0">
+                                    <div class="card chart-card h-100">
+                                        <div class="card-header bg-gradient-info text-white">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-user-tie me-2"></i>
+                                                {{ 'Top Vendedores' | translate }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div *ngIf="estadoCarga.core" class="text-center py-5">
+                                                <div class="spinner-border text-info" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Cargando vendedores...</p>
+                                            </div>
+                                            <div *ngIf="!estadoCarga.core">
+                                                <!-- Vendedor top destacado -->
+                                                <div class="alert alert-info mb-3" *ngIf="vendedorTop">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-crown me-2"></i>
+                                                        <div>
+                                                            <strong>{{ formatVendedorName(vendedorTop.vendedor) }}</strong> - Vendedor Estrella
+                                                            <br>
+                                                            <small>{{ vendedorTop.ticketPromedio | currency:'COP':'symbol':'1.0-0' }} por pedido</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Lista de vendedores -->
+                                                <div class="vendedor-list" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="vendedor-item mb-3" *ngFor="let vendedor of vendedoresData; let i = index">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div class="vendedor-info">
+                                                                <h6 class="mb-1">
+                                                                    <i class="fas fa-user-circle me-2 text-primary"></i>
+                                                                    {{ formatVendedorName(vendedor.vendedor) }}
+                                                                </h6>
+                                                                <small class="text-muted">
+                                                                    {{ vendedor.pedidos }} pedidos • {{ vendedor.ventas | currency:'COP':'symbol':'1.0-0' }}
+                                                                </small>
+                                                            </div>
+                                                            <div class="vendedor-metrics text-end">
+                                                                <div class="ticket-promedio">
+                                                                    <strong [class.text-success]="vendedor.ticketPromedio > promedioTicket"
+                                                                            [class.text-warning]="vendedor.ticketPromedio <= promedioTicket">
+                                                                        {{ vendedor.ticketPromedio | currency:'COP':'symbol':'1.0-0' }}
+                                                                    </strong>
+                                                                </div>
+                                                                <div class="performance" *ngIf="vendedor.ticketPromedio > promedioTicket">
+                                                                    <small class="text-success">
+                                                                        <i class="fas fa-arrow-up me-1"></i>
+                                                                        Sobre promedio
+                                                                    </small>
+                                                                </div>
+                                                                <div class="performance" *ngIf="vendedor.ticketPromedio <= promedioTicket">
+                                                                    <small class="text-warning">
+                                                                        <i class="fas fa-arrow-down me-1"></i>
+                                                                        Bajo promedio
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="progress mt-2" style="height: 4px;">
+                                                            <div class="progress-bar" 
+                                                                 [class.bg-success]="vendedor.ticketPromedio > promedioTicket"
+                                                                 [class.bg-warning]="vendedor.ticketPromedio <= promedioTicket"
+                                                                 [style.width.%]="(vendedor.ticketPromedio / vendedoresData[0].ticketPromedio) * 100"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Productos Más Vendidos -->
                                 <div class="col-md-6">
                                     <div class="card chart-card h-100">

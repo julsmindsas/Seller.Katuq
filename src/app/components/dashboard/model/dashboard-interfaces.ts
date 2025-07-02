@@ -25,6 +25,9 @@ export interface DashboardCoreResponse {
   periodo: PeriodoInfo;
   kpis: KPIsCriticos;
   ventasPorPeriodo: VentaDiaria[];
+  // 🆕 NUEVAS MÉTRICAS - Ticket Promedio por Canal y Vendedor
+  ticketPromedioPorCanal: TicketPromedioCanal[];
+  ticketPromedioPorVendedor: TicketPromedioVendedor[];
 }
 
 /**
@@ -57,6 +60,28 @@ export interface VentaDiaria {
   fecha: string;           // Fecha en formato YYYY-MM-DD
   ventas: number;          // Ventas del día (solo pedidos aprobados)
   pedidos: number;         // Cantidad de pedidos del día
+}
+
+/**
+ * Ticket promedio por canal de venta
+ * Para análisis de performance por canal
+ */
+export interface TicketPromedioCanal {
+  canal: string;            // Nombre del canal (POS, Web, Rappi, MercadoLibre, etc.)
+  ticketPromedio: number;   // Valor promedio por pedido
+  ventas: number;           // Total de ventas del canal
+  pedidos: number;          // Cantidad total de pedidos
+}
+
+/**
+ * Ticket promedio por vendedor
+ * Para análisis de performance por vendedor (Top 10)
+ */
+export interface TicketPromedioVendedor {
+  vendedor: string;         // Email o identificador del vendedor
+  ticketPromedio: number;   // Valor promedio por pedido
+  ventas: number;           // Total de ventas del vendedor
+  pedidos: number;          // Cantidad total de pedidos
 }
 
 // ============================================================================

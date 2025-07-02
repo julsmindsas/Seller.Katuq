@@ -1,16 +1,16 @@
 <div [ngClass]="{'modal-content': isModalMode}">
-  <div *ngIf="isModalMode" class="modal-header">
-    <h4 class="modal-title">
-      <i class="fa" [ngClass]="{
-        'fa-shopping-bag': selectedIntegrationType === 'shopify',
-        'fa-credit-card': selectedIntegrationType === 'wompi' || selectedIntegrationType === 'epayco',
-        'fa-paypal': selectedIntegrationType === 'paypal',
-        'fa-plug': !selectedIntegrationType
-      }"></i>
-      {{editingIntegrationId ? 'Editar' : 'Configurar nueva'}} integración
-    </h4>
-    <button type="button" class="close" aria-label="Close" (click)="cancel()">
-      <span aria-hidden="true">&times;</span>
+  <div *ngIf="isModalMode" class="modern-modal-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fa fa-puzzle-piece"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="header-title">{{editingIntegrationId ? 'Editar' : 'Configurar'}} Integración</h2>
+        <p class="header-subtitle">Conecta tu tienda con herramientas poderosas</p>
+      </div>
+    </div>
+    <button type="button" class="modern-close-btn" aria-label="Close" (click)="cancel()">
+      <i class="fa fa-times"></i>
     </button>
   </div>
   
@@ -56,40 +56,77 @@
       </div>
     </div>
     
-    <!-- Vista mejorada de selección de integraciones por categoría -->
-    <div class="category-tabs">
-      <ul class="nav nav-tabs">
-        <li class="nav-item" *ngFor="let category of categories">
-          <a class="nav-link" [class.active]="selectedCategory === category" href="javascript:void(0)" (click)="selectCategory(category)">
-            <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-            {{ categoryLabels[category] }}
-          </a>
-        </li>
-      </ul>
+    <!-- Plugin Store Header -->
+    <div class="plugin-store-header" *ngIf="!editingIntegrationId">
+      <div class="store-title">
+        <h3><i class="fa fa-store"></i> Tienda de Integraciones</h3>
+        <p>Selecciona las herramientas que necesitas para hacer crecer tu negocio</p>
+      </div>
+      <div class="store-search">
+        <div class="search-box-modern">
+          <i class="fa fa-search"></i>
+          <input type="text" placeholder="Buscar integración..." #searchInput>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modern Category Pills -->
+    <div class="modern-category-pills" *ngIf="!editingIntegrationId">
+      <div class="pills-container">
+        <button *ngFor="let category of categories" 
+                class="category-pill" 
+                [class.active]="selectedCategory === category"
+                (click)="selectCategory(category)">
+          <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+          <span>{{ categoryLabels[category] }}</span>
+        </button>
+      </div>
     </div>
     
-    <div class="card integration-grid mt-3">
-      <div class="card-body">
-        <div class="row">
-          <div *ngFor="let integration of availableIntegrations[selectedCategory]" 
-               class="col-md-4 col-lg-3 mb-4">
-            <div class="integration-option" 
-                 [class.active]="selectedIntegrationType === integration.id"
-                 (click)="onSelectIntegrationType(integration.id)">
-              <div class="integration-option-icon">
-                <img [src]="integration.logo" 
-                     [alt]="integration.name"
-                     (error)="onImageError($event, integration)"
-                     style="display: block;">
-                <i class="fa fallback-icon" 
-                   [ngClass]="getIntegrationIcon(integration.id)"
-                   style="display: none;"></i>
-              </div>
-              <div class="integration-option-info">
-                <h6>{{ integration.name }}</h6>
-                <p>{{ integration.description }}</p>
-              </div>
+    <!-- Plugin Store Grid -->
+    <div class="plugin-store-grid" *ngIf="!editingIntegrationId">
+      <div class="grid-container">
+        <div *ngFor="let integration of availableIntegrations[selectedCategory]" 
+             class="plugin-card" 
+             [class.selected]="selectedIntegrationType === integration.id"
+             (click)="onSelectIntegrationType(integration.id)">
+          
+          <div class="plugin-header">
+            <div class="plugin-logo">
+              <img [src]="integration.logo" 
+                   [alt]="integration.name"
+                   (error)="onImageError($event, integration)"
+                   style="display: block;">
+              <i class="fa fallback-icon" 
+                 [ngClass]="getIntegrationIcon(integration.id)"
+                 style="display: none;"></i>
             </div>
+            <div class="plugin-badges">
+              <span class="badge badge-popular" *ngIf="['shopify', 'wompi', 'paypal'].includes(integration.id)">Popular</span>
+              <span class="badge badge-recommended" *ngIf="['stripe', 'woocommerce'].includes(integration.id)">Recomendado</span>
+            </div>
+          </div>
+          
+          <div class="plugin-info">
+            <h4 class="plugin-name">{{ integration.name }}</h4>
+            <p class="plugin-description">{{ integration.description }}</p>
+          </div>
+          
+          <div class="plugin-footer">
+            <div class="plugin-rating">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star-o"></i>
+              <span class="rating-text">4.2</span>
+            </div>
+            <button class="install-btn" *ngIf="selectedIntegrationType !== integration.id">
+              <i class="fa fa-plus"></i> Configurar
+            </button>
+            <button class="selected-btn" *ngIf="selectedIntegrationType === integration.id">
+              <i class="fa fa-check"></i> Seleccionado
+            </button>
           </div>
         </div>
       </div>
@@ -617,6 +654,231 @@
             <input type="text" id="publicKey" formControlName="publicKey">
           </div>
           <small class="form-text text-muted">Clave pública para transacciones (opcional)</small>
+        </div>
+      </ng-container>
+
+      <!-- Mercado Pago Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'mercadopago'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para integrar Mercado Pago, necesitas crear una aplicación y obtener las credenciales desde tu cuenta de desarrollador.</span>
+          <a href="https://www.mercadopago.com.ar/developers" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="environment-badge">
+          <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
+            <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
+            {{isTestMode ? 'Ambiente Sandbox' : 'Ambiente de Producción'}}
+          </span>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="accessToken">
+              <i class="fa fa-key"></i> Access Token:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="accessToken" formControlName="accessToken" placeholder="TEST-...">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <div *ngIf="integrationForm.get('accessToken')?.invalid && integrationForm.get('accessToken')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Access Token es requerido
+            </div>
+            <small class="form-text text-muted">{{isTestMode ? 'Comienza con TEST-' : 'Comienza con APP_USR-'}}</small>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="publicKey">
+              <i class="fa fa-globe"></i> Public Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-globe prefix-icon"></i>
+              <input type="text" id="publicKey" formControlName="publicKey" placeholder="TEST-...">
+            </div>
+            <div *ngIf="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Public Key es requerida
+            </div>
+            <small class="form-text text-muted">{{isTestMode ? 'Comienza con TEST-' : 'Comienza con APP_USR-'}}</small>
+          </div>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="clientId">
+              <i class="fa fa-id-card"></i> Client ID:
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-id-card prefix-icon"></i>
+              <input type="text" id="clientId" formControlName="clientId">
+            </div>
+            <small class="form-text text-muted">ID de la aplicación (opcional)</small>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="clientSecret">
+              <i class="fa fa-lock"></i> Client Secret:
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="clientSecret" formControlName="clientSecret">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <small class="form-text text-muted">Secret de la aplicación (opcional)</small>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="webhookUrl">
+            <i class="fa fa-bell"></i> Webhook URL:
+          </label>
+          <div class="input-with-icon">
+            <i class="fa fa-globe prefix-icon"></i>
+            <input type="text" id="webhookUrl" formControlName="webhookUrl" placeholder="https://mitienda.com/webhooks/mercadopago">
+          </div>
+          <small class="form-text text-muted">URL para recibir notificaciones de pagos (opcional)</small>
+        </div>
+      </ng-container>
+
+      <!-- WooCommerce Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'woocommerce'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para conectar WooCommerce, necesitas generar las claves de API desde tu panel de administración de WordPress.</span>
+          <a href="https://woocommerce.github.io/woocommerce-rest-api-docs/" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="form-group">
+          <label for="siteUrl">
+            <i class="fa fa-globe"></i> URL del sitio:
+            <span class="field-required">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="fa fa-globe prefix-icon"></i>
+            <input type="text" id="siteUrl" formControlName="siteUrl" placeholder="https://mitienda.com">
+          </div>
+          <div *ngIf="integrationForm.get('siteUrl')?.invalid && integrationForm.get('siteUrl')?.touched" class="text-danger">
+            <i class="fa fa-exclamation-triangle"></i> URL del sitio es requerida
+          </div>
+          <small class="form-text text-muted">URL completa de tu tienda WooCommerce</small>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="consumerKey">
+              <i class="fa fa-key"></i> Consumer Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="text" id="consumerKey" formControlName="consumerKey" placeholder="ck_...">
+            </div>
+            <div *ngIf="integrationForm.get('consumerKey')?.invalid && integrationForm.get('consumerKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Consumer Key es requerida
+            </div>
+            <small class="form-text text-muted">Comienza con ck_</small>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="consumerSecret">
+              <i class="fa fa-lock"></i> Consumer Secret:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="consumerSecret" formControlName="consumerSecret" placeholder="cs_...">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <div *ngIf="integrationForm.get('consumerSecret')?.invalid && integrationForm.get('consumerSecret')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Consumer Secret es requerido
+            </div>
+            <small class="form-text text-muted">Comienza con cs_</small>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="apiVersion">
+            <i class="fa fa-code-branch"></i> Versión de API:
+          </label>
+          <select id="apiVersion" formControlName="apiVersion" class="custom-select">
+            <option value="v3">v3 (Recomendada)</option>
+            <option value="v2">v2</option>
+            <option value="v1">v1</option>
+          </select>
+          <small class="form-text text-muted">Versión de la API REST de WooCommerce</small>
+        </div>
+      </ng-container>
+
+      <!-- Magento Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'magento'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para conectar Magento, necesitas un token de acceso de administrador generado desde el panel de administración.</span>
+          <a href="https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="form-group">
+          <label for="baseUrl">
+            <i class="fa fa-globe"></i> URL base:
+            <span class="field-required">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="fa fa-globe prefix-icon"></i>
+            <input type="text" id="baseUrl" formControlName="baseUrl" placeholder="https://mitienda.com">
+          </div>
+          <div *ngIf="integrationForm.get('baseUrl')?.invalid && integrationForm.get('baseUrl')?.touched" class="text-danger">
+            <i class="fa fa-exclamation-triangle"></i> URL base es requerida
+          </div>
+          <small class="form-text text-muted">URL base de tu instalación de Magento</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="adminToken">
+            <i class="fa fa-key"></i> Admin Token:
+            <span class="field-required">*</span>
+          </label>
+          <div class="input-with-icon password-field">
+            <i class="fa fa-key prefix-icon"></i>
+            <input type="password" id="adminToken" formControlName="adminToken">
+            <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+          </div>
+          <div *ngIf="integrationForm.get('adminToken')?.invalid && integrationForm.get('adminToken')?.touched" class="text-danger">
+            <i class="fa fa-exclamation-triangle"></i> Admin Token es requerido
+          </div>
+          <small class="form-text text-muted">Token de acceso generado en System > Extensions > Integrations</small>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="username">
+              <i class="fa fa-user"></i> Usuario Admin:
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-user prefix-icon"></i>
+              <input type="text" id="username" formControlName="username">
+            </div>
+            <small class="form-text text-muted">Usuario administrador (opcional)</small>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="password">
+              <i class="fa fa-lock"></i> Contraseña:
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-lock prefix-icon"></i>
+              <input type="password" id="password" formControlName="password">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <small class="form-text text-muted">Contraseña del usuario (opcional)</small>
+          </div>
         </div>
       </ng-container>
       

@@ -13,6 +13,8 @@ import {
   PerformanceEntregasResponse,
   AnalisisGeograficoResponse,
   EstadoCarga,
+  TicketPromedioCanal,
+  TicketPromedioVendedor,
   COLORES_DEFAULT,
   COLORES_ESTADOS,
   getNombreEstadoAmigable,
@@ -111,6 +113,29 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get promedioTicket(): number {
     return this.coreData?.kpis?.ticketPromedio || 0;
+  }
+
+  // 🆕 NUEVAS MÉTRICAS: Ticket Promedio por Canal y Vendedor
+  get canalesData(): TicketPromedioCanal[] {
+    return this.coreData?.ticketPromedioPorCanal || [];
+  }
+  
+  get vendedoresData(): TicketPromedioVendedor[] {
+    return this.coreData?.ticketPromedioPorVendedor || [];
+  }
+  
+  // Análisis de canal más rentable
+  get canalMasRentable(): TicketPromedioCanal | null {
+    if (!this.canalesData.length) return null;
+    return this.canalesData.reduce((max, canal) => 
+      canal.ticketPromedio > max.ticketPromedio ? canal : max
+    );
+  }
+  
+  // Análisis de vendedor top
+  get vendedorTop(): TicketPromedioVendedor | null {
+    if (!this.vendedoresData.length) return null;
+    return this.vendedoresData[0]; // Ya viene ordenado del backend
   }
 
   get tasaConversion(): number {
@@ -356,6 +381,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private procesarDatosCore(data: DashboardCoreResponse): void {
     // Convertir datos para compatibilidad con gráficos existentes
     this.topVentasPorDia = this.convertVentasPorDia(data.ventasPorPeriodo);
+    
+    // 🆕 Log de las nuevas métricas
+    this.logNuevasMetricas();
     
     // Asegurar que el DOM esté listo antes de renderizar
     this.waitForDOMAndRender(() => this.renderVentasChart());
@@ -1433,5 +1461,76 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     
     console.log('================================\n');
+  }
+
+  // ============================================================================
+  // 🆕 MÉTODOS HELPER PARA NUEVAS MÉTRICAS
+  // ============================================================================
+
+  /**
+   * Calcula el total de ventas de todos los canales
+   */
+  getTotalVentasCanales(): number {
+    return this.canalesData.reduce((total, canal) => total + canal.ventas, 0);
+  }
+
+  /**
+   * Obtiene el porcentaje de participación de un canal
+   */
+  getPorcentajeCanal(canal: TicketPromedioCanal): number {
+    const total = this.getTotalVentasCanales();
+    return total > 0 ? (canal.ventas / total) * 100 : 0;
+  }
+
+  /**
+   * Formatea el nombre del vendedor para mostrar
+   */
+  formatVendedorName(email: string): string {
+    return email.split('@')[0].replace('.', ' ').toUpperCase();
+  }
+
+  /**
+   * Obtiene el color para cada canal (para gráficos)
+   */
+  getChannelColor(index: number): string {
+    const colors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0'];
+    return colors[index % colors.length];
+  }
+
+  /**
+   * Verifica si un canal supera el ticket promedio general
+   */
+  isChannelAboveAverage(canal: TicketPromedioCanal): boolean {
+    return canal.ticketPromedio > this.promedioTicket;
+  }
+
+  /**
+   * Obtiene estadísticas adicionales de canales
+   */
+  getChannelStats() {
+    const canales = this.canalesData;
+    if (!canales.length) return null;
+
+    return {
+      totalCanales: canales.length,
+      ticketMasAlto: Math.max(...canales.map(c => c.ticketPromedio)),
+      ticketMasBajo: Math.min(...canales.map(c => c.ticketPromedio)),
+      promedioVentasPorCanal: this.getTotalVentasCanales() / canales.length
+    };
+  }
+
+  /**
+   * Log de las nuevas métricas para debugging
+   */
+  private logNuevasMetricas(): void {
+    if (this.coreData) {
+      console.log('📊 === NUEVAS MÉTRICAS ===');
+      console.log('🏪 Canales:', this.canalesData);
+      console.log('👥 Vendedores:', this.vendedoresData);
+      console.log('🏆 Canal más rentable:', this.canalMasRentable);
+      console.log('⭐ Vendedor top:', this.vendedorTop);
+      console.log('📈 Stats canales:', this.getChannelStats());
+      console.log('========================');
+    }
   }
 }

@@ -989,9 +989,10 @@
                             <div class="row">
                                 <div class="col-sm-3">
                                     <button *ngIf="mostrarCrear" (click)="guardar()"
-                                        class="btn btn-lg btn-primary">Guardar</button>
+                                        class="btn btn-lg btn-primary me-2">Guardar</button>
                                     <button *ngIf="!mostrarCrear" (click)="editar()"
-                                        class="btn btn-lg btn-primary">Editar</button>
+                                        class="btn btn-lg btn-primary me-2">Editar</button>
+                                    <button type="button" class="btn btn-lg btn-secondary" (click)="volverAlListado()">Volver</button>
                                 </div>
                             </div>
                         </p-tabView>
