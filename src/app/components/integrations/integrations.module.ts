@@ -15,8 +15,14 @@ import { IntegrationStateService } from './integration-state.service';
 import { IntegrationCacheService } from './integration-cache.service';
 
 const routes: Routes = [
-  { path: '', component: IntegrationsListComponent },
-  { path: 'configure', component: IntegrationsComponent }
+  // Vista principal de listado
+  { path: '', component: IntegrationsListComponent, pathMatch: 'full' },
+  // Alias opcional: /integrations/list
+  { path: 'list', redirectTo: '', pathMatch: 'full' },
+  // Formulario de configuración / edición
+  { path: 'configure', component: IntegrationsComponent },
+  // Fallback: redirigir rutas desconocidas de este módulo al listado
+  { path: '**', redirectTo: '' }
 ];
 
 @NgModule({
@@ -40,9 +46,6 @@ const routes: Routes = [
   providers: [
     IntegrationStateService,
     IntegrationCacheService
-  ],
-  entryComponents: [
-    IntegrationsComponent
   ],
   exports: [
     IntegrationsComponent,
