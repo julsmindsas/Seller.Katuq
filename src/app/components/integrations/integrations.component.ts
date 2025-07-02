@@ -26,10 +26,10 @@ export class IntegrationsComponent implements OnInit {
   selectedCategory: IntegrationCategory = IntegrationCategory.ECOMMERCE;
 
   integrationTypes = [
-    { id: 'shopify', name: 'Shopify', logo: 'assets/images/logos/shopify.png' },
-    { id: 'wompi', name: 'Wompi', logo: 'assets/images/logos/wompi.png' },
-    { id: 'epayco', name: 'ePayco', logo: 'assets/images/logos/epayco.png' },
-    { id: 'paypal', name: 'PayPal', logo: 'assets/images/logos/paypal.png' }
+    { id: 'shopify', name: 'Shopify', logo: 'assets/images/logos/shopify.svg' },
+    { id: 'wompi', name: 'Wompi', logo: 'assets/images/logos/wompi.svg' },
+    { id: 'epayco', name: 'ePayco', logo: 'assets/images/logos/epayco.svg' },
+    { id: 'paypal', name: 'PayPal', logo: 'assets/images/logos/paypal.svg' }
   ];
   
   selectedIntegrationType = 'shopify';
@@ -166,6 +166,27 @@ export class IntegrationsComponent implements OnInit {
       case 'paypal':
         this.integrationForm = this.createPaypalForm();
         break;
+      case 'stripe':
+        this.integrationForm = this.createStripeForm();
+        break;
+      case 'payu':
+        this.integrationForm = this.createPayUForm();
+        break;
+      case 'mercadopago':
+        this.integrationForm = this.createMercadoPagoForm();
+        break;
+      case 'woocommerce':
+        this.integrationForm = this.createWooCommerceForm();
+        break;
+      case 'magento':
+        this.integrationForm = this.createMagentoForm();
+        break;
+      case 'prestashop':
+        this.integrationForm = this.createPrestaShopForm();
+        break;
+      default:
+        this.integrationForm = this.createShopifyForm();
+        break;
     }
     
     this.statusMessage = null;
@@ -299,6 +320,74 @@ export class IntegrationsComponent implements OnInit {
     });
   }
 
+  createStripeForm(): FormGroup {
+    return this.fb.group({
+      name: ['Stripe', Validators.required],
+      enabled: [true],
+      publishableKey: ['', Validators.required],
+      secretKey: ['', Validators.required],
+      webhookSecret: [''],
+      accountId: ['']
+    });
+  }
+
+  createPayUForm(): FormGroup {
+    return this.fb.group({
+      name: ['PayU', Validators.required],
+      enabled: [true],
+      apiKey: ['', Validators.required],
+      apiLogin: ['', Validators.required],
+      merchantId: ['', Validators.required],
+      accountId: ['', Validators.required],
+      publicKey: ['']
+    });
+  }
+
+  createMercadoPagoForm(): FormGroup {
+    return this.fb.group({
+      name: ['Mercado Pago', Validators.required],
+      enabled: [true],
+      accessToken: ['', Validators.required],
+      publicKey: ['', Validators.required],
+      clientId: [''],
+      clientSecret: [''],
+      webhookUrl: ['']
+    });
+  }
+
+  createWooCommerceForm(): FormGroup {
+    return this.fb.group({
+      name: ['WooCommerce', Validators.required],
+      enabled: [true],
+      siteUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      consumerKey: ['', Validators.required],
+      consumerSecret: ['', Validators.required],
+      apiVersion: ['v3']
+    });
+  }
+
+  createMagentoForm(): FormGroup {
+    return this.fb.group({
+      name: ['Magento', Validators.required],
+      enabled: [true],
+      baseUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      adminToken: ['', Validators.required],
+      username: [''],
+      password: ['']
+    });
+  }
+
+  createPrestaShopForm(): FormGroup {
+    return this.fb.group({
+      name: ['PrestaShop', Validators.required],
+      enabled: [true],
+      shopUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      webserviceKey: ['', Validators.required],
+      language: ['es'],
+      outputFormat: ['JSON']
+    });
+  }
+
   onSubmit(): void {
     if (this.integrationForm.invalid) {
       this.integrationForm.markAllAsTouched();
@@ -343,6 +432,59 @@ export class IntegrationsComponent implements OnInit {
           clientSecret: formData.clientSecret,
           merchantId: formData.merchantId,
           environment: this.isTestMode ? 'sandbox' : 'production'
+        };
+        break;
+      case 'stripe':
+        credentials = {
+          publishableKey: formData.publishableKey,
+          secretKey: formData.secretKey,
+          webhookSecret: formData.webhookSecret,
+          accountId: formData.accountId,
+          environment: this.isTestMode ? 'test' : 'live'
+        };
+        break;
+      case 'payu':
+        credentials = {
+          apiKey: formData.apiKey,
+          apiLogin: formData.apiLogin,
+          merchantId: formData.merchantId,
+          accountId: formData.accountId,
+          publicKey: formData.publicKey,
+          environment: this.isTestMode ? 'test' : 'production'
+        };
+        break;
+      case 'mercadopago':
+        credentials = {
+          accessToken: formData.accessToken,
+          publicKey: formData.publicKey,
+          clientId: formData.clientId,
+          clientSecret: formData.clientSecret,
+          webhookUrl: formData.webhookUrl,
+          environment: this.isTestMode ? 'sandbox' : 'production'
+        };
+        break;
+      case 'woocommerce':
+        credentials = {
+          siteUrl: formData.siteUrl,
+          consumerKey: formData.consumerKey,
+          consumerSecret: formData.consumerSecret,
+          apiVersion: formData.apiVersion
+        };
+        break;
+      case 'magento':
+        credentials = {
+          baseUrl: formData.baseUrl,
+          adminToken: formData.adminToken,
+          username: formData.username,
+          password: formData.password
+        };
+        break;
+      case 'prestashop':
+        credentials = {
+          shopUrl: formData.shopUrl,
+          webserviceKey: formData.webserviceKey,
+          language: formData.language,
+          outputFormat: formData.outputFormat
         };
         break;
     }
@@ -403,7 +545,6 @@ export class IntegrationsComponent implements OnInit {
           apiSecret: formData.apiSecret
         };
         break;
-      // Repeat for other types
       case 'wompi':
         credentials = {
           publicKey: formData.publicKey,
@@ -424,6 +565,48 @@ export class IntegrationsComponent implements OnInit {
           clientId: formData.clientId,
           clientSecret: formData.clientSecret,
           environment: this.isTestMode ? 'sandbox' : 'production'
+        };
+        break;
+      case 'stripe':
+        credentials = {
+          publishableKey: formData.publishableKey,
+          secretKey: formData.secretKey,
+          environment: this.isTestMode ? 'test' : 'live'
+        };
+        break;
+      case 'payu':
+        credentials = {
+          apiKey: formData.apiKey,
+          apiLogin: formData.apiLogin,
+          merchantId: formData.merchantId,
+          accountId: formData.accountId,
+          environment: this.isTestMode ? 'test' : 'production'
+        };
+        break;
+      case 'mercadopago':
+        credentials = {
+          accessToken: formData.accessToken,
+          publicKey: formData.publicKey,
+          environment: this.isTestMode ? 'sandbox' : 'production'
+        };
+        break;
+      case 'woocommerce':
+        credentials = {
+          siteUrl: formData.siteUrl,
+          consumerKey: formData.consumerKey,
+          consumerSecret: formData.consumerSecret
+        };
+        break;
+      case 'magento':
+        credentials = {
+          baseUrl: formData.baseUrl,
+          adminToken: formData.adminToken
+        };
+        break;
+      case 'prestashop':
+        credentials = {
+          shopUrl: formData.shopUrl,
+          webserviceKey: formData.webserviceKey
         };
         break;
     }
@@ -525,5 +708,45 @@ export class IntegrationsComponent implements OnInit {
   // Método para cambiar la categoría seleccionada
   selectCategory(category: IntegrationCategory): void {
     this.selectedCategory = category;
+  }
+
+  // Método para manejar errores de imágenes
+  onImageError(event: any, integration: any): void {
+    event.target.style.display = 'none';
+    // Mostrar icono como fallback
+    const iconElement = event.target.nextElementSibling;
+    if (iconElement) {
+      iconElement.style.display = 'flex';
+    }
+  }
+
+  // Método para obtener icono de integración específica
+  getIntegrationIcon(integrationId: string): string {
+    const iconMap: { [key: string]: string } = {
+      'shopify': 'fa-shopping-cart',
+      'wompi': 'fa-credit-card',
+      'epayco': 'fa-credit-card',
+      'paypal': 'fa-paypal',
+      'stripe': 'fa-stripe',
+      'payu': 'fa-credit-card',
+      'mercadopago': 'fa-credit-card',
+      'woocommerce': 'fa-wordpress',
+      'magento': 'fa-shopping-cart',
+      'prestashop': 'fa-shopping-cart',
+      'fedex': 'fa-truck',
+      'dhl': 'fa-truck',
+      'servientrega': 'fa-truck',
+      'coordinadora': 'fa-truck',
+      'mailchimp': 'fa-envelope',
+      'hubspot': 'fa-chart-line',
+      'google_analytics': 'fa-chart-bar',
+      'salesforce': 'fa-users',
+      'zoho_crm': 'fa-users',
+      'quickbooks': 'fa-calculator',
+      'siigo': 'fa-file-invoice',
+      'slack': 'fa-slack',
+      'zapier': 'fa-bolt'
+    };
+    return iconMap[integrationId] || 'fa-plug';
   }
 }

@@ -77,8 +77,13 @@
                  [class.active]="selectedIntegrationType === integration.id"
                  (click)="onSelectIntegrationType(integration.id)">
               <div class="integration-option-icon">
-                <img *ngIf="integration.logo" [src]="integration.logo" [alt]="integration.name">
-                <i *ngIf="!integration.logo" class="fa" [ngClass]="getIntegrationIcon(integration.id)"></i>
+                <img [src]="integration.logo" 
+                     [alt]="integration.name"
+                     (error)="onImageError($event, integration)"
+                     style="display: block;">
+                <i class="fa fallback-icon" 
+                   [ngClass]="getIntegrationIcon(integration.id)"
+                   style="display: none;"></i>
               </div>
               <div class="integration-option-info">
                 <h6>{{ integration.name }}</h6>
@@ -447,6 +452,171 @@
             <input type="text" id="merchantId" formControlName="merchantId">
           </div>
           <small class="form-text text-muted">ID de comercio (opcional para algunos casos)</small>
+        </div>
+      </ng-container>
+      
+      <!-- Stripe Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'stripe'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para integrar Stripe, necesitas crear una cuenta y obtener las claves de API desde el dashboard de Stripe.</span>
+          <a href="https://stripe.com/docs/api" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="environment-badge">
+          <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
+            <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
+            {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+          </span>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="publishableKey">
+              <i class="fa fa-key"></i> Publishable Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-globe prefix-icon"></i>
+              <input type="text" id="publishableKey" formControlName="publishableKey" placeholder="pk_test_...">
+            </div>
+            <div *ngIf="integrationForm.get('publishableKey')?.invalid && integrationForm.get('publishableKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Publishable Key es requerida
+            </div>
+            <small class="form-text text-muted">{{isTestMode ? 'Comienza con pk_test_' : 'Comienza con pk_live_'}}</small>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="secretKey">
+              <i class="fa fa-lock"></i> Secret Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="secretKey" formControlName="secretKey" placeholder="sk_test_...">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <div *ngIf="integrationForm.get('secretKey')?.invalid && integrationForm.get('secretKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Secret Key es requerida
+            </div>
+            <small class="form-text text-muted">{{isTestMode ? 'Comienza con sk_test_' : 'Comienza con sk_live_'}}</small>
+          </div>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="webhookSecret">
+              <i class="fa fa-bell"></i> Webhook Secret:
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="password" id="webhookSecret" formControlName="webhookSecret" placeholder="whsec_...">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+            </div>
+            <small class="form-text text-muted">Secret para validar webhooks (opcional)</small>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="accountId">
+              <i class="fa fa-id-badge"></i> Account ID:
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-user prefix-icon"></i>
+              <input type="text" id="accountId" formControlName="accountId" placeholder="acct_...">
+            </div>
+            <small class="form-text text-muted">ID de cuenta de Stripe Connect (opcional)</small>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- PayU Fields -->
+      <ng-container *ngIf="selectedIntegrationType === 'payu'">
+        <div class="integration-info-box">
+          <i class="fa fa-info-circle"></i>
+          <span>Para configurar PayU, necesitas las credenciales de tu cuenta PayU Latin America.</span>
+          <a href="https://developers.payulatam.com/" target="_blank" class="learn-more">
+            <i class="fa fa-external-link"></i> Ver documentación
+          </a>
+        </div>
+        
+        <div class="environment-badge">
+          <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
+            <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
+            {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+          </span>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="apiKey">
+              <i class="fa fa-key"></i> API Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-key prefix-icon"></i>
+              <input type="text" id="apiKey" formControlName="apiKey">
+            </div>
+            <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> API Key es requerida
+            </div>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="apiLogin">
+              <i class="fa fa-user"></i> API Login:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-user prefix-icon"></i>
+              <input type="text" id="apiLogin" formControlName="apiLogin">
+            </div>
+            <div *ngIf="integrationForm.get('apiLogin')?.invalid && integrationForm.get('apiLogin')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> API Login es requerido
+            </div>
+          </div>
+        </div>
+        
+        <div class="field-row">
+          <div class="field-col form-group">
+            <label for="merchantId">
+              <i class="fa fa-store"></i> Merchant ID:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-id-badge prefix-icon"></i>
+              <input type="text" id="merchantId" formControlName="merchantId">
+            </div>
+            <div *ngIf="integrationForm.get('merchantId')?.invalid && integrationForm.get('merchantId')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Merchant ID es requerido
+            </div>
+          </div>
+          
+          <div class="field-col form-group">
+            <label for="accountId">
+              <i class="fa fa-id-card"></i> Account ID:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-id-card prefix-icon"></i>
+              <input type="text" id="accountId" formControlName="accountId">
+            </div>
+            <div *ngIf="integrationForm.get('accountId')?.invalid && integrationForm.get('accountId')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Account ID es requerido
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="publicKey">
+            <i class="fa fa-key"></i> Public Key:
+          </label>
+          <div class="input-with-icon">
+            <i class="fa fa-key prefix-icon"></i>
+            <input type="text" id="publicKey" formControlName="publicKey">
+          </div>
+          <small class="form-text text-muted">Clave pública para transacciones (opcional)</small>
         </div>
       </ng-container>
       

@@ -735,6 +735,22 @@ input:checked + .slider:before {
   color: #7366ff;
 }
 
+.fallback-icon {
+  width: 60px;
+  height: 60px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(115,102,255,0.1);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.integration-option:hover .fallback-icon {
+  background-color: rgba(115,102,255,0.2);
+  transform: scale(1.05);
+}
+
 .integration-option-info h6 {
   font-weight: 600;
   margin-bottom: 5px;
