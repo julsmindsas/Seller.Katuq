@@ -1,113 +1,507 @@
-<app-breadcrumb [title]="'Crear Formas de Pago'" [items]="['Extras/Formas de Pago']"
-    [active_item]="'Crear Formas de Pago'">
+<app-breadcrumb
+    [title]="'Crear Formas de Pago'"
+    [items]="['Extras/Formas de Pago']"
+    [active_item]="'Crear Formas de Pago'"
+>
 </app-breadcrumb>
+
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body">
-                    <form [formGroup]="fomrasPagoForm">
-                        <div class="row">
-                            <div class="col-sm-4">
-                                <label for="image">Id</label>
-                                <input class="form-control" type="number" id="image" formControlName="id">
-                            </div>
-                            <div class="col-sm-4">
-                                <div class="row">
-                                    <label for="id">Clasificación forma de pago:</label>
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="icofont icofont-credit-card me-2"></i>
+                        {{
+                            editando
+                                ? "Editar Forma de Pago"
+                                : "Crear Nueva Forma de Pago"
+                        }}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form [formGroup]="fomrasPagoForm" novalidate>
+                        <!-- ID y Clasificación -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">
+                                    <i
+                                        class="icofont icofont-numbered me-1"
+                                    ></i>
+                                    ID
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="icofont icofont-hash"></i>
+                                    </span>
+                                    <input
+                                        class="form-control"
+                                        type="number"
+                                        formControlName="id"
+                                        readonly
+                                        placeholder="Generado automáticamente"
+                                    />
                                 </div>
-                                <div class="row">
-                                    <select class="form-control" id="id" formControlName="online">
+                                <small class="text-muted"
+                                    >El ID se genera automáticamente</small
+                                >
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold required">
+                                    <i class="icofont icofont-tags me-1"></i>
+                                    Clasificación forma de pago
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="icofont icofont-list"></i>
+                                    </span>
+                                    <select
+                                        class="form-select"
+                                        formControlName="online"
+                                        [class.is-invalid]="
+                                            fomrasPagoForm.get('online')
+                                                ?.touched &&
+                                            fomrasPagoForm.get('online')
+                                                ?.invalid
+                                        "
+                                    >
+                                        <option value="">
+                                            Seleccione una clasificación
+                                        </option>
                                         <option value="Online">Online</option>
                                         <option
-                                            value="Offline (Efectivo, Datafono, consignación, Transferencia, App, QR)">
-                                            Offline (efectivo, datafono, consignación, transferencia, App, QR)</option>
-                                        <option value="Billeteras Virtuales">Billeteras virtuales</option>
-                                        <option value="Criptomonedas">Criptomonedas</option>
-                                        <option value="Pago a Credito">Pago a crédito</option>
-                                        <option value="Envío de dinero a Colombia desde cualquier lugar del mundo">Envío
-                                            de dinero a Colombia desde cualquier lugar del mundo</option>
+                                            value="Offline (Efectivo, Datafono, consignación, Transferencia, App, QR)"
+                                        >
+                                            Offline (efectivo, datafono,
+                                            consignación, transferencia, App,
+                                            QR)
+                                        </option>
+                                        <option value="Billeteras Virtuales">
+                                            Billeteras virtuales
+                                        </option>
+                                        <option value="Criptomonedas">
+                                            Criptomonedas
+                                        </option>
+                                        <option value="Pago a Credito">
+                                            Pago a crédito
+                                        </option>
+                                        <option
+                                            value="Envío de dinero a Colombia desde cualquier lugar del mundo"
+                                        >
+                                            Envío de dinero a Colombia desde
+                                            cualquier lugar del mundo
+                                        </option>
                                     </select>
                                 </div>
-
-
-
-                            </div>
-                            <div class="col-sm-4">
-                                <label for="image">Título</label>
-                                <input class="form-control" type="text" id="image" formControlName="nombre">
-                            </div>
-
-
-                        </div>
-                        <br>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <label for="name">Posición</label>
-                                <input class="form-control" type="number" id="name" formControlName="posicion">
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label for="position">Integración</label>
-                                <select class="form-control" formControlName="integracion">
-                                    <option value="Si">Si</option>
-                                    <option value="No" selected>No</option>
-                                </select>
-                            </div>
-
-
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <div class="row">
-                                    <label for="name">Activo</label>
+                                <div
+                                    class="invalid-feedback"
+                                    *ngIf="
+                                        fomrasPagoForm.get('online')?.touched &&
+                                        fomrasPagoForm.get('online')?.errors?.[
+                                            'required'
+                                        ]
+                                    "
+                                >
+                                    La clasificación es obligatoria
                                 </div>
-                                <div class="row">
-                                    <input type="checkbox" id="name" formControlName="activo">
+                            </div>
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold required">
+                                    <i
+                                        class="icofont icofont-ui-text-chat me-1"
+                                    ></i>
+                                    Título/Nombre
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i
+                                            class="icofont icofont-pencil-alt-2"
+                                        ></i>
+                                    </span>
+                                    <input
+                                        class="form-control"
+                                        type="text"
+                                        formControlName="nombre"
+                                        placeholder="Ingrese el nombre de la forma de pago"
+                                        [class.is-invalid]="
+                                            fomrasPagoForm.get('nombre')
+                                                ?.touched &&
+                                            fomrasPagoForm.get('nombre')
+                                                ?.invalid
+                                        "
+                                    />
                                 </div>
-
-
+                                <div
+                                    class="invalid-feedback"
+                                    *ngIf="
+                                        fomrasPagoForm.get('nombre')?.touched &&
+                                        fomrasPagoForm.get('nombre')?.errors?.[
+                                            'required'
+                                        ]
+                                    "
+                                >
+                                    El nombre es obligatorio
+                                </div>
                             </div>
-
-
                         </div>
+
+                        <!-- Posición e Integración -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required">
+                                    <i
+                                        class="icofont icofont-sort-numeric-asc me-1"
+                                    ></i>
+                                    Posición
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="icofont icofont-numbered"></i>
+                                    </span>
+                                    <input
+                                        class="form-control"
+                                        type="number"
+                                        formControlName="posicion"
+                                        placeholder="Orden de visualización"
+                                        min="1"
+                                        [class.is-invalid]="
+                                            fomrasPagoForm.get('posicion')
+                                                ?.touched &&
+                                            fomrasPagoForm.get('posicion')
+                                                ?.invalid
+                                        "
+                                    />
+                                </div>
+                                <div
+                                    class="invalid-feedback"
+                                    *ngIf="
+                                        fomrasPagoForm.get('posicion')
+                                            ?.touched &&
+                                        fomrasPagoForm.get('posicion')
+                                            ?.errors?.['required']
+                                    "
+                                >
+                                    La posición es obligatoria
+                                </div>
+                                <small class="text-muted"
+                                    >Orden en que aparecerá en el listado</small
+                                >
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required">
+                                    <i class="icofont icofont-plugin me-1"></i>
+                                    Integración
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i
+                                            class="icofont icofont-connection"
+                                        ></i>
+                                    </span>
+                                    <select
+                                        class="form-select"
+                                        formControlName="integracion"
+                                        [class.is-invalid]="
+                                            fomrasPagoForm.get('integracion')
+                                                ?.touched &&
+                                            fomrasPagoForm.get('integracion')
+                                                ?.invalid
+                                        "
+                                    >
+                                        <option value="No">No</option>
+                                        <option value="Si">Sí</option>
+                                    </select>
+                                </div>
+                                <small class="text-muted"
+                                    >¿Requiere integración con pasarela?</small
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Estado Activo -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card border-light bg-light">
+                                    <div class="card-body py-3">
+                                        <div class="form-check form-switch">
+                                            <input
+                                                class="form-check-input"
+                                                type="checkbox"
+                                                id="activoSwitch"
+                                                formControlName="activo"
+                                                style="transform: scale(1.5)"
+                                            />
+                                            <label
+                                                class="form-check-label fw-bold ms-2"
+                                                for="activoSwitch"
+                                            >
+                                                <i
+                                                    class="icofont icofont-toggle-on me-1"
+                                                ></i>
+                                                Forma de pago activa
+                                            </label>
+                                        </div>
+                                        <small class="text-muted"
+                                            >Activa o desactiva esta forma de
+                                            pago para uso en el sistema</small
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descripciones -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required">
+                                    <i class="icofont icofont-email me-1"></i>
+                                    Descripción Correo Electrónico
+                                </label>
+                                <textarea
+                                    class="form-control"
+                                    rows="4"
+                                    formControlName="descripcionCorreoElectronico"
+                                    placeholder="Descripción que aparecerá en los correos electrónicos"
+                                    [class.is-invalid]="
+                                        fomrasPagoForm.get(
+                                            'descripcionCorreoElectronico'
+                                        )?.touched &&
+                                        fomrasPagoForm.get(
+                                            'descripcionCorreoElectronico'
+                                        )?.invalid
+                                    "
+                                >
+                                </textarea>
+                                <div
+                                    class="invalid-feedback"
+                                    *ngIf="
+                                        fomrasPagoForm.get(
+                                            'descripcionCorreoElectronico'
+                                        )?.touched &&
+                                        fomrasPagoForm.get(
+                                            'descripcionCorreoElectronico'
+                                        )?.errors?.['required']
+                                    "
+                                >
+                                    La descripción de correo es obligatoria
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required">
+                                    <i
+                                        class="icofont icofont-notification me-1"
+                                    ></i>
+                                    Recordatorio Cobro
+                                </label>
+                                <textarea
+                                    class="form-control"
+                                    rows="4"
+                                    formControlName="recordatorioCobro"
+                                    placeholder="Texto para recordatorios de cobro"
+                                    [class.is-invalid]="
+                                        fomrasPagoForm.get('recordatorioCobro')
+                                            ?.touched &&
+                                        fomrasPagoForm.get('recordatorioCobro')
+                                            ?.invalid
+                                    "
+                                >
+                                </textarea>
+                                <div
+                                    class="invalid-feedback"
+                                    *ngIf="
+                                        fomrasPagoForm.get('recordatorioCobro')
+                                            ?.touched &&
+                                        fomrasPagoForm.get('recordatorioCobro')
+                                            ?.errors?.['required']
+                                    "
+                                >
+                                    El recordatorio de cobro es obligatorio
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Imágenes -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    <i class="icofont icofont-image me-1"></i>
+                                    Imagen Interna
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i
+                                            class="icofont icofont-upload-alt"
+                                        ></i>
+                                    </span>
+                                    <input
+                                        class="form-control"
+                                        type="file"
+                                        accept="image/*"
+                                        (change)="onImageInternaChange($event)"
+                                    />
+                                </div>
+                                <small class="text-muted"
+                                    >Imagen para uso interno del sistema</small
+                                >
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    <i
+                                        class="icofont icofont-shopping-cart me-1"
+                                    ></i>
+                                    Imagen Carrito
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i
+                                            class="icofont icofont-upload-alt"
+                                        ></i>
+                                    </span>
+                                    <input
+                                        class="form-control"
+                                        type="file"
+                                        accept="image/*"
+                                        (change)="onImageCarritoChange($event)"
+                                    />
+                                </div>
+                                <small class="text-muted"
+                                    >Imagen que se mostrará en el carrito de
+                                    compras</small
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
                         <div class="row">
-                            <div class="col-sm-6">
-                                <label for="name">Descripción Correo Electrónico</label>
-                                <textarea class="form-control" style="width: 100%;"
-                                    formControlName="descripcionCorreoElectronico"></textarea>
+                            <div class="col-12">
+                                <div class="d-flex gap-3 justify-content-end">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary"
+                                        (click)="cancelar()"
+                                    >
+                                        <i
+                                            class="icofont icofont-close-circled me-2"
+                                        ></i>
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        *ngIf="!editando"
+                                        type="button"
+                                        (click)="guardar()"
+                                        class="btn btn-primary"
+                                        [disabled]="
+                                            fomrasPagoForm.invalid || guardando
+                                        "
+                                    >
+                                        <i
+                                            class="icofont icofont-save me-2"
+                                            *ngIf="!guardando"
+                                        ></i>
+                                        <span
+                                            class="spinner-border spinner-border-sm me-2"
+                                            *ngIf="guardando"
+                                        ></span>
+                                        {{
+                                            guardando
+                                                ? "Creando..."
+                                                : "Crear Forma de Pago"
+                                        }}
+                                    </button>
+                                    <button
+                                        *ngIf="editando"
+                                        type="button"
+                                        (click)="editar()"
+                                        class="btn btn-success"
+                                        [disabled]="
+                                            fomrasPagoForm.invalid || guardando
+                                        "
+                                    >
+                                        <i
+                                            class="icofont icofont-save me-2"
+                                            *ngIf="!guardando"
+                                        ></i>
+                                        <span
+                                            class="spinner-border spinner-border-sm me-2"
+                                            *ngIf="guardando"
+                                        ></span>
+                                        {{
+                                            guardando
+                                                ? "Guardando..."
+                                                : "Guardar Cambios"
+                                        }}
+                                    </button>
+                                </div>
                             </div>
-                            <div class="form-group col-sm-6">
-                                <label for="position">Recordatorio Cobro</label>
-                                <textarea class="form-control" style="width: 100%;"
-                                    formControlName="recordatorioCobro"></textarea>
-                            </div>
-
                         </div>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <label for="name">Imagen Interna:</label>
-                                <input class="form-control" type="file" id="name">
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label for="position">Imagen Carrito:</label>
-                                <input class="form-control" type="file" id="name">
-                            </div>
-
-                        </div>
-
-
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <button *ngIf="!editando" (click)="guardar()" class="btn btn-primary"
-                                    type="submit">Crear Forma Pago</button>
-                                <button *ngIf="editando" (click)="editar()" class="btn btn-primary"
-                                    type="submit">Guardar</button>
-                            </div>
-                        </div>
-
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Estilos adicionales -->
+<style>
+    .required::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-label {
+        margin-bottom: 0.75rem;
+    }
+
+    .input-group-text {
+        border-right: none;
+    }
+
+    .input-group .form-control,
+    .input-group .form-select {
+        border-left: none;
+    }
+
+    .input-group .form-control:focus,
+    .input-group .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    .form-check-input:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .btn {
+        border-radius: 8px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+</style>
