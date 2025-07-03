@@ -165,7 +165,7 @@ export class IntegrationStateService {
   // Actions para gestión de integraciones
   setIntegrations(integrations: Integration[]): void {
     this.updateState(state => ({
-      integrations: integrations || [],
+      integrations: [...(integrations || [])],
       cache: {
         ...state.cache,
         lastUpdated: Date.now()

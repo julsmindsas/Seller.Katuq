@@ -6,15 +6,69 @@ import { IntegrationStateService } from './integration-state.service';
 import { IntegrationCacheService } from './integration-cache.service';
 import { tap, map, catchError, finalize } from 'rxjs/operators';
 
+// ===== INTERFACES V2 SEGÚN DOCUMENTACIÓN BACKEND =====
+
+export interface IntegrationV2 {
+  provider: string;        // Nuevo: reemplaza 'type'
+  config: any;            // Nuevo: configuración validada por esquema
+  enabled?: boolean;      // Opcional: manejado por el backend
+  metadata?: {            // Nuevo: metadatos del backend
+    version: string;
+    lastModified: string;
+    modifiedBy: string;
+    encrypted?: string[]; // Campos que están encriptados
+  };
+}
+
+// Mantener interface legacy para compatibilidad
 export interface Integration {
   id?: string;
   type: string;
   name: string;
   enabled: boolean;
-  category: IntegrationCategory; // Añadido campo de categoría
+  category: IntegrationCategory;
   credentials: any;
   createdAt?: string;
   updatedAt?: string;
+  // Nuevos campos V2
+  provider?: string;
+  config?: any;
+  metadata?: {
+    version: string;
+    lastModified: string;
+    modifiedBy: string;
+    encrypted?: string[];
+  };
+}
+
+// Nuevas interfaces para validación
+export interface ValidationResponse {
+  success: boolean;
+  errors?: string[];
+  warnings?: string[];
+  suggestions?: string[];
+}
+
+export interface ConfigSchema {
+  provider: string;
+  fields: SchemaField[];
+  required: string[];
+  encrypted: string[];
+  environments?: string[];
+}
+
+export interface SchemaField {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  required: boolean;
+  encrypted?: boolean;
+  description?: string;
+  validation?: {
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+    enum?: string[];
+  };
 }
 
 export enum IntegrationCategory {
@@ -42,53 +96,120 @@ export const CATEGORY_LABELS = {
   providedIn: 'root'
 })
 export class IntegrationsService {
-  // Actualizar la URL base para coincidir con las rutas de la API
-  private apiUrl = `${environment.urlApi}/v1/integration/configurations`;
+  // Nueva URL base según API V2
+  private apiUrl = `${environment.urlApi}/v1/integration/config`;
+  
+  // Company ID requerido para multi-tenancy
+  private currentCompanyId: string = '';
 
   constructor(
     private http: HttpClient,
     private stateService: IntegrationStateService,
     private cacheService: IntegrationCacheService
-  ) { }
+  ) { 
+    // TODO: Obtener company ID del usuario actual o contexto
+    this.currentCompanyId = this.getCurrentCompanyId();
+  }
+
+  /**
+   * Obtiene el ID de la empresa actual del contexto o localStorage
+   */
+  private getCurrentCompanyId(): string {
+    // TODO: Implementar lógica para obtener company ID del contexto de usuario
+    // Por ahora retorna un valor por defecto
+    return localStorage.getItem('currentCompanyId') || 'default_company';
+  }
+
+  /**
+   * Genera headers requeridos por la API V2
+   */
+  private getApiHeaders(): { [key: string]: string } {
+    return {
+      'Content-Type': 'application/json',
+      'company': this.currentCompanyId
+    };
+  }
 
   getIntegrations(): Observable<Integration[]> {
-    return this.cacheService.get(
+    this.stateService.setLoading('list', true);
+
+    const fetchIntegrations$ = this.http.get<{ success: boolean; data?: Integration[]; configs?: any[]; metadata?: any }>(this.apiUrl, {
+      headers: this.getApiHeaders()
+    }).pipe(
+      map(response => {
+        // V2 FIRST: Priorizar el nuevo formato de respuesta si contiene datos.
+        if (response.configs && response.configs.length > 0) {
+          // Convertir cada registro V2 al formato legacy que usa la UI actual
+          return (response.configs || []).map(cfg => this.convertFromV2(cfg));
+        }
+
+        // V1 FALLBACK: Usar el formato antiguo solo si `configs` no está presente o está vacío.
+        if (response.data) {
+          // Asegurar que cada integración tenga categoría. Si el backend legacy no la envía, la inferimos.
+          return (response.data || []).map((intg: any) => {
+            if (intg && !intg.category) {
+              const provider = intg.provider || intg.type;
+              return {
+                ...intg,
+                category: this.getCategoryForProvider(provider)
+              };
+            }
+            return intg;
+          });
+        }
+
+        // Si la respuesta no tiene ni `configs` ni `data` válidos, devolver un array vacío.
+        return [];
+      })
+    );
+
+    const integrationsFromCacheOrApi$ = this.cacheService.get(
       'integrations:all',
-      () => {
-        this.stateService.setLoading('list', true);
-        return this.http.get<Integration[]>(this.apiUrl).pipe(
-          map(integrations => integrations || []),
-          tap(integrations => {
-            this.stateService.setIntegrations(integrations);
-            this.stateService.setError('list', null);
-          }),
-          catchError(error => {
-            console.error('Error al cargar integraciones desde API:', error);
-            this.stateService.setError('list', error.message || 'Error al cargar integraciones');
-            this.stateService.setIntegrations([]);
-            // Retornar array vacío en lugar de propagar el error
-            return of([]);
-          }),
-          finalize(() => {
-            this.stateService.setLoading('list', false);
-          })
-        );
-      },
+      () => fetchIntegrations$,
       5 * 60 * 1000 // 5 minutos TTL
+    );
+
+    return integrationsFromCacheOrApi$.pipe(
+      tap(integrations => {
+        this.stateService.setIntegrations(integrations);
+        this.stateService.setError('list', null);
+      }),
+      catchError(error => {
+        console.error('Error al cargar integraciones (desde getIntegrations):', error);
+        this.stateService.setError('list', error.message || 'Error al cargar integraciones');
+        this.stateService.setIntegrations([]);
+        return of([]);
+      }),
+      finalize(() => {
+        this.stateService.setLoading('list', false);
+      })
     );
   }
 
-  getIntegration(id: string): Observable<Integration> {
+  getIntegration(provider: string): Observable<Integration> {
     return this.cacheService.get(
-      `integration:${id}`,
-      () => this.http.get<Integration>(`${this.apiUrl}/${id}`),
+      `integration:${provider}`,
+      () => this.http.get<{ success: boolean; data: Integration; metadata?: any }>(`${this.apiUrl}/${provider}`, {
+        headers: this.getApiHeaders()
+      }).pipe(
+        map(response => response.data)
+      ),
       10 * 60 * 1000 // 10 minutos TTL para integraciones individuales
     );
   }
 
-  createIntegration(integration: Integration): Observable<Integration> {
+  createIntegration(provider: string, config: any): Observable<Integration> {
     this.stateService.setLoading('save', true);
-    return this.http.post<Integration>(this.apiUrl, integration).pipe(
+    
+    const requestBody = {
+      provider: provider,
+      config: config
+    };
+    
+    return this.http.post<{ success: boolean; data: Integration; metadata?: any }>(this.apiUrl, requestBody, {
+      headers: this.getApiHeaders()
+    }).pipe(
+      map(response => response.data),
       tap(createdIntegration => {
         this.stateService.addIntegration(createdIntegration);
         this.stateService.setError('save', null);
@@ -107,14 +228,23 @@ export class IntegrationsService {
     );
   }
 
-  updateIntegration(id: string, integration: Integration): Observable<Integration> {
+  updateIntegration(provider: string, config: any): Observable<Integration> {
     this.stateService.setLoading('save', true);
-    return this.http.put<Integration>(`${this.apiUrl}/${id}`, integration).pipe(
+    
+    const requestBody = {
+      provider: provider,
+      config: config
+    };
+    
+    return this.http.put<{ success: boolean; data: Integration; metadata?: any }>(`${this.apiUrl}/${provider}`, requestBody, {
+      headers: this.getApiHeaders()
+    }).pipe(
+      map(response => response.data),
       tap(updatedIntegration => {
         this.stateService.updateIntegration(updatedIntegration);
         this.stateService.setError('save', null);
         // Invalidar cache específico y listas
-        this.cacheService.invalidateIntegration(id);
+        this.cacheService.invalidateIntegration(provider);
         // Cachear la integración actualizada
         this.cacheService.cacheIntegration(updatedIntegration);
       }),
@@ -128,14 +258,16 @@ export class IntegrationsService {
     );
   }
 
-  deleteIntegration(id: string): Observable<any> {
+  deleteIntegration(provider: string): Observable<any> {
     this.stateService.setLoading('delete', true);
-    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete<{ success: boolean; message?: string }>(`${this.apiUrl}/${provider}`, {
+      headers: this.getApiHeaders()
+    }).pipe(
       tap(() => {
-        this.stateService.removeIntegration(id);
+        this.stateService.removeIntegration(provider);
         this.stateService.setError('delete', null);
         // Invalidar cache
-        this.cacheService.invalidateIntegration(id);
+        this.cacheService.invalidateIntegration(provider);
       }),
       catchError(error => {
         this.stateService.setError('delete', error.message || 'Error al eliminar integración');
@@ -147,15 +279,21 @@ export class IntegrationsService {
     );
   }
 
-  testIntegration(integration: Integration): Observable<{success: boolean, message: string}> {
+  testIntegration(provider: string, config: any): Observable<{success: boolean, message: string}> {
     this.stateService.setLoading('test', true);
-    return this.http.post<{success: boolean, message: string}>(`${this.apiUrl}/test`, integration).pipe(
+    
+    const requestBody = {
+      provider: provider,
+      config: config
+    };
+    
+    return this.http.post<{success: boolean, message: string}>(`${this.apiUrl}/test`, requestBody, {
+      headers: this.getApiHeaders()
+    }).pipe(
       tap(result => {
         this.stateService.setError('test', null);
-        // Opcional: cachear resultado de test por un tiempo corto
-        if (integration.id) {
-          this.cacheService.set(`test:${integration.id}`, result, 2 * 60 * 1000); // 2 minutos
-        }
+        // Cachear resultado de test por un tiempo corto
+        this.cacheService.set(`test:${provider}`, result, 2 * 60 * 1000); // 2 minutos
       }),
       catchError(error => {
         this.stateService.setError('test', error.message || 'Error al probar integración');
@@ -237,6 +375,239 @@ export class IntegrationsService {
    */
   getCacheStats() {
     return this.cacheService.getStats();
+  }
+
+  // ===== NUEVOS MÉTODOS API V2 =====
+
+  /**
+   * Validar configuración sin guardar
+   */
+  validateConfig(provider: string, config: any): Observable<ValidationResponse> {
+    const requestBody = {
+      provider: provider,
+      config: config
+    };
+    
+    return this.http.post<ValidationResponse>(
+      `${this.apiUrl}/validate`, 
+      requestBody,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener esquema de configuración para un proveedor
+   */
+  getConfigSchema(provider: string): Observable<ConfigSchema> {
+    return this.cacheService.get(
+      `schema:${provider}`,
+      () => this.http.get<{ success: boolean; data: ConfigSchema }>(`${this.apiUrl}/schema/${provider}`, {
+        headers: this.getApiHeaders()
+      }).pipe(
+        map(response => response.data)
+      ),
+      30 * 60 * 1000 // 30 minutos TTL para esquemas
+    );
+  }
+
+  /**
+   * Crear integración usando nueva API V2
+   */
+  createIntegrationV2(provider: string, config: any): Observable<IntegrationV2> {
+    this.stateService.setLoading('save', true);
+    
+    const requestBody = {
+      provider: provider,
+      config: config
+    };
+    
+    return this.http.post<{ success: boolean; data: IntegrationV2; metadata?: any }>(this.apiUrl, requestBody, {
+      headers: this.getApiHeaders()
+    }).pipe(
+      map(response => response.data),
+      tap(createdIntegration => {
+        this.stateService.setError('save', null);
+        this.cacheService.invalidatePattern(/^integrations:/);
+      }),
+      catchError(error => {
+        this.stateService.setError('save', error.message || 'Error al crear integración');
+        throw error;
+      }),
+      finalize(() => {
+        this.stateService.setLoading('save', false);
+      })
+    );
+  }
+
+  /**
+   * Actualizar una integración existente usando la API V2.
+   */
+  updateIntegrationV2(provider: string, config: any): Observable<IntegrationV2> {
+    this.stateService.setLoading('save', true);
+
+    const requestBody = {
+      provider: provider,
+      config: config
+    };
+
+    return this.http.put<{ success: boolean; data: IntegrationV2; metadata?: any }>(`${this.apiUrl}/${provider}`, requestBody, {
+      headers: this.getApiHeaders()
+    }).pipe(
+      map(response => response.data),
+      tap(updatedIntegration => {
+        this.stateService.setError('save', null);
+        // Invalidar cache de esta integración y de las listas relacionadas
+        this.cacheService.invalidateIntegration(provider);
+      }),
+      catchError(error => {
+        this.stateService.setError('save', error.message || 'Error al actualizar integración');
+        throw error;
+      }),
+      finalize(() => {
+        this.stateService.setLoading('save', false);
+      })
+    );
+  }
+
+  /**
+   * Convertir del modelo legacy al esquema V2 utilizado por la nueva API.
+   */
+  convertToV2(integration: Integration): IntegrationV2 {
+    return {
+      provider: integration.provider || integration.type,
+      config: integration.config || integration.credentials,
+      enabled: integration.enabled,
+      metadata: integration.metadata
+    };
+  }
+
+  /**
+   * Convierte un registro de la API V2 (o el objeto raw devuelto por /configs) al modelo legacy
+   * utilizado actualmente por el resto de la aplicación.
+   */
+  convertFromV2(integrationV2: any, category?: IntegrationCategory): Integration {
+    const provider = integrationV2.provider || integrationV2.type;
+
+    // Determinar categoría si no viene definida externamente
+    const resolvedCategory = category || this.getCategoryForProvider(provider);
+
+    // Clonar el objeto para no modificar el original.
+    const credentials = { ...integrationV2 };
+
+    // Lista de claves estándar que no son parte de las credenciales.
+    const standardKeys = [
+      'id', 'type', 'provider', 'name', 'enabled', 'category', 
+      'createdAt', 'updatedAt', 'metadata', 
+      'config', 'credentials' // También eliminar si existen como objetos anidados
+    ];
+    
+    // Eliminar las claves estándar para dejar solo las credenciales.
+    for (const key of standardKeys) {
+        delete credentials[key];
+    }
+    
+    // Si el objeto original tenía una propiedad 'credentials' o 'config', 
+    // fusionar sus campos. Esto da prioridad a los campos anidados si existen.
+    if (integrationV2.credentials && typeof integrationV2.credentials === 'object') {
+        Object.assign(credentials, integrationV2.credentials);
+    }
+    if (integrationV2.config && typeof integrationV2.config === 'object') {
+        Object.assign(credentials, integrationV2.config);
+    }
+
+    return {
+      // El backend V2 puede devolver un ID único, usarlo. Si no, usar el provider.
+      id: integrationV2.id || provider, 
+      type: provider,
+      provider: provider,
+      name: integrationV2.name || provider,
+      enabled: integrationV2.enabled === true,
+      category: resolvedCategory,
+      credentials: credentials,
+      config: credentials, // 'config' es el alias moderno de 'credentials'
+      createdAt: integrationV2.createdAt,
+      updatedAt: integrationV2.updatedAt,
+      metadata: integrationV2.metadata
+    };
+  }
+
+  /**
+   * Mapeo rápido de proveedor ➜ categoría para soportar la conversión V2.
+   */
+  private getCategoryForProvider(provider: string): IntegrationCategory {
+    switch (provider) {
+      case 'shopify':
+      case 'woocommerce':
+      case 'magento':
+      case 'prestashop':
+        return IntegrationCategory.ECOMMERCE;
+      case 'wompi':
+      case 'epayco':
+      case 'paypal':
+      case 'stripe':
+      case 'payu':
+      case 'mercadopago':
+        return IntegrationCategory.PAYMENT;
+      case 'fedex':
+      case 'dhl':
+      case 'servientrega':
+      case 'coordinadora':
+        return IntegrationCategory.LOGISTICS;
+      case 'mailchimp':
+      case 'hubspot':
+      case 'google_analytics':
+        return IntegrationCategory.MARKETING;
+      case 'salesforce':
+      case 'zoho_crm':
+        return IntegrationCategory.CRM;
+      case 'quickbooks':
+      case 'siigo':
+        return IntegrationCategory.ACCOUNTING;
+      default:
+        return IntegrationCategory.OTHER;
+    }
+  }
+
+  /**
+   * Health check del servicio de integraciones
+   */
+  getHealthCheck(): Observable<{ status: string; services: any; timestamp: string }> {
+    return this.http.get<{ status: string; services: any; timestamp: string }>(
+      `${this.apiUrl}/health`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener estadísticas de seguridad de webhooks
+   */
+  getWebhookSecurityStats(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(
+      `${environment.urlApi}/v1/integration/webhook-security-stats`,
+      { headers: this.getApiHeaders() }
+    ).pipe(
+      map(response => response.data)
+    );
+  }
+
+  /**
+   * Obtener métricas de salud del sistema
+   */
+  getMetricsHealth(): Observable<any> {
+    return this.http.get<{ status: string; metrics: any }>(
+      `${environment.urlApi}/v1/metrics/health`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Actualizar company ID (útil para cambio de contexto)
+   */
+  setCompanyId(companyId: string): void {
+    this.currentCompanyId = companyId;
+    localStorage.setItem('currentCompanyId', companyId);
+    // Invalidar cache al cambiar de empresa
+    this.invalidateAllCache();
   }
 
   // Método para obtener las integraciones disponibles por categoría
