@@ -130,7 +130,6 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   }
 
   guardarDatosFacturacionElectronica() {
-    this.datosFacturacionElectronica = [];
     const datosFacturacionElec = {
       alias: this.alias_facturacion,
       nombres: this.razon_social,
@@ -150,10 +149,25 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
-      res.datosFacturacionElectronica.map((x) => {
-        this.datosFacturacionElectronica.push(x);
+      // Reconstruir la lista manteniendo el orden correcto
+      const nuevaLista = [];
+
+      // Agregar datos del servidor
+      res.datosFacturacionElectronica.forEach((x) => {
+        nuevaLista.push(x);
       });
-      this.datosFacturacionElectronica.push(datosFacturacionElec);
+
+      // Agregar el nuevo dato
+      nuevaLista.push(datosFacturacionElec);
+
+      // Actualizar la lista
+      this.datosFacturacionElectronica = nuevaLista;
+
+      // Verificar y agregar consumidor final si no existe
+      if (!this.existeConsumidorFinal()) {
+        this.agregarConsumidorFinal();
+      }
+
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         this.datosFacturacionElectronica,
       );
