@@ -1,60 +1,65 @@
-import { NgModule, Injector } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '../../../app/shared/shared.module';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
-import { VentasRoutingModule } from './ventas-routing.module';
-import { CrearVentasComponent } from './crear-ventas/crear-ventas.component';
-import { TabViewModule } from 'primeng/tabview';
-import { NgSelectModule } from '@ng-select/ng-select';
-import { ArchwizardModule } from 'angular-archwizard';
-import { ClientesComponent } from './clientes/clientes.component';
-import { QuickViewComponent } from './quick-view/quick-view.component';
-import { EcomerceProductsComponent } from './catalogo/ecomerce-products/ecomerce-products.component';
-import { TreeSelectModule } from 'primeng/treeselect';
-import { SliderModule } from 'primeng/slider';
-import { ConfProductToCartComponent } from './catalogo/conf-product-to-cart/conf-product-to-cart.component';
-import { GalleryModule, ModalGalleryService } from '@ks89/angular-modal-gallery';
-import { CarritoComponent } from './carrito/carrito.component';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NotasComponent } from './notas/notas/notas.component';
-import { CheckOutComponent } from '../ventas/checkout/checkout.component';
-import { ConfirmComponent } from './confirm/confirm.component'
-import { CalendarModule } from 'primeng/calendar';
-import { NgxHotkeysModule, NgxHotkeysService } from '@balticcode/ngx-hotkeys';
-import { NgxStarRatingModule } from 'ngx-star-rating';
-import { ListOrdersComponent } from './list/list.component';
-import { TableModule } from 'primeng/table';
-import { PedidoEntregaComponent } from './entrega/pedido-entrega.component';
-import { PedidoFacturacionComponent } from './facturacion/pedido-facturacion.component';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { PedidosUtilService } from './service/pedidos.util.service'
-import { ToastModule } from 'primeng/toast';
-import { AsentarpagomanualComponent } from './asentarpagomanual/asentarpagomanual.component';
-import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ClientesListaComponent } from './clientes/lista/clientes-lista.component';
-import { CargaVentasComponent } from './carga-ventas/carga-ventas.component';
-import { HttpClientModule } from '@angular/common/http';
-import { VoiceInteractionModule } from '../../shared/components/voice-interaction/voice-interaction.module';
-import { PosComponent } from './pos2/pos.component';
-import { ProductCategoryComponent } from './pos2/widgets/product-category/product-category.component';
-import { ProductComponent } from './pos2/widgets/product/product.component';
-import { CreateCustomerModalComponent } from './pos2/widgets/create-customer-modal/create-customer-modal.component';
-import { PosCheckoutComponent } from './pos2/widgets/pos-checkout/pos-checkout.component';
-import { CrearClienteModalComponent } from './clientes/crear-cliente-modal/crear-cliente-modal.component';
-import { CardPaymentComponent } from './pos2/widgets/card-payment/card-payment';
-import { CashPaymentComponent } from './pos2/widgets/cash-payment/cash-payment';
-import { EWalletPaymentComponent } from './pos2/widgets/ewallet-payment/ewallet-payment';
-import { WarehouseSelectorComponent } from './pos2/widgets/warehouse-selector/warehouse-selector';
-import { ImageOptimizerDirective } from '../../shared/directives/image-optimizer.directive';
-import { CashClosingComponent } from './pos2/widgets/cash-closing/cash-closing.component';
-import { CashClosingHistoryComponent } from './pos2/widgets/cash-closing-history/cash-closing-history.component';
-import { DireccionEstructuradaComponent } from './entrega/direccion-estructurada/direccion-estructurada.component';
-import { CustomerSectionComponent } from './pos2/widgets/customer-section/customer-section.component';
-import { CartSummaryComponent } from './pos2/widgets/cart-summary/cart-summary.component';
-import { PaymentSelectorComponent } from './pos2/widgets/payment-selector/payment-selector.component';
-import { PosCheckoutService, POS_CHECKOUT_SERVICE } from '../../shared/services/ventas/pos-checkout.service';
-import { VentaAsistidaModule } from './venta-asistida/venta-asistida.module';
-import { ReporteCierreComponent } from './pos2/widgets/cash-closing/reporte-cierre/reporte-cierre.component';
+import { NgModule, Injector } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { SharedModule } from "../../../app/shared/shared.module";
+import { NgxDatatableModule } from "@swimlane/ngx-datatable";
+import { VentasRoutingModule } from "./ventas-routing.module";
+import { CrearVentasComponent } from "./crear-ventas/crear-ventas.component";
+import { TabViewModule } from "primeng/tabview";
+import { NgSelectModule } from "@ng-select/ng-select";
+import { ArchwizardModule } from "angular-archwizard";
+import { ClientesComponent } from "./clientes/clientes.component";
+import { QuickViewComponent } from "./quick-view/quick-view.component";
+import { EcomerceProductsComponent } from "./catalogo/ecomerce-products/ecomerce-products.component";
+import { TreeSelectModule } from "primeng/treeselect";
+import { SliderModule } from "primeng/slider";
+import { ConfProductToCartComponent } from "./catalogo/conf-product-to-cart/conf-product-to-cart.component";
+import {
+  GalleryModule,
+  ModalGalleryService,
+} from "@ks89/angular-modal-gallery";
+import { CarritoComponent } from "./carrito/carrito.component";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { NotasComponent } from "./notas/notas/notas.component";
+import { CheckOutComponent } from "../ventas/checkout/checkout.component";
+import { ConfirmComponent } from "./confirm/confirm.component";
+import { CalendarModule } from "primeng/calendar";
+import { NgxHotkeysModule, NgxHotkeysService } from "@balticcode/ngx-hotkeys";
+import { NgxStarRatingModule } from "ngx-star-rating";
+import { ListOrdersComponent } from "./list/list.component";
+import { TableModule } from "primeng/table";
+import { PedidoEntregaComponent } from "./entrega/pedido-entrega.component";
+import { PedidoFacturacionComponent } from "./facturacion/pedido-facturacion.component";
+import { MultiSelectModule } from "primeng/multiselect";
+import { PedidosUtilService } from "./service/pedidos.util.service";
+import { ToastModule } from "primeng/toast";
+import { AsentarpagomanualComponent } from "./asentarpagomanual/asentarpagomanual.component";
+import { AutoCompleteModule } from "primeng/autocomplete";
+import { ClientesListaComponent } from "./clientes/lista/clientes-lista.component";
+import { CargaVentasComponent } from "./carga-ventas/carga-ventas.component";
+import { HttpClientModule } from "@angular/common/http";
+import { VoiceInteractionModule } from "../../shared/components/voice-interaction/voice-interaction.module";
+import { PosComponent } from "./pos2/pos.component";
+import { ProductCategoryComponent } from "./pos2/widgets/product-category/product-category.component";
+import { ProductComponent } from "./pos2/widgets/product/product.component";
+import { CreateCustomerModalComponent } from "./pos2/widgets/create-customer-modal/create-customer-modal.component";
+import { PosCheckoutComponent } from "./pos2/widgets/pos-checkout/pos-checkout.component";
+import { CrearClienteModalComponent } from "./clientes/crear-cliente-modal/crear-cliente-modal.component";
+import { CardPaymentComponent } from "./pos2/widgets/card-payment/card-payment";
+import { CashPaymentComponent } from "./pos2/widgets/cash-payment/cash-payment";
+import { EWalletPaymentComponent } from "./pos2/widgets/ewallet-payment/ewallet-payment";
+import { WarehouseSelectorComponent } from "./pos2/widgets/warehouse-selector/warehouse-selector";
+import { ImageOptimizerDirective } from "../../shared/directives/image-optimizer.directive";
+import { CashClosingComponent } from "./pos2/widgets/cash-closing/cash-closing.component";
+import { CashClosingHistoryComponent } from "./pos2/widgets/cash-closing-history/cash-closing-history.component";
+import { DireccionEstructuradaComponent } from "./entrega/direccion-estructurada/direccion-estructurada.component";
+import { CustomerSectionComponent } from "./pos2/widgets/customer-section/customer-section.component";
+import { CartSummaryComponent } from "./pos2/widgets/cart-summary/cart-summary.component";
+import { PaymentSelectorComponent } from "./pos2/widgets/payment-selector/payment-selector.component";
+import {
+  PosCheckoutService,
+  POS_CHECKOUT_SERVICE,
+} from "../../shared/services/ventas/pos-checkout.service";
+import { ReporteCierreComponent } from "./pos2/widgets/cash-closing/reporte-cierre/reporte-cierre.component";
 
 @NgModule({
   imports: [
@@ -79,7 +84,6 @@ import { ReporteCierreComponent } from './pos2/widgets/cash-closing/reporte-cier
     ToastModule,
     HttpClientModule,
     VoiceInteractionModule,
-    VentaAsistidaModule
   ],
   declarations: [
     PedidoFacturacionComponent,
@@ -87,14 +91,14 @@ import { ReporteCierreComponent } from './pos2/widgets/cash-closing/reporte-cier
     CheckOutComponent,
     PedidoEntregaComponent,
     ListOrdersComponent,
-    CrearVentasComponent, 
-    ClientesComponent, 
-    QuickViewComponent, 
-    EcomerceProductsComponent, 
-    ConfProductToCartComponent, 
-    CarritoComponent, 
-    NotasComponent, 
-    ConfirmComponent, 
+    CrearVentasComponent,
+    ClientesComponent,
+    QuickViewComponent,
+    EcomerceProductsComponent,
+    ConfProductToCartComponent,
+    CarritoComponent,
+    NotasComponent,
+    ConfirmComponent,
     AsentarpagomanualComponent,
     CargaVentasComponent,
     PosComponent,
@@ -113,32 +117,30 @@ import { ReporteCierreComponent } from './pos2/widgets/cash-closing/reporte-cier
     DireccionEstructuradaComponent,
     CustomerSectionComponent,
     CartSummaryComponent,
-    PaymentSelectorComponent
+    PaymentSelectorComponent,
   ],
   exports: [
     CrearVentasComponent,
-    ClientesComponent, 
+    ClientesComponent,
     QuickViewComponent,
     ListOrdersComponent,
     PedidoEntregaComponent,
     PedidoFacturacionComponent,
     CheckOutComponent,
     ConfirmComponent,
-    AsentarpagomanualComponent
+    AsentarpagomanualComponent,
   ],
   providers: [
-    QuickViewComponent, 
-    ModalGalleryService, 
-    NgxHotkeysService, 
+    QuickViewComponent,
+    ModalGalleryService,
+    NgxHotkeysService,
     PedidosUtilService,
     ImageOptimizerDirective,
-    { 
-      provide: POS_CHECKOUT_SERVICE, 
-      useFactory: (injector: Injector) => injector.get(PosCheckoutService), 
-      deps: [Injector] 
-    }
-  ]
+    {
+      provide: POS_CHECKOUT_SERVICE,
+      useFactory: (injector: Injector) => injector.get(PosCheckoutService),
+      deps: [Injector],
+    },
+  ],
 })
-export class VentasModule { }
-
-
+export class VentasModule {}
