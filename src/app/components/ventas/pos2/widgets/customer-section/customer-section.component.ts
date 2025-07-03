@@ -1,4 +1,10 @@
-import { Component, ElementRef, OnInit, ViewChild } from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  ChangeDetectorRef,
+} from "@angular/core";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { PosCheckoutService } from "../../../../../shared/services/ventas/pos-checkout.service";
 import { MaestroService } from "../../../../../shared/services/maestros/maestro.service";
@@ -20,15 +26,19 @@ export class CustomerSectionComponent implements OnInit {
     private modal: NgbModal,
     private service: MaestroService,
     private checkoutService: PosCheckoutService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     // Suscribirse a cambios en el cliente
     this.checkoutService.customer$.subscribe((customer) => {
+      console.log("🔄 Customer observable cambió:", customer);
       if (customer) {
         this.datosCliente = customer;
+        console.log("✅ Cliente asignado a datosCliente:", this.datosCliente);
       } else {
         this.datosCliente = "";
+        console.log("❌ Cliente limpiado");
       }
     });
   }
@@ -51,9 +61,23 @@ export class CustomerSectionComponent implements OnInit {
     // Manejar el resultado del modal
     modalRef.result.then(
       (result) => {
+        console.log("📦 Resultado del modal:", result);
         if (result && result.cliente) {
+          console.log("👤 Cliente del modal:", result.cliente);
+
           // Asociar automáticamente el cliente creado/editado a la venta
           this.checkoutService.setCustomer(result.cliente);
+          console.log("🔗 Cliente enviado al servicio checkout");
+
+          // Forzar actualización inmediata
+          this.datosCliente = result.cliente;
+          console.log("⚡ Cliente asignado directamente:", this.datosCliente);
+
+          // Forzar detección de cambios con un pequeño delay
+          setTimeout(() => {
+            this.cdr.detectChanges();
+            console.log("🔄 Detección de cambios forzada después del timeout");
+          }, 100);
 
           // Actualizar el campo de búsqueda con el documento del cliente
           if (result.cliente.documento) {
@@ -63,17 +87,23 @@ export class CustomerSectionComponent implements OnInit {
             }
           }
 
-          // Mostrar mensaje de confirmación
-          const mensaje = this.datosCliente
-            ? "Cliente asociado a la venta"
-            : "Cliente creado y asociado a la venta";
+          // Determinar el mensaje apropiado basado en la acción realizada
+          const mensaje =
+            result.action === "updated"
+              ? "Cliente actualizado y asociado a la venta"
+              : "Cliente creado y asociado automáticamente a la venta";
+
           Swal.fire({
-            title: "Éxito",
+            title: "¡Perfecto!",
             text: mensaje,
             icon: "success",
-            timer: 2000,
+            timer: 3000,
             showConfirmButton: false,
+            position: "top-end",
+            toast: true,
           });
+        } else {
+          console.log("❌ No hay cliente en el resultado del modal");
         }
       },
       () => {},
@@ -103,18 +133,48 @@ export class CustomerSectionComponent implements OnInit {
     // Manejar el cierre del modal
     modalRef.result.then(
       (result) => {
+        console.log("📝 Resultado de edición:", result);
         if (result && result.cliente) {
+          console.log("👤 Cliente editado:", result.cliente);
+
           // Actualizar el cliente en el servicio de checkout
           this.checkoutService.setCustomer(result.cliente);
 
+          // Forzar actualización inmediata
+          this.datosCliente = result.cliente;
+          console.log(
+            "⚡ Cliente editado asignado directamente:",
+            this.datosCliente,
+          );
+
+          // Forzar detección de cambios con un pequeño delay
+          setTimeout(() => {
+            this.cdr.detectChanges();
+            console.log(
+              "🔄 Detección de cambios forzada después del timeout (edición)",
+            );
+          }, 100);
+
+          // Actualizar el campo de búsqueda con el documento del cliente
+          if (result.cliente.documento) {
+            this.documentoCliente = result.cliente.documento;
+            if (this.clienteBuscar && this.clienteBuscar.nativeElement) {
+              this.clienteBuscar.nativeElement.value = result.cliente.documento;
+            }
+          }
+
           // Mostrar mensaje de éxito
           Swal.fire({
-            title: "Cliente actualizado",
-            text: "Los datos del cliente han sido actualizados correctamente",
+            title: "¡Cliente actualizado!",
+            text: "Los datos del cliente han sido actualizados y permanece asociado a la venta",
             icon: "success",
-            timer: 2000,
+            timer: 3000,
             showConfirmButton: false,
+            position: "top-end",
+            toast: true,
           });
+        } else {
+          console.log("❌ No hay cliente en el resultado de edición");
         }
       },
       () => {},
@@ -125,11 +185,14 @@ export class CustomerSectionComponent implements OnInit {
    * Limpia los datos del cliente
    */
   limpiar(): void {
+    console.log("🧹 Limpiando cliente");
     this.checkoutService.clearCustomer();
+    this.datosCliente = "";
     this.documentoCliente = "";
     if (this.clienteBuscar) {
       this.clienteBuscar.nativeElement.value = "";
     }
+    console.log("✅ Cliente limpiado completamente");
   }
 
   /**
@@ -171,7 +234,22 @@ export class CustomerSectionComponent implements OnInit {
           });
         } else {
           try {
+            console.log("🔍 Cliente encontrado en búsqueda:", res);
             this.checkoutService.setCustomer(res);
+            // Forzar actualización inmediata
+            this.datosCliente = res;
+            console.log(
+              "⚡ Cliente de búsqueda asignado directamente:",
+              this.datosCliente,
+            );
+
+            // Forzar detección de cambios con un pequeño delay
+            setTimeout(() => {
+              this.cdr.detectChanges();
+              console.log(
+                "🔄 Detección de cambios forzada después del timeout (búsqueda)",
+              );
+            }, 100);
           } catch (error) {
             console.log(error);
             this.showAlert(

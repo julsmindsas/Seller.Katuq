@@ -1,39 +1,98 @@
 <div class="card customer-sticky">
-  <div class="card-header card-no-border p-3">
-    <div class="header-top">
-      <h5 class="m-0">{{'Cliente' | translate}} </h5>
-      <div class="card-header-right-icon create-right-btn m-l-5">
-        <a class="btn btn-primary f-w-500" href="javascript:void(0)" (click)="openModal()">{{'Crear +' | translate}}</a>
-      </div>
-    </div>
-  </div>
-  <div class="card-body pt-0 order-details p-3">
-    <div class="search-items">
-      <div class="input-group common-search">
-        <span class="input-group-text">
-          <i data-feather="search" height="16" width="16" class="fc-gray"></i>
-        </span>
-        <input #clienteBuscar class="form-control" type="text" [(ngModel)]="documentoCliente"
-          placeholder="{{'Buscar documento cliente...' | translate }}"
-          (keyup.enter)="buscar()">
-      </div>
-      <div class="common-flex">
-        <a class="btn bc-primary ml-3 fc-white" (click)="buscar()">{{ 'Buscar' | translate }}</a>
-        <a class="btn bc-secondary ml-3 fc-white" (click)="limpiar()">{{'Limpiar' | translate }}</a>
-      </div>
-
-      <div class="p-2" *ngIf="datosCliente">
-        <div class="d-flex justify-content-between">
-          <h6 class="mb-2 fw-bold">Información del Cliente</h6>
-          <button class="btn btn-sm btn-outline-primary" (click)="editarCliente()">
-            <i class="icofont icofont-pencil-alt-5"></i>
-          </button>
+    <div class="card-header card-no-border p-3">
+        <div class="header-top">
+            <h5 class="m-0">{{ "Cliente" | translate }}</h5>
+            <div class="card-header-right-icon create-right-btn m-l-5">
+                <a
+                    class="btn btn-primary f-w-500"
+                    href="javascript:void(0)"
+                    (click)="openModal()"
+                    >{{ "Crear +" | translate }}</a
+                >
+            </div>
         </div>
-        <p class="mb-1"><strong>Documento: </strong>&nbsp;{{datosCliente?.documento}}</p>
-        <p class="mb-1"><strong>Nombre: </strong>&nbsp;{{datosCliente?.nombres_completos}} {{datosCliente?.apellidos_completos}}</p>
-        <p class="mb-1"><strong>Celular: </strong>&nbsp;{{datosCliente?.numero_celular_comprador}}</p>
-        <p class="mb-1"><strong>Correo: </strong>&nbsp;{{datosCliente?.correo_electronico_comprador}}</p>
-      </div>
     </div>
-  </div>
-</div> 
+    <div class="card-body pt-0 order-details p-3">
+        <div class="search-items">
+            <div class="input-group common-search">
+                <span class="input-group-text">
+                    <i
+                        data-feather="search"
+                        height="16"
+                        width="16"
+                        class="fc-gray"
+                    ></i>
+                </span>
+                <input
+                    #clienteBuscar
+                    class="form-control"
+                    type="text"
+                    [(ngModel)]="documentoCliente"
+                    placeholder="{{
+                        'Buscar documento cliente...' | translate
+                    }}"
+                    (keyup.enter)="buscar()"
+                />
+            </div>
+            <div class="common-flex">
+                <a class="btn bc-primary ml-3 fc-white" (click)="buscar()">{{
+                    "Buscar" | translate
+                }}</a>
+                <a class="btn bc-secondary ml-3 fc-white" (click)="limpiar()">{{
+                    "Limpiar" | translate
+                }}</a>
+            </div>
+
+            <div class="p-3 bg-light border rounded" *ngIf="datosCliente">
+                <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                >
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-check-circle text-success me-2"></i>
+                        <h6 class="mb-0 fw-bold text-success">
+                            Cliente Asociado a la Venta
+                        </h6>
+                    </div>
+                    <button
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="editarCliente()"
+                        title="Editar cliente"
+                    >
+                        <i class="fa fa-edit"></i>
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <p class="mb-2">
+                            <strong>Documento:</strong><br />
+                            <span class="text-muted">{{
+                                datosCliente?.documento
+                            }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Nombre:</strong><br />
+                            <span class="text-muted"
+                                >{{ datosCliente?.nombres_completos }}
+                                {{ datosCliente?.apellidos_completos }}</span
+                            >
+                        </p>
+                    </div>
+                    <div class="col-6">
+                        <p class="mb-2">
+                            <strong>Celular:</strong><br />
+                            <span class="text-muted">{{
+                                datosCliente?.numero_celular_comprador
+                            }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Correo:</strong><br />
+                            <span class="text-muted">{{
+                                datosCliente?.correo_electronico_comprador
+                            }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
