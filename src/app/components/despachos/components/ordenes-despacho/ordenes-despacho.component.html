@@ -112,7 +112,7 @@
                             <td>{{ pedido.envio?.ciudad || 'N/A' }}</td>
                             <td>{{ pedido.envio?.direccionEntrega || 'N/A' }}</td>
                             <td>{{ formatDate(pedido.fechaEntrega) }}</td>
-                            <td class="text-end">{{ pedido.faltaPorPagar | currency }}</td>
+                            <td class="text-end">{{ getValorACobrarPorPedido(pedido) | currency }}</td>
                             <td>
                               <span class="badge" 
                                 [ngClass]="{
