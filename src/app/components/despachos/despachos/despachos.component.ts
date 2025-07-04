@@ -2228,11 +2228,13 @@ export class DespachosComponent implements OnInit {
     return `${fechaEntrega.day}/${fechaEntrega.month}/${fechaEntrega.year}`;
   }
 
-  openModal(content, edit?: boolean, item?: any) {
+  openModal(content, edit?: boolean, item?: any, skipResetOnClose: boolean = false) {
     if (edit === true) {
       this.editTransporter = edit;
       this.dataEditTransporter = item;
-      this.transportadorForm.patchValue(item);
+      if (item) {
+        this.transportadorForm.patchValue(item);
+      }
     } else {
       this.editTransporter = false;
       this.dataEditTransporter = null;
@@ -2251,11 +2253,15 @@ export class DespachosComponent implements OnInit {
     });
     this.modalRef.result.then(
       (result) => {
-        this.limpiarEstadoOrdenEnvio(); // Limpiar estado al cerrar modal
+        if (!skipResetOnClose) {
+          this.limpiarEstadoOrdenEnvio(); // Limpiar estado al cerrar modal
+        }
         this.refrescarDatos(); // Lógica a ejecutar cuando se cierra el modal
       },
       (reason) => {
-        this.limpiarEstadoOrdenEnvio(); // Limpiar estado al cerrar modal
+        if (!skipResetOnClose) {
+          this.limpiarEstadoOrdenEnvio(); // Limpiar estado al cerrar modal
+        }
         this.refrescarDatos(); // Lógica a ejecutar cuando se cierra el modal
       },
     );
@@ -2997,7 +3003,30 @@ export class DespachosComponent implements OnInit {
   }
 
   viewAllDispatchOrders() {
-    this.openModal(this.dispatchOrdersModal, true);
+    this.logisticaService.getShippingOrders().subscribe(
+      (data: any[]) => {
+        const currentCompanyStr = sessionStorage.getItem("currentCompany");
+        const companyName = currentCompanyStr
+          ? JSON.parse(currentCompanyStr).nomComercial
+          : "";
+
+        this.dispatchOrders = data
+          .filter((x) => x.company == companyName)
+          .sort((a, b) => {
+            const aNum = a.nroShippingOrder ? parseInt(a.nroShippingOrder) : 0;
+            const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
+            return bNum - aNum;
+          });
+        // Abrir el modal de órdenes de despacho sin resetear el estado al cerrarse
+        this.openModal(this.dispatchOrdersModal, false, null, true);
+      },
+      (error) => {
+        console.error("Error al consultar las órdenes de despacho:", error);
+        this.dispatchOrders = [];
+        // Abrir el modal de órdenes de despacho sin resetear el estado al cerrarse
+        this.openModal(this.dispatchOrdersModal, false, null, true);
+      },
+    );
   }
 
   pdfOrder(content, order: Pedido) {
@@ -3446,40 +3475,65 @@ export class DespachosComponent implements OnInit {
   }
 
   // Manejadores para acciones desde OrdenesDespachoComponent
-  handleOrderView(orderId: string) {
-    // Consultar la orden de envío existente
-    const orderIdNumber = parseInt(orderId);
-    if (isNaN(orderIdNumber)) {
-      console.error("ID de orden inválido:", orderId);
-      Swal.fire("Error", "ID de orden de envío inválido", "error");
-      return;
+  handleOrderView(orderId: any) {
+    let numeroOrden: number;
+
+    if (typeof orderId === 'number') {
+        numeroOrden = orderId;
+    } else if (typeof orderId === 'string') {
+        if (orderId.startsWith('OE-')) {
+            numeroOrden = parseInt(orderId.substring(3), 10);
+        } else {
+            numeroOrden = parseInt(orderId, 10);
+        }
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de formato',
+            text: `El formato del número de orden de envío es inválido: ${orderId}`,
+        });
+        return;
     }
 
-    this.logisticaService.getShippingOrder(orderIdNumber).subscribe({
-      next: (response) => {
-        // Asignar datos a las propiedades
-        this.nuevaOrdenEnvio = response;
-        this.pedidosSeleccionados = response.pedidos || [];
-        this.transportadorSeleccionado = response.transportador;
-        this.nroShippingOrder = response.nroShippingOrder;
+    if (isNaN(numeroOrden)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Número de orden inválido',
+            text: `El número de orden de envío no es válido: ${orderId}`,
+        });
+        return;
+    }
 
-        // Cerrar el modal de listado de órdenes
-        this.modalService.dismissAll();
-
-        // Abrir el modal de edición de orden
-        setTimeout(() => {
-          this.openModal(this.pantallaOrdenEnvioModal, true);
-        }, 100);
+    const context = this;
+    this.logisticaService.getShippingOrder(numeroOrden).subscribe(
+      (response: any) => {
+        if (response && response.nroShippingOrder) {
+          context.nroShippingOrder = response.nroShippingOrder;
+          context.nuevaOrdenEnvio = response;
+          context.pedidosSeleccionados = response.pedidos || [];
+          context.transportadorSeleccionado = response.transportador;
+          
+          context.modalService.dismissAll();
+          
+          context.openModal(context.pantallaOrdenEnvioModal, true);
+          
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se encontró la orden de envío para editar.',
+          });
+        }
       },
-      error: (error) => {
-        console.error("Error al consultar la orden:", error);
-        Swal.fire(
-          "Error",
-          "Hubo un problema al consultar la orden de envío",
-          "error",
-        );
-      },
-    });
+      (error) => {
+        console.error('Error al cargar la orden de envío para editar:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error en el servidor',
+          text: 'No se pudo cargar la orden de envío para editar.',
+        });
+      }
+    );
   }
 
   mostrarDetallesEnvio(envioData: any) {
