@@ -26,6 +26,7 @@ import { DropdownModule } from "primeng/dropdown";
 import { RippleModule } from "primeng/ripple";
 import { RouterModule } from "@angular/router";
 import { DynamicDialogModule, DialogService } from "primeng/dynamicdialog";
+import { MenuModule } from "primeng/menu";
 
 // Componentes
 import { TablaPedidosComponent } from "./components/tabla-pedidos/tabla-pedidos.component";
@@ -66,6 +67,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     RippleModule,
     RouterModule,
     DynamicDialogModule,
+    MenuModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
   ],

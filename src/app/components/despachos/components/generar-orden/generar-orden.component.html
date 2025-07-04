@@ -1,17 +1,12 @@
 <div class="modal-header">
     <h4 class="modal-title">
         {{
-            isEditMode
-                ? "Editar Orden de Envío: " + nroShippingOrder
-                : ("Generar Orden de Envío" | translate)
+        isEditMode
+        ? "Editar Orden de Envío: " + nroShippingOrder
+        : ("Generar Orden de Envío" | translate)
         }}
     </h4>
-    <button
-        type="button"
-        class="close"
-        aria-label="Close"
-        (click)="closeModal()"
-    >
+    <button type="button" class="close" aria-label="Close" (click)="closeModal()">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
@@ -27,44 +22,32 @@
                         <div class="form-group">
                             <label for="fechaEnvio" class="form-label">{{
                                 "Fecha de Envío" | translate
-                            }}</label>
+                                }}</label>
                             <div class="input-group">
-                                <input
-                                    type="date"
-                                    id="fechaEnvio"
-                                    formControlName="fechaEnvio"
-                                    class="form-control form-control-sm"
-                                    [class.is-invalid]="
+                                <input type="date" id="fechaEnvio" formControlName="fechaEnvio"
+                                    class="form-control form-control-sm" [class.is-invalid]="
                                         ordenEnvioForm.get('fechaEnvio')
                                             ?.invalid &&
                                         ordenEnvioForm.get('fechaEnvio')
                                             ?.touched
-                                    "
-                                    (change)="actualizarPedidosDisponibles()"
-                                />
+                                    " (change)="actualizarPedidosDisponibles()" />
                                 <span class="input-group-text">
                                     <i class="pi pi-calendar"></i>
                                 </span>
                             </div>
-                            <div
-                                class="text-muted small"
-                                *ngIf="ordenEnvioForm.get('fechaEnvio')?.value"
-                            >
+                            <div class="text-muted small" *ngIf="ordenEnvioForm.get('fechaEnvio')?.value">
                                 Fecha seleccionada:
                                 {{
-                                    ordenEnvioForm.get("fechaEnvio")?.value
-                                        | date: "dd/MM/yyyy"
+                                ordenEnvioForm.get("fechaEnvio")?.value
+                                | date: "dd/MM/yyyy"
                                 }}
                             </div>
-                            <div
-                                *ngIf="
+                            <div *ngIf="
                                     ordenEnvioForm.get('fechaEnvio')?.invalid &&
                                     ordenEnvioForm.get('fechaEnvio')?.touched
-                                "
-                                class="text-danger small"
-                            >
+                                " class="text-danger small">
                                 {{
-                                    "La fecha de envío es requerida" | translate
+                                "La fecha de envío es requerida" | translate
                                 }}
                             </div>
                         </div>
@@ -73,12 +56,8 @@
                         <div class="form-group">
                             <label for="metodoEnvio" class="form-label">{{
                                 "Método de Envío" | translate
-                            }}</label>
-                            <select
-                                id="metodoEnvio"
-                                formControlName="metodoEnvio"
-                                class="form-select form-select-sm"
-                            >
+                                }}</label>
+                            <select id="metodoEnvio" formControlName="metodoEnvio" class="form-select form-select-sm">
                                 <option value="">
                                     {{ "Seleccione un método" | translate }}
                                 </option>
@@ -89,17 +68,14 @@
                                     {{ "Transportadora" | translate }}
                                 </option>
                             </select>
-                            <div
-                                *ngIf="
+                            <div *ngIf="
                                     ordenEnvioForm.get('metodoEnvio')
                                         ?.invalid &&
                                     ordenEnvioForm.get('metodoEnvio')?.touched
-                                "
-                                class="text-danger small"
-                            >
+                                " class="text-danger small">
                                 {{
-                                    "El método de envío es requerido"
-                                        | translate
+                                "El método de envío es requerido"
+                                | translate
                                 }}
                             </div>
                         </div>
@@ -109,14 +85,9 @@
         </div>
 
         <!-- Selección de pedidos disponibles -->
-        <div
-            class="card mb-3"
-            *ngIf="metodoEnvio && ordenEnvioForm.get('fechaEnvio')?.valid"
-        >
+        <div class="card mb-3" *ngIf="metodoEnvio && ordenEnvioForm.get('fechaEnvio')?.valid">
             <div class="card-body">
-                <div
-                    class="d-flex justify-content-between align-items-center mb-3"
-                >
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="card-title m-0">
                         {{ "Pedidos Disponibles" | translate }}
                     </h5>
@@ -125,18 +96,10 @@
                     <div class="d-flex align-items-center gap-3">
                         <!-- Filtro para mostrar pedidos en órdenes -->
                         <div class="form-check form-switch">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="mostrarPedidosEnOrdenes"
-                                [(ngModel)]="mostrarPedidosEnOrdenes"
-                                [ngModelOptions]="{ standalone: true }"
-                                (change)="actualizarPedidosDisponibles()"
-                            />
-                            <label
-                                class="form-check-label small"
-                                for="mostrarPedidosEnOrdenes"
-                            >
+                            <input class="form-check-input" type="checkbox" id="mostrarPedidosEnOrdenes"
+                                [(ngModel)]="mostrarPedidosEnOrdenes" [ngModelOptions]="{ standalone: true }"
+                                (change)="actualizarPedidosDisponibles()" />
+                            <label class="form-check-label small" for="mostrarPedidosEnOrdenes">
                                 Mostrar pedidos ya en órdenes
                             </label>
                         </div>
@@ -145,57 +108,37 @@
                         <div class="d-flex align-items-center gap-2">
                             <label class="me-2 text-nowrap">{{
                                 "Columnas:" | translate
-                            }}</label>
-                            <p-multiSelect
-                                [options]="displayedColumns"
-                                [(ngModel)]="selectedColumns"
-                                optionLabel="header"
-                                [style]="{ width: '200px' }"
-                                defaultLabel="Seleccionar columnas"
+                                }}</label>
+                            <p-multiSelect [options]="displayedColumns" [(ngModel)]="selectedColumns"
+                                optionLabel="header" [style]="{ width: '200px' }" defaultLabel="Seleccionar columnas"
                                 [ngModelOptions]="{ standalone: true }"
-                                (onChange)="onColumnSelectionChange()"
-                            ></p-multiSelect>
+                                (onChange)="onColumnSelectionChange()"></p-multiSelect>
                         </div>
                     </div>
                 </div>
 
-                <div
-                    class="alert alert-info"
-                    *ngIf="pedidosDisponibles.length === 0"
-                >
+                <div class="alert alert-info" *ngIf="pedidosDisponibles.length === 0">
                     <i class="pi pi-info-circle me-2"></i>
                     {{
-                        "No hay pedidos disponibles para esta fecha y método de envío"
-                            | translate
+                    "No hay pedidos disponibles para esta fecha y método de envío"
+                    | translate
                     }}
                     <div class="small mt-1" *ngIf="!mostrarPedidosEnOrdenes">
-                        <em
-                            >Tip: Activa "Mostrar pedidos ya en órdenes" para
+                        <em>Tip: Activa "Mostrar pedidos ya en órdenes" para
                             ver todos los pedidos de la fecha y poder moverlos
-                            entre órdenes</em
-                        >
+                            entre órdenes</em>
                     </div>
                 </div>
 
-                <div
-                    class="table-responsive"
-                    *ngIf="pedidosDisponibles.length > 0"
-                >
-                    <p-table
-                        [value]="pedidosDisponibles"
-                        styleClass="p-datatable-sm"
-                        [paginator]="pedidosDisponibles.length > 10"
-                        [rows]="10"
-                        [rowsPerPageOptions]="[5, 10, 25, 50]"
+                <div class="table-responsive" *ngIf="pedidosDisponibles.length > 0">
+                    <p-table [value]="pedidosDisponibles" styleClass="p-datatable-sm"
+                        [paginator]="pedidosDisponibles.length > 10" [rows]="10" [rowsPerPageOptions]="[5, 10, 25, 50]"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} de {totalRecords} pedidos"
-                        [tableStyle]="{ 'min-width': '100%' }"
-                    >
+                        [tableStyle]="{ 'min-width': '100%' }">
                         <ng-template pTemplate="header">
                             <tr>
-                                <ng-container
-                                    *ngFor="let col of selectedColumns"
-                                >
+                                <ng-container *ngFor="let col of selectedColumns">
                                     <th *ngIf="col.field !== 'accion'">
                                         {{ col.header | translate }}
                                     </th>
@@ -208,93 +151,64 @@
 
                         <ng-template pTemplate="body" let-pedido>
                             <tr>
-                                <ng-container
-                                    *ngFor="let col of selectedColumns"
-                                >
+                                <ng-container *ngFor="let col of selectedColumns">
                                     <td *ngIf="col.field !== 'accion'">
                                         <ng-container [ngSwitch]="col.field">
-                                            <ng-container
-                                                *ngSwitchCase="'faltaPorPagar'"
-                                            >
+                                            <ng-container *ngSwitchCase="'faltaPorPagar'">
                                                 {{
-                                                    getNestedProperty(
-                                                        pedido,
-                                                        col.field
-                                                    ) | currency
+                                                getNestedProperty(
+                                                pedido,
+                                                col.field
+                                                ) | currency
                                                 }}
                                             </ng-container>
-                                            <ng-container
-                                                *ngSwitchCase="'enOrden'"
-                                            >
-                                                <div
-                                                    *ngIf="
+                                            <ng-container *ngSwitchCase="'enOrden'">
+                                                <div *ngIf="
                                                         pedidoExisteEnOrden(
                                                             pedido
                                                         )
-                                                    "
-                                                    class="d-flex flex-column gap-1"
-                                                >
-                                                    <span
-                                                        class="badge bg-warning text-dark"
-                                                        [title]="
+                                                    " class="d-flex flex-column gap-1">
+                                                    <span class="badge bg-warning text-dark" [title]="
                                                             'Pedido incluido en la orden: ' +
                                                             getNumeroOrdenPedido(
                                                                 pedido
                                                             )
-                                                        "
-                                                    >
-                                                        <i
-                                                            class="pi pi-exclamation-triangle me-1"
-                                                        ></i
-                                                        >Orden
+                                                        ">
+                                                        <i class="pi pi-exclamation-triangle me-1"></i>Orden
                                                         {{
-                                                            getNumeroOrdenPedido(
-                                                                pedido
-                                                            )
+                                                        getNumeroOrdenPedido(
+                                                        pedido
+                                                        )
                                                         }}
                                                     </span>
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-sm btn-outline-info"
-                                                        (click)="
+                                                    <button type="button" class="btn btn-sm btn-outline-info" (click)="
                                                             moverPedidoDeOrden(
                                                                 pedido
                                                             )
-                                                        "
-                                                        [title]="
+                                                        " [title]="
                                                             'Mover pedido de la orden ' +
                                                             getNumeroOrdenPedido(
                                                                 pedido
                                                             ) +
                                                             ' a esta orden'
-                                                        "
-                                                    >
-                                                        <i
-                                                            class="pi pi-arrow-right me-1"
-                                                        ></i
-                                                        >Mover aquí
+                                                        ">
+                                                        <i class="pi pi-arrow-right me-1"></i>Mover aquí
                                                     </button>
                                                 </div>
-                                                <span
-                                                    *ngIf="
+                                                <span *ngIf="
                                                         !pedidoExisteEnOrden(
                                                             pedido
                                                         )
-                                                    "
-                                                    class="badge bg-success"
-                                                >
-                                                    <i
-                                                        class="pi pi-check me-1"
-                                                    ></i
-                                                    >Disponible
+                                                    " class="badge bg-success">
+                                                    <i class="pi pi-check me-1"></i>Disponible
                                                 </span>
                                             </ng-container>
                                             <ng-container *ngSwitchDefault>
                                                 {{
-                                                    getNestedProperty(
-                                                        pedido,
-                                                        col.field
-                                                    )
+                                                getNestedProperty(
+                                                pedido,
+                                                col.field
+                                                )
                                                 }}
                                             </ng-container>
                                         </ng-container>
@@ -302,54 +216,40 @@
                                 </ng-container>
                                 <td *ngIf="isActionColumnVisible()">
                                     <div class="d-flex flex-column gap-1">
-                                        <button
-                                            type="button"
-                                            class="btn btn-sm btn-outline-primary"
-                                            (click)="agregarPedido(pedido)"
-                                            [disabled]="
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            (click)="agregarPedido(pedido)" [disabled]="
                                                 pedidoExisteEnOrden(pedido)
-                                            "
-                                            [title]="
+                                            " [title]="
                                                 pedidoExisteEnOrden(pedido)
                                                     ? 'Este pedido ya existe en la orden: ' +
                                                       getNumeroOrdenPedido(
                                                           pedido
                                                       )
                                                     : 'Agregar pedido a la orden'
-                                            "
-                                        >
+                                            ">
                                             <i class="pi pi-plus"></i>
                                             {{ "Agregar" | translate }}
                                         </button>
 
                                         <!-- Botón para ver detalles del pedido -->
-                                        <button
-                                            type="button"
-                                            class="btn btn-sm btn-outline-info"
-                                            (click)="verDetallesPedido(pedido)"
-                                            [title]="
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            (click)="verDetallesPedido(pedido)" [title]="
                                                 'Ver detalles completos del pedido'
-                                            "
-                                        >
+                                            ">
                                             <i class="pi pi-info-circle"></i>
                                             {{ "Detalles" | translate }}
                                         </button>
 
                                         <!-- Botón para ver detalles de la orden existente -->
-                                        <button
-                                            type="button"
-                                            *ngIf="pedidoExisteEnOrden(pedido)"
-                                            class="btn btn-sm btn-outline-secondary"
-                                            (click)="
+                                        <button type="button" *ngIf="pedidoExisteEnOrden(pedido)"
+                                            class="btn btn-sm btn-outline-secondary" (click)="
                                                 verDetallesOrdenExistente(
                                                     pedido
                                                 )
-                                            "
-                                            [title]="
+                                            " [title]="
                                                 'Ver detalles de la orden ' +
                                                 getNumeroOrdenPedido(pedido)
-                                            "
-                                        >
+                                            ">
                                             <i class="pi pi-eye"></i> Ver orden
                                         </button>
                                     </div>
@@ -359,12 +259,9 @@
 
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td
-                                    [attr.colspan]="selectedColumns.length"
-                                    class="text-center"
-                                >
+                                <td [attr.colspan]="selectedColumns.length" class="text-center">
                                     {{
-                                        "No hay pedidos disponibles" | translate
+                                    "No hay pedidos disponibles" | translate
                                     }}
                                 </td>
                             </tr>
@@ -377,28 +274,22 @@
         <!-- Pedidos seleccionados -->
         <div class="card mb-3" *ngIf="pedidosSeleccionados.length > 0">
             <div class="card-body">
-                <div
-                    class="d-flex justify-content-between align-items-center mb-3"
-                >
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="card-title m-0">
                         {{ "Pedidos Seleccionados" | translate }}
                     </h5>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-primary">{{
                             pedidosSeleccionados.length
-                        }}</span>
+                            }}</span>
                         <span *ngIf="hayPedidosMovidos" class="badge bg-info">
-                            <i class="pi pi-refresh me-1"></i
-                            >{{ contarPedidosMovidos() }} movidos
+                            <i class="pi pi-refresh me-1"></i>{{ contarPedidosMovidos() }} movidos
                         </span>
                     </div>
                 </div>
 
                 <div class="table-responsive">
-                    <p-table
-                        [value]="pedidosSeleccionados"
-                        styleClass="p-datatable-sm"
-                    >
+                    <p-table [value]="pedidosSeleccionados" styleClass="p-datatable-sm">
                         <ng-template pTemplate="header">
                             <tr>
                                 <th>{{ "Nro. Pedido" | translate }}</th>
@@ -406,6 +297,7 @@
                                 <th>{{ "Ciudad" | translate }}</th>
                                 <th>{{ "Valor a Cobrar" | translate }}</th>
                                 <th>{{ "Estado" | translate }}</th>
+                                <th>{{ "Opciones" | translate }}</th>
                                 <th>{{ "Acción" | translate }}</th>
                             </tr>
                         </ng-template>
@@ -414,14 +306,10 @@
                             <tr [class.table-info]="esPedidoMovido(pedido)">
                                 <td>
                                     {{ pedido.nroPedido }}
-                                    <span
-                                        *ngIf="esPedidoMovido(pedido)"
-                                        class="badge bg-info ms-1"
-                                        [title]="
+                                    <span *ngIf="esPedidoMovido(pedido)" class="badge bg-info ms-1" [title]="
                                             'Movido desde la orden ' +
                                             getOrdenAnteriorPedido(pedido)
-                                        "
-                                    >
+                                        ">
                                         <i class="pi pi-refresh"></i>
                                     </span>
                                 </td>
@@ -433,26 +321,47 @@
                                 </td>
                                 <td>{{ pedido.faltaPorPagar | currency }}</td>
                                 <td>
-                                    <span
-                                        *ngIf="esPedidoMovido(pedido)"
-                                        class="badge bg-warning text-dark"
-                                    >
+                                    <span *ngIf="esPedidoMovido(pedido)" class="badge bg-warning text-dark">
                                         Movido desde orden
                                         {{ getOrdenAnteriorPedido(pedido) }}
                                     </span>
-                                    <span
-                                        *ngIf="!esPedidoMovido(pedido)"
-                                        class="badge bg-success"
-                                    >
+                                    <span *ngIf="!esPedidoMovido(pedido)" class="badge bg-success">
                                         Agregado normalmente
                                     </span>
                                 </td>
                                 <td>
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-danger"
-                                        (click)="retirarPedido(pedido)"
-                                    >
+                                    <div class="dropdown" ngbDropdown>
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                            id="dropdownMenuButton" ngbDropdownToggle>
+                                            <i class="pi pi-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton" ngbDropdownMenu>
+                                            <li>
+                                                <button class="dropdown-item" (click)="printPdf(pedido)">
+                                                    <i class="pi pi-file-pdf me-1"></i>{{ 'Imprimir Pdf' | translate }}
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item" (click)="viewTags(pedido)">
+                                                    <i class="pi pi-tag me-1"></i>{{ 'Tarjeta' | translate }}
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item" (click)="printLabel(pedido)" [disabled]="isRotuloGenerando(pedido)">
+                                                    <span *ngIf="!isRotuloGenerando(pedido)">
+                                                        <i class="pi pi-file me-1"></i>{{ 'Rótulo' | translate }}
+                                                    </span>
+                                                    <span *ngIf="isRotuloGenerando(pedido)">
+                                                        <i class="pi pi-spin pi-spinner me-1"></i>{{ 'Generando...' | translate }}
+                                                    </span>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        (click)="retirarPedido(pedido)">
                                         <i class="pi pi-trash"></i>
                                         {{ "Retirar" | translate }}
                                     </button>
@@ -465,15 +374,16 @@
                                 <td colspan="4" class="text-end">
                                     <strong>{{
                                         "Total a Cobrar:" | translate
-                                    }}</strong>
+                                        }}</strong>
                                 </td>
                                 <td>
                                     {{
-                                        pedidosSeleccionados
-                                            | totalValorACobrar
-                                            | currency
+                                    pedidosSeleccionados
+                                    | totalValorACobrar
+                                    | currency
                                     }}
                                 </td>
+                                <td></td>
                                 <td></td>
                             </tr>
                         </ng-template>
@@ -493,13 +403,7 @@
 </div>
 
 <!-- Modal para detalles del pedido -->
-<div
-    class="modal fade"
-    id="detallesPedidoModal"
-    tabindex="-1"
-    aria-hidden="true"
-    *ngIf="pedidoSeleccionadoDetalle"
->
+<div class="modal fade" id="detallesPedidoModal" tabindex="-1" aria-hidden="true" *ngIf="pedidoSeleccionadoDetalle">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white">
@@ -509,74 +413,40 @@
                         <h4 class="modal-title mb-0">
                             {{ "Detalles del Pedido" | translate }}
                         </h4>
-                        <small class="opacity-75"
-                            >#{{ pedidoSeleccionadoDetalle.nroPedido }}</small
-                        >
+                        <small class="opacity-75">#{{ pedidoSeleccionadoDetalle.nroPedido }}</small>
                     </div>
                 </div>
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    (click)="cerrarDetallesPedido()"
-                ></button>
+                <button type="button" class="btn-close btn-close-white" (click)="cerrarDetallesPedido()"></button>
             </div>
 
             <div class="modal-body p-0">
                 <!-- Navegación por pestañas -->
                 <ul class="nav nav-tabs nav-justified bg-light" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button
-                            class="nav-link active fw-semibold"
-                            id="general-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#general-content"
-                            type="button"
-                            role="tab"
-                        >
-                            <i class="pi pi-info-circle me-2"></i
-                            >{{ "General" | translate }}
+                        <button class="nav-link active fw-semibold" id="general-tab" data-bs-toggle="tab"
+                            data-bs-target="#general-content" type="button" role="tab">
+                            <i class="pi pi-info-circle me-2"></i>{{ "General" | translate }}
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button
-                            class="nav-link fw-semibold"
-                            id="productos-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#productos-content"
-                            type="button"
-                            role="tab"
-                        >
-                            <i class="pi pi-box me-2"></i
-                            >{{ "Productos" | translate }}
+                        <button class="nav-link fw-semibold" id="productos-tab" data-bs-toggle="tab"
+                            data-bs-target="#productos-content" type="button" role="tab">
+                            <i class="pi pi-box me-2"></i>{{ "Productos" | translate }}
                             <span class="badge bg-primary ms-1">{{
                                 getProductosCount()
-                            }}</span>
+                                }}</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button
-                            class="nav-link fw-semibold"
-                            id="entrega-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#entrega-content"
-                            type="button"
-                            role="tab"
-                        >
-                            <i class="pi pi-truck me-2"></i
-                            >{{ "Entrega" | translate }}
+                        <button class="nav-link fw-semibold" id="entrega-tab" data-bs-toggle="tab"
+                            data-bs-target="#entrega-content" type="button" role="tab">
+                            <i class="pi pi-truck me-2"></i>{{ "Entrega" | translate }}
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button
-                            class="nav-link fw-semibold"
-                            id="pagos-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#pagos-content"
-                            type="button"
-                            role="tab"
-                        >
-                            <i class="pi pi-credit-card me-2"></i
-                            >{{ "Pagos" | translate }}
+                        <button class="nav-link fw-semibold" id="pagos-tab" data-bs-toggle="tab"
+                            data-bs-target="#pagos-content" type="button" role="tab">
+                            <i class="pi pi-credit-card me-2"></i>{{ "Pagos" | translate }}
                         </button>
                     </li>
                 </ul>
@@ -584,25 +454,16 @@
                 <!-- Contenido de las pestañas -->
                 <div class="tab-content p-4">
                     <!-- Pestaña General -->
-                    <div
-                        class="tab-pane fade show active"
-                        id="general-content"
-                        role="tabpanel"
-                    >
+                    <div class="tab-pane fade show active" id="general-content" role="tabpanel">
                         <div class="row g-4">
                             <!-- Información del Cliente -->
                             <div class="col-lg-6">
                                 <div class="card h-100 border-0 shadow-sm">
-                                    <div
-                                        class="card-header bg-light border-0 pb-3"
-                                    >
-                                        <h6
-                                            class="card-title mb-0 text-primary"
-                                        >
-                                            <i class="pi pi-user me-2"></i
-                                            >{{
-                                                "Información del Cliente"
-                                                    | translate
+                                    <div class="card-header bg-light border-0 pb-3">
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-user me-2"></i>{{
+                                            "Información del Cliente"
+                                            | translate
                                             }}
                                         </h6>
                                     </div>
@@ -612,21 +473,21 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Nombre Completo"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
                                                         {{
-                                                            pedidoSeleccionadoDetalle
-                                                                .cliente
-                                                                ?.nombres_completos ||
-                                                                pedidoSeleccionadoDetalle
-                                                                    .cliente
-                                                                    ?.nombres +
-                                                                    " " +
-                                                                    pedidoSeleccionadoDetalle
-                                                                        .cliente
-                                                                        ?.apellidos ||
-                                                                "N/A"
+                                                        pedidoSeleccionadoDetalle
+                                                        .cliente
+                                                        ?.nombres_completos ||
+                                                        pedidoSeleccionadoDetalle
+                                                        .cliente
+                                                        ?.nombres +
+                                                        " " +
+                                                        pedidoSeleccionadoDetalle
+                                                        .cliente
+                                                        ?.apellidos ||
+                                                        "N/A"
                                                         }}
                                                     </div>
                                                 </div>
@@ -635,16 +496,14 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Teléfono" | translate
-                                                    }}</label>
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <i
-                                                            class="pi pi-phone me-2 text-success"
-                                                        ></i>
+                                                        <i class="pi pi-phone me-2 text-success"></i>
                                                         {{
-                                                            pedidoSeleccionadoDetalle
-                                                                .cliente
-                                                                ?.numero_celular_comprador ||
-                                                                "N/A"
+                                                        pedidoSeleccionadoDetalle
+                                                        .cliente
+                                                        ?.numero_celular_comprador ||
+                                                        "N/A"
                                                         }}
                                                     </div>
                                                 </div>
@@ -653,16 +512,14 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Email" | translate
-                                                    }}</label>
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <i
-                                                            class="pi pi-envelope me-2 text-info"
-                                                        ></i>
+                                                        <i class="pi pi-envelope me-2 text-info"></i>
                                                         {{
-                                                            pedidoSeleccionadoDetalle
-                                                                .cliente
-                                                                ?.correo_electronico_comprador ||
-                                                                "N/A"
+                                                        pedidoSeleccionadoDetalle
+                                                        .cliente
+                                                        ?.correo_electronico_comprador ||
+                                                        "N/A"
                                                         }}
                                                     </div>
                                                 </div>
@@ -671,13 +528,13 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Documento" | translate
-                                                    }}</label>
+                                                        }}</label>
                                                     <div class="info-value">
                                                         {{
-                                                            pedidoSeleccionadoDetalle
-                                                                .cliente
-                                                                ?.documento ||
-                                                                "N/A"
+                                                        pedidoSeleccionadoDetalle
+                                                        .cliente
+                                                        ?.documento ||
+                                                        "N/A"
                                                         }}
                                                     </div>
                                                 </div>
@@ -690,15 +547,10 @@
                             <!-- Estado del Pedido -->
                             <div class="col-lg-6">
                                 <div class="card h-100 border-0 shadow-sm">
-                                    <div
-                                        class="card-header bg-light border-0 pb-3"
-                                    >
-                                        <h6
-                                            class="card-title mb-0 text-primary"
-                                        >
-                                            <i class="pi pi-flag me-2"></i
-                                            >{{
-                                                "Estado del Pedido" | translate
+                                    <div class="card-header bg-light border-0 pb-3">
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-flag me-2"></i>{{
+                                            "Estado del Pedido" | translate
                                             }}
                                         </h6>
                                     </div>
@@ -708,19 +560,16 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Estado de Proceso"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <span
-                                                            class="badge"
-                                                            [ngClass]="
+                                                        <span class="badge" [ngClass]="
                                                                 getEstadoProcesoClass(
                                                                     pedidoSeleccionadoDetalle.estadoProceso
                                                                 )
-                                                            "
-                                                        >
+                                                            ">
                                                             {{
-                                                                pedidoSeleccionadoDetalle.estadoProceso
+                                                            pedidoSeleccionadoDetalle.estadoProceso
                                                             }}
                                                         </span>
                                                     </div>
@@ -730,19 +579,16 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Estado de Pago"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <span
-                                                            class="badge"
-                                                            [ngClass]="
+                                                        <span class="badge" [ngClass]="
                                                                 getEstadoPagoClass(
                                                                     pedidoSeleccionadoDetalle.estadoPago
                                                                 )
-                                                            "
-                                                        >
+                                                            ">
                                                             {{
-                                                                pedidoSeleccionadoDetalle.estadoPago
+                                                            pedidoSeleccionadoDetalle.estadoPago
                                                             }}
                                                         </span>
                                                     </div>
@@ -752,16 +598,14 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Fecha de Creación"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <i
-                                                            class="pi pi-calendar me-2 text-secondary"
-                                                        ></i>
+                                                        <i class="pi pi-calendar me-2 text-secondary"></i>
                                                         {{
-                                                            formatDate(
-                                                                pedidoSeleccionadoDetalle.fechaCreacion
-                                                            )
+                                                        formatDate(
+                                                        pedidoSeleccionadoDetalle.fechaCreacion
+                                                        )
                                                         }}
                                                     </div>
                                                 </div>
@@ -770,37 +614,30 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Fecha de Entrega"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <i
-                                                            class="pi pi-clock me-2 text-warning"
-                                                        ></i>
+                                                        <i class="pi pi-clock me-2 text-warning"></i>
                                                         {{
-                                                            formatDate(
-                                                                pedidoSeleccionadoDetalle.fechaEntrega
-                                                            )
+                                                        formatDate(
+                                                        pedidoSeleccionadoDetalle.fechaEntrega
+                                                        )
                                                         }}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div
-                                                class="col-12"
-                                                *ngIf="
+                                            <div class="col-12" *ngIf="
                                                     pedidoSeleccionadoDetalle.horarioEntrega
-                                                "
-                                            >
+                                                ">
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Horario de Entrega"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <i
-                                                            class="pi pi-clock me-2 text-primary"
-                                                        ></i>
+                                                        <i class="pi pi-clock me-2 text-primary"></i>
                                                         {{
-                                                            pedidoSeleccionadoDetalle.horarioEntrega
+                                                        pedidoSeleccionadoDetalle.horarioEntrega
                                                         }}
                                                     </div>
                                                 </div>
@@ -813,77 +650,57 @@
                     </div>
 
                     <!-- Pestaña Productos -->
-                    <div
-                        class="tab-pane fade"
-                        id="productos-content"
-                        role="tabpanel"
-                    >
+                    <div class="tab-pane fade" id="productos-content" role="tabpanel">
                         <div class="row g-4">
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
                                     <div class="card-header bg-light border-0">
-                                        <h6
-                                            class="card-title mb-0 text-primary"
-                                        >
-                                            <i class="pi pi-box me-2"></i
-                                            >{{
-                                                "Productos del Pedido"
-                                                    | translate
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-box me-2"></i>{{
+                                            "Productos del Pedido"
+                                            | translate
                                             }}
                                         </h6>
                                     </div>
                                     <div class="card-body p-0">
                                         <div class="table-responsive">
-                                            <table
-                                                class="table table-hover mb-0"
-                                            >
+                                            <table class="table table-hover mb-0">
                                                 <thead class="table-light">
                                                     <tr>
                                                         <th class="border-0">
                                                             {{
-                                                                "Producto"
-                                                                    | translate
+                                                            "Producto"
+                                                            | translate
                                                             }}
                                                         </th>
-                                                        <th
-                                                            class="border-0 text-center"
-                                                        >
+                                                        <th class="border-0 text-center">
                                                             {{
-                                                                "Cantidad"
-                                                                    | translate
+                                                            "Cantidad"
+                                                            | translate
                                                             }}
                                                         </th>
-                                                        <th
-                                                            class="border-0 text-end"
-                                                        >
+                                                        <th class="border-0 text-end">
                                                             {{
-                                                                "Precio Unit."
-                                                                    | translate
+                                                            "Precio Unit."
+                                                            | translate
                                                             }}
                                                         </th>
-                                                        <th
-                                                            class="border-0 text-end"
-                                                        >
+                                                        <th class="border-0 text-end">
                                                             {{
-                                                                "Subtotal"
-                                                                    | translate
+                                                            "Subtotal"
+                                                            | translate
                                                             }}
                                                         </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr
-                                                        *ngFor="
+                                                    <tr *ngFor="
                                                             let item of pedidoSeleccionadoDetalle.carrito;
                                                             let i = index
-                                                        "
-                                                    >
+                                                        ">
                                                         <td class="border-0">
-                                                            <div
-                                                                class="d-flex align-items-center"
-                                                            >
-                                                                <div
-                                                                    class="product-thumbnail me-3"
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="product-thumbnail me-3"
                                                                     [style.background-image]="
                                                                         'url(' +
                                                                         (getProductImage(
@@ -891,107 +708,78 @@
                                                                         ) ||
                                                                             'assets/images/no-image.png') +
                                                                         ')'
-                                                                    "
-                                                                ></div>
+                                                                    "></div>
                                                                 <div>
-                                                                    <h6
-                                                                        class="mb-1 text-dark"
-                                                                    >
+                                                                    <h6 class="mb-1 text-dark">
                                                                         {{
-                                                                            getProductTitle(
-                                                                                item
-                                                                            )
+                                                                        getProductTitle(
+                                                                        item
+                                                                        )
                                                                         }}
                                                                     </h6>
-                                                                    <small
-                                                                        class="text-muted"
-                                                                        >{{
-                                                                            getProductReference(
-                                                                                item
-                                                                            )
-                                                                        }}</small
-                                                                    >
-                                                                    <div
-                                                                        *ngIf="
+                                                                    <small class="text-muted">{{
+                                                                        getProductReference(
+                                                                        item
+                                                                        )
+                                                                        }}</small>
+                                                                    <div *ngIf="
                                                                             getProductVariations(
                                                                                 item
                                                                             )
-                                                                        "
-                                                                        class="mt-1"
-                                                                    >
-                                                                        <small
-                                                                            class="badge bg-light text-dark"
-                                                                            >{{
-                                                                                getProductVariations(
-                                                                                    item
-                                                                                )
-                                                                            }}</small
-                                                                        >
+                                                                        " class="mt-1">
+                                                                        <small class="badge bg-light text-dark">{{
+                                                                            getProductVariations(
+                                                                            item
+                                                                            )
+                                                                            }}</small>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td
-                                                            class="border-0 text-center align-middle"
-                                                        >
-                                                            <span
-                                                                class="badge bg-primary rounded-pill"
-                                                                >{{
-                                                                    item.cantidad
-                                                                }}</span
-                                                            >
+                                                        <td class="border-0 text-center align-middle">
+                                                            <span class="badge bg-primary rounded-pill">{{
+                                                                item.cantidad
+                                                                }}</span>
                                                         </td>
-                                                        <td
-                                                            class="border-0 text-end align-middle"
-                                                        >
+                                                        <td class="border-0 text-end align-middle">
                                                             <strong>{{
                                                                 getProductPrice(
-                                                                    item
+                                                                item
                                                                 )
-                                                                    | currency
-                                                                        : "COP"
-                                                                        : "symbol"
-                                                                        : "1.0-0"
-                                                            }}</strong>
+                                                                | currency
+                                                                : "COP"
+                                                                : "symbol"
+                                                                : "1.0-0"
+                                                                }}</strong>
                                                         </td>
-                                                        <td
-                                                            class="border-0 text-end align-middle"
-                                                        >
-                                                            <strong
-                                                                class="text-success"
-                                                                >{{
-                                                                    getProductSubtotal(
-                                                                        item
-                                                                    )
-                                                                        | currency
-                                                                            : "COP"
-                                                                            : "symbol"
-                                                                            : "1.0-0"
-                                                                }}</strong
-                                                            >
+                                                        <td class="border-0 text-end align-middle">
+                                                            <strong class="text-success">{{
+                                                                getProductSubtotal(
+                                                                item
+                                                                )
+                                                                | currency
+                                                                : "COP"
+                                                                : "symbol"
+                                                                : "1.0-0"
+                                                                }}</strong>
                                                         </td>
                                                     </tr>
                                                 </tbody>
                                                 <tfoot class="table-light">
                                                     <tr>
-                                                        <th
-                                                            colspan="3"
-                                                            class="border-0 text-end"
-                                                        >
+                                                        <th colspan="3" class="border-0 text-end">
                                                             {{
-                                                                "Total de Productos:"
-                                                                    | translate
+                                                            "Total de Productos:"
+                                                            | translate
                                                             }}
                                                         </th>
-                                                        <th
-                                                            class="border-0 text-end text-success"
-                                                        >
+                                                        <th class="border-0 text-end text-success">
                                                             {{
-                                                                getProductsTotalValue()
-                                                                    | currency
-                                                                        : "COP"
-                                                                        : "symbol"
-                                                                        : "1.0-0"
+                                                            getProductsTotalValue()
+                                                            | currency
+                                                            : "COP"
+                                                            : "symbol"
+                                                            : "1.0-0"
                                                             }}
                                                         </th>
                                                     </tr>
@@ -1005,22 +793,15 @@
                     </div>
 
                     <!-- Pestaña Entrega -->
-                    <div
-                        class="tab-pane fade"
-                        id="entrega-content"
-                        role="tabpanel"
-                    >
+                    <div class="tab-pane fade" id="entrega-content" role="tabpanel">
                         <div class="row g-4">
                             <div class="col-lg-8">
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-header bg-light border-0">
-                                        <h6
-                                            class="card-title mb-0 text-primary"
-                                        >
-                                            <i class="pi pi-map-marker me-2"></i
-                                            >{{
-                                                "Dirección de Entrega"
-                                                    | translate
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-map-marker me-2"></i>{{
+                                            "Dirección de Entrega"
+                                            | translate
                                             }}
                                         </h6>
                                     </div>
@@ -1030,10 +811,10 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Recibe" | translate
-                                                    }}</label>
+                                                        }}</label>
                                                     <div class="info-value">
                                                         {{
-                                                            getDeliveryRecipient()
+                                                        getDeliveryRecipient()
                                                         }}
                                                     </div>
                                                 </div>
@@ -1042,12 +823,10 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Teléfono de Contacto"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <i
-                                                            class="pi pi-phone me-2 text-success"
-                                                        ></i>
+                                                        <i class="pi pi-phone me-2 text-success"></i>
                                                         {{ getDeliveryPhone() }}
                                                     </div>
                                                 </div>
@@ -1056,14 +835,10 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Dirección Completa"
-                                                            | translate
-                                                    }}</label>
-                                                    <div
-                                                        class="info-value address-block"
-                                                    >
-                                                        <i
-                                                            class="pi pi-home me-2 text-info"
-                                                        ></i>
+                                                        | translate
+                                                        }}</label>
+                                                    <div class="info-value address-block">
+                                                        <i class="pi pi-home me-2 text-info"></i>
                                                         {{ getFullAddress() }}
                                                     </div>
                                                 </div>
@@ -1072,13 +847,13 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Ciudad" | translate
-                                                    }}</label>
+                                                        }}</label>
                                                     <div class="info-value">
                                                         {{
-                                                            pedidoSeleccionadoDetalle
-                                                                .envio
-                                                                ?.ciudad ||
-                                                                "N/A"
+                                                        pedidoSeleccionadoDetalle
+                                                        .envio
+                                                        ?.ciudad ||
+                                                        "N/A"
                                                         }}
                                                     </div>
                                                 </div>
@@ -1087,14 +862,14 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Departamento"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
                                                         {{
-                                                            pedidoSeleccionadoDetalle
-                                                                .envio
-                                                                ?.departamento ||
-                                                                "N/A"
+                                                        pedidoSeleccionadoDetalle
+                                                        .envio
+                                                        ?.departamento ||
+                                                        "N/A"
                                                         }}
                                                     </div>
                                                 </div>
@@ -1103,44 +878,34 @@
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Zona de Cobro"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <span
-                                                            class="badge bg-info"
-                                                            >{{
-                                                                pedidoSeleccionadoDetalle
-                                                                    .envio
-                                                                    ?.zonaCobro ||
-                                                                    "N/A"
-                                                            }}</span
-                                                        >
+                                                        <span class="badge bg-info">{{
+                                                            pedidoSeleccionadoDetalle
+                                                            .envio
+                                                            ?.zonaCobro ||
+                                                            "N/A"
+                                                            }}</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div
-                                                class="col-12"
-                                                *ngIf="
+                                            <div class="col-12" *ngIf="
                                                     pedidoSeleccionadoDetalle
                                                         .envio?.observaciones
-                                                "
-                                            >
+                                                ">
                                                 <div class="info-item">
                                                     <label class="info-label">{{
                                                         "Observaciones de Entrega"
-                                                            | translate
-                                                    }}</label>
+                                                        | translate
+                                                        }}</label>
                                                     <div class="info-value">
-                                                        <div
-                                                            class="alert alert-info mb-0"
-                                                        >
-                                                            <i
-                                                                class="pi pi-info-circle me-2"
-                                                            ></i>
+                                                        <div class="alert alert-info mb-0">
+                                                            <i class="pi pi-info-circle me-2"></i>
                                                             {{
-                                                                pedidoSeleccionadoDetalle
-                                                                    .envio
-                                                                    .observaciones
+                                                            pedidoSeleccionadoDetalle
+                                                            .envio
+                                                            .observaciones
                                                             }}
                                                         </div>
                                                     </div>
@@ -1154,92 +919,74 @@
                             <div class="col-lg-4">
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-header bg-light border-0">
-                                        <h6
-                                            class="card-title mb-0 text-primary"
-                                        >
-                                            <i class="pi pi-truck me-2"></i
-                                            >{{
-                                                "Información de Envío"
-                                                    | translate
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-truck me-2"></i>{{
+                                            "Información de Envío"
+                                            | translate
                                             }}
                                         </h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="delivery-summary">
                                             <div class="delivery-item">
-                                                <div
-                                                    class="delivery-icon bg-primary"
-                                                >
-                                                    <i
-                                                        class="pi pi-send text-white"
-                                                    ></i>
+                                                <div class="delivery-icon bg-primary">
+                                                    <i class="pi pi-send text-white"></i>
                                                 </div>
                                                 <div class="delivery-content">
                                                     <div class="delivery-label">
                                                         {{
-                                                            "Forma de Entrega"
-                                                                | translate
+                                                        "Forma de Entrega"
+                                                        | translate
                                                         }}
                                                     </div>
                                                     <div class="delivery-value">
                                                         {{
-                                                            pedidoSeleccionadoDetalle.formaEntrega ||
-                                                                "N/A"
+                                                        pedidoSeleccionadoDetalle.formaEntrega ||
+                                                        "N/A"
                                                         }}
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div class="delivery-item">
-                                                <div
-                                                    class="delivery-icon bg-success"
-                                                >
-                                                    <i
-                                                        class="pi pi-dollar text-white"
-                                                    ></i>
+                                                <div class="delivery-icon bg-success">
+                                                    <i class="pi pi-dollar text-white"></i>
                                                 </div>
                                                 <div class="delivery-content">
                                                     <div class="delivery-label">
                                                         {{
-                                                            "Costo de Envío"
-                                                                | translate
+                                                        "Costo de Envío"
+                                                        | translate
                                                         }}
                                                     </div>
                                                     <div class="delivery-value">
                                                         {{
-                                                            pedidoSeleccionadoDetalle.totalEnvio
-                                                                | currency
-                                                                    : "COP"
-                                                                    : "symbol"
-                                                                    : "1.0-0"
+                                                        pedidoSeleccionadoDetalle.totalEnvio
+                                                        | currency
+                                                        : "COP"
+                                                        : "symbol"
+                                                        : "1.0-0"
                                                         }}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div
-                                                class="delivery-item"
-                                                *ngIf="
+                                            <div class="delivery-item" *ngIf="
                                                     pedidoSeleccionadoDetalle.transportador
-                                                "
-                                            >
-                                                <div
-                                                    class="delivery-icon bg-info"
-                                                >
-                                                    <i
-                                                        class="pi pi-user text-white"
-                                                    ></i>
+                                                ">
+                                                <div class="delivery-icon bg-info">
+                                                    <i class="pi pi-user text-white"></i>
                                                 </div>
                                                 <div class="delivery-content">
                                                     <div class="delivery-label">
                                                         {{
-                                                            "Transportador"
-                                                                | translate
+                                                        "Transportador"
+                                                        | translate
                                                         }}
                                                     </div>
                                                     <div class="delivery-value">
                                                         {{
-                                                            pedidoSeleccionadoDetalle.transportador
+                                                        pedidoSeleccionadoDetalle.transportador
                                                         }}
                                                     </div>
                                                 </div>
@@ -1252,23 +999,14 @@
                     </div>
 
                     <!-- Pestaña Pagos -->
-                    <div
-                        class="tab-pane fade"
-                        id="pagos-content"
-                        role="tabpanel"
-                    >
+                    <div class="tab-pane fade" id="pagos-content" role="tabpanel">
                         <div class="row g-4">
                             <div class="col-lg-8">
                                 <div class="card border-0 shadow-sm">
                                     <div class="card-header bg-light border-0">
-                                        <h6
-                                            class="card-title mb-0 text-primary"
-                                        >
-                                            <i
-                                                class="pi pi-credit-card me-2"
-                                            ></i
-                                            >{{
-                                                "Resumen de Pagos" | translate
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-credit-card me-2"></i>{{
+                                            "Resumen de Pagos" | translate
                                             }}
                                         </h6>
                                     </div>
@@ -1277,92 +1015,76 @@
                                             <div class="row g-3">
                                                 <div class="col-sm-6">
                                                     <div class="payment-item">
-                                                        <div
-                                                            class="payment-label"
-                                                        >
+                                                        <div class="payment-label">
                                                             {{
-                                                                "Subtotal Productos"
-                                                                    | translate
+                                                            "Subtotal Productos"
+                                                            | translate
                                                             }}
                                                         </div>
-                                                        <div
-                                                            class="payment-value"
-                                                        >
+                                                        <div class="payment-value">
                                                             {{
-                                                                pedidoSeleccionadoDetalle.totalPedidoSinDescuento
-                                                                    | currency
-                                                                        : "COP"
-                                                                        : "symbol"
-                                                                        : "1.0-0"
+                                                            pedidoSeleccionadoDetalle.totalPedidoSinDescuento
+                                                            | currency
+                                                            : "COP"
+                                                            : "symbol"
+                                                            : "1.0-0"
                                                             }}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-6">
                                                     <div class="payment-item">
-                                                        <div
-                                                            class="payment-label"
-                                                        >
+                                                        <div class="payment-label">
                                                             {{
-                                                                "Descuentos"
-                                                                    | translate
+                                                            "Descuentos"
+                                                            | translate
                                                             }}
                                                         </div>
-                                                        <div
-                                                            class="payment-value text-success"
-                                                        >
+                                                        <div class="payment-value text-success">
                                                             -{{
-                                                                pedidoSeleccionadoDetalle.totalDescuento
-                                                                    | currency
-                                                                        : "COP"
-                                                                        : "symbol"
-                                                                        : "1.0-0"
+                                                            pedidoSeleccionadoDetalle.totalDescuento
+                                                            | currency
+                                                            : "COP"
+                                                            : "symbol"
+                                                            : "1.0-0"
                                                             }}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-6">
                                                     <div class="payment-item">
-                                                        <div
-                                                            class="payment-label"
-                                                        >
+                                                        <div class="payment-label">
                                                             {{
-                                                                "Costo de Envío"
-                                                                    | translate
+                                                            "Costo de Envío"
+                                                            | translate
                                                             }}
                                                         </div>
-                                                        <div
-                                                            class="payment-value"
-                                                        >
+                                                        <div class="payment-value">
                                                             {{
-                                                                pedidoSeleccionadoDetalle.totalEnvio
-                                                                    | currency
-                                                                        : "COP"
-                                                                        : "symbol"
-                                                                        : "1.0-0"
+                                                            pedidoSeleccionadoDetalle.totalEnvio
+                                                            | currency
+                                                            : "COP"
+                                                            : "symbol"
+                                                            : "1.0-0"
                                                             }}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-6">
                                                     <div class="payment-item">
-                                                        <div
-                                                            class="payment-label"
-                                                        >
+                                                        <div class="payment-label">
                                                             {{
-                                                                "Impuestos"
-                                                                    | translate
+                                                            "Impuestos"
+                                                            | translate
                                                             }}
                                                         </div>
-                                                        <div
-                                                            class="payment-value"
-                                                        >
+                                                        <div class="payment-value">
                                                             {{
-                                                                pedidoSeleccionadoDetalle.totalImpuesto
-                                                                    | currency
-                                                                        : "COP"
-                                                                        : "symbol"
-                                                                        : "1.0-0"
+                                                            pedidoSeleccionadoDetalle.totalImpuesto
+                                                            | currency
+                                                            : "COP"
+                                                            : "symbol"
+                                                            : "1.0-0"
                                                             }}
                                                         </div>
                                                     </div>
@@ -1373,51 +1095,39 @@
 
                                             <div class="row g-3">
                                                 <div class="col-sm-6">
-                                                    <div
-                                                        class="payment-item-total"
-                                                    >
-                                                        <div
-                                                            class="payment-label"
-                                                        >
+                                                    <div class="payment-item-total">
+                                                        <div class="payment-label">
                                                             {{
-                                                                "Total del Pedido"
-                                                                    | translate
+                                                            "Total del Pedido"
+                                                            | translate
                                                             }}
                                                         </div>
-                                                        <div
-                                                            class="payment-value-total"
-                                                        >
+                                                        <div class="payment-value-total">
                                                             {{
-                                                                pedidoSeleccionadoDetalle.totalPedididoConDescuento
-                                                                    | currency
-                                                                        : "COP"
-                                                                        : "symbol"
-                                                                        : "1.0-0"
+                                                            pedidoSeleccionadoDetalle.totalPedididoConDescuento
+                                                            | currency
+                                                            : "COP"
+                                                            : "symbol"
+                                                            : "1.0-0"
                                                             }}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <div
-                                                        class="payment-item-total"
-                                                    >
-                                                        <div
-                                                            class="payment-label"
-                                                        >
+                                                    <div class="payment-item-total">
+                                                        <div class="payment-label">
                                                             {{
-                                                                "Anticipo Pagado"
-                                                                    | translate
+                                                            "Anticipo Pagado"
+                                                            | translate
                                                             }}
                                                         </div>
-                                                        <div
-                                                            class="payment-value-total text-success"
-                                                        >
+                                                        <div class="payment-value-total text-success">
                                                             {{
-                                                                pedidoSeleccionadoDetalle.anticipo
-                                                                    | currency
-                                                                        : "COP"
-                                                                        : "symbol"
-                                                                        : "1.0-0"
+                                                            pedidoSeleccionadoDetalle.anticipo
+                                                            | currency
+                                                            : "COP"
+                                                            : "symbol"
+                                                            : "1.0-0"
                                                             }}
                                                         </div>
                                                     </div>
@@ -1429,46 +1139,39 @@
                             </div>
 
                             <div class="col-lg-4">
-                                <div
-                                    class="card border-0 shadow-sm bg-gradient-warning"
-                                >
+                                <div class="card border-0 shadow-sm bg-gradient-warning">
                                     <div class="card-body text-center">
                                         <div class="payment-pending">
-                                            <i
-                                                class="pi pi-wallet display-4 text-warning mb-3"
-                                            ></i>
+                                            <i class="pi pi-wallet display-4 text-warning mb-3"></i>
                                             <h5 class="card-title text-dark">
                                                 {{
-                                                    "Falta por Pagar"
-                                                        | translate
+                                                "Falta por Pagar"
+                                                | translate
                                                 }}
                                             </h5>
                                             <div class="pending-amount">
                                                 {{
-                                                    pedidoSeleccionadoDetalle.faltaPorPagar
-                                                        | currency
-                                                            : "COP"
-                                                            : "symbol"
-                                                            : "1.0-0"
+                                                pedidoSeleccionadoDetalle.faltaPorPagar
+                                                | currency
+                                                : "COP"
+                                                : "symbol"
+                                                : "1.0-0"
                                                 }}
                                             </div>
                                             <div class="mt-3">
-                                                <span
-                                                    class="badge"
-                                                    [ngClass]="
+                                                <span class="badge" [ngClass]="
                                                         pedidoSeleccionadoDetalle.faltaPorPagar >
                                                         0
                                                             ? 'bg-warning text-dark'
                                                             : 'bg-success'
-                                                    "
-                                                >
+                                                    ">
                                                     {{
-                                                        pedidoSeleccionadoDetalle.faltaPorPagar >
-                                                        0
-                                                            ? ("Pendiente"
-                                                              | translate)
-                                                            : ("Pagado"
-                                                              | translate)
+                                                    pedidoSeleccionadoDetalle.faltaPorPagar >
+                                                    0
+                                                    ? ("Pendiente"
+                                                    | translate)
+                                                    : ("Pagado"
+                                                    | translate)
                                                     }}
                                                 </span>
                                             </div>
@@ -1482,24 +1185,16 @@
             </div>
 
             <div class="modal-footer bg-light">
-                <button
-                    type="button"
-                    class="btn btn-secondary"
-                    (click)="cerrarDetallesPedido()"
-                >
+                <button type="button" class="btn btn-secondary" (click)="cerrarDetallesPedido()">
                     <i class="pi pi-times me-2"></i>{{ "Cerrar" | translate }}
                 </button>
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    (click)="agregarPedidoDesdeDetalle()"
-                    [disabled]="pedidoExisteEnOrden(pedidoSeleccionadoDetalle)"
-                >
+                <button type="button" class="btn btn-primary" (click)="agregarPedidoDesdeDetalle()"
+                    [disabled]="pedidoExisteEnOrden(pedidoSeleccionadoDetalle)">
                     <i class="pi pi-plus me-2"></i>
                     {{
-                        pedidoExisteEnOrden(pedidoSeleccionadoDetalle)
-                            ? ("Ya en orden" | translate)
-                            : ("Agregar a Orden" | translate)
+                    pedidoExisteEnOrden(pedidoSeleccionadoDetalle)
+                    ? ("Ya en orden" | translate)
+                    : ("Agregar a Orden" | translate)
                     }}
                 </button>
             </div>
@@ -1512,22 +1207,13 @@
         {{ "Cancelar" | translate }}
     </button>
 
-    <button
-        type="button"
-        class="btn btn-primary"
-        [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0"
-        (click)="guardarOrden()"
-    >
+    <button type="button" class="btn btn-primary"
+        [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0" (click)="guardarOrden()">
         {{ "Guardar Orden" | translate }}
     </button>
 
-    <button
-        type="button"
-        class="btn btn-success"
-        *ngIf="nroShippingOrder"
-        (click)="imprimirOrden()"
-        [disabled]="isGeneratingPDF"
-    >
+    <button type="button" class="btn btn-success" *ngIf="nroShippingOrder" (click)="imprimirOrden()"
+        [disabled]="isGeneratingPDF">
         <span *ngIf="!isGeneratingPDF">
             <i class="pi pi-print me-1"></i>{{ "Imprimir" | translate }}
         </span>
@@ -1540,25 +1226,15 @@
     <!-- Progress bar for PDF generation -->
     <div *ngIf="isGeneratingPDF" class="mt-2">
         <div class="progress">
-            <div
-                class="progress-bar progress-bar-striped progress-bar-animated"
-                role="progressbar"
-                [style.width.%]="pdfProgress"
-                [attr.aria-valuenow]="pdfProgress"
-                aria-valuemin="0"
-                aria-valuemax="100"
-            >
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                [style.width.%]="pdfProgress" [attr.aria-valuenow]="pdfProgress" aria-valuemin="0" aria-valuemax="100">
                 {{ pdfProgress }}%
             </div>
         </div>
     </div>
 
-    <button
-        type="button"
-        class="btn btn-warning"
-        *ngIf="nroShippingOrder && metodoEnvio === 'mensajeroPropio'"
-        (click)="despacharOrden()"
-    >
+    <button type="button" class="btn btn-warning" *ngIf="nroShippingOrder && metodoEnvio === 'mensajeroPropio'"
+        (click)="despacharOrden()">
         <i class="pi pi-send me-1"></i>{{ "Despachar" | translate }}
     </button>
 </div>

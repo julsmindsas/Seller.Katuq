@@ -23,6 +23,7 @@ export class GenerarOrdenComponent implements OnInit {
   @Input() isEditMode: boolean = false;
   @Input() isGeneratingPDF: boolean = false;
   @Input() pdfProgress: number = 0;
+  @Input() generandoRotuloPara: Set<string> = new Set();
 
   @Output() onClose = new EventEmitter<void>();
   @Output() onSave = new EventEmitter<any>();
@@ -30,6 +31,9 @@ export class GenerarOrdenComponent implements OnInit {
   @Output() onRemoveOrder = new EventEmitter<Pedido>();
   @Output() onPrintOrder = new EventEmitter<void>();
   @Output() onDispatchOrder = new EventEmitter<void>();
+  @Output() onPrintPdf = new EventEmitter<Pedido>();
+  @Output() onViewTags = new EventEmitter<Pedido>();
+  @Output() onPrintLabel = new EventEmitter<Pedido>();
 
   ordenEnvioForm: FormGroup;
   metodoEnvio: string;
@@ -252,7 +256,7 @@ export class GenerarOrdenComponent implements OnInit {
 
   retirarPedido(pedido: Pedido): void {
     // Si es un pedido movido, quitarlo del tracking
-    if (this.pedidosMovidos.has(pedido.nroPedido)) {
+    if (pedido.nroPedido && this.pedidosMovidos.has(pedido.nroPedido)) {
       this.pedidosMovidos.delete(pedido.nroPedido);
       // Actualizar flag de pedidos movidos
       this.hayPedidosMovidos = this.pedidosMovidos.size > 0;
@@ -485,6 +489,15 @@ export class GenerarOrdenComponent implements OnInit {
 
   // Método para mover un pedido de una orden existente a la orden actual
   moverPedidoDeOrden(pedido: Pedido): void {
+    if (!pedido.nroPedido) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Pedido',
+        text: 'El pedido no tiene un número de referencia y no puede ser movido.',
+      });
+      return;
+    }
+    
     if (
       this.pedidosSeleccionados.some((p) => p.nroPedido === pedido.nroPedido)
     ) {
@@ -521,8 +534,10 @@ export class GenerarOrdenComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         // Marcar el pedido como movido
-        this.pedidosMovidos.set(pedido.nroPedido, ordenAnterior);
-        this.hayPedidosMovidos = true;
+        if (pedido.nroPedido) {
+          this.pedidosMovidos.set(pedido.nroPedido, ordenAnterior);
+          this.hayPedidosMovidos = true;
+        }
 
         // Agregar el pedido a la lista de seleccionados
         this.pedidosSeleccionados.push(pedido);
@@ -543,12 +558,12 @@ export class GenerarOrdenComponent implements OnInit {
 
   // Método para verificar si un pedido fue movido de otra orden
   esPedidoMovido(pedido: Pedido): boolean {
-    return this.pedidosMovidos.has(pedido.nroPedido);
+    return !!pedido.nroPedido && this.pedidosMovidos.has(pedido.nroPedido);
   }
 
   // Método para obtener la orden anterior de un pedido movido
   getOrdenAnteriorPedido(pedido: Pedido): string {
-    return this.pedidosMovidos.get(pedido.nroPedido) || "";
+    return (pedido.nroPedido && this.pedidosMovidos.get(pedido.nroPedido)) || "";
   }
 
   // Método para contar pedidos movidos
@@ -778,10 +793,11 @@ export class GenerarOrdenComponent implements OnInit {
   }
 
   getProductVariations(item: any): string {
-    const configuracion = item.configuracion;
-    if (!configuracion) return "";
-
-    const variations = [];
+    if (!item.variableForm) {
+      return "";
+    }
+    const configuracion = item.variableForm;
+    const variations: string[] = [];
 
     if (configuracion.color) {
       variations.push(`Color: ${configuracion.color}`);
@@ -797,12 +813,7 @@ export class GenerarOrdenComponent implements OnInit {
   }
 
   getProductPrice(item: any): number {
-    return (
-      item.precio ||
-      item.producto?.precio ||
-      item.producto?.crearProducto?.precio ||
-      0
-    );
+    return item.precio?.precioSinImpuesto || 0;
   }
 
   getProductSubtotal(item: any): number {
@@ -911,5 +922,22 @@ export class GenerarOrdenComponent implements OnInit {
     } catch (error) {
       return "Fecha inválida";
     }
+  }
+
+  isRotuloGenerando(pedido: Pedido): boolean {
+    return !!pedido.nroPedido && this.generandoRotuloPara.has(pedido.nroPedido);
+  }
+
+  // ======= MÉTODOS PARA OPCIONES DE CADA PEDIDO =======
+  printPdf(pedido: Pedido): void {
+    this.onPrintPdf.emit(pedido);
+  }
+
+  viewTags(pedido: Pedido): void {
+    this.onViewTags.emit(pedido);
+  }
+
+  printLabel(pedido: Pedido): void {
+    this.onPrintLabel.emit(pedido);
   }
 }

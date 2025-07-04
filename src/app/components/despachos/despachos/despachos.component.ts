@@ -129,6 +129,7 @@ export class DespachosComponent implements OnInit {
   @ViewChild("pdfTemplateContainer", { static: false }) pdfTemplateContainer!: ElementRef;
   orders: PedidoPriorizado[] = [];
   loading: boolean = true;
+  generandoRotuloPara: Set<string> = new Set();
   totalValorProductoBruto: number;
   totalDescuento: number;
   htmlModal: any;
@@ -2991,92 +2992,61 @@ export class DespachosComponent implements OnInit {
   }
 
   public getCurrentUser(): UserLite | null {
-    const userStr = localStorage.getItem("user");
-    if (!userStr) return null;
-
-    try {
-      return JSON.parse(userStr) as UserLite;
-    } catch (error) {
-      console.error("Error al parsear información de usuario:", error);
-      return null;
-    }
+    const user = sessionStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
   }
 
   viewAllDispatchOrders() {
-    // Aquí se añade la lógica para la consulta masiva de órdenes de despacho
-    this.logisticaService.getShippingOrders().subscribe(
-      (data: Pedido[]) => {
-        const currentCompanyStr = sessionStorage.getItem("currentCompany");
-        const companyName = currentCompanyStr
-          ? JSON.parse(currentCompanyStr).nomComercial
-          : "";
-
-        this.dispatchOrders = data
-          .filter((x) => x.company == companyName)
-          .sort((a, b) => {
-            const aNum = a.nroShippingOrder ? parseInt(a.nroShippingOrder) : 0;
-            const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
-            return bNum - aNum;
-          });
-        this.modalService.open(this.dispatchOrdersModal, {
-          size: "xl",
-          fullscreen: true,
-        });
-      },
-      (error) => {
-        console.error("Error al consultar las órdenes de despacho:", error);
-        this.dispatchOrders = [];
-        this.modalService.open(this.dispatchOrdersModal, { size: "xl" });
-      },
-    );
+    this.openModal(this.dispatchOrdersModal, true);
   }
 
   pdfOrder(content, order: Pedido) {
-    this.pedidoSeleccionado = order;
     this.htmlModal = this.paymentService.getHtmlContent(order);
-    this.modalService
-      .open(content, {
-        size: "lg",
-        scrollable: true,
-        centered: true,
-        fullscreen: true,
-        ariaLabelledBy: "modal-basic-title",
-      })
-      .result.then(
-        (result) => {
-          this.htmlModal = null;
-        },
-        (reason) => {
-          this.htmlModal = null;
-        },
-      );
+    this.pedidoSeleccionado = order;
+    this.openModal(content);
   }
 
-  descargarRotulo(pedido: any): void {
-    this.pdfSize = "5x5";
-    const size = this.pdfSize.split("x").map(Number);
-    const width = size[0];
-    const height = size[1];
+  async descargarRotulo(pedido: any): Promise<void> {
+    if (!pedido || !pedido.nroPedido) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se puede generar el rótulo porque el pedido no tiene un número de referencia.',
+      });
+      return;
+    }
 
-    const rotuloContent = `
-    <div style="font-family: Arial, sans-serif; padding: 3px; border: 2px solid #ddd;">
-      <div>
-          <div style="margin-bottom: 2px;">
-            <p style="font-size: 100px; line-height:1.2;"><strong>Número de Pedido:</strong> ${pedido.nroPedido}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Fecha Entrega:</strong> ${pedido.fechaEntrega ? pedido.fechaEntrega.split("T")[0] : "N/A"}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Horario de Entrega:</strong> ${pedido.horarioEntrega || "N/A"}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Recibe:</strong> ${pedido.envio?.nombres || ""} ${pedido.envio?.apellidos || ""}</p>
-            <p style="font-size: 100px; line-height:1.2;">${pedido.envio?.direccionEntrega || ""}, ${pedido.envio?.nombreUnidad || ""}, ${pedido.envio?.especificacionesInternas || ""}, ${pedido.envio?.observaciones || ""}, ${pedido.envio?.zonaCobro || ""}</p>
-          </div>
-        </div>
-    </div>
-    `;
+    if (this.generandoRotuloPara.has(pedido.nroPedido)) {
+      return; // Evitar múltiples ejecuciones simultáneas
+    }
 
+    this.generandoRotuloPara.add(pedido.nroPedido);
     const element = document.createElement("div");
-    element.innerHTML = rotuloContent;
-    document.body.appendChild(element);
 
-    html2canvas(element).then((canvas) => {
+    try {
+      this.pdfSize = "5x5";
+      const size = this.pdfSize.split("x").map(Number);
+      const width = size[0];
+      const height = size[1];
+
+      const rotuloContent = `
+      <div style="font-family: Arial, sans-serif; padding: 3px; border: 2px solid #ddd;">
+        <div>
+            <div style="margin-bottom: 2px;">
+              <p style="font-size: 100px; line-height:1.2;"><strong>Número de Pedido:</strong> ${pedido.nroPedido}</p>
+              <p style="font-size: 100px; line-height:1.2;"><strong>Fecha Entrega:</strong> ${pedido.fechaEntrega ? new Date(pedido.fechaEntrega).toLocaleDateString("es-CO") : "N/A"}</p>
+              <p style="font-size: 100px; line-height:1.2;"><strong>Horario de Entrega:</strong> ${pedido.horarioEntrega || "N/A"}</p>
+              <p style="font-size: 100px; line-height:1.2;"><strong>Recibe:</strong> ${pedido.envio?.nombres || ""} ${pedido.envio?.apellidos || ""}</p>
+              <p style="font-size: 100px; line-height:1.2;">${pedido.envio?.direccionEntrega || ""}, ${pedido.envio?.nombreUnidad || ""}, ${pedido.envio?.especificacionesInternas || ""}, ${pedido.envio?.observaciones || ""}, ${pedido.envio?.zonaCobro || ""}</p>
+            </div>
+          </div>
+      </div>
+      `;
+
+      element.innerHTML = rotuloContent;
+      document.body.appendChild(element);
+
+      const canvas = await html2canvas(element);
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         orientation: "landscape",
@@ -3084,54 +3054,71 @@ export class DespachosComponent implements OnInit {
         format: [width, height],
       });
       pdf.addImage(imgData, "PNG", 0, 0, 5, 4);
+      
       const pdfBlob = pdf.output("blob");
       const url = URL.createObjectURL(pdfBlob);
 
-      window.open(url);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rotulo_${pedido.nroPedido}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-      document.body.removeChild(element);
-    });
+      Swal.fire({
+        icon: "success",
+        title: "Rótulo Descargado",
+        text: `El rótulo para el pedido #${pedido.nroPedido} ha sido generado exitosamente.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Error al descargar el rótulo", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error al generar rótulo",
+        text: `No se pudo generar el rótulo para el pedido #${pedido.nroPedido}. Inténtalo de nuevo.`,
+      });
+    } finally {
+      if (element.parentNode) {
+        document.body.removeChild(element);
+      }
+      this.generandoRotuloPara.delete(pedido.nroPedido);
+    }
   }
 
   imprimirOrderToAction(orderId: any) {
-    const cacheKey = `order_${orderId}`;
-    const cached = this.orderCache.get(cacheKey);
-
-    // Verificar si existe en cache y no ha expirado
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      this.procesarOrdenParaImprimir(cached.data);
-      return;
-    }
-
-    // Si no existe en cache o ha expirado, hacer la petición
-    this.logisticaService.getShippingOrder(orderId).subscribe({
-      next: (response) => {
+    this.logisticaService.getShippingOrder(orderId).subscribe(
+      (response) => {
         // Guardar en cache
-        this.orderCache.set(cacheKey, {
+        this.orderCache.set(`order_${orderId}`, {
           data: response,
           timestamp: Date.now(),
         });
-
         this.procesarOrdenParaImprimir(response);
       },
-      error: (error) => {
+      (error) => {
         console.error("Error obteniendo orden:", error);
         Swal.fire("Error", "No se pudo obtener la orden", "error");
       },
-    });
+    );
   }
 
   private procesarOrdenParaImprimir(response: any) {
-    this.nuevaOrdenEnvio = response;
-    this.pedidosSeleccionados = this.optimizarDatosPedidos(response.pedidos);
-    this.transportadorSeleccionado = response.pedidos[0]?.transportador;
-    this.nroShippingOrder = response.nroShippingOrder;
+    if (response && response.length > 0) {
+      this.nuevaOrdenEnvio = response;
+      this.pedidosSeleccionados = this.optimizarDatosPedidos(response.pedidos);
+      this.transportadorSeleccionado = response.pedidos[0]?.transportador;
+      this.nroShippingOrder = response.nroShippingOrder;
 
-    // Validar datos antes de imprimir
-    if (this.validateOrderData()) {
-      this.imprimirOrden();
-    } else {
-      this.showErrorMessage("Error: Datos de orden incompletos");
+      // Validar datos antes de imprimir
+      if (this.validateOrderData()) {
+        this.imprimirOrden();
+      } else {
+        this.showErrorMessage("Error: Datos de orden incompletos");
+      }
     }
   }
 
@@ -4323,3 +4310,4 @@ export class DespachosComponent implements OnInit {
     console.log("Estado de orden de envío limpiado completamente");
   }
 }
+
