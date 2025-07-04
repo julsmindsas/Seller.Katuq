@@ -42,6 +42,7 @@ import { ToastrService } from "ngx-toastr";
 import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
+import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
 
 @Component({
   selector: "app-list-orders",
@@ -204,6 +205,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   allBillingZone: any;
   selectedOrder: any;
   modalVisible = false;
+  
+  // Propiedades para modal de detalle entrega
+  detalleEntregaVisible = false;
+  pedidoEntregaData: PedidoEntrega | null = null;
 
   // Configuración de columnas - IMPORTANTE: 'detalles' debe estar siempre primero
   displayedColumns: ColumnDefinition[] = [
@@ -1539,6 +1544,67 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
           this.editOrder(order);
         },
       );
+  }
+
+  /**
+   * Muestra el modal con detalles de entrega para pedidos entregados
+   * @param order Pedido entregado del cual mostrar los detalles
+   */
+  mostrarDetalleEntrega(order: Pedido) {
+    // Verificar que el pedido esté en estado "Entregado"
+    if (order.estadoProceso !== 'Entregado') {
+      this.toastrService.warning(
+        'Esta opción solo está disponible para pedidos entregados',
+        'Estado inválido'
+      );
+      return;
+    }
+
+    // Convertir Pedido a PedidoEntrega con datos adicionales
+    this.pedidoEntregaData = {
+      ...order,
+      // Datos adicionales que podrían venir del backend
+      estadoEntrega: 'Entregado',
+      quienRecibio: order.envio?.nombres || 'No especificado',
+      telefono: order.envio?.celular || order.cliente?.numero_celular_comprador,
+      fechaRecepcion: order.fechaEntrega || new Date().toISOString(),
+      observacionesEntrega: order.notasPedido?.notasEntregas?.[0]?.descripcion || '',
+      // Estas propiedades deberían venir del backend en una implementación real
+      fotosEvidencia: [], // Se llenarían desde el servidor
+      fotoEvidencia: '', // Se llenaría desde el servidor  
+      signatureImage: '', // Se llenaría desde el servidor
+      calificacion: 0
+    };
+
+    // Debug: Verificar datos
+    console.log('Datos del pedido de entrega:', this.pedidoEntregaData);
+    console.log('Mostrando modal con detalleEntregaVisible:', true);
+    
+    // Mostrar el modal
+    this.detalleEntregaVisible = true;
+    
+    // Debug adicional después de 100ms para verificar que el cambio se propague
+    setTimeout(() => {
+      console.log('Estado después de 100ms - detalleEntregaVisible:', this.detalleEntregaVisible);
+      console.log('Estado después de 100ms - pedidoEntregaData:', this.pedidoEntregaData);
+    }, 100);
+  }
+
+  /**
+   * Cierra el modal de detalle de entrega
+   */
+  cerrarDetalleEntrega() {
+    this.detalleEntregaVisible = false;
+    this.pedidoEntregaData = null;
+  }
+
+  /**
+   * Maneja el click en una imagen del modal de detalle entrega
+   * @param imageUrl URL de la imagen a mostrar en tamaño completo
+   */
+  onImageClick(imageUrl: string) {
+    // TODO: Implementar modal de imagen en tamaño completo si es necesario
+    console.log('Imagen clickeada:', imageUrl);
   }
 
   editDatosFacturacion(content, order: Pedido) {

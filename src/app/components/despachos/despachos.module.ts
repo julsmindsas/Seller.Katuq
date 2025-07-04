@@ -83,5 +83,6 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     PdfTemplateComponent,
     TotalValorACobrarPipe,
   ],
+  exports: [DetalleEntregaComponent],
 })
 export class DespachosModule {}

@@ -1496,6 +1496,27 @@ $border-radius: 8px;
 .delete-icon {
   background: linear-gradient(135deg, #ff3838, #ff4757);
 }
+.delivery-icon {
+  background: linear-gradient(135deg, #00d2d3, #054f52);
+}
+
+// Contenedor simple para el modal de entrega sin conflictos CSS
+.delivery-modal-container {
+  max-width: 800px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+  
+  // Asegurar que el contenido interno se muestre correctamente
+  app-detalle-entrega {
+    display: block;
+    width: 100%;
+  }
+}
 
 .option-content {
   flex: 1;
@@ -1575,6 +1596,11 @@ $border-radius: 8px;
   max-height: 90vh;
   overflow-y: auto;
   animation: slideIn 0.3s ease-out;
+  
+  &.delivery-modal {
+    max-width: 700px;
+    width: 95%;
+  }
 }
 
 .custom-modal-content {

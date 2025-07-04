@@ -1552,6 +1552,17 @@
             </div>
           </button>
 
+          <!-- Ver Detalles de Entrega (Solo cuando está entregado) -->
+          <button *ngIf="selectedOrder?.estadoProceso === 'Entregado'" class="option-btn" type="button" (click)="mostrarDetalleEntrega(selectedOrder); closeOptionsModal()">
+            <div class="option-icon delivery-icon">
+              <i class="fa fa-truck"></i>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ 'Ver Detalles de Entrega' | translate }}</span>
+              <small class="option-description">{{ 'Información de la entrega realizada' | translate }}</small>
+            </div>
+          </button>
+
           <!-- Eliminar Pedido (Solo usuarios autorizados) -->
           <button *ngIf="canDeleteOrder() && !isFromProduction" class="option-btn danger-btn" type="button" (click)="confirmDeleteOrder(selectedOrder); closeOptionsModal()">
             <div class="option-icon delete-icon">
@@ -1573,6 +1584,26 @@
           {{ 'Cancelar' | translate }}
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalles de Entrega -->
+<div *ngIf="detalleEntregaVisible" class="custom-modal-overlay" (click)="cerrarDetalleEntrega()">
+  <div class="delivery-modal-container" (click)="$event.stopPropagation()">
+    <!-- DEBUG: Test de visibilidad del modal -->
+
+    
+    <app-detalle-entrega 
+      *ngIf="pedidoEntregaData"
+      [pedido]="pedidoEntregaData"
+      (onImageClick)="onImageClick($event)"
+      (onClose)="cerrarDetalleEntrega()">
+    </app-detalle-entrega>
+    
+    <!-- DEBUG: Si no hay datos -->
+    <div *ngIf="!pedidoEntregaData" style="background: orange; color: white; padding: 20px; text-align: center;">
+      No hay datos de pedidoEntregaData
     </div>
   </div>
 </div>

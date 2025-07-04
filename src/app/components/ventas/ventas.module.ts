@@ -60,6 +60,7 @@ import {
   POS_CHECKOUT_SERVICE,
 } from "../../shared/services/ventas/pos-checkout.service";
 import { ReporteCierreComponent } from "./pos2/widgets/cash-closing/reporte-cierre/reporte-cierre.component";
+import { DespachosModule } from "../despachos/despachos.module";
 
 @NgModule({
   imports: [
@@ -84,6 +85,7 @@ import { ReporteCierreComponent } from "./pos2/widgets/cash-closing/reporte-cier
     ToastModule,
     HttpClientModule,
     VoiceInteractionModule,
+    DespachosModule,
   ],
   declarations: [
     PedidoFacturacionComponent,

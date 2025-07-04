@@ -67,21 +67,78 @@ export class PdfTemplateComponent implements OnInit {
   }
 
   getCurrentDate(): string {
-    return new Date().toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    const date = new Date();
+    const dias = [
+      "Domingo",
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+    ];
+    const meses = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
+
+    const diaSemana = dias[date.getDay()];
+    const dia = String(date.getDate()).padStart(2, "0");
+    const mes = meses[date.getMonth()];
+    const anio = date.getFullYear();
+
+    return `${diaSemana} ${dia} de ${mes} de ${anio}`;
   }
 
   getCurrentDateTime(): string {
-    return new Date().toLocaleString("es-CO", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const date = new Date();
+
+    const dias = [
+      "Domingo",
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+    ];
+    const meses = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
+
+    const diaSemana = dias[date.getDay()];
+    const dia = String(date.getDate()).padStart(2, "0");
+    const mes = meses[date.getMonth()];
+    const anio = date.getFullYear();
+
+    let horas = date.getHours();
+    const minutos = String(date.getMinutes()).padStart(2, "0");
+    const ampm = horas >= 12 ? "pm" : "am";
+    horas = horas % 12;
+    horas = horas ? horas : 12; // Convertir 0 en 12
+
+    return `${diaSemana} ${dia} de ${mes} de ${anio}, ${horas}:${minutos}${ampm}`;
   }
 
   formatCurrency(amount: number): string {
