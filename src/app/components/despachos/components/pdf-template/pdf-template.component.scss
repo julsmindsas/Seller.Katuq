@@ -1,0 +1,361 @@
+/* Variables de Diseño */
+:root {
+  --primary-color: #4A90E2;
+  --secondary-color: #50E3C2;
+  --text-color: #4A4A4A;
+  --light-gray-color: #F4F4F4;
+  --medium-gray-color: #D8D8D8;
+  --dark-gray-color: #9B9B9B;
+  --font-family: 'Helvetica Neue', 'Arial', sans-serif;
+}
+
+/* Estructura Principal */
+.pdf-container {
+  background: white;
+  font-family: var(--font-family);
+  color: var(--text-color);
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Encabezado */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 15px;
+  border-bottom: 3px solid var(--primary-color);
+}
+
+.header-left .order-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 0 0 5px 0;
+}
+
+.footer-bottom {
+  font-size: 10px;
+  color: var(--dark-gray-color);
+  margin-top: 15px;
+}
+
+.header-left .company-details p {
+  font-size: 12px;
+  color: var(--dark-gray-color);
+  margin: 0;
+}
+
+.header-right .order-id {
+  background-color: var(--light-gray-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.header-right .order-id span {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--dark-gray-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-right .order-id p {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 2px 0 0 0;
+}
+
+/* Sección de Información */
+.info-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--medium-gray-color);
+}
+
+.info-box {
+  flex: 1;
+  text-align: center;
+}
+
+.info-box .info-label {
+  font-size: 11px;
+  color: var(--dark-gray-color);
+  text-transform: uppercase;
+}
+
+.info-box .info-data {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.info-box.total-box .total-amount {
+  font-size: 18px;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+/* Tabla de Pedidos */
+.table-section {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.orders-table th, .orders-table td {
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--medium-gray-color);
+}
+
+.orders-table th {
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--dark-gray-color);
+  letter-spacing: 1px;
+  border-bottom: 2px solid #D0021B;
+}
+
+.orders-table tbody tr {
+  border-bottom: 1px solid #D0021B;
+}
+
+.orders-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.col-pedido { width: 15%; }
+.col-cliente { width: 30%; }
+.col-zona { width: 10%; }
+.col-horario { width: 15%; }
+.col-valor { width: 15%; text-align: right; }
+.col-firma { width: 15%; }
+
+.cliente-nombre {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.cliente-direccion {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.cliente-telefono {
+  font-size: 10px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.col-valor {
+  font-weight: bold;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  align-items: flex-end;
+  font-size: 10px;
+  color: var(--dark-gray-color);
+  padding-top: 15px;
+  border-top: 1px solid var(--medium-gray-color);
+  margin-top: auto;
+}
+
+.footer-left {
+  flex-basis: 50%;
+}
+
+.footer-right {
+  flex-basis: 50%;
+  display: flex;
+  justify-content: flex-start;
+  gap: 30px;
+}
+
+.signature-box {
+  text-align: center;
+}
+
+.signature-line {
+  border-bottom: 1px solid var(--text-color);
+  width: 150px;
+  margin-bottom: 5px;
+}
+
+/* Estado de Error */
+.error-state {
+  padding: 30px;
+  text-align: center;
+  font-family: var(--font-family);
+
+  h3 {
+    color: #D0021B;
+    margin-bottom: 15px;
+  }
+}
+
+// Print Optimizations
+@media print {
+  .pdf-container {
+    max-width: none;
+    margin: 0;
+    padding: 15px;
+    font-size: 12px;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+
+    .header {
+      margin-bottom: 20px;
+      page-break-after: avoid;
+
+      .company-info h1 {
+        font-size: 20px;
+      }
+
+      .order-info h2 {
+        font-size: 24px;
+      }
+    }
+
+    .transport-info {
+      page-break-inside: avoid;
+      margin-bottom: 15px;
+      padding: 10px;
+
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+    }
+
+    .order-table {
+      page-break-inside: avoid;
+      font-size: 10px;
+      margin: 15px 0;
+
+      th,
+      td {
+        padding: 6px 4px;
+      }
+
+      .client-info .client-details {
+        font-size: 9px;
+      }
+    }
+
+    .products-section {
+      .pedido-products {
+        page-break-inside: avoid;
+        margin-bottom: 15px;
+      }
+    }
+
+    .summary {
+      page-break-inside: avoid;
+      margin: 20px 0;
+      padding: 15px;
+    }
+
+    .footer {
+      page-break-inside: avoid;
+      margin-top: 25px;
+
+      .signatures {
+        margin-top: 30px;
+
+        .signature p:first-child {
+          width: 150px;
+        }
+      }
+    }
+
+    .error-state {
+      display: none;
+    }
+  }
+
+  // Hide elements that shouldn't print
+  .no-print {
+    display: none !important;
+  }
+}
+
+// Responsive Design for smaller screens
+@media (max-width: 768px) {
+  .pdf-container {
+    padding: 15px;
+
+    .header {
+      flex-direction: column;
+      gap: 20px;
+
+      .order-info {
+        text-align: left;
+      }
+    }
+
+    .transport-info .info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .order-table {
+      font-size: 11px;
+
+      th,
+      td {
+        padding: 6px 4px;
+      }
+    }
+
+    .footer .signatures {
+      flex-direction: column;
+      gap: 30px;
+    }
+  }
+}
+
+// Dark mode support (optional)
+@media (prefers-color-scheme: dark) {
+  .pdf-container {
+    background: white; // Force white background for PDF
+    color: #333; // Force dark text for PDF
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .pdf-container {
+    .header {
+      border-bottom-color: #000;
+    }
+
+    .order-table {
+      th,
+      td {
+        border-color: #000;
+      }
+
+      th {
+        background-color: #000;
+        color: #fff;
+      }
+    }
+  }
+}

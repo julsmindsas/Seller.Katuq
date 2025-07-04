@@ -21,6 +21,8 @@ export class GenerarOrdenComponent implements OnInit {
   @Input() nuevaOrdenEnvio: any;
   @Input() nroShippingOrder: string;
   @Input() isEditMode: boolean = false;
+  @Input() isGeneratingPDF: boolean = false;
+  @Input() pdfProgress: number = 0;
 
   @Output() onClose = new EventEmitter<void>();
   @Output() onSave = new EventEmitter<any>();

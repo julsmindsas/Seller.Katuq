@@ -1,0 +1,93 @@
+<div class="pdf-container" *ngIf="isValidForGeneration()">
+  <!-- Encabezado -->
+  <header class="header">
+    <div class="header-left">
+      <h1 class="order-title">{{ getOrderTitle() }}</h1>
+      <div class="company-details">
+        <p>Katuq Seller</p>
+        <p>Fecha de Generación: {{ getCurrentDate() }}</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="order-id">
+        <span>N° Orden de Envío</span>
+        <p>{{ nroShippingOrder }}</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Información de la Orden -->
+  <section class="info-section">
+    <div class="info-box">
+      <span class="info-label">Transportador</span>
+      <p class="info-data">{{ getTransportadorNombre() }}</p>
+    </div>
+    <div class="info-box">
+      <span class="info-label">Despachador</span>
+      <p class="info-data">{{ getValorSeguro(userName) }}</p>
+    </div>
+    <div class="info-box">
+      <span class="info-label">Total de Pedidos</span>
+      <p class="info-data">{{ getPedidosCount() }}</p>
+    </div>
+    <div class="info-box total-box">
+      <span class="info-label">Total a Recaudar</span>
+      <p class="info-data total-amount">{{ formatCurrency(totalPendiente) }}</p>
+    </div>
+  </section>
+
+  <!-- Tabla de Pedidos -->
+  <section class="table-section">
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th class="col-pedido">Pedido</th>
+          <th class="col-cliente">Cliente y Dirección</th>
+          <th class="col-zona">Zona</th>
+          <th class="col-horario">Horario</th>
+          <th class="col-valor">Valor a Cobrar</th>
+          <th class="col-firma">Firma</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let pedido of pedidos; trackBy: trackByPedido">
+          <td class="col-pedido">{{ getValorSeguro(pedido.nroPedido) }}</td>
+          <td class="col-cliente">
+            <p class="cliente-nombre">{{ getClienteNombre(pedido) }}</p>
+            <p class="cliente-direccion">{{ getDireccionCompleta(pedido) }}</p>
+            <p class="cliente-telefono">Tel: {{ getValorSeguro(pedido.envio?.celular) }}</p>
+          </td>
+          <td class="col-zona">{{ getValorSeguro(pedido.envio?.zonaCobro) }}</td>
+          <td class="col-horario">{{ getValorSeguro(pedido.horarioEntrega) }}</td>
+          <td class="col-valor">{{ formatCurrency(pedido.faltaPorPagar || 0) }}</td>
+          <td class="col-firma"></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-bottom">
+      Documento generado por Katuq Seller | {{ getCurrentDateTime() }}
+    </div>
+    <div class="footer-right">
+      <div class="signature-box">
+        <p class="signature-line"></p>
+        <p>Firma Despachador</p>
+      </div>
+      <div class="signature-box">
+        <p class="signature-line"></p>
+        <p>Firma Transportador</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- Estado de Error -->
+<div class="error-state" *ngIf="!isValidForGeneration()">
+  <h3>Error en la generación del PDF</h3>
+  <ul>
+    <li *ngFor="let error of getValidationErrors()">{{ error }}</li>
+  </ul>
+</div>

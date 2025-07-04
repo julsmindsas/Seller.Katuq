@@ -183,12 +183,12 @@ $border-radius: 8px;
   .stat-card {
     margin-bottom: 0.75rem;
   }
-  
+
   .btn-group {
     width: 100%;
     margin-bottom: 0.5rem;
   }
-  
+
   .filtros-container h5 {
     margin-bottom: 1rem;
   }
@@ -222,15 +222,15 @@ $border-radius: 8px;
 .module-header {
   background: linear-gradient(to right, white, #fafafa);
   border-radius: $border-radius $border-radius 0 0;
-  
+
   h5 {
     font-size: 1.3rem;
-    
+
     i {
       font-size: 1.1rem;
     }
   }
-  
+
   p {
     opacity: 0.8;
     margin-left: 2rem;
@@ -242,16 +242,16 @@ $border-radius: 8px;
   .card {
     border: none;
     transition: all 0.2s ease-in-out;
-    
+
     &:hover {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
     }
   }
-  
+
   .progress {
     background-color: #f0f0f0;
     border-radius: 10px;
-    
+
     .progress-bar {
       border-radius: 10px;
     }
@@ -266,19 +266,19 @@ $border-radius: 8px;
   border-radius: 30px;
   font-size: 0.8rem;
   font-weight: 600;
-  
+
   &.prioridad-alta {
     background-color: rgba(255, 62, 62, 0.15);
     color: #de2a2a;
     border: 1px solid rgba(255, 62, 62, 0.3);
   }
-  
+
   &.prioridad-media {
     background-color: rgba(255, 187, 51, 0.15);
     color: #e09c0e;
     border: 1px solid rgba(255, 187, 51, 0.3);
   }
-  
+
   &.prioridad-baja {
     background-color: rgba(39, 194, 76, 0.15);
     color: #19a03e;
@@ -386,7 +386,7 @@ $border-radius: 8px;
 .alert {
   border-radius: 0.5rem;
   border: none;
-  
+
   &.alert-warning {
     background-color: rgba(255, 187, 51, 0.15);
     color: #b27b00;
@@ -394,7 +394,7 @@ $border-radius: 8px;
       color: #ffc107;
     }
   }
-  
+
   &.alert-info {
     background-color: rgba(13, 202, 240, 0.15);
     color: #087990;
@@ -408,7 +408,7 @@ $border-radius: 8px;
 .options-cell {
   .btn-actions {
     position: relative;
-    
+
     .btn-options {
       background: transparent;
       border: none;
@@ -416,13 +416,13 @@ $border-radius: 8px;
       border-radius: 4px;
       cursor: pointer;
       color: #6c757d;
-      
+
       &:hover {
         background-color: #f8f9fa;
         color: #0d6efd;
       }
     }
-    
+
     .list-actions {
       display: none;
       position: absolute;
@@ -436,27 +436,27 @@ $border-radius: 8px;
       margin: 0;
       min-width: 180px;
       z-index: 1000;
-      
+
       li {
         display: flex;
         align-items: center;
         padding: 0.5rem 1rem;
         cursor: pointer;
         font-size: 0.875rem;
-        
+
         i {
           margin-right: 0.5rem;
           width: 16px;
           text-align: center;
         }
-        
+
         &:hover {
           background-color: #f8f9fa;
           color: #0d6efd;
         }
       }
     }
-    
+
     &:hover .list-actions {
       display: block;
     }
@@ -479,92 +479,92 @@ $border-radius: 8px;
       border-radius: 8px;
       padding: 0.75rem;
       transition: all 0.3s ease;
-      
+
       &:hover {
         background: #e9ecef;
         transform: translateY(-1px);
       }
-      
+
       i {
         font-size: 1.5rem;
       }
-      
+
       .fw-bold {
         font-size: 1.2rem;
         line-height: 1.2;
         color: #495057 !important;
       }
-      
+
       .small {
         font-size: 0.8rem;
         color: #6c757d !important;
       }
     }
   }
-  
+
   .map-placeholder {
     min-height: 400px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border: 2px dashed #dee2e6;
     transition: all 0.3s ease;
-    
+
     &:hover {
       border-color: #0d6efd;
       background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
     }
-    
+
     i {
       font-size: 3rem;
       color: #6c757d;
     }
-    
+
     h6 {
       color: #495057;
       margin-bottom: 0.5rem;
     }
-    
+
     p {
       color: #6c757d;
       font-size: 0.9rem;
     }
   }
-  
+
   .pedido-card {
     transition: all 0.2s ease;
     border: 1px solid #e9ecef !important;
-    
+
     &:hover {
       border-color: #0d6efd !important;
       box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
     }
-    
+
     .card-body {
       padding: 0.75rem;
     }
-    
+
     .fw-bold {
       color: #0d6efd;
       font-size: 0.9rem;
     }
-    
+
     .text-muted {
       font-size: 0.8rem;
       line-height: 1.3;
     }
-    
+
     .badge {
       font-size: 0.7rem;
       padding: 0.25em 0.5em;
-      
+
       &.bg-success {
         background-color: #198754 !important;
       }
-      
+
       &.bg-warning {
         background-color: #ffc107 !important;
         color: #000 !important;
       }
-      
+
       &.bg-info {
         background-color: #0dcaf0 !important;
         color: #000 !important;
@@ -580,39 +580,39 @@ $border-radius: 8px;
     border: 1px solid #e9ecef;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
-    
+
     &:hover {
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       transform: translateY(-1px);
     }
-    
+
     .fw-bold {
       font-size: 1.4rem !important;
       font-weight: 700 !important;
-      
+
       &.text-info {
         color: #17a2b8 !important;
       }
-      
+
       &.text-warning {
         color: #f57c00 !important;
       }
-      
+
       &.text-primary {
         color: #0d6efd !important;
       }
-      
+
       &.text-success {
         color: #198754 !important;
       }
     }
-    
+
     .small.text-muted {
       color: #6c757d !important;
       font-weight: 500;
       font-size: 0.8rem;
     }
-    
+
     i {
       opacity: 0.8;
     }
@@ -630,32 +630,32 @@ $border-radius: 8px;
 :host ::ng-deep .tracking-section {
   .card {
     background: #ffffff;
-    
+
     .card-title {
       color: #343a40 !important;
       font-weight: 600;
     }
-    
+
     .fw-bold {
       color: #495057 !important;
-      
+
       &.text-info {
         color: #17a2b8 !important;
       }
-      
+
       &.text-warning {
         color: #f57c00 !important;
       }
-      
+
       &.text-primary {
         color: #0d6efd !important;
       }
-      
+
       &.text-success {
         color: #198754 !important;
       }
     }
-    
+
     .text-muted {
       color: #6c757d !important;
     }
@@ -666,18 +666,18 @@ $border-radius: 8px;
 .stat-card {
   &.stat-tracking {
     border-left: 4px solid;
-    
+
     &.en-ruta {
       border-left-color: #0dcaf0;
-      
+
       .stat-icon {
         background: linear-gradient(45deg, #0dcaf0, #17a2b8);
       }
     }
-    
+
     &.para-despacho {
       border-left-color: #ffc107;
-      
+
       .stat-icon {
         background: linear-gradient(45deg, #ffc107, #fd7e14);
       }
@@ -708,20 +708,20 @@ $border-radius: 8px;
 .ubicaciones-list {
   max-height: 300px;
   overflow-y: auto;
-  
+
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 3px;
-    
+
     &:hover {
       background: #a8a8a8;
     }
@@ -744,18 +744,18 @@ $border-radius: 8px;
   .stat-card {
     margin-bottom: 1rem;
   }
-  
+
   .metrics-container .col-md-4 {
     margin-bottom: 1rem;
   }
-  
+
   .tracking-section {
     .tracking-stats {
       .col-6 {
         margin-bottom: 0.5rem;
       }
     }
-    
+
     .pedido-card {
       margin-bottom: 0.5rem;
     }
@@ -767,22 +767,190 @@ $border-radius: 8px;
     .map-placeholder {
       min-height: 300px;
       padding: 2rem 1rem;
-      
+
       i {
         font-size: 2rem;
       }
-      
+
       h6 {
         font-size: 1rem;
       }
-      
+
       p {
         font-size: 0.8rem;
       }
     }
-    
+
     .pedido-card .card-body {
       padding: 0.5rem;
     }
   }
+}
+
+// PDF Loading Overlay Styles
+.pdf-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.3s ease-in-out;
+
+  .pdf-loading-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    animation: slideIn 0.3s ease-out;
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    .progress {
+      border-radius: 10px;
+      background-color: #f8f9fa;
+
+      .progress-bar {
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: width 0.3s ease;
+      }
+    }
+
+    h5 {
+      color: #495057;
+      font-weight: 600;
+    }
+
+    p {
+      color: #6c757d;
+      margin: 0;
+    }
+
+    small {
+      color: #868e96;
+    }
+  }
+}
+
+// Progress Modal Styles
+.modal-body .progress-container {
+  .progress {
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+
+    .progress-bar {
+      border-radius: 8px;
+      font-weight: 600;
+      transition: width 0.3s ease;
+
+      &.bg-success {
+        background: linear-gradient(45deg, #28a745, #20c997);
+      }
+
+      &.bg-primary {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+      }
+    }
+  }
+}
+
+.progress-info {
+  i.pi-file-pdf {
+    font-size: 1.2rem;
+  }
+
+  .text-success {
+    font-weight: 600;
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Responsive adjustments for overlay
+@media (max-width: 576px) {
+  .pdf-loading-overlay {
+    .pdf-loading-content {
+      padding: 1.5rem;
+      margin: 1rem;
+
+      .spinner-border {
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+
+      h5 {
+        font-size: 1.1rem;
+      }
+    }
+  }
+}
+
+// Print styles - hide overlay when printing
+@media print {
+  .pdf-loading-overlay {
+    display: none !important;
+  }
+}
+
+// PDF Progress Overlay
+.pdf-progress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.pdf-progress-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.pdf-progress-modal .progress {
+  height: 25px;
+}
+
+.pdf-progress-modal .progress-bar {
+  transition: width 0.3s ease;
 }
