@@ -67,81 +67,27 @@ export class PdfTemplateComponent implements OnInit {
   }
 
   getCurrentDate(): string {
-    const date = new Date();
-    const dias = [
-      "Domingo",
-      "Lunes",
-      "Martes",
-      "Miércoles",
-      "Jueves",
-      "Viernes",
-      "Sábado",
-    ];
-    const meses = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
-
-    const diaSemana = dias[date.getDay()];
-    const dia = String(date.getDate()).padStart(2, "0");
-    const mes = meses[date.getMonth()];
-    const anio = date.getFullYear();
-
-    return `${diaSemana} ${dia} de ${mes} de ${anio}`;
+    return new Date().toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   }
 
   getCurrentDateTime(): string {
-    const date = new Date();
-
-    const dias = [
-      "Domingo",
-      "Lunes",
-      "Martes",
-      "Miércoles",
-      "Jueves",
-      "Viernes",
-      "Sábado",
-    ];
-    const meses = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
-
-    const diaSemana = dias[date.getDay()];
-    const dia = String(date.getDate()).padStart(2, "0");
-    const mes = meses[date.getMonth()];
-    const anio = date.getFullYear();
-
-    let horas = date.getHours();
-    const minutos = String(date.getMinutes()).padStart(2, "0");
-    const ampm = horas >= 12 ? "pm" : "am";
-    horas = horas % 12;
-    horas = horas ? horas : 12; // Convertir 0 en 12
-
-    return `${diaSemana} ${dia} de ${mes} de ${anio}, ${horas}:${minutos}${ampm}`;
+    return new Date().toLocaleString("es-CO", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   formatCurrency(amount: number): string {
+    if (isNaN(amount)) {
+      return "N/A";
+    }
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
       currency: "COP",
@@ -150,18 +96,13 @@ export class PdfTemplateComponent implements OnInit {
   }
 
   getPedidosCount(): number {
-    return this.pedidos.length;
+    return this.pedidos?.length || 0;
   }
 
   getTotalProductos(): number {
-    return this.pedidos.reduce((total, pedido) => {
-      return (
-        total +
-        (pedido.carrito?.reduce(
-          (subtotal, item) => subtotal + (item.cantidad || 0),
-          0,
-        ) || 0)
-      );
+    if (!this.pedidos) return 0;
+    return this.pedidos.reduce((acc, pedido) => {
+      return acc + (pedido.carrito?.length || 0);
     }, 0);
   }
 
@@ -169,78 +110,85 @@ export class PdfTemplateComponent implements OnInit {
   getOrderTitle(): string {
     switch (this.templateType) {
       case "orden":
-        return "Orden de Envío";
+        return `Orden de Envío #${this.nroShippingOrder}`;
       case "entrega":
-        return "Guía de Entrega";
+        return `Comprobante de Entrega - Pedido #${this.pedidos[0]?.nroPedido}`;
       case "factura":
-        return "Factura de Despacho";
+        return `Factura de Venta - Pedido #${this.pedidos[0]?.nroPedido}`;
       default:
         return "Documento";
     }
   }
 
   shouldShowField(field: string): boolean {
-    // Configurar qué campos mostrar según el tipo de template
-    const fieldsByType = {
-      orden: [
-        "nroPedido",
-        "cliente",
-        "direccion",
-        "telefono",
-        "total",
-        "horario",
-        "ciudad",
-        "departamento",
-      ],
-      entrega: [
-        "nroPedido",
-        "cliente",
-        "direccion",
-        "telefono",
-        "productos",
-        "observaciones",
-      ],
-      factura: [
-        "nroPedido",
-        "cliente",
-        "direccion",
-        "total",
-        "impuestos",
-        "subtotal",
-      ],
+    const config = {
+      orden: {
+        header: true,
+        summary: true,
+        details: true,
+        footer: true,
+        transportador: true,
+        user: true,
+        total: true,
+      },
+      entrega: {
+        header: true,
+        summary: false,
+        details: true,
+        footer: true,
+        transportador: false,
+        user: false,
+        total: false,
+      },
+      factura: {
+        header: true,
+        summary: true,
+        details: true,
+        footer: false,
+        transportador: false,
+        user: true,
+        total: true,
+      },
     };
-
-    return fieldsByType[this.templateType]?.includes(field) || false;
+    return config[this.templateType]?.[field] ?? false;
   }
 
   // Validación de datos
   isValidForGeneration(): boolean {
+    console.log("Validando datos para generación PDF:", {
+      pedidos: this.pedidos?.length || 0,
+      nroShippingOrder: this.nroShippingOrder,
+      transportadorSeleccionado: !!this.transportadorSeleccionado,
+      userName: this.userName,
+    });
 
     // Validación más flexible - transportador no es obligatorio si hay userName
     const hasBasicData = !!(this.pedidos.length > 0 && this.nroShippingOrder);
     const hasResponsible = !!(this.transportadorSeleccionado || this.userName);
     
     const isValid = hasBasicData && hasResponsible;
-   
+    
+    console.log("Resultado de validación:", isValid, {
+      hasBasicData,
+      hasResponsible
+    });
     
     return isValid;
   }
 
   getValidationErrors(): string[] {
     const errors: string[] = [];
-
     if (!this.pedidos || this.pedidos.length === 0) {
-      errors.push("No hay pedidos para generar el PDF");
+      errors.push("No hay pedidos para generar la orden.");
     }
-
     if (!this.nroShippingOrder) {
-      errors.push("Número de orden de envío requerido");
+      errors.push("Falta el número de orden de envío.");
     }
-
     if (!this.transportadorSeleccionado && !this.userName) {
       errors.push("Se requiere transportador o usuario responsable");
     }
 
+    console.log("Errores de validación:", errors);
     return errors;
   }
 
