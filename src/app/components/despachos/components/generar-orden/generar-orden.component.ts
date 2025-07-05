@@ -49,6 +49,7 @@ export class GenerarOrdenComponent implements OnInit {
     { field: "direccionEntrega", header: "Dirección", visible: true },
     { field: "faltaPorPagar", header: "Valor a Cobrar", visible: true },
     { field: "enOrden", header: "Estado en Orden", visible: true },
+    { field: "opciones", header: "Opciones", visible: true },
     { field: "horarioEntrega", header: "Horario Entrega", visible: false },
     { field: "formaEntrega", header: "Forma Entrega", visible: false },
     { field: "estadoProceso", header: "Estado", visible: false },

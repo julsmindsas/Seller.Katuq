@@ -203,6 +203,36 @@
                                                     <i class="pi pi-check me-1"></i>Disponible
                                                 </span>
                                             </ng-container>
+                                            <ng-container *ngSwitchCase="'opciones'">
+                                                <div class="dropdown" ngbDropdown>
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                                        [id]="'dropdownMenuButtonAvailable' + pedido.nroPedido" ngbDropdownToggle>
+                                                        <i class="pi pi-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu" [attr.aria-labelledby]="'dropdownMenuButtonAvailable' + pedido.nroPedido" ngbDropdownMenu>
+                                                        <li>
+                                                            <button class="dropdown-item" (click)="printPdf(pedido)">
+                                                                <i class="pi pi-file-pdf me-1"></i>{{ 'Imprimir Pdf' | translate }}
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="dropdown-item" (click)="viewTags(pedido)">
+                                                                <i class="pi pi-tag me-1"></i>{{ 'Tarjeta' | translate }}
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="dropdown-item" (click)="printLabel(pedido)" [disabled]="isRotuloGenerando(pedido)">
+                                                                <span *ngIf="!isRotuloGenerando(pedido)">
+                                                                    <i class="pi pi-file me-1"></i>{{ 'Rótulo' | translate }}
+                                                                </span>
+                                                                <span *ngIf="isRotuloGenerando(pedido)">
+                                                                    <i class="pi pi-spin pi-spinner me-1"></i>{{ 'Generando...' | translate }}
+                                                                </span>
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </ng-container>
                                             <ng-container *ngSwitchDefault>
                                                 {{
                                                 getNestedProperty(
@@ -332,10 +362,10 @@
                                 <td>
                                     <div class="dropdown" ngbDropdown>
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                                            id="dropdownMenuButton" ngbDropdownToggle>
+                                            [id]="'dropdownMenuButtonSelected' + pedido.nroPedido" ngbDropdownToggle>
                                             <i class="pi pi-ellipsis-v"></i>
                                         </button>
-                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton" ngbDropdownMenu>
+                                        <ul class="dropdown-menu" [attr.aria-labelledby]="'dropdownMenuButtonSelected' + pedido.nroPedido" ngbDropdownMenu>
                                             <li>
                                                 <button class="dropdown-item" (click)="printPdf(pedido)">
                                                     <i class="pi pi-file-pdf me-1"></i>{{ 'Imprimir Pdf' | translate }}
