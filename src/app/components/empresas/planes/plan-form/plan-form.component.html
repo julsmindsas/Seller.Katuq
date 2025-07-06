@@ -1,0 +1,63 @@
+<p-card>
+  <p-header>
+    <h2>{{ editMode ? 'Editar Plan' : 'Crear Plan' }}</h2>
+  </p-header>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="p-fluid p-formgrid p-grid">
+      <div class="p-field p-col-12 p-md-6">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" pInputText formControlName="nombre" />
+      </div>
+
+      <div class="p-field p-col-12 p-md-6">
+        <label for="tipo">Tipo</label>
+        <input id="tipo" pInputText formControlName="tipo" />
+      </div>
+
+      <div class="p-field p-col-12 p-md-6">
+        <label for="precio">Precio</label>
+        <p-inputNumber id="precio" formControlName="precio" mode="currency" currency="USD" locale="en-US"></p-inputNumber>
+      </div>
+
+      <div class="p-field p-col-12 p-md-6">
+        <label for="duracion">Duración (días)</label>
+        <p-inputNumber id="duracion" formControlName="duracion"></p-inputNumber>
+      </div>
+
+      <div class="p-field p-col-12">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" rows="3" pInputTextarea formControlName="descripcion"></textarea>
+      </div>
+
+      <div class="p-field p-col-12 p-md-6">
+        <label for="fechaInicio">Fecha de Inicio</label>
+        <p-calendar id="fechaInicio" formControlName="fechaInicio" dateFormat="dd/mm/yy"></p-calendar>
+      </div>
+
+      <div class="p-field p-col-12 p-md-6">
+        <label for="fechaVigencia">Fecha de Vigencia</label>
+        <p-calendar id="fechaVigencia" formControlName="fechaVigencia" dateFormat="dd/mm/yy" [disabled]="true"></p-calendar>
+      </div>
+
+      <div class="p-col-12">
+        <h3>Características</h3>
+        <div *ngFor="let ctrl of caracteristicasArr.controls; let i = index" class="feature-row">
+          <input pInputText [formControl]="ctrl" />
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger" (click)="removeCaracteristica(i)"></button>
+        </div>
+        <button pButton type="button" icon="pi pi-plus" label="Añadir característica" class="p-mt-2" (click)="addCaracteristica()"></button>
+      </div>
+
+      <div class="p-field-checkbox p-col-12 p-md-4">
+        <p-checkbox binary="true" formControlName="activo" inputId="activo"></p-checkbox>
+        <label for="activo">Activo</label>
+      </div>
+
+      <div class="p-col-12 p-text-right">
+        <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cancelar()"></button>
+        <button pButton type="submit" [label]="editMode ? 'Actualizar' : 'Crear'" [disabled]="form.invalid || submitting" ></button>
+      </div>
+    </div>
+  </form>
+</p-card> 

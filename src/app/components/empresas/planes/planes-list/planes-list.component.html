@@ -1,0 +1,34 @@
+<div class="planes-container">
+  <p-card>
+    <p-header>
+      <div class="header-actions">
+        <h2>Planes de Suscripción</h2>
+        <button pButton type="button" label="Crear Plan" icon="pi pi-plus" (click)="crear()"></button>
+      </div>
+    </p-header>
+
+    <p-table [value]="planes" [loading]="cargando" [paginator]="true" [rows]="10" [responsiveLayout]="'scroll'">
+      <ng-template pTemplate="header">
+        <tr>
+          <th *ngFor="let col of columnas">{{ col.header }}</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-plan>
+        <tr>
+          <td>{{ plan.nombre }}</td>
+          <td>{{ plan.precio | currency:'USD' }}</td>
+          <td>{{ plan.tipo }}</td>
+          <td>{{ plan.duracion }}</td>
+          <td>
+            <p-tag [value]="plan.activo ? 'Activo' : 'Inactivo'" [severity]="plan.activo ? 'success' : 'danger'"></p-tag>
+          </td>
+          <td>
+            <button pButton icon="pi pi-pencil" class="p-button-text" (click)="editar(plan)"></button>
+            <button pButton icon="pi pi-trash" class="p-button-text p-button-danger" (click)="eliminar(plan)"></button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div> 

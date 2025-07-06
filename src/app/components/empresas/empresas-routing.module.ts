@@ -12,6 +12,10 @@ const routes: Routes = [
   {
     path: 'modulovariable',
     loadChildren: () => import('./modulovariable/modulovariable.module').then(m => m.ModulosVariablesModule)
+  },
+  {
+    path: 'planes',
+    loadChildren: () => import('./planes/planes.module').then(m => m.PlanesModule)
   }
 ];
 

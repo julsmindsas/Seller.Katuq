@@ -1,123 +1,58 @@
 import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject } from 'rxjs';
-import { takeUntil, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { takeUntil, map } from 'rxjs/operators';
 import { DataStoreService } from '../../shared/services/dataStoreService';
-import { FormControl } from '@angular/forms';
-import { Table } from 'primeng/table';
-import { MessageService } from 'primeng/api';
 
-// Interfaz mejorada basada en el modelo completo de Empresa
-export interface Empresa {
+// Definir interfaz para la estructura de datos de Empresa
+interface Empresa {
   nit: string;
-  digitoVerificacion?: string;
   nombre: string;
-  nomComercial: string;
   emailContactoGeneral: string;
-  emailFactuElec?: string;
-  fijo?: number | string | null;
-  cel?: number | string | null;
-  celular?: number | string | null; // Alias para cel
-  indicativoFijoLocal?: string;
-  indicativoCel?: string;
-  direccion?: string;
-  barrio?: string;
-  ciudad?: string;
-  departamento?: string;
+  nomComercial: string;
+  fijo?: number | string | null; // Permitir null/undefined y string si es necesario
+  cel?: number | string | null;  // Permitir null/undefined y string si es necesario
   pais: string;
-  codPostal?: string;
-  logo?: string;
-  activo?: boolean;
-  date_edit?: any;
-  terminosYCondiciones?: boolean;
-  tratamientoDeDatosPersonales?: boolean;
-  // Campos adicionales para filtrado y visualización
-  fechaCreacion?: Date;
-  ultimaActualizacion?: Date;
-  [key: string]: any;
+  // Añadir otras propiedades que se usen de la empresa si existen
+  [key: string]: any; // Para permitir otras propiedades no definidas explícitamente si es necesario
 }
 
-export interface FiltrosAvanzados {
-  global: string;
-  nit: string;
-  nombre: string;
-  nomComercial: string;
-  email: string;
-  telefono: string;
-  pais: string[];
-  activo: boolean | null;
-  fechaDesde: Date | null;
-  fechaHasta: Date | null;
-}
 
 @Component({
   selector: 'app-empresas',
   templateUrl: './empresas.component.html',
-  styleUrls: ['./empresas.component.scss'],
-  providers: [MessageService]
+  styleUrls: ['./empresas.component.scss']
 })
 export class EmpresasComponent implements OnInit, OnDestroy {
-  @ViewChild('dt') table!: Table;
+  @ViewChild(DatatableComponent, { static: false }) table: DatatableComponent;
 
-  // Estado de carga y datos
   cargando = true;
-  exportando = false;
-  
-  // Datos de empresas
+
   rows: Empresa[] = [];
   temp: Empresa[] = [];
-  empresasFiltradas: Empresa[] = [];
-  
-  // Configuración de tabla
-  rowsPerPageOptions = [5, 10, 25, 50, 100];
-  totalRecords = 0;
-  
-  // Estados y configuraciones
+
+  // Propiedades eliminadas: userRol, userNit, NombreUsuario, Vendedor, empresas, closeResult, paises
+
+  ColumnMode = ColumnMode;
+
   isMobile = false;
   isJulsmind = false;
-  
-  // Filtros
-  filtros: FiltrosAvanzados = {
-    global: '',
-    nit: '',
-    nombre: '',
-    nomComercial: '',
-    email: '',
-    telefono: '',
-    pais: [],
-    activo: null,
-    fechaDesde: null,
-    fechaHasta: null
-  };
-  
-  // Controles de formulario para filtros reactivos
-  filtroGlobalControl = new FormControl('');
-  mostrarFiltrosAvanzados = false;
-  
-  // Opciones para filtros
-  paisesDisponibles: string[] = [];
-  paisesOptions: { label: string, value: string }[] = [];
-  estadosActivo = [
-    { label: 'Todos', value: null },
-    { label: 'Activo', value: true },
-    { label: 'Inactivo', value: false }
-  ];
 
-  private destroy$ = new Subject<void>();
+  private destroy$ = new Subject<void>(); // Subject para gestionar la cancelación de suscripciones
 
   constructor(
     private service: MaestroService,
     private router: Router,
     private breakpointObserver: BreakpointObserver,
-    private dataStoreService: DataStoreService,
-    private messageService: MessageService
+    private dataStoreService: DataStoreService // Inyectar DataStoreService
   ) {
     const currentCompany = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
 
-    // Observar cambios en el tamaño de la pantalla
+    // Observar cambios en el tamaño de la pantalla para actualizar isMobile
     this.breakpointObserver.observe([
       Breakpoints.HandsetPortrait,
       Breakpoints.TabletPortrait
@@ -127,310 +62,80 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     ).subscribe(matches => {
       this.isMobile = matches;
     });
-
-    // Configurar filtro global reactivo
-    this.filtroGlobalControl.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$)
-    ).subscribe(valor => {
-      this.filtros.global = valor || '';
-      this.aplicarFiltros();
-    });
   }
 
   ngOnInit(): void {
     this.cargarDatos();
+    // La detección de móvil ahora es reactiva y se maneja en el constructor
   }
 
   ngOnDestroy(): void {
+    // Completar el Subject para cancelar todas las suscripciones pendientes
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  cargarDatos(): void {
+  cargarDatos() {
     this.cargando = true;
+    
     this.service.consultarEmpresas()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntil(this.destroy$)) // Cancelar la suscripción al destruir el componente
       .subscribe({
-        next: (datos: any) => {
-          this.procesarDatos(datos as Empresa[]);
+        next: (datos: any) => { // Revertir temporalmente a 'any' debido al tipo de retorno del servicio
+          this.temp = [...datos];
+          this.rows = datos;
           this.cargando = false;
         },
         error: (err) => {
           console.error('Error fetching empresas:', err);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cargar las empresas'
-          });
           this.cargando = false;
         }
       });
   }
 
-  private procesarDatos(datos: Empresa[]): void {
-    // Procesar y normalizar datos
-    this.temp = datos.map(empresa => ({
-      ...empresa,
-      // Normalizar campos de teléfono
-      celular: empresa.cel || empresa.celular,
-      // Procesar fechas si existen
-      fechaCreacion: empresa.date_edit ? new Date(empresa.date_edit) : undefined,
-      ultimaActualizacion: empresa.date_edit ? new Date(empresa.date_edit) : undefined
-    }));
-    
-    this.rows = [...this.temp];
-    this.empresasFiltradas = [...this.temp];
-    this.totalRecords = this.temp.length;
-    
-    // Extraer países únicos para filtros
-    this.paisesDisponibles = [...new Set(datos.map(e => e.pais).filter(Boolean))].sort();
-    this.paisesOptions = this.paisesDisponibles.map(pais => ({ label: pais, value: pais }));
-  }
-
-  aplicarFiltros(): void {
-    let resultado = [...this.temp];
-
-    // Filtro global
-    if (this.filtros.global) {
-      const termino = this.filtros.global.toLowerCase();
-      resultado = resultado.filter(empresa => 
-        this.buscarEnTodosLosCampos(empresa, termino)
-      );
-    }
-
-    // Filtros específicos
-    if (this.filtros.nit) {
-      resultado = resultado.filter(empresa => 
-        empresa.nit?.toLowerCase().includes(this.filtros.nit.toLowerCase())
-      );
-    }
-
-    if (this.filtros.nombre) {
-      resultado = resultado.filter(empresa => 
-        empresa.nombre?.toLowerCase().includes(this.filtros.nombre.toLowerCase())
-      );
-    }
-
-    if (this.filtros.nomComercial) {
-      resultado = resultado.filter(empresa => 
-        empresa.nomComercial?.toLowerCase().includes(this.filtros.nomComercial.toLowerCase())
-      );
-    }
-
-    if (this.filtros.email) {
-      resultado = resultado.filter(empresa => 
-        empresa.emailContactoGeneral?.toLowerCase().includes(this.filtros.email.toLowerCase())
-      );
-    }
-
-    if (this.filtros.telefono) {
-      resultado = resultado.filter(empresa => {
-        const telefono = this.filtros.telefono.toLowerCase();
-        return (
-          empresa.fijo?.toString().includes(telefono) ||
-          empresa.cel?.toString().includes(telefono) ||
-          empresa.celular?.toString().includes(telefono)
-        );
-      });
-    }
-
-    if (this.filtros.pais.length > 0) {
-      resultado = resultado.filter(empresa => 
-        this.filtros.pais.includes(empresa.pais)
-      );
-    }
-
-    if (this.filtros.activo !== null) {
-      resultado = resultado.filter(empresa => 
-        Boolean(empresa.activo) === this.filtros.activo
-      );
-    }
-
-    // Filtros de fecha
-    if (this.filtros.fechaDesde || this.filtros.fechaHasta) {
-      resultado = resultado.filter(empresa => {
-        if (!empresa.fechaCreacion) return false;
-        
-        const fechaEmpresa = new Date(empresa.fechaCreacion);
-        
-        if (this.filtros.fechaDesde && fechaEmpresa < this.filtros.fechaDesde) {
-          return false;
-        }
-        
-        if (this.filtros.fechaHasta && fechaEmpresa > this.filtros.fechaHasta) {
-          return false;
-        }
-        
-        return true;
-      });
-    }
-
-    this.empresasFiltradas = resultado;
-    this.rows = resultado;
-    this.totalRecords = resultado.length;
-  }
-
-  private buscarEnTodosLosCampos(empresa: Empresa, termino: string): boolean {
-    const campos = [
-      empresa.nit,
-      empresa.nombre,
-      empresa.nomComercial,
-      empresa.emailContactoGeneral,
-      empresa.fijo?.toString(),
-      empresa.cel?.toString(),
-      empresa.celular?.toString(),
-      empresa.pais,
-      empresa.ciudad,
-      empresa.direccion
-    ];
-
-    return campos.some(campo => 
-      campo?.toString().toLowerCase().includes(termino)
-    );
-  }
-
-  limpiarFiltros(): void {
-    this.filtros = {
-      global: '',
-      nit: '',
-      nombre: '',
-      nomComercial: '',
-      email: '',
-      telefono: '',
-      pais: [],
-      activo: null,
-      fechaDesde: null,
-      fechaHasta: null
-    };
-    
-    this.filtroGlobalControl.setValue('', { emitEvent: false });
-    this.aplicarFiltros();
-    
-    if (this.table) {
-      this.table.clear();
-    }
-  }
-
-  toggleFiltrosAvanzados(): void {
-    this.mostrarFiltrosAvanzados = !this.mostrarFiltrosAvanzados;
-  }
-
-  crearEmpresa(): void {
+  crearEmpresa() {
     this.dataStoreService.remove('infoFormsCompany').then(() => {
       this.router.navigateByUrl('empresas/crearEmpresa');
     });
-  }
+  };
 
-  editarEmpresa(empresa: Empresa): void {
-    this.dataStoreService.set('infoFormsCompany', empresa).then(() => {
+  editarEmpresa(row: Empresa) { // Usar la interfaz Empresa
+    console.log(row);
+    this.dataStoreService.set('infoFormsCompany', row).then(() => {
       this.router.navigateByUrl('empresas/crearEmpresa');
     });
   }
 
-  async exportarExcel(): Promise<void> {
-    try {
-      this.exportando = true;
-      
-      // Usar el método existente del servicio para exportar
-      this.service.exportToExcel().subscribe({
-        next: (blob: any) => {
-          // Crear un enlace de descarga para el archivo
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `empresas_${new Date().toISOString().split('T')[0]}.xlsx`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-          
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Archivo exportado correctamente'
-          });
-        },
-        error: (error) => {
-          console.error('Error al exportar:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al exportar los datos'
-          });
-        },
-        complete: () => {
-          this.exportando = false;
-        }
+  updateFilter(event: Event) { // Tipar el evento como Event
+    const target = event.target as HTMLInputElement; // Castear a HTMLInputElement
+    const val = target.value.toLowerCase(); // Obtener valor y convertir a minúsculas una vez
+
+    let temp: Empresa[]; // Usar la interfaz Empresa
+
+    if (this.isMobile) {
+      temp = this.temp.filter((d: Empresa) => { // Usar la interfaz Empresa
+        const res1 = d.nombre.toLowerCase().includes(val);
+        const res3 = d.nomComercial.toLowerCase().includes(val);
+        return res1 || res3;
       });
-      
-    } catch (error) {
-      this.exportando = false;
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Error al iniciar la exportación'
+    } else {
+      temp = this.temp.filter((d: Empresa) => { // Usar la interfaz Empresa
+        const res = d.nit.toLowerCase().includes(val);
+        const res1 = d.nombre.toLowerCase().includes(val);
+        const res2 = d.emailContactoGeneral.toLowerCase().includes(val);
+        const res3 = d.nomComercial.toLowerCase().includes(val);
+        // Añadir comprobaciones de nulidad/undefined antes de toString()
+        const res4 = (d.fijo?.toString() || '').toLowerCase().includes(val);
+        const res5 = (d.cel?.toString() || '').toLowerCase().includes(val);
+        const res7 = d.pais.toLowerCase().includes(val);
+
+        return res || res1 || res2 || res3 || res4 || res5 || res7;
       });
     }
-  }
 
-  onFiltroChange(): void {
-    this.aplicarFiltros();
-  }
-
-  // Métodos para formato de datos
-  formatearTelefono(empresa: Empresa): string {
-    const telefono = empresa.fijo || empresa.cel || empresa.celular;
-    return telefono ? telefono.toString() : '-';
-  }
-
-  formatearNit(empresa: Empresa): string {
-    if (!empresa.nit) return '-';
-    return empresa.digitoVerificacion 
-      ? `${empresa.nit}-${empresa.digitoVerificacion}` 
-      : empresa.nit;
-  }
-
-  getEstadoSeverity(activo: boolean | undefined): string {
-    return activo ? 'success' : 'danger';
-  }
-
-  getEstadoLabel(activo: boolean | undefined): string {
-    return activo ? 'Activo' : 'Inactivo';
-  }
-
-  // NUEVO: alternar estado activo/inactivo de una empresa
-  toggleEstado(empresa: Empresa): void {
-    // Determinar nuevo estado
-    const nuevoEstado = !empresa.activo;
-    const accion = nuevoEstado ? 'activar' : 'desactivar';
-
-    // Confirmación rápida (puede reemplazarse por un diálogo más elaborado)
-    if (!confirm(`¿Está seguro de ${accion} la empresa \"${empresa.nomComercial || empresa.nombre}\"?`)) {
-      return;
+    this.rows = temp;
+    if (this.table) { // Asegurarse que la tabla existe antes de acceder a offset
+        this.table.offset = 0;
     }
-
-    const payload: Empresa = { ...empresa, activo: nuevoEstado };
-
-    this.service.editCompany(payload).subscribe({
-      next: () => {
-        // Actualizar estado localmente para reflejar el cambio al instante
-        empresa.activo = nuevoEstado;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Empresa ${accion}da correctamente`
-        });
-      },
-      error: (err) => {
-        console.error(`Error al ${accion} la empresa`, err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: `No se pudo ${accion} la empresa`
-        });
-      }
-    });
   }
 }
