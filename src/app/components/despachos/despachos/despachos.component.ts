@@ -43,6 +43,8 @@ import html2pdf from "html2pdf.js";
 import { PedidoEntrega } from "../interfaces/pedido-entrega.interface";
 import { Router } from "@angular/router";
 import { PdfTemplateComponent } from "../components/pdf-template/pdf-template.component";
+import { GeocodingService, GeocodingResponse } from "../../../shared/services/geocoding.service";
+import { MapaUbicacionesComponent } from "../components/mapa-ubicaciones/mapa-ubicaciones.component";
 
 interface ColumnDefinition {
   field: string;
@@ -128,6 +130,7 @@ export class DespachosComponent implements OnInit {
   @ViewChild("pdfTemplate", { static: false }) pdfTemplate!: PdfTemplateComponent;
   @ViewChild("pdfTemplateContainer", { static: false })
   pdfTemplateContainer!: ElementRef;
+  @ViewChild("mapaUbicaciones", { static: false }) mapaComponent?: MapaUbicacionesComponent;
   generandoRotuloPara: Set<string> = new Set();
   orders: PedidoPriorizado[] = [];
   loading: boolean = true;
@@ -197,6 +200,18 @@ export class DespachosComponent implements OnInit {
   // Control de frecuencia para modales de advertencia
   private ultimaAlertaPedidosUrgentes: Date | null = null;
   private ultimaAlertaPedidosSinProducir: Date | null = null;
+
+  // Propiedades para geocodificación y mapa
+  private geocodingCache: Map<string, GeocodingResponse> = new Map();
+  private readonly GEOCODING_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas
+  configuracionMapa: any = {
+    centroMapa: { lat: 4.6097, lng: -74.0817 }, // Bogotá por defecto
+    zoom: 11,
+    ubicaciones: []
+  };
+  geocodingInProgress: boolean = false;
+  geocodingProgress: number = 0;
+  filtroEstadoMapa: string | null = null;
   private intervaloBetweenAlertas: number = 5 * 60 * 1000; // 5 minutos en milisegundos
 
   // Definiciones para la gestión de columnas
@@ -253,6 +268,7 @@ export class DespachosComponent implements OnInit {
     private formBuilder: FormBuilder,
     private pedidoUtilService: PedidosUtilService,
     private router: Router,
+    private geocodingService: GeocodingService,
   ) {
     const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
     this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
@@ -353,6 +369,11 @@ export class DespachosComponent implements OnInit {
 
       // Calcular métricas para análisis KAI
       this.calcularMetricas();
+
+      // Actualizar mapa si está visible
+      if (this.mostrarMapa) {
+        this.actualizarConfiguracionMapa();
+      }
 
       this.loading = false;
     });
@@ -932,14 +953,6 @@ export class DespachosComponent implements OnInit {
     return this.pedidosParaDespacho;
   }
 
-  // Método para alternar la visualización del mapa
-  toggleMapa(): void {
-    this.mostrarMapa = !this.mostrarMapa;
-    if (this.mostrarMapa) {
-      // Actualizar ubicaciones cuando se abre el mapa
-      this.generarUbicacionesPedidos();
-    }
-  }
 
   // Método para obtener datos del mapa
   obtenerDatosMapa() {
@@ -1979,6 +1992,29 @@ export class DespachosComponent implements OnInit {
 
     this.ventasService.editOrder(order).subscribe((data) => {
       this.refrescarDatos(false); // No mostrar alertas al cambiar estado
+      
+      // Si el pedido se cambió a "Despachado", intentar geocodificarlo automáticamente
+      if (order.estadoProceso === EstadoProceso.Despachado) {
+        console.log(`🚚 Pedido ${order.nroPedido} cambió a Despachado - Verificando geocodificación...`);
+        
+        // Geocodificar específicamente este pedido si no tiene coordenadas
+        if (order.envio?.direccionEntrega && order.envio?.ciudad && 
+            (!order.envio?.latitud || !order.envio?.longitud)) {
+          console.log(`📍 Geocodificando pedido despachado: ${order.nroPedido}`);
+          this.geocodificarPedido(order).then(() => {
+            if (this.mostrarMapa) {
+              console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
+              this.actualizarConfiguracionMapa();
+            }
+          }).catch(error => {
+            console.error(`❌ Error geocodificando pedido ${order.nroPedido}:`, error);
+          });
+        } else if (this.mostrarMapa) {
+          // Si ya tiene coordenadas, solo actualizar el mapa
+          this.actualizarConfiguracionMapa();
+        }
+      }
+      
       Swal.fire({
         icon: "success",
         title: "Pedido actualizado correctamente",
@@ -2153,6 +2189,11 @@ export class DespachosComponent implements OnInit {
 
       // Calcular métricas para análisis KAI
       this.calcularMetricas();
+
+      // Actualizar mapa si está visible
+      if (this.mostrarMapa) {
+        this.actualizarConfiguracionMapa();
+      }
 
       this.loading = false;
     });
@@ -2863,6 +2904,25 @@ export class DespachosComponent implements OnInit {
         // Guardar los cambios
         this.ventasService.editOrder(pedido).subscribe(
           (response) => {
+            console.log(`🚚 Pedido ${pedido.nroPedido} despachado exitosamente - Verificando geocodificación...`);
+            
+            // Geocodificar automáticamente el pedido despachado si no tiene coordenadas
+            if (pedido.envio?.direccionEntrega && pedido.envio?.ciudad && 
+                (!pedido.envio?.latitud || !pedido.envio?.longitud)) {
+              console.log(`📍 Geocodificando pedido recién despachado: ${pedido.nroPedido}`);
+              this.geocodificarPedido(pedido).then(() => {
+                if (this.mostrarMapa) {
+                  console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${pedido.nroPedido}`);
+                  this.actualizarConfiguracionMapa();
+                }
+              }).catch(error => {
+                console.error(`❌ Error geocodificando pedido ${pedido.nroPedido}:`, error);
+              });
+            } else if (this.mostrarMapa) {
+              // Si ya tiene coordenadas, solo actualizar el mapa
+              this.actualizarConfiguracionMapa();
+            }
+            
             Swal.fire("Éxito", "Pedido despachado exitosamente", "success");
             // Simplemente refrescar los datos de todas las órdenes
             this.refrescarDatos();
@@ -3791,6 +3851,29 @@ export class DespachosComponent implements OnInit {
 
           Promise.all(actualizarPromises)
             .then(() => {
+              console.log(`🚚 Orden ${this.nuevaOrdenEnvio.nroShippingOrder} despachada exitosamente - Verificando geocodificación...`);
+              
+              // Geocodificar automáticamente los pedidos despachados que no tienen coordenadas
+              const pedidosSinCoordenadas = this.nuevaOrdenEnvio.pedidos.filter(pedido =>
+                pedido.envio?.direccionEntrega && pedido.envio?.ciudad && 
+                (!pedido.envio?.latitud || !pedido.envio?.longitud)
+              );
+              
+              if (pedidosSinCoordenadas.length > 0) {
+                console.log(`📍 Geocodificando ${pedidosSinCoordenadas.length} pedidos de la orden despachada...`);
+                this.geocodificarPedidosDespachados().then(() => {
+                  if (this.mostrarMapa) {
+                    console.log(`🗺️ Actualizando mapa después de geocodificar orden despachada`);
+                    this.actualizarConfiguracionMapa();
+                  }
+                }).catch(error => {
+                  console.error(`❌ Error geocodificando pedidos de la orden:`, error);
+                });
+              } else if (this.mostrarMapa) {
+                // Si todos ya tienen coordenadas, solo actualizar el mapa
+                this.actualizarConfiguracionMapa();
+              }
+              
               Swal.fire(
                 "Éxito",
                 "Orden despachada exitosamente y todos los pedidos actualizados",
@@ -4323,5 +4406,386 @@ export class DespachosComponent implements OnInit {
     }
 
     console.log("Estado de orden de envío limpiado completamente");
+  }
+
+  // Métodos para geocodificación y mapa
+  
+  /**
+   * Geocodifica las direcciones de pedidos que no tienen coordenadas
+   */
+  async geocodificarDireccionesPedidos(): Promise<void> {
+    if (this.geocodingInProgress) {
+      console.log('Geocodificación ya en progreso');
+      return;
+    }
+
+    this.geocodingInProgress = true;
+    this.geocodingProgress = 0;
+    
+    // Mostrar animación inicial en el mapa
+    if (this.mapaComponent && this.mostrarMapa) {
+      this.mapaComponent.mostrarAnimacionGeocodificacion();
+      this.mapaComponent.mostrarEfectoBusqueda();
+    }
+
+    try {
+      // Filtrar pedidos que necesitan geocodificación
+      const pedidosSinCoordenadas = this.orders.filter(pedido => 
+        pedido.envio && 
+        pedido.envio.direccionEntrega && 
+        pedido.envio.ciudad && 
+        (!pedido.envio.latitud || !pedido.envio.longitud)
+      );
+
+      // DIAGNÓSTICO: Mostrar pedidos que necesitan geocodificación
+      const pedidosDespachadosSinCoordenadas = pedidosSinCoordenadas.filter(p => p.estadoProceso === 'Despachado');
+      
+      console.log('🌍 DIAGNÓSTICO GEOCODIFICACIÓN:');
+      console.log(`📍 Total pedidos sin coordenadas: ${pedidosSinCoordenadas.length}`);
+      console.log(`🚚 Pedidos despachados sin coordenadas: ${pedidosDespachadosSinCoordenadas.length}`);
+      
+      if (pedidosDespachadosSinCoordenadas.length > 0) {
+        console.log('🚚 Pedidos despachados que se van a geocodificar:');
+        pedidosDespachadosSinCoordenadas.forEach(p => {
+          console.log(`  - ${p.nroPedido}: ${p.envio?.direccionEntrega}, ${p.envio?.ciudad}`);
+        });
+      }
+
+      if (pedidosSinCoordenadas.length === 0) {
+        console.log('No hay pedidos sin coordenadas para geocodificar');
+        this.geocodingInProgress = false;
+        return;
+      }
+
+      console.log(`Geocodificando ${pedidosSinCoordenadas.length} pedidos...`);
+
+      // PRIORIZAR PEDIDOS DESPACHADOS: Reorganizar array para procesar primero los despachados
+      const pedidosDespachados = pedidosSinCoordenadas.filter(p => p.estadoProceso === 'Despachado');
+      const pedidosOtros = pedidosSinCoordenadas.filter(p => p.estadoProceso !== 'Despachado');
+      
+      // Crear array priorizado: despachados primero, luego otros
+      const pedidosPriorizados = [...pedidosDespachados, ...pedidosOtros];
+      
+      console.log(`📋 Orden de geocodificación: ${pedidosDespachados.length} despachados primero, luego ${pedidosOtros.length} otros`);
+
+      // Procesar pedidos en lotes para evitar sobrecargar la API
+      const batchSize = 5;
+      const totalBatches = Math.ceil(pedidosPriorizados.length / batchSize);
+
+      for (let i = 0; i < totalBatches; i++) {
+        const batch = pedidosPriorizados.slice(i * batchSize, (i + 1) * batchSize);
+        await this.procesarBatchGeocodificacion(batch);
+        
+        this.geocodingProgress = ((i + 1) / totalBatches) * 100;
+        
+        // Actualizar mapa después de cada lote si contiene pedidos despachados
+        const batchTieneDespachados = batch.some(p => p.estadoProceso === 'Despachado');
+        if (batchTieneDespachados && this.mostrarMapa) {
+          console.log(`🗺️ Actualizando mapa después de geocodificar lote con ${batch.filter(p => p.estadoProceso === 'Despachado').length} despachados`);
+          this.actualizarConfiguracionMapa();
+          
+          // Actualizar progreso en el mapa
+          if (this.mapaComponent) {
+            this.mapaComponent.actualizarProgresoGeocodificacion(this.geocodingProgress);
+          }
+        }
+        
+        // Pequeña pausa entre lotes para no sobrecargar la API
+        if (i < totalBatches - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      console.log('Geocodificación completada');
+      
+      // Actualizar configuración del mapa
+      this.actualizarConfiguracionMapa();
+      
+      // Mostrar notificación de éxito en el mapa
+      if (this.mapaComponent && this.mostrarMapa) {
+        setTimeout(() => {
+          console.log('🎉 Geocodificación completada - animaciones finalizadas');
+        }, 1000);
+      }
+      
+    } catch (error) {
+      console.error('Error durante la geocodificación:', error);
+    } finally {
+      this.geocodingInProgress = false;
+      this.geocodingProgress = 0;
+    }
+  }
+
+  /**
+   * Procesa un lote de pedidos para geocodificación
+   */
+  private async procesarBatchGeocodificacion(pedidos: Pedido[]): Promise<void> {
+    const promises = pedidos.map(pedido => this.geocodificarPedido(pedido));
+    await Promise.allSettled(promises);
+  }
+
+  /**
+   * Geocodifica un pedido específico
+   */
+  private async geocodificarPedido(pedido: Pedido): Promise<void> {
+    if (!pedido.envio?.direccionEntrega || !pedido.envio?.ciudad) {
+      return;
+    }
+
+    const direccionCompleta = `${pedido.envio.direccionEntrega}, ${pedido.envio.ciudad}`;
+    const cacheKey = `${pedido.envio.direccionEntrega}_${pedido.envio.ciudad}`;
+
+    try {
+      // Verificar caché primero
+      const cachedResult = this.geocodingCache.get(cacheKey);
+      if (cachedResult) {
+        this.aplicarCoordenadasAPedido(pedido, cachedResult);
+        return;
+      }
+
+      // Llamar al servicio de geocodificación
+      const response = await this.geocodingService.geocodeDireccion(
+        pedido.envio.direccionEntrega,
+        pedido.envio.ciudad
+      ).toPromise();
+
+      if (response && response.latitud && response.longitud) {
+        // Guardar en caché
+        this.geocodingCache.set(cacheKey, response);
+        
+        // Aplicar coordenadas al pedido
+        this.aplicarCoordenadasAPedido(pedido, response);
+        
+        console.log(`Geocodificado: ${pedido.nroPedido} - ${direccionCompleta}`);
+      } else {
+        console.warn(`No se pudieron obtener coordenadas para: ${direccionCompleta}`);
+      }
+
+    } catch (error) {
+      console.error(`Error geocodificando ${direccionCompleta}:`, error);
+    }
+  }
+
+  /**
+   * Aplica las coordenadas obtenidas al pedido
+   */
+  private aplicarCoordenadasAPedido(pedido: Pedido, response: GeocodingResponse): void {
+    if (pedido.envio) {
+      pedido.envio.latitud = response.latitud;
+      pedido.envio.longitud = response.longitud;
+    }
+  }
+
+  /**
+   * Transforma los datos de pedidos al formato requerido por el mapa
+   */
+  transformarPedidosAUbicaciones(): UbicacionPedido[] {
+    // DIAGNÓSTICO: Logging detallado para pedidos despachados
+    const totalPedidos = this.orders.length;
+    const pedidosDespachados = this.orders.filter(p => p.estadoProceso === 'Despachado');
+    const pedidosDespachadosConDireccion = pedidosDespachados.filter(p => p.envio?.direccionEntrega);
+    const pedidosDespachadosConCoordenadas = pedidosDespachados.filter(p => 
+      p.envio?.latitud && p.envio?.longitud
+    );
+
+    console.log('🚚 DIAGNÓSTICO PEDIDOS DESPACHADOS:');
+    console.log(`📦 Total pedidos cargados: ${totalPedidos}`);
+    console.log(`🚚 Pedidos con estado "Despachado": ${pedidosDespachados.length}`);
+    console.log(`📍 Pedidos despachados con dirección: ${pedidosDespachadosConDireccion.length}`);
+    console.log(`🗺️ Pedidos despachados con coordenadas: ${pedidosDespachadosConCoordenadas.length}`);
+    
+    if (pedidosDespachados.length > 0) {
+      console.log('📋 Detalle de pedidos despachados:');
+      pedidosDespachados.forEach(p => {
+        console.log(`  - ${p.nroPedido}: ${p.envio?.direccionEntrega || 'SIN DIRECCIÓN'} | Coords: ${p.envio?.latitud ? 'SÍ' : 'NO'}`);
+      });
+    }
+
+    let pedidosFiltrados = this.orders
+      .filter(pedido => 
+        pedido.envio?.latitud && 
+        pedido.envio?.longitud && 
+        pedido.envio?.direccionEntrega
+      );
+
+    console.log(`🔍 Pedidos con coordenadas válidas (todos los estados): ${pedidosFiltrados.length}`);
+
+    // Aplicar filtro de estado si está activo
+    if (this.filtroEstadoMapa) {
+      const antesDelFiltro = pedidosFiltrados.length;
+      pedidosFiltrados = pedidosFiltrados.filter(pedido => 
+        pedido.estadoProceso === this.filtroEstadoMapa
+      );
+      console.log(`🎯 Filtro activo: "${this.filtroEstadoMapa}" - Antes: ${antesDelFiltro}, Después: ${pedidosFiltrados.length}`);
+    }
+
+    const ubicacionesFinales = pedidosFiltrados.map(pedido => ({
+      nroPedido: pedido.nroPedido || '',
+      estado: pedido.estadoProceso,
+      cliente: pedido.cliente?.nombres_completos || 'Cliente no especificado',
+      direccion: `${pedido.envio!.direccionEntrega}, ${pedido.envio!.ciudad || ''}`,
+      latitud: parseFloat(pedido.envio!.latitud!),
+      longitud: parseFloat(pedido.envio!.longitud!),
+      transportador: pedido.transportador?.nombre || '',
+      fechaEntrega: pedido.fechaEntrega || '',
+      horaEstimada: pedido.horarioEntrega || '',
+      distanciaRestante: undefined, // Se puede calcular más tarde
+      tiempoEstimado: undefined // Se puede calcular más tarde
+    }));
+
+    console.log(`✅ Total ubicaciones finales para el mapa: ${ubicacionesFinales.length}`);
+    
+    return ubicacionesFinales;
+  }
+
+  /**
+   * Actualiza la configuración del mapa con los datos actuales
+   */
+  actualizarConfiguracionMapa(): void {
+    const ubicaciones = this.transformarPedidosAUbicaciones();
+    
+    this.configuracionMapa = {
+      ...this.configuracionMapa,
+      ubicaciones: ubicaciones
+    };
+
+    // Actualizar métricas de logística
+    if (this.metricasLogistica) {
+      this.metricasLogistica.ubicacionesPedidos = ubicaciones;
+    }
+
+    console.log(`Mapa actualizado con ${ubicaciones.length} ubicaciones`);
+  }
+
+  /**
+   * Alterna la visibilidad del mapa
+   */
+  toggleMapa(): void {
+    this.mostrarMapa = !this.mostrarMapa;
+    
+    if (this.mostrarMapa) {
+      // Actualizar configuración del mapa cuando se muestra
+      this.actualizarConfiguracionMapa();
+      
+      // Geocodificar pedidos sin coordenadas si es necesario
+      const pedidosSinCoordenadas = this.orders.filter(pedido => 
+        pedido.envio?.direccionEntrega && 
+        (!pedido.envio?.latitud || !pedido.envio?.longitud)
+      );
+      
+      if (pedidosSinCoordenadas.length > 0) {
+        console.log(`Encontrados ${pedidosSinCoordenadas.length} pedidos sin coordenadas`);
+        this.geocodificarDireccionesPedidos();
+      }
+    }
+  }
+
+  /**
+   * Fuerza la geocodificación de todos los pedidos
+   */
+  forzarGeocodificacion(): void {
+    // Limpiar caché para forzar nueva geocodificación
+    this.geocodingCache.clear();
+    
+    // Limpiar coordenadas existentes
+    this.orders.forEach(pedido => {
+      if (pedido.envio) {
+        pedido.envio.latitud = undefined;
+        pedido.envio.longitud = undefined;
+      }
+    });
+    
+    // Ejecutar geocodificación
+    this.geocodificarDireccionesPedidos();
+  }
+
+  /**
+   * Filtra las ubicaciones del mapa por estado de proceso
+   */
+  filtrarMapaPorEstado(estado: string | null): void {
+    this.filtroEstadoMapa = estado;
+    this.actualizarConfiguracionMapa();
+  }
+
+  /**
+   * Cuenta pedidos despachados que están mostrados en el mapa
+   */
+  contarPedidosDespachados(): number {
+    return this.configuracionMapa.ubicaciones?.filter(u => u.estado === 'Despachado').length || 0;
+  }
+
+  /**
+   * Cuenta pedidos despachados que no tienen coordenadas para geocodificar
+   */
+  contarPedidosDespachadosSinCoordenadas(): number {
+    return this.orders.filter(pedido => 
+      pedido.estadoProceso === 'Despachado' &&
+      pedido.envio?.direccionEntrega && 
+      pedido.envio?.ciudad && 
+      (!pedido.envio?.latitud || !pedido.envio?.longitud)
+    ).length;
+  }
+
+  /**
+   * Geocodifica específicamente pedidos despachados sin coordenadas
+   */
+  async geocodificarPedidosDespachados(): Promise<void> {
+    console.log('🚚 Iniciando geocodificación prioritaria de pedidos despachados...');
+
+    if (this.geocodingInProgress) {
+      console.log('⚠️ Geocodificación ya en progreso');
+      return;
+    }
+
+    // Filtrar solo pedidos despachados sin coordenadas
+    const pedidosDespachadosSinCoordenadas = this.orders.filter(pedido => 
+      pedido.estadoProceso === 'Despachado' &&
+      pedido.envio && 
+      pedido.envio.direccionEntrega && 
+      pedido.envio.ciudad && 
+      (!pedido.envio.latitud || !pedido.envio.longitud)
+    );
+
+    if (pedidosDespachadosSinCoordenadas.length === 0) {
+      console.log('✅ No hay pedidos despachados sin coordenadas');
+      return;
+    }
+
+    console.log(`🎯 Encontrados ${pedidosDespachadosSinCoordenadas.length} pedidos despachados sin coordenadas`);
+
+    this.geocodingInProgress = true;
+    this.geocodingProgress = 0;
+
+    try {
+      for (let i = 0; i < pedidosDespachadosSinCoordenadas.length; i++) {
+        const pedido = pedidosDespachadosSinCoordenadas[i];
+        console.log(`🌍 Geocodificando pedido despachado ${i + 1}/${pedidosDespachadosSinCoordenadas.length}: ${pedido.nroPedido}`);
+        
+        await this.geocodificarPedido(pedido);
+        
+        this.geocodingProgress = ((i + 1) / pedidosDespachadosSinCoordenadas.length) * 100;
+        
+        // Actualizar mapa cada 2 pedidos
+        if ((i + 1) % 2 === 0 && this.mostrarMapa) {
+          this.actualizarConfiguracionMapa();
+        }
+        
+        // Pausa corta entre pedidos
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      console.log('✅ Geocodificación de pedidos despachados completada');
+      
+      // Actualización final del mapa
+      if (this.mostrarMapa) {
+        this.actualizarConfiguracionMapa();
+      }
+      
+    } catch (error) {
+      console.error('❌ Error durante geocodificación de pedidos despachados:', error);
+    } finally {
+      this.geocodingInProgress = false;
+      this.geocodingProgress = 0;
+    }
   }
 }

@@ -51,13 +51,65 @@
       [style.height]="altura">
     </div>
     
-    <!-- Overlay de carga -->
+    <!-- Overlay de carga inicial -->
     <div class="mapa-loading" *ngIf="!leafletCargado">
       <div class="text-center">
         <div class="spinner-border text-primary mb-3" role="status">
           <span class="visually-hidden">{{ 'Cargando mapa...' | translate }}</span>
         </div>
         <p class="text-muted">{{ 'Cargando mapa interactivo...' | translate }}</p>
+      </div>
+    </div>
+    
+    <!-- Overlay de geocodificación -->
+    <div class="geocoding-overlay" *ngIf="geocodingInProgress && leafletCargado">
+      <div class="geocoding-content">
+        <div class="geocoding-animation-container">
+          <div class="geocoding-pulse-main"></div>
+          <div class="geocoding-icon-main">
+            <i class="pi pi-map-marker"></i>
+          </div>
+        </div>
+        
+        <div class="geocoding-text mt-3">
+          <h6 class="text-white mb-2">
+            <i class="pi pi-spin pi-spinner me-2"></i>
+            {{ 'Geocodificando direcciones...' | translate }}
+          </h6>
+          <p class="text-white-50 small mb-3">
+            {{ 'Convirtiendo direcciones a coordenadas del mapa' | translate }}
+          </p>
+          
+          <!-- Barra de progreso -->
+          <div class="progress geocoding-progress-bar">
+            <div class="progress-bar geocoding-progress bg-success" 
+                 [style.width.%]="geocodingProgress"
+                 [attr.aria-valuenow]="geocodingProgress"
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+              {{ geocodingProgress | number:'1.0-0' }}%
+            </div>
+          </div>
+        </div>
+        
+        <!-- Efectos visuales adicionales -->
+        <div class="geocoding-effects">
+          <div class="geocoding-dot" 
+               *ngFor="let dot of [1,2,3,4,5]; let i = index"
+               [style.animation-delay.s]="i * 0.2">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Indicador de nuevos marcadores -->
+    <div class="new-markers-indicator" 
+         *ngIf="!geocodingInProgress && leafletCargado && configuracion.ubicaciones.length > ultimosLocationsProcesados">
+      <div class="new-markers-content">
+        <i class="pi pi-check-circle text-success me-2"></i>
+        <span class="text-success">
+          {{ 'Nuevas ubicaciones agregadas' | translate }}
+        </span>
       </div>
     </div>
 
@@ -74,6 +126,11 @@
         <i class="pi pi-refresh me-1"></i>{{ 'Reintentar' | translate }}
       </button>
     </div>
+  </div>
+  
+  <!-- Barra de progreso inferior durante geocodificación -->
+  <div class="geocoding-bottom-progress" *ngIf="geocodingInProgress">
+    <div class="progress-line" [style.width.%]="geocodingProgress"></div>
   </div>
 
   <!-- Panel de información rápida -->

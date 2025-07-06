@@ -37,11 +37,15 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() altura: string = '400px';
   @Input() mostrarControles: boolean = true;
   @Input() tiempoReal: boolean = false;
+  @Input() geocodingInProgress: boolean = false;
+  @Input() geocodingProgress: number = 0;
 
   mapa: any = null;
   marcadores: any[] = [];
   intervalTimer: any = null;
   leafletCargado: boolean = false;
+  marcadoresAnimandose: Set<string> = new Set();
+  ultimosLocationsProcesados: number = 0;
 
   // Configuración de íconos para diferentes estados
   iconosEstado = {
@@ -196,16 +200,19 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     });
     this.marcadores = [];
 
-    // Agregar nuevos marcadores
-    this.configuracion.ubicaciones.forEach(ubicacion => {
+    // Agregar nuevos marcadores con animación
+    this.configuracion.ubicaciones.forEach((ubicacion, index) => {
       if (ubicacion.latitud && ubicacion.longitud) {
+        // Verificar si es un marcador nuevo (para animación)
+        const isNewMarker = index >= this.ultimosLocationsProcesados;
+        
         const iconoConfig = this.iconosEstado[ubicacion.estado] || this.iconosEstado['ParaDespachar'];
         
-        // Crear ícono personalizado
+        // Crear ícono personalizado con animación condicional
         const icono = L.divIcon({
           className: 'custom-marker',
           html: `
-            <div class="marker-container" style="
+            <div class="marker-container ${isNewMarker ? 'marker-new' : ''}" style="
               background-color: ${iconoConfig.color};
               border-radius: 50%;
               width: 30px;
@@ -219,6 +226,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
               border: 2px solid white;
               box-shadow: 0 2px 6px rgba(0,0,0,0.3);
               ${iconoConfig.animation ? 'animation: pulse 2s infinite;' : ''}
+              ${isNewMarker ? 'animation: marker-drop 0.8s ease-out forwards;' : ''}
             ">
               ${iconoConfig.icon}
             </div>
@@ -239,11 +247,21 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
           this.onMarcadorClick(ubicacion);
         });
 
-        // Agregar al mapa
-        marcador.addTo(this.mapa);
-        this.marcadores.push(marcador);
+        // Agregar al mapa con delay para animación escalonada
+        if (isNewMarker) {
+          setTimeout(() => {
+            marcador.addTo(this.mapa);
+            this.marcadores.push(marcador);
+          }, index * 100); // 100ms de delay entre marcadores
+        } else {
+          marcador.addTo(this.mapa);
+          this.marcadores.push(marcador);
+        }
       }
     });
+    
+    // Actualizar contador de ubicaciones procesadas
+    this.ultimosLocationsProcesados = this.configuracion.ubicaciones.length;
   }
 
   private crearContenidoPopup(ubicacion: UbicacionPedido): string {
@@ -345,6 +363,77 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.mapa) {
       this.agregarMarcadores();
       this.ajustarVistaAMarcadores();
+    }
+  }
+
+  // Método para mostrar animación de geocodificación
+  mostrarAnimacionGeocodificacion(): void {
+    if (!this.mapa) return;
+    
+    const L = (window as any).L;
+    
+    // Crear marcador de geocodificación animado
+    const marcadorGeocoding = L.divIcon({
+      className: 'geocoding-marker',
+      html: `
+        <div class="geocoding-animation">
+          <div class="geocoding-pulse"></div>
+          <div class="geocoding-icon">
+            <i class="pi pi-map-marker"></i>
+          </div>
+        </div>
+      `,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+    
+    // Agregar marcador temporal en el centro del mapa
+    const centro = this.mapa.getCenter();
+    const marcadorTemporal = L.marker([centro.lat, centro.lng], { icon: marcadorGeocoding });
+    marcadorTemporal.addTo(this.mapa);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+      if (this.mapa) {
+        this.mapa.removeLayer(marcadorTemporal);
+      }
+    }, 3000);
+  }
+
+  // Método para simular efecto de búsqueda en el mapa
+  mostrarEfectoBusqueda(): void {
+    if (!this.mapa) return;
+    
+    const L = (window as any).L;
+    
+    // Crear círculo de búsqueda que se expande
+    const centro = this.mapa.getCenter();
+    const circulo = L.circle([centro.lat, centro.lng], {
+      color: '#2196F3',
+      fillColor: '#2196F3',
+      fillOpacity: 0.1,
+      radius: 100
+    }).addTo(this.mapa);
+    
+    // Animar expansión del círculo
+    let radius = 100;
+    const interval = setInterval(() => {
+      radius += 200;
+      circulo.setRadius(radius);
+      circulo.setStyle({ fillOpacity: Math.max(0.01, 0.1 - (radius / 5000)) });
+      
+      if (radius > 2000) {
+        clearInterval(interval);
+        this.mapa.removeLayer(circulo);
+      }
+    }, 100);
+  }
+
+  // Método para mostrar progreso de geocodificación
+  actualizarProgresoGeocodificacion(progreso: number): void {
+    const progressElement = document.querySelector('.geocoding-progress');
+    if (progressElement) {
+      (progressElement as HTMLElement).style.width = `${progreso}%`;
     }
   }
 
