@@ -14,6 +14,16 @@ interface UbicacionPedido {
   tiempoEstimado?: number;
 }
 
+interface MapaMetricas {
+  despachados: number;
+  paraDespachar: number;
+  empacados: number;
+  producidos: number;
+  enRuta: number;
+  pendientes: number;
+  tiempoPromedioEstimado?: number;
+}
+
 interface ConfiguracionMapa {
   centroMapa: { lat: number; lng: number };
   zoom: number;
@@ -39,6 +49,15 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() tiempoReal: boolean = false;
   @Input() geocodingInProgress: boolean = false;
   @Input() geocodingProgress: number = 0;
+  @Input() metricas: MapaMetricas = {
+    despachados: 0,
+    paraDespachar: 0,
+    empacados: 0,
+    producidos: 0,
+    enRuta: 0,
+    pendientes: 0,
+    tiempoPromedioEstimado: 0
+  };
 
   mapa: any = null;
   marcadores: any[] = [];
@@ -461,39 +480,39 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     console.log('Pedido seleccionado:', ubicacion);
   }
 
-  // Métodos getter para usar en el template
+  // Métodos getter unificados (ahora usan métricas del Input)
   get contadorDespachados(): number {
-    return this.configuracion.ubicaciones.filter(u => u.estado === 'Despachado').length;
+    return this.metricas.despachados;
   }
 
   get contadorParaDespachar(): number {
-    return this.configuracion.ubicaciones.filter(u => u.estado === 'ParaDespachar').length;
+    return this.metricas.paraDespachar;
   }
 
   get contadorEmpacados(): number {
-    return this.configuracion.ubicaciones.filter(u => u.estado === 'Empacado').length;
+    return this.metricas.empacados;
   }
 
   get contadorProducidos(): number {
-    return this.configuracion.ubicaciones.filter(u => u.estado === 'ProducidoTotalmente').length;
+    return this.metricas.producidos;
   }
 
   get contadorPendientes(): number {
-    return this.configuracion.ubicaciones.filter(u => u.estado !== 'Despachado').length;
+    return this.metricas.pendientes;
   }
 
   get contadorEnRuta(): number {
-    return this.configuracion.ubicaciones.filter(u => u.estado === 'Despachado').length;
+    return this.metricas.enRuta;
   }
 
-  // Método público para obtener estadísticas del mapa
+  // Método público para obtener estadísticas del mapa (unificado)
   obtenerEstadisticas() {
     const stats = {
       totalUbicaciones: this.configuracion.ubicaciones.length,
-      enRuta: this.contadorDespachados,
-      paraDespacho: this.contadorParaDespachar,
-      empacados: this.contadorEmpacados,
-      tiempoPromedioEstimado: this.calcularTiempoPromedioEstimado()
+      enRuta: this.metricas.enRuta,
+      paraDespacho: this.metricas.paraDespachar,
+      empacados: this.metricas.empacados,
+      tiempoPromedioEstimado: this.metricas.tiempoPromedioEstimado || this.calcularTiempoPromedioEstimado()
     };
 
     return stats;

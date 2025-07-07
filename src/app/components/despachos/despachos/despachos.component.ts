@@ -46,6 +46,16 @@ import { PdfTemplateComponent } from "../components/pdf-template/pdf-template.co
 import { GeocodingService, GeocodingResponse } from "../../../shared/services/geocoding.service";
 import { MapaUbicacionesComponent } from "../components/mapa-ubicaciones/mapa-ubicaciones.component";
 
+interface MapaMetricas {
+  despachados: number;
+  paraDespachar: number;
+  empacados: number;
+  producidos: number;
+  enRuta: number;
+  pendientes: number;
+  tiempoPromedioEstimado?: number;
+}
+
 interface ColumnDefinition {
   field: string;
   header: string;
@@ -213,6 +223,17 @@ export class DespachosComponent implements OnInit {
   geocodingProgress: number = 0;
   filtroEstadoMapa: string | null = null;
   private intervaloBetweenAlertas: number = 5 * 60 * 1000; // 5 minutos en milisegundos
+  
+  // Métricas unificadas del mapa
+  mapaMetricas: MapaMetricas = {
+    despachados: 0,
+    paraDespachar: 0,
+    empacados: 0,
+    producidos: 0,
+    enRuta: 0,
+    pendientes: 0,
+    tiempoPromedioEstimado: 0
+  };
 
   // Definiciones para la gestión de columnas
   displayedColumns: ColumnDefinition[] = [
@@ -954,12 +975,17 @@ export class DespachosComponent implements OnInit {
   }
 
 
-  // Método para obtener datos del mapa
+  // Método para obtener datos del mapa (unificado con configuracionMapa)
   obtenerDatosMapa() {
+    // Asegurar que configuracionMapa esté actualizado
+    if (!this.configuracionMapa.ubicaciones || this.configuracionMapa.ubicaciones.length === 0) {
+      this.actualizarConfiguracionMapa();
+    }
+    
     return {
-      ubicaciones: this.metricasLogistica?.ubicacionesPedidos || [],
-      centroMapa: { lat: 4.6097, lng: -74.0817 }, // Bogotá como centro por defecto
-      zoom: 11,
+      ubicaciones: this.configuracionMapa.ubicaciones || [],
+      centroMapa: this.configuracionMapa.centroMapa || { lat: 4.6097, lng: -74.0817 },
+      zoom: this.configuracionMapa.zoom || 11,
     };
   }
 
@@ -4654,7 +4680,40 @@ export class DespachosComponent implements OnInit {
       this.metricasLogistica.ubicacionesPedidos = ubicaciones;
     }
 
+    // Calcular y actualizar métricas unificadas del mapa
+    this.calcularMetricasMapa();
+
     console.log(`Mapa actualizado con ${ubicaciones.length} ubicaciones`);
+  }
+
+  /**
+   * Calcula las métricas unificadas para el componente del mapa
+   */
+  private calcularMetricasMapa(): void {
+    const ubicaciones = this.configuracionMapa.ubicaciones || [];
+    
+    this.mapaMetricas = {
+      despachados: ubicaciones.filter(u => u.estado === 'Despachado').length,
+      paraDespachar: ubicaciones.filter(u => u.estado === 'ParaDespachar').length,
+      empacados: ubicaciones.filter(u => u.estado === 'Empacado').length,
+      producidos: ubicaciones.filter(u => u.estado === 'ProducidoTotalmente').length,
+      enRuta: ubicaciones.filter(u => u.estado === 'Despachado').length, // Mismo que despachados
+      pendientes: ubicaciones.filter(u => u.estado !== 'Despachado').length,
+      tiempoPromedioEstimado: this.calcularTiempoPromedioEstimadoMapa(ubicaciones)
+    };
+  }
+
+  /**
+   * Calcula el tiempo promedio estimado de entrega
+   */
+  private calcularTiempoPromedioEstimadoMapa(ubicaciones: any[]): number {
+    const tiempos = ubicaciones
+      .filter(u => u.tiempoEstimado && u.tiempoEstimado > 0)
+      .map(u => u.tiempoEstimado);
+    
+    if (tiempos.length === 0) return 0;
+    
+    return Math.round(tiempos.reduce((sum: number, tiempo: number) => sum + tiempo, 0) / tiempos.length);
   }
 
   /**

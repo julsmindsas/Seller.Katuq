@@ -92,8 +92,8 @@ export class GeocodingService {
    */
   private async geocodeWithFallback(direccion: string, ciudad: string): Promise<GeocodingResponse> {
     const providers = [
-      GeocodingProvider.FIREBASE,
       GeocodingProvider.GOOGLE_MAPS,
+      GeocodingProvider.FIREBASE,
       GeocodingProvider.OPEN_ROUTE,
       GeocodingProvider.NOMINATIM
     ];
