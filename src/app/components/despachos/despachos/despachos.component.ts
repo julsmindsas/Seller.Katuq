@@ -370,7 +370,7 @@ export class DespachosComponent implements OnInit {
 
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
       this.orders = data as PedidoPriorizado[];
-      this.orders.forEach((order) => {
+   /*   this.orders.forEach((order) => {
         if (order.fechaCreacion) {
           order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
         }
@@ -384,7 +384,7 @@ export class DespachosComponent implements OnInit {
         order.faltaPorPagar =
           (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
       });
-
+*/
       // Aplicar algoritmo de priorización
       this.aplicarAlgoritmoPriorizacion(mostrarAlertas);
 
@@ -2201,14 +2201,14 @@ export class DespachosComponent implements OnInit {
     this.loading = true;
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
       this.orders = data as PedidoPriorizado[];
-      this.orders.forEach((order) => {
+    /* this.orders.forEach((order) => {
         if (order.fechaCreacion) {
           order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
         }
         order.anticipo = order.anticipo ?? 0;
         order.faltaPorPagar =
           (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
-      });
+      });*/
 
       // Aplicar algoritmo de priorización sin mostrar alertas en buscarPorFechas
       this.aplicarAlgoritmoPriorizacion(false);

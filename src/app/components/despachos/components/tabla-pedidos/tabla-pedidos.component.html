@@ -9,8 +9,9 @@
                         [scrollHeight]="'calc(100vh - 400px)'" [paginator]="true"
                         currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords} pedidos' | translate }}"
                         [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadoPago']"
-                        styleClass="p-datatable-sm p-datatable-customers p-datatable-gridlines"
-                        style="font-size: 0.9em;">
+                        styleClass="p-datatable-sm p-datatable-customers p-datatable-gridlines p-datatable-striped"
+                        [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }"
+                        style="font-size: 0.8em; table-layout: auto;">
 
                         <!-- CAPTION: Botones y filtros generales -->
                         <ng-template pTemplate="caption">
@@ -111,7 +112,7 @@
                                 <td *ngIf="isColumnVisible('opciones')" class="options-cell" style="width: 3rem; text-align: center;">
                                     <div class="btn-actions hover-container">
                                         <button class="btn-options" type="button">
-                                            <i class="pi pi-ellipsis-v"></i>
+                                            <i class="pi pi-cog"></i>
                                         </button>
 
                                         <ul class="list-actions popup">
@@ -167,24 +168,45 @@
                                 <ng-container *ngFor="let col of selectedColumns">
                                     <ng-container *ngIf="col.field !== 'detalles' && col.field !== 'opciones' && isColumnVisible(col.field)">
                                         <!-- Estado de Pago -->
-                                        <td *ngIf="col.field === 'estadoPago'">
-                                            <span class="estado-pill estado-pago" [ngClass]="{
-                                                'estado-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
-                                                'estado-success': pedido?.estadoPago === 'Aprobado' || pedido?.estadoPago === 'PreAprobado',
-                                                'estado-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
-                                            }">{{ pedido?.estadoPago }}</span>
+                                        <td *ngIf="col.field === 'estadoPago'" class="estado-cell text-center">
+                                            <span class="modern-badge" [ngClass]="{
+                                                'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
+                                                'badge-success': pedido?.estadoPago === 'Aprobado',
+                                                'badge-info': pedido?.estadoPago === 'PreAprobado',
+                                                'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
+                                            }">
+                                                <i class="status-icon pi" [ngClass]="{
+                                                    'pi-clock': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
+                                                    'pi-check-circle': pedido?.estadoPago === 'Aprobado',
+                                                    'pi-eye': pedido?.estadoPago === 'PreAprobado',
+                                                    'pi-times-circle': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
+                                                }"></i>
+                                                {{ pedido?.estadoPago }}
+                                            </span>
                                         </td>
                                         
                                         <!-- Estado de Proceso -->
-                                        <td *ngIf="col.field === 'estadoProceso'">
-                                            <span class="estado-pill estado-proceso" [ngClass]="{
-                                                'estado-secondary': pedido?.estadoProceso === 'SinProducir',
-                                                'estado-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                                'estado-primary': pedido?.estadoProceso === 'Empacado',
-                                                'estado-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                                'estado-success': pedido?.estadoProceso === 'Entregado',
-                                                'estado-danger': pedido?.estadoProceso === 'Rechazado'
-                                            }">{{ pedido?.estadoProceso }}</span>
+                                        <td *ngIf="col.field === 'estadoProceso'" class="estado-cell text-center">
+                                            <span class="modern-badge" [ngClass]="{
+                                                'badge-secondary': pedido?.estadoProceso === 'SinProducir',
+                                                'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                'badge-primary': pedido?.estadoProceso === 'Empacado',
+                                                'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                'badge-success': pedido?.estadoProceso === 'Entregado',
+                                                'badge-danger': pedido?.estadoProceso === 'Rechazado',
+                                                'badge-dark': pedido?.estadoProceso === 'Cerrado'
+                                            }">
+                                                <i class="status-icon pi" [ngClass]="{
+                                                    'pi-circle': pedido?.estadoProceso === 'SinProducir',
+                                                    'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                    'pi-box': pedido?.estadoProceso === 'Empacado',
+                                                    'pi-truck': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                    'pi-check-circle': pedido?.estadoProceso === 'Entregado',
+                                                    'pi-times-circle': pedido?.estadoProceso === 'Rechazado',
+                                                    'pi-lock': pedido?.estadoProceso === 'Cerrado'
+                                                }"></i>
+                                                {{ pedido?.estadoProceso }}
+                                            </span>
                                         </td>
                                         
                                         <!-- Prioridad - Nueva columna -->
@@ -319,9 +341,9 @@
                         </ng-template>
 
                         <!-- FOOTER: Totales (adaptar el colspan en función del número de columnas visibles) -->
-                        <ng-template pTemplate="footer">
-                            <tr style="font-size: 0.85em;" *ngIf="getVisibleColumnsCount() > 0">
-                                <td [attr.colspan]="getVisibleColumnsCount()" class="text-end">
+                        <ng-template pTemplate="summary">
+                            <tr class="summary-row" style="font-size: 0.85em; background-color: #f8f9fa; border-top: 2px solid #007bff;" *ngIf="getVisibleColumnsCount() > 0">
+                                <td [attr.colspan]="getVisibleColumnsCount()" class="text-end" style="padding: 1rem; font-weight: bold;">
                                     <strong>{{ 'Total Envío:' | translate }}</strong> {{ calculateTotalEnvio(orders) | currency }} | 
                                     <strong>{{ 'Falta Por Pagar:' | translate }}</strong> {{ calculateFaltaPorPagar(orders) | currency }}
                                 </td>
