@@ -108,7 +108,7 @@
                     </span>
                   </div>
                   <input type="text" class="form-control" placeholder="Buscar integración..." 
-                    [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)" />
+                    [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
                   <div class="input-group-append" *ngIf="searchTerm">
                     <button class="btn btn-outline-secondary" type="button" (click)="onSearchChange('')">
                       <i class="fa fa-times"></i>
@@ -140,48 +140,7 @@
             </div>
           </div>
 
-          <!-- DEBUG SECTION - TEMPORAL -->
-          <div class="card border-info mb-3" style="background-color: #e7f3ff;">
-            <div class="card-header bg-info text-white">
-              <h6 class="mb-0"><i class="fa fa-bug"></i> Debug Info (Temporal - Remover después)</h6>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-3">
-                  <strong>Loading:</strong> {{ loading }}<br>
-                  <strong>Error:</strong> {{ errorMessage }}<br>
-                  <strong>View Mode:</strong> {{ viewMode }}
-                </div>
-                <div class="col-md-3">
-                  <strong>integrations.length:</strong> {{ integrations.length }}<br>
-                  <strong>filteredIntegrations.length:</strong> {{ filteredIntegrations.length }}<br>
-                  <strong>Total filtered by method:</strong> {{ getSortedAndFilteredIntegrations().length }}
-                </div>
-                <div class="col-md-3">
-                  <strong>Search Term:</strong> "{{ searchTerm }}"<br>
-                  <strong>Filter Category:</strong> {{ filterCategory }}<br>
-                  <strong>Filter Status:</strong> {{ filterStatus }}
-                </div>
-                <div class="col-md-3">
-                  <strong>Categories with data:</strong>
-                  <div *ngFor="let category of categories">
-                    {{ getCategoryLabel(category) }}: {{ getFilteredIntegrationsByCategory(category).length }}
-                  </div>
-                </div>
-              </div>
-              <div class="mt-2">
-                <button class="btn btn-sm btn-info mr-2" (click)="showCompleteDebugInfo()">Complete Debug</button>
-                <button class="btn btn-sm btn-warning mr-2" (click)="resetFilters()">Reset Filters</button>
-                <button class="btn btn-sm btn-success mr-2" (click)="forceRefreshFromAPI()">Force Refresh</button>
-                <button class="btn btn-sm btn-primary" (click)="testAPIConnection()">Test API</button>
-              </div>
-              <div class="mt-2" *ngIf="integrations.length > 0">
-                <strong>Raw integrations data (first 2):</strong>
-                <pre style="max-height: 100px; overflow-y: auto; font-size: 11px;">{{ integrations.slice(0, 2) | json }}</pre>
-              </div>
-            </div>
-          </div>
-          <!-- END DEBUG SECTION -->
+          <!-- Se eliminó la sección de depuración -->
 
           <!-- Loading -->
           <div *ngIf="loading" class="text-center py-4">
@@ -305,16 +264,10 @@
           
           <!-- Grid View -->
           <div *ngIf="!loading && integrations.length > 0 && viewMode === 'grid'" class="integration-grid">
-            <!-- DEBUG: Grid View Data -->
-            <div class="alert alert-info mb-3">
-              <strong>🎯 Grid View Debug:</strong> Showing {{ integrations.length }} integrations in grid mode
-            </div>
+            <!-- Fin alerta debug Grid -->
             
             <div *ngFor="let category of categories" class="integration-category" [hidden]="!shouldShowCategory(category)">
-              <!-- DEBUG: Category Data -->
-              <div class="alert alert-warning" *ngIf="getFilteredIntegrationsByCategory(category).length === 0 && !shouldShowCategory(category)">
-                🚫 Category {{ getCategoryLabel(category) }} hidden or has no data
-              </div>
+              <!-- Fin alerta debug categoría -->
               
               <div class="category-header">
                 <h5>
@@ -336,8 +289,6 @@
               
               <div class="row">
                 <div *ngFor="let integration of getFilteredIntegrationsByCategory(category); trackBy: trackByIntegration" class="col-md-6 col-xl-4 mb-4">
-                  <!-- DEBUG: Show integration being rendered -->
-                  <div class="small text-muted mb-1">🔧 Rendering: {{ integration.name }} ({{ integration.type }})</div>
                   <div class="integration-card" [ngClass]="{'inactive': !integration.enabled, 'has-error': hasError(integration), 'featured': isFeatured(integration)}" (click)="openIntegrationConfig(integration)">
                     <div class="integration-card-header">
                       <div class="integration-logo-container">
@@ -439,10 +390,7 @@
 
           <!-- List View -->
           <div *ngIf="!loading && integrations.length > 0 && viewMode === 'list'" class="integration-list-view">
-            <!-- DEBUG: List View Data -->
-            <div class="alert alert-info mb-3">
-              <strong>📋 List View Debug:</strong> Showing {{ getSortedAndFilteredIntegrations().length }} integrations in list mode (from {{ integrations.length }} total)
-            </div>
+            <!-- Fin alerta debug List -->
             
             <div class="table-responsive">
               <table class="table table-hover integration-table">

@@ -106,13 +106,6 @@
   color: #7366ff;
 }
 
-.integration-logo {
-  height: 50px;
-  width: 50px;
-  object-fit: contain;
-  margin-bottom: 10px;
-}
-
 .integration-name {
   font-size: 16px;
   font-weight: 600;

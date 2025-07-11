@@ -198,7 +198,7 @@ export class IntegrationsService {
     );
   }
 
-  createIntegration(provider: string, config: any): Observable<Integration> {
+  createIntegration(provider: string, config: any): Observable<Integration | null> {
     this.stateService.setLoading('save', true);
     
     const requestBody = {
@@ -206,17 +206,21 @@ export class IntegrationsService {
       config: config
     };
     
-    return this.http.post<{ success: boolean; data: Integration; metadata?: any }>(this.apiUrl, requestBody, {
+    return this.http.post<{ success: boolean; data?: Integration; configId?: string; message?: string; metadata?: any }>(this.apiUrl, requestBody, {
       headers: this.getApiHeaders()
     }).pipe(
-      map(response => response.data),
+      map(response => response.data || null),
       tap(createdIntegration => {
-        this.stateService.addIntegration(createdIntegration);
+        // Si el backend no devuelve la integración completa (solo configId), forzar refetch
+        if (createdIntegration) {
+          this.stateService.addIntegration(createdIntegration);
+          this.cacheService.cacheIntegration(createdIntegration);
+        } else {
+          // Refrescar lista completa
+          this.invalidateAllCache();
+          this.getIntegrations().subscribe();
+        }
         this.stateService.setError('save', null);
-        // Invalidar cache de listas
-        this.cacheService.invalidatePattern(/^integrations:/);
-        // Cachear la nueva integración
-        this.cacheService.cacheIntegration(createdIntegration);
       }),
       catchError(error => {
         this.stateService.setError('save', error.message || 'Error al crear integración');
@@ -228,7 +232,7 @@ export class IntegrationsService {
     );
   }
 
-  updateIntegration(provider: string, config: any): Observable<Integration> {
+  updateIntegration(provider: string, config: any): Observable<Integration | null> {
     this.stateService.setLoading('save', true);
     
     const requestBody = {
@@ -236,17 +240,21 @@ export class IntegrationsService {
       config: config
     };
     
-    return this.http.put<{ success: boolean; data: Integration; metadata?: any }>(`${this.apiUrl}/${provider}`, requestBody, {
+    return this.http.put<{ success: boolean; data?: Integration; configId?: string; message?: string; metadata?: any }>(`${this.apiUrl}/${provider}`, requestBody, {
       headers: this.getApiHeaders()
     }).pipe(
-      map(response => response.data),
+      map(response => response.data || null),
       tap(updatedIntegration => {
-        this.stateService.updateIntegration(updatedIntegration);
+        if (updatedIntegration) {
+          this.stateService.updateIntegration(updatedIntegration);
+          this.cacheService.cacheIntegration(updatedIntegration);
+        } else {
+          // Sin datos: invalidar caches y refetch lista
+          this.cacheService.invalidateIntegration(provider);
+          this.invalidateAllCache();
+          this.getIntegrations().subscribe();
+        }
         this.stateService.setError('save', null);
-        // Invalidar cache específico y listas
-        this.cacheService.invalidateIntegration(provider);
-        // Cachear la integración actualizada
-        this.cacheService.cacheIntegration(updatedIntegration);
       }),
       catchError(error => {
         this.stateService.setError('save', error.message || 'Error al actualizar integración');
@@ -367,7 +375,7 @@ export class IntegrationsService {
    * Invalidar todo el cache relacionado con integraciones
    */
   invalidateAllCache(): void {
-    this.cacheService.invalidatePattern(/^integrations?:/);
+    this.cacheService.invalidatePattern(/^integrations:/);
   }
 
   /**
@@ -491,23 +499,27 @@ export class IntegrationsService {
     // Determinar categoría si no viene definida externamente
     const resolvedCategory = category || this.getCategoryForProvider(provider);
 
+    // Derivar bandera enabled desde múltiples posibles campos
+    const enabled = typeof integrationV2.enabled === 'boolean'
+      ? integrationV2.enabled
+      : (integrationV2.status ? integrationV2.status.toString().toLowerCase() === 'active' : true);
+
     // Clonar el objeto para no modificar el original.
     const credentials = { ...integrationV2 };
 
     // Lista de claves estándar que no son parte de las credenciales.
     const standardKeys = [
-      'id', 'type', 'provider', 'name', 'enabled', 'category', 
-      'createdAt', 'updatedAt', 'metadata', 
-      'config', 'credentials' // También eliminar si existen como objetos anidados
+      'id', 'type', 'provider', 'name', 'enabled', 'status', 'category', 
+      'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'metadata', 
+      'config', 'credentials', 'companyId', 'version', 'company', 'companyID'
     ];
     
     // Eliminar las claves estándar para dejar solo las credenciales.
     for (const key of standardKeys) {
         delete credentials[key];
     }
-    
-    // Si el objeto original tenía una propiedad 'credentials' o 'config', 
-    // fusionar sus campos. Esto da prioridad a los campos anidados si existen.
+
+    // Fusionar campos anidados de config/credentials si existen
     if (integrationV2.credentials && typeof integrationV2.credentials === 'object') {
         Object.assign(credentials, integrationV2.credentials);
     }
@@ -516,15 +528,14 @@ export class IntegrationsService {
     }
 
     return {
-      // El backend V2 puede devolver un ID único, usarlo. Si no, usar el provider.
       id: integrationV2.id || provider, 
       type: provider,
       provider: provider,
       name: integrationV2.name || provider,
-      enabled: integrationV2.enabled === true,
+      enabled: enabled,
       category: resolvedCategory,
       credentials: credentials,
-      config: credentials, // 'config' es el alias moderno de 'credentials'
+      config: credentials,
       createdAt: integrationV2.createdAt,
       updatedAt: integrationV2.updatedAt,
       metadata: integrationV2.metadata

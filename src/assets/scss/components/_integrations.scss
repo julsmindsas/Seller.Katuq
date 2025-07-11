@@ -1,0 +1,74 @@
+/* Integrations shared styles */
+
+.integration-logo,
+.integration-logo-sm,
+.service-logo {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+}
+
+.integration-icon,
+.service-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  background: linear-gradient(135deg, var(--primary-color, #7366ff), #a992ff);
+  transition: all 0.3s ease;
+}
+
+.integration-icon-sm {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 12px !important;
+  margin-right: 8px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.category-pill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+// Category colors
+.category-ecommerce { background-color: #e3f2fd; color: #0d47a1; }
+.category-payment   { background-color: #e8f5e9; color: #1b5e20; }
+.category-logistics { background-color: #fff3e0; color: #e65100; }
+.category-marketing { background-color: #f3e5f5; color: #6a1b9a; }
+.category-crm       { background-color: #e8eaf6; color: #283593; }
+
+.status-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+}
+.status-badge.active   { background-color: rgba(40, 167, 69, 0.1); color: #28a745; }
+.status-badge.inactive { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
+
+/* Loading helpers */
+.spinner-container { display: flex; flex-direction: column; align-items: center; }
+.spinner {
+  width: 50px; height: 50px;
+  border: 3px solid rgba(115,102,255,0.2);
+  border-top-color: #7366ff;
+  border-radius: 50%;
+  animation: spin 1s ease-in-out infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-indicator { display: flex; align-items: center; gap: 8px; color: #7366ff; font-size: 14px; }
+.loading-indicator i { font-size: 16px; } 

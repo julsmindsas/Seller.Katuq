@@ -292,6 +292,13 @@ export class IntegrationFormValidatorService {
       result.errors!['apiSecret'] = 'El API Secret debe tener al menos 32 caracteres';
     }
 
+    // Validar Access Token
+    if (!formValue.accessToken || !formValue.accessToken.startsWith('shpat_')) {
+      result.errors!['accessToken'] = 'El Access Token de Shopify debe comenzar con "shpat_"';
+    } else if (formValue.accessToken.length < 32) {
+      result.errors!['accessToken'] = 'El Access Token parece ser demasiado corto';
+    }
+
     // Sugerencias
     if (formValue.apiVersion && formValue.apiVersion < '2023-01') {
       result.warnings!.push('Se recomienda usar una versión más reciente de la API');

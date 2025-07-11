@@ -532,48 +532,64 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   editIntegration(integration: Integration): void {
     this.selectedIntegrationType = integration.type;
     this.editingIntegrationId = integration.id!;
-    
-    // Cargar datos en el formulario según el tipo
+
+    // Crear el formulario base según el tipo seleccionado
     switch (integration.type) {
       case 'shopify':
         this.integrationForm = this.createShopifyForm();
-        this.integrationForm.patchValue({
-          name: integration.name,
-          enabled: integration.enabled,
-          shopUrl: integration.credentials.shopUrl,
-          apiKey: integration.credentials.apiKey,
-          apiSecret: integration.credentials.apiSecret,
-          apiVersion: integration.credentials.apiVersion || '2023-01'
-        });
         break;
       case 'wompi':
         this.integrationForm = this.createWompiForm();
-        this.integrationForm.patchValue({
-          name: integration.name,
-          enabled: integration.enabled,
-          publicKey: integration.credentials.publicKey,
-          privateKey: integration.credentials.privateKey,
-          eventKey: integration.credentials.eventKey,
-          integrityKey: integration.credentials.integrityKey,
-          redirectUrl: integration.credentials.redirectUrl
-        });
-        this.isTestMode = integration.credentials.environment === 'test';
+        break;
+      case 'epayco':
+        this.integrationForm = this.createEpaycoForm();
+        break;
+      case 'paypal':
+        this.integrationForm = this.createPaypalForm();
+        break;
+      case 'stripe':
+        this.integrationForm = this.createStripeForm();
+        break;
+      case 'payu':
+        this.integrationForm = this.createPayUForm();
+        break;
+      case 'mercadopago':
+        this.integrationForm = this.createMercadoPagoForm();
         break;
       case 'woocommerce':
         this.integrationForm = this.createWooCommerceForm();
-        this.integrationForm.patchValue({
-          name: integration.name,
-          enabled: integration.enabled,
-          siteUrl: integration.credentials.storeUrl,
-          consumerKey: integration.credentials.consumerKey,
-          consumerSecret: integration.credentials.consumerSecret,
-          webhookSecret: integration.credentials.webhookSecret,
-          apiVersion: integration.credentials.version || 'v3',
-          verifySsl: integration.credentials.verifySsl ?? true
-        });
         break;
-      // Agregar otros casos para los demás tipos
+      case 'magento':
+        this.integrationForm = this.createMagentoForm();
+        break;
+      case 'prestashop':
+        this.integrationForm = this.createPrestaShopForm();
+        break;
+      default:
+        this.integrationForm = this.createShopifyForm();
+        break;
     }
+
+    // Parchear únicamente campos seguros (nombre y estado). Las credenciales se dejan vacías por seguridad.
+    this.integrationForm.patchValue({
+      name: integration.name,
+      enabled: integration.enabled
+    });
+
+    // Si el backend no envía credenciales, los campos relacionados quedan vacíos. Para evitar que el
+    // formulario quede inválido (Validators.required), eliminamos los validadores de todos los
+    // campos excepto "name" y "enabled" cuando los valores están vacíos.
+    Object.keys(this.integrationForm.controls).forEach(ctrlName => {
+      if (['name', 'enabled'].includes(ctrlName)) return;
+      const ctrl = this.integrationForm.get(ctrlName);
+      if (ctrl && (ctrl.value === '' || ctrl.value === null || ctrl.value === undefined)) {
+        ctrl.clearValidators();
+        ctrl.updateValueAndValidity({ emitEvent: false });
+      }
+    });
+
+    // Reiniciar la bandera de modo de pruebas; el backend ya no envía información sensible.
+    this.isTestMode = false;
   }
 
   testExistingIntegration(integration: Integration): void {
@@ -627,12 +643,13 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   
   createShopifyForm(): FormGroup {
     return this.fb.group({
-      name: ['Shopify', Validators.required],
+      name: ['', Validators.required],
       enabled: [true],
-      shopUrl: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/)]],
+      shopUrl: ['', [Validators.required, this.formValidator.createShopifyUrlValidator()]],
       apiKey: ['', Validators.required],
       apiSecret: ['', Validators.required],
-      apiVersion: ['2023-01']
+      accessToken: ['', Validators.required],
+      apiVersion: ['2025-07']
     });
   }
 
@@ -782,13 +799,22 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       }),
       takeUntil(this.destroy$)
     ).subscribe({
-      next: (result) => {
+      next: (result: any) => {
+        // El backend ahora responde { success, configId, message }
+        if (result && result.success && result.configId) {
+          this.isSaving = false;
+          this.showStatus('success', result.message || 'Configuración guardada');
+          // Notificar lista para refrescar (emitir evento)
+          if (this.isModalMode && this.activeModal) {
+            this.activeModal.close('saved');
+          }
+          return;
+        }
+
+        // Compatibilidad retro con estructura anterior (Integration)
         const message = this.editingIntegrationId ? 'Integración actualizada correctamente' : 'Integración creada correctamente';
-        this.handleSaveSuccess(result, message);
-        
-        // Realizar health check después del guardado
+        this.handleSaveSuccess(result as any, message);
         this.performHealthCheck();
-        
         if (this.isModalMode && this.activeModal) {
           this.activeModal.close('success');
         }
@@ -846,6 +872,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           shopUrl: formData.shopUrl,
           apiKey: formData.apiKey,
           apiSecret: formData.apiSecret,
+          accessToken: formData.accessToken,
           apiVersion: formData.apiVersion
         };
         break;
@@ -991,20 +1018,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return IntegrationCategory.OTHER;
   }
 
-  // Método para obtener el ícono de una categoría
+  // Delegar obtención de icono de categoría al servicio UI Helper
   getCategoryIcon(category: string): string {
-    const icons = {
-      [IntegrationCategory.ECOMMERCE]: 'fa-shopping-cart',
-      [IntegrationCategory.PAYMENT]: 'fa-credit-card',
-      [IntegrationCategory.LOGISTICS]: 'fa-truck',
-      [IntegrationCategory.MARKETING]: 'fa-bullhorn',
-      [IntegrationCategory.CRM]: 'fa-users',
-      [IntegrationCategory.ACCOUNTING]: 'fa-calculator',
-      [IntegrationCategory.OTHER]: 'fa-puzzle-piece'
-    };
-    return icons[category] || 'fa-plug';
+    return this.uiHelper.getCategoryIcon(category as IntegrationCategory);
   }
-  
+
   // Método para cambiar la categoría seleccionada
   selectCategory(category: IntegrationCategory): void {
     this.selectedCategory = category;
@@ -1020,34 +1038,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Método para obtener icono de integración específica
+  // Delegar icono de integración al servicio centralizado
   getIntegrationIcon(integrationId: string): string {
-    const iconMap: { [key: string]: string } = {
-      'shopify': 'fa-shopping-cart',
-      'wompi': 'fa-credit-card',
-      'epayco': 'fa-credit-card',
-      'paypal': 'fa-paypal',
-      'stripe': 'fa-stripe',
-      'payu': 'fa-credit-card',
-      'mercadopago': 'fa-credit-card',
-      'woocommerce': 'fa-wordpress',
-      'magento': 'fa-shopping-cart',
-      'prestashop': 'fa-shopping-cart',
-      'fedex': 'fa-truck',
-      'dhl': 'fa-truck',
-      'servientrega': 'fa-truck',
-      'coordinadora': 'fa-truck',
-      'mailchimp': 'fa-envelope',
-      'hubspot': 'fa-chart-line',
-      'google_analytics': 'fa-chart-bar',
-      'salesforce': 'fa-users',
-      'zoho_crm': 'fa-users',
-      'quickbooks': 'fa-calculator',
-      'siigo': 'fa-file-invoice',
-      'slack': 'fa-slack',
-      'zapier': 'fa-bolt'
-    };
-    return iconMap[integrationId] || 'fa-plug';
+    return this.uiHelper.getIntegrationIcon(integrationId);
   }
 
   // Métodos para health check y validación

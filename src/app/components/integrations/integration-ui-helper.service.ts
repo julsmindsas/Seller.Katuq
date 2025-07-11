@@ -69,6 +69,42 @@ export class IntegrationUIHelperService {
     [IntegrationCategory.OTHER]: 'fa-puzzle-piece'
   };
 
+  // NUEVO: Colores de categoría centralizados
+  private readonly categoryColors: { [key in IntegrationCategory]: string } = {
+    [IntegrationCategory.ECOMMERCE]: '#95bf47',
+    [IntegrationCategory.PAYMENT]: '#6c5ce7',
+    [IntegrationCategory.LOGISTICS]: '#fd79a8',
+    [IntegrationCategory.MARKETING]: '#fdcb6e',
+    [IntegrationCategory.CRM]: '#00b894',
+    [IntegrationCategory.ACCOUNTING]: '#0984e3',
+    [IntegrationCategory.OTHER]: '#636e72'
+  };
+
+  // Mapeo inverso: tipo -> categoría (centralizado para evitar duplicados)
+  private readonly typeToCategory: { [key: string]: IntegrationCategory } = {
+    shopify: IntegrationCategory.ECOMMERCE,
+    woocommerce: IntegrationCategory.ECOMMERCE,
+    magento: IntegrationCategory.ECOMMERCE,
+    prestashop: IntegrationCategory.ECOMMERCE,
+    wompi: IntegrationCategory.PAYMENT,
+    epayco: IntegrationCategory.PAYMENT,
+    paypal: IntegrationCategory.PAYMENT,
+    stripe: IntegrationCategory.PAYMENT,
+    payu: IntegrationCategory.PAYMENT,
+    mercadopago: IntegrationCategory.PAYMENT,
+    fedex: IntegrationCategory.LOGISTICS,
+    dhl: IntegrationCategory.LOGISTICS,
+    servientrega: IntegrationCategory.LOGISTICS,
+    coordinadora: IntegrationCategory.LOGISTICS,
+    mailchimp: IntegrationCategory.MARKETING,
+    hubspot: IntegrationCategory.MARKETING,
+    google_analytics: IntegrationCategory.MARKETING,
+    salesforce: IntegrationCategory.CRM,
+    zoho_crm: IntegrationCategory.CRM,
+    quickbooks: IntegrationCategory.ACCOUNTING,
+    siigo: IntegrationCategory.ACCOUNTING
+  };
+
   // Integration features and documentation
   private integrationFeatures = {
     shopify: ['Sincronización automática', 'Gestión de inventario', 'Webhooks'],
@@ -716,5 +752,28 @@ export class IntegrationUIHelperService {
 
   showInfo(message: string, duration?: number): string {
     return this.showFeedback('info', message, duration);
+  }
+
+  // Métodos públicos añadidos para reutilizar desde componentes ---------
+
+  /**
+   * Devuelve la categoría (IntegrationCategory) correspondiente a un tipo de integración.
+   */
+  getIntegrationCategory(type: string): IntegrationCategory {
+    return this.typeToCategory[type] || IntegrationCategory.OTHER;
+  }
+
+  /**
+   * Devuelve un color HEX representativo para una categoría o para el tipo de integración dado.
+   * Si se pasa un tipo, se hará la conversión automática a categoría.
+   */
+  getCategoryColor(typeOrCategory: string | IntegrationCategory): string {
+    let category: IntegrationCategory;
+    if (Object.values(IntegrationCategory).includes(typeOrCategory as IntegrationCategory)) {
+      category = typeOrCategory as IntegrationCategory;
+    } else {
+      category = this.getIntegrationCategory(typeOrCategory as string);
+    }
+    return this.categoryColors[category] || '#636e72';
   }
 }
