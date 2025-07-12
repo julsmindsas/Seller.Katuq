@@ -60,6 +60,7 @@ import { DefaultToolAdapterService } from './services/tools/default-tool-adapter
 import { TOOL_REGISTRARS } from './services/tools/tool-registrar';
 import { TOOL_REGISTRARS_INITIALIZER } from './services/tools/tool-registrars-initializer';
 import { SalesToolsRegistrarService } from '../tools/sales-tools-registrar.service';
+import { OrderToolsRegistrarService } from './services/tools/order-tools-registrar.service';
 
 @NgModule({
   declarations: [
@@ -123,6 +124,7 @@ import { SalesToolsRegistrarService } from '../tools/sales-tools-registrar.servi
     ProduccionService,
     { provide: TOOL_ADAPTER, useClass: DefaultToolAdapterService },
     { provide: TOOL_REGISTRARS, useExisting: SalesToolsRegistrarService, multi: true },
+    { provide: TOOL_REGISTRARS, useExisting: OrderToolsRegistrarService, multi: true },
     TOOL_REGISTRARS_INITIALIZER
   ],
   exports: [
