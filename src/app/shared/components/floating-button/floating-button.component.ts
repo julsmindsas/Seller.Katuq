@@ -11,6 +11,7 @@ import { VentasService } from '../../services/ventas/ventas.service';
 import { PaymentService } from '../../../shared/services/ventas/payment.service';
 import { ToastrService } from 'ngx-toastr';
 import { UtilsService } from '../../../shared/services/utils.service';
+import { ToolAdapter, TOOL_ADAPTER } from '../../services/tools/tool-adapter';
 
 // Interfaz para los pasos visuales
 interface VisualStep {
@@ -95,7 +96,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     private ventasService: VentasService,
     private paymentService: PaymentService,
     private toastr: ToastrService,
-    private utils: UtilsService
+    private utils: UtilsService,
+    @Inject(TOOL_ADAPTER) private toolAdapter: ToolAdapter
   ) {
     // Detectar si es un dispositivo móvil
     this.detectMobileDevice();
@@ -105,7 +107,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       this.detectMobileDevice();
     });
 
-    // Inicializar herramientas disponibles
+    // Inicializar herramientas disponibles y registrarlas en el adapter
     this.initializeTools();
 
     // Verificamos si el usuario está autenticado correctamente
@@ -607,7 +609,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
           type: 'session.update',
           session: {
             modalities: ['text', 'audio'],
-            tools: this.tools
+            tools: this.toolAdapter.getToolsMetadata()
           }
         };
 
@@ -631,45 +633,27 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
         // Procesar llamadas a funciones siguiendo el patrón proporcionado
         if (msg.type === 'response.function_call_arguments.done') {
           await this.ngZone.run(async () => {
-            const fn = this.toolFunctions[msg.name];
-            if (fn !== undefined) {
-              console.log(`Calling local function ${msg.name} with ${msg.arguments}`);
-              try {
-                const args = msg.arguments ? JSON.parse(msg.arguments) : {};
-                const result = await fn(args);
-                console.log('result', result);
+            try {
+              const args = msg.arguments ? JSON.parse(msg.arguments) : {};
+              const result = await this.toolAdapter.executeTool(msg.name, args);
+              console.log('result', result);
 
-                // Enviar el resultado de vuelta a OpenAI
-                const event = {
-                  type: 'conversation.item.create',
-                  item: {
-                    type: 'function_call_output',
-                    call_id: msg.call_id,
-                    output: JSON.stringify(result)
-                  }
-                };
+              // Enviar el resultado de vuelta a OpenAI
+              const event = {
+                type: 'conversation.item.create',
+                item: {
+                  type: 'function_call_output',
+                  call_id: msg.call_id,
+                  output: JSON.stringify(result)
+                }
+              };
 
-                // Enviar el resultado y solicitar respuesta
-                this.dataChannel.send(JSON.stringify(event));
-                this.dataChannel.send(JSON.stringify({ type: "response.create" }));
-              } catch (error: any) {
-                console.error(`Error executing function ${msg.name}:`, error);
-
-                // En caso de error, informar al modelo
-                const errorEvent = {
-                  type: 'conversation.item.create',
-                  item: {
-                    type: 'function_call_output',
-                    call_id: msg.call_id,
-                    output: JSON.stringify({ error: `Error: ${error.message}` })
-                  }
-                };
-
-                this.dataChannel.send(JSON.stringify(errorEvent));
-                this.dataChannel.send(JSON.stringify({ type: "response.create" }));
-              }
-            } else {
-              console.error(`Function not found: ${msg.name}`);
+              // Enviar el resultado y solicitar respuesta
+              this.dataChannel?.send(JSON.stringify(event));
+              this.dataChannel?.send(JSON.stringify({ type: "response.create" }));
+            } catch (error: any) {
+              console.error(`Error ejecutando herramienta ${msg.name}:`, error);
+              // Se maneja igual en el catch inferior
             }
           });
         }
@@ -1390,7 +1374,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
           if (args.notes) {
             // Añadir notas si existen
-            pedido.notasPedido.notasCliente.push({
+            pedido.notasPedido?.notasCliente.push({
               fecha: new Date().toISOString(),
               nota: args.notes
             });
@@ -1748,6 +1732,18 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
         }
       }
     ];
+
+    // Registrar cada herramienta en el adapter
+    this.tools.forEach(meta => {
+      const fn = this.toolFunctions[meta.name] as any;
+      if (fn) {
+        try {
+          this.toolAdapter.registerTool(meta, fn);
+        } catch (e) {
+          console.warn(`Tool '${meta.name}' ya registrada o error:`, e);
+        }
+      }
+    });
   }
 
   // Método actualizado para cargar contenido visual de demostración
@@ -1803,7 +1799,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
         stepNumber === this.visualSteps.length ? 'Finalmente, ' :
           'Ahora ';
 
-      this.currentStepText = `${stepPrefix}${this.visualSteps[this.currentStepIndex].caption.split(':')[0]}`;
+      const captionText = this.visualSteps[this.currentStepIndex]?.caption?.split(':')[0] || '';
+      this.currentStepText = `${stepPrefix}${captionText}`;
       this.logDebug(`📝 Texto de paso actualizado: "${this.currentStepText}"`);
     } else {
       this.currentStepText = 'Escuchando...';
