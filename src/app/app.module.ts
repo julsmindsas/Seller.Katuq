@@ -49,6 +49,12 @@ import { AnalyticsService } from './services/analytics.service';
 import { CompaniesService } from './services/companies.service';
 import { GeocodingService } from './shared/services/geocoding.service';
 import { PosCheckoutService, POS_CHECKOUT_SERVICE } from './shared/services/ventas/pos-checkout.service';
+import { DefaultToolAdapterService } from './shared/services/tools/default-tool-adapter.service';
+import { TOOL_ADAPTER } from './shared/services/tools/tool-adapter';
+import { TOOL_REGISTRARS } from './shared/services/tools/tool-registrar';
+import { TOOL_REGISTRARS_INITIALIZER } from './shared/services/tools/tool-registrars-initializer';
+import { SalesToolsRegistrarService } from './tools/sales-tools-registrar.service';
+import { OrderToolsRegistrarService } from './shared/services/tools/order-tools-registrar.service';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, "./assets/i18n/", ".json");
@@ -114,6 +120,10 @@ export function HttpLoaderFactory(http: HttpClient) {
     AnalyticsService,
     CompaniesService,
     GeocodingService,
+    { provide: TOOL_ADAPTER, useClass: DefaultToolAdapterService },
+    //{ provide: TOOL_REGISTRARS, useExisting: SalesToolsRegistrarService, multi: true },
+    { provide: TOOL_REGISTRARS, useExisting: OrderToolsRegistrarService, multi: true },
+    TOOL_REGISTRARS_INITIALIZER,
     { 
       provide: POS_CHECKOUT_SERVICE, 
       useFactory: (injector: Injector) => injector.get(PosCheckoutService), 

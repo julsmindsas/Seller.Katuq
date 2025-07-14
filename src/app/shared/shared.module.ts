@@ -55,12 +55,6 @@ import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos
 import { BaseService } from './services/base.service';
 import { CacheService } from './services/cache/cache.service';
 import { ProduccionService } from './services/produccion/produccion.service';
-import { TOOL_ADAPTER } from './services/tools/tool-adapter';
-import { DefaultToolAdapterService } from './services/tools/default-tool-adapter.service';
-import { TOOL_REGISTRARS } from './services/tools/tool-registrar';
-import { TOOL_REGISTRARS_INITIALIZER } from './services/tools/tool-registrars-initializer';
-import { SalesToolsRegistrarService } from '../tools/sales-tools-registrar.service';
-import { OrderToolsRegistrarService } from './services/tools/order-tools-registrar.service';
 
 @NgModule({
   declarations: [
@@ -121,11 +115,12 @@ import { OrderToolsRegistrarService } from './services/tools/order-tools-registr
     POSPedidosUtilService,
     BaseService,
     CacheService,
-    ProduccionService,
-    { provide: TOOL_ADAPTER, useClass: DefaultToolAdapterService },
-    { provide: TOOL_REGISTRARS, useExisting: SalesToolsRegistrarService, multi: true },
-    { provide: TOOL_REGISTRARS, useExisting: OrderToolsRegistrarService, multi: true },
-    TOOL_REGISTRARS_INITIALIZER
+    ProduccionService
+    // SE ELIMINAN LOS PROVEEDORES DE HERRAMIENTAS DE AQUÍ
+    // { provide: TOOL_ADAPTER, useClass: DefaultToolAdapterService },
+    // { provide: TOOL_REGISTRARS, useExisting: SalesToolsRegistrarService, multi: true },
+    // { provide: TOOL_REGISTRARS, useExisting: OrderToolsRegistrarService, multi: true },
+    // TOOL_REGISTRARS_INITIALIZER
   ],
   exports: [
     NgbModule,

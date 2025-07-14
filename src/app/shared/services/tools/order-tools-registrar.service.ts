@@ -31,6 +31,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
   ) {
     // Por simplicidad copiamos una referencia al catálogo ya existente
     // En producción debería cargarse desde un servicio compartido.
+    console.log('OrderToolsRegistrarService constructor');
   }
 
   register(adapter: ToolAdapter): void {

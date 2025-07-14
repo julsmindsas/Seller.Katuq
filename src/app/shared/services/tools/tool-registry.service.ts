@@ -16,8 +16,11 @@ export class ToolRegistryService {
 
   registerTool(meta: ToolMetadata, fn: ToolFunction): void {
     if (this.toolFunctions.has(meta.name)) {
-      throw new Error(`La herramienta '${meta.name}' ya está registrada.`);
+      // No lanzamos error, simplemente advertimos para permitir recarga en caliente si fuera necesario
+      console.warn(`[ToolRegistry] La herramienta '${meta.name}' ya está registrada. Se omitirá el nuevo registro.`);
+      return;
     }
+    console.log(`[ToolRegistry] Registrando herramienta: '${meta.name}'`);
     meta.type = meta.type || 'function';
     this.toolFunctions.set(meta.name, fn);
     this.toolsMetadata.push(meta);

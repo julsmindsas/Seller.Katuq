@@ -47,7 +47,7 @@ export const environment = {
       clientSecret: "",
     },
   },
-  useModelBig: true,
+  useModelBig: false,
   geocoding: {
     openRouteService: {
       apiKey: 'AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I',

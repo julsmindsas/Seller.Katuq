@@ -1,16 +1,11 @@
-import { Component, HostListener, ElementRef, OnInit, Output, EventEmitter, OnDestroy, NgZone, Inject } from '@angular/core';
+import { Component, HostListener, ElementRef, OnInit, OnDestroy, NgZone, Inject } from '@angular/core';
 import { AuthService } from '../../services/firebase/auth.service';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
 // Importar interfaces del modelo de pedido
-import { Pedido, Cliente, Facturacion, Envio, Carrito, EstadoProceso, EstadoPago } from '../../../components/ventas/modelo/pedido';
 // Importar servicios necesarios para la creación de pedidos
-import { VentasService } from '../../services/ventas/ventas.service';
-import { PaymentService } from '../../../shared/services/ventas/payment.service';
-import { ToastrService } from 'ngx-toastr';
-import { UtilsService } from '../../../shared/services/utils.service';
 import { ToolAdapter, TOOL_ADAPTER } from '../../services/tools/tool-adapter';
 
 // Interfaz para los pasos visuales
@@ -71,16 +66,17 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   public voiceWindowPosition = { x: 0, y: 0 };
 
   // Propiedades para el estado del proceso de ventas
-  private currentSaleProcess = {
-    step: 0, // Paso actual del proceso
-    cart: [] as any[],
-    client: null as any,
-    deliveryInfo: null as any,
-    billingInfo: null as any,
-    paymentInfo: null as any,
-    completed: false
-  };
-  empresaActual: any;
+  // SE ELIMINA LA PROPIEDAD 'currentSaleProcess' Y 'empresaActual'
+  // private currentSaleProcess = {
+  //   step: 0, // Paso actual del proceso
+  //   cart: [] as any[],
+  //   client: null as any,
+  //   deliveryInfo: null as any,
+  //   billingInfo: null as any,
+  //   paymentInfo: null as any,
+  //   completed: false
+  // };
+  // empresaActual: any;
   useModelBig: any;
   isLoggedIn = false;
   public chatMaximized: boolean = false;
@@ -92,11 +88,6 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     private ngZone: NgZone,
     private router: Router,
     @Inject(DOCUMENT) private document: Document,
-    // Inyectar los servicios necesarios para crear pedidos
-    private ventasService: VentasService,
-    private paymentService: PaymentService,
-    private toastr: ToastrService,
-    private utils: UtilsService,
     @Inject(TOOL_ADAPTER) private toolAdapter: ToolAdapter
   ) {
     // Detectar si es un dispositivo móvil
@@ -539,7 +530,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
     const baseUrl = "https://api.openai.com/v1/realtime";
     const modelBig = "gpt-4o-realtime-preview-2025-06-03";
-    const modelMini = "gpt-4o-mini-realtime-preview-2025-06-03";
+    const modelMini = "gpt-4o-mini-realtime-preview-2024-12-17";
     const model = this.useModelBig ? modelBig : modelMini;
 
     // Realizar la petición a la API de OpenAI
@@ -663,58 +654,139 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
   // Método para inicializar las herramientas disponibles
   private initializeTools(): void {
-    // Herramientas exclusivamente de UI
+    // SE ELIMINA EL CATÁLOGO DE PRODUCTOS HARCODEADO
+    // const catalogProducts = [ ... ];
+
+    // Las toolFunctions ahora solo contienen las que manejan la UI del componente
     this.toolFunctions = {
-      showStep: async ({ stepNumber }: { stepNumber: number }) => {
-        const idx = stepNumber - 1;
-        if (idx >= 0 && idx < this.visualSteps.length) {
-          this.goToStep(idx);
-          return { success: true };
-        }
-        return { success: false, error: 'Paso no válido' };
+      // Navegar a una ruta específica
+      navigateTo: async (args: { route: string }) => {
+        this.router.navigate([args.route]);
+        return { success: true, route: args.route };
       },
+
+      // Mostrar un paso específico en la guía visual
+      showStep: async (args: { stepNumber: number }) => {
+        const stepIndex = args.stepNumber - 1;
+        if (this.visualSteps && stepIndex >= 0 && stepIndex < this.visualSteps.length) {
+          this.goToStep(stepIndex);
+          return { success: true, step: args.stepNumber };
+        } else {
+          return { success: false, error: "Paso no disponible" };
+        }
+      },
+
+      // Obtener información sobre los pasos de creación de venta
       getVentaStepsInfo: async () => {
         return {
           success: true,
           totalSteps: this.visualSteps.length,
           currentStep: this.currentStepIndex + 1,
-          steps: this.visualSteps.map((s, i) => ({
-            number: i + 1,
-            title: s.caption?.split(':')[0] || `Paso ${i + 1}`
+          steps: this.visualSteps.map((step, index) => ({
+            number: index + 1,
+            title: step.caption ? step.caption.split(':')[0].trim() : 'Paso ' + (index + 1),
+            description: step.caption ? (step.caption.split(':')[1]?.trim() || step.caption) : ''
           }))
         };
       },
+
+      // Ir al siguiente paso
       nextStep: async () => {
         if (this.currentStepIndex < this.visualSteps.length - 1) {
-          this.currentStepIndex++; this.updateCurrentStepText();
-          return { success: true };
+          this.currentStepIndex++;
+          this.updateCurrentStepText();
+          return { success: true, newStep: this.currentStepIndex + 1 };
+        } else {
+          return { success: false, error: "Ya estás en el último paso" };
         }
-        return { success: false, error: 'Último paso' };
       },
+
+      // Ir al paso anterior
       previousStep: async () => {
         if (this.currentStepIndex > 0) {
-          this.currentStepIndex--; this.updateCurrentStepText();
-          return { success: true };
+          this.currentStepIndex--;
+          this.updateCurrentStepText();
+          return { success: true, newStep: this.currentStepIndex + 1 };
+        } else {
+          return { success: false, error: "Ya estás en el primer paso" };
         }
-        return { success: false, error: 'Primer paso' };
       },
-      getPageInfo: async () => ({ success: true, url: this.document.location.href, title: this.document.title }),
-      getPageHTML: async () => ({ success: true, html: this.document.documentElement.outerHTML })
-    } as any;
 
+      // Obtener la información de la página actual
+      getPageInfo: async () => {
+        return {
+          success: true,
+          url: this.document.location.href,
+          title: this.document.title,
+          path: this.router.url
+        };
+      },
+
+      // Obtener el HTML de la página actual (similar al ejemplo)
+      getPageHTML: async () => {
+        return {
+          success: true,
+          html: this.document.documentElement.outerHTML
+        };
+      }
+      
+      // SE ELIMINAN TODAS LAS FUNCIONES DE VENTA:
+      // searchProducts, addToCart, getCartContents, setClientInfo,
+      // setBillingInfo, setDeliveryInfo, processSale, getCurrentSaleProcess,
+      // getCurrentStepInSalesProcess, resetSaleProcess
+    };
+
+    // La lista 'tools' ahora solo contiene los metadatos de las herramientas de UI
     this.tools = [
-      { type: 'function', name: 'showStep', description: 'Muestra un paso de la guía', parameters: { type: 'object', properties: { stepNumber: { type: 'integer' } }, required: ['stepNumber'] } },
-      { type: 'function', name: 'getVentaStepsInfo', description: 'Lista los pasos de venta', parameters: { type: 'object', properties: {} } },
-      { type: 'function', name: 'nextStep', description: 'Avanza al siguiente paso', parameters: { type: 'object', properties: {} } },
-      { type: 'function', name: 'previousStep', description: 'Retrocede al paso anterior', parameters: { type: 'object', properties: {} } },
-      { type: 'function', name: 'getPageInfo', description: 'Información de la página', parameters: { type: 'object', properties: {} } },
-      { type: 'function', name: 'getPageHTML', description: 'HTML de la página', parameters: { type: 'object', properties: {} } }
+      {
+        type: 'function',
+        name: 'navigateTo',
+        description: 'Navega a una ruta específica de la app',
+        parameters: { /* ... */ }
+      },
+      {
+        type: 'function',
+        name: 'showStep',
+        description: 'Muestra un paso específico de la guía',
+        parameters: { /* ... */ }
+      },
+      {
+        type: 'function',
+        name: 'getVentaStepsInfo',
+        description: 'Obtiene lista de pasos de venta',
+        parameters: { /* ... */ }
+      },
+      {
+        type: 'function',
+        name: 'nextStep',
+        description: 'Va al siguiente paso visual',
+        parameters: { /* ... */ }
+      },
+      {
+        type: 'function',
+        name: 'previousStep',
+        description: 'Va al paso visual anterior',
+        parameters: { /* ... */ }
+      },
+      {
+        type: 'function',
+        name: 'getPageInfo',
+        description: 'Obtiene info de la página actual',
+        parameters: { /* ... */ }
+      }
+      // SE ELIMINAN LOS METADATOS DE LAS HERRAMIENTAS DE VENTA
     ];
 
+    // Se mantiene el registro de las herramientas restantes en el adapter
     this.tools.forEach(meta => {
-      try {
-        this.toolAdapter.registerTool(meta, (this.toolFunctions as any)[meta.name]);
-      } catch {}
+      const fn = (this.toolFunctions as any)[meta.name];
+      if (fn) {
+        try {
+          this.toolAdapter.registerTool(meta, fn);
+        } catch (e) {
+          console.warn(`Tool '${meta.name}' ya registrada o error:`, e);
+        }
+      }
     });
   }
 

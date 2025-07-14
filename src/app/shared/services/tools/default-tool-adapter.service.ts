@@ -12,6 +12,7 @@ export class DefaultToolAdapterService implements ToolAdapter {
 
   async executeTool(name: string, args: any): Promise<any> {
     try {
+      console.log(`[ToolAdapter] Ejecutando herramienta: '${name}' con argumentos:`, args);
       const result = await this.registry.executeTool(name, args);
       if (result && typeof result === 'object' && 'success' in result) {
         return result;

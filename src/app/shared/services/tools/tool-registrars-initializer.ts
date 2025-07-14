@@ -3,9 +3,9 @@ import { TOOL_REGISTRARS, ToolRegistrar } from './tool-registrar';
 import { TOOL_ADAPTER } from './tool-adapter';
 
 function initRegistrars(): () => void {
+  const registrars = inject(TOOL_REGISTRARS, { optional: true }) ?? [];
+  const adapter = inject(TOOL_ADAPTER);
   return () => {
-    const registrars = inject(TOOL_REGISTRARS, { optional: true }) ?? [];
-    const adapter = inject(TOOL_ADAPTER);
     registrars.forEach((r: ToolRegistrar) => {
       try {
         r.register(adapter);
