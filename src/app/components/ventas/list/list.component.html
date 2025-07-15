@@ -1241,9 +1241,13 @@
 
 <ng-template #cambioEstadoPagoModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">
+        <h4  *ngIf="!isFromProduction" class="modal-title" id="modal-basic-title">
             <i class="fa fa-credit-card-alt me-2"></i>
-            {{'Cambiar estado de pago' | translate}}
+            {{'Cambiar estado de pago y proceso' | translate}}
+        </h4>
+        <h4 *ngIf="isFromProduction" class="modal-title" id="modal-basic-title">
+            <i class="fa fa-credit-card-alt me-2"></i>
+            {{'Cambiar estado de proceso' | translate}}
         </h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
@@ -1274,11 +1278,11 @@
             <label class="form-label fw-bold">{{ 'Estado de proceso:' | translate }}</label>
             <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso">
                 <option *ngFor="let estado of estadosProcesos" [value]="estado">
-                    {{ estado }}
+                     {{ estado }}
                 </option>
             </select>
             <small class="form-text text-muted">
-                {{ 'Estados que congelan el pedido: ProducidoParcialmente, Cerrado, Entregado' | translate }}
+                {{ 'Estados que congelan el pedido: EnProduccion, ProducidoParcialmente, Cerrado, Entregado' | translate }}
             </small>
         </div>
 
@@ -1499,7 +1503,7 @@
           </button>
 
           <!-- Estado de Pago -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
+          <button class="option-btn" type="button" (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
             <div class="option-icon payment-icon">
               <i class="fa fa-credit-card-alt"></i>
             </div>

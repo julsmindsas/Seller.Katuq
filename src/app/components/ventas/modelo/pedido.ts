@@ -107,6 +107,7 @@ export enum EstadoProceso {
   ProducidoParcialmente = "ProducidoParcialmente",
   ParaDespachar = "ParaDespachar",
   Cerrado = "Cerrado",
+  EnProduccion = "EnProduccion",
 }
 
 export enum EstadoProcesoFiltros {
@@ -115,6 +116,7 @@ export enum EstadoProcesoFiltros {
   Despachado = "Despachado",
   Entregado = "Entregado",
   Rechazado = "Rechazado",
+  EnProduccion = "EnProduccion",
   ProducidoTotalmente = "ProducidoTotalmente",
   ProducidoParcialmente = "ProducidoParcialmente",
   ParaDespachar = "ParaDespachar",

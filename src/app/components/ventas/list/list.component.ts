@@ -152,9 +152,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       return false;
     }
 
-    const estadosCongelados = ["ProducidoParcialmente", "Cerrado", "Entregado"];
+    const estadosCongelados = [EstadoProcesoFiltros.EnProduccion, EstadoProcesoFiltros.ProducidoParcialmente, EstadoProcesoFiltros.Cerrado, EstadoProcesoFiltros.Entregado];
 
-    return estadosCongelados.includes(order.estadoProceso);
+    return estadosCongelados.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
   }
 
   /**
@@ -441,6 +441,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     this.estadosPago = Object.values(EstadoPago);
     // this.estadosProcesos = Object.values(EstadoProceso)
     this.estadosProcesos = Object.values(EstadoProcesoFiltros);
+    if(this.isFromProduction){
+      this.estadosProcesos = this.estadosProcesos.filter(estado => estado == EstadoProcesoFiltros.EnProduccion);
+    }
     this.validaciones = [
       { value: false, nombre: "No" },
       { value: true, nombre: "Si" },
@@ -452,10 +455,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Asegurar que las columnas estén en el orden correcto
     this.initializeColumns();
 
-    // Debug: Verificar configuración de columnas
-    console.log("Columnas mostradas:", this.displayedColumns);
-    console.log("Columnas seleccionadas:", this.selectedColumns);
-    console.log("¿Detalles visible?", this.isColumnVisible("detalles"));
 
     // Cargar estado de filtros guardado
     this.loadFiltersState();
@@ -650,7 +649,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         .nomComercial,
       tipoFecha: "fechaEntrega",
       estadoProceso: this.isFromProduction
-        ? [EstadoProceso.SinProducir]
+        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion]
         : ["Todos"],
     };
 
