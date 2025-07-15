@@ -114,6 +114,15 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 
+  public refrescarMapa(): void {
+    if (this.mapa) {
+      setTimeout(() => {
+        this.mapa.invalidateSize();
+        this.ajustarVistaAMarcadores();
+      }, 100);
+    }
+  }
+
   public async cargarLeaflet(): Promise<void> {
     try {
       // Verificar si Leaflet ya está cargado

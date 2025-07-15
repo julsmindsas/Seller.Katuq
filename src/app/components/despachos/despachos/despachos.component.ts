@@ -4723,19 +4723,17 @@ export class DespachosComponent implements OnInit {
     this.mostrarMapa = !this.mostrarMapa;
     
     if (this.mostrarMapa) {
-      // Actualizar configuración del mapa cuando se muestra
       this.actualizarConfiguracionMapa();
       
-      // Geocodificar pedidos sin coordenadas si es necesario
-      const pedidosSinCoordenadas = this.orders.filter(pedido => 
-        pedido.envio?.direccionEntrega && 
-        (!pedido.envio?.latitud || !pedido.envio?.longitud)
-      );
-      
-      if (pedidosSinCoordenadas.length > 0) {
-        console.log(`Encontrados ${pedidosSinCoordenadas.length} pedidos sin coordenadas`);
+      const tieneCoordenadas = this.orders.some(p => p.envio?.latitud && p.envio?.longitud);
+      if (!tieneCoordenadas) {
         this.geocodificarDireccionesPedidos();
       }
+
+      // Añadido: Refrescar el mapa después de que la vista se actualice
+      setTimeout(() => {
+        this.mapaComponent?.refrescarMapa();
+      }, 0);
     }
   }
 
@@ -4848,3 +4846,4 @@ export class DespachosComponent implements OnInit {
     }
   }
 }
+

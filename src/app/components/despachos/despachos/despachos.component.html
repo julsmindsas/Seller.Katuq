@@ -327,7 +327,20 @@
                         </button>
                     </div>
 
-                    <!-- Mapa se muestra solo cuando se activa el toggle -->
+                    <!-- Componente de mapa interactivo -->
+                    <div class="mapa-contenedor">
+                        <app-mapa-ubicaciones
+                            #mapaUbicaciones
+                            [configuracion]="obtenerDatosMapa()"
+                            [altura]="'400px'"
+                            [mostrarControles]="true"
+                            [tiempoReal]="true"
+                            [geocodingInProgress]="geocodingInProgress"
+                            [geocodingProgress]="geocodingProgress"
+                            [metricas]="mapaMetricas"
+                        >
+                        </app-mapa-ubicaciones>
+                    </div>
 
                     <!-- Información adicional del mapa -->
                     <div class="mt-3" *ngIf="configuracionMapa.ubicaciones?.length === 0">
@@ -1323,20 +1336,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Componente de mapa interactivo -->
-                                    <div *ngIf="mostrarMapa">
-                                        <app-mapa-ubicaciones
-                                            #mapaUbicaciones
-                                            [configuracion]="obtenerDatosMapa()"
-                                            [altura]="'400px'"
-                                            [mostrarControles]="true"
-                                            [tiempoReal]="true"
-                                            [geocodingInProgress]="geocodingInProgress"
-                                            [geocodingProgress]="geocodingProgress"
-                                            [metricas]="mapaMetricas"
-                                        >
-                                        </app-mapa-ubicaciones>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
