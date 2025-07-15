@@ -16,16 +16,80 @@
   font-family: var(--font-family);
   color: var(--text-color);
   padding: 12px;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-  max-width: none;
-  margin: 0;
+  width: 1000px; /* Ajustado para evitar recorte en PDF */
+  margin: 0 auto; /* Centrar para la vista previa en el modal */
   box-sizing: border-box;
+  /* Se eliminan height, flex-direction y max-width para que el contenido determine el alto */
 }
 
-/* Encabezado */
+/* Encabezado con Tabla */
+.header-table {
+  width: 100%;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--primary-color), #1e40af);
+  border-radius: 6px;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 12px 16px;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  .header-left {
+    vertical-align: top;
+    
+    .order-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: white;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.025em;
+    }
+
+    .company-details p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+      font-weight: 500;
+    }
+  }
+
+  .header-right {
+    vertical-align: top;
+    text-align: left; /* Mover ligeramente más a la izquierda */
+    width: 140px; /* Ancho fijo ajustado */
+    padding-left: 8px;
+
+    .order-id {
+      background-color: rgba(255, 255, 255, 0.15);
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: inline-block;
+
+      span {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      p {
+        font-size: 20px;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        font-family: 'SF Mono', 'Monaco', monospace;
+      }
+    }
+  }
+}
+
+
+/* Encabezado (se deja por si se usa en otro lado, pero se puede eliminar si no) */
 .header {
   display: flex;
   justify-content: space-between;
@@ -124,17 +188,18 @@
 }
 
 .info-box.total-box {
-  background: linear-gradient(135deg, var(--accent-color), #ef4444);
-  color: white;
+  background: #ffe5e5; /* Fondo claro para que se vea en PDF */
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
 }
 
 .info-box.total-box .info-label {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--accent-color);
 }
 
 .info-box.total-box .total-amount {
   font-size: 16px;
-  color: white;
+  color: var(--accent-color);
   font-weight: 700;
   font-family: 'SF Mono', 'Monaco', monospace;
 }
@@ -151,12 +216,54 @@
 }
 
 
-.orders-table {
+.pedidos-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  margin-top: 20px;
+  font-size: 10px;
   table-layout: fixed;
-  overflow-x: visible;
+
+  thead th {
+    background-color: #007bff; // Azul primario
+    color: white;
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #dee2e6;
+  }
+
+  /* Definir anchos de columna para evitar desbordamiento */
+  thead th:nth-child(1) { width: 10%; } /* Pedido */
+  thead th:nth-child(2) { width: 35%; } /* Cliente y Dirección */
+  thead th:nth-child(3) { width: 15%; } /* Zona */
+  thead th:nth-child(4) { width: 15%; } /* Horario */
+  thead th:nth-child(5) { width: 10%; } /* Valor */
+  thead th:nth-child(6) { width: 15%; } /* Firma */
+
+  tbody td {
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    vertical-align: top;
+    line-height: 1.4;
+    word-wrap: break-word;
+
+    &.valor-cobrar {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    strong {
+      font-weight: bold;
+    }
+
+    small {
+      font-size: 9px;
+      color: #555;
+    }
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #f8f9fa; // Gris claro para filas pares
+  }
 }
 
 .orders-table th, .orders-table td {
@@ -246,22 +353,25 @@
 }
 
 .footer-right {
-  flex: 1;
+  flex: none; /* No crecer */
   display: flex;
-  justify-content: center;
-  gap: 40px;
+  justify-content: flex-end;
+  gap: 12px;
+  max-width: 240px; /* Ajuste dentro del margen */
+  width: auto; /* Evitar que ocupe todo el ancho */
 }
 
 .signature-box {
   text-align: center;
-  min-width: 120px;
+  min-width: 90px;
+  font-size: 9.5px;
 }
 
 .signature-line {
   border-bottom: 1px solid var(--text-color);
-  width: 120px;
+  width: 90px;
   margin-bottom: 4px;
-  height: 20px;
+  height: 18px;
 }
 
 /* Estado de Error */

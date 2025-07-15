@@ -13,7 +13,7 @@
     "update-version": "node update-version.js",
     "prebuild": "npm run update-version",
     "prebuild:prod": "npm run update-version",
-    "actualizar-compilar": "npm run update-version && npm run build",    
+    "actualizar-compilar": "npm run update-version && npm run build",
     "release": "npm run update-version && ng build --configuration=production && firebase deploy"
   },
   "private": true,
@@ -45,6 +45,7 @@
     "@ngx-loading-bar/router": "^6.0.2",
     "@ngx-translate/core": "^14.0.0",
     "@ngx-translate/http-loader": "^7.0.0",
+    "@openai/agents": "^0.0.11",
     "@popperjs/core": "^2.11.5",
     "@swimlane/ngx-datatable": "^20.1.0",
     "angular-archwizard": "^7.0.0",

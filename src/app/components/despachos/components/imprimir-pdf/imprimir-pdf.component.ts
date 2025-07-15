@@ -45,24 +45,48 @@ export class ImprimirPdfComponent implements OnInit {
   imprimirPdf(): void {
     const printContent = document.getElementById('htmlPdf');
     if (printContent) {
-      html2canvas(printContent).then(canvas => {
+      // Opciones para mejorar la calidad de la imagen generada por html2canvas
+      const options = {
+        scale: 3, // Aumentar la escala para una mayor resolución
+        useCORS: true, // Permitir cargar imágenes de otros orígenes
+        logging: false,
+        width: printContent.scrollWidth,
+        height: printContent.scrollHeight,
+      };
+
+      html2canvas(printContent, options).then(canvas => {
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
-          orientation: 'portrait',
+          orientation: 'landscape', // Cambiado a horizontal
           unit: 'mm',
           format: 'a4'
         });
         
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
+        
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         
+        // Calcular la altura de la imagen en el PDF manteniendo la proporción
         const ratio = canvasWidth / canvasHeight;
         const imgWidth = pageWidth;
         const imgHeight = imgWidth / ratio;
         
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // Agregar la primera página
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        // Agregar páginas adicionales si el contenido es más alto que una página
+        while (heightLeft > 0) {
+          position -= pageHeight; // Mover la posición de la imagen hacia arriba para la siguiente página
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
         
         if (this.pedido && this.pedido.nroPedido) {
           pdf.save(`pedido-${this.pedido.nroPedido}.pdf`);
