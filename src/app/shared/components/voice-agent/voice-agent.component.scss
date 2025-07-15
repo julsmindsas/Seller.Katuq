@@ -1,0 +1,509 @@
+// Variables de diseño
+$primary-color: #3f51b5;
+$secondary-color: #ff4081;
+$tertiary-color: #4caf50;
+$light-color: #ffffff;
+$dark-color: #333333;
+$shadow-standard: 0 3px 8px rgba(0, 0, 0, 0.2);
+$shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.25);
+$radius-standard: 12px;
+$transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+// Contenedor principal del agente de voz
+.voice-agent-container {
+  width: 320px;
+  background-color: $light-color;
+  border-radius: $radius-standard;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: slide-up 0.3s forwards;
+  z-index: 1000;
+  
+  &.position-fixed {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+  }
+  
+  &.position-relative {
+    position: relative;
+  }
+  
+  &.theme-minimal {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    
+    .call-header {
+      padding: 10px 15px;
+      font-size: 14px;
+    }
+    
+    .call-avatar-container {
+      padding: 15px;
+      
+      .call-avatar {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  }
+  
+  &.theme-compact {
+    width: 280px;
+    
+    .call-visual-content {
+      &.has-content {
+        max-height: 200px;
+      }
+    }
+  }
+  
+  &.mobile-view {
+    width: 100%;
+    height: 100%;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+  
+  &.session-active {
+    height: auto;
+    max-height: 500px;
+  }
+}
+
+// Interfaz de llamada
+.voice-call-interface {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  
+  .call-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, $tertiary-color, darken($tertiary-color, 15%));
+    color: $light-color;
+    
+    &.draggable {
+      cursor: move;
+    }
+    
+    .call-status {
+      font-weight: 500;
+      font-size: 15px;
+    }
+    
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      
+      .call-timer {
+        font-size: 14px;
+      }
+      
+      .header-end-call-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        border: none;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        color: $light-color;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transform: rotate(135deg);
+        transition: all 0.2s;
+        
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.3);
+          transform: rotate(135deg) scale(1.1);
+        }
+      }
+    }
+  }
+  
+  .call-avatar-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    .call-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: #f0f0f0;
+      background-image: url('/assets/images/logo-kai.png');
+      background-size: cover;
+      background-position: center;
+      margin-bottom: 12px;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .call-name {
+      font-weight: 600;
+      font-size: 18px;
+      color: $dark-color;
+      margin-bottom: 5px;
+    }
+    
+    .call-status-text {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 14px;
+      text-align: center;
+      
+      .badge {
+        padding: 2px 6px;
+        font-size: 10px;
+        vertical-align: middle;
+      }
+    }
+  }
+  
+  // Contenido visual
+  .call-visual-content {
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s;
+    background-color: #f5f5f5;
+    
+    &.has-content {
+      padding: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+      
+      &::-webkit-scrollbar {
+        width: 5px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+      }
+    }
+    
+    .no-content-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      color: rgba(0, 0, 0, 0.4);
+      
+      i {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+    }
+    
+    .content-steps {
+      .steps-indicator {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-bottom: 15px;
+        
+        .step-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background-color: rgba(0, 0, 0, 0.2);
+          cursor: pointer;
+          transition: all 0.2s;
+          
+          &.active {
+            background-color: $primary-color;
+            transform: scale(1.3);
+          }
+          
+          &:hover {
+            background-color: rgba($primary-color, 0.7);
+          }
+        }
+      }
+      
+      .steps-carousel {
+        position: relative;
+        
+        .step-item {
+          display: none;
+          
+          &.active {
+            display: block;
+            animation: fade-in 0.3s;
+          }
+          
+          .step-title {
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-align: center;
+            color: $dark-color;
+          }
+          
+          .step-image {
+            width: 100%;
+            height: 180px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+          }
+          
+          .step-caption {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.7);
+            text-align: center;
+            padding: 0 5px;
+          }
+        }
+      }
+      
+      .steps-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+        
+        .step-control {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background-color: rgba($primary-color, 0.1);
+          border: none;
+          color: $primary-color;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          
+          &:hover:not(:disabled) {
+            background-color: rgba($primary-color, 0.2);
+            transform: scale(1.1);
+          }
+          
+          &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+          }
+        }
+        
+        .step-counter {
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.6);
+        }
+      }
+    }
+  }
+  
+  // Visualizador de audio
+  .call-visualizer {
+    height: 50px;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    
+    .call-wave {
+      height: 30px;
+      width: 3px;
+      background: $primary-color;
+      border-radius: 3px;
+      animation: sound-wave 0.8s infinite alternate;
+      
+      &:nth-child(2) {
+        animation-delay: 0.2s;
+        height: 20px;
+      }
+      
+      &:nth-child(3) {
+        animation-delay: 0.4s;
+        height: 25px;
+      }
+      
+      &:nth-child(4) {
+        animation-delay: 0.6s;
+        height: 15px;
+      }
+      
+      &:nth-child(5) {
+        animation-delay: 0.8s;
+        height: 30px;
+      }
+      
+      &.inactive {
+        animation: none;
+        opacity: 0.4;
+        height: 10px;
+      }
+    }
+  }
+  
+  // Controles de la sesión
+  .call-controls {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    
+    &.fixed-controls {
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+    
+    .call-control-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      
+      &:active {
+        transform: scale(0.95);
+      }
+      
+      &.interrupt-btn {
+        background-color: #ff9800;
+        
+        &:hover {
+          background-color: #f57c00;
+          transform: scale(1.1);
+        }
+      }
+      
+      &.end-call-btn {
+        background-color: #f44336;
+        transform: rotate(135deg);
+        
+        &:hover {
+          background-color: #d32f2f;
+          transform: rotate(135deg) scale(1.1);
+        }
+      }
+      
+      &.info-btn {
+        background-color: #607d8b;
+        
+        &.connected {
+          background-color: #4caf50;
+        }
+        
+        &.disconnected {
+          background-color: #f44336;
+        }
+        
+        &:hover {
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+  
+  // Mensaje de error
+  .call-error {
+    padding: 10px 15px;
+    background-color: #ffebee;
+    color: #f44336;
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+
+// Listener para arrastre (invisible)
+.drag-listener {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  pointer-events: none;
+}
+
+// Animaciones
+@keyframes sound-wave {
+  0% {
+    height: 5px;
+  }
+  100% {
+    height: 30px;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Media queries para responsividad
+@media (max-width: 768px) {
+  .voice-agent-container {
+    &.mobile-view {
+      .call-visual-content {
+        &.has-content {
+          max-height: 250px;
+        }
+      }
+    }
+  }
+}
+
+// Temas específicos
+.voice-agent-container {
+  &.theme-minimal {
+    .call-controls {
+      padding: 10px;
+      
+      .call-control-btn {
+        width: 40px;
+        height: 40px;
+      }
+    }
+  }
+  
+  &.theme-compact {
+    .call-avatar-container {
+      padding: 15px;
+      
+      .call-avatar {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .call-name {
+        font-size: 16px;
+      }
+    }
+  }
+} 

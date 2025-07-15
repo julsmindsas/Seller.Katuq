@@ -115,110 +115,23 @@
     Pregúntale a K.A.I.
   </span>
 
-  <!-- Modo de voz unificado para móvil y escritorio -->
-  <div *ngIf="selectedMode === 'voice' && isListening" class="voice-mode-container"
-    [ngClass]="{'voice-call-mode': true}"
-    [style.transform]="!isMobile ? 'translate3d(' + voiceWindowPosition.x + 'px, ' + voiceWindowPosition.y + 'px, 0)' : ''"
-    [style.position]="!isMobile ? 'absolute' : ''">
-    <div class="voice-call-ui">
-      <!-- Barra de título arrastrable en escritorio con botón para colgar -->
-      <div class="call-header" (mousedown)="startDrag($event)" [ngClass]="{'draggable': !isMobile}">
-        <span class="call-status">Asistente K.A.I. activo</span>
-        <div class="header-controls">
-          <span class="call-timer">{{callDuration}}</span>
-          <!-- Botón adicional para colgar en el encabezado (siempre visible) -->
-          <button *ngIf="!isMobile" class="header-end-call-btn" (click)="stopVoiceMode($event)"
-            title="Finalizar llamada">
-            <i class="fa fa-phone"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="call-avatar-container">
-        <div class="call-avatar"></div>
-        <div class="call-name">K.A.I.</div>
-        <div class="call-status-text">{{currentStepText || 'Escuchando...'}}
-          <span *ngIf="audioError" class="badge bg-danger ms-2">
-            <i class="fa fa-exclamation-circle"></i>
-          </span>
-        </div>
-      </div>
-
-      <!-- Área para mostrar imágenes por pasos -->
-      <div class="call-visual-content" [ngClass]="{'has-content': hasVisualContent}">
-        <div class="content-steps" *ngIf="hasVisualContent">
-          <!-- Indicador de pasos -->
-          <div class="steps-indicator">
-            <div class="step-dot" *ngFor="let step of visualSteps; let i = index"
-              [ngClass]="{'active': currentStepIndex === i}" (click)="goToStep(i, $event)" [title]="'Paso ' + (i+1)">
-            </div>
-          </div>
-
-          <!-- Contenedor de imágenes con animación de carrusel -->
-          <div class="steps-carousel">
-            <div class="step-item" *ngFor="let step of visualSteps; let i = index"
-              [ngClass]="{'active': currentStepIndex === i}">
-              <h5 class="step-title">Paso {{i+1}} de {{visualSteps.length}}</h5>
-              <div class="step-image" [style.background-image]="'url(' + step.imageUrl + ')'"></div>
-              <div class="step-caption" *ngIf="step.caption">
-                {{step.caption.includes(':') ? step.caption.split(':')[1] : step.caption}}
-              </div>
-            </div>
-          </div>
-
-          <!-- Controles de navegación de pasos -->
-          <div class="steps-controls" *ngIf="visualSteps.length > 1">
-            <button class="step-control prev" (click)="previousStep($event)" [disabled]="currentStepIndex === 0">
-              <i class="fa fa-chevron-left"></i>
-            </button>
-            <span class="step-counter">{{currentStepIndex + 1}} / {{visualSteps.length}}</span>
-            <button class="step-control next" (click)="nextStep($event)"
-              [disabled]="currentStepIndex >= visualSteps.length - 1">
-              <i class="fa fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Mensaje cuando no hay contenido visual -->
-        <div class="no-content-message">
-          <i class="fa fa-image"></i>
-          <span>El contenido visual aparecerá aquí</span>
-        </div>
-      </div>
-
-      <!-- Cuadrado visual para mostrar mensajes de debug -->
-      <!-- <div class="step-info" *ngIf="hasVisualContent">
-        {{ debugLogs.join(' | ') }}
-      </div>
-       -->
-      <div class="call-visualizer">
-        <div class="call-wave"></div>
-        <div class="call-wave"></div>
-        <div class="call-wave"></div>
-        <div class="call-wave"></div>
-        <div class="call-wave"></div>
-      </div>
-
-      <!-- Mejora de visibilidad para los controles de llamada (con clase extra para fijarlos) -->
-      <div class="call-controls" [ngClass]="{'fixed-controls': !isMobile && hasVisualContent}">
-        <button class="call-control-btn mute-btn" (click)="toggleMute($event)" [ngClass]="{'muted': isMuted}">
-          <i class="fa" [ngClass]="isMuted ? 'fa-microphone-slash' : 'fa-microphone'"></i>
-        </button>
-        <button class="call-control-btn end-call-btn" (click)="stopVoiceMode($event)">
-          <i class="fa fa-phone"></i>
-        </button>
-        <button class="call-control-btn speaker-btn" (click)="toggleSpeaker($event)"
-          [ngClass]="{'active': isSpeakerOn}">
-          <i class="fa fa-volume-up"></i>
-        </button>
-      </div>
-
-      <!-- Mensaje de error con mejor visibilidad -->
-      <div *ngIf="audioError" class="call-error">
-        <i class="fa fa-warning me-2"></i>{{audioError}}
-      </div>
-    </div>
-  </div>
+  <!-- Nuevo componente de agente de voz - Reemplaza toda la implementación anterior -->
+  <app-voice-agent
+    *ngIf="selectedMode === 'voice'"
+    [config]="voiceAgentConfig"
+    [demoSteps]="demoSteps"
+    [uiConfig]="{
+      showVisualSteps: true,
+      allowDragging: true,
+      position: 'fixed',
+      theme: 'default',
+      showControls: true
+    }"
+    (sessionStarted)="saveState()"
+    (sessionEnded)="stopVoiceMode(null)"
+    (stepChanged)="currentStepIndex = $event.stepIndex"
+    (errorOccurred)="onVoiceError($event)">
+  </app-voice-agent>
 
   <!-- Burbuja de chat minimizada -->
   <div *ngIf="chatMinimized" class="minimized-chat-bubble" (click)="maximizeChat($event)">

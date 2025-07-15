@@ -43,6 +43,7 @@ import { ChatComponent } from './components/chat/chat/chat.component';
 import { AppTranslateModule } from './shared/modules/translate.module';
 // Importamos el nuevo módulo en lugar del componente individual
 import { VoiceInteractionModule } from './shared/components/voice-interaction/voice-interaction.module';
+import { VoiceAgentModule } from './shared/components/voice-agent/voice-agent.module';
 
 // Importar servicios
 import { AnalyticsService } from './services/analytics.service';
@@ -108,7 +109,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     ChangePasswordModule,
     FacturaTirillaModule,
     AppTranslateModule,
-    VoiceInteractionModule // Agregamos el módulo aquí
+    VoiceInteractionModule,
+    VoiceAgentModule // Agregamos el módulo aquí
   ],
   providers: [
     NotificationService,
