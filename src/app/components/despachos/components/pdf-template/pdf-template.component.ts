@@ -155,23 +155,13 @@ export class PdfTemplateComponent implements OnInit {
 
   // Validación de datos
   isValidForGeneration(): boolean {
-    console.log("Validando datos para generación PDF:", {
-      pedidos: this.pedidos?.length || 0,
-      nroShippingOrder: this.nroShippingOrder,
-      transportadorSeleccionado: !!this.transportadorSeleccionado,
-      userName: this.userName,
-    });
-
     // Validación más flexible - transportador no es obligatorio si hay userName
     const hasBasicData = !!(this.pedidos.length > 0 && this.nroShippingOrder);
     const hasResponsible = !!(this.transportadorSeleccionado || this.userName);
     
     const isValid = hasBasicData && hasResponsible;
     
-    console.log("Resultado de validación:", isValid, {
-      hasBasicData,
-      hasResponsible
-    });
+    
     
     return isValid;
   }
@@ -188,7 +178,6 @@ export class PdfTemplateComponent implements OnInit {
       errors.push("Se requiere transportador o usuario responsable");
     }
 
-    console.log("Errores de validación:", errors);
     return errors;
   }
 
