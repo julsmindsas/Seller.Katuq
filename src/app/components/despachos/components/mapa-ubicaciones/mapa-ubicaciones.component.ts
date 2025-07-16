@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { Subscription } from 'rxjs';
+import { SecurityService } from '../../../../shared/services/security/security.service';
 
 interface UbicacionPedido {
   nroPedido: string;
@@ -82,6 +83,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   leafletCargado: boolean = false;
   marcadoresAnimandose: Set<string> = new Set();
   ultimosLocationsProcesados: number = 0;
+  private companyName: string;
 
   // Configuración de íconos para diferentes estados
   iconosEstado = {
@@ -107,9 +109,21 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
   };
 
-  constructor(private db: AngularFireDatabase, private cd: ChangeDetectorRef) { }
+  constructor(
+    private db: AngularFireDatabase, 
+    private cd: ChangeDetectorRef,
+    private securityService: SecurityService
+  ) { }
 
   ngOnInit(): void {
+    const companyInfo = this.securityService.getCompanyInformationLogged();
+    if (companyInfo && companyInfo.nombreComercio) {
+      this.companyName = companyInfo.nombreComercio.toUpperCase();
+    } else {
+      console.warn('No se pudo obtener el nombre del comercio. El filtro de mensajeros por comercio puede no funcionar.');
+      this.companyName = '';
+    }
+    
     this.mostrarMensajeros = this.verMensajeros;
     this.cargarLeaflet();
     if (this.mostrarMensajeros) {
@@ -623,10 +637,35 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     
     const activeUsersRef = this.db.list('active_users');
     this.mensajerosSubscription = activeUsersRef.snapshotChanges().subscribe(snapshots => {
-      this.mensajeros = snapshots.map(snapshot => ({
-        id: snapshot.key as string,
-        ...(snapshot.payload.val() as any)
-      }));
+      this.mensajeros = snapshots
+        .filter(snapshot => {
+          if (!this.companyName) {
+            return false;
+          }
+          const key = snapshot.key as string;
+          const keyParts = key.split('_');
+          
+          if (keyParts.length < 2) { // Asumiendo formato minimo: nombre_empresa
+            return false;
+          }
+
+          const companyFromKey = (keyParts[keyParts.length - 1] || '').trim();
+          
+          return companyFromKey.toUpperCase() === this.companyName;
+        })
+        .map(snapshot => {
+          const key = snapshot.key as string;
+          const keyParts = key.split('_');
+          keyParts.pop(); // Eliminar el nombre de la empresa del final
+          const nombreMensajero = keyParts.join(' '); // Reconstruir el nombre del mensajero
+
+          return {
+            id: key,
+            nombre: nombreMensajero,
+            ...(snapshot.payload.val() as any)
+          };
+        });
+
       this.actualizarMarcadoresMensajeros();
       this.cd.detectChanges(); // Forzar detección de cambios para el contador
     }, error => {
