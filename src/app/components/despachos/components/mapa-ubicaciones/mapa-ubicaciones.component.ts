@@ -1,4 +1,6 @@
-import { Component, Input, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { Subscription } from 'rxjs';
 
 interface UbicacionPedido {
   nroPedido: string;
@@ -12,6 +14,14 @@ interface UbicacionPedido {
   horaEstimada?: string;
   distanciaRestante?: number;
   tiempoEstimado?: number;
+}
+
+interface UbicacionMensajero {
+  id: string;
+  lat: number;
+  lng: number;
+  timestamp: string;
+  nombre?: string;
 }
 
 interface MapaMetricas {
@@ -49,6 +59,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() tiempoReal: boolean = false;
   @Input() geocodingInProgress: boolean = false;
   @Input() geocodingProgress: number = 0;
+  @Input() verMensajeros: boolean = true;
   @Input() metricas: MapaMetricas = {
     despachados: 0,
     paraDespachar: 0,
@@ -61,6 +72,12 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
   mapa: any = null;
   marcadores: any[] = [];
+  private capaMensajeros: any = null;
+  private mensajerosSubscription: Subscription | null = null;
+  
+  public mostrarMensajeros: boolean = true;
+  public mensajeros: UbicacionMensajero[] = [];
+
   intervalTimer: any = null;
   leafletCargado: boolean = false;
   marcadoresAnimandose: Set<string> = new Set();
@@ -90,10 +107,14 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
   };
 
-  constructor() { }
+  constructor(private db: AngularFireDatabase, private cd: ChangeDetectorRef) { }
 
   ngOnInit(): void {
+    this.mostrarMensajeros = this.verMensajeros;
     this.cargarLeaflet();
+    if (this.mostrarMensajeros) {
+      this.escucharUbicacionMensajeros();
+    }
   }
 
   ngAfterViewInit(): void {
@@ -111,6 +132,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
     if (this.mapa) {
       this.mapa.remove();
+    }
+    if (this.mensajerosSubscription) {
+      this.mensajerosSubscription.unsubscribe();
     }
   }
 
@@ -199,8 +223,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         maxZoom: 18
       }).addTo(this.mapa);
 
+      this.capaMensajeros = L.layerGroup().addTo(this.mapa);
+
       // Agregar marcadores
       this.agregarMarcadores();
+      this.actualizarMarcadoresMensajeros();
 
       // Configurar actualización en tiempo real si está habilitada
       if (this.tiempoReal) {
@@ -292,6 +319,49 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     this.ultimosLocationsProcesados = this.configuracion.ubicaciones.length;
   }
 
+  private actualizarMarcadoresMensajeros(): void {
+    if (!this.mapa || !this.leafletCargado || !this.capaMensajeros) {
+      return;
+    }
+
+    this.capaMensajeros.clearLayers();
+    
+    if (!this.mostrarMensajeros) {
+      return;
+    }
+
+    const L = (window as any).L;
+
+    this.mensajeros.forEach(mensajero => {
+      if (mensajero.lat && mensajero.lng) {
+        const iconoMensajero = L.divIcon({
+          className: 'custom-marker-mensajero',
+          html: `
+            <div class="marker-mensajero-content" title="Mensajero: ${mensajero.nombre || mensajero.id}">
+              <span class="marker-mensajero-icon">🛵</span>
+              <div class="marker-mensajero-pulse"></div>
+            </div>
+          `,
+          iconSize: [40, 40],
+          iconAnchor: [20, 40]
+        });
+
+        const marcador = L.marker([mensajero.lat, mensajero.lng], { icon: iconoMensajero });
+        
+        const popupContent = `
+          <div style="font-size: 12px; color: #333;">
+            <strong style="color: #007bff;">Mensajero</strong><br>
+            <strong>ID:</strong> ${mensajero.id}<br>
+            ${mensajero.nombre ? `<strong>Nombre:</strong> ${mensajero.nombre}<br>` : ''}
+            <strong>Actualizado:</strong> ${new Date(mensajero.timestamp).toLocaleTimeString()}
+          </div>
+        `;
+        marcador.bindPopup(popupContent);
+        this.capaMensajeros.addLayer(marcador);
+      }
+    });
+  }
+
   private crearContenidoPopup(ubicacion: UbicacionPedido): string {
     const estadoClass = this.obtenerClaseEstado(ubicacion.estado);
     
@@ -353,7 +423,16 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     const L = (window as any).L;
-    const grupo = new L.featureGroup(this.marcadores);
+    const marcadoresTotales = [...this.marcadores];
+    if (this.mostrarMensajeros && this.capaMensajeros) {
+      marcadoresTotales.push(...this.capaMensajeros.getLayers());
+    }
+
+    if (marcadoresTotales.length === 0) {
+      return;
+    }
+
+    const grupo = new L.featureGroup(marcadoresTotales);
     this.mapa.fitBounds(grupo.getBounds().pad(0.1));
   }
 
@@ -535,5 +614,40 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (tiempos.length === 0) return 0;
     
     return Math.round(tiempos.reduce((sum, tiempo) => sum + tiempo, 0) / tiempos.length);
+  }
+
+  private escucharUbicacionMensajeros(): void {
+    if (this.mensajerosSubscription) {
+      this.mensajerosSubscription.unsubscribe();
+    }
+    
+    const activeUsersRef = this.db.list('active_users');
+    this.mensajerosSubscription = activeUsersRef.snapshotChanges().subscribe(snapshots => {
+      this.mensajeros = snapshots.map(snapshot => ({
+        id: snapshot.key as string,
+        ...(snapshot.payload.val() as any)
+      }));
+      this.actualizarMarcadoresMensajeros();
+      this.cd.detectChanges(); // Forzar detección de cambios para el contador
+    }, error => {
+      console.error('Error escuchando ubicación de mensajeros:', error);
+    });
+  }
+
+  public toggleMensajeros(event: any): void {
+    this.mostrarMensajeros = event.target.checked;
+    if (this.mostrarMensajeros) {
+      this.escucharUbicacionMensajeros();
+    } else {
+      if (this.mensajerosSubscription) {
+        this.mensajerosSubscription.unsubscribe();
+        this.mensajerosSubscription = null;
+      }
+      this.mensajeros = [];
+      if (this.capaMensajeros) {
+        this.capaMensajeros.clearLayers();
+      }
+    }
+    this.cd.detectChanges();
   }
 }

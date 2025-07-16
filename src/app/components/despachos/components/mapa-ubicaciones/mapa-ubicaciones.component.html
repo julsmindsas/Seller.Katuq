@@ -19,6 +19,19 @@
         title="{{ 'Ajustar vista a todas las ubicaciones' | translate }}">
         <i class="pi pi-search-plus"></i>
       </button>
+
+      <!-- Toggle para mensajeros -->
+      <div class="form-check form-switch ms-2" title="{{ 'Mostrar/Ocultar mensajeros' | translate }}">
+        <input class="form-check-input" 
+               type="checkbox" 
+               role="switch" 
+               id="toggleMensajeros"
+               [checked]="mostrarMensajeros"
+               (change)="toggleMensajeros($event)">
+        <label class="form-check-label" for="toggleMensajeros">
+          <i class="pi pi-user"></i>
+        </label>
+      </div>
     </div>
   </div>
 
@@ -40,6 +53,10 @@
       <div class="d-flex align-items-center">
         <div class="leyenda-item producido me-2"></div>
         <small>{{ 'Producido' | translate }} ({{ contadorProducidos }})</small>
+      </div>
+      <div class="d-flex align-items-center" *ngIf="mostrarMensajeros && mensajeros.length > 0">
+        <div class="leyenda-item mensajero me-2"></div>
+        <small>{{ 'Mensajero' | translate }} ({{ mensajeros.length }})</small>
       </div>
     </div>
   </div>

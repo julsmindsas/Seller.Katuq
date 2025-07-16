@@ -50,6 +50,11 @@ $border-radius: 8px;
       &.producido {
         background-color: #6f42c1;
       }
+      
+      &.mensajero {
+        background-color: #ff5722;
+        animation: pulse-orange 2s infinite;
+      }
     }
 
     small {
@@ -431,6 +436,18 @@ $border-radius: 8px;
   }
 }
 
+@keyframes pulse-orange {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 87, 34, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
+  }
+}
+
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -561,6 +578,37 @@ $border-radius: 8px;
     }
   }
   
+  // Marcador de mensajero
+  .custom-marker-mensajero {
+    background: none !important;
+    border: none !important;
+    
+    .marker-mensajero-content {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .marker-mensajero-icon {
+        font-size: 24px;
+        z-index: 2;
+        text-shadow: 0px 0px 3px #000000a0;
+      }
+      
+      .marker-mensajero-pulse {
+        position: absolute;
+        width: 25px;
+        height: 25px;
+        background: #ff5722;
+        border-radius: 50%;
+        animation: pulse-orange 1.5s infinite;
+        z-index: 1;
+      }
+    }
+  }
+
   // Marcador de geocodificación temporal
   .geocoding-marker {
     background: none !important;
