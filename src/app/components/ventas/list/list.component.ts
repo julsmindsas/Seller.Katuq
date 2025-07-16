@@ -132,6 +132,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       "jarango@almara.com",
       "danielmauriciogarcia@hotmail.com",
       "dgarciar@gmail.com",
+      "gerencia@almara.com",
       "danielmauriciog2@hotmail.com",
     ];
     return !!(
