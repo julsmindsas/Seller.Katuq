@@ -132,6 +132,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       "jarango@almara.com",
       "danielmauriciogarcia@hotmail.com",
       "dgarciar@gmail.com",
+      "danielmauriciog2@hotmail.com",
     ];
     return !!(
       this.UserLogged?.email && authorizedEmails.includes(this.UserLogged.email)
@@ -343,6 +344,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     {
       field: "horarioEntrega",
       header: "Horario de Entrega",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    // Nueva columna para mostrar el canal de procedencia del pedido
+    {
+      field: "channel",
+      header: "Canal",
       visible: true,
       type: "text",
       filterable: true,
@@ -2334,6 +2343,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       {
         field: "horarioEntrega",
         header: "Horario de Entrega",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      // Nueva columna para mostrar el canal de procedencia del pedido
+      {
+        field: "channel",
+        header: "Canal",
         visible: true,
         type: "text",
         filterable: true,

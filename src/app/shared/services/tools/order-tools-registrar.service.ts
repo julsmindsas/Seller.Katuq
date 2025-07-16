@@ -13,6 +13,7 @@ import { PedidosUtilService } from '../../../components/ventas/service/pedidos.u
 import { Producto } from '../../models/productos/Producto';
 import { UserLogged } from '../../models/User/UserLogged';
 import { UserLite } from '../../models/User/UserLite';
+import { VoiceAgentService } from '../voice-agent.service';
 
 
 @Injectable({ providedIn: 'root' })
@@ -33,6 +34,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     private bodegaService: BodegaService,
     private inventarioService: InventarioService,
     private pedidosUtilService: PedidosUtilService,
+    private voiceAgentService: VoiceAgentService
   ) {
     console.log('OrderToolsRegistrarService constructor inicializado');
     this.empresaActual = JSON.parse(localStorage.getItem("company") || '{}');
@@ -61,8 +63,101 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     this.bodegaSeleccionada = null;
     this.productosCatalogo = [];
     console.log('Nuevo proceso de pedido inicializado.');
+    this.voiceAgentService.setVisualSteps(this.getInitialProcessSteps());
   }
 
+  private updateVisualStep(stepName: string) {
+    const steps = this.getInitialProcessSteps();
+    const stepIndex = steps.findIndex(s => s.caption.toLowerCase().includes(stepName.toLowerCase()));
+    if (stepIndex !== -1) {
+      this.voiceAgentService.goToStep(stepIndex);
+    }
+  }
+
+  private getInitialProcessSteps() {
+    return [
+      {
+        imageUrl: 'assets/images/ventas/paso1-catalogo.png',
+        caption: '1. Catálogo: Selecciona una ubicación de destino y elige los productos del catálogo'
+      },
+      {
+        imageUrl: 'assets/images/ventas/paso2-carrito.png',
+        caption: '2. Carrito y Notas: Revisa tus productos seleccionados y agrega notas al pedido'
+      },
+      {
+        imageUrl: 'assets/images/ventas/paso3-cliente.png',
+        caption: '3. Datos Cliente: Busca un cliente existente o crea uno nuevo con sus datos completos'
+      },
+      {
+        imageUrl: 'assets/images/ventas/paso4-facturacion.png',
+        caption: '4. Datos de Facturación: Completa la información para la facturación electrónica'
+      },
+      {
+        imageUrl: 'assets/images/ventas/paso5-entrega.png',
+        caption: '5. Datos de Entrega: Define la dirección y detalles para la entrega del pedido'
+      },
+      {
+        imageUrl: 'assets/images/ventas/paso6-pago.png',
+        caption: '6. Resumen y Pago: Revisa el pedido completo y procede al pago'
+      },
+      {
+        imageUrl: 'assets/images/ventas/paso7-confirmacion.png',
+        caption: '7. Confirmación: ¡Venta completada exitosamente!'
+      }
+    ];
+  }
+
+  private _getCartStatus() {
+    const cartItems = this.cartService.productInCart.getValue();
+    this.pedidoEnProgreso.carrito = cartItems;
+    this.pedidosUtilService.pedido = this.pedidoEnProgreso;
+    const subtotal = this.pedidosUtilService.getSubtotal();
+    return { items: cartItems, count: cartItems.length, subtotal: subtotal };
+  }
+  private _getProcessStatus(): any {
+    const hasWarehouse = !!this.bodegaSeleccionada;
+    const hasProducts = this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0;
+    const hasClient = !!this.pedidoEnProgreso.cliente;
+    const hasDeliveryInfo = !!this.pedidoEnProgreso.envio && !!this.pedidoEnProgreso.fechaEntrega && !!this.pedidoEnProgreso.formaEntrega;
+    const hasBillingInfo = !!this.pedidoEnProgreso.facturacion;
+
+    let currentStep = 'warehouse_selection';
+    let nextStep = 'Seleccionar bodega';
+
+    if (hasWarehouse) {
+        currentStep = 'product_selection';
+        nextStep = 'Agregar productos al carrito';
+        if (hasProducts) {
+            currentStep = 'client_info';
+            nextStep = 'Configurar información del cliente';
+            if (hasClient) {
+                currentStep = 'delivery_info';
+                nextStep = 'Configurar información de entrega';
+                if (hasDeliveryInfo) {
+                    currentStep = 'billing_info';
+                    nextStep = 'Configurar información de facturación';
+                    if (hasBillingInfo) {
+                        currentStep = 'ready_for_payment';
+                        nextStep = 'Procesar el pago';
+                    }
+                }
+            }
+        }
+    }
+    
+    return {
+        currentStep,
+        completedSteps: {
+            warehouse: hasWarehouse,
+            products: hasProducts,
+            client: hasClient,
+            delivery: hasDeliveryInfo,
+            billing: hasBillingInfo
+        },
+        nextStep,
+        readyForPayment: hasWarehouse && hasProducts && hasClient && hasDeliveryInfo && hasBillingInfo
+    };
+  }
   register(adapter: ToolAdapter): void {
     
     // Herramienta para listar bodegas disponibles
@@ -116,6 +211,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
                 }));
 
                 this.toastr.info(`Catálogo de ${this.bodegaSeleccionada.nombre} cargado.`, 'Bodega Seleccionada');
+                this.updateVisualStep('catalogo');
 
                 return { success: true, selectedWarehouse: this.bodegaSeleccionada.nombre, productsLoaded: this.productosCatalogo.length };
             } catch (error: any) {
@@ -196,8 +292,9 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         this.cartService.addToCart(productoCompra);
         this.pedidoEnProgreso.carrito = this.cartService.productInCart.getValue();
         this.toastr.success(`${product.crearProducto?.titulo} añadido al carrito.`, 'Producto Añadido');
+        this.updateVisualStep('carrito');
 
-        return { success: true, cart: this.pedidoEnProgreso.carrito };
+        return { success: true, ...this._getCartStatus(), processStatus: this._getProcessStatus() };
       }
     );
 
@@ -209,11 +306,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         parameters: { type: 'object', properties: {} }
       },
       () => {
-        const cartItems = this.cartService.productInCart.getValue();
-        this.pedidoEnProgreso.carrito = cartItems;
-        this.pedidosUtilService.pedido = this.pedidoEnProgreso;
-        const subtotal = this.pedidosUtilService.getSubtotal();
-        return { success: true, items: cartItems, count: cartItems.length, subtotal: subtotal };
+        return { success: true, ...this._getCartStatus() };
       }
     );
     
@@ -232,12 +325,13 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
                 if (client) {
                     this.pedidoEnProgreso.cliente = client;
                     this.toastr.info(`Cliente ${client.nombres_completos} seleccionado.`, 'Cliente Encontrado');
-                    return { success: true, client: client };
+                    this.updateVisualStep('cliente');
+                    return { success: true, client: client, processStatus: this._getProcessStatus() };
                 } else {
-                    return { success: false, error: 'Cliente no encontrado. Se puede crear con la herramienta setClientToOrder.' };
+                    return { success: false, error: 'Cliente no encontrado. Se puede crear con la herramienta setClientToOrder.', processStatus: this._getProcessStatus() };
                 }
             } catch (error: any) {
-                return { success: false, error: `Error al buscar el cliente: ${error.message}` };
+                return { success: false, error: `Error al buscar el cliente: ${error.message}`, processStatus: this._getProcessStatus() };
             }
         }
     );
@@ -303,7 +397,8 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         };
 
         this.toastr.info(`Datos del cliente ${args.name} asignados al pedido.`, 'Cliente Asignado');
-        return { success: true, clientInfo: this.pedidoEnProgreso.cliente };
+        this.updateVisualStep('cliente');
+        return { success: true, clientInfo: this.pedidoEnProgreso.cliente, processStatus: this._getProcessStatus() };
       }
     );
 
@@ -337,8 +432,9 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         this.pedidosUtilService.pedido = this.pedidoEnProgreso;
         this.pedidoEnProgreso.totalEnvio = this.pedidosUtilService.getShippingCost(this.allBillingZone);
         this.toastr.info(`Costo de envío calculado: ${this.pedidoEnProgreso.totalEnvio ?? 0}`, 'Envío');
+        this.updateVisualStep('entrega');
 
-        return { success: true, deliveryInfo: this.pedidoEnProgreso.envio, shippingCost: this.pedidoEnProgreso.totalEnvio };
+        return { success: true, deliveryInfo: this.pedidoEnProgreso.envio, shippingCost: this.pedidoEnProgreso.totalEnvio, processStatus: this._getProcessStatus() };
       }
     );
     
@@ -349,7 +445,60 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         description: 'Obtiene el estado completo del pedido que se está creando.',
         parameters: { type: 'object', properties: {} }
       },
-      () => ({ success: true, order: this.pedidoEnProgreso })
+      () => ({ success: true, order: this.pedidoEnProgreso, processStatus: this._getProcessStatus() })
+    );
+
+    // Herramienta para obtener opciones de entrega
+    adapter.registerTool(
+      {
+        name: 'getDeliveryOptions',
+        description: 'Obtiene las formas y horarios de entrega disponibles.',
+        parameters: { type: 'object', properties: {} }
+      },
+      async () => {
+        try {
+          const formasEntrega = await this.maestroService.getFormaEntrega().toPromise();
+          const horarios = await this.maestroService.getHorarioEntregas().toPromise();
+          return {
+            success: true,
+            deliveryMethods: (formasEntrega as unknown as any[])?.map(f => f.nombre),
+            deliveryTimes: (horarios as unknown as any[])?.map(h => `${h.nombre} (${h.horaInicio} - ${h.horaFin})`)
+          };
+        } catch (error: any) {
+          return { success: false, error: `Error al obtener opciones de entrega: ${error.message}` };
+        }
+      }
+    );
+
+    // Herramienta para configurar detalles de la entrega
+    adapter.registerTool(
+      {
+        name: 'setDeliveryDetails',
+        description: 'Configura la fecha, forma y horario de entrega del pedido.',
+        parameters: {
+          type: 'object',
+          properties: {
+            deliveryDate: { type: 'string', description: 'Fecha de entrega en formato YYYY-MM-DD.' },
+            deliveryMethod: { type: 'string', description: 'Forma de entrega seleccionada (ej. Domicilio, Recoge en tienda).' },
+            deliveryTime: { type: 'string', description: 'Horario de entrega seleccionado.' }
+          },
+          required: ['deliveryDate', 'deliveryMethod', 'deliveryTime']
+        }
+      },
+      (args) => {
+        if (!this.pedidoEnProgreso) {
+          return { success: false, error: 'No hay un pedido en progreso.' };
+        }
+
+        this.pedidoEnProgreso.fechaEntrega = args.deliveryDate;
+        this.pedidoEnProgreso.formaEntrega = args.deliveryMethod;
+        this.pedidoEnProgreso.horarioEntrega = args.deliveryTime;
+        
+        this.updateVisualStep('entrega');
+        this.toastr.info(`Datos de entrega configurados para el ${args.deliveryDate}.`, 'Entrega Configurada');
+
+        return { success: true, deliveryDetails: { date: args.deliveryDate, method: args.deliveryMethod, time: args.deliveryTime }, processStatus: this._getProcessStatus() };
+      }
     );
 
     // Herramienta para procesar y finalizar la venta
@@ -391,14 +540,15 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
           const result = await this.ventasService.createOrder({ order: this.pedidoEnProgreso, emailHtml: htmlContent }).toPromise();
           
           this.toastr.success(`Pedido ${this.pedidoEnProgreso.nroPedido} creado con éxito.`, 'Venta Completada');
+          this.updateVisualStep('confirmacion');
 
           const createdOrder = { ...this.pedidoEnProgreso }; // Guardar copia antes de reiniciar
           this.inicializarNuevoPedido(); // Reiniciar para la siguiente venta
           
-          return { success: true, order: result };
+          return { success: true, order: result, processStatus: this._getProcessStatus() };
         } catch (e: any) {
           this.toastr.error(e?.message || 'Error desconocido al crear el pedido', 'Error en Creación');
-          return { success: false, error: `Error al crear el pedido: ${e?.message}` };
+          return { success: false, error: `Error al crear el pedido: ${e?.message}`, processStatus: this._getProcessStatus() };
         }
       }
     );
@@ -409,7 +559,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
       () => {
         this.inicializarNuevoPedido();
         this.toastr.warning('El proceso de venta ha sido reiniciado.', 'Proceso Reiniciado');
-        return { success: true, message: 'Proceso de venta reiniciado.' };
+        return { success: true, message: 'Proceso de venta reiniciado.', processStatus: this._getProcessStatus() };
       }
     );
 
@@ -434,12 +584,12 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             this.pedidoEnProgreso.cuponAplicado = couponCode;
             this.pedidoEnProgreso.porceDescuento = cuponValido.porcentaje || 0;
             this.toastr.success(`Cupón ${couponCode} aplicado correctamente.`, 'Cupón Aplicado');
-            return { success: true, coupon: cuponValido };
+            return { success: true, coupon: cuponValido, processStatus: this._getProcessStatus() };
           } else {
-            return { success: false, error: 'Cupón no válido o expirado.' };
+            return { success: false, error: 'Cupón no válido o expirado.', processStatus: this._getProcessStatus() };
           }
         } catch (error: any) {
-          return { success: false, error: `Error al validar cupón: ${error.message}` };
+          return { success: false, error: `Error al validar cupón: ${error.message}`, processStatus: this._getProcessStatus() };
         }
       }
     );
@@ -455,7 +605,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         this.pedidoEnProgreso.cuponAplicado = undefined;
         this.pedidoEnProgreso.porceDescuento = 0;
         this.toastr.info('Cupón removido del pedido.', 'Cupón Removido');
-        return { success: true, message: 'Cupón removido correctamente.' };
+        return { success: true, message: 'Cupón removido correctamente.', processStatus: this._getProcessStatus() };
       }
     );
 
@@ -513,7 +663,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         }
 
         this.toastr.info(`Nota de ${noteType} agregada al pedido.`, 'Nota Agregada');
-        return { success: true, noteAdded: nota };
+        return { success: true, noteAdded: nota, processStatus: this._getProcessStatus() };
       }
     );
 
@@ -630,7 +780,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         this.pedidoEnProgreso.carrito = updatedCart;
         
         this.toastr.info('Producto removido del carrito.', 'Producto Removido');
-        return { success: true, cart: updatedCart };
+        return { success: true, ...this._getCartStatus(), processStatus: this._getProcessStatus() };
       }
     );
 
@@ -665,7 +815,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         this.pedidoEnProgreso.carrito = currentCart;
         
         this.toastr.success('Cantidad actualizada en el carrito.', 'Cantidad Actualizada');
-        return { success: true, cart: currentCart };
+        return { success: true, ...this._getCartStatus(), processStatus: this._getProcessStatus() };
       }
     );
 
@@ -680,7 +830,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         this.cartService.clearCart();
         this.pedidoEnProgreso.carrito = [];
         this.toastr.warning('Carrito limpiado.', 'Carrito Vacío');
-        return { success: true, message: 'Carrito limpiado correctamente.' };
+        return { success: true, message: 'Carrito limpiado correctamente.', processStatus: this._getProcessStatus() };
       }
     );
 
@@ -692,31 +842,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         parameters: { type: 'object', properties: {} }
       },
       () => {
-        const hasWarehouse = !!this.bodegaSeleccionada;
-        const hasProducts = this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0;
-        const hasClient = !!this.pedidoEnProgreso.cliente;
-        const hasDeliveryInfo = !!this.pedidoEnProgreso.envio;
-        const hasBillingInfo = !!this.pedidoEnProgreso.facturacion;
-
-        const status = {
-          currentStep: hasWarehouse ? (hasProducts ? (hasClient ? (hasDeliveryInfo ? (hasBillingInfo ? 'ready_for_payment' : 'billing_info') : 'delivery_info') : 'client_info') : 'product_selection') : 'warehouse_selection',
-          completedSteps: {
-            warehouse: hasWarehouse,
-            products: hasProducts,
-            client: hasClient,
-            delivery: hasDeliveryInfo,
-            billing: hasBillingInfo
-          },
-          nextStep: !hasWarehouse ? 'Seleccionar bodega' : 
-                   !hasProducts ? 'Agregar productos al carrito' :
-                   !hasClient ? 'Configurar información del cliente' :
-                   !hasDeliveryInfo ? 'Configurar información de entrega' :
-                   !hasBillingInfo ? 'Configurar información de facturación' :
-                   'Procesar el pago',
-          readyForPayment: hasWarehouse && hasProducts && hasClient && hasDeliveryInfo && hasBillingInfo
-        };
-
-        return { success: true, status };
+        return { success: true, status: this._getProcessStatus() };
       }
     );
 
@@ -841,7 +967,8 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         };
 
         this.toastr.success('Información de facturación configurada.', 'Facturación');
-        return { success: true, billingInfo: this.pedidoEnProgreso.facturacion };
+        this.updateVisualStep('facturacion');
+        return { success: true, billingInfo: this.pedidoEnProgreso.facturacion, processStatus: this._getProcessStatus() };
       }
     );
 
@@ -888,7 +1015,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         }
         
         this.toastr.info(`Ciudad de entrega seleccionada: ${cityValue}`, 'Ciudad Seleccionada');
-        return { success: true, selectedCity: cityValue };
+        return { success: true, selectedCity: cityValue, processStatus: this._getProcessStatus() };
       }
     );
 
@@ -924,7 +1051,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
 
         this.pedidoEnProgreso.notasPedido.notasCliente.push(nota);
         this.toastr.success('Nota del cliente agregada.', 'Nota Agregada');
-        return { success: true, noteAdded: nota };
+        return { success: true, noteAdded: nota, processStatus: this._getProcessStatus() };
       }
     );
 
@@ -1029,7 +1156,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         }
 
         this.toastr.info(`Forma de entrega configurada: ${deliveryMethod}`, 'Entrega');
-        return { success: true, deliveryMethod: deliveryMethod, isPickup: deliveryMethod.toLowerCase().includes('recoge') };
+        return { success: true, deliveryMethod: deliveryMethod, isPickup: deliveryMethod.toLowerCase().includes('recoge'), processStatus: this._getProcessStatus() };
       }
     );
 
@@ -1047,12 +1174,12 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             const clientData = JSON.parse(cachedClient);
             this.pedidoEnProgreso.cliente = clientData;
             this.toastr.success(`Cliente ${clientData.nombres_completos} cargado desde caché.`, 'Cliente Cargado');
-            return { success: true, client: clientData };
+            return { success: true, client: clientData, processStatus: this._getProcessStatus() };
           } else {
-            return { success: false, message: 'No hay cliente en caché' };
+            return { success: false, message: 'No hay cliente en caché', processStatus: this._getProcessStatus() };
           }
         } catch (error: any) {
-          return { success: false, error: `Error al cargar cliente: ${error.message}` };
+          return { success: false, error: `Error al cargar cliente: ${error.message}`, processStatus: this._getProcessStatus() };
         }
       }
     );
@@ -1077,7 +1204,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         this.cartService.clearCart();
         
         this.toastr.warning('Todo el proceso de venta ha sido limpiado y reiniciado.', 'Proceso Reiniciado');
-        return { success: true, message: 'Proceso completamente reiniciado' };
+        return { success: true, message: 'Proceso completamente reiniciado', processStatus: this._getProcessStatus() };
       }
     );
 

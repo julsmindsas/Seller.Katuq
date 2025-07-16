@@ -652,6 +652,17 @@
                                                 </div>
                                             </th>
 
+                                            <!-- Columna Canal -->
+                                            <th *ngIf="isColumnVisible('channel')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                <div class="flex align-items-center">
+                                                    {{'Canal' | translate}}
+                                                    <p-columnFilter type="text" field="channel.name"
+                                                        matchMode="contains" placeholder="{{'Canal' | translate}}"
+                                                        [showMenu]="true" display="menu">
+                                                    </p-columnFilter>
+                                                </div>
+                                            </th>
+
                                             <!-- Columna Vendedor -->
                                             <th *ngIf="isColumnVisible('vendedor') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
@@ -823,6 +834,9 @@
 
                                             <!-- Columna Horario de Entrega -->
                                             <td *ngIf="isColumnVisible('horarioEntrega')" class="text-nowrap">{{ pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
+
+                                            <!-- Columna Canal -->
+                                            <td *ngIf="isColumnVisible('channel')" class="text-nowrap">{{ pedido.channel?.name || 'Regular' }}</td>
 
                                             <!-- Columna Vendedor -->
                                             <td *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="text-nowrap">
@@ -1145,6 +1159,11 @@
 
                                 <!-- Columna Horario de Entrega -->
                                 <td *ngIf="isColumnVisible('horarioEntrega')" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Canal -->
+                                <td *ngIf="isColumnVisible('channel')" class="summary-cell">
                                     <!-- Vacía -->
                                 </td>
 

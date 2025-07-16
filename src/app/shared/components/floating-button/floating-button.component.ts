@@ -34,44 +34,11 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
   // Configuración del agente de voz
   public voiceAgentConfig: VoiceAgentConfig = {
-    agentName: 'K.A.I.',
-    instructions: 'Eres un asistente virtual inteligente de Katuq. Ayudas a los usuarios con ventas, inventarios y gestión empresarial.'
+    agentName: 'K.A.I.'
   };
 
-  // Pasos de demostración para ventas
-  public demoSteps: VisualStep[] = [
-    {
-      imageUrl: 'assets/images/ventas/paso1-catalogo.png',
-      caption: '1. Catálogo: Selecciona una ubicación de destino y elige los productos del catálogo'
-    },
-    {
-      imageUrl: 'assets/images/ventas/paso2-carrito.png',
-      caption: '2. Carrito y Notas: Revisa tus productos seleccionados y agrega notas al pedido'
-    },
-    {
-      imageUrl: 'assets/images/ventas/paso3-cliente.png',
-      caption: '3. Datos Cliente: Busca un cliente existente o crea uno nuevo con sus datos completos'
-    },
-    {
-      imageUrl: 'assets/images/ventas/paso4-facturacion.png',
-      caption: '4. Datos de Facturación: Completa la información para la facturación electrónica'
-    },
-    {
-      imageUrl: 'assets/images/ventas/paso5-entrega.png',
-      caption: '5. Datos de Entrega: Define la dirección y detalles para la entrega del pedido'
-    },
-    {
-      imageUrl: 'assets/images/ventas/paso6-pago.png',
-      caption: '6. Resumen y Pago: Revisa el pedido completo y procede al pago'
-    },
-    {
-      imageUrl: 'assets/images/ventas/paso7-confirmacion.png',
-      caption: '7. Confirmación: ¡Venta completada exitosamente!'
-    }
-  ];
-
-  useModelBig: any;
-  isLoggedIn = false;
+  public useModelBig: any;
+  public isLoggedIn = false;
   public chatMaximized: boolean = false;
 
   constructor(
@@ -223,9 +190,6 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     console.log('🎤 Iniciando modo de voz con nuevo servicio');
     
     try {
-      // Cargar pasos de demostración
-      this.voiceAgentService.setVisualSteps(this.demoSteps);
-      
       // Iniciar sesión de voz
       await this.voiceAgentService.startVoiceSession(this.voiceAgentConfig);
       
