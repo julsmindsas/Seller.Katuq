@@ -12,6 +12,10 @@ const routes: Routes = [
   {
     path: 'modulovariable',
     loadChildren: () => import('./modulovariable/modulovariable.module').then(m => m.ModulosVariablesModule)
+  },
+  {
+    path: 'cotizaciones',
+    loadChildren: () => import('../cotizaciones/cotizaciones.module').then(m => m.CotizacionesModule)
   }
 ];
 

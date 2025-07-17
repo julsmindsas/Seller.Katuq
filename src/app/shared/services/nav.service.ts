@@ -247,6 +247,12 @@ export class NavService implements OnDestroy {
 			]
 		},
 		{
+			title: 'Cotizaciones', icon: 'file-text', type: 'sub', active: false, children: [
+				{ path: 'cotizaciones', title: 'Crear cotización', type: 'link' },
+				{ path: 'cotizaciones/lista', title: 'Listado de cotizaciones', type: 'link' }
+			]
+		},
+		{
 			title: 'Ventas', icon: 'dollar-sign', type: 'sub', active: false, children: [
 				{ path: 'ventas/crear-ventas', title: 'Venta asistida', type: 'link' },
 				{ path: 'ventas/carga-ventas', title: 'Ventas masivas', type: 'link' },

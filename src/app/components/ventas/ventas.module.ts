@@ -131,6 +131,7 @@ import { DespachosModule } from "../despachos/despachos.module";
     CheckOutComponent,
     ConfirmComponent,
     AsentarpagomanualComponent,
+    CustomerSectionComponent,
   ],
   providers: [
     QuickViewComponent,

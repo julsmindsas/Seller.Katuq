@@ -1,0 +1,677 @@
+
+
+<!-- Contenedor principal de cotizaciones -->
+<div class="cotizaciones-container">
+  <!-- Loader -->
+  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="height: 200px;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="container-fluid" *ngIf="!isLoading">
+    <!-- Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="page-header-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 class="page-title mb-2">
+                <i class="fa fa-file-invoice-dollar me-2"></i>
+                Nueva Cotización
+              </h1>
+              <p class="page-subtitle mb-0">Crea cotizaciones profesionales para tus clientes</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-outline-primary me-2" routerLink="/cotizaciones/lista">
+                <i class="fa fa-list me-1"></i>
+                Ver Cotizaciones
+              </button>
+              <button class="btn btn-success" (click)="guardarCotizacion()" [disabled]="!cliente || items.length === 0">
+                <i class="fa fa-save me-1"></i>
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Sidebar izquierdo -->
+      <div class="col-lg-4 col-md-5">
+        <div class="sidebar-content">
+          <!-- Cliente -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="card-title mb-0">
+                <i class="fa fa-user me-2"></i>
+                Cliente
+              </h5>
+            </div>
+            <div class="card-body">
+              <app-customer-section></app-customer-section>
+              
+              <!-- Cliente seleccionado -->
+              <div *ngIf="cliente" class="client-selected mt-3">
+                <div class="client-info-card">
+                  <div class="client-avatar">
+                    <i class="fa fa-user-circle"></i>
+                  </div>
+                  <div class="client-details">
+                    <h6 class="client-name">{{cliente.nombres_completos}}</h6>
+                    <p class="client-doc">{{cliente.documento}}</p>
+                    <small class="client-contact">
+                      <i class="fa fa-phone me-1"></i>
+                      {{cliente.numero_celular || cliente.numero_celular_comprador}}
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="!cliente" class="no-client text-center py-3">
+                <i class="fa fa-user-plus fa-2x text-muted mb-2"></i>
+                <p class="text-muted mb-0">Selecciona un cliente para continuar</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuración -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="card-title mb-0">
+                <i class="fa fa-cog me-2"></i>
+                Configuración
+              </h5>
+            </div>
+            <div class="card-body">
+              <form [formGroup]="cotizacionForm">
+                <div class="mb-3">
+                  <label class="form-label">Validez (días)</label>
+                  <input type="number" formControlName="validez" class="form-control" min="1" max="365">
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label">Descuento (%)</label>
+                  <input type="number" formControlName="porcentajeDescuento" 
+                         class="form-control" min="0" max="100" (change)="actualizarDescuento()">
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label">Observaciones</label>
+                  <textarea formControlName="observaciones" class="form-control" rows="3" 
+                            placeholder="Términos y condiciones"></textarea>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Resumen -->
+          <div class="card" *ngIf="items.length > 0">
+            <div class="card-header">
+              <h5 class="card-title mb-0">
+                <i class="fa fa-calculator me-2"></i>
+                Resumen
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="totals-summary">
+                <div class="total-line" *ngIf="obtenerAhorroTotalVolumen() > 0">
+                  <span>Subtotal sin descuentos:</span>
+                  <span class="fw-bold text-muted">{{formatearPrecio(obtenerSubtotalSinDescuentosVolumen())}}</span>
+                </div>
+                <div class="total-line" *ngIf="obtenerAhorroTotalVolumen() > 0">
+                  <span class="text-success">Descuentos por volumen:</span>
+                  <span class="fw-bold text-success">-{{formatearPrecio(obtenerAhorroTotalVolumen())}}</span>
+                </div>
+                <div class="total-line">
+                  <span>Subtotal:</span>
+                  <span class="fw-bold">{{formatearPrecio(subtotal)}}</span>
+                </div>
+                <div class="total-line" *ngIf="descuento > 0">
+                  <span>Descuento adicional:</span>
+                  <span class="fw-bold text-danger">-{{formatearPrecio(descuento)}}</span>
+                </div>
+                <div class="total-line">
+                  <span>IVA ({{porcentajeImpuesto}}%):</span>
+                  <span class="fw-bold">{{formatearPrecio(impuestos)}}</span>
+                </div>
+                <div class="total-line total-final">
+                  <span><strong>Total:</strong></span>
+                  <span class="fw-bold text-success">{{formatearPrecio(total)}}</span>
+                </div>
+              </div>
+              
+              <div class="mt-3">
+                <button class="btn btn-primary w-100 mb-2" (click)="generarPDF()" 
+                        [disabled]="!cliente || items.length === 0">
+                  <i class="fa fa-file-pdf me-2"></i>
+                  Generar PDF
+                </button>
+                <button class="btn btn-success w-100 mb-2" (click)="abrirModalEnviarCorreo(modalEnviarCorreo)" 
+                        [disabled]="!cliente || items.length === 0 || !cotizacion.id">
+                  <i class="fa fa-envelope me-2"></i>
+                  Enviar por Correo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="col-lg-8 col-md-7">
+        <!-- Catálogo -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">
+                <i class="fa fa-boxes me-2"></i>
+                Catálogo de Productos
+              </h5>
+              <div class="catalog-badges">
+                <span class="badge bg-info me-1">{{productosPaginados.length}} de {{productosFiltrados.length}} productos</span>
+                <span class="badge bg-success">{{items.length}} en cotización</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <!-- Filtros -->
+            <div class="filters-row mb-4">
+              <div class="row g-3">
+                <div class="col-xl-5 col-lg-12 col-md-12">
+                  <div class="search-container">
+                    <i class="fa fa-search search-icon"></i>
+                    <input type="text" [(ngModel)]="searchTerm" 
+                           (input)="filtrarProductos()" 
+                           (keyup)="filtrarProductos()" 
+                           (change)="filtrarProductos()"
+                           class="form-control search-input" 
+                           placeholder="Buscar productos por nombre o código...">
+                    <button *ngIf="searchTerm" class="btn btn-outline-secondary btn-sm clear-search" 
+                            (click)="limpiarBusqueda()" type="button">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-xl-4 col-lg-8 col-md-8">
+                  <select [(ngModel)]="selectedCategory" (change)="filtrarPorCategoria()" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    <option *ngFor="let categoria of categorias" [value]="categoria.nombre">
+                      {{categoria.nombre}}
+                    </option>
+                  </select>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-4">
+                  <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                            [class.active]="!listView" (click)="toggleListView()"
+                            title="Vista en cuadrícula">
+                      <i class="fa fa-th"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                            [class.active]="listView" (click)="toggleListView()"
+                            title="Vista en lista">
+                      <i class="fa fa-list"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Productos -->
+            <div class="products-section">
+              <!-- Estado vacío -->
+              <div *ngIf="productosPaginados.length === 0 && !isLoadingMore" class="empty-products">
+                <i class="fa fa-box-open fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No se encontraron productos</h5>
+                <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
+              </div>
+
+              <!-- Indicador de carga -->
+              <div *ngIf="isLoadingMore" class="loading-products text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando productos...</span>
+                </div>
+                <p class="mt-2 text-muted">Cargando productos...</p>
+              </div>
+
+              <!-- Vista Grid -->
+              <div *ngIf="!listView && productosPaginados.length > 0" class="products-grid">
+                <div *ngFor="let producto of productosPaginados" class="product-card">
+                  <div class="product-image">
+                    <img [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-placeholder.svg'" 
+                         [alt]="producto.crearProducto?.titulo" class="img-fluid">
+                  </div>
+                  <div class="product-info">
+                    <div class="product-header">
+                      <h6 class="product-name">{{producto.crearProducto?.titulo || 'Sin nombre'}}</h6>
+                      <span class="product-code">{{producto.identificacion?.referencia}}</span>
+                    </div>
+                    <div class="product-footer">
+                      <div class="product-price">
+                        {{formatearPrecio(producto.precio?.precioUnitarioConIva || producto.precio?.precioUnitario || producto.precio || 0)}}
+                      </div>
+                      <button class="btn btn-primary btn-sm" (click)="agregarProducto(producto)">
+                        <i class="fa fa-plus me-1"></i>
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vista Lista -->
+              <div *ngIf="listView && productosPaginados.length > 0" class="products-table">
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th width="100">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let producto of productosPaginados">
+                        <td>
+                          <span class="code-badge">{{producto.identificacion?.referencia}}</span>
+                        </td>
+                        <td>
+                          <strong>{{producto.crearProducto?.titulo || 'Sin nombre'}}</strong>
+                        </td>
+                        <td>
+                          <span class="price-text">{{formatearPrecio(producto.precio?.precioUnitarioConIva || producto.precio?.precioUnitario || producto.precio || 0)}}</span>
+                        </td>
+                        <td>
+                          <button class="btn btn-primary btn-sm" (click)="agregarProducto(producto)">
+                            <i class="fa fa-plus"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Paginación compacta -->
+              <div *ngIf="totalViewPages > 1" class="d-flex justify-content-center align-items-center mt-3">
+                <nav aria-label="Paginación de productos">
+                  <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" [class.disabled]="currentViewPage === 1">
+                      <button class="page-link px-2 py-1" (click)="paginaAnterior()" [disabled]="currentViewPage === 1">
+                        <i class="fa fa-chevron-left"></i>
+                      </button>
+                    </li>
+                    
+                    <li class="page-item" *ngFor="let page of [].constructor(totalViewPages); let i = index" 
+                        [class.active]="currentViewPage === i + 1">
+                      <button class="page-link px-2 py-1" (click)="cambiarPaginaVista(i + 1)">
+                        {{i + 1}}
+                      </button>
+                    </li>
+                    
+                    <li class="page-item" [class.disabled]="currentViewPage === totalViewPages">
+                      <button class="page-link px-2 py-1" (click)="paginaSiguiente()" [disabled]="currentViewPage === totalViewPages">
+                        <i class="fa fa-chevron-right"></i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+                <small class="text-muted ms-3">
+                  {{currentViewPage}}/{{totalViewPages}} ({{productosFiltrados.length}} productos)
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cotización -->
+        <div class="card" *ngIf="items.length > 0">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="fa fa-file-invoice me-2"></i>
+              Productos en Cotización ({{items.length}})
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="cart-items">
+              <div *ngFor="let item of items; let i = index" class="cart-item">
+                <div class="item-details">
+                  <h6 class="item-name">{{item.producto.crearProducto?.titulo || 'Sin nombre'}}</h6>
+                  <small class="item-code">{{item.producto.identificacion?.referencia}}</small>
+                  
+                  <!-- Mostrar descuentos por volumen disponibles -->
+                  <div *ngIf="obtenerDescuentosDisponibles(item.producto).length > 0" class="volume-discounts-info mt-1">
+                    <small class="text-info">
+                      <i class="fa fa-tags me-1"></i>
+                      Descuentos disponibles:
+                    </small>
+                    <div class="discount-ranges">
+                      <small *ngFor="let desc of obtenerDescuentosDisponibles(item.producto)" class="d-block text-muted">
+                        {{desc.rangoInicial}}-{{desc.rangoFinal}} unidades: 
+                        <span class="text-success fw-bold">{{desc.porcentajeDescuento | number:'1.1-1'}}% OFF</span>
+                      </small>
+                    </div>
+                  </div>
+                </div>
+                <div class="item-controls">
+                  <div class="quantity-input">
+                    <label class="form-label">Cant:</label>
+                    <input type="number" class="form-control form-control-sm" 
+                           [value]="item.cantidad" 
+                           (change)="actualizarCantidad(i, $event.target.value)" 
+                           min="1">
+                  </div>
+                  <div class="item-prices">
+                    <div class="unit-price">
+                      <span [class.text-decoration-line-through]="item.descuentoVolumen?.aplicado" 
+                            [class.text-muted]="item.descuentoVolumen?.aplicado">
+                        {{formatearPrecio(item.precioOriginal)}}
+                      </span>
+                      <br *ngIf="item.descuentoVolumen?.aplicado">
+                      <span *ngIf="item.descuentoVolumen?.aplicado" class="text-success fw-bold">
+                        {{formatearPrecio(item.precio)}}
+                      </span>
+                    </div>
+                    <div class="subtotal-price">{{formatearPrecio(item.subtotal)}}</div>
+                    <!-- Mostrar ahorro si aplica descuento -->
+                    <div *ngIf="item.descuentoVolumen?.aplicado" class="discount-badge">
+                      <span class="badge bg-success">
+                        {{item.descuentoVolumen.porcentaje | number:'1.1-1'}}% OFF
+                      </span>
+                      <small class="text-success d-block">
+                        Ahorro: {{formatearPrecio(item.descuentoVolumen.ahorro)}}
+                      </small>
+                    </div>
+                  </div>
+                  <button class="btn btn-outline-danger btn-sm" (click)="eliminarItem(i)">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumen de ahorros por volumen -->
+            <div *ngIf="obtenerAhorroTotalVolumen() > 0" class="volume-savings-summary mt-3 p-3 bg-light rounded">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-1 text-success">
+                    <i class="fa fa-tags me-2"></i>
+                    Ahorros por Descuentos de Volumen
+                  </h6>
+                  <small class="text-muted">
+                    Subtotal sin descuentos: {{formatearPrecio(obtenerSubtotalSinDescuentosVolumen())}}
+                  </small>
+                </div>
+                <div class="text-end">
+                  <div class="h5 mb-0 text-success">
+                    -{{formatearPrecio(obtenerAhorroTotalVolumen())}}
+                  </div>
+                  <small class="text-muted">Total ahorrado</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado vacío cotización -->
+        <div class="card" *ngIf="items.length === 0">
+          <div class="card-body text-center py-5">
+            <i class="fa fa-file-invoice fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Cotización vacía</h5>
+            <p class="text-muted">Agrega productos desde el catálogo para crear tu cotización</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista previa del PDF (oculta) -->
+  <div #cotizacionPDF class="pdf-preview d-none">
+    <div class="pdf-content" style="padding: 40px; font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+      
+      <!-- Encabezado de la cotización -->
+      <div class="pdf-header" style="border-bottom: 2px solid #007bff; padding-bottom: 20px; margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="flex: 1;">
+            <h1 style="color: #007bff; margin: 0; font-size: 28px;">COTIZACIÓN</h1>
+            <p style="margin: 5px 0; color: #6c757d;">{{cotizacion.numero || 'COT-' + fechaActual}}</p>
+          </div>
+          <div style="text-align: right; flex: 1;">
+            <!-- Información de la empresa (sin logo para evitar problemas de CORS) -->
+            <div>
+              <p style="margin: 0; font-weight: bold; font-size: 18px; color: #007bff;">{{empresaActual?.nomComercial || empresaActual?.nombre || 'Mi Empresa'}}</p>
+              <p style="margin: 5px 0; color: #6c757d; font-size: 12px;" *ngIf="empresaActual?.nit">NIT: {{empresaActual.nit}}</p>
+              <p style="margin: 2px 0; color: #6c757d; font-size: 12px;">{{empresaActual?.direccion || 'Dirección de la empresa'}}</p>
+              <p style="margin: 2px 0; color: #6c757d; font-size: 12px;" *ngIf="empresaActual?.ciudad">{{empresaActual.ciudad}}, {{empresaActual.pais}}</p>
+              <p style="margin: 2px 0; color: #6c757d; font-size: 12px;">{{empresaActual?.telefono || 'Teléfono'}} | {{empresaActual?.email || 'Email'}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información del cliente y cotización -->
+      <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+        <div style="flex: 1; margin-right: 20px;">
+          <h3 style="color: #343a40; margin-bottom: 15px; font-size: 18px;">Cliente</h3>
+          <div *ngIf="cliente" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <p style="margin: 5px 0;"><strong>Nombre:</strong> {{cliente.nombres_completos}}</p>
+            <p style="margin: 5px 0;"><strong>Documento:</strong> {{cliente.documento}}</p>
+            <p style="margin: 5px 0;"><strong>Teléfono:</strong> {{cliente.numero_celular || cliente.numero_celular_comprador}}</p>
+            <p style="margin: 5px 0;"><strong>Email:</strong> {{cliente.correo_electronico}}</p>
+            <p style="margin: 5px 0;" *ngIf="cliente.direccion"><strong>Dirección:</strong> {{cliente.direccion}}</p>
+          </div>
+        </div>
+        
+        <div style="flex: 1;">
+          <h3 style="color: #343a40; margin-bottom: 15px; font-size: 18px;">Detalles de la Cotización</h3>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <p style="margin: 5px 0;"><strong>Fecha:</strong> {{formatearFecha(cotizacion.fecha)}}</p>
+            <p style="margin: 5px 0;"><strong>Validez:</strong> {{cotizacionForm.get('validez')?.value || '30'}} días</p>
+            <p style="margin: 5px 0;"><strong>Estado:</strong> {{cotizacion.estado | titlecase}}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de productos -->
+      <div style="margin-bottom: 30px;">
+        <h3 style="color: #343a40; margin-bottom: 15px; font-size: 18px;">Productos</h3>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;">
+          <thead>
+            <tr style="background-color: #f8f9fa;">
+              <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left; font-weight: 600;">Producto</th>
+              <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-weight: 600;">Cantidad</th>
+              <th style="padding: 12px; border: 1px solid #dee2e6; text-align: right; font-weight: 600;">Precio Unit.</th>
+              <th style="padding: 12px; border: 1px solid #dee2e6; text-align: right; font-weight: 600;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of items">
+              <td style="padding: 12px; border: 1px solid #dee2e6;">
+                <div>
+                  <strong>{{item.producto.crearProducto?.titulo || 'Sin nombre'}}</strong>
+                  <br>
+                  <small style="color: #6c757d;">Código: {{item.producto.identificacion?.referencia}}</small>
+                  <div *ngIf="item.descuentoVolumen?.aplicado" style="margin-top: 5px;">
+                    <small style="color: #28a745; font-weight: bold;">
+                      ✓ Descuento por volumen: {{item.descuentoVolumen.porcentaje | number:'1.1-1'}}% OFF
+                    </small>
+                    <br>
+                    <small style="color: #6c757d;">
+                      Rango: {{item.descuentoVolumen.rangoInicial}}-{{item.descuentoVolumen.rangoFinal}} unidades
+                    </small>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">{{item.cantidad}}</td>
+              <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">
+                <div *ngIf="item.descuentoVolumen?.aplicado">
+                  <span style="text-decoration: line-through; color: #6c757d; font-size: 12px;">
+                    {{formatearPrecio(item.precioOriginal)}}
+                  </span>
+                  <br>
+                  <span style="color: #28a745; font-weight: bold;">
+                    {{formatearPrecio(item.precio)}}
+                  </span>
+                </div>
+                <span *ngIf="!item.descuentoVolumen?.aplicado">
+                  {{formatearPrecio(item.precio)}}
+                </span>
+              </td>
+              <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">{{formatearPrecio(item.subtotal)}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Totales -->
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 30px;">
+        <div style="width: 300px;">
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span>Subtotal:</span>
+              <span style="font-weight: 600;">{{formatearPrecio(subtotal)}}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;" *ngIf="descuento > 0">
+              <span>Descuento ({{porcentajeDescuento}}%):</span>
+              <span style="color: #dc3545; font-weight: 600;">-{{formatearPrecio(descuento)}}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span>IVA ({{porcentajeImpuesto}}%):</span>
+              <span style="font-weight: 600;">{{formatearPrecio(impuestos)}}</span>
+            </div>
+            <hr style="margin: 15px 0; border: 1px solid #dee2e6;">
+            <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #28a745;">
+              <span>Total:</span>
+              <span>{{formatearPrecio(total)}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div *ngIf="cotizacionForm.get('observaciones')?.value" style="margin-bottom: 30px;">
+        <h3 style="color: #343a40; margin-bottom: 15px; font-size: 18px;">Observaciones</h3>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+          <p style="margin: 0; line-height: 1.5;">{{cotizacionForm.get('observaciones')?.value}}</p>
+        </div>
+      </div>
+
+      <!-- Pie de página -->
+      <div style="border-top: 1px solid #dee2e6; padding-top: 20px; text-align: center; color: #6c757d;">
+        <p style="margin: 0; font-size: 12px;">
+          Esta cotización es válida por {{cotizacionForm.get('validez')?.value || '30'}} días a partir de la fecha de emisión.
+        </p>
+        <p style="margin: 5px 0; font-size: 12px;">
+          Generada el {{formatearFecha(fechaHoy)}}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para envío de correo electrónico -->
+<ng-template #modalEnviarCorreo let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">
+      <i class="fa fa-envelope me-2"></i>
+      Enviar Cotización por Correo
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="cancelarEnvioCorreo()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  
+  <div class="modal-body">
+    <form [formGroup]="emailForm">
+      <div class="mb-3">
+        <label for="emailDestino" class="form-label">
+          <i class="fa fa-at me-1"></i>
+          Correo Electrónico de Destino <span class="text-danger">*</span>
+        </label>
+        <input 
+          type="email" 
+          class="form-control" 
+          id="emailDestino"
+          formControlName="email"
+          placeholder="ejemplo@correo.com"
+          [class.is-invalid]="emailForm.get('email')?.invalid && emailForm.get('email')?.touched">
+        <div class="invalid-feedback" *ngIf="emailForm.get('email')?.invalid && emailForm.get('email')?.touched">
+          <div *ngIf="emailForm.get('email')?.errors?.['required']">El correo electrónico es requerido</div>
+          <div *ngIf="emailForm.get('email')?.errors?.['email']">Ingrese un correo electrónico válido</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="asuntoCorreo" class="form-label">
+          <i class="fa fa-tag me-1"></i>
+          Asunto <span class="text-danger">*</span>
+        </label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="asuntoCorreo"
+          formControlName="asunto"
+          placeholder="Asunto del correo"
+          [class.is-invalid]="emailForm.get('asunto')?.invalid && emailForm.get('asunto')?.touched">
+        <div class="invalid-feedback" *ngIf="emailForm.get('asunto')?.invalid && emailForm.get('asunto')?.touched">
+          <div *ngIf="emailForm.get('asunto')?.errors?.['required']">El asunto es requerido</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="mensajeCorreo" class="form-label">
+          <i class="fa fa-comment me-1"></i>
+          Mensaje (Opcional)
+        </label>
+        <textarea 
+          class="form-control" 
+          id="mensajeCorreo"
+          formControlName="mensaje"
+          rows="4"
+          placeholder="Mensaje personalizado para el cliente"></textarea>
+        <div class="form-text">
+          <small>Este mensaje aparecerá en el cuerpo del correo junto con la cotización adjunta.</small>
+        </div>
+      </div>
+
+      <!-- Información de la cotización -->
+      <div class="alert alert-info" *ngIf="cotizacion">
+        <h6 class="alert-heading">
+          <i class="fa fa-info-circle me-1"></i>
+          Información de la Cotización
+        </h6>
+        <div class="row">
+          <div class="col-md-6">
+            <small><strong>Número:</strong> {{cotizacion.numero || 'Sin número'}}</small><br>
+            <small><strong>Cliente:</strong> {{cotizacion.cliente?.nombre || 'Sin cliente'}}</small>
+          </div>
+          <div class="col-md-6">
+            <small><strong>Fecha:</strong> {{formatearFecha(cotizacion.fecha)}}</small><br>
+            <small><strong>Total:</strong> {{formatearPrecio(cotizacion.total)}}</small>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cancelarEnvioCorreo()">
+      <i class="fa fa-times me-1"></i>
+      Cancelar
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-success" 
+      (click)="enviarCotizacionPorCorreo()"
+      [disabled]="!emailForm.valid || enviandoCorreo">
+      <span *ngIf="enviandoCorreo" class="spinner-border spinner-border-sm me-2" role="status"></span>
+      <i *ngIf="!enviandoCorreo" class="fa fa-paper-plane me-1"></i>
+      {{enviandoCorreo ? 'Enviando...' : 'Enviar Cotización'}}
+    </button>
+  </div>
+</ng-template>
