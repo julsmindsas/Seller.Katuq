@@ -388,6 +388,13 @@ export class ConfProductToCartComponent
           return 0;
         });
 
+      console.log("🔧 Debug adiciones:", {
+        totalAdiciones: r.adiciones?.length || 0,
+        adicionesFiltradasPorEsAdicion: this.adicionesrows?.length || 0,
+        primeraAdicion: this.adicionesrows?.[0],
+        aceptaAdiciones: this.producto?.procesoComercial?.aceptaAdiciones
+      });
+
       this.rowsinicialesSinMod = JSON.stringify(this.adicionesrows);
 
       this.loadFormasEntregaConfiguracionProducto();
@@ -1832,7 +1839,7 @@ export class ConfProductToCartComponent
       valorIva: adicion.precioIva || 0,
       porcentajeIva: adicion.porcentajeIVA || 0,
       precioTotalConIva: adicion.precioTotal || 0,
-      imagen: adicion.imagenPrincipal[0]?.urls,
+      imagen: adicion.imagenPrincipal?.[0]?.urls || 'assets/images/other-images/sinimagen.webp',
       tipo: "adicion",
       cantidad: 1,
       paraProduccion: true,

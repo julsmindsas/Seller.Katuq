@@ -754,6 +754,12 @@
                                                 <h5 class="mb-0">{{'Adiciones disponibles' | translate}}</h5>
                                             </div>
                                             <div class="card-body scrollable-div p-2">
+                                                <!-- Mensaje cuando no hay adiciones disponibles -->
+                                                <div *ngIf="!adicionesrows || adicionesrows.length === 0" class="text-center p-4">
+                                                    <i class="fa fa-info-circle text-muted mb-2" style="font-size: 2em;"></i>
+                                                    <p class="text-muted">{{'No hay adiciones disponibles para este producto' | translate}}</p>
+                                                </div>
+                                                
                                                 <div class="row g-sm-4 g-2" *ngFor="let item of adicionesrows">
                                                     <div class="col-xl-12 col-md-6">
                                                         <div class="prooduct-details-box p-2" style="cursor: pointer;"
@@ -761,7 +767,7 @@
                                                             [ngClass]="{ 'active': item?.seleccionado }">
                                                             <div class="media d-flex align-items-center">
 
-                                                                <img [src]="item.imagenPrincipal[0].urls"
+                                                                <img [src]="item.imagenPrincipal?.[0]?.urls || 'assets/images/other-images/sinimagen.webp'"
                                                                     [alt]="item.titulo" appImageOptimizer
                                                                     [quality]="0.3" [width]="300" [height]="300"
                                                                     [lazy]="true" loading="lazy" priority
