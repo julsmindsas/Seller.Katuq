@@ -57,6 +57,10 @@ export interface Pedido {
   channel?: Channel;
   _estadoCalculadoEnFrontend?: boolean;
   preAprobadoManual?: boolean;
+  // Propiedades de evidencia de entrega
+  fotosEvidencia?: string[];
+  fotoEvidencia?: string;
+  signatureImage?: string;
 }
 
 export interface Channel {

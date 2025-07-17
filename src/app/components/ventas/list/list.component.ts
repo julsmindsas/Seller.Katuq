@@ -1578,14 +1578,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       telefono: order.envio?.celular || order.cliente?.numero_celular_comprador,
       fechaRecepcion: order.fechaEntrega || new Date().toISOString(),
       observacionesEntrega: order.notasPedido?.notasEntregas?.[0]?.descripcion || '',
-      // Estas propiedades deberían venir del backend en una implementación real
-      fotosEvidencia: [], // Se llenarían desde el servidor
-      fotoEvidencia: '', // Se llenaría desde el servidor  
-      signatureImage: '', // Se llenaría desde el servidor
+      // Acceso a datos reales de evidencia de entrega
+      fotosEvidencia: order.fotosEvidencia || [], // Array de fotos de evidencia
+      fotoEvidencia: order.fotoEvidencia || '', // Foto individual de evidencia  
+      signatureImage: order.signatureImage || '', // Firma digital
       calificacion: 0
     };
 
-    // Debug: Verificar datos
+    // Debug: Verificar datos y fotos de evidencia
+    console.log('📸 Debug fotos evidencia - Original order:', {
+      fotosEvidencia: order.fotosEvidencia,
+      fotoEvidencia: order.fotoEvidencia,
+      signatureImage: order.signatureImage
+    });
+    console.log('📸 Debug fotos evidencia - Processed data:', {
+      fotosEvidencia: this.pedidoEntregaData.fotosEvidencia,
+      fotoEvidencia: this.pedidoEntregaData.fotoEvidencia,
+      signatureImage: this.pedidoEntregaData.signatureImage,
+      hayFotos: this.pedidoEntregaData.fotosEvidencia?.length > 0 || !!this.pedidoEntregaData.fotoEvidencia
+    });
     console.log('Datos del pedido de entrega:', this.pedidoEntregaData);
     console.log('Mostrando modal con detalleEntregaVisible:', true);
     
