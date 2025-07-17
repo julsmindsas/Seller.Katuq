@@ -119,6 +119,19 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     { label: 'Termina con', value: 'endsWith' }
   ];
 
+  // Propiedades para filtros modernos (inspiradas en ventas/list)
+  showFilters: boolean = false;
+  nroPedido: string | null = null;
+  
+  // Filtros rápidos para producción
+  quickFilters = {
+    estadoPago: "all",
+    estadoProceso: "all",
+  };
+
+  // Propiedades para autocompletado
+  clienteAutocomplete: any[] = [];
+
   constructor(
     private produccionService: ProduccionNewService,
     private ventasService: VentasService,
@@ -225,6 +238,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       { id: 4, nombre: 'Devuelto' }
     ];
     this.selectedColumns = [...this.columns];
+    
+    // Inicializar fechas por defecto si no están configuradas
+    if (!this.fechaInicial) {
+      this.fechaInicial = new Date();
+    }
+    if (!this.fechaFinal) {
+      this.fechaFinal = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000));
+    }
+    
+    // Cargar estado de filtros guardado
+    this.loadFiltersState();
+    
     this.refrescarDatosEnsamble();
   }
 
@@ -448,6 +473,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     let fechaInicial = this.fechaInicial;
     let fechaFinal = this.fechaFinal;
 
+    // Si no hay fechas configuradas, usar rango por defecto (hoy a 30 días)
+    if (!fechaInicial) {
+      fechaInicial = new Date();
+    }
+    if (!fechaFinal) {
+      fechaFinal = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000));
+    }
+
     // Corregir si las fechas están al revés
     if (fechaInicial > fechaFinal) {
       const temp = fechaInicial;
@@ -455,17 +488,44 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       fechaFinal = temp;
     }
 
+    // Configurar horas: fecha inicial 00:00, fecha final 23:59
+    const fechaInicialFormatted = new Date(fechaInicial);
+    fechaInicialFormatted.setHours(0, 0, 0, 0);
+
+    const fechaFinalFormatted = new Date(fechaFinal);
+    fechaFinalFormatted.setHours(23, 59, 59, 999);
+
+    // Configurar estados de pago basado en filtros modernos
+    let estadosPago = ['Prependiente', 'PreAprobado', 'Aprobado', 'Pendiente'];
+    if (this.quickFilters.estadoPago !== "all") {
+      estadosPago = [this.quickFilters.estadoPago];
+    }
+
+    // Configurar estados de proceso basado en filtros modernos
+    let estadoProceso = ['En proceso', 'En ensamble'];
+    if (this.quickFilters.estadoProceso !== "all") {
+      estadoProceso = [this.quickFilters.estadoProceso];
+    }
+
     const filter = {
-      fechaInicial: fechaInicial,
-      fechaFinal: fechaFinal,
-      estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
-      estadoProceso: ['En proceso', 'En ensamble'],
+      fechaInicial: fechaInicialFormatted,
+      fechaFinal: fechaFinalFormatted,
+      estadosPago: estadosPago,
+      estadoProceso: estadoProceso,
       company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
 
     this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe((data) => {
+      let filteredOrders = data.orders;
 
-      this.filterProcess = data.orders.flatMap((pedido) => {
+      // Aplicar filtro por número de pedido si existe
+      if (this.nroPedido && this.nroPedido.trim() !== '') {
+        filteredOrders = filteredOrders.filter(pedido => 
+          pedido.nroPedido && pedido.nroPedido.toLowerCase().includes(this.nroPedido!.toLowerCase())
+        );
+      }
+
+      this.filterProcess = filteredOrders.flatMap((pedido) => {
 
         return pedido.producto.otrosProcesos.modulosVariables.produccion.flatMap((produccion) => {
           return produccion.procesos.flatMap((proceso, index) => {
@@ -487,7 +547,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       this.filterProcessCombo = this.utilService.deepClone(this.filterProcess);
 
 
-      let dataEnsamble = data.orders.flatMap((pedido) => {
+      let dataEnsamble = filteredOrders.flatMap((pedido) => {
         let articulosConProcesos = [];
         const variables: TreeNode[] = parse(pedido.producto.procesoComercial.variablesForm);
 
@@ -2094,6 +2154,108 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     } catch (e) {
       console.warn('Error al cargar preferencias de densidad', e);
     }
+
+    // Cargar estado de filtros guardado
+    this.loadFiltersState();
+  }
+
+  // Métodos para filtros modernos (inspirados en ventas/list)
+  
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+    this.saveFiltersState();
+  }
+
+  getActiveFiltersCount(): number {
+    let count = 0;
+    if (this.fechaInicial) count++;
+    if (this.fechaFinal) count++;
+    if (this.nroPedido) count++;
+    if (this.quickFilters.estadoPago !== "all") count++;
+    if (this.quickFilters.estadoProceso !== "all") count++;
+    if (this.selectedProcesosFilter) count++;
+    return count;
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(
+      this.fechaInicial ||
+      this.fechaFinal ||
+      this.nroPedido ||
+      this.quickFilters.estadoPago !== "all" ||
+      this.quickFilters.estadoProceso !== "all" ||
+      this.selectedProcesosFilter
+    );
+  }
+
+  clearQuickFilter(type: "estadoPago" | "estadoProceso"): void {
+    this.quickFilters[type] = "all";
+    this.refrescarDatosEnsamble();
+  }
+
+  clearAllFilters(): void {
+    this.fechaInicial = new Date();
+    this.fechaFinal = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000));
+    this.nroPedido = null;
+    this.selectedProcesosFilter = null;
+    this.quickFilters = {
+      estadoPago: "all",
+      estadoProceso: "all",
+    };
+    // Cerrar filtros si no hay filtros activos
+    if (!this.hasActiveFilters()) {
+      this.showFilters = false;
+      this.saveFiltersState();
+    }
+    this.refrescarDatosEnsamble();
+  }
+
+  // Métodos para persistir estado de filtros
+  private loadFiltersState(): void {
+    const savedState = localStorage.getItem("produccionFiltersState");
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        this.showFilters = state.showFilters || false;
+        // Si hay filtros activos, abrir automáticamente
+        if (this.hasActiveFilters()) {
+          this.showFilters = true;
+        }
+      } catch (e) {
+        console.error("Error loading filters state", e);
+        this.showFilters = false;
+      }
+    }
+  }
+
+  private saveFiltersState(): void {
+    const state = {
+      showFilters: this.showFilters,
+      timestamp: new Date().getTime(),
+    };
+    localStorage.setItem("produccionFiltersState", JSON.stringify(state));
+  }
+
+  // Auto-abrir filtros cuando se aplicuen filtros rápidos
+  setQuickFilter(type: "estadoPago" | "estadoProceso", value: string): void {
+    this.quickFilters[type] = value;
+    // Abrir filtros si se aplica un filtro
+    if (value !== "all" && !this.showFilters) {
+      this.showFilters = true;
+      this.saveFiltersState();
+    }
+    // Refrescar datos cuando cambian los filtros rápidos
+    this.refrescarDatosEnsamble();
+  }
+
+  // Manejar cambios en las fechas
+  onDateChange(): void {
+    this.refrescarDatosEnsamble();
+  }
+
+  // Manejar cambios en el número de pedido
+  onOrderNumberChange(): void {
+    this.refrescarDatosEnsamble();
   }
 
 }

@@ -1123,3 +1123,363 @@ $transition: all 0.3s ease;
     }
   }
 }
+
+/* === ESTILOS PARA FILTROS MODERNOS === */
+/* Inspirados en ventas/list pero adaptados para producción */
+
+.modern-filters-container {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: $border-radius;
+  border: 1px solid #e9ecef;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .filters-compact-header {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+
+    .filter-toggle-section {
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: $primary-color;
+      }
+    }
+
+    .quick-actions {
+      .header-quick-filters {
+        .shortcuts-label {
+          font-size: 0.85rem;
+          color: #6c757d;
+          font-weight: 500;
+        }
+
+        .shortcuts-group {
+          gap: 0.25rem;
+
+          .shortcut-btn {
+            padding: 0.3rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s ease;
+
+            &:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+          }
+        }
+      }
+
+      .vertical-separator {
+        width: 1px;
+        height: 2rem;
+        background-color: #dee2e6;
+      }
+
+      .actions-group {
+        gap: 0.25rem;
+
+        .action-btn {
+          padding: 0.4rem 0.6rem;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          transition: all 0.2s ease;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+          }
+        }
+      }
+    }
+  }
+
+  .filters-expanded-content {
+    padding: 1rem;
+
+    .active-filters-summary {
+      background-color: rgba($primary-color, 0.05);
+      padding: 0.75rem;
+      border-radius: 6px;
+      border: 1px solid rgba($primary-color, 0.1);
+      margin-bottom: 1rem;
+
+      .filter-indicator-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: $primary-color;
+      }
+
+      .filter-tag {
+        background-color: $primary-color;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+
+        i {
+          cursor: pointer;
+          margin-left: 0.25rem;
+          opacity: 0.8;
+          transition: opacity 0.2s ease;
+
+          &:hover {
+            opacity: 1;
+          }
+        }
+      }
+    }
+
+    .main-filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+
+      .filter-group {
+        background-color: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+        .filter-group-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 0.75rem;
+          font-weight: 600;
+          color: #495057;
+          font-size: 0.9rem;
+
+          i {
+            margin-right: 0.5rem;
+            color: $primary-color;
+          }
+        }
+
+        .filter-group-content {
+          .filter-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #6c757d;
+            font-size: 0.8rem;
+          }
+
+          .modern-date-input,
+          .modern-autocomplete input {
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+
+            &:focus {
+              border-color: $primary-color;
+              box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+              outline: none;
+            }
+          }
+
+          .date-range-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+
+            .date-input-wrapper {
+              flex: 1;
+            }
+
+            .date-separator {
+              color: #6c757d;
+              font-size: 0.9rem;
+            }
+          }
+
+          .status-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+
+            .status-chip {
+              padding: 0.4rem 0.8rem;
+              border: 1px solid #dee2e6;
+              border-radius: 20px;
+              background-color: white;
+              color: #6c757d;
+              font-size: 0.75rem;
+              font-weight: 500;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              display: flex;
+              align-items: center;
+
+              &:hover {
+                border-color: $primary-color;
+                color: $primary-color;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              }
+
+              &.active {
+                background-color: $primary-color;
+                border-color: $primary-color;
+                color: white;
+                box-shadow: 0 2px 8px rgba($primary-color, 0.3);
+              }
+
+              &.status-success.active {
+                background-color: $success-color;
+                border-color: $success-color;
+              }
+
+              &.status-warning.active {
+                background-color: $warning-color;
+                border-color: $warning-color;
+                color: #212529;
+              }
+
+              &.status-info.active {
+                background-color: #03a9f4;
+                border-color: #03a9f4;
+              }
+
+              &.status-secondary.active {
+                background-color: $secondary-color;
+                border-color: $secondary-color;
+              }
+            }
+          }
+
+          .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+
+            .action-btn {
+              flex: 1;
+              min-width: 120px;
+              padding: 0.5rem 1rem;
+              border-radius: 6px;
+              border: none;
+              font-weight: 500;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+
+              &.btn-primary {
+                background-color: $primary-color;
+                color: white;
+
+                &:hover {
+                  background-color: darken($primary-color, 10%);
+                  transform: translateY(-1px);
+                  box-shadow: 0 4px 8px rgba($primary-color, 0.3);
+                }
+              }
+
+              &.btn-secondary {
+                background-color: $secondary-color;
+                color: white;
+
+                &:hover {
+                  background-color: darken($secondary-color, 10%);
+                  transform: translateY(-1px);
+                  box-shadow: 0 4px 8px rgba($secondary-color, 0.3);
+                }
+              }
+
+              i {
+                margin-right: 0.5rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Ajustes responsivos para filtros modernos */
+@media (max-width: 768px) {
+  .modern-filters-container {
+    .filters-compact-header {
+      .quick-actions {
+        .header-quick-filters {
+          .shortcuts-label {
+            display: none;
+          }
+        }
+      }
+    }
+
+    .filters-expanded-content {
+      .main-filters-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .modern-filters-container {
+    .filters-compact-header {
+      padding: 0.75rem;
+      
+      .quick-actions {
+        .actions-group {
+          .action-btn {
+            padding: 0.3rem 0.4rem;
+            font-size: 0.75rem;
+          }
+        }
+      }
+    }
+
+    .filters-expanded-content {
+      padding: 0.75rem;
+
+      .filter-group {
+        padding: 0.75rem;
+
+        .filter-group-content {
+          .date-range-container {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+
+            .date-separator {
+              text-align: center;
+            }
+          }
+
+          .status-chips {
+            .status-chip {
+              padding: 0.3rem 0.6rem;
+              font-size: 0.7rem;
+            }
+          }
+
+          .action-buttons {
+            flex-direction: column;
+
+            .action-btn {
+              min-width: unset;
+              width: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+}

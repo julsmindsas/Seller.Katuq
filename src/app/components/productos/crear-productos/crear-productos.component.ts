@@ -1581,7 +1581,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
           nombreImagen: "principal",
         },
       ]);
-    }
+    } 
     this.crearProducto.controls["paraProduccion"].setValue(
       productWithKatuq.crearProducto.paraProduccion,
     );
