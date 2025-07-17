@@ -9,6 +9,7 @@ import {
   Output,
   ComponentRef,
   ViewContainerRef,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import {
@@ -290,6 +291,7 @@ export class DespachosComponent implements OnInit {
     private pedidoUtilService: PedidosUtilService,
     private router: Router,
     private geocodingService: GeocodingService,
+    private cdr: ChangeDetectorRef,
   ) {
     const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
     this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
@@ -1362,6 +1364,7 @@ export class DespachosComponent implements OnInit {
         
         this.pdfTemplate.totalPendiente = totalPendiente;
 
+
         console.log("Datos configurados en el template:", {
           pedidos: this.pdfTemplate.pedidos?.length || 0,
           nroShippingOrder: this.pdfTemplate.nroShippingOrder,
@@ -1860,6 +1863,9 @@ export class DespachosComponent implements OnInit {
       // Forzar detección de cambios para asegurar que el template esté renderizado
       setTimeout(async () => {
         try {
+          // Forzar detección de cambios antes de procesar
+          this.cdr.detectChanges();
+          
           // Debugging después del timeout
           console.log("=== DESPUÉS DEL TIMEOUT ===");
           this.debugComponentState();
@@ -3059,12 +3065,32 @@ export class DespachosComponent implements OnInit {
           .subscribe(
             (response) => {
               Swal.fire("Éxito", "Orden despachada exitosamente", "success");
-              this.imprimirOrden();
+              
+              // Agregar delay para asegurar sincronización de datos antes de imprimir
+              setTimeout(() => {
+                console.log("=== IMPRESIÓN AUTOMÁTICA TRAS DESPACHO ===");
+                console.log("Datos antes de imprimir:", {
+                  pedidosSeleccionados: this.pedidosSeleccionados?.length || 0,
+                  nroShippingOrder: this.nroShippingOrder,
+                  transportadorSeleccionado: !!this.transportadorSeleccionado,
+                  transportadorNombre: this.transportadorSeleccionado?.nombre || this.transportadorSeleccionado
+                });
+                
+                // Ejecutar impresión sin await para respetar timeouts internos
+                this.imprimirOrden();
+                
+                // Limpiar datos después de tiempo suficiente para que termine todo el proceso
+                setTimeout(() => {
+                  console.log("Limpiando datos después de impresión completa...");
+                  this.pedidosSeleccionados = [];
+                  this.transportadorSeleccionado = null;
+                  this.nroShippingOrder = null;
+                  this.nuevaOrdenEnvio = null;
+                }, 3000); // 3 segundos para asegurar que todos los timeouts internos terminen
+                
+              }, 500); // Delay de 500ms para sincronización
+              
               this.modalService.dismissAll();
-              this.pedidosSeleccionados = [];
-              this.transportadorSeleccionado = null;
-              this.nroShippingOrder = null;
-              this.nuevaOrdenEnvio = null;
             },
             (error) => {
               Swal.fire(
@@ -3252,6 +3278,7 @@ export class DespachosComponent implements OnInit {
     console.log("Resultado validación:", isValid);
     return isValid;
   }
+
 
   public calculateTotalPendiente(): number {
     return this.pedidosSeleccionados.reduce(
@@ -3479,7 +3506,6 @@ export class DespachosComponent implements OnInit {
     );
   }
 
-  // Método de debugging para verificar el estado de los componentes
   private debugComponentState(): void {
     console.log("=== DEBUG: Estado de componentes para PDF ===");
     console.log("ViewChild pdfTemplate:", {
