@@ -428,7 +428,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Cargar ciudades de entrega disponibles (igual que en Crear-Ventas)
     try {
       const currentCompany = JSON.parse(
-        sessionStorage.getItem("currentCompany") || "{}",
+        localStorage.getItem("currentCompany") || "{}",
       );
       if (currentCompany?.ciudadess?.ciudadesEntrega) {
         this.ciudadesEntrega = currentCompany.ciudadess.ciudadesEntrega;
@@ -655,7 +655,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     const filter: any = {
       fechaInicial: this.fechaInicial + "T00:00:00.0000Z",
       fechaFinal: this.fechaFinal + "T23:59:59.9999Z",
-      company: JSON.parse(sessionStorage.getItem("currentCompany")!)
+      company: JSON.parse(localStorage.getItem("currentCompany")!)
         .nomComercial,
       tipoFecha: "fechaEntrega",
       estadoProceso: this.isFromProduction
@@ -2010,7 +2010,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       tipoFecha: "fechaCreacion",
-      company: JSON.parse(sessionStorage.getItem("currentCompany")!)
+      company: JSON.parse(localStorage.getItem("currentCompany")!)
         .nomComercial,
       estadoProceso: this.isFromProduction
         ? [EstadoProceso.SinProducir]

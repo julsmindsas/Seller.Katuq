@@ -1769,7 +1769,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private initializeCompanyData() {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
+    this.empresaActual = JSON.parse(localStorage.getItem("currentCompany")!);
     const texto = this.empresaActual?.nomComercial?.toString().replace(" ", "") || "PRD";
     this.ultimasLetras = texto.substring(0, 3);
     this.setupMarketplaceFields();

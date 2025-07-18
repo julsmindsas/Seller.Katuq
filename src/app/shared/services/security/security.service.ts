@@ -11,9 +11,9 @@ export class SecurityService {
     // Get company information from session storage usin behaviorsubject
     public companyInformation$ : BehaviorSubject<CompanyInformation | null> = new BehaviorSubject<CompanyInformation | null>(null);
 
-    // Set company information in session storage
+    // Set company information in localStorage (changed from sessionStorage for persistence)
     setCompanyInformationLogged(companyInformation: CompanyInformation) {
-        sessionStorage.setItem('currentCompany', JSON.stringify(companyInformation));
+        localStorage.setItem('currentCompany', JSON.stringify(companyInformation));
         const updatedInfo = this.getCompanyInformationLogged();
         this.companyInformation$.next(updatedInfo);
     }
@@ -23,9 +23,9 @@ export class SecurityService {
         return this.companyInformation$.asObservable();
     }
 
-    // Get company information from session storage
+    // Get company information from localStorage (changed from sessionStorage for persistence)
     getCompanyInformationLogged(): CompanyInformation | null {
-        const currentCompany = sessionStorage.getItem('currentCompany');
+        const currentCompany = localStorage.getItem('currentCompany');
         if (currentCompany) {
             try {
                 const empresa: Empresa = JSON.parse(currentCompany);
@@ -40,7 +40,7 @@ export class SecurityService {
                 return this.getCompanyInformationFromLocalStorage();
             }
         }
-        // Si no hay en sessionStorage, intentar obtener del localStorage
+        // Si no hay en localStorage, intentar obtener del localStorage como respaldo
         return this.getCompanyInformationFromLocalStorage();
     }
 

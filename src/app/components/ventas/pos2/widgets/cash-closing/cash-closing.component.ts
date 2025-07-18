@@ -51,7 +51,7 @@ export class CashClosingComponent {
     private ventasService: VentasService,
     public modal: NgbModal
   ) {
-    const companyData = sessionStorage.getItem("currentCompany");
+    const companyData = localStorage.getItem("currentCompany");
     if (companyData) {
       const company = JSON.parse(companyData);
       this.empresa = company.nomComercial || '';

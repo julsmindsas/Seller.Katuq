@@ -77,7 +77,7 @@ export class VentasService extends BaseService {
   }
 
   getOrders() {
-    const empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
+    const empresaActual = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     const id = empresaActual.nomComercial;
     return this.get<Pedido[]>('/v1/orders/all/' + id);
 

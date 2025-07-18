@@ -226,7 +226,7 @@ export class POSListOrdersComponent implements OnInit {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
-      company: JSON.parse(sessionStorage.getItem("currentCompany") ?? '{}').nomComercial
+      company: JSON.parse(localStorage.getItem("currentCompany") ?? '{}').nomComercial
     };
 
     // if (this.isFromProduction) {
@@ -775,7 +775,7 @@ export class POSListOrdersComponent implements OnInit {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
-      company: JSON.parse(sessionStorage.getItem("currentCompany")).nomComercial,
+      company: JSON.parse(localStorage.getItem("currentCompany")).nomComercial,
       estadoProceso: this.isFromProduction ? [EstadoProceso.SinProducir] : ['Todos']
     }
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {

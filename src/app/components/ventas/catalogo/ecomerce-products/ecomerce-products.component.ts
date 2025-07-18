@@ -217,7 +217,7 @@ export class EcomerceProductsComponent
 
   getAllFilters() {
     this.empresaActual = JSON.parse(
-      sessionStorage.getItem("currentCompany") || "{}",
+      localStorage.getItem("currentCompany") || "{}",
     );
 
     forkJoin([

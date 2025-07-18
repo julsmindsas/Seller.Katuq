@@ -1,7 +1,7 @@
-import { Component, PLATFORM_ID, Inject, OnInit } from '@angular/core';
+import { Component, PLATFORM_ID, Inject, OnInit, OnDestroy } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { LoadingBarService } from '@ngx-loading-bar/core';
-import { map, delay, withLatestFrom } from 'rxjs/operators';
+import { map, delay, withLatestFrom, takeUntil } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import { SwUpdate } from '@angular/service-worker';
 import Swal from 'sweetalert2';
@@ -17,13 +17,14 @@ import { ErrorHandlerService } from './shared/services/errores/error-handler.ser
 import { AuthService } from './shared/services/firebase/auth.service';
 import { LayoutService } from './shared/services/layout.service';
 import { NgpThemeService } from './shared/services/ngtheme.service';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
   //IDle timeout
   IdleState = 'Not Started.';
@@ -39,6 +40,7 @@ export class AppComponent implements OnInit {
   );
   unreadNotifications: any[];
   newTickets: any[];
+  private destroy$ = new Subject<void>();
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object,
     private notificationService: NotificationService,
@@ -63,19 +65,23 @@ export class AppComponent implements OnInit {
       // this.updateCheckText = rejected: ${ err.message }
     );
 
-    this.notificationService.notifications$.subscribe(
-      notifications => {
-        if (notifications.length > 0) {
-          this.toastrService.info("Tienes notificaciones pendientes", 'Notification', {
-            timeOut: 5000,
-            progressBar: true,
-            positionClass: 'toast-top-right'
-          });
+    this.notificationService.notifications$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        notifications => {
+          if (notifications.length > 0) {
+            this.toastrService.info("Tienes notificaciones pendientes", 'Notification', {
+              timeOut: 5000,
+              progressBar: true,
+              positionClass: 'toast-top-right'
+            });
+          }
         }
-      }
-    );
+      );
 
-    updates.available.subscribe(async event => {
+    updates.available
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(async event => {
       // Add a notification
       this.notificationService.addNotification({
         message: 'Tenemos una actualización nueva. Para acceder a nuevas funcionalidades y mejoras. Dale REINICIAR AHORA. Detalles de la actualización: [detalles]',
@@ -98,8 +104,9 @@ export class AppComponent implements OnInit {
 
     });
 
-    idle.setIdle(5);
-    idle.setTimeout(1500);
+    // Configuración de timeout más flexible para evitar cierres prematuros
+    idle.setIdle(30); // 30 minutos de inactividad antes de mostrar warning
+    idle.setTimeout(300); // 5 minutos adicionales antes de cerrar sesión
     idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
 
     idle.onIdleEnd.subscribe(() => {
@@ -115,11 +122,20 @@ export class AppComponent implements OnInit {
     idle.onIdleStart.subscribe(() => { });
 
     idle.onTimeoutWarning.subscribe((countdown) => {
-      if (countdown === 12 && !this.router.url.includes('login')) {
+      // Mostrar warning solo cuando quedan 2 minutos (120 segundos)
+      if (countdown === 120 && !this.router.url.includes('login')) {
         Swal.fire({
           icon: 'warning',
-          title: '¡ Sesión inactiva por 25 minutos, cerrada !',
-          showConfirmButton: true
+          title: '¡ Sesión inactiva por 30 minutos, se cerrará en 2 minutos !',
+          text: 'Mueve el mouse o haz clic para mantener la sesión activa',
+          showConfirmButton: true,
+          confirmButtonText: 'Mantener sesión activa',
+          timer: 30000 // Auto-cerrar después de 30 segundos
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Resetear el timer de inactividad
+            this.reset();
+          }
         });
       }
     });
@@ -133,10 +149,12 @@ export class AppComponent implements OnInit {
   }
 
   loadNotifications() {
-    this.notificationrlService.getNotifications().subscribe((notifications) => {
-      this.unreadNotifications = notifications.filter((n) => !n.read); // Filtra las no leídas
-      this.newTickets = notifications; // Lista completa de notificaciones
-    });
+    this.notificationrlService.getNotifications()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((notifications) => {
+        this.unreadNotifications = notifications.filter((n) => !n.read); // Filtra las no leídas
+        this.newTickets = notifications; // Lista completa de notificaciones
+      });
   }
 
   // Marcar una notificación como leída
@@ -159,6 +177,9 @@ export class AppComponent implements OnInit {
       this.errorHandlerService.logError(event.reason);
     });
 
+    // Restaurar datos de sesión al inicializar la aplicación
+    this.initializeSessionData();
+
     this.UserLogged = JSON.parse(localStorage.getItem('user')!);
 
     const tema = this.UserLogged?.tema;
@@ -171,10 +192,65 @@ export class AppComponent implements OnInit {
 
   }
 
+  /**
+   * Inicializa y restaura los datos de sesión críticos
+   */
+  private initializeSessionData(): void {
+    try {
+      // Verificar si hay datos de usuario válidos
+      const userDataString = localStorage.getItem('user');
+      if (!userDataString) {
+        console.warn('No hay datos de usuario en localStorage');
+        return;
+      }
+
+      let userData: any;
+      try {
+        userData = JSON.parse(userDataString);
+      } catch (parseError) {
+        console.error('Error parsing user data:', parseError);
+        return;
+      }
+
+      // Restaurar información de la empresa si no existe
+      const currentCompany = localStorage.getItem('currentCompany');
+      if (!currentCompany && userData.company) {
+        console.log('Restaurando información de empresa desde datos de usuario');
+        
+        // Crear información básica de empresa desde los datos del usuario
+        const companyInfo = {
+          nombreComercio: userData.company,
+          imgUrlLogo: undefined, // Se usará el logo por defecto
+          razonSocial: userData.company
+        };
+
+        // Guardar en localStorage
+        localStorage.setItem('currentCompany', JSON.stringify(companyInfo));
+        console.log('Información de empresa restaurada exitosamente');
+      }
+
+      // Verificar que el menú esté disponible
+      const authorizedMenuItems = localStorage.getItem('authorizedMenuItems');
+      if (!authorizedMenuItems && userData.menu) {
+        console.log('Restaurando menú autorizado desde datos de usuario');
+        localStorage.setItem('authorizedMenuItems', JSON.stringify(userData.menu));
+      }
+
+      console.log('Datos de sesión inicializados correctamente');
+    } catch (error) {
+      console.error('Error inicializando datos de sesión:', error);
+    }
+  }
+
   reset() {
     this.idle.watch();
     this.IdleState = 'Started.';
     this.timedOut = false;
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 }

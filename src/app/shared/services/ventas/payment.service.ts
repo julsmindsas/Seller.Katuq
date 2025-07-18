@@ -872,7 +872,7 @@ export class PaymentService extends BaseService {
 
     // --- Construcción Final del HTML ---
     const empresaActual = JSON.parse(
-      sessionStorage.getItem("currentCompany") || "{}",
+      localStorage.getItem("currentCompany") || "{}",
     );
     const encabezadoUrl = empresaActual.imageEmail?.encabezado || ""; // URL por defecto si no existe
     const pieDePaginaUrl = empresaActual.imageEmail?.piepagina || ""; // URL por defecto si no existe

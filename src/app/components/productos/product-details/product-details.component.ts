@@ -104,7 +104,7 @@ export class ProductDetailsComponent implements OnInit {
   
   }
   getAllFilters() {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany"));
+    this.empresaActual = JSON.parse(localStorage.getItem("currentCompany"));
 
     forkJoin([
   

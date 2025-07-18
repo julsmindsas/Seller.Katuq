@@ -150,7 +150,7 @@ export class PedidosUtilService {
     getAllMaestros(): Observable<MaestrosData> {
         this.updateState({ loading: true, error: false });
         
-        const empresaStr = sessionStorage.getItem("currentCompany");
+        const empresaStr = localStorage.getItem("currentCompany");
         this.empresaActual = empresaStr ? JSON.parse(empresaStr) : {};
         const cacheKey = `${this.CACHE_KEY}_${this.empresaActual?.nomComercial}`;
 

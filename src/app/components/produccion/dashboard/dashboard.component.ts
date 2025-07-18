@@ -259,7 +259,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
-      company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial || ''
+      company: JSON.parse(localStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
     this.loading = true;
     const context = this;
@@ -513,7 +513,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       fechaFinal: fechaFinalFormatted,
       estadosPago: estadosPago,
       estadoProceso: estadoProceso,
-      company: JSON.parse(sessionStorage.getItem("currentCompany") || '{}').nomComercial || ''
+      company: JSON.parse(localStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
 
     this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe((data) => {
@@ -903,7 +903,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   buscarPorFechas(table?: Table): void {
     // Implementar lógica para filtrar los pedidos entre fechaInicial y fechaFinal
-    const currentCompanyData = sessionStorage.getItem("currentCompany");
+    const currentCompanyData = localStorage.getItem("currentCompany");
 
     if (!currentCompanyData) {
       console.error('No hay información de la compañía en sessionStorage');

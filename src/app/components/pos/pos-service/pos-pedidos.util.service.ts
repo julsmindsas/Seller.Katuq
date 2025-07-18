@@ -104,7 +104,7 @@ export class POSPedidosUtilService {
 
     getAllMaestros() {
 
-        this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany")!);
+        this.empresaActual = JSON.parse(localStorage.getItem("currentCompany")!);
 
         forkJoin([
             this.maestroService.getFormaEntrega(),

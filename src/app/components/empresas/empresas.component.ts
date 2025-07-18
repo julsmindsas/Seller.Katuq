@@ -114,7 +114,7 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     private dataStoreService: DataStoreService,
     private messageService: MessageService
   ) {
-    const currentCompany = JSON.parse(sessionStorage.getItem("currentCompany") || '{}');
+    const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
 
     // Observar cambios en el tamaño de la pantalla

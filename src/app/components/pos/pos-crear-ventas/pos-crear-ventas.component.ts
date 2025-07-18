@@ -236,7 +236,7 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
     // });
 
     this.maxDate = new Date();
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") ?? '{}');
+    this.empresaActual = JSON.parse(localStorage.getItem("currentCompany") ?? '{}');
     console.log(this.empresaActual);
     this.pedidoGral = {
       referencia: "",

@@ -51,7 +51,7 @@ export class ProductosComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const currentCompany = sessionStorage.getItem("currentCompany");
+    const currentCompany = localStorage.getItem("currentCompany");
     this.empresaActual = currentCompany ? JSON.parse(currentCompany) : {};
     const texto = this.empresaActual.nomComercial.toString();
     this.ultimasLetras = texto.substring(texto.length - 3);

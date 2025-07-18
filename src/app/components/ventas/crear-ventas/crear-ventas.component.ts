@@ -259,7 +259,7 @@ export class CrearVentasComponent
 
     this.maxDate = new Date();
     this.empresaActual = JSON.parse(
-      sessionStorage.getItem("currentCompany") || "{}",
+      localStorage.getItem("currentCompany") || "{}",
     );
 
     // Inicializar pedidoGral inmediatamente para evitar errores de null

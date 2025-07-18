@@ -147,7 +147,7 @@ window.fullMaestrosTest = function() {
   
   setTimeout(() => {
     console.log('\n3. Verificando caché...');
-    const empresaStr = sessionStorage.getItem("currentCompany");
+    const empresaStr = localStorage.getItem("currentCompany");
     const empresa = empresaStr ? JSON.parse(empresaStr) : {};
     const cacheKey = `pedidos_maestros_${empresa?.nomComercial}`;
     console.log('🗄️ Clave de caché:', cacheKey);

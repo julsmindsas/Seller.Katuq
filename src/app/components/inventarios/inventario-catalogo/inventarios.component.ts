@@ -105,7 +105,7 @@ export class InventarioCatalogoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.empresaActual = JSON.parse(sessionStorage.getItem("currentCompany") ?? '{}');
+    this.empresaActual = JSON.parse(localStorage.getItem("currentCompany") ?? '{}');
     const texto = this.empresaActual.nomComercial.toString();
     this.ultimasLetras = texto.substring(texto.length - 3);
 

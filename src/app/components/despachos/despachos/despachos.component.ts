@@ -344,7 +344,7 @@ export class DespachosComponent implements OnInit {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
-      company: JSON.parse(sessionStorage.getItem("currentCompany") || "{}")
+      company: JSON.parse(localStorage.getItem("currentCompany") || "{}")
         .nomComercial,
       estadoProceso: [
         EstadoProceso.Rechazado,
@@ -2176,7 +2176,7 @@ export class DespachosComponent implements OnInit {
     }
 
     // Obtener empresa actual
-    const currentCompanyStr = sessionStorage.getItem("currentCompany");
+    const currentCompanyStr = localStorage.getItem("currentCompany");
     const companyName = currentCompanyStr
       ? JSON.parse(currentCompanyStr).nomComercial
       : "";
@@ -2874,7 +2874,7 @@ export class DespachosComponent implements OnInit {
 
     // Inicializar nuevaOrdenEnvio si no existe
     if (!this.nuevaOrdenEnvio) {
-      const currentCompanyStr = sessionStorage.getItem("currentCompany");
+      const currentCompanyStr = localStorage.getItem("currentCompany");
       const companyName = currentCompanyStr
         ? JSON.parse(currentCompanyStr).nomComercial
         : "";
@@ -2966,7 +2966,7 @@ export class DespachosComponent implements OnInit {
                 .getShippingOrders()
                 .subscribe((data: Pedido[]) => {
                   const currentCompanyStr =
-                    sessionStorage.getItem("currentCompany");
+                    localStorage.getItem("currentCompany");
                   const companyName = currentCompanyStr
                     ? JSON.parse(currentCompanyStr).nomComercial
                     : "";
@@ -3042,7 +3042,7 @@ export class DespachosComponent implements OnInit {
 
         // Asegurarse de que nuevaOrdenEnvio esté inicializado
         if (!this.nuevaOrdenEnvio) {
-          const currentCompanyStr = sessionStorage.getItem("currentCompany");
+          const currentCompanyStr = localStorage.getItem("currentCompany");
           const companyName = currentCompanyStr
             ? JSON.parse(currentCompanyStr).nomComercial
             : "";
@@ -3120,7 +3120,7 @@ export class DespachosComponent implements OnInit {
     // Aquí se añade la lógica para la consulta masiva de órdenes de despacho
     this.logisticaService.getShippingOrders().subscribe(
       (data: Pedido[]) => {
-        const currentCompanyStr = sessionStorage.getItem("currentCompany");
+        const currentCompanyStr = localStorage.getItem("currentCompany");
         const companyName = currentCompanyStr
           ? JSON.parse(currentCompanyStr).nomComercial
           : "";
@@ -3729,7 +3729,7 @@ export class DespachosComponent implements OnInit {
 
     // Asignar datos recibidos a la nueva orden de envío
     if (!this.nuevaOrdenEnvio) {
-      const currentCompanyStr = sessionStorage.getItem("currentCompany");
+      const currentCompanyStr = localStorage.getItem("currentCompany");
       const companyName = currentCompanyStr
         ? JSON.parse(currentCompanyStr).nomComercial
         : "";

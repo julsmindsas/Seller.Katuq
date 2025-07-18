@@ -186,7 +186,7 @@ export class MaestrosTestingService {
    * 📊 Obtiene información del caché
    */
   private getCacheInfo(): any {
-    const empresaStr = sessionStorage.getItem("currentCompany");
+    const empresaStr = localStorage.getItem("currentCompany");
     const empresa = empresaStr ? JSON.parse(empresaStr) : {};
     const cacheKey = `pedidos_maestros_${empresa?.nomComercial}`;
     

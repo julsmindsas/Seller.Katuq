@@ -192,9 +192,9 @@ export class AuthService implements OnInit {
     // Resetear servicios de inicialización
     this.initializationService.resetInitialization();
     
-    // Limpiar datos de localStorage y sessionStorage
+    // Limpiar datos de localStorage (currentCompany migrado de sessionStorage)
     localStorage.removeItem('user');
-    sessionStorage.removeItem('currentCompany');
+    localStorage.removeItem('currentCompany');
     localStorage.removeItem('authorizedMenuItems');
     localStorage.removeItem('company');
     localStorage.removeItem('warehousePOS');
@@ -345,7 +345,7 @@ export class AuthService implements OnInit {
       localStorage.removeItem('company');
       localStorage.removeItem('warehousePOS');
       localStorage.removeItem('warehouse');
-      sessionStorage.removeItem('currentCompany');
+      localStorage.removeItem('currentCompany');
     } catch (error) {
       console.error("Error clearing invalid session:", error);
     }
