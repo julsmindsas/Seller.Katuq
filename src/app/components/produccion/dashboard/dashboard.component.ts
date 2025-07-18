@@ -126,17 +126,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   
   // Filtros rápidos para producción
   quickFilters = {
-    estadoPago: "all",
-    estadoProceso: "all",
+    estadoPago: 'all',
+    estadoProceso: 'all'
   };
 
-  // Propiedades para autocompletado
   clienteAutocomplete: any[] = [];
 
-  // Variables para impresión de lista por proceso
   procesoParaImprimir: any = null;
   fechaParaImprimir: Date = new Date();
-  listaPorProcesoParaImprimir: { nombre: string, cantidad: number }[] = [];
+  listaPorProcesoParaImprimir: { producto: string, articulo: string, cantidad: number, fecha?: string }[] = [];
 
   @ViewChild('vistaPreviaImpresionModal', { static: false }) vistaPreviaImpresionModal: any;
 
@@ -2397,7 +2395,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     const proceso = procesoStr.toLowerCase().trim();
 
     const estado = this.estadoParaImprimir;
-    const lista: { nombre: string, cantidad: number, fecha?: string }[] = [];
+    const lista: { producto: string, articulo: string, cantidad: number, fecha?: string }[] = [];
     let fechasFiltro: Date[] = [];
     const filtrarPorFecha = this.fechaParaImprimir !== null && this.fechaParaImprimir !== undefined;
 
@@ -2476,17 +2474,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           // Si coincide proceso y fecha (o no hay que filtrar por fecha)
           if (coincideFecha) {
             lista.push({
-              nombre: `${order.nombreArticulo} (${order.nombreProducto})`,
+              producto: order.nombreProducto,
+              articulo: order.nombreArticulo,
               cantidad: detalle.cantidadArticulosPorPedido,
               fecha: detalle.fechaEntrega ? new Date(detalle.fechaEntrega).toLocaleDateString() : 'Sin fecha'
             });
-            console.log(`Añadido a la lista: ${order.nombreArticulo} - cantidad: ${detalle.cantidadArticulosPorPedido}`);
+            console.log(`[IMPRESIÓN] Añadido a la lista: ${order.nombreArticulo} - cantidad: ${detalle.cantidadArticulosPorPedido}`);
           }
         }
       });
     });
     
-    console.log(`Total de artículos filtrados: ${lista.length}`);
+    console.log(`[IMPRESIÓN] Total de artículos filtrados: ${lista.length}`);
     this.listaPorProcesoParaImprimir = lista;
     
     // Si no hay resultados, mostrar mensaje adicional

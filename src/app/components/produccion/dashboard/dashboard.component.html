@@ -1143,7 +1143,8 @@
                     <tr>
                         <th>#</th>
                         <th *ngIf="shouldShowDateColumnForPrint()">Fecha</th>
-                        <th>Producto / Artículo</th>
+                        <th>Producto</th>
+                        <th>Artículo</th>
                         <th>Cantidad</th>
                         <th class="check">✓</th>
                         <th class="obs">Observaciones</th>
@@ -1154,7 +1155,8 @@
                         [ngClass]="{'print-highpriority': item.cantidad > 5}">
                         <td>{{i+1}}</td>
                         <td *ngIf="shouldShowDateColumnForPrint()">{{item.fecha}}</td>
-                        <td>{{item.nombre}}</td>
+                        <td>{{item.producto}}</td>
+                        <td>{{item.articulo}}</td>
                         <td>{{item.cantidad}}</td>
                         <td class="check"><input type="checkbox" style="width:2em;height:2em;" /></td>
                         <td class="obs"></td>
