@@ -105,8 +105,8 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     // Configuración de timeout más flexible para evitar cierres prematuros
-    idle.setIdle(30); // 30 minutos de inactividad antes de mostrar warning
-    idle.setTimeout(300); // 5 minutos adicionales antes de cerrar sesión
+    idle.setIdle(120); // 2 horas de inactividad antes de mostrar warning
+    idle.setTimeout(600); // 10 minutos adicionales antes de cerrar sesión
     idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
 
     idle.onIdleEnd.subscribe(() => {
@@ -126,7 +126,7 @@ export class AppComponent implements OnInit, OnDestroy {
       if (countdown === 120 && !this.router.url.includes('login')) {
         Swal.fire({
           icon: 'warning',
-          title: '¡ Sesión inactiva por 30 minutos, se cerrará en 2 minutos !',
+          title: '¡ Sesión inactiva por 2 horas, se cerrará en 2 minutos !',
           text: 'Mueve el mouse o haz clic para mantener la sesión activa',
           showConfirmButton: true,
           confirmButtonText: 'Mantener sesión activa',

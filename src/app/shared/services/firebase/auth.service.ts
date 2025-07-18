@@ -204,7 +204,7 @@ export class AuthService implements OnInit {
   }
 
   // Constantes para la validación de sesión
-  private readonly SESSION_DURATION_HOURS = 24;
+  private readonly SESSION_DURATION_HOURS = 48;
   private readonly REQUIRED_USER_FIELDS = ['token', 'email', 'rol'];
 
   get isLoggedIn(): boolean {
