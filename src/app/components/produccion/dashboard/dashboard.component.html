@@ -516,7 +516,7 @@
                                             <tr>
                                                 <td class="action-column"></td>
                                                 <th *ngFor="let col of selectedColumns" 
-                                                    [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega',
+                                                    [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega' || col.field === 'estadoPago',
                                                               'text-end': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble'}"
                                                     [pSortableColumn]="col.field">
                                                     <div class="header-cell" pTooltip="{{ col.description }}" tooltipPosition="top">
@@ -569,7 +569,7 @@
                                                     </button>
                                             </td>
                                                 <td *ngFor="let col of selectedColumns"
-                                                    [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega',
+                                                    [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega' || col.field === 'estadoPago',
                                                                 'text-end': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble',
                                                                 'numeric-cell': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble'}">
                                                     
@@ -592,6 +592,17 @@
                                                                  pTooltip="{{getProcessStatusTooltip(row)}}"
                                                                  tooltipPosition="top">
                                                                 <i [class]="getProcessStatusIcon(row)"></i>
+                                                            </div>
+                                                        </ng-container>
+                                                        
+                                                        <!-- Estado de Pago -->
+                                                        <ng-container *ngSwitchCase="'estadoPago'">
+                                                            <div class="payment-status-badge" 
+                                                                 [ngClass]="getPaymentStatusClass(getPaymentStatus(row))"
+                                                                 pTooltip="Estado de pago: {{getPaymentStatus(row)}}"
+                                                                 tooltipPosition="top">
+                                                                <i [class]="getPaymentStatusIcon(getPaymentStatus(row))"></i>
+                                                                <span class="payment-status-text">{{ getPaymentStatus(row) }}</span>
                                                             </div>
                                                         </ng-container>
                                                         
@@ -1890,5 +1901,137 @@
 
 .proceso-available .proceso-icon {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Estilos para el estado de pago */
+.payment-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 120px;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid transparent;
+}
+
+.payment-status-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.payment-status-badge i {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.payment-status-text {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Estados específicos de pago */
+.payment-status-approved {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.15));
+    color: var(--accent-green);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.payment-status-approved:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.2));
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.payment-status-preapproved {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.15));
+    color: var(--accent-blue);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.payment-status-preapproved:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.2));
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.payment-status-pending {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.15));
+    color: var(--accent-orange);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.payment-status-pending:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.2));
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
+.payment-status-rejected {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.15));
+    color: var(--error-color);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.payment-status-rejected:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.payment-status-cancelled {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.1), rgba(107, 114, 128, 0.15));
+    color: var(--text-medium);
+    border-color: rgba(107, 114, 128, 0.3);
+}
+
+.payment-status-cancelled:hover {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(107, 114, 128, 0.2));
+    border-color: rgba(107, 114, 128, 0.4);
+}
+
+.payment-status-unknown {
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.1), rgba(156, 163, 175, 0.15));
+    color: var(--text-light);
+    border-color: rgba(156, 163, 175, 0.3);
+}
+
+.payment-status-unknown:hover {
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.15), rgba(156, 163, 175, 0.2));
+    border-color: rgba(156, 163, 175, 0.4);
+}
+
+/* Responsividad para pantallas pequeñas */
+@media (max-width: 768px) {
+    .payment-status-badge {
+        min-width: 100px;
+        padding: 0.375rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .payment-status-badge i {
+        font-size: 0.875rem;
+    }
+}
+
+/* Densidad de tabla */
+.modern-production-table.density-compact .payment-status-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    min-width: 90px;
+}
+
+.modern-production-table.density-compact .payment-status-badge i {
+    font-size: 0.875rem;
+}
+
+.modern-production-table.density-expanded .payment-status-badge {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    min-width: 140px;
+}
+
+.modern-production-table.density-expanded .payment-status-badge i {
+    font-size: 1.125rem;
 }
 </style>

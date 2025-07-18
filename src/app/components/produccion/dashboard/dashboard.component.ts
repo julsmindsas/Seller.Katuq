@@ -88,6 +88,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     { field: 'nombreArticulo', header: 'Artículo', icon: 'pi pi-box', description: 'Nombre del artículo a fabricar' },
     { field: 'nombreProducto', header: 'Producto', icon: 'pi pi-shopping-bag', description: 'Producto principal asociado' },
     { field: 'proceso', header: 'Proceso', icon: 'pi pi-cog', description: 'Estado del proceso de fabricación' },
+    { field: 'estadoPago', header: 'Estado Pago', icon: 'pi pi-credit-card', description: 'Estado de pago del pedido' },
     { field: 'tracking', header: 'Tracking', icon: 'pi pi-search', description: 'Seguimiento detallado del proceso' },
     { field: 'cantidadTotalProducto', header: 'Cantidad', icon: 'pi pi-hashtag', description: 'Cantidad total a producir' },
     { field: 'cantidadTotalProductoEnsamble', header: 'Ensamble', icon: 'pi pi-th-large', description: 'Cantidad total en ensamble' },
@@ -1822,6 +1823,88 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         index
       };
     }).filter(p => p.nombreProceso !== this.procesoGlobal);
+  }
+
+  /**
+   * Obtiene el estado de pago predominante de un pedido de producción
+   * Prioriza estados críticos (Rechazado, Cancelado) sobre estados normales
+   */
+  getPaymentStatus(row: PedidosParaProduccionEnsamble): string {
+    if (!row.detallePedido || row.detallePedido.length === 0) {
+      return 'Sin información';
+    }
+
+    // Obtener todos los estados de pago únicos
+    const estadosPago = [...new Set(row.detallePedido.map(detalle => detalle.estadoPago))];
+    
+    // Si solo hay un estado, retornarlo
+    if (estadosPago.length === 1) {
+      return estadosPago[0] || 'Sin información';
+    }
+
+    // Prioridad de estados (de mayor a menor importancia)
+    const prioridades: { [key: string]: number } = {
+      'Rechazado': 6,
+      'Cancelado': 5,
+      'Precancelado': 4,
+      'Pendiente': 3,
+      'Pospendiente': 2,
+      'PreAprobado': 1,
+      'Aprobado': 0
+    };
+
+    // Encontrar el estado con mayor prioridad (número más alto = más crítico)
+    const estadoMasCritico = estadosPago.reduce((estadoActual, estadoNuevo) => {
+      const prioridadActual = prioridades[estadoActual] ?? -1;
+      const prioridadNueva = prioridades[estadoNuevo] ?? -1;
+      return prioridadNueva > prioridadActual ? estadoNuevo : estadoActual;
+    });
+
+    return estadoMasCritico;
+  }
+
+  /**
+   * Obtiene la clase CSS para el badge de estado de pago
+   */
+  getPaymentStatusClass(estadoPago: string): string {
+    switch (estadoPago) {
+      case 'Aprobado':
+        return 'payment-status-approved';
+      case 'PreAprobado':
+        return 'payment-status-preapproved';
+      case 'Pendiente':
+      case 'Pospendiente':
+        return 'payment-status-pending';
+      case 'Rechazado':
+        return 'payment-status-rejected';
+      case 'Cancelado':
+      case 'Precancelado':
+        return 'payment-status-cancelled';
+      default:
+        return 'payment-status-unknown';
+    }
+  }
+
+  /**
+   * Obtiene el icono para el estado de pago
+   */
+  getPaymentStatusIcon(estadoPago: string): string {
+    switch (estadoPago) {
+      case 'Aprobado':
+        return 'pi pi-check-circle';
+      case 'PreAprobado':
+        return 'pi pi-clock';
+      case 'Pendiente':
+      case 'Pospendiente':
+        return 'pi pi-exclamation-triangle';
+      case 'Rechazado':
+        return 'pi pi-times-circle';
+      case 'Cancelado':
+      case 'Precancelado':
+        return 'pi pi-ban';
+      default:
+        return 'pi pi-question-circle';
+    }
   }
 
   /**
