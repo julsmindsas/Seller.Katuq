@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { ProduccionModuleRoutingModule } from './produccion-routing.module';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgxHotkeysModule } from '@balticcode/ngx-hotkeys';
 import { GalleryModule } from '@ks89/angular-modal-gallery';
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -29,6 +29,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { ProduccionService } from '../../shared/services/produccion/produccion.service';
 import { ProduccionNewService } from '../../shared/services/produccion/produccion-new.service';
 import { ProduccionDirectService } from '../../shared/services/produccion/produccion-direct.service';
+import { OrderByPipe } from 'src/app/shared/pipes/order-by.pipe';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
     imports: [ProduccionModuleRoutingModule,
@@ -46,12 +48,14 @@ import { ProduccionDirectService } from '../../shared/services/produccion/produc
         SliderModule,
         GalleryModule,
         FormsModule,
+        ReactiveFormsModule,
         TabViewModule,
         CalendarModule,
         FormsModule,
         NgxHotkeysModule.forRoot(),
         NgxStarRatingModule,
         TableModule,
+        TooltipModule,
         MultiSelectModule,
         
         TimelineModule,
@@ -59,7 +63,7 @@ import { ProduccionDirectService } from '../../shared/services/produccion/produc
     exports: [DashboardComponent],
     declarations: [DashboardComponent,
         CerrararticuloComponent, ProcesoTrackingComponent,
-        CerrarProductoComponent],
+        CerrarProductoComponent, OrderByPipe],
     providers: [
     ],
 })

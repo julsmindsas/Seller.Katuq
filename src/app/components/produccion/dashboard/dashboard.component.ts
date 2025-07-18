@@ -120,7 +120,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     { label: 'Termina con', value: 'endsWith' }
   ];
 
-  // Propiedades para filtros modernos (inspiradas en ventas/list)
+  // Propiedades para filtros modernos (inspirados en ventas/list)
   showFilters: boolean = false;
   nroPedido: string | null = null;
   
@@ -132,6 +132,27 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   // Propiedades para autocompletado
   clienteAutocomplete: any[] = [];
+
+  // Variables para impresión de lista por proceso
+  procesoParaImprimir: any = null;
+  fechaParaImprimir: Date = new Date();
+  listaPorProcesoParaImprimir: { nombre: string, cantidad: number }[] = [];
+
+  @ViewChild('vistaPreviaImpresionModal', { static: false }) vistaPreviaImpresionModal: any;
+
+  estadosProcesoParaImprimir = [
+    { label: 'Todos', value: 'Todos' },
+    { label: 'Sin Producir', value: 'SinProducir' },
+    { label: 'En Proceso', value: 'EnProceso' },
+    { label: 'Completado', value: 'Completado' }
+  ];
+  estadoParaImprimir: string = 'Todos';
+
+  // Variable para almacenar las fechas disponibles por proceso
+  fechasDisponiblesPorProceso: { [proceso: string]: Date[] } = {};
+
+  // Variable para almacenar las fechas disponibles para mostrar en la UI
+  fechasDisponiblesParaUi: Date[] = [];
 
   constructor(
     private produccionService: ProduccionNewService,
@@ -646,7 +667,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           cantidadArticulosPorPedido: item.cantidadArticulo * item.cantidadTotalProductoEnsamble,
           historialPiezasProducidas: item.historialPiezasProducidas || [],
           piezasProducidas: 0,
-          proceso: ''
+          proceso: item.nombreProceso
         };
         //validar si ya existe el nroPedido
         if (acumulador[clave].detallePedido.findIndex((detalle) => detalle.nroPedido === detallePedido.nroPedido) === -1) {
@@ -694,7 +715,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           historialPiezasProducidas: item.historialPiezasProducidas || [],
           piezasProducidas: 0,
           nombreArticulo: item.nombreArticulo,
-          proceso: ''
+          proceso: item.nombreProceso
         };
 
         // Validar si ya existe el nroPedido
@@ -2339,6 +2360,309 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   // Manejar cambios en el número de pedido
   onOrderNumberChange(): void {
     this.refrescarDatosEnsamble();
+  }
+
+  abrirModalImprimirListaPorProceso(modalRef) {
+    this.procesoParaImprimir = null;
+    this.fechaParaImprimir = new Date();
+    this.listaPorProcesoParaImprimir = [];
+    this.fechasDisponiblesParaUi = []; // Limpiar fechas al abrir el modal
+    this.modalService.open(modalRef, { size: 'md', centered: true });
+  }
+
+  // Genera la lista filtrada y abre la vista previa
+  async generarVistaPreviaImpresion(parentModal) {
+    if (!this.procesoParaImprimir) return;
+
+    let procesoStr = '';
+    // Extraer el nombre del proceso de forma segura
+    if (typeof this.procesoParaImprimir === 'string') {
+      procesoStr = this.procesoParaImprimir;
+    } else if (this.procesoParaImprimir && typeof this.procesoParaImprimir === 'object') {
+      if (this.procesoParaImprimir.value && typeof this.procesoParaImprimir.value === 'object' && this.procesoParaImprimir.value.nombre) {
+        procesoStr = this.procesoParaImprimir.value.nombre;
+      } else if (this.procesoParaImprimir.label && typeof this.procesoParaImprimir.label === 'string') {
+        procesoStr = this.procesoParaImprimir.label;
+      } else if (this.procesoParaImprimir.nombre && typeof this.procesoParaImprimir.nombre === 'string') {
+        procesoStr = this.procesoParaImprimir.nombre;
+      } else {
+        try {
+          procesoStr = String(this.procesoParaImprimir);
+        } catch (e) {
+          console.error('No se pudo convertir el proceso a string', this.procesoParaImprimir);
+          procesoStr = '';
+        }
+      }
+    }
+    const proceso = procesoStr.toLowerCase().trim();
+
+    const estado = this.estadoParaImprimir;
+    const lista: { nombre: string, cantidad: number, fecha?: string }[] = [];
+    let fechasFiltro: Date[] = [];
+    const filtrarPorFecha = this.fechaParaImprimir !== null && this.fechaParaImprimir !== undefined;
+
+    console.log('[IMPRESIÓN] Filtrar por fecha:', filtrarPorFecha);
+    console.log('[IMPRESIÓN] Fecha seleccionada:', this.fechaParaImprimir);
+
+    if (filtrarPorFecha) {
+      if (Array.isArray(this.fechaParaImprimir)) {
+        const startDate = this.fechaParaImprimir[0];
+        const endDate = this.fechaParaImprimir[1];
+
+        // Si hay fecha de inicio y de fin, es un rango
+        if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          start.setHours(0, 0, 0, 0);
+          end.setHours(0, 0, 0, 0);
+
+          let d = new Date(start);
+          while (d <= end) {
+            fechasFiltro.push(new Date(d));
+            d.setDate(d.getDate() + 1);
+          }
+        }
+        // Si solo hay fecha de inicio, es un día único
+        else if (startDate) {
+          const f = new Date(startDate);
+          f.setHours(0, 0, 0, 0);
+          fechasFiltro = [f];
+        }
+      }
+      // Si es un solo objeto Date
+      else if (this.fechaParaImprimir instanceof Date) {
+        const f = new Date(this.fechaParaImprimir);
+        f.setHours(0, 0, 0, 0);
+        fechasFiltro = [f];
+      }
+      console.log('[IMPRESIÓN] Fechas para filtrar:', fechasFiltro.map(f => f.toLocaleDateString()));
+    }
+
+    console.log('[IMPRESIÓN] Total pedidos a revisar:', this.ordersEnsamble.length);
+
+    const sonMismaFecha = (fecha1: Date, fecha2: Date): boolean => {
+      return fecha1.getDate() === fecha2.getDate() && 
+             fecha1.getMonth() === fecha2.getMonth() && 
+             fecha1.getFullYear() === fecha2.getFullYear();
+    };
+    
+    // Recorremos los pedidos filtrando por proceso
+    this.ordersEnsamble.forEach(order => {
+      console.log(`Revisando pedido: ${order.nombreProducto} - ${order.nombreArticulo}`);
+      console.log(`Tiene ${order.detallePedido.length} detalles`);
+      
+      order.detallePedido.forEach(detalle => {
+        // Comparación de proceso insensible a mayúsculas/minúsculas
+        const procesoDetalle = detalle.proceso?.toLowerCase()?.trim() || '';
+        const coincideProceso = procesoDetalle === proceso;
+        
+        if (coincideProceso) {
+          console.log(`Coincide proceso: ${procesoDetalle} = ${proceso}`);
+          let coincideFecha = true;
+          
+          // Si hay que filtrar por fecha, verificar coincidencia
+          if (filtrarPorFecha && detalle.fechaEntrega) {
+            const fechaEntrega = new Date(detalle.fechaEntrega);
+            fechaEntrega.setHours(0,0,0,0);
+            
+            console.log(`Fecha entrega: ${fechaEntrega.toLocaleDateString()}`);
+            
+            // Comparar usando día/mes/año en vez de timestamp
+            coincideFecha = fechasFiltro.some(f => sonMismaFecha(f, fechaEntrega));
+            
+            console.log(`¿Coincide fecha? ${coincideFecha}`);
+          }
+          
+          // Si coincide proceso y fecha (o no hay que filtrar por fecha)
+          if (coincideFecha) {
+            lista.push({
+              nombre: `${order.nombreArticulo} (${order.nombreProducto})`,
+              cantidad: detalle.cantidadArticulosPorPedido,
+              fecha: detalle.fechaEntrega ? new Date(detalle.fechaEntrega).toLocaleDateString() : 'Sin fecha'
+            });
+            console.log(`Añadido a la lista: ${order.nombreArticulo} - cantidad: ${detalle.cantidadArticulosPorPedido}`);
+          }
+        }
+      });
+    });
+    
+    console.log(`Total de artículos filtrados: ${lista.length}`);
+    this.listaPorProcesoParaImprimir = lista;
+    
+    // Si no hay resultados, mostrar mensaje adicional
+    if (lista.length === 0) {
+      console.warn('No se encontraron artículos con los criterios seleccionados:');
+      console.warn('- Proceso:', proceso);
+      console.warn('- Fechas:', fechasFiltro.map(f => f.toLocaleDateString()));
+      
+      // Contar cuántos pedidos tienen el proceso seleccionado (para diagnóstico)
+      let pedidosConProceso = 0;
+      this.ordersEnsamble.forEach(order => {
+        order.detallePedido.forEach(detalle => {
+          if (detalle.proceso?.toLowerCase()?.trim() === proceso) {
+            pedidosConProceso++;
+            console.log(`Pedido con proceso "${proceso}" encontrado: fecha ${detalle.fechaEntrega}`);
+          }
+        });
+      });
+      console.log(`Total pedidos con el proceso "${proceso}": ${pedidosConProceso}`);
+    }
+    
+    parentModal.close();
+    setTimeout(() => {
+      this.modalService.open(this.vistaPreviaImpresionModal, { size: 'lg', centered: true });
+    }, 100);
+  }
+
+  // Imprime la lista mostrada en la vista previa
+  imprimirListaPorProceso() {
+    const printContents = document.getElementById('printable-lista-proceso')?.innerHTML;
+    if (!printContents) return;
+    const win = window.open('', '', 'height=700,width=900');
+    if (win) {
+      win.document.write('<html><head><title>Lista por Proceso</title>');
+      win.document.write('<style>body{font-family:Arial,sans-serif;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#f5f5f5;}h5{margin-bottom:1rem;}</style>');
+      win.document.write('</head><body>');
+      win.document.write(printContents);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.focus();
+      setTimeout(() => {
+        win.print();
+        win.close();
+      }, 500);
+    }
+  }
+
+  // Calcula la suma total de cantidades de artículos en la lista de impresión
+  getTotalCantidad(): number {
+    return this.listaPorProcesoParaImprimir.reduce((sum, item) => sum + (item.cantidad || 0), 0);
+  }
+
+  // Función para identificar fechas disponibles para un proceso
+  mostrarFechasDisponibles(): void {
+    if (!this.procesoParaImprimir) {
+      this.fechasDisponiblesParaUi = [];
+      return;
+    }
+
+    let procesoStr = '';
+    // Extraer el nombre del proceso de forma segura
+      if (typeof this.procesoParaImprimir === 'string') {
+        procesoStr = this.procesoParaImprimir;
+      } else if (this.procesoParaImprimir && typeof this.procesoParaImprimir === 'object') {
+        if (this.procesoParaImprimir.value && typeof this.procesoParaImprimir.value === 'object' && this.procesoParaImprimir.value.nombre) {
+          procesoStr = this.procesoParaImprimir.value.nombre;
+        } else if (this.procesoParaImprimir.label && typeof this.procesoParaImprimir.label === 'string') {
+          procesoStr = this.procesoParaImprimir.label;
+        } else if (this.procesoParaImprimir.nombre && typeof this.procesoParaImprimir.nombre === 'string') {
+          procesoStr = this.procesoParaImprimir.nombre;
+        } else {
+          try {
+            procesoStr = String(this.procesoParaImprimir);
+          } catch (e) {
+            console.error('No se pudo convertir el proceso a string', this.procesoParaImprimir);
+            procesoStr = '';
+          }
+        }
+      }
+    const proceso = procesoStr.toLowerCase().trim();
+
+    // Usar un Map para almacenar fechas únicas (clave YYYY-MM-DD, valor objeto Date)
+    const fechasMap: Map<string, Date> = new Map();
+
+    this.ordersEnsamble.forEach(order => {
+      order.detallePedido.forEach(detalle => {
+        const procesoDetalle = detalle.proceso?.toLowerCase()?.trim() || '';
+        if (procesoDetalle === proceso && detalle.fechaEntrega) {
+          const fechaEntrega = new Date(detalle.fechaEntrega);
+          // Normalizar la fecha para usarla como clave única, ignorando la hora
+          const key = `${fechaEntrega.getFullYear()}-${fechaEntrega.getMonth()}-${fechaEntrega.getDate()}`;
+          if (!fechasMap.has(key)) {
+              // Guardar la fecha con la hora reseteada para evitar problemas de timezone
+              fechaEntrega.setHours(0, 0, 0, 0);
+              fechasMap.set(key, fechaEntrega);
+          }
+        }
+      });
+    });
+
+    // Convertir el Map a un array de fechas y ordenarlas
+    const fechasArray = Array.from(fechasMap.values()).sort((a, b) => a.getTime() - b.getTime());
+    
+    this.fechasDisponiblesParaUi = fechasArray;
+
+    console.log(`📅 FECHAS DISPONIBLES PARA "${proceso.toUpperCase()}":`, this.fechasDisponiblesParaUi.map(d => d.toLocaleDateString()));
+  }
+
+  // Verifica si dos fechas representan el mismo día (ignorando hora)
+  isSameDay(fechaTag: Date, fechaSeleccionada: Date | Date[]): boolean {
+    if (!fechaTag || !fechaSeleccionada) return false;
+    
+    // El calendario en modo rango devuelve un array, tomamos la primera fecha
+    const fechaAComparar = Array.isArray(fechaSeleccionada) ? fechaSeleccionada[0] : fechaSeleccionada;
+    if (!fechaAComparar) return false;
+
+    return fechaTag.getDate() === fechaAComparar.getDate() && 
+           fechaTag.getMonth() === fechaAComparar.getMonth() && 
+           fechaTag.getFullYear() === fechaAComparar.getFullYear();
+  }
+
+  // Mostrar fechas disponibles cuando se selecciona un proceso
+  onProcesoChange(): void {
+    if (this.procesoParaImprimir) {
+      this.mostrarFechasDisponibles();
+    } else {
+      this.fechasDisponiblesParaUi = [];
+    }
+  }
+
+  // Función para seleccionar una fecha cuando se hace clic en su etiqueta
+  seleccionarFecha(fecha: Date): void {
+    this.fechaParaImprimir = fecha;
+    console.log('Fecha seleccionada:', this.fechaParaImprimir);
+  }
+
+  getFormattedDateForPrint(): string {
+    if (!this.fechaParaImprimir) {
+      return 'Todas las fechas';
+    }
+
+    if (Array.isArray(this.fechaParaImprimir)) {
+      const startDate = this.fechaParaImprimir[0];
+      const endDate = this.fechaParaImprimir[1];
+      
+      if (startDate && endDate) {
+        const startStr = startDate.toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        const endStr = endDate.toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        if (startStr === endStr) {
+          return `Fecha: ${startStr}`;
+        }
+        return `Rango: ${startStr} - ${endStr}`;
+      } else if (startDate) {
+        return `Fecha: ${startDate.toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'})}`;
+      }
+    }
+
+    if (this.fechaParaImprimir instanceof Date) {
+      return `Fecha: ${this.fechaParaImprimir.toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'})}`;
+    }
+
+    return 'Todas las fechas';
+  }
+
+  shouldShowDateColumnForPrint(): boolean {
+    if (Array.isArray(this.fechaParaImprimir)) {
+      // Mostrar columna solo si es un rango de fechas válido y diferente
+      if (this.fechaParaImprimir[0] && this.fechaParaImprimir[1]) {
+        const start = new Date(this.fechaParaImprimir[0]);
+        const end = new Date(this.fechaParaImprimir[1]);
+        start.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+        return start.getTime() !== end.getTime();
+      }
+    }
+    return false;
   }
 
 }

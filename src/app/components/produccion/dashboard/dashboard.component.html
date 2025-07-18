@@ -249,6 +249,12 @@
                                                         pTooltip="Cerrar productos"
                                                         (click)="cerrarProductosSeleccionados(cerrarProductoModal)">
                                                     </button>
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm"
+                                                        (click)="abrirModalImprimirListaPorProceso(imprimirListaPorProcesoModal)"
+                                                        pTooltip="Imprimir lista por proceso">
+                                                        <i class="pi pi-print me-1"></i> Imprimir lista por proceso
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -957,6 +963,218 @@
     </div>
 </ng-template>
 <!--Fin Modales-->
+
+<!-- Modal Imprimir Lista por Proceso -->
+<ng-template #imprimirListaPorProcesoModal let-modal>
+    <div class="modal-header modern-modal-header bg-primary text-white">
+        <h4 class="modal-title">
+            <i class="pi pi-print me-2"></i>
+            <span>Imprimir lista por proceso</span>
+        </h4>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-info mb-3" style="font-size:1em;">
+            <i class="pi pi-info-circle me-2"></i>
+            Esta funcionalidad está diseñada para imprimir listas de trabajo para personal operativo (cocina, bodega, suministros, etc.). La lista es tipo checklist para marcar manualmente en piso o bodega.
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Estado</label>
+            <p-dropdown [options]="estadosProcesoParaImprimir"
+                        [(ngModel)]="estadoParaImprimir"
+                        placeholder="Todos"
+                        optionLabel="label"
+                        optionValue="value"
+                        styleClass="w-100">
+            </p-dropdown>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Proceso</label>
+            <p-dropdown [options]="filterProcessCombo"
+                        [(ngModel)]="procesoParaImprimir"
+                        placeholder="Seleccione un proceso"
+                        optionLabel="label"
+                        optionValue="value"
+                        styleClass="w-100"
+                        (onChange)="onProcesoChange()">
+            </p-dropdown>
+        </div>
+        
+        <!-- Mensaje de ayuda con fechas disponibles -->
+        <div *ngIf="procesoParaImprimir" class="alert alert-warning mb-3">
+            <i class="pi pi-calendar me-2"></i>
+            <strong>Fechas disponibles:</strong> Selecciona una de estas fechas para encontrar pedidos:
+            <div class="dates-container mt-2">
+                <span *ngFor="let fecha of fechasDisponiblesParaUi" 
+                      class="date-tag" 
+                      [class.active]="isSameDay(fecha, fechaParaImprimir)"
+                      (click)="seleccionarFecha(fecha)">
+                    {{fecha | date:'dd/MM/yyyy'}}
+                </span>
+                <span *ngIf="!fechasDisponiblesParaUi || fechasDisponiblesParaUi.length === 0" class="text-muted">
+                    No hay pedidos disponibles para este proceso
+                </span>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Fecha o rango de fechas</label>
+            <p-calendar [(ngModel)]="fechaParaImprimir"
+                        class="modern-date-input"
+                        [showIcon]="true"
+                        dateFormat="dd/mm/yy"
+                        [readonlyInput]="true"
+                        [selectionMode]="'range'"
+                        styleClass="w-100">
+            </p-calendar>
+            <small class="form-text text-muted mt-1">
+                <i class="pi pi-info-circle me-1"></i>
+                Si no selecciona fecha, se mostrarán todos los artículos del proceso seleccionado.
+            </small>
+        </div>
+    </div>
+    <div class="modal-footer modern-modal-footer">
+        <button type="button" class="btn-modal-secondary" (click)="modal.close('cancel')">
+            <i class="pi pi-times me-2"></i>Cancelar
+        </button>
+        <button type="button" class="btn-modal-primary" [disabled]="!procesoParaImprimir" (click)="generarVistaPreviaImpresion(modal)">
+            <i class="pi pi-eye me-2"></i>Vista previa
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal Vista Previa Impresión -->
+<ng-template #vistaPreviaImpresionModal let-modal>
+    <div class="modal-header modern-modal-header bg-primary text-white">
+        <h4 class="modal-title">
+            <i class="pi pi-print me-2"></i>
+            <span>Vista previa lista por proceso</span>
+        </h4>
+        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <i class="pi pi-times"></i>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-info mb-3" style="font-size:1em;">
+            <i class="pi pi-info-circle me-2"></i>
+            Esta lista es imprimible y está pensada para ser utilizada por personal operativo en piso, cocina o bodega. Puede marcar los productos conforme los prepare o retire.
+        </div>
+        <div id="printable-lista-proceso">
+            <style>
+                .print-header {
+                    text-align: center;
+                    font-size: 1.5em;
+                    font-weight: bold;
+                    margin-bottom: 0.5em;
+                }
+                .print-subheader {
+                    text-align: center;
+                    font-size: 1.1em;
+                    margin-bottom: 1em;
+                }
+                .print-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 1.2em;
+                }
+                .print-table th, .print-table td {
+                    border: 1px solid #333;
+                    padding: 1em 0.5em;
+                    text-align: left;
+                }
+                .print-table th {
+                    background: #f5f5f5;
+                    font-size: 1.1em;
+                }
+                .print-table td.check {
+                    text-align: center;
+                    width: 3em;
+                }
+                .print-table td.obs {
+                    min-width: 120px;
+                }
+                .print-table tr {
+                    height: 2.5em;
+                }
+                .print-footer {
+                    margin-top: 2em;
+                    font-size: 1em;
+                    text-align: right;
+                }
+                .print-empty {
+                    text-align: center;
+                    padding: 3em;
+                    font-size: 1.2em;
+                    color: #666;
+                    border: 1px dashed #ccc;
+                    margin: 1em 0;
+                    background: #f9f9f9;
+                }
+                .print-total {
+                    margin: 1em 0;
+                    font-weight: bold;
+                    font-size: 1.1em;
+                    text-align: right;
+                }
+                .print-highpriority {
+                    background-color: #FFF3E0;
+                }
+            </style>
+            <div class="print-header">Lista de {{procesoParaImprimir?.label}} - {{estadoParaImprimir || 'Todos'}}</div>
+            <div class="print-subheader">
+                <span>{{ getFormattedDateForPrint() }}</span>
+            </div>
+            
+            <div class="print-total" *ngIf="listaPorProcesoParaImprimir.length > 0">
+                Total: {{listaPorProcesoParaImprimir.length}} items | 
+                Cantidad total: {{getTotalCantidad()}} unidades
+            </div>
+            
+            <div class="print-empty" *ngIf="listaPorProcesoParaImprimir.length === 0">
+                No se encontraron artículos con los criterios seleccionados.
+                <br><br>
+                <small>Verifique el proceso, la fecha o ambos y vuelva a generar la vista previa.</small>
+            </div>
+            
+            <table class="print-table" *ngIf="listaPorProcesoParaImprimir.length > 0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th *ngIf="shouldShowDateColumnForPrint()">Fecha</th>
+                        <th>Producto / Artículo</th>
+                        <th>Cantidad</th>
+                        <th class="check">✓</th>
+                        <th class="obs">Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of listaPorProcesoParaImprimir | orderBy:'cantidad':'desc'; let i = index" 
+                        [ngClass]="{'print-highpriority': item.cantidad > 5}">
+                        <td>{{i+1}}</td>
+                        <td *ngIf="shouldShowDateColumnForPrint()">{{item.fecha}}</td>
+                        <td>{{item.nombre}}</td>
+                        <td>{{item.cantidad}}</td>
+                        <td class="check"><input type="checkbox" style="width:2em;height:2em;" /></td>
+                        <td class="obs"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="print-footer" *ngIf="listaPorProcesoParaImprimir.length > 0">
+                Firma responsable: ___________________________
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer modern-modal-footer">
+        <button type="button" class="btn-modal-secondary" (click)="modal.close('cancel')">
+            <i class="pi pi-times me-2"></i>Cancelar
+        </button>
+        <button type="button" class="btn-modal-primary" (click)="imprimirListaPorProceso()">
+            <i class="pi pi-print me-2"></i>Imprimir
+        </button>
+    </div>
+</ng-template>
 
 <style>
 /* Variables globales */
@@ -2033,5 +2251,38 @@
 
 .modern-production-table.density-expanded .payment-status-badge i {
     font-size: 1.125rem;
+}
+
+/* Estilos para las etiquetas de fechas disponibles */
+.dates-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.date-tag {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-tag:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+.date-tag.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
 }
 </style>
