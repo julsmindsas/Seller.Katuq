@@ -956,23 +956,29 @@ export class PaymentService extends BaseService {
     const linkReferenciaPedido = `<a href="${window.location.origin}/ventas/pedidos?nroPedido=${pedido.nroPedido ?? ""}" style="text-decoration: none; color: #007bff;"><p>Referencia del Pedido: ${pedido.nroPedido ?? "N/A"}</p></a>`;
 
     // Reconstruir secciones con validaciones internas y usando las variables HTML generadas
-    // Cards individuales modernizadas para el layout de dos columnas
+    // Cards individuales modernizadas para el layout de dos columnas - Compatible con impresión sin estilos
     const htmlDatosClienteModerno = !isComanda
       ? `
-                  <div class="info-card modern-card">
-                    <div class="card-header modern-header">
-                      <div class="card-icon modern-icon">👤</div>
-                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos del Cliente</h2>
+                  <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);">
+                    <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="vertical-align: middle; padding: 0;">
+                            <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">👤</span>
+                            <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Datos del Cliente</h2>
+                          </td>
+                        </tr>
+                      </table>
                     </div>
-                    <div style="padding: ${styles.spacing.sm} 0;">
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Tipo Documento:</strong> ${pedido?.cliente?.tipo_documento_comprador ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Documento:</strong> ${pedido?.cliente?.documento ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Nombres:</strong> ${pedido?.cliente?.nombres_completos ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Apellidos:</strong> ${pedido?.cliente?.apellidos_completos ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Celular:</strong> (${pedido?.cliente?.indicativo_celular_comprador ?? ""}) ${pedido?.cliente?.numero_celular_comprador ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">WhatsApp:</strong> (${pedido?.cliente?.indicativo_celular_whatsapp ?? ""}) ${pedido?.cliente?.numero_celular_whatsapp ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Estado:</strong> ${pedido?.cliente?.estado ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Correo:</strong> ${pedido?.cliente?.correo_electronico_comprador ?? "N/A"}</p>
+                    <div style="padding: 4px 0;">
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Tipo Documento:</strong> ${pedido?.cliente?.tipo_documento_comprador ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Documento:</strong> ${pedido?.cliente?.documento ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Nombres:</strong> ${pedido?.cliente?.nombres_completos ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Apellidos:</strong> ${pedido?.cliente?.apellidos_completos ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Celular:</strong> (${pedido?.cliente?.indicativo_celular_comprador ?? ""}) ${pedido?.cliente?.numero_celular_comprador ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">WhatsApp:</strong> (${pedido?.cliente?.indicativo_celular_whatsapp ?? ""}) ${pedido?.cliente?.numero_celular_whatsapp ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Estado:</strong> ${pedido?.cliente?.estado ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Correo:</strong> ${pedido?.cliente?.correo_electronico_comprador ?? "N/A"}</p>
                     </div>
                   </div>`
       : "";
@@ -980,22 +986,28 @@ export class PaymentService extends BaseService {
     const htmlFacturacionModerno =
       !isComanda && pedido?.facturacion
         ? `
-                  <div class="info-card modern-card">
-                    <div class="card-header modern-header">
-                      <div class="card-icon modern-icon">🧾</div>
-                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos de Facturación Electrónica</h2>
+                  <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);">
+                    <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="vertical-align: middle; padding: 0;">
+                            <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">🧾</span>
+                            <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Datos de Facturación Electrónica</h2>
+                          </td>
+                        </tr>
+                      </table>
                     </div>
-                    <div style="padding: ${styles.spacing.sm} 0;">
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Nombres:</strong> ${pedido.facturacion.nombres ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Tipo Documento:</strong> ${pedido.facturacion.tipoDocumento ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Documento:</strong> ${pedido.facturacion.documento ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">País:</strong> ${pedido.facturacion.pais ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Departamento:</strong> ${pedido.facturacion.departamento ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Ciudad:</strong> ${pedido.facturacion.ciudad ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Código Postal:</strong> ${pedido.facturacion.codigoPostal ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Celular:</strong> (${pedido.facturacion.indicativoCel ?? ""}) ${pedido.facturacion.celular ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Dirección:</strong> ${pedido.facturacion.direccion ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Alias:</strong> ${pedido.facturacion.alias ?? "N/A"}</p>
+                    <div style="padding: 4px 0;">
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Nombres:</strong> ${pedido.facturacion.nombres ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Tipo Documento:</strong> ${pedido.facturacion.tipoDocumento ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Documento:</strong> ${pedido.facturacion.documento ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">País:</strong> ${pedido.facturacion.pais ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Departamento:</strong> ${pedido.facturacion.departamento ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Ciudad:</strong> ${pedido.facturacion.ciudad ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Código Postal:</strong> ${pedido.facturacion.codigoPostal ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Celular:</strong> (${pedido.facturacion.indicativoCel ?? ""}) ${pedido.facturacion.celular ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Dirección:</strong> ${pedido.facturacion.direccion ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Alias:</strong> ${pedido.facturacion.alias ?? "N/A"}</p>
                     </div>
                   </div>`
         : "";
@@ -1006,30 +1018,38 @@ export class PaymentService extends BaseService {
         pedido.formaEntrega.trim().toLowerCase() !== "recoge") &&
       pedido?.envio
         ? `
-          <div class="info-card modern-card">
-            <div class="card-header modern-header">
-              <div class="card-icon modern-icon">📦</div>
-              <h2 style="margin: 0; color: ${styles.colors.text};">Datos de Envío</h2>
+          <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);">
+            <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6; position: relative;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="vertical-align: middle; padding: 0;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">📦</span>
+                    <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Datos de Envío</h2>
+                  </td>
+                </tr>
+              </table>
             </div>
-            <div style="padding: ${styles.spacing.sm} 0; display: grid; grid-template-columns: 1fr 1fr; gap: ${styles.spacing.md}; align-items: start;">
-              <div>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Nombres:</strong> ${pedido.envio.nombres ?? "N/A"}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Apellidos:</strong> ${pedido.envio.apellidos ?? "N/A"}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Alias:</strong> ${pedido.envio.alias ?? "N/A"}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Dirección:</strong> ${pedido.envio.direccionEntrega ?? "N/A"}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Unidad/Apto:</strong> ${pedido.envio.nombreUnidad ?? ""}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Especificaciones:</strong> ${pedido.envio.especificacionesInternas ?? ""}</p>
-              </div>
-              <div>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Departamento:</strong> ${pedido.envio.departamento ?? "N/A"}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Ciudad:</strong> ${pedido.envio.ciudad ?? "N/A"}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Barrio:</strong> ${pedido.envio.barrio ?? ""}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Código Postal:</strong> ${pedido.envio.codigoPV ?? ""}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Celular:</strong> (${pedido.envio.indicativoCel ?? ""}) ${pedido.envio.celular ?? "N/A"}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Otro Número:</strong> (${pedido.envio.indicativoOtroNumero ?? ""}) ${pedido.envio.otroNumero ?? ""}</p>
-                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Zona Cobro:</strong> ${pedido.envio.zonaCobro ?? "N/A"}</p>
-              </div>
-            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="width: 50%; vertical-align: top; padding-right: 8px;">
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Nombres:</strong> ${pedido.envio.nombres ?? "N/A"}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Apellidos:</strong> ${pedido.envio.apellidos ?? "N/A"}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Alias:</strong> ${pedido.envio.alias ?? "N/A"}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Dirección:</strong> ${pedido.envio.direccionEntrega ?? "N/A"}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Unidad/Apto:</strong> ${pedido.envio.nombreUnidad ?? ""}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Especificaciones:</strong> ${pedido.envio.especificacionesInternas ?? ""}</p>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding-left: 8px;">
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Departamento:</strong> ${pedido.envio.departamento ?? "N/A"}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Ciudad:</strong> ${pedido.envio.ciudad ?? "N/A"}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Barrio:</strong> ${pedido.envio.barrio ?? ""}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Código Postal:</strong> ${pedido.envio.codigoPV ?? ""}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Celular:</strong> (${pedido.envio.indicativoCel ?? ""}) ${pedido.envio.celular ?? "N/A"}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Otro Número:</strong> (${pedido.envio.indicativoOtroNumero ?? ""}) ${pedido.envio.otroNumero ?? ""}</p>
+                  <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Zona Cobro:</strong> ${pedido.envio.zonaCobro ?? "N/A"}</p>
+                </td>
+              </tr>
+            </table>
           </div>`
         : "";
 
@@ -1465,12 +1485,25 @@ export class PaymentService extends BaseService {
             padding: 0 !important;
             margin-bottom: ${styles.spacing.md};
           }
-          /* Hacer que el grid del envío también sea responsive */
-          .info-card div[style*="grid-template-columns"] {
-            display: block !important;
+          /* Mantener layout de tabla para envío en móvil */
+          .info-card table {
+            display: table !important;
+            width: 100% !important;
           }
-          .info-card div[style*="grid-template-columns"] > div {
-            margin-bottom: ${styles.spacing.sm};
+          .info-card table td {
+            display: table-cell !important;
+            width: 50% !important;
+            vertical-align: top !important;
+            padding: 0 4px !important;
+          }
+          /* Solo en pantallas muy pequeñas convertir a bloque */
+          @media (max-width: 400px) {
+            .info-card table,
+            .info-card table td {
+              display: block !important;
+              width: 100% !important;
+              padding: 0 !important;
+            }
           }
         }
         
@@ -1522,24 +1555,30 @@ export class PaymentService extends BaseService {
           .card-header::after {
             display: none !important;
           }
+          /* Mantener layout de dos columnas en impresión para mejor aprovechamiento del papel */
           .two-column-container table {
-            display: block !important;
+            display: table !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
           }
           .two-column-container td {
-            display: block !important;
-            width: 100% !important;
-            padding: 0 !important;
+            display: table-cell !important;
+            width: 48% !important;
+            vertical-align: top !important;
+            padding: 0 4px !important;
           }
           .modern-header h2 {
             -webkit-text-fill-color: black !important;
             color: black !important;
           }
-          /* Asegurar que los grids se conviertan en bloques en impresión */
-          .info-card div[style*="grid-template-columns"] {
-            display: block !important;
+          /* Asegurar que los grids internos se mantengan como tabla en impresión */
+          .info-card table {
+            display: table !important;
+            width: 100% !important;
           }
-          .info-card div[style*="grid-template-columns"] > div {
-            margin-bottom: 2px !important;
+          .info-card table td {
+            display: table-cell !important;
+            vertical-align: top !important;
           }
           .card-header {
             margin-bottom: 4px !important;
@@ -1592,13 +1631,19 @@ ${htmlDatosClienteModerno}
                 <td style="width: 48%; vertical-align: top; padding-left: ${styles.spacing.lg};">
                   <!-- Datos de Facturación -->
 ${htmlFacturacionModerno || `
-                  <div class="info-card modern-card" style="opacity: 0.6;">
-                    <div class="card-header modern-header">
-                      <div class="card-icon modern-icon">🧾</div>
-                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos de Facturación</h2>
+                  <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; opacity: 0.6;">
+                    <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="vertical-align: middle; padding: 0;">
+                            <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">🧾</span>
+                            <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Datos de Facturación</h2>
+                          </td>
+                        </tr>
+                      </table>
                     </div>
-                    <div style="padding: ${styles.spacing.sm} 0;">
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body}; font-style: italic;">No se requiere facturación electrónica para este pedido</p>
+                    <div style="padding: 4px 0;">
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px; font-style: italic;">No se requiere facturación electrónica para este pedido</p>
                     </div>
                   </div>`}
                 </td>
@@ -1612,31 +1657,43 @@ ${htmlFacturacionModerno || `
           <div class="two-column-container">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="width: 48%; vertical-align: top; padding-right: ${styles.spacing.lg};">
+                <td style="width: 48%; vertical-align: top; padding-right: 8px;">
                   <!-- Datos Extras Entrega -->
-                  <div class="info-card modern-card">
-                    <div class="card-header modern-header">
-                      <div class="card-icon modern-icon">📅</div>
-                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos Extras de Entrega</h2>
+                  <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);">
+                    <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="vertical-align: middle; padding: 0;">
+                            <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">📅</span>
+                            <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Datos Extras de Entrega</h2>
+                          </td>
+                        </tr>
+                      </table>
                     </div>
-                    <div style="padding: ${styles.spacing.sm} 0;">
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Fecha Entrega:</strong> ${this.customFormatDate(pedido.fechaEntrega)}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Forma Entrega:</strong> ${pedido.formaEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Horario Entrega:</strong> ${pedido.horarioEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega ?? "N/A"}</p>
+                    <div style="padding: 4px 0;">
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Fecha Entrega:</strong> ${this.customFormatDate(pedido.fechaEntrega)}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Forma Entrega:</strong> ${pedido.formaEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Horario Entrega:</strong> ${pedido.horarioEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega ?? "N/A"}</p>
                     </div>
                   </div>
                 </td>
-                <td style="width: 48%; vertical-align: top; padding-left: ${styles.spacing.lg};">
+                <td style="width: 48%; vertical-align: top; padding-left: 8px;">
                   <!-- Datos Extras Orden -->
-                  <div class="info-card modern-card">
-                    <div class="card-header modern-header">
-                      <div class="card-icon modern-icon">📋</div>
-                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos Extras de la Orden</h2>
+                  <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);">
+                    <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="vertical-align: middle; padding: 0;">
+                            <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">📋</span>
+                            <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Datos Extras de la Orden</h2>
+                          </td>
+                        </tr>
+                      </table>
                     </div>
-                    <div style="padding: ${styles.spacing.sm} 0;">
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Asesor Asignado:</strong> ${pedido?.asesorAsignado?.name ?? "N/A"}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Fecha Compra:</strong> ${this.customFormatDateHour(pedido?.fechaCreacion)}</p>
-                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Fuente:</strong> <strong style="color: ${styles.colors.primary};">SELLERCENTER</strong></p>
+                    <div style="padding: 4px 0;">
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Asesor Asignado:</strong> ${pedido?.asesorAsignado?.name ?? "N/A"}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Fecha Compra:</strong> ${this.customFormatDateHour(pedido?.fechaCreacion)}</p>
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px;"><strong style="color: #1f2937;">Fuente:</strong> <strong style="color: #2563eb;">SELLERCENTER</strong></p>
                     </div>
                   </div>
                 </td>
@@ -1646,10 +1703,16 @@ ${htmlFacturacionModerno || `
 
           <hr class="section-divider">
           <!-- Productos del Pedido -->
-          <div class="info-card">
-            <div class="card-header">
-              <div class="card-icon">🛍️</div>
-              <h2 style="margin: 0; color: ${styles.colors.text};">Productos del pedido</h2>
+          <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);">
+            <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="vertical-align: middle; padding: 0;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">🛍️</span>
+                    <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Productos del pedido</h2>
+                  </td>
+                </tr>
+              </table>
             </div>
             <table>
               <tbody>

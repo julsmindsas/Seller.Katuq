@@ -1274,26 +1274,46 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Actualiza printContents con el HTML modificado
     printContents = tempDiv.innerHTML;
 
-    const originalContents = document.body.innerHTML;
-    document.body.innerHTML = printContents;
-    // Elimina los paddings de document.body
-    document.body.style.padding = "0";
-
-    // Ajusta el tamaño de la letra
-    document.body.style.fontSize = "small";
-
-    // Opcional: Ajusta otros estilos para intentar hacer que todo quepa en una página
-    document.body.style.lineHeight = "1.2";
-
-    window.print();
-
-    setTimeout(() => {
-      // Restaura el contenido original del cuerpo después de un retraso
-      // document.body.innerHTML = originalContents;
-      window.location.reload();
-      // O recarga la página para restablecer el estado completamente
-      // window.location.reload();
-    }, 500); // Ajusta el retraso según sea necesario
+    // Crear una nueva ventana/pestaña con el contenido del PDF
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Pedido ${this.pedidoSeleccionado?.nroPedido || 'PDF'}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              font-size: 12px;
+              line-height: 1.2;
+              margin: 0;
+              padding: 20px;
+              background: white;
+            }
+            .texto-pequeno {
+              font-size: 10px;
+            }
+            @media print {
+              body {
+                padding: 0;
+                margin: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContents}
+        </body>
+        </html>
+      `);
+      newWindow.document.close();
+      
+      // Opcional: Automáticamente abrir el diálogo de impresión en la nueva ventana
+      setTimeout(() => {
+        newWindow.print();
+      }, 500);
+    }
   }
 
   editDatosClientes(content, order: Pedido) {
