@@ -154,7 +154,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       return false;
     }
 
-    const estadosCongelados = [EstadoProcesoFiltros.EnProduccion, EstadoProcesoFiltros.ProducidoParcialmente, EstadoProcesoFiltros.Cerrado, EstadoProcesoFiltros.Entregado];
+    const estadosCongelados = [EstadoProcesoFiltros.EnProduccion, EstadoProcesoFiltros.ProducidoParcialmente, EstadoProcesoFiltros.Cerrado, EstadoProcesoFiltros.Despachado, EstadoProcesoFiltros.Entregado];
 
     return estadosCongelados.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
   }

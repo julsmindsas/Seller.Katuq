@@ -1293,15 +1293,18 @@
             </select>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-3" >
             <label class="form-label fw-bold">{{ 'Estado de proceso:' | translate }}</label>
-            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso">
+            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso" [disabled]="isPedidoCongelado(pedidoSeleccionado) && !canDeleteOrder()">
                 <option *ngFor="let estado of estadosProcesos" [value]="estado">
                      {{ estado }}
                 </option>
             </select>
             <small class="form-text text-muted">
-                {{ 'Estados que congelan el pedido: EnProduccion, ProducidoParcialmente, Cerrado, Entregado' | translate }}
+                {{ 'Estados que congelan el pedido: EnProduccion, ProducidoParcialmente, Cerrado, Entregado, Despachado' | translate }}
+            </small>
+            <small class="form-text text-muted" *ngIf="isPedidoCongelado(pedidoSeleccionado) && !canDeleteOrder()">
+                {{ 'El pedido está congelado y no se puede modificar.' | translate }}
             </small>
         </div>
 
