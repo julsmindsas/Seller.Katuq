@@ -19,64 +19,185 @@
   </div>
 </div>
 
+<!-- Modal para ver detalles de cotización -->
+<ng-template #detalleModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Detalles de Cotización</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div *ngIf="cotizacionSeleccionada">
+      <!-- Información básica -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <h6>Información General</h6>
+          <p><strong>Número:</strong> {{cotizacionSeleccionada.nroCotizacion || cotizacionSeleccionada.numero}}</p>
+          <p><strong>Fecha:</strong> {{formatearFecha(cotizacionSeleccionada.fechaCreacion ||
+            cotizacionSeleccionada.fecha)}}</p>
+          <p><strong>Estado:</strong>
+            <span class="badge ms-1"
+              [ngClass]="getEstadoClass(cotizacionSeleccionada.estadoCotizacion || cotizacionSeleccionada.estado)">
+              {{cotizacionSeleccionada.estadoCotizacion || cotizacionSeleccionada.estado}}
+            </span>
+          </p>
+          <p *ngIf="cotizacionSeleccionada.fechaVencimiento"><strong>Vencimiento:</strong>
+            {{formatearFecha(cotizacionSeleccionada.fechaVencimiento)}}</p>
+        </div>
+        <div class="col-md-6">
+          <h6>Cliente</h6>
+          <p><strong>Nombre:</strong> {{cotizacionSeleccionada.cliente?.nombres_completos}}</p>
+          <p><strong>Documento:</strong> {{cotizacionSeleccionada.cliente?.documento}}</p>
+          <p><strong>Email:</strong> {{cotizacionSeleccionada.cliente?.correo_electronico_comprador ||
+            cotizacionSeleccionada.cliente?.correo_electronico}}</p>
+          <p><strong>Teléfono:</strong> {{cotizacionSeleccionada.cliente?.numero_celular_comprador ||
+            cotizacionSeleccionada.cliente?.numero_celular}}</p>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="mb-3">
+        <h6>Productos</h6>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of cotizacionSeleccionada.items">
+                <td>
+                  <strong>{{item.producto?.crearProducto?.titulo || item.producto?.identificacion?.referencia}}</strong>
+                  <br>
+                  <small class="text-muted">{{item.producto?.identificacion?.referencia}}</small>
+                </td>
+                <td>{{item.cantidad}}</td>
+                <td>{{formatearPrecio(item.precio || 0)}}</td>
+                <td>{{formatearPrecio(item.subtotal || 0)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Totales -->
+      <div class="row">
+        <div class="col-md-6 offset-md-6">
+          <table class="table table-sm">
+            <tr>
+              <td><strong>Subtotal:</strong></td>
+              <td class="text-end">{{formatearPrecio(cotizacionSeleccionada.subtotal)}}</td>
+            </tr>
+            <tr *ngIf="cotizacionSeleccionada.descuento > 0">
+              <td><strong>Descuento:</strong></td>
+              <td class="text-end">-{{formatearPrecio(cotizacionSeleccionada.descuento)}}</td>
+            </tr>
+            <tr *ngIf="cotizacionSeleccionada.impuestos > 0">
+              <td><strong>Impuestos:</strong></td>
+              <td class="text-end">{{formatearPrecio(cotizacionSeleccionada.impuestos)}}</td>
+            </tr>
+            <tr class="table-primary">
+              <td><strong>Total:</strong></td>
+              <td class="text-end"><strong>{{formatearPrecio(cotizacionSeleccionada.total)}}</strong></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div *ngIf="cotizacionSeleccionada.observaciones" class="mb-3">
+        <h6>Observaciones</h6>
+        <p>{{cotizacionSeleccionada.observaciones}}</p>
+      </div>
+
+      <!-- Asesor -->
+      <div *ngIf="cotizacionSeleccionada.asesorAsignado" class="mb-3">
+        <h6>Asesor Asignado</h6>
+        <p><strong>{{cotizacionSeleccionada.asesorAsignado.name}}</strong> -
+          {{cotizacionSeleccionada.asesorAsignado.email}}</p>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.close()">Cerrar</button>
+    <button type="button" class="btn btn-primary" (click)="imprimirPDF(cotizacionSeleccionada)">
+      <i class="fa fa-file-pdf-o me-1"></i>
+      Imprimir PDF
+    </button>
+  </div>
+</ng-template>
+
 <div class="container-fluid">
   <!-- Filtros -->
   <div class="row">
     <div class="col-12">
       <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
           <h5>Filtros de Búsqueda</h5>
+          <div>
+            <button class="btn btn-outline-primary me-2" (click)="refrescarLista()" [disabled]="isLoading">
+              <i class="fa fa-refresh me-1"></i>
+              Refrescar
+            </button>
+            <button class="btn btn-primary" (click)="crearCotizacion()">
+              <i class="fa fa-plus me-1"></i>
+              Nueva Cotización
+            </button>
+          </div>
         </div>
         <div class="card-body">
           <div class="row">
-            <div class="col-md-4">
-              <div class="form-group">
-                <label for="searchTerm">Buscar</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="searchTerm"
-                  [(ngModel)]="searchTerm"
-                  (ngModelChange)="filtrarCotizaciones()"
-                  placeholder="Número, cliente o documento">
-              </div>
-            </div>
             <div class="col-md-3">
               <div class="form-group">
+                <label for="searchTerm">Buscar</label>
+                <input type="text" class="form-control" id="searchTerm" [(ngModel)]="searchTerm"
+                  (ngModelChange)="onSearch()" placeholder="Número, cliente o documento">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-group">
                 <label for="selectedEstado">Estado</label>
-                <select 
-                  class="form-control" 
-                  id="selectedEstado"
-                  [(ngModel)]="selectedEstado"
-                  (ngModelChange)="filtrarCotizaciones()">
+                <select class="form-control" id="selectedEstado" [(ngModel)]="selectedEstado"
+                  (ngModelChange)="onEstadoChange()">
                   <option *ngFor="let estado of estados" [value]="estado.value">
                     {{estado.label}}
                   </option>
                 </select>
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <div class="form-group">
                 <label for="selectedFecha">Fecha</label>
-                <input 
-                  type="date" 
-                  class="form-control" 
-                  id="selectedFecha"
-                  [(ngModel)]="selectedFecha"
-                  (ngModelChange)="filtrarCotizaciones()">
+                <input type="date" class="form-control" id="selectedFecha" [(ngModel)]="selectedFecha"
+                  (ngModelChange)="onFechaChange()">
               </div>
             </div>
             <div class="col-md-2">
               <div class="form-group">
+                <label for="selectedAsesor">Asesor</label>
+                <input type="text" class="form-control" id="selectedAsesor" [(ngModel)]="selectedAsesor"
+                  (ngModelChange)="onAsesorChange()" placeholder="Email del asesor">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-group">
+                <label for="pageSize">Elementos por página</label>
+                <select class="form-control" id="pageSize" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+                  <option *ngFor="let size of pageSizes" [value]="size">
+                    {{size}}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-1">
+              <div class="form-group">
                 <label>&nbsp;</label>
-                <div class="d-flex gap-2">
-                  <button 
-                    type="button" 
-                    class="btn btn-secondary btn-sm"
-                    (click)="limpiarFiltros()">
-                    Limpiar
-                  </button>
-                </div>
+                <button class="btn btn-secondary d-block w-100" (click)="limpiarFiltros()">
+                  <i class="fa fa-eraser"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -85,147 +206,213 @@
     </div>
   </div>
 
-  <!-- Acciones -->
+  <!-- Tabla de cotizaciones -->
   <div class="row">
     <div class="col-12">
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">
-            Cotizaciones 
-            <span class="badge badge-primary ml-2">{{cotizacionesFiltradas.length}}</span>
+          <h5>Cotizaciones
+            <span class="badge badge-info">{{totalItems}} total</span>
           </h5>
-          <button 
-            type="button" 
-            class="btn btn-primary"
-            (click)="nuevaCotizacion()">
-            <i data-feather="plus"></i>
-            Nueva Cotización
-          </button>
+          <div *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
         </div>
         <div class="card-body">
-          
-          <!-- Loading -->
-          <div *ngIf="isLoading" class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-              <span class="sr-only">Cargando...</span>
-            </div>
-            <p class="mt-2">Cargando cotizaciones...</p>
-          </div>
-
-          <!-- Tabla de cotizaciones -->
-          <div *ngIf="!isLoading" class="table-responsive">
-            <table class="table table-hover">
+          <div class="table-responsive" *ngIf="!isLoading">
+            <table class="table table-striped">
               <thead>
                 <tr>
                   <th>Número</th>
-                  <th>Fecha</th>
                   <th>Cliente</th>
-                  <th>Total</th>
-                  <th>Validez</th>
+                  <th>Fecha</th>
                   <th>Estado</th>
+                  <th>Total</th>
+                  <th>Asesor</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let cotizacion of cotizacionesFiltradas">
                   <td>
-                    <strong>{{cotizacion.numero}}</strong>
-                  </td>
-                  <td>
-                    {{formatearFecha(cotizacion.fecha)}}
+                    <strong>{{cotizacion.nroCotizacion || cotizacion.numero}}</strong>
                   </td>
                   <td>
                     <div>
                       <strong>{{cotizacion.cliente?.nombres_completos}}</strong>
+                      <br>
+                      <small class="text-muted">{{cotizacion.cliente?.documento}}</small>
                     </div>
-                    <small class="text-muted">
-                      {{cotizacion.cliente?.documento}}
-                    </small>
                   </td>
                   <td>
-                    <strong class="text-success">
-                      {{formatearPrecio(cotizacion.total)}}
-                    </strong>
-                    <div *ngIf="cotizacion.descuento > 0">
-                      <small class="text-muted">
-                        Desc: {{formatearPrecio(cotizacion.descuento)}}
+                    <div>
+                      <strong>{{formatearFecha(cotizacion.fechaCreacion || cotizacion.fecha)}}</strong>
+                      <br>
+                      <small class="text-muted" *ngIf="cotizacion.fechaVencimiento">
+                        Vence: {{formatearFecha(cotizacion.fechaVencimiento)}}
                       </small>
                     </div>
                   </td>
                   <td>
-                    <div>{{cotizacion.validez}} días</div>
-                    <small 
-                      class="text-muted"
-                      [class.text-danger]="estaVencida(cotizacion.fecha, cotizacion.validez)">
-                      Vence: {{calcularFechaVencimiento(cotizacion.fecha, cotizacion.validez)}}
+                    <span class="badge" [ngClass]="getEstadoClass(cotizacion.estadoCotizacion || cotizacion.estado)">
+                      {{cotizacion.estadoCotizacion || cotizacion.estado}}
+                    </span>
+                    <div *ngIf="cotizacion.convertidaAPedido" class="mt-1">
+                      <small class="text-success">
+                        <i class="fa fa-check-circle"></i> Convertida
+                      </small>
+                    </div>
+                  </td>
+                  <td>
+                    <strong>{{formatearPrecio(cotizacion.total)}}</strong>
+                    <br>
+                    <small class="text-muted">
+                      Subtotal: {{formatearPrecio(cotizacion.subtotal)}}
                     </small>
                   </td>
                   <td>
-                    <span 
-                      class="badge"
-                      [class]="getEstadoClass(cotizacion.estado)">
-                      {{getEstadoLabel(cotizacion.estado)}}
-                    </span>
+                    <div *ngIf="cotizacion.asesorAsignado">
+                      <strong>{{cotizacion.asesorAsignado.name}}</strong>
+                      <br>
+                      <small class="text-muted">{{cotizacion.asesorAsignado.email}}</small>
+                    </div>
+                    <span *ngIf="!cotizacion.asesorAsignado" class="text-muted">Sin asignar</span>
                   </td>
                   <td>
                     <div class="btn-group" role="group">
-                      <button 
-                        type="button" 
-                        class="btn btn-sm btn-outline-primary"
-                        (click)="verCotizacion(cotizacion)"
+                      <button class="btn btn-sm btn-outline-primary" (click)="verDetalleCotizacion(cotizacion)"
+                        title="Ver detalles">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary" (click)="editarCotizacion(cotizacion)"
+                        title="Editar">
+                        <i class="fa fa-edit"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-warning" (click)="imprimirPDF(cotizacion)"
+                        title="Imprimir PDF">
+                        <i class="fa fa-file-pdf-o"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-info" (click)="duplicarCotizacion(cotizacion)"
+                        title="Duplicar">
+                        <i class="fa fa-copy"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-success" (click)="convertirAPedido(cotizacion)"
+                        [disabled]="cotizacion.estadoCotizacion !== 'Aprobada' || cotizacion.convertidaAPedido"
+                        title="Convertir a pedido">
+                        <i class="fa fa-shopping-cart"></i>
+                      </button>
+                      <button class="btn btn-outline-warning btn-sm me-2" (click)="cambiarEstadoCotizacion(cotizacion)"
+                        [disabled]="isLoading" title="Cambiar estado">
+                        <i class="fas fa-exchange-alt me-1"></i>
+                        Estado
+                      </button>
+
+                      <!-- Ejemplo de implementación completa en una fila de tabla -->
+                <tr *ngFor="let cotizacion of cotizacionesPaginadas">
+                  <td>{{ cotizacion.nroCotizacion || cotizacion.numero || 'Sin número' }}</td>
+                  <td>{{ cotizacion.cliente?.nombres_completos || 'Cliente no especificado' }}</td>
+                  <td>{{ formatearFecha(cotizacion.fechaCreacion || cotizacion.fecha) }}</td>
+                  <td>
+                    <span [class]="obtenerClaseEstado(cotizacion.estadoCotizacion || cotizacion.estado)">
+                      {{ obtenerTextoEstado(cotizacion.estadoCotizacion || cotizacion.estado) }}
+                    </span>
+                  </td>
+                  <td>{{ formatearPrecio(cotizacion.total || 0) }}</td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <!-- Botón Ver/Editar -->
+                      <button class="btn btn-outline-primary btn-sm" (click)="verCotizacion(cotizacion)"
                         title="Ver cotización">
-                        <i data-feather="eye"></i>
+                        <i class="fas fa-eye"></i>
                       </button>
-                      <button 
-                        type="button" 
-                        class="btn btn-sm btn-outline-secondary"
-                        (click)="editarCotizacion(cotizacion)"
-                        title="Editar cotización">
-                        <i data-feather="edit"></i>
+
+                      <!-- Botón Duplicar -->
+                      <button class="btn btn-outline-info btn-sm" (click)="duplicarCotizacion(cotizacion)"
+                        [disabled]="isLoading" title="Duplicar cotización">
+                        <i class="fas fa-copy"></i>
                       </button>
-                      <button 
-                        type="button" 
-                        class="btn btn-sm btn-outline-info"
-                        (click)="duplicarCotizacion(cotizacion)"
-                        title="Duplicar cotización">
-                        <i data-feather="copy"></i>
+
+                      <!-- Botón Cambiar Estado -->
+                      <button class="btn btn-outline-warning btn-sm" (click)="cambiarEstadoCotizacion(cotizacion)"
+                        [disabled]="isLoading" title="Cambiar estado">
+                        <i class="fas fa-exchange-alt"></i>
                       </button>
-                      <button 
-                        type="button" 
-                        class="btn btn-sm btn-outline-danger"
-                        (click)="eliminarCotizacion(cotizacion)"
-                        title="Eliminar cotización">
-                        <i data-feather="trash-2"></i>
+
+                      <!-- Botón PDF -->
+                      <button class="btn btn-outline-secondary btn-sm" (click)="generarPDFCotizacion(cotizacion)"
+                        title="Generar PDF">
+                        <i class="fas fa-file-pdf"></i>
                       </button>
                     </div>
                   </td>
                 </tr>
-              </tbody>
-            </table>
-
-            <!-- Estado vacío -->
-            <div *ngIf="cotizacionesFiltradas.length === 0" class="text-center py-5">
-              <i data-feather="file-text" class="feather-48 text-muted mb-3"></i>
-              <h5 class="text-muted">No se encontraron cotizaciones</h5>
-              <p class="text-muted">
-                <span *ngIf="searchTerm || selectedEstado || selectedFecha">
-                  Prueba ajustando los filtros de búsqueda
-                </span>
-                <span *ngIf="!searchTerm && !selectedEstado && !selectedFecha">
-                  Aún no hay cotizaciones creadas
-                </span>
-              </p>
-              <button 
-                type="button" 
-                class="btn btn-primary mt-3"
-                (click)="nuevaCotizacion()">
-                <i data-feather="plus"></i>
-                Crear Primera Cotización
-              </button>
-            </div>
           </div>
+          </td>
+          </tr>
+          </tbody>
+          </table>
+        </div>
+
+        <!-- Estado de carga -->
+        <div *ngIf="isLoading" class="text-center py-5">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Cargando cotizaciones...</span>
+          </div>
+          <p class="mt-2">Cargando cotizaciones...</p>
+        </div>
+
+        <!-- Sin resultados -->
+        <div *ngIf="!isLoading && cotizacionesFiltradas.length === 0" class="text-center py-5">
+          <i class="fa fa-file-text-o fa-3x text-muted mb-3"></i>
+          <h5 class="text-muted">No hay cotizaciones disponibles</h5>
+          <p class="text-muted">Crea tu primera cotización para comenzar</p>
+          <button class="btn btn-primary" (click)="crearCotizacion()">
+            <i class="fa fa-plus me-1"></i>
+            Crear Cotización
+          </button>
+        </div>
+
+        <!-- Paginación -->
+        <div *ngIf="!isLoading && cotizacionesFiltradas.length > 0"
+          class="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            <small class="text-muted">
+              Mostrando {{((currentPage - 1) * pageSize) + 1}} a {{Math.min(currentPage * pageSize, totalItems)}} de
+              {{totalItems}} cotizaciones
+            </small>
+          </div>
+          <nav *ngIf="totalPages > 1">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="currentPage === 1">
+                <a class="page-link" (click)="onPageChange(1)" href="javascript:void(0)">
+                  <i class="fa fa-angle-double-left"></i>
+                </a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage === 1">
+                <a class="page-link" (click)="onPageChange(currentPage - 1)" href="javascript:void(0)">
+                  <i class="fa fa-angle-left"></i>
+                </a>
+              </li>
+              <li *ngFor="let page of getPaginationArray()" class="page-item" [class.active]="page === currentPage">
+                <a class="page-link" (click)="onPageChange(page)" href="javascript:void(0)">
+                  {{page}}
+                </a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage === totalPages">
+                <a class="page-link" (click)="onPageChange(currentPage + 1)" href="javascript:void(0)">
+                  <i class="fa fa-angle-right"></i>
+                </a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage === totalPages">
+                <a class="page-link" (click)="onPageChange(totalPages)" href="javascript:void(0)">
+                  <i class="fa fa-angle-double-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
     </div>
   </div>
-</div> 
+</div>
+</div>

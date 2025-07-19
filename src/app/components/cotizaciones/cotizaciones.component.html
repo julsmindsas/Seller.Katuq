@@ -19,18 +19,49 @@
             <div>
               <h1 class="page-title mb-2">
                 <i class="fa fa-file-invoice-dollar me-2"></i>
-                Nueva Cotización
+                {{ isEditing ? 'Editar Cotización' : 'Nueva Cotización' }}
+                <span *ngIf="cotizacion.numero" class="text-muted ms-2">({{ cotizacion.numero }})</span>
               </h1>
-              <p class="page-subtitle mb-0">Crea cotizaciones profesionales para tus clientes</p>
+              <p class="page-subtitle mb-0">
+                {{ isEditing ? 'Modifica los datos de la cotización existente' : 'Crea cotizaciones profesionales para tus clientes' }}
+              </p>
+              <div *ngIf="isEditing && cotizacion.fechaCreacion" class="mt-2">
+                <small class="text-muted">
+                  <i class="fa fa-calendar me-1"></i>
+                  Creada: {{ formatearFecha(cotizacion.fechaCreacion) }}
+                  <span *ngIf="cotizacion.fechaVencimiento" class="ms-3">
+                    <i class="fa fa-clock me-1"></i>
+                    Vence: {{ formatearFecha(cotizacion.fechaVencimiento) }}
+                  </span>
+                  <span *ngIf="cotizacion.estadoCotizacion" class="ms-3">
+                    <i class="fa fa-info-circle me-1"></i>
+                    Estado: 
+                    <span class="badge" [ngClass]="{
+                      'badge-secondary': cotizacion.estadoCotizacion === 'Borrador',
+                      'badge-info': cotizacion.estadoCotizacion === 'Enviada',
+                      'badge-success': cotizacion.estadoCotizacion === 'Aprobada',
+                      'badge-danger': cotizacion.estadoCotizacion === 'Rechazada',
+                      'badge-warning': cotizacion.estadoCotizacion === 'Expirada',
+                      'badge-primary': cotizacion.estadoCotizacion === 'Convertida'
+                    }">
+                      {{ cotizacion.estadoCotizacion }}
+                    </span>
+                  </span>
+                </small>
+              </div>
             </div>
             <div class="header-actions">
               <button class="btn btn-outline-primary me-2" routerLink="/cotizaciones/lista">
                 <i class="fa fa-list me-1"></i>
                 Ver Cotizaciones
               </button>
+              <button *ngIf="isEditing" class="btn btn-outline-secondary me-2" (click)="nuevaCotizacion()">
+                <i class="fa fa-plus me-1"></i>
+                Nueva
+              </button>
               <button class="btn btn-success" (click)="guardarCotizacion()" [disabled]="!cliente || items.length === 0">
                 <i class="fa fa-save me-1"></i>
-                Guardar
+                {{ isEditing ? 'Actualizar' : 'Guardar' }}
               </button>
             </div>
           </div>
@@ -150,7 +181,7 @@
                   Generar PDF
                 </button>
                 <button class="btn btn-success w-100 mb-2" (click)="abrirModalEnviarCorreo(modalEnviarCorreo)" 
-                        [disabled]="!cliente || items.length === 0 || !cotizacion.id">
+                        [disabled]="!cliente || items.length === 0">
                   <i class="fa fa-envelope me-2"></i>
                   Enviar por Correo
                 </button>
@@ -439,7 +470,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div style="flex: 1;">
             <h1 style="color: #007bff; margin: 0; font-size: 28px;">COTIZACIÓN</h1>
-            <p style="margin: 5px 0; color: #6c757d;">{{cotizacion.numero || 'COT-' + fechaActual}}</p>
+            <p style="margin: 5px 0; color: #6c757d;">{{cotizacion.nroCotizacion || cotizacion.numero || 'COT-' + fechaActual}}</p>
           </div>
           <div style="text-align: right; flex: 1;">
             <!-- Información de la empresa (sin logo para evitar problemas de CORS) -->
@@ -647,8 +678,8 @@
         </h6>
         <div class="row">
           <div class="col-md-6">
-            <small><strong>Número:</strong> {{cotizacion.numero || 'Sin número'}}</small><br>
-            <small><strong>Cliente:</strong> {{cotizacion.cliente?.nombre || 'Sin cliente'}}</small>
+            <small><strong>Número:</strong> {{cotizacion.nroCotizacion || cotizacion.numero || 'Sin número'}}</small><br>
+            <small><strong>Cliente:</strong> {{cotizacion.cliente?.nombres_completos || cliente?.nombres_completos || 'Sin cliente'}}</small>
           </div>
           <div class="col-md-6">
             <small><strong>Fecha:</strong> {{formatearFecha(cotizacion.fecha)}}</small><br>

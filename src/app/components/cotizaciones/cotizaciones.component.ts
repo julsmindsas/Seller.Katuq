@@ -18,13 +18,26 @@ import { Observable, of, firstValueFrom, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PosCheckoutService } from '../../shared/services/ventas/pos-checkout.service';
 
+// Enumeraciones según la API
+export enum EstadoCotizacion {
+  Borrador = "Borrador",
+  Enviada = "Enviada", 
+  Aprobada = "Aprobada",
+  Rechazada = "Rechazada",
+  Expirada = "Expirada",
+  Convertida = "Convertida"
+}
+
 export interface CotizacionItem {
-  producto: any;
+  producto: any;                         // Producto completo
   cantidad: number;
-  precio: number;
-  precioOriginal: number;
-  subtotal: number;
-  descuentoVolumen?: {
+  precio: number;                        // Para compatibilidad con código existente
+  precioOriginal: number;                // Para compatibilidad con código existente
+  subtotal: number;                      // Para compatibilidad con código existente
+  descuento?: number;                    // Porcentaje de descuento (según API)
+  configuracion?: any;                   // Configuraciones específicas
+  notaProduccion?: string[];             // Notas de producción
+  descuentoVolumen?: {                   // Para compatibilidad con código existente
     aplicado: boolean;
     porcentaje: number;
     ahorro: number;
@@ -34,18 +47,45 @@ export interface CotizacionItem {
 }
 
 export interface Cotizacion {
-  id?: string;
-  numero?: string;
-  fecha: string;
+  id?: string;                           // ID generado automáticamente
+  nroCotizacion?: string;                // Número consecutivo (COT-2024-000001)
+  numero?: string;                       // Alias para nroCotizacion (compatibilidad)
+  fechaCreacion?: string;                // ISO DateTime
+  fechaVencimiento?: string;             // ISO DateTime
+  fecha: string;                         // Para compatibilidad con código existente
+  company?: string;                      // Empresa propietaria
+  
+  // Cliente
   cliente?: any;
+  
+  // Items cotizados
   items: CotizacionItem[];
+  
+  // Estados
+  estadoCotizacion?: 'Borrador' | 'Enviada' | 'Aprobada' | 'Rechazada' | 'Expirada' | 'Convertida';
+  estado: 'borrador' | 'enviada' | 'aceptada' | 'rechazada' | 'vencida';  // Para compatibilidad
+  
+  // Totales financieros
   subtotal: number;
-  impuestos: number;
-  descuento: number;
+  totalImpuesto?: number;
+  impuestos: number;                     // Alias para totalImpuesto
+  totalDescuento?: number;
+  descuento: number;                     // Alias para totalDescuento
   total: number;
+  
+  // Metadatos
+  asesorAsignado?: any;
+  validezDias?: number;                  // Días de validez (default: 30)
+  validez: string;                       // Para compatibilidad con código existente
   observaciones?: string;
-  validez: string;
-  estado: 'borrador' | 'enviada' | 'aceptada' | 'rechazada' | 'vencida';
+  
+  // Conversión a pedido
+  convertidaAPedido?: boolean;
+  pedidoGenerado?: string;               // ID del pedido creado
+  
+  // Campos de auditoría
+  date_edit?: string;
+  user_edit?: string;
 }
 
 @Component({
@@ -62,6 +102,7 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
   public isLoading: boolean = false;
   public currentStep: number = 1;
   public totalSteps: number = 1;
+  public isEditing: boolean = false;
 
   public clienteForm!: FormGroup;
   public cotizacionForm!: FormGroup;
@@ -146,16 +187,104 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.cargarDatos();
-    this.verificarModoEdicion();
+    this.inicializar();
 
     // Suscribirse a cambios de cliente desde la sección compacta POS
     this.posCheckoutService.customer$.subscribe((customer) => {
       if (customer) {
         this.cliente = customer;
         this.clienteEncontrado = true;
+        
+        // Actualizar la cotización con los datos del cliente
+        this.cotizacion.cliente = customer;
+        
+        console.log('Cliente seleccionado:', customer);
+        console.log('Email del cliente:', customer.correo_electronico_comprador || customer.correo_electronico);
       }
     });
+  }
+
+  /**
+   * Inicializa el componente en el orden correcto
+   */
+  private async inicializar(): Promise<void> {
+    try {
+      // Primero cargar los datos base (productos, categorías, empresa)
+      await this.cargarDatos();
+      
+      // Verificar si hay datos de cotización duplicada
+      this.verificarCotizacionDuplicada();
+      
+      // Luego verificar si estamos en modo edición y cargar la cotización
+      this.verificarModoEdicion();
+      
+    } catch (error) {
+      console.error('Error en inicialización:', error);
+      this.toastrService.error('Error al inicializar el componente');
+    }
+  }
+
+  /**
+   * Verifica si hay datos de cotización duplicada en el state
+   */
+  private verificarCotizacionDuplicada(): void {
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras?.state?.cotizacionDuplicada) {
+      const cotizacionDuplicada = navigation.extras.state.cotizacionDuplicada;
+      this.cargarCotizacionDuplicada(cotizacionDuplicada);
+    }
+  }
+
+  /**
+   * Carga los datos de una cotización duplicada
+   */
+  private cargarCotizacionDuplicada(cotizacionData: any): void {
+    // Asignar los datos de la cotización duplicada
+    this.cotizacion = {
+      ...cotizacionData,
+      fecha: new Date().toISOString().split('T')[0],
+      estado: 'borrador',
+      estadoCotizacion: 'Borrador'
+    };
+
+    // Asignar el cliente
+    if (cotizacionData.cliente) {
+      this.cliente = cotizacionData.cliente;
+      this.clienteEncontrado = true;
+      
+      // Parchear el formulario de cliente
+      this.clienteForm.patchValue({
+        tipo_documento: cotizacionData.cliente.tipo_documento_comprador || 'CC-NIT',
+        documento: cotizacionData.cliente.documento || '',
+        nombres_completos: cotizacionData.cliente.nombres_completos || '',
+        numero_celular: cotizacionData.cliente.numero_celular_comprador || cotizacionData.cliente.numero_celular || '',
+        correo_electronico: cotizacionData.cliente.correo_electronico_comprador || cotizacionData.cliente.correo_electronico || '',
+        direccion: cotizacionData.cliente.direccion || '',
+        ciudad: cotizacionData.cliente.ciudad || '',
+        departamento: cotizacionData.cliente.departamento || '',
+        pais: cotizacionData.cliente.pais || 'Colombia'
+      });
+    }
+
+    // Asignar los items
+    if (cotizacionData.items && cotizacionData.items.length > 0) {
+      this.items = cotizacionData.items.map((item: any) => ({
+        ...item,
+        id: `item-${Date.now()}-${Math.random()}`
+      }));
+    }
+
+    // Parchear el formulario de cotización
+    this.cotizacionForm.patchValue({
+      validez: cotizacionData.validez || '30',
+      observaciones: cotizacionData.observaciones || '',
+      porcentajeDescuento: this.porcentajeDescuento
+    });
+
+    // Recalcular totales
+    this.calcularTotales();
+    
+    this.toastrService.success('Cotización duplicada cargada correctamente');
   }
 
   ngOnDestroy(): void {
@@ -263,10 +392,19 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private verificarModoEdicion(): void {
+  private async verificarModoEdicion(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.cargarCotizacion(id);
+      this.isEditing = true;
+      await this.cargarCotizacion(id);
+      
+      // Verificar si se debe generar PDF automáticamente
+      const action = this.route.snapshot.queryParamMap.get('action');
+      if (action === 'pdf') {
+        setTimeout(() => {
+          this.generarPDF();
+        }, 1000); // Esperar a que se cargue completamente
+      }
     }
   }
 
@@ -275,16 +413,23 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
       // Cargar solo las primeras páginas para empezar
       await this.cargarProductosPaginados(1);
       
-      // Cargar algunas páginas adicionales para tener más productos disponibles
-      if (this.totalPages > 1) {
-        const paginasACargar = Math.min(5, this.totalPages); // Cargar máximo 5 páginas
-        const promesas: Promise<void>[] = [];
-        
-        for (let page = 2; page <= paginasACargar; page++) {
-          promesas.push(this.cargarProductosPaginados(page));
+      // Si estamos en modo edición, cargar todos los productos para asegurar que 
+      // los productos de la cotización estén disponibles
+      if (this.isEditing) {
+        console.log('Modo edición detectado, cargando todos los productos...');
+        await this.cargarTodasLasPaginas();
+      } else {
+        // En modo creación, cargar algunas páginas adicionales para tener más productos disponibles
+        if (this.totalPages > 1) {
+          const paginasACargar = Math.min(5, this.totalPages); // Cargar máximo 5 páginas
+          const promesas: Promise<void>[] = [];
+          
+          for (let page = 2; page <= paginasACargar; page++) {
+            promesas.push(this.cargarProductosPaginados(page));
+          }
+          
+          await Promise.all(promesas);
         }
-        
-        await Promise.all(promesas);
       }
       
       // Ejecutar filtrado inicial
@@ -335,21 +480,34 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
 
   private async cargarTodasLasPaginas(): Promise<void> {
     try {
+      console.log(`Cargando todas las páginas (${this.totalPages} páginas)...`);
+      
+      // Cargar hasta 5 páginas simultáneamente para no sobrecargar el servidor
+      const batchSize = 5;
       const promesas: Promise<void>[] = [];
       
-      // Cargar hasta 10 páginas simultáneamente para no sobrecargar el servidor
-      for (let page = 2; page <= Math.min(this.totalPages, 10); page++) {
+      for (let page = 2; page <= Math.min(this.totalPages, batchSize + 1); page++) {
         promesas.push(this.cargarProductosPaginados(page));
       }
       
       await Promise.all(promesas);
       
-      // Si hay más de 10 páginas, cargar el resto secuencialmente
-      if (this.totalPages > 10) {
-        for (let page = 11; page <= this.totalPages; page++) {
-          await this.cargarProductosPaginados(page);
+      // Si hay más páginas, cargar el resto en lotes
+      if (this.totalPages > batchSize + 1) {
+        for (let startPage = batchSize + 2; startPage <= this.totalPages; startPage += batchSize) {
+          const endPage = Math.min(startPage + batchSize - 1, this.totalPages);
+          const batchPromesas: Promise<void>[] = [];
+          
+          for (let page = startPage; page <= endPage; page++) {
+            batchPromesas.push(this.cargarProductosPaginados(page));
+          }
+          
+          await Promise.all(batchPromesas);
+          console.log(`Cargado lote de páginas ${startPage}-${endPage}`);
         }
       }
+      
+      console.log(`✅ Todas las páginas cargadas. Total productos: ${this.productos.length}`);
     } catch (error) {
       console.error('Error cargando todas las páginas:', error);
       // No lanzar error para no interrumpir el flujo
@@ -758,16 +916,114 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
     try {
       this.isLoading = true;
       
-      this.cotizacion.numero = `COT-${Date.now()}`;
-      this.cotizacion.observaciones = this.cotizacionForm.get('observaciones')?.value;
-      this.cotizacion.validez = this.cotizacionForm.get('validez')?.value;
+      // Actualizar datos de la cotización antes de guardar
+      this.calcularTotales();
       
-      console.log('Cotización guardada:', this.cotizacion);
-      this.toastrService.success('Cotización guardada correctamente');
+      // Preparar datos según el formato de la API
+      const fechaVencimiento = new Date();
+      fechaVencimiento.setDate(fechaVencimiento.getDate() + (parseInt(this.cotizacionForm.get('validez')?.value) || 30));
+      
+      // Obtener datos del usuario y empresa desde sessionStorage
+      const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const empresaData = JSON.parse(sessionStorage.getItem('empresa') || '{}');
+      
+      const cotizacionData = {
+        cliente: {
+          correo_electronico_comprador: this.cliente.correo_electronico_comprador || this.cliente.correo_electronico || '',
+          nombres_completos: this.cliente.nombres_completos || '',
+          apellidos_completos: this.cliente.apellidos_completos || '',
+          documento: this.cliente.documento || '',
+          tipo_documento_comprador: this.cliente.tipo_documento_comprador || 'CC',
+          numero_celular_comprador: this.cliente.numero_celular_comprador || this.cliente.numero_celular || '',
+          indicativo_celular_comprador: this.cliente.indicativo_celular_comprador || '+57',
+          direccion: this.cliente.direccion || '',
+          ciudad: this.cliente.ciudad || '',
+          departamento: this.cliente.departamento || '',
+          pais: this.cliente.pais || 'Colombia'
+        },
+        items: this.items.map(item => ({
+          producto: item.producto,
+          cantidad: item.cantidad,
+          descuento: item.descuentoVolumen?.porcentaje || 0,
+          configuracion: item.producto.configuracion || null,
+          notaProduccion: []
+        })),
+        fechaVencimiento: fechaVencimiento.toISOString(),
+        validezDias: parseInt(this.cotizacionForm.get('validez')?.value) || 30,
+        formaDePago: 'Contado', // Por defecto, se puede hacer configurable
+        observaciones: this.cotizacionForm.get('observaciones')?.value || '',
+        asesorAsignado: userData.email ? {
+          email: userData.email,
+          name: userData.name || userData.nombres_completos || 'Asesor',
+          nit: empresaData.nit || ''
+        } : null
+      };
+      
+      console.log('Datos a enviar a la API:', cotizacionData);
+      
+      let response;
+      
+      // Determinar si es creación o edición
+      if (this.cotizacion.id && this.cotizacion.id !== `temp-${Date.now()}`) {
+        // Es una edición
+        const editData = {
+          id: this.cotizacion.id,
+          ...cotizacionData
+        };
+        response = await firstValueFrom(this.cotizacionesService.editarCotizacion(editData));
+        console.log('Cotización editada:', response);
+      } else {
+        // Es una creación
+        response = await firstValueFrom(this.cotizacionesService.crearCotizacion(cotizacionData));
+        console.log('Cotización creada:', response);
+      }
+      
+      if (response && response.success !== false) {
+        // Asignar el ID y número devuelto por el backend
+        if (response.data && response.data.id) {
+          this.cotizacion.id = response.data.id;
+          this.cotizacion.numero = response.data.nroCotizacion;
+        } else if (response.id) {
+          this.cotizacion.id = response.id;
+          this.cotizacion.numero = response.nroCotizacion;
+        } else if (!this.cotizacion.id) {
+          // Si no hay ID del backend, generar uno temporal
+          this.cotizacion.id = `temp-${Date.now()}`;
+          this.cotizacion.numero = `COT-${Date.now()}`;
+        }
+        
+        // Actualizar estado y otros campos
+        this.cotizacion.estado = 'borrador';
+        this.cotizacion.observaciones = cotizacionData.observaciones;
+        this.cotizacion.validez = cotizacionData.validezDias.toString();
+        this.cotizacion.cliente = this.cliente;
+        
+        console.log('Cotización guardada:', this.cotizacion);
+        
+        // Mostrar mensaje apropiado
+        const mensaje = this.route.snapshot.paramMap.get('id') ? 'Cotización actualizada correctamente' : 'Cotización guardada correctamente';
+        this.toastrService.success(mensaje);
+        
+        // Si es una nueva cotización, redirigir a edición para mantener el estado
+        if (!this.route.snapshot.paramMap.get('id') && this.cotizacion.id) {
+          this.router.navigate(['/cotizaciones/editar', this.cotizacion.id], { replaceUrl: true });
+        }
+        
+      } else {
+        throw new Error(response.message || 'Error al guardar la cotización');
+      }
       
     } catch (error) {
       console.error('Error guardando cotización:', error);
-      this.toastrService.error('Error al guardar la cotización');
+      
+      // En caso de error, asignar un ID temporal para permitir el envío por correo
+      if (!this.cotizacion.id) {
+        this.cotizacion.id = `temp-${Date.now()}`;
+        this.cotizacion.numero = `COT-${Date.now()}`;
+        this.toastrService.warning('Cotización guardada localmente. Algunas funciones pueden estar limitadas.');
+      } else {
+        this.toastrService.error('Error al guardar la cotización');
+      }
     } finally {
       this.isLoading = false;
     }
@@ -872,11 +1128,187 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
       this.isLoading = true;
       console.log('Cargando cotización:', id);
       
+      // Obtener la cotización desde el servicio
+      const response = await firstValueFrom(this.cotizacionesService.obtenerCotizacion(id));
+      
+      if (response && response.success !== false) {
+        const cotizacionData = response.data || response;
+        
+        console.log('Datos de cotización recibidos:', cotizacionData);
+        
+        // Mapear los datos de la cotización al objeto local
+        this.cotizacion = {
+          id: cotizacionData.id || cotizacionData._id,
+          nroCotizacion: cotizacionData.nroCotizacion || cotizacionData.numero,
+          numero: cotizacionData.nroCotizacion || cotizacionData.numero,
+          fechaCreacion: cotizacionData.fechaCreacion,
+          fechaVencimiento: cotizacionData.fechaVencimiento,
+          fecha: cotizacionData.fechaCreacion ? new Date(cotizacionData.fechaCreacion).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          company: cotizacionData.company,
+          cliente: cotizacionData.cliente,
+          items: cotizacionData.items || [],
+          estadoCotizacion: cotizacionData.estadoCotizacion,
+          estado: this.mapearEstadoAPI(cotizacionData.estadoCotizacion),
+          subtotal: cotizacionData.subtotal || 0,
+          totalImpuesto: cotizacionData.totalImpuesto || 0,
+          impuestos: cotizacionData.totalImpuesto || 0,
+          totalDescuento: cotizacionData.totalDescuento || 0,
+          descuento: cotizacionData.totalDescuento || 0,
+          total: cotizacionData.total || 0,
+          asesorAsignado: cotizacionData.asesorAsignado,
+          validezDias: cotizacionData.validezDias || 30,
+          validez: (cotizacionData.validezDias || 30).toString(),
+          observaciones: cotizacionData.observaciones || '',
+          convertidaAPedido: cotizacionData.convertidaAPedido || false,
+          pedidoGenerado: cotizacionData.pedidoGenerado,
+          date_edit: cotizacionData.date_edit,
+          user_edit: cotizacionData.user_edit
+        };
+        
+        // Asignar el cliente
+        if (cotizacionData.cliente) {
+          this.cliente = cotizacionData.cliente;
+          this.clienteEncontrado = true;
+          
+          // Parchear el formulario de cliente
+          this.clienteForm.patchValue({
+            tipo_documento: cotizacionData.cliente.tipo_documento_comprador || 'CC-NIT',
+            documento: cotizacionData.cliente.documento || '',
+            nombres_completos: cotizacionData.cliente.nombres_completos || '',
+            numero_celular: cotizacionData.cliente.numero_celular_comprador || cotizacionData.cliente.numero_celular || '',
+            correo_electronico: cotizacionData.cliente.correo_electronico_comprador || cotizacionData.cliente.correo_electronico || '',
+            direccion: cotizacionData.cliente.direccion || '',
+            ciudad: cotizacionData.cliente.ciudad || '',
+            departamento: cotizacionData.cliente.departamento || '',
+            pais: cotizacionData.cliente.pais || 'Colombia'
+          });
+        }
+        
+        // Asignar los items
+        if (cotizacionData.items && cotizacionData.items.length > 0) {
+          console.log('Procesando items de cotización:', cotizacionData.items.length);
+          console.log('Productos disponibles en catálogo:', this.productos.length);
+          
+          this.items = [];
+          
+          for (const item of cotizacionData.items) {
+            let producto = item.producto;
+            
+            // Si el producto no tiene todos los datos, buscarlo en el catálogo
+            if (!producto || !producto.precio || !producto.identificacion) {
+              const productoEncontrado = this.productos.find(p => 
+                p.identificacion?.referencia === item.producto?.identificacion?.referencia ||
+                p.identificacion?.codigoBarras === item.producto?.identificacion?.codigoBarras ||
+                p.cd === item.producto?.cd
+              );
+              
+              if (productoEncontrado) {
+                producto = productoEncontrado;
+                console.log('Producto encontrado en catálogo:', producto);
+              } else {
+                console.warn('Producto no encontrado en catálogo, buscando específicamente...');
+                // Buscar específicamente el producto
+                const referencia = item.producto?.identificacion?.referencia || item.producto?.cd;
+                if (referencia) {
+                  const productoBuscado = await this.buscarProductoEspecifico(referencia);
+                  if (productoBuscado) {
+                    producto = productoBuscado;
+                    console.log('Producto encontrado mediante búsqueda específica:', producto);
+                  } else {
+                    console.warn('Producto no encontrado ni en catálogo ni mediante búsqueda:', item.producto);
+                    // Usar los datos del item tal como vienen
+                    producto = item.producto;
+                  }
+                } else {
+                  console.warn('No se pudo obtener referencia del producto:', item.producto);
+                  // Usar los datos del item tal como vienen
+                  producto = item.producto;
+                }
+              }
+            }
+            
+            const precioBase = item.precio || producto?.precio?.valorUnitario || 0;
+            const itemCotizacion = {
+              id: item.id || `item-${Date.now()}-${Math.random()}`,
+              producto: producto,
+              cantidad: item.cantidad || 1,
+              precio: precioBase,
+              precioOriginal: precioBase,
+              subtotal: item.subtotal || (item.cantidad * precioBase),
+              descuentoVolumen: item.descuentoVolumen || null,
+              configuracion: item.configuracion || null,
+              notaProduccion: item.notaProduccion || []
+            };
+            
+            // Aplicar descuentos por volumen si existen
+            if (producto?.precio?.preciosVolumen?.length > 0) {
+              this.actualizarPrecioConVolumen(itemCotizacion);
+            }
+            
+            this.items.push(itemCotizacion);
+          }
+          
+          console.log('Items procesados:', this.items);
+        }
+        
+        // Parchear el formulario de cotización
+        this.cotizacionForm.patchValue({
+          validez: this.cotizacion.validez,
+          observaciones: this.cotizacion.observaciones || '',
+          porcentajeDescuento: this.porcentajeDescuento
+        });
+        
+        // Parchear el formulario de email si existe cliente
+        if (this.cliente && this.cliente.correo_electronico_comprador) {
+          this.emailForm.patchValue({
+            email: this.cliente.correo_electronico_comprador || this.cliente.correo_electronico || '',
+            asunto: `Cotización ${this.cotizacion.numero || 'N/A'} - Katuq`,
+            mensaje: `Estimado/a ${this.cliente.nombres_completos || 'cliente'},\n\nAdjunto encontrará la cotización ${this.cotizacion.numero || 'solicitada'}.\n\nGracias por su interés en nuestros productos.\n\nSaludos cordiales,\nEquipo Katuq`
+          });
+        }
+        
+        // Recalcular totales
+        this.calcularTotales();
+        
+        // Actualizar la vista
+        this.cdr.detectChanges();
+        
+        console.log('Cotización cargada exitosamente:', this.cotizacion);
+        this.toastrService.success('Cotización cargada correctamente');
+        
+      } else {
+        throw new Error(response.message || 'No se pudo cargar la cotización');
+      }
+      
     } catch (error) {
       console.error('Error cargando cotización:', error);
       this.toastrService.error('Error al cargar la cotización');
+      // Redirigir a la lista si hay error
+      this.router.navigate(['/cotizaciones/lista']);
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  /**
+   * Mapea el estado de la API al estado local para compatibilidad
+   */
+  private mapearEstadoAPI(estadoAPI: string): 'borrador' | 'enviada' | 'aceptada' | 'rechazada' | 'vencida' {
+    switch (estadoAPI) {
+      case 'Borrador':
+        return 'borrador';
+      case 'Enviada':
+        return 'enviada';
+      case 'Aprobada':
+        return 'aceptada';
+      case 'Rechazada':
+        return 'rechazada';
+      case 'Expirada':
+        return 'vencida';
+      case 'Convertida':
+        return 'aceptada'; // Tratamos las convertidas como aceptadas
+      default:
+        return 'borrador';
     }
   }
 
@@ -901,15 +1333,18 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Navega a crear una nueva cotización
+   */
+  public nuevaCotizacion(): void {
+    this.router.navigate(['/cotizaciones/crear']);
+  }
+
+  /**
    * Limpia por completo el estado del componente para asegurar que al entrar
    * nuevamente a la pantalla no queden datos residuales de sesiones previas.
    */
   private resetData(): void {
-    this.cliente = null;
-    this.clienteEncontrado = false;
-    this.bloqueado = false;
-
-    this.items = [];
+    // Limpiar datos de productos y categorías
     this.productos = [];
     this.productosFiltrados = [];
     this.categorias = [];
@@ -928,6 +1363,26 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
     this.currentViewPage = 1;
     this.totalViewPages = 0;
     this.productosPaginados = [];
+    
+    // Solo limpiar datos de cotización si no estamos editando
+    if (!this.isEditing) {
+      this.cliente = null;
+      this.clienteEncontrado = false;
+      this.bloqueado = false;
+      this.items = [];
+      this.cotizacion = {
+        fecha: new Date().toISOString().split('T')[0],
+        cliente: null,
+        items: [],
+        subtotal: 0,
+        impuestos: 0,
+        descuento: 0,
+        total: 0,
+        validez: '30',
+        estado: 'borrador'
+      };
+      this.calcularTotales();
+    }
 
     this.subtotal = 0;
     this.impuestos = 0;
@@ -981,25 +1436,63 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
   /**
    * Abre el modal para enviar cotización por correo
    */
-  abrirModalEnviarCorreo(content: any): void {
+  async abrirModalEnviarCorreo(content: any): Promise<void> {
+    // Si la cotización no tiene ID, intentar guardarla primero
     if (!this.cotizacion || !this.cotizacion.id) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Advertencia',
-        text: 'Debe guardar la cotización antes de enviarla por correo'
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Guardar cotización',
+        text: 'La cotización debe guardarse antes de enviarla por correo. ¿Desea guardarla ahora?',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#28a745'
       });
-      return;
+
+      if (result.isConfirmed) {
+        await this.guardarCotizacion();
+        
+        // Verificar si se guardó correctamente
+        if (!this.cotizacion.id) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo guardar la cotización. Inténtelo nuevamente.'
+          });
+          return;
+        }
+      } else {
+        return;
+      }
     }
 
     // Pre-llenar el email del cliente si existe
-    if (this.cotizacion.cliente?.email) {
+    const emailCliente = this.cotizacion.cliente?.correo_electronico_comprador || 
+                         this.cotizacion.cliente?.correo_electronico ||
+                         this.cliente?.correo_electronico_comprador ||
+                         this.cliente?.correo_electronico;
+    
+    if (emailCliente) {
       this.emailForm.patchValue({
-        email: this.cotizacion.cliente.email
+        email: emailCliente
+      });
+    } else {
+      // Mostrar advertencia si el cliente no tiene email
+      Swal.fire({
+        icon: 'warning',
+        title: 'Email no encontrado',
+        text: 'El cliente seleccionado no tiene un email registrado. Por favor, ingrese manualmente el email de destino.',
+        confirmButtonText: 'Entendido'
       });
     }
 
     // Pre-llenar el asunto con información de la cotización
-    const asuntoPersonalizado = `Cotización ${this.cotizacion.numero || ''} - ${this.cotizacion.cliente?.nombre || 'Cliente'}`;
+    const nombreCliente = this.cotizacion.cliente?.nombres_completos || 
+                          this.cliente?.nombres_completos ||
+                          this.cotizacion.cliente?.nombre ||
+                          'Cliente';
+    
+    const asuntoPersonalizado = `Cotización ${this.cotizacion.nroCotizacion || this.cotizacion.numero || ''} - ${nombreCliente}`;
     this.emailForm.patchValue({
       asunto: asuntoPersonalizado
     });
@@ -1072,5 +1565,32 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
       asunto: 'Cotización - Katuq',
       mensaje: 'Adjunto encontrará la cotización solicitada.\n\nGracias por su interés en nuestros productos.'
     });
+  }
+
+  /**
+   * Busca un producto específico por ID o referencia
+   */
+  private async buscarProductoEspecifico(referenciaProducto: string): Promise<any> {
+    try {
+      // Intentar buscar el producto por referencia en el servicio
+      const response: any = await firstValueFrom(
+        this.maestroService.getProductsBySearch(referenciaProducto, 10, 1)
+      );
+      
+      if (response && response.products && response.products.length > 0) {
+        // Buscar el producto que coincida exactamente con la referencia
+        const productoEncontrado = response.products.find((p: any) => 
+          p.identificacion?.referencia === referenciaProducto ||
+          p.cd === referenciaProducto
+        );
+        
+        return productoEncontrado || response.products[0];
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error buscando producto específico:', error);
+      return null;
+    }
   }
 }

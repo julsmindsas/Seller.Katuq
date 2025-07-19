@@ -1,7 +1,7 @@
 // Importaciones de Angular core
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 // Importaciones de modelos
@@ -14,7 +14,7 @@ import { environment } from '../../../environments/environment';
 export class CotizacionesService {
 
   // URL base de la API
-  private apiUrl = 'https://api.katuq.com'; // TODO: Configurar en environment
+  private apiUrl = environment.urlApi;
   
   // Headers HTTP por defecto
   private httpOptions = {
@@ -26,13 +26,39 @@ export class CotizacionesService {
   constructor(private http: HttpClient) { }
 
   /**
+ * Actualiza el estado de una cotización específica
+ */
+public actualizarEstadoCotizacion(idCotizacion: string, nuevoEstado: string): Observable<any> {
+  const url = `${this.apiUrl}/cotizaciones/${idCotizacion}/estado`;
+  
+  const datos = {
+    estadoCotizacion: nuevoEstado,
+    fechaActualizacion: new Date().toISOString()
+  };
+  
+  return this.http.put<any>(url, datos).pipe(
+    catchError(this.handleError<any>('actualizarEstadoCotizacion', { success: false, message: 'Error al actualizar estado' }))
+  );
+}
+
+  /**
    * Obtiene todas las cotizaciones de la empresa
    */
-  public obtenerCotizaciones(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/cotizaciones`, this.httpOptions)
+  public obtenerCotizaciones(page: number = 1, limit: number = 10, estado?: string, asesor?: string): Observable<any> {
+    let url = `${this.apiUrl}/v1/cotizaciones/all?page=${page}&limit=${limit}`;
+    
+    if (estado) {
+      url += `&estado=${estado}`;
+    }
+    
+    if (asesor) {
+      url += `&asesor=${asesor}`;
+    }
+    
+    return this.http.get(url, this.httpOptions)
       .pipe(
         map((response: any) => response),
-        catchError(this.handleError<any>('obtenerCotizaciones', { cotizaciones: [] }))
+        catchError(this.handleError<any>('obtenerCotizaciones', { success: false, data: [], pagination: null }))
       );
   }
 
@@ -40,32 +66,53 @@ export class CotizacionesService {
    * Obtiene una cotización por ID
    */
   public obtenerCotizacion(id: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/cotizaciones/${id}`, this.httpOptions)
+    return this.http.get(`${this.apiUrl}/v1/cotizaciones/${id}`, this.httpOptions)
       .pipe(
         map((response: any) => response),
-        catchError(this.handleError<any>('obtenerCotizacion', { cotizacion: null }))
+        catchError(this.handleError<any>('obtenerCotizacion', { success: false, data: null }))
+      );
+  }
+
+  /**
+   * Obtiene una cotización por número
+   */
+  public obtenerCotizacionPorNumero(numero: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/v1/cotizaciones/number/${numero}`, this.httpOptions)
+      .pipe(
+        map((response: any) => response),
+        catchError(this.handleError<any>('obtenerCotizacionPorNumero', { success: false, data: null }))
       );
   }
 
   /**
    * Crea una nueva cotización
    */
-  public crearCotizacion(cotizacion: Cotizacion): Observable<any> {
-    return this.http.post(`${this.apiUrl}/cotizaciones`, cotizacion, this.httpOptions)
+  public crearCotizacion(cotizacionData: any): Observable<any> {
+    const payload = {
+      cliente: cotizacionData.cliente,
+      items: cotizacionData.items,
+      fechaVencimiento: cotizacionData.fechaVencimiento,
+      validezDias: cotizacionData.validezDias || 30,
+      formaDePago: cotizacionData.formaDePago || 'Contado',
+      observaciones: cotizacionData.observaciones || '',
+      asesorAsignado: cotizacionData.asesorAsignado || null
+    };
+
+    return this.http.post(`${this.apiUrl}/v1/cotizaciones/create`, payload, this.httpOptions)
       .pipe(
         map((response: any) => response),
-        catchError(this.handleError<any>('crearCotizacion', { cotizacion: null }))
+        catchError(this.handleError<any>('crearCotizacion', { success: false, message: 'Error al crear cotización' }))
       );
   }
 
   /**
-   * Actualiza una cotización existente
+   * Edita una cotización existente
    */
-  public actualizarCotizacion(id: string, cotizacion: Cotizacion): Observable<any> {
-    return this.http.put(`${this.apiUrl}/cotizaciones/${id}`, cotizacion, this.httpOptions)
+  public editarCotizacion(cotizacionData: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/v1/cotizaciones/edit`, cotizacionData, this.httpOptions)
       .pipe(
         map((response: any) => response),
-        catchError(this.handleError<any>('actualizarCotizacion', { cotizacion: null }))
+        catchError(this.handleError<any>('editarCotizacion', { success: false, message: 'Error al editar cotización' }))
       );
   }
 
@@ -73,31 +120,44 @@ export class CotizacionesService {
    * Elimina una cotización
    */
   public eliminarCotizacion(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/cotizaciones/${id}`, this.httpOptions)
+    return this.http.delete(`${this.apiUrl}/v1/cotizaciones/delete?id=${id}`, this.httpOptions)
       .pipe(
         map((response: any) => response),
-        catchError(this.handleError<any>('eliminarCotizacion', { success: false }))
+        catchError(this.handleError<any>('eliminarCotizacion', { success: false, message: 'Error al eliminar cotización' }))
       );
   }
 
   /**
-   * Cambia el estado de una cotización
+   * Filtrado avanzado de cotizaciones
    */
-  public cambiarEstadoCotizacion(id: string, estado: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/cotizaciones/${id}/estado`, { estado }, this.httpOptions)
+  public filtrarCotizaciones(filtros: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/v1/cotizaciones/filter`, filtros, this.httpOptions)
       .pipe(
         map((response: any) => response),
-        catchError(this.handleError<any>('cambiarEstadoCotizacion', { success: false }))
+        catchError(this.handleError<any>('filtrarCotizaciones', { success: false, data: [] }))
       );
   }
 
   /**
-   * Genera el PDF de una cotización
+   * Convierte una cotización a pedido
    */
-  public generarPDFCotizacion(id: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/cotizaciones/${id}/pdf`, { responseType: 'blob' })
+  public convertirCotizacionAPedido(cotizacionId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/v1/cotizaciones/convertir-pedido`, { cotizacionId }, this.httpOptions)
       .pipe(
-        catchError(this.handleError<any>('generarPDFCotizacion', null))
+        map((response: any) => response),
+        catchError(this.handleError<any>('convertirCotizacionAPedido', { success: false, message: 'Error al convertir cotización' }))
+      );
+  }
+
+  /**
+   * Obtiene estadísticas de cotizaciones
+   */
+  public obtenerEstadisticas(fechaInicio: string, fechaFin: string): Observable<any> {
+    const url = `${this.apiUrl}/v1/cotizaciones/estadisticas/resumen?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`;
+    return this.http.get(url, this.httpOptions)
+      .pipe(
+        map((response: any) => response),
+        catchError(this.handleError<any>('obtenerEstadisticas', { success: false, data: null }))
       );
   }
 
@@ -105,176 +165,22 @@ export class CotizacionesService {
    * Envía una cotización por email
    */
   public enviarCotizacionEmail(id: string, email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/cotizaciones/${id}/enviar`, { email }, this.httpOptions)
+    return this.http.post(`${this.apiUrl}/v1/cotizaciones/${id}/enviar`, { email }, this.httpOptions)
       .pipe(
         map((response: any) => response),
-        catchError(this.handleError<any>('enviarCotizacionEmail', { success: false }))
+        catchError(this.handleError<any>('enviarCotizacionEmail', { success: false, message: 'Error al enviar cotización' }))
       );
   }
 
   /**
-   * Duplica una cotización existente
-   */
-  public duplicarCotizacion(id: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/cotizaciones/${id}/duplicar`, {}, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('duplicarCotizacion', { cotizacion: null }))
-      );
-  }
-
-  /**
-   * Convierte una cotización en pedido
-   */
-  public convertirCotizacionEnPedido(id: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/cotizaciones/${id}/convertir-pedido`, {}, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('convertirCotizacionEnPedido', { pedido: null }))
-      );
-  }
-
-  /**
-   * Obtiene estadísticas de cotizaciones
-   */
-  public obtenerEstadisticasCotizaciones(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/cotizaciones/estadisticas`, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('obtenerEstadisticasCotizaciones', { estadisticas: {} }))
-      );
-  }
-
-  /**
-   * Busca cotizaciones por filtros
-   */
-  public buscarCotizaciones(filtros: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/cotizaciones/buscar`, filtros, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('buscarCotizaciones', { cotizaciones: [] }))
-      );
-  }
-
-  /**
-   * Obtiene el historial de una cotización
-   */
-  public obtenerHistorialCotizacion(id: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/cotizaciones/${id}/historial`, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('obtenerHistorialCotizacion', { historial: [] }))
-      );
-  }
-
-  /**
-   * Valida una cotización antes de guardar
-   */
-  public validarCotizacion(cotizacion: Cotizacion): Observable<any> {
-    return this.http.post(`${this.apiUrl}/cotizaciones/validar`, cotizacion, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('validarCotizacion', { valid: false, errors: [] }))
-      );
-  }
-
-  /**
-   * Obtiene plantillas de cotizaciones
-   */
-  public obtenerPlantillasCotizaciones(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/cotizaciones/plantillas`, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('obtenerPlantillasCotizaciones', { plantillas: [] }))
-      );
-  }
-
-  /**
-   * Genera un número de cotización único
-   */
-  public generarNumeroCotizacion(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/cotizaciones/generar-numero`, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('generarNumeroCotizacion', { numero: 'COT-' + Date.now() }))
-      );
-  }
-
-  /**
-   * Maneja errores de las operaciones HTTP
+   * Maneja errores HTTP
    */
   private handleError<T>(operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
-      console.error(`${operation} failed: ${error.message}`);
+      console.error(`${operation} failed:`, error);
       
-      // Registrar el error en el servicio de logging si existe
-      this.log(`${operation} failed: ${error.message}`);
-      
-      // Retornar un resultado vacío para que la aplicación siga funcionando
+      // Retornar un resultado por defecto para que la aplicación siga funcionando
       return of(result as T);
     };
-  }
-
-  /**
-   * Registra mensajes en la consola
-   */
-  private log(message: string): void {
-    console.log(`CotizacionesService: ${message}`);
-  }
-
-  /**
-   * Obtiene configuración de cotizaciones
-   */
-  public obtenerConfiguracionCotizaciones(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/configuracion/cotizaciones`, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('obtenerConfiguracionCotizaciones', { 
-          configuracion: {
-            validezDefecto: 30,
-            impuestoDefecto: 19,
-            moneda: 'COP',
-            formatoNumero: 'COT-{YYYY}-{MM}-{####}'
-          }
-        }))
-      );
-  }
-
-  /**
-   * Actualiza configuración de cotizaciones
-   */
-  public actualizarConfiguracionCotizaciones(configuracion: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/configuracion/cotizaciones`, configuracion, this.httpOptions)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('actualizarConfiguracionCotizaciones', { success: false }))
-      );
-  }
-
-  /**
-   * Exporta cotizaciones a Excel
-   */
-  public exportarCotizacionesExcel(filtros?: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/cotizaciones/exportar/excel`, filtros || {}, { 
-      responseType: 'blob',
-      headers: this.httpOptions.headers
-    })
-      .pipe(
-        catchError(this.handleError<any>('exportarCotizacionesExcel', null))
-      );
-  }
-
-  /**
-   * Importa cotizaciones desde Excel
-   */
-  public importarCotizacionesExcel(archivo: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('archivo', archivo);
-    
-    return this.http.post(`${this.apiUrl}/cotizaciones/importar/excel`, formData)
-      .pipe(
-        map((response: any) => response),
-        catchError(this.handleError<any>('importarCotizacionesExcel', { success: false, errores: [] }))
-      );
   }
 } 

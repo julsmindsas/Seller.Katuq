@@ -5,10 +5,49 @@ $primary-color: #007bff;
 $success-color: #28a745;
 $danger-color: #dc3545;
 $info-color: #17a2b8;
+$warning-color: #ffc107;
+$secondary-color: #6c757d;
 $light-color: #f8f9fa;
 $dark-color: #343a40;
 $border-color: #dee2e6;
 $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+// Estilos para badges de estado
+.badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  
+  &.badge-secondary {
+    background-color: $secondary-color;
+    color: white;
+  }
+  
+  &.badge-info {
+    background-color: $info-color;
+    color: white;
+  }
+  
+  &.badge-success {
+    background-color: $success-color;
+    color: white;
+  }
+  
+  &.badge-danger {
+    background-color: $danger-color;
+    color: white;
+  }
+  
+  &.badge-warning {
+    background-color: $warning-color;
+    color: #212529;
+  }
+  
+  &.badge-primary {
+    background-color: $primary-color;
+    color: white;
+  }
+}
 
 // Contenedor principal
 .cotizaciones-container {
