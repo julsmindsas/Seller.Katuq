@@ -265,6 +265,9 @@ export class CrearEmpresaComponent implements OnInit {
       planPago: ["Mensual", Validators.required],
       nombrePlan: ["Freemium", Validators.required],
       timeRestToExpirePlan: [0, Validators.required],
+      // Configuración App Mensajeros
+      telefonoSoporte: ['', Validators.required],
+      whatsappSoporte: ['', Validators.required],
     });
 
     this.ciudadess = this.fb.group({

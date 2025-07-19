@@ -985,6 +985,56 @@
                                 </div>
 
                             </p-tabPanel>
+                            <p-tabPanel header="Configuración App Mensajeros">
+                                <div class="messenger-config">
+                                    <div class="row">
+                                    <h5>Configuración App Mensajeros</h5>
+                                    <p class="text-muted">Configura los números de contacto para soporte técnico a los mensajeros que utilicen la aplicación</p>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="telefonoSoporte">
+                                            <i class="icofont icofont-phone me-2"></i>
+                                            Teléfono de Soporte
+                                        </label>
+                                        <input 
+                                            formControlName="telefonoSoporte" 
+                                            class="form-control" 
+                                            id="telefonoSoporte"
+                                            type="tel" 
+                                            placeholder="Ej: +57 300 123 4567"
+                                            required="">
+                                        <div class="form-text">
+                                            Número de teléfono para soporte técnico a mensajeros
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="whatsappSoporte">
+                                            <i class="icofont icofont-whatsapp me-2"></i>
+                                            WhatsApp de Soporte
+                                        </label>
+                                        <input 
+                                            formControlName="whatsappSoporte" 
+                                            class="form-control" 
+                                            id="whatsappSoporte"
+                                            type="tel" 
+                                            placeholder="Ej: +57 300 123 4567"
+                                            required="">
+                                        <div class="form-text">
+                                            Número de WhatsApp para soporte técnico a mensajeros
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <i class="icofont icofont-info-circle me-2"></i>
+                                            <strong>Información:</strong> Estos números serán utilizados en la aplicación de mensajeros para que los mensajeros puedan contactar al soporte técnico en caso de problemas con la aplicación, consultas sobre entregas o asistencia técnica.
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </p-tabPanel>
                             <hr class="divider my-3" />
                             <div class="row">
                                 <div class="col-sm-3">
