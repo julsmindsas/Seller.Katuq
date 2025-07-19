@@ -556,9 +556,80 @@ export class PaymentService extends BaseService {
     }
   }
 
+  // Sistema de estilos moderno para emails
+  private getEmailStyles() {
+    return {
+      colors: {
+        primary: '#2563eb',
+        primaryLight: '#3b82f6',
+        secondary: '#7c3aed',
+        success: '#10b981',
+        warning: '#f59e0b',
+        danger: '#ef4444',
+        info: '#06b6d4',
+        white: '#ffffff',
+        black: '#000000',
+        gray50: '#f9fafb',
+        gray100: '#f3f4f6',
+        gray200: '#e5e7eb',
+        gray300: '#d1d5db',
+        gray400: '#9ca3af',
+        gray500: '#6b7280',
+        gray600: '#4b5563',
+        gray700: '#374151',
+        gray800: '#1f2937',
+        gray900: '#111827',
+        text: '#1f2937',
+        textMuted: '#6b7280',
+        border: '#e5e7eb',
+        borderLight: '#f3f4f6',
+        background: '#f9fafb'
+      },
+      typography: {
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        heading1: '16px',
+        heading2: '14px',
+        heading3: '13px',
+        heading4: '12px',
+        heading5: '11px',
+        body: '11px',
+        bodySmall: '10px',
+        caption: '9px',
+        light: '300',
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700'
+      },
+      spacing: {
+        xs: '2px',
+        sm: '3px',
+        md: '4px',
+        lg: '6px',
+        xl: '8px',
+        xxl: '10px',
+        xxxl: '12px'
+      },
+      borderRadius: {
+        sm: '4px',
+        md: '6px',
+        lg: '8px',
+        xl: '12px'
+      },
+      shadows: {
+        sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+      }
+    };
+  }
+
   // Método principal para generar el HTML del correo/comanda
   getHtmlContent(pedido: Pedido, isComanda: boolean = false): SafeHtml | null {
     if (!pedido) return null;
+
+    // Cargar sistema de estilos moderno
+    const styles = this.getEmailStyles();
 
     // Asegurarse que los maestros estén cargados
     if (!this.maestros || Object.keys(this.maestros).length === 0) {
@@ -885,61 +956,81 @@ export class PaymentService extends BaseService {
     const linkReferenciaPedido = `<a href="${window.location.origin}/ventas/pedidos?nroPedido=${pedido.nroPedido ?? ""}" style="text-decoration: none; color: #007bff;"><p>Referencia del Pedido: ${pedido.nroPedido ?? "N/A"}</p></a>`;
 
     // Reconstruir secciones con validaciones internas y usando las variables HTML generadas
-    const htmlDatosCliente = !isComanda
+    // Cards individuales modernizadas para el layout de dos columnas
+    const htmlDatosClienteModerno = !isComanda
       ? `
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-      <h2 style="color: #444; margin-bottom: 10px;">Datos del Cliente</h2>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Tipo Documento: ${pedido?.cliente?.tipo_documento_comprador ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Documento: ${pedido?.cliente?.documento ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Nombres: ${pedido?.cliente?.nombres_completos ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Apellidos: ${pedido?.cliente?.apellidos_completos ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Celular: (${pedido?.cliente?.indicativo_celular_comprador ?? ""}) ${pedido?.cliente?.numero_celular_comprador ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Whatsapp: (${pedido?.cliente?.indicativo_celular_whatsapp ?? ""}) ${pedido?.cliente?.numero_celular_whatsapp ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Estado: ${pedido?.cliente?.estado ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Correo: ${pedido?.cliente?.correo_electronico_comprador ?? "N/A"}</p>
-    </div>`
+                  <div class="info-card modern-card">
+                    <div class="card-header modern-header">
+                      <div class="card-icon modern-icon">👤</div>
+                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos del Cliente</h2>
+                    </div>
+                    <div style="padding: ${styles.spacing.sm} 0;">
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Tipo Documento:</strong> ${pedido?.cliente?.tipo_documento_comprador ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Documento:</strong> ${pedido?.cliente?.documento ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Nombres:</strong> ${pedido?.cliente?.nombres_completos ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Apellidos:</strong> ${pedido?.cliente?.apellidos_completos ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Celular:</strong> (${pedido?.cliente?.indicativo_celular_comprador ?? ""}) ${pedido?.cliente?.numero_celular_comprador ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">WhatsApp:</strong> (${pedido?.cliente?.indicativo_celular_whatsapp ?? ""}) ${pedido?.cliente?.numero_celular_whatsapp ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Estado:</strong> ${pedido?.cliente?.estado ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Correo:</strong> ${pedido?.cliente?.correo_electronico_comprador ?? "N/A"}</p>
+                    </div>
+                  </div>`
       : "";
 
-    const htmlFacturacion =
+    const htmlFacturacionModerno =
       !isComanda && pedido?.facturacion
         ? `
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #444; margin-bottom: 10px;">Datos de Facturación Electrónica</h2>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Nombres: ${pedido.facturacion.nombres ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Tipo Documento: ${pedido.facturacion.tipoDocumento ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Documento: ${pedido.facturacion.documento ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">País: ${pedido.facturacion.pais ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Departamento: ${pedido.facturacion.departamento ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Ciudad: ${pedido.facturacion.ciudad ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Código Postal: ${pedido.facturacion.codigoPostal ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Celular: (${pedido.facturacion.indicativoCel ?? ""}) ${pedido.facturacion.celular ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Dirección: ${pedido.facturacion.direccion ?? "N/A"}</p>
-        <p style="font-size: 14px; margin: 5px 0 5px 20px;">Alias: ${pedido.facturacion.alias ?? "N/A"}</p>
-    </div>`
+                  <div class="info-card modern-card">
+                    <div class="card-header modern-header">
+                      <div class="card-icon modern-icon">🧾</div>
+                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos de Facturación Electrónica</h2>
+                    </div>
+                    <div style="padding: ${styles.spacing.sm} 0;">
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Nombres:</strong> ${pedido.facturacion.nombres ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Tipo Documento:</strong> ${pedido.facturacion.tipoDocumento ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Documento:</strong> ${pedido.facturacion.documento ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">País:</strong> ${pedido.facturacion.pais ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Departamento:</strong> ${pedido.facturacion.departamento ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Ciudad:</strong> ${pedido.facturacion.ciudad ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Código Postal:</strong> ${pedido.facturacion.codigoPostal ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Celular:</strong> (${pedido.facturacion.indicativoCel ?? ""}) ${pedido.facturacion.celular ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Dirección:</strong> ${pedido.facturacion.direccion ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Alias:</strong> ${pedido.facturacion.alias ?? "N/A"}</p>
+                    </div>
+                  </div>`
         : "";
 
-    const htmlEnvio =
+    const htmlEnvioModerno =
       !isComanda &&
       (!pedido?.formaEntrega ||
         pedido.formaEntrega.trim().toLowerCase() !== "recoge") &&
       pedido?.envio
         ? `
-    <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-      <h2 style="color: #444; margin-bottom: 10px;">Datos de Envío</h2>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Nombres: ${pedido.envio.nombres ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Apellidos: ${pedido.envio.apellidos ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Alias: ${pedido.envio.alias ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Dirección: ${pedido.envio.direccionEntrega ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Unidad/Apto: ${pedido.envio.nombreUnidad ?? ""}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Especificaciones: ${pedido.envio.especificacionesInternas ?? ""}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Departamento: ${pedido.envio.departamento ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Ciudad: ${pedido.envio.ciudad ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Barrio: ${pedido.envio.barrio ?? ""}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Código Postal: ${pedido.envio.codigoPV ?? ""}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Celular: (${pedido.envio.indicativoCel ?? ""}) ${pedido.envio.celular ?? "N/A"}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Otro Número: (${pedido.envio.indicativoOtroNumero ?? ""}) ${pedido.envio.otroNumero ?? ""}</p>
-      <p style="font-size: 14px; margin: 5px 0 5px 20px;">Zona Cobro: ${pedido.envio.zonaCobro ?? "N/A"}</p>
-    </div>`
+          <div class="info-card modern-card">
+            <div class="card-header modern-header">
+              <div class="card-icon modern-icon">📦</div>
+              <h2 style="margin: 0; color: ${styles.colors.text};">Datos de Envío</h2>
+            </div>
+            <div style="padding: ${styles.spacing.sm} 0; display: grid; grid-template-columns: 1fr 1fr; gap: ${styles.spacing.md}; align-items: start;">
+              <div>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Nombres:</strong> ${pedido.envio.nombres ?? "N/A"}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Apellidos:</strong> ${pedido.envio.apellidos ?? "N/A"}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Alias:</strong> ${pedido.envio.alias ?? "N/A"}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Dirección:</strong> ${pedido.envio.direccionEntrega ?? "N/A"}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Unidad/Apto:</strong> ${pedido.envio.nombreUnidad ?? ""}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Especificaciones:</strong> ${pedido.envio.especificacionesInternas ?? ""}</p>
+              </div>
+              <div>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Departamento:</strong> ${pedido.envio.departamento ?? "N/A"}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Ciudad:</strong> ${pedido.envio.ciudad ?? "N/A"}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Barrio:</strong> ${pedido.envio.barrio ?? ""}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Código Postal:</strong> ${pedido.envio.codigoPV ?? ""}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Celular:</strong> (${pedido.envio.indicativoCel ?? ""}) ${pedido.envio.celular ?? "N/A"}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Otro Número:</strong> (${pedido.envio.indicativoOtroNumero ?? ""}) ${pedido.envio.otroNumero ?? ""}</p>
+                <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Zona Cobro:</strong> ${pedido.envio.zonaCobro ?? "N/A"}</p>
+              </div>
+            </div>
+          </div>`
         : "";
 
     const htmlNotasProduccion = notasProduccionHtml
@@ -1092,29 +1183,389 @@ export class PaymentService extends BaseService {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Detalle Pedido ${pedido.nroPedido ?? ""}</title>
       <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        .container { width: 90%; max-width: 800px; margin: 20px auto; background-color: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .header, .footer, .ad { text-align: center; padding: 10px 0; }
-        .header img, .footer img, .ad img { max-width: 100%; height: auto; }
-        .content { padding: 20px; }
-        h1 { font-size: 1.5em; color: #333; text-align: center; }
-        h2 { color: #444; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 1.2em; }
-        p { font-size: 14px; margin: 5px 0 10px 0; line-height: 1.5; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .total-row th, .total-row td { font-size: 16px; font-weight: bold; }
-        .button-link { display: inline-block; background-color: #007bff; color: #ffffff; padding: 10px 15px; margin: 5px; border-radius: 5px; text-decoration: none; font-size: 14px; text-align: center; }
-        .button-table td { border: none; padding: 5px; }
-        .button-table { margin-top: 20px; }
+        body { 
+          font-family: ${styles.typography.fontFamily}; 
+          margin: 0; 
+          padding: 0; 
+          background-color: ${styles.colors.background}; 
+          line-height: 1.6;
+          color: ${styles.colors.text};
+        }
+        .container { 
+          width: 90%; 
+          max-width: 900px; 
+          margin: ${styles.spacing.xl} auto; 
+          background-color: ${styles.colors.white}; 
+          border-radius: ${styles.borderRadius.lg};
+          box-shadow: ${styles.shadows.lg}; 
+          overflow: hidden;
+        }
+        .header, .footer, .ad { 
+          text-align: center; 
+          padding: ${styles.spacing.lg} 0; 
+        }
+        .header img, .footer img, .ad img { 
+          max-width: 100%; 
+          height: auto; 
+          border-radius: ${styles.borderRadius.md};
+        }
+        .content { 
+          padding: ${styles.spacing.lg}; 
+        }
+        .hero-section {
+          background: linear-gradient(135deg, ${styles.colors.primary} 0%, ${styles.colors.primaryLight} 50%, ${styles.colors.secondary} 100%);
+          color: ${styles.colors.white};
+          padding: ${styles.spacing.xl};
+          text-align: center;
+          margin-bottom: ${styles.spacing.lg};
+          box-shadow: 0 8px 32px rgba(37, 99, 235, 0.2), 0 4px 16px rgba(124, 58, 237, 0.15);
+          position: relative;
+          overflow: hidden;
+        }
+        .hero-section::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+          pointer-events: none;
+        }
+        .hero-title {
+          font-size: ${styles.typography.heading1}; 
+          font-weight: ${styles.typography.bold};
+          margin: 0 0 ${styles.spacing.sm} 0;
+        }
+        .hero-subtitle {
+          font-size: ${styles.typography.bodySmall};
+          margin: 0;
+          opacity: 0.9;
+        }
+        h1 { 
+          font-size: ${styles.typography.heading1}; 
+          color: ${styles.colors.text}; 
+          text-align: center; 
+          font-weight: ${styles.typography.bold};
+          margin: 0 0 ${styles.spacing.xl} 0;
+        }
+        h2 { 
+          color: ${styles.colors.text}; 
+          margin-bottom: ${styles.spacing.md}; 
+          border-bottom: 1px solid ${styles.colors.border}; 
+          padding-bottom: ${styles.spacing.xs}; 
+          font-size: ${styles.typography.heading3};
+          font-weight: ${styles.typography.semibold};
+        }
+        .section-divider {
+          border: none;
+          height: 1px;
+          background: ${styles.colors.border};
+          margin: ${styles.spacing.lg} 0;
+        }
+        p { 
+          font-size: ${styles.typography.body}; 
+          margin: ${styles.spacing.sm} 0 ${styles.spacing.md} 0; 
+          line-height: 1.6; 
+          color: ${styles.colors.text};
+        }
+        table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-bottom: ${styles.spacing.xl}; 
+          font-size: ${styles.typography.bodySmall}; 
+          border-radius: ${styles.borderRadius.md};
+          overflow: hidden;
+          box-shadow: ${styles.shadows.sm};
+        }
+        th, td { 
+          border: 1px solid ${styles.colors.border}; 
+          padding: ${styles.spacing.md}; 
+          text-align: left; 
+          vertical-align: top; 
+        }
+        th { 
+          background: linear-gradient(135deg, ${styles.colors.gray100} 0%, ${styles.colors.gray200} 100%); 
+          font-weight: ${styles.typography.semibold}; 
+          color: ${styles.colors.text};
+          font-size: ${styles.typography.bodySmall};
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          border-left: 3px solid transparent;
+          position: relative;
+        }
+        th:first-child {
+          border-left: 3px solid ${styles.colors.primary};
+        }
+        .total-row th, .total-row td { 
+          font-size: ${styles.typography.body}; 
+          font-weight: ${styles.typography.bold}; 
+          background-color: ${styles.colors.gray50};
+        }
+        .button-link { 
+          display: inline-block; 
+          background: ${styles.colors.white};
+          color: ${styles.colors.text}; 
+          padding: ${styles.spacing.sm} ${styles.spacing.md}; 
+          margin: ${styles.spacing.xs}; 
+          border: 1px solid ${styles.colors.border};
+          border-radius: ${styles.borderRadius.sm}; 
+          text-decoration: none; 
+          font-size: ${styles.typography.bodySmall}; 
+          text-align: center; 
+          font-weight: ${styles.typography.normal};
+        }
+        .button-table td { 
+          border: none; 
+          padding: ${styles.spacing.sm}; 
+        }
+        .button-table { 
+          margin-top: ${styles.spacing.xl}; 
+        }
+        .info-card {
+          background: linear-gradient(145deg, ${styles.colors.white} 0%, ${styles.colors.gray50} 100%);
+          border-radius: ${styles.borderRadius.lg};
+          padding: ${styles.spacing.lg};
+          margin-bottom: ${styles.spacing.lg};
+          border: 1px solid ${styles.colors.borderLight};
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .info-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .modern-card {
+          background: linear-gradient(145deg, ${styles.colors.white} 0%, ${styles.colors.gray50} 100%);
+          box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          position: relative;
+          overflow: hidden;
+        }
+        .modern-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, ${styles.colors.primary} 0%, ${styles.colors.secondary} 50%, ${styles.colors.primaryLight} 100%);
+        }
+        .card-header {
+          margin-bottom: ${styles.spacing.md};
+          padding-bottom: ${styles.spacing.sm};
+          border-bottom: 1px solid ${styles.colors.borderLight};
+          position: relative;
+        }
+        .card-header::after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          left: 0;
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(90deg, ${styles.colors.primary} 0%, ${styles.colors.secondary} 100%);
+          border-radius: 1px;
+        }
+        .modern-header {
+          display: flex;
+          align-items: center;
+          padding: ${styles.spacing.xs} 0;
+        }
+        .modern-header h2 {
+          margin: 0;
+          background: linear-gradient(135deg, ${styles.colors.text} 0%, ${styles.colors.gray600} 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          font-weight: ${styles.typography.semibold};
+        }
+        .card-icon {
+          width: 24px;
+          height: 24px;
+          background: linear-gradient(135deg, ${styles.colors.primary} 0%, ${styles.colors.primaryLight} 100%);
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: ${styles.spacing.sm};
+          font-size: 12px;
+          box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+        .modern-icon {
+          width: 28px;
+          height: 28px;
+          background: linear-gradient(135deg, ${styles.colors.primary} 0%, ${styles.colors.secondary} 100%);
+          color: ${styles.colors.white};
+          font-size: 14px;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3), 0 2px 6px rgba(124, 58, 237, 0.2);
+          position: relative;
+        }
+        .modern-icon::after {
+          content: '';
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          right: 2px;
+          bottom: 2px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+        .two-column-container {
+          margin-bottom: ${styles.spacing.lg};
+        }
         @media (max-width: 600px) {
-          .container { width: 100%; margin: 0; }
-          .content { padding: 10px; }
-          h1 { font-size: 1.3em; }
-          h2 { font-size: 1.1em; }
-          p, table, th, td { font-size: 12px; }
-          .button-link { display: block; width: calc(100% - 30px); }
-          .button-table td { display: block; width: 100%; box-sizing: border-box; }
+          .container { 
+            width: 95%; 
+            margin: ${styles.spacing.md} auto; 
+            border-radius: ${styles.borderRadius.md};
+          }
+          .content { 
+            padding: ${styles.spacing.lg}; 
+          }
+          .hero-section {
+            padding: ${styles.spacing.xl};
+            margin: -${styles.spacing.lg} -${styles.spacing.lg} ${styles.spacing.xl} -${styles.spacing.lg};
+          }
+          .hero-title { 
+            font-size: ${styles.typography.heading3}; 
+          }
+          h1 { 
+            font-size: ${styles.typography.heading3}; 
+          }
+          h2 { 
+            font-size: ${styles.typography.heading4}; 
+          }
+          p, table, th, td { 
+            font-size: ${styles.typography.caption}; 
+          }
+          .button-link { 
+            display: block; 
+            width: calc(100% - ${styles.spacing.xl}); 
+            margin: ${styles.spacing.sm} 0;
+          }
+          .button-table td { 
+            display: block; 
+            width: 100%; 
+            box-sizing: border-box; 
+          }
+          .info-card {
+            padding: ${styles.spacing.md};
+            margin-bottom: ${styles.spacing.md};
+          }
+          .two-column-container table {
+            display: block !important;
+          }
+          .two-column-container td {
+            display: block !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin-bottom: ${styles.spacing.md};
+          }
+          /* Hacer que el grid del envío también sea responsive */
+          .info-card div[style*="grid-template-columns"] {
+            display: block !important;
+          }
+          .info-card div[style*="grid-template-columns"] > div {
+            margin-bottom: ${styles.spacing.sm};
+          }
+        }
+        
+        /* Media query específica para impresión */
+        @media print {
+          body {
+            background: white !important;
+            color: black !important;
+            font-size: 10px !important;
+          }
+          .container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+          }
+          .content {
+            padding: 8px !important;
+          }
+          .hero-section {
+            background: white !important;
+            color: black !important;
+            padding: 4px !important;
+            margin-bottom: 8px !important;
+            box-shadow: none !important;
+          }
+          .info-card, .modern-card {
+            background: white !important;
+            padding: 4px !important;
+            margin-bottom: 6px !important;
+            box-shadow: none !important;
+            border: 1px solid #ccc !important;
+          }
+          .card-icon, .modern-icon {
+            background: #ddd !important;
+            color: black !important;
+            box-shadow: none !important;
+          }
+          .modern-card::before {
+            display: none !important;
+          }
+          .modern-icon::after {
+            display: none !important;
+          }
+          .hero-section::before {
+            display: none !important;
+          }
+          .card-header::after {
+            display: none !important;
+          }
+          .two-column-container table {
+            display: block !important;
+          }
+          .two-column-container td {
+            display: block !important;
+            width: 100% !important;
+            padding: 0 !important;
+          }
+          .modern-header h2 {
+            -webkit-text-fill-color: black !important;
+            color: black !important;
+          }
+          /* Asegurar que los grids se conviertan en bloques en impresión */
+          .info-card div[style*="grid-template-columns"] {
+            display: block !important;
+          }
+          .info-card div[style*="grid-template-columns"] > div {
+            margin-bottom: 2px !important;
+          }
+          .card-header {
+            margin-bottom: 4px !important;
+            padding-bottom: 2px !important;
+          }
+          h1, h2, h3 {
+            font-size: 12px !important;
+            margin: 2px 0 4px 0 !important;
+          }
+          p {
+            font-size: 9px !important;
+            margin: 1px 0 !important;
+            line-height: 1.2 !important;
+          }
+          table th, table td {
+            padding: 2px 4px !important;
+            font-size: 8px !important;
+          }
+          .section-divider {
+            margin: 4px 0 !important;
+          }
+          .button-link {
+            font-size: 8px !important;
+            padding: 2px 4px !important;
+            margin: 1px !important;
+          }
         }
       </style>
     </head>
@@ -1123,33 +1574,83 @@ export class PaymentService extends BaseService {
         ${!isComanda && encabezadoUrl ? `<div class="header"><img src="${encabezadoUrl}" alt="Encabezado"></div>` : ""}
 
         <div class="content">
-          <h1>${textoEncabezado}</h1>
-          ${!isComanda ? linkReferenciaPedido : ""}
-          <p style="text-align: center;">Gracias por elegirnos. Estamos procesando tu pedido.</p>
-
-          ${htmlDatosCliente}
-          ${htmlFacturacion}
-          ${htmlEnvio}
-
-          <!-- Datos Extras Entrega -->
-          <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-              <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de Entrega</h2>
-              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Fecha Entrega: ${this.customFormatDate(pedido.fechaEntrega)}</p>
-              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Forma Entrega: ${pedido.formaEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega ?? "N/A"}</p>
-              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Horario Entrega: ${pedido.horarioEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega ?? "N/A"}</p>
+          <!-- Hero Section -->
+          <div class="hero-section">
+            <h1 class="hero-title">${textoEncabezado}</h1>
+            ${!isComanda ? `<p class="hero-subtitle">Referencia: ${pedido.nroPedido ?? "N/A"}</p>` : ""}
+            <p class="hero-subtitle">Gracias por elegirnos. Estamos procesando tu pedido.</p>
           </div>
 
-          <!-- Datos Extras Orden -->
-          <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-              <h2 style="color: #444; margin-bottom: 10px;">Datos Extras de la Orden</h2>
-              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Asesor Asignado: ${pedido?.asesorAsignado?.name ?? "N/A"}</p>
-              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Fecha Compra: ${this.customFormatDateHour(pedido?.fechaCreacion)}</p>
-              <p style="font-size: 14px; margin: 5px 0 5px 20px;">Fuente: <strong>SELLERCENTER</strong></p>
+          <!-- Cliente y Facturación - Layout de Dos Columnas -->
+          <div class="two-column-container">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="width: 48%; vertical-align: top; padding-right: ${styles.spacing.lg};">
+                  <!-- Datos del Cliente -->
+${htmlDatosClienteModerno}
+                </td>
+                <td style="width: 48%; vertical-align: top; padding-left: ${styles.spacing.lg};">
+                  <!-- Datos de Facturación -->
+${htmlFacturacionModerno || `
+                  <div class="info-card modern-card" style="opacity: 0.6;">
+                    <div class="card-header modern-header">
+                      <div class="card-icon modern-icon">🧾</div>
+                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos de Facturación</h2>
+                    </div>
+                    <div style="padding: ${styles.spacing.sm} 0;">
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body}; font-style: italic;">No se requiere facturación electrónica para este pedido</p>
+                    </div>
+                  </div>`}
+                </td>
+              </tr>
+            </table>
           </div>
 
+          ${htmlEnvioModerno}
+          
+          <!-- Datos Extras - Layout de Dos Columnas -->
+          <div class="two-column-container">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="width: 48%; vertical-align: top; padding-right: ${styles.spacing.lg};">
+                  <!-- Datos Extras Entrega -->
+                  <div class="info-card modern-card">
+                    <div class="card-header modern-header">
+                      <div class="card-icon modern-icon">📅</div>
+                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos Extras de Entrega</h2>
+                    </div>
+                    <div style="padding: ${styles.spacing.sm} 0;">
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Fecha Entrega:</strong> ${this.customFormatDate(pedido.fechaEntrega)}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Forma Entrega:</strong> ${pedido.formaEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Horario Entrega:</strong> ${pedido.horarioEntrega ?? pedido.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega ?? "N/A"}</p>
+                    </div>
+                  </div>
+                </td>
+                <td style="width: 48%; vertical-align: top; padding-left: ${styles.spacing.lg};">
+                  <!-- Datos Extras Orden -->
+                  <div class="info-card modern-card">
+                    <div class="card-header modern-header">
+                      <div class="card-icon modern-icon">📋</div>
+                      <h2 style="margin: 0; color: ${styles.colors.text};">Datos Extras de la Orden</h2>
+                    </div>
+                    <div style="padding: ${styles.spacing.sm} 0;">
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Asesor Asignado:</strong> ${pedido?.asesorAsignado?.name ?? "N/A"}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Fecha Compra:</strong> ${this.customFormatDateHour(pedido?.fechaCreacion)}</p>
+                      <p style="margin: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body};"><strong style="color: ${styles.colors.text};">Fuente:</strong> <strong style="color: ${styles.colors.primary};">SELLERCENTER</strong></p>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <hr class="section-divider">
           <!-- Productos del Pedido -->
-          <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-            <h2 style="color: #444; margin-bottom: 10px;">Productos del pedido</h2>
+          <div class="info-card">
+            <div class="card-header">
+              <div class="card-icon">🛍️</div>
+              <h2 style="margin: 0; color: ${styles.colors.text};">Productos del pedido</h2>
+            </div>
             <table>
               <tbody>
                 ${carritoHtml}
