@@ -7,7 +7,7 @@ import { SwUpdate } from '@angular/service-worker';
 import Swal from 'sweetalert2';
 import { env } from 'process';
 import { environment } from './../environments/environment';
-import { Idle, DEFAULT_INTERRUPTSOURCES, StorageInterruptSource, InterruptSource, EventTargetInterruptSource } from '@ng-idle/core';
+import { Idle } from '@ng-idle/core';
 import { Keepalive } from '@ng-idle/keepalive';
 import { Router } from '@angular/router';
 import { NotificationService } from './shared/services/notification.service'
@@ -17,6 +17,7 @@ import { ErrorHandlerService } from './shared/services/errores/error-handler.ser
 import { AuthService } from './shared/services/firebase/auth.service';
 import { LayoutService } from './shared/services/layout.service';
 import { NgpThemeService } from './shared/services/ngtheme.service';
+import { IdleInterruptService, IdleConfiguration } from './shared/services/idle-interrupt.service';
 import { Subject } from 'rxjs';
 
 @Component({
@@ -52,6 +53,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     public layout: LayoutService,
     public ngpService: NgpThemeService,
+    private idleInterruptService: IdleInterruptService,
     private loader: LoadingBarService, translate: TranslateService, private updates: SwUpdate,
     private errorHandlerService: ErrorHandlerService) {
     if (isPlatformBrowser(this.platformId)) {
@@ -104,42 +106,56 @@ export class AppComponent implements OnInit, OnDestroy {
 
     });
 
-    // Configuración de timeout más flexible para evitar cierres prematuros
-    idle.setIdle(120); // 2 horas de inactividad antes de mostrar warning
-    idle.setTimeout(600); // 10 minutos adicionales antes de cerrar sesión
-    //idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
-    DEFAULT_INTERRUPTSOURCES.push(new StorageInterruptSource(2));
-    DEFAULT_INTERRUPTSOURCES.push(new EventTargetInterruptSource('user', 'storage'));
-    idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
+    // Enhanced idle configuration using IdleInterruptService
+    this.configureIdleSettings();
 
     idle.onIdleEnd.subscribe(() => {
       console.log('Sesión reactivada');
+      this.idleInterruptService.trackActivity();
       this.reset();
     });
 
     idle.onTimeout.subscribe(() => {
-      console.log('Sesión inactiva por 2 horas, se cerrará en 2 minutos');
+      const config = this.idleInterruptService.getCurrentConfiguration();
+      const totalMinutes = Math.floor((config.idleTime + config.timeoutTime) / 60);
+      console.log(`Sesión inactiva por ${totalMinutes} minutos, cerrando sesión automáticamente`);
+      
       this.timedOut = true;
       this.authService.SignOut();
       this.reset();
+      
+      // Show logout notification
+      this.toastrService.error(
+        `Sesión cerrada por inactividad de ${totalMinutes} minutos`, 
+        'Sesión Terminada',
+        { timeOut: 10000 }
+      );
     });
 
     idle.onIdleStart.subscribe(() => { });
 
     idle.onTimeoutWarning.subscribe((countdown) => {
-      // Mostrar warning solo cuando quedan 2 minutos (120 segundos)
-      if (countdown === 120 && !this.router.url.includes('login')) {
+      const config = this.idleInterruptService.getCurrentConfiguration();
+      const warningThreshold = Math.min(120, Math.floor(config.timeoutTime * 0.2)); // 20% of timeout or 120s max
+      
+      if (countdown === warningThreshold && !this.router.url.includes('login')) {
+        const idleMinutes = Math.floor(config.idleTime / 60);
+        const remainingSeconds = countdown;
+        const remainingMinutes = Math.floor(remainingSeconds / 60);
+        
         Swal.fire({
           icon: 'warning',
-          title: '¡ Sesión inactiva por 2 horas, se cerrará en 2 minutos !',
-          text: 'Mueve el mouse o haz clic para mantener la sesión activa',
+          title: `¡ Sesión inactiva por ${idleMinutes} minutos, se cerrará en ${remainingMinutes > 0 ? remainingMinutes + ' minutos' : remainingSeconds + ' segundos'} !`,
+          text: 'Mueve el mouse, toca la pantalla o haz clic para mantener la sesión activa',
           showConfirmButton: true,
           confirmButtonText: 'Mantener sesión activa',
-          timer: 30000 // Auto-cerrar después de 30 segundos
+          timer: 30000,
+          allowOutsideClick: false,
+          allowEscapeKey: false
         }).then((result) => {
           if (result.isConfirmed) {
-            // Resetear el timer de inactividad
             this.reset();
+            this.toastrService.success('Sesión extendida exitosamente', 'Sesión Activa');
           }
         });
       }
@@ -254,9 +270,61 @@ export class AppComponent implements OnInit, OnDestroy {
     this.timedOut = false;
   }
 
+  private configureIdleSettings(): void {
+    // Determine profile based on current route or user role
+    let profile: 'admin' | 'user' | 'pos' = 'user';
+    
+    if (this.router.url.includes('/pos')) {
+      profile = 'pos';
+    } else if (this.UserLogged?.role === 'admin' || this.UserLogged?.isAdmin) {
+      profile = 'admin';
+    }
+
+    // Set the profile
+    this.idleInterruptService.setProfile(profile);
+    
+    // Get configuration for current profile
+    const config = this.idleInterruptService.getCurrentConfiguration();
+    
+    // Apply configuration to idle service
+    this.idle.setIdle(config.idleTime);
+    this.idle.setTimeout(config.timeoutTime);
+    
+    // Set enhanced interrupt sources
+    const interruptSources = this.idleInterruptService.createEnhancedInterruptSources();
+    this.idle.setInterrupts(interruptSources);
+    
+    // Log configuration for debugging
+    this.idleInterruptService.logConfiguration();
+    
+    console.log(`Idle system configured for profile: ${profile}`);
+  }
+
+  public switchIdleProfile(profile: 'admin' | 'user' | 'pos'): void {
+    console.log(`Switching idle profile from ${this.idleInterruptService.getCurrentConfiguration().profile} to ${profile}`);
+    
+    // Stop current idle watching
+    this.idle.stop();
+    
+    // Reconfigure with new profile
+    this.idleInterruptService.setProfile(profile);
+    this.configureIdleSettings();
+    
+    // Restart idle watching
+    this.reset();
+    
+    this.toastrService.info(`Perfil de inactividad cambiado a: ${profile}`, 'Configuración');
+  }
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    
+    // Cleanup idle interrupt sources
+    this.idleInterruptService.cleanup();
+    
+    // Stop idle watching
+    this.idle.stop();
   }
 
 }
