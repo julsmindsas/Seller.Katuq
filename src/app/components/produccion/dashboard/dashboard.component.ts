@@ -67,8 +67,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   ];
   representatives: { name: string; image: string; }[];
   configuracionCarritoSeleccionado: Carrito;
-  fechaInicial: Date;
-  fechaFinal: Date;
+  fechaInicial: Date | null;
+  fechaFinal: Date | null;
   horariosEntrega: any[] = [{
     nroPedido: '123',
     horarioEntrega: '10:00-12:00'
@@ -259,16 +259,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     ];
     this.selectedColumns = [...this.columns];
     
-    // Inicializar fechas por defecto si no están configuradas
-    if (!this.fechaInicial) {
-      this.fechaInicial = new Date();
-    }
-    if (!this.fechaFinal) {
-      this.fechaFinal = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000));
-    }
-    
-    // Cargar estado de filtros guardado
-    this.loadFiltersState();
+    // Cargar estado de filtros guardado (incluye inicialización de defaults si no hay datos guardados)
+    this.loadFiltersFromStorage();
     
     this.refrescarDatosEnsamble();
   }
@@ -408,23 +400,66 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  private editMultipleOrders(orders: Pedido[]) {
-    this.ventasService.editMultipleOrders({orders: orders}).subscribe((data) => {
-      this.refrescarDatos();
-      Swal.fire({
-        icon: 'success',
-        title: 'Pedidos actualizados correctamente',
-        showConfirmButton: false,
-        timer: 1500
-      });
-    }, (error) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al actualizar los pedidos',
-        showConfirmButton: false,
-        timer: 1500
-      });
+  // Helper functions for data validation
+  private isValidPedido(pedido: Pedido): boolean {
+    return !!(
+      pedido &&
+      pedido._id &&
+      pedido.carrito &&
+      Array.isArray(pedido.carrito) &&
+      pedido.carrito.length > 0
+    );
+  }
+
+  private isValidOrdersArray(orders: Pedido[]): boolean {
+    return !!(
+      orders &&
+      Array.isArray(orders) &&
+      orders.length > 0 &&
+      orders.every(order => this.isValidPedido(order))
+    );
+  }
+
+  private logOrdersValidationError(orders: Pedido[], context: string): void {
+    console.error(`[${context}] Invalid orders array:`, {
+      orders,
+      isArray: Array.isArray(orders),
+      length: orders?.length,
+      isEmpty: !orders || orders.length === 0,
+      hasInvalidOrders: orders?.some(order => !this.isValidPedido(order))
     });
+  }
+
+  private editMultipleOrders(orders: Pedido[]) {
+    // Final validation before API call
+    if (!this.isValidOrdersArray(orders)) {
+      console.error('editMultipleOrders: Invalid orders array passed to method');
+      return;
+    }
+
+    console.log(`editMultipleOrders: Processing ${orders.length} orders`);
+    
+    this.ventasService.editMultipleOrders({orders: orders}).subscribe(
+      (data) => {
+        console.log('editMultipleOrders: Success response:', data);
+        this.refrescarDatos();
+        Swal.fire({
+          icon: 'success',
+          title: 'Pedidos actualizados correctamente',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }, 
+      (error) => {
+        console.error('editMultipleOrders: API error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al actualizar los pedidos',
+          text: error?.message || 'Error desconocido al actualizar pedidos',
+          showConfirmButton: true
+        });
+      }
+    );
   }
 
 
@@ -532,10 +567,17 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       fechaFinal: fechaFinalFormatted,
       estadosPago: estadosPago,
       estadoProceso: estadoProceso,
-      company: JSON.parse(localStorage.getItem("currentCompany") || '{}').nomComercial || ''
+      company: JSON.parse(localStorage.getItem("currentCompany") || '{}').nomComercial || '',
+      // Incluir filtro de proceso si está seleccionado
+      proceso: this.selectedProcesosFilter ? this.selectedProcesosFilter.nombre : null
     }
 
+    console.log('🔍 [DEBUG] Filtro enviado al API:', filter);
+    console.log('🔍 [DEBUG] Proceso seleccionado:', this.selectedProcesosFilter);
+
     this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe((data) => {
+      console.log('📡 [DEBUG] Respuesta del API recibida:', data);
+      console.log('📡 [DEBUG] Cantidad de órdenes del API:', data.orders?.length || 0);
       let filteredOrders = data.orders;
 
       // Aplicar filtro por número de pedido si existe
@@ -778,8 +820,28 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       this.orders = data.orders;
       this.orderResponse = data;
 
+      console.log('🧩 [DEBUG] Resultado procesado:', resultado.length, 'órdenes');
+      console.log('🧩 [DEBUG] Procesos encontrados en resultado:', [...new Set(resultado.flatMap(order => order.detalles.map(d => d.nombreProceso)))]);
+      
       this.ordersEnsamble = resultado;
       this.AllOrdersEnsamble = this.utilService.deepClone(this.ordersEnsamble);
+      
+      console.log('💾 [DEBUG] AllOrdersEnsamble actualizado:', this.AllOrdersEnsamble.length, 'órdenes');
+      console.log('💾 [DEBUG] ordersEnsamble actual:', this.ordersEnsamble.length, 'órdenes');
+      
+      // Si hay un filtro de proceso aplicado, aplicar filtrado local inmediatamente
+      if (this.selectedProcesosFilter) {
+        console.log('🔄 [DEBUG] Re-aplicando filtro de proceso después de refresh API:', this.selectedProcesosFilter.nombre);
+        this.ordersEnsamble = this.utilService.deepClone(
+          this.AllOrdersEnsamble.filter((order) => {
+            return order.detalles.find((detalle) => {
+              return detalle.nombreProceso === this.selectedProcesosFilter.nombre;
+            });
+          })
+        );
+        console.log('✅ [DEBUG] Filtro re-aplicado:', this.ordersEnsamble.length, 'órdenes filtradas');
+      }
+      
       this.loading = false;
 
       // Después de cargar los datos, clasificar los pedidos
@@ -966,6 +1028,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     const fechaActual = new Date();
     this.fechaInicial = new Date(fechaActual.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaActual.setHours(23, 59, 59, 999));
+    this.saveFiltersToStorage();
     this.refrescarDatosEnsamble();
   }
 
@@ -975,6 +1038,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     fechaManana.setDate(fechaManana.getDate() + 1);
     this.fechaInicial = new Date(fechaManana.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaManana.setHours(23, 59, 59, 999));
+    this.saveFiltersToStorage();
     this.refrescarDatosEnsamble();
   }
 
@@ -984,6 +1048,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     fechaPasadoManana.setDate(fechaPasadoManana.getDate() + 2);
     this.fechaInicial = new Date(fechaPasadoManana.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaPasadoManana.setHours(23, 59, 59, 999));
+    this.saveFiltersToStorage();
     this.refrescarDatosEnsamble();
   }
 
@@ -1359,7 +1424,40 @@ export class DashboardComponent implements OnInit, AfterViewInit {
               });
           });
 
-          this.editMultipleOrders(ordersPushToUpdate);
+          // Validate and process orders with improved error handling
+          try {
+            if (!this.isValidOrdersArray(ordersPushToUpdate)) {
+              this.logOrdersValidationError(ordersPushToUpdate, 'editMultipleOrders call');
+              
+              if (!ordersPushToUpdate || ordersPushToUpdate.length === 0) {
+                console.warn('No valid orders to update - skipping API call');
+                return;
+              }
+              
+              // Filter out invalid orders and log warnings
+              const validOrders = ordersPushToUpdate.filter(order => this.isValidPedido(order));
+              if (validOrders.length === 0) {
+                console.warn('All orders are invalid - skipping API call');
+                return;
+              }
+              
+              if (validOrders.length !== ordersPushToUpdate.length) {
+                console.warn(`Filtered ${ordersPushToUpdate.length - validOrders.length} invalid orders`);
+              }
+              
+              this.editMultipleOrders(validOrders);
+            } else {
+              this.editMultipleOrders(ordersPushToUpdate);
+            }
+          } catch (error) {
+            console.error('Error processing orders for update:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error procesando pedidos',
+              text: 'Hubo un problema al procesar los pedidos para actualización',
+              showConfirmButton: true
+            });
+          }
 
           //buscar en allorders y reemplazar el item
           const index = this.AllOrdersEnsamble.findIndex((order) => order.nombreProducto === item.nombreProducto && order.nombreArticulo === item.nombreArticulo);
@@ -1392,24 +1490,34 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   filterOrderByProcess(event: any) {
+    // Limpiar selección actual
     this.selectedOrdersEnsamble = [];
-
-    this.ordersEnsamble = this.utilService.deepClone(this.AllOrdersEnsamble.filter((order) => {
-      return order.detalles.find((detalle) => {
-        return detalle.nombreProceso === event.value.nombre;
-      });
-    }));
-
-    // this.ordersEnsamble = this.ordersEnsamble.map((order) => {
-
-    //   order.detalles = order.detalles.filter((detalle) => {
-    //     return detalle.nombreProceso === event.value;
-    //   });
-
-    //   return order;
-    // });
-
-
+    
+    // Actualizar filtro de proceso
+    this.selectedProcesosFilter = event.value;
+    
+    // FILTRADO LOCAL INMEDIATO para feedback visual instantáneo
+    if (event.value) {
+      console.log('Filtrando localmente por proceso:', event.value.nombre);
+      this.ordersEnsamble = this.utilService.deepClone(
+        this.AllOrdersEnsamble.filter((order) => {
+          return order.detalles.find((detalle) => {
+            return detalle.nombreProceso === event.value.nombre;
+          });
+        })
+      );
+      console.log(`Filtrado local: ${this.ordersEnsamble.length} órdenes de ${this.AllOrdersEnsamble.length} total`);
+    } else {
+      // Mostrar todas las órdenes cuando no hay filtro
+      console.log('Removiendo filtro de proceso - mostrando todas las órdenes');
+      this.ordersEnsamble = this.utilService.deepClone(this.AllOrdersEnsamble);
+    }
+    
+    // Guardar estado en sessionStorage
+    this.saveFiltersToStorage();
+    
+    // OPCIONAL: También refrescar desde API para persistencia (con debouncing)
+    // this.debounceApiRefresh();
   }
 
 
@@ -2258,14 +2366,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     }
 
     // Cargar estado de filtros guardado
-    this.loadFiltersState();
+    this.loadFiltersFromStorage();
   }
 
   // Métodos para filtros modernos (inspirados en ventas/list)
   
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
-    this.saveFiltersState();
+    this.saveFiltersToStorage();
   }
 
   getActiveFiltersCount(): number {
@@ -2292,6 +2400,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   clearQuickFilter(type: "estadoPago" | "estadoProceso"): void {
     this.quickFilters[type] = "all";
+    this.saveFiltersToStorage();
     this.refrescarDatosEnsamble();
   }
 
@@ -2307,35 +2416,78 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     // Cerrar filtros si no hay filtros activos
     if (!this.hasActiveFilters()) {
       this.showFilters = false;
-      this.saveFiltersState();
+      this.saveFiltersToStorage();
     }
     this.refrescarDatosEnsamble();
   }
 
-  // Métodos para persistir estado de filtros
-  private loadFiltersState(): void {
-    const savedState = localStorage.getItem("produccionFiltersState");
+  // Métodos para persistir estado de filtros en sessionStorage
+  private loadFiltersFromStorage(): void {
+    const savedState = sessionStorage.getItem("produccionFiltersState");
     if (savedState) {
       try {
         const state = JSON.parse(savedState);
+        
+        // Cargar estado de visibilidad de filtros
         this.showFilters = state.showFilters || false;
+        
+        // Cargar valores de filtros
+        if (state.fechaInicial) {
+          this.fechaInicial = new Date(state.fechaInicial);
+        }
+        if (state.fechaFinal) {
+          this.fechaFinal = new Date(state.fechaFinal);
+        }
+        if (state.nroPedido) {
+          this.nroPedido = state.nroPedido;
+        }
+        if (state.selectedProcesosFilter) {
+          this.selectedProcesosFilter = state.selectedProcesosFilter;
+        }
+        if (state.quickFilters) {
+          this.quickFilters = { ...this.quickFilters, ...state.quickFilters };
+        }
+        
         // Si hay filtros activos, abrir automáticamente
         if (this.hasActiveFilters()) {
           this.showFilters = true;
         }
+        
+        console.log("Filtros cargados desde sessionStorage:", state);
       } catch (e) {
-        console.error("Error loading filters state", e);
-        this.showFilters = false;
+        console.error("Error loading filters from sessionStorage", e);
+        this.initializeDefaultFilters();
       }
+    } else {
+      this.initializeDefaultFilters();
     }
   }
 
-  private saveFiltersState(): void {
+  private saveFiltersToStorage(): void {
     const state = {
       showFilters: this.showFilters,
+      fechaInicial: this.fechaInicial,
+      fechaFinal: this.fechaFinal,
+      nroPedido: this.nroPedido,
+      selectedProcesosFilter: this.selectedProcesosFilter,
+      quickFilters: this.quickFilters,
       timestamp: new Date().getTime(),
     };
-    localStorage.setItem("produccionFiltersState", JSON.stringify(state));
+    
+    sessionStorage.setItem("produccionFiltersState", JSON.stringify(state));
+    console.log("Filtros guardados en sessionStorage:", state);
+  }
+
+  private initializeDefaultFilters(): void {
+    this.fechaInicial = new Date();
+    this.fechaFinal = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000));
+    this.nroPedido = null;
+    this.selectedProcesosFilter = null;
+    this.quickFilters = {
+      estadoPago: "all",
+      estadoProceso: "all",
+    };
+    this.showFilters = false;
   }
 
   // Auto-abrir filtros cuando se aplicuen filtros rápidos
@@ -2344,20 +2496,46 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     // Abrir filtros si se aplica un filtro
     if (value !== "all" && !this.showFilters) {
       this.showFilters = true;
-      this.saveFiltersState();
     }
+    // Guardar filtros cuando cambian
+    this.saveFiltersToStorage();
     // Refrescar datos cuando cambian los filtros rápidos
     this.refrescarDatosEnsamble();
   }
 
   // Manejar cambios en las fechas
   onDateChange(): void {
+    this.saveFiltersToStorage();
     this.refrescarDatosEnsamble();
   }
 
   // Manejar cambios en el número de pedido
   onOrderNumberChange(): void {
+    this.saveFiltersToStorage();
     this.refrescarDatosEnsamble();
+  }
+
+  // Métodos helper para limpiar filtros individuales
+  clearDateFilter(type: 'inicial' | 'final'): void {
+    if (type === 'inicial') {
+      this.fechaInicial = null;
+    } else {
+      this.fechaFinal = null;
+    }
+    this.saveFiltersToStorage();
+    this.refrescarDatosEnsamble();
+  }
+
+  clearOrderNumberFilter(): void {
+    this.nroPedido = null;
+    this.saveFiltersToStorage();
+    this.refrescarDatosEnsamble();
+  }
+
+  clearProcessFilter(): void {
+    this.selectedProcesosFilter = null;
+    this.saveFiltersToStorage();
+    this.filterOrderByProcess({value: null});
   }
 
   abrirModalImprimirListaPorProceso(modalRef) {
