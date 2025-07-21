@@ -6,7 +6,6 @@ import { Pedido } from '../../ventas/modelo/pedido';
  */
 export interface PedidoEntrega extends Pedido {
   // Datos de estado
-  estadoEntrega?: string;
   
   // Datos de quien recibe
   quienRecibio?: string;

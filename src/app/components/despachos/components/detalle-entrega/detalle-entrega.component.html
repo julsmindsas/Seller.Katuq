@@ -33,10 +33,10 @@
                     </div>
                     <div class="info-card-content">
                         <span [ngClass]="{
-                            'badge bg-success': pedido?.estadoEntrega === 'Entregado',
-                            'badge bg-warning': pedido?.estadoEntrega === 'En proceso',
-                            'badge bg-danger': pedido?.estadoEntrega === 'Fallido'
-                        }">{{ pedido?.estadoEntrega }}</span>
+                            'badge bg-success': pedido?.estadoProceso === 'Entregado',
+                            'badge bg-warning': pedido?.estadoProceso === 'En proceso',
+                            'badge bg-danger': pedido?.estadoProceso === 'Fallido'
+                        }">{{ pedido?.estadoProceso }}</span>
                     </div>
                 </div>
             </div>
@@ -150,6 +150,27 @@
                         <i class="pi pi-file" style="font-size: 2rem;"></i>
                         <p class="mt-2">{{ 'No hay firma disponible' | translate }}</p>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notas de Entrega del Mensajero -->
+        <div class="mb-3">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <i class="pi pi-comment me-1"></i>
+                    {{ 'Notas de Entrega del Mensajero' | translate }}
+                </div>
+                <div class="card-body p-3">
+                    <div *ngIf="pedido?.notasEntregaMensajero; else noNotas" class="notas-content">
+                        <p class="mb-0">{{ pedido?.notasEntregaMensajero }}</p>
+                    </div>
+                    <ng-template #noNotas>
+                        <div class="text-center text-secondary py-3">
+                            <i class="pi pi-comment" style="font-size: 2rem;"></i>
+                            <p class="mt-2">{{ 'No hay notas de entrega disponibles' | translate }}</p>
+                        </div>
+                    </ng-template>
                 </div>
             </div>
         </div>

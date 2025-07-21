@@ -1593,7 +1593,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     this.pedidoEntregaData = {
       ...order,
       // Datos adicionales que podrían venir del backend
-      estadoEntrega: 'Entregado',
       quienRecibio: order.envio?.nombres || 'No especificado',
       telefono: order.envio?.celular || order.cliente?.numero_celular_comprador,
       fechaRecepcion: order.fechaEntrega || new Date().toISOString(),

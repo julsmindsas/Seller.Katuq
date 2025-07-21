@@ -7,7 +7,7 @@ import { SwUpdate } from '@angular/service-worker';
 import Swal from 'sweetalert2';
 import { env } from 'process';
 import { environment } from './../environments/environment';
-import { Idle, DEFAULT_INTERRUPTSOURCES } from '@ng-idle/core';
+import { Idle, DEFAULT_INTERRUPTSOURCES, StorageInterruptSource, InterruptSource, EventTargetInterruptSource } from '@ng-idle/core';
 import { Keepalive } from '@ng-idle/keepalive';
 import { Router } from '@angular/router';
 import { NotificationService } from './shared/services/notification.service'
@@ -107,13 +107,18 @@ export class AppComponent implements OnInit, OnDestroy {
     // Configuración de timeout más flexible para evitar cierres prematuros
     idle.setIdle(120); // 2 horas de inactividad antes de mostrar warning
     idle.setTimeout(600); // 10 minutos adicionales antes de cerrar sesión
+    //idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
+    DEFAULT_INTERRUPTSOURCES.push(new StorageInterruptSource(2));
+    DEFAULT_INTERRUPTSOURCES.push(new EventTargetInterruptSource('user', 'storage'));
     idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
 
     idle.onIdleEnd.subscribe(() => {
+      console.log('Sesión reactivada');
       this.reset();
     });
 
     idle.onTimeout.subscribe(() => {
+      console.log('Sesión inactiva por 2 horas, se cerrará en 2 minutos');
       this.timedOut = true;
       this.authService.SignOut();
       this.reset();
@@ -243,6 +248,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   reset() {
+    console.log('Resetting idle timer');
     this.idle.watch();
     this.IdleState = 'Started.';
     this.timedOut = false;

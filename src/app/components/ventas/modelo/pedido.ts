@@ -28,6 +28,7 @@ export interface Pedido {
   company?: string;
   cliente?: Cliente;
   notasPedido?: NotasPedido;
+  notasEntregaMensajero?: string;
   carrito?: Carrito[];
   formaDePago?: string;
   cuponAplicado?: string;

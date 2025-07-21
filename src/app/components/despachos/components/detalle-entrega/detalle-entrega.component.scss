@@ -86,4 +86,17 @@
   &:hover {
     color: #343a40;
   }
+}
+
+.notas-content {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 12px;
+  border-left: 3px solid #007bff;
+  
+  p {
+    color: #495057;
+    line-height: 1.5;
+    margin: 0;
+  }
 } 
