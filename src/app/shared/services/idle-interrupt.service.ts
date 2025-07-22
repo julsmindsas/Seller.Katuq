@@ -145,8 +145,8 @@ export class IdleInterruptService {
 
   private profiles: Record<string, IdleConfiguration> = {
     admin: {
-      idleTime: 300, // 5 minutes
-      timeoutTime: 900, // 15 minutes
+      idleTime: 1800, // 30 minutos
+      timeoutTime: 7200, // 2 horas
       enableTouch: true,
       enableScroll: true,
       enableVisibility: true,
@@ -157,8 +157,8 @@ export class IdleInterruptService {
       profile: 'admin'
     },
     user: {
-      idleTime: 120, // 2 minutes
-      timeoutTime: 600, // 10 minutes
+      idleTime: 1800, // 30 minutos
+      timeoutTime: 7200, // 2 horas
       enableTouch: true,
       enableScroll: true,
       enableVisibility: true,
