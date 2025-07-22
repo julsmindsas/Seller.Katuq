@@ -207,7 +207,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   allBillingZone: any;
   selectedOrder: any;
   modalVisible = false;
-  
+
   // Propiedades para modal de detalle entrega
   detalleEntregaVisible = false;
   pedidoEntregaData: PedidoEntrega | null = null;
@@ -451,7 +451,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     this.estadosPago = Object.values(EstadoPago);
     // this.estadosProcesos = Object.values(EstadoProceso)
     this.estadosProcesos = Object.values(EstadoProcesoFiltros);
-    if(this.isFromProduction){
+    if (this.isFromProduction) {
       this.estadosProcesos = this.estadosProcesos.filter(estado => estado == EstadoProcesoFiltros.EnProduccion);
     }
     this.validaciones = [
@@ -586,7 +586,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
                 adicion["cantidad"] *
                 adicion["referencia"]["precioIva"] *
                 itemCarrito.cantidad;
-          } catch (error) {}
+          } catch (error) { }
         });
       }
 
@@ -894,17 +894,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-              // Para Wompi, verificar que no esté pendiente
-              if (
-                pago.formaPago?.toLowerCase().includes("wompi") &&
-                pago.estadoVerificacion === "Pendiente"
-              ) {
-                return sum; // No sumar pagos de Wompi pendientes
-              }
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = pago.valor || pago.valorRegistrado || 0;
-              return sum + valorPago;
-            }, 0)
+            // Para Wompi, verificar que no esté pendiente
+            if (
+              pago.formaPago?.toLowerCase().includes("wompi") &&
+              pago.estadoVerificacion === "Pendiente"
+            ) {
+              return sum; // No sumar pagos de Wompi pendientes
+            }
+            // Considerar tanto valor como valorRegistrado
+            const valorPago = pago.valor || pago.valorRegistrado || 0;
+            return sum + valorPago;
+          }, 0)
           : pedido.anticipo || 0;
       const faltaPorPagar =
         (pedido.totalPedididoConDescuento || 0) - anticipoReal;
@@ -922,17 +922,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-              // Para Wompi, verificar que no esté pendiente
-              if (
-                pago.formaPago?.toLowerCase().includes("wompi") &&
-                pago.estadoVerificacion === "Pendiente"
-              ) {
-                return sum; // No sumar pagos de Wompi pendientes
-              }
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = pago.valor || pago.valorRegistrado || 0;
-              return sum + valorPago;
-            }, 0)
+            // Para Wompi, verificar que no esté pendiente
+            if (
+              pago.formaPago?.toLowerCase().includes("wompi") &&
+              pago.estadoVerificacion === "Pendiente"
+            ) {
+              return sum; // No sumar pagos de Wompi pendientes
+            }
+            // Considerar tanto valor como valorRegistrado
+            const valorPago = pago.valor || pago.valorRegistrado || 0;
+            return sum + valorPago;
+          }, 0)
           : pedido.anticipo || 0;
       return acc + anticipoReal;
     }, 0);
@@ -1102,17 +1102,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-              // Para Wompi, verificar que no esté pendiente
-              if (
-                pago.formaPago?.toLowerCase().includes("wompi") &&
-                pago.estadoVerificacion === "Pendiente"
-              ) {
-                return sum; // No sumar pagos de Wompi pendientes
-              }
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = pago.valor || pago.valorRegistrado || 0;
-              return sum + valorPago;
-            }, 0)
+            // Para Wompi, verificar que no esté pendiente
+            if (
+              pago.formaPago?.toLowerCase().includes("wompi") &&
+              pago.estadoVerificacion === "Pendiente"
+            ) {
+              return sum; // No sumar pagos de Wompi pendientes
+            }
+            // Considerar tanto valor como valorRegistrado
+            const valorPago = pago.valor || pago.valorRegistrado || 0;
+            return sum + valorPago;
+          }, 0)
           : pedido.anticipo || 0;
       return acc + anticipoReal;
     }, 0);
@@ -1127,17 +1127,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-              // Para Wompi, verificar que no esté pendiente
-              if (
-                pago.formaPago?.toLowerCase().includes("wompi") &&
-                pago.estadoVerificacion === "Pendiente"
-              ) {
-                return sum; // No sumar pagos de Wompi pendientes
-              }
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = pago.valor || pago.valorRegistrado || 0;
-              return sum + valorPago;
-            }, 0)
+            // Para Wompi, verificar que no esté pendiente
+            if (
+              pago.formaPago?.toLowerCase().includes("wompi") &&
+              pago.estadoVerificacion === "Pendiente"
+            ) {
+              return sum; // No sumar pagos de Wompi pendientes
+            }
+            // Considerar tanto valor como valorRegistrado
+            const valorPago = pago.valor || pago.valorRegistrado || 0;
+            return sum + valorPago;
+          }, 0)
           : pedido.anticipo || 0;
       const faltaPorPagar =
         (pedido.totalPedididoConDescuento || 0) - anticipoReal;
@@ -1308,7 +1308,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         </html>
       `);
       newWindow.document.close();
-      
+
       // Opcional: Automáticamente abrir el diálogo de impresión en la nueva ventana
       setTimeout(() => {
         newWindow.print();
@@ -1618,10 +1618,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     });
     console.log('Datos del pedido de entrega:', this.pedidoEntregaData);
     console.log('Mostrando modal con detalleEntregaVisible:', true);
-    
+
     // Mostrar el modal
     this.detalleEntregaVisible = true;
-    
+
     // Debug adicional después de 100ms para verificar que el cambio se propague
     setTimeout(() => {
       console.log('Estado después de 100ms - detalleEntregaVisible:', this.detalleEntregaVisible);
@@ -2032,7 +2032,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       company: JSON.parse(localStorage.getItem("currentCompany")!)
         .nomComercial,
       estadoProceso: this.isFromProduction
-        ? [EstadoProceso.SinProducir]
+        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion]
         : ["Todos"],
     };
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
