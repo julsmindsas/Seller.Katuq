@@ -81,6 +81,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   // --- Ciudades de entrega para el selector en el modal de recompra ---
   public ciudadesEntrega: any[] = [];
 
+  // 1. Agregar propiedad para guardar el scroll
+  private lastScrollTop = 0;
+  // Reemplazar la propiedad de scroll simple por una pila
+  private scrollStack: number[] = [];
+
   ngAfterViewInit() {
     // Limpiar funciones del menú anterior
   }
@@ -101,6 +106,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   openOptionsModal(order: any) {
+    this.scrollStack.push(window.scrollY);
     this.selectedOrder = order;
     this.modalVisible = true;
     // Usar clase CSS en lugar de manipulación directa del style
@@ -112,6 +118,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     this.selectedOrder = null;
     // Remover la clase CSS para restaurar el scroll
     document.body.classList.remove("modal-open");
+    const last = this.scrollStack.pop();
+    if (last !== undefined) {
+      setTimeout(() => {
+        window.scrollTo({ top: last });
+      }, 0);
+    }
   }
 
   onBackdropClick(event: Event) {
@@ -1146,12 +1158,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   pdfOrder(content, order: Pedido) {
+    this.scrollStack.push(window.scrollY);
     this.pedidoSeleccionado = order;
     this.htmlModal = this.paymentService.getHtmlContent(
       order,
       this.isFromProduction,
     );
-    // this.renderer.setProperty(this.htmlPdf.nativeElement, 'innerHTML', this.htmlModal);
     this.modalService
       .open(content, {
         size: "lg",
@@ -1162,11 +1174,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       })
       .result.then(
         (result) => {
-          console.log(result);
           this.htmlModal = null;
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (reason) => {
-          console.log(reason);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
       );
   }
@@ -1317,7 +1339,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   editDatosClientes(content, order: Pedido) {
-    // Verificar si se pueden modificar datos básicos
     if (!this.canModifyBasicData(order)) {
       this.toastrService.warning(
         "No se pueden modificar los datos del cliente en pedidos entregados",
@@ -1325,14 +1346,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       );
       return;
     }
-
-    this.clienteSeleccionado = order.cliente;
+    this.scrollStack.push(window.scrollY);
+    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
     this.pedidoSeleccionado = order;
-
-    // Inicializar formulario con los datos del cliente (igual que en editDatosEntrega y editDatosFacturacion)
     this.initForms(this.clienteSeleccionado);
-
-    // Pequeño delay para evitar conflictos entre cierre de modal de opciones y apertura de modal de cliente
     setTimeout(() => {
       const modalRef = this.modalService.open(content, {
         size: "xl",
@@ -1341,23 +1358,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         fullscreen: false,
         ariaLabelledBy: "modal-basic-title",
       });
-
-      // Después de que el modal se abra, inicializar el componente clientes
       setTimeout(() => {
         this.inicializarComponenteClientes();
       }, 500);
-
       modalRef.result.then(
         (result) => {
-          console.log(result);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (reason) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
           if (reason == "Cross click") {
             return;
           }
-          this.clienteSeleccionado = null;
-          order.cliente = reason;
-
+          this.clienteSeleccionado = null as any;
+          order.cliente = reason ?? order.cliente;
           this.editOrder(order);
         },
       );
@@ -1545,10 +1569,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   editDatosEntrega(content, order: Pedido) {
-    this.clienteSeleccionado = order.cliente;
+    this.scrollStack.push(window.scrollY);
+    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
     this.pedidoSeleccionado = order;
-
-    //inicializr formulario con los datos del cliente tiene las mismas propiedades
     this.initForms(this.clienteSeleccionado);
     this.modalService
       .open(content, {
@@ -1560,9 +1583,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       })
       .result.then(
         (result) => {
-          console.log(result);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (reason) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
           if (reason == "Cross click") {
             return;
           }
@@ -1647,10 +1681,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   editDatosFacturacion(content, order: Pedido) {
-    this.clienteSeleccionado = order.cliente;
+    this.scrollStack.push(window.scrollY);
+    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
     this.pedidoSeleccionado = order;
-
-    //inicializr formulario con los datos del cliente tiene las mismas propiedades
     this.initForms(this.clienteSeleccionado);
     this.modalService
       .open(content, {
@@ -1662,9 +1695,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       })
       .result.then(
         (result) => {
-          console.log(result);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (reason) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
           if (reason == "Cross click") {
             return;
           }
@@ -1675,7 +1719,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
   // edutar Notas
   editNotas(content, order: Pedido) {
-    // VERIFICACIÓN CRÍTICA ANTES DE ABRIR MODAL
     if (!order.carrito || order.carrito.length === 0) {
       Swal.fire({
         icon: "error",
@@ -1685,16 +1728,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       });
       return;
     }
-
-    console.log(
-      "🛡️ APERTURA SEGURA: Pedido tiene",
-      order.carrito.length,
-      "productos",
-    );
-
-    this.clienteSeleccionado = order.cliente;
-    this.pedidoSeleccionado = order; // NO hacer copia, usar referencia original
-    //inicializr formulario con los datos del cliente tiene las mismas propiedades
+    this.scrollStack.push(window.scrollY);
+    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
+    this.pedidoSeleccionado = order;
     this.initForms(this.clienteSeleccionado);
     this.modalService
       .open(content, {
@@ -1706,13 +1742,23 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       })
       .result.then(
         (result) => {
-          console.log(result);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (reason) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
           if (reason == "Cross click") {
             return;
           }
-          // CRÍTICO: Solo actualizar las notas, NO el pedido completo
           this.updateNotasOnly(order);
         },
       );
@@ -1782,9 +1828,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
   // edutar Notas
   editarEstadoPago(content, order: Pedido) {
-    this.clienteSeleccionado = order.cliente;
+    this.scrollStack.push(window.scrollY);
+    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
     this.pedidoSeleccionado = order;
-    //inicializr formulario con los datos del cliente tiene las mismas propiedades
     this.initForms(this.clienteSeleccionado);
     this.modalService
       .open(content, {
@@ -1796,9 +1842,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       })
       .result.then(
         (result) => {
-          console.log(result);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (reason) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
           if (reason == "Cross click") {
             return;
           }
@@ -1833,7 +1890,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   confProductToCart(content, carritoConfiguracion: Carrito, order: Pedido) {
-    // Verificar si se pueden modificar productos
     if (!this.canModifyProducts(order)) {
       this.toastrService.warning(
         `No se pueden modificar productos. El pedido está en estado: ${order.estadoProceso}`,
@@ -1841,9 +1897,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       );
       return;
     }
-
+    this.scrollStack.push(window.scrollY);
     this.configuracionCarritoSeleccionado = carritoConfiguracion;
-
     this.modalService
       .open(content, {
         size: "xl",
@@ -1854,30 +1909,47 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       })
       .result.then(
         (result) => {
-          console.log(result);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (configuracionResult) => {
-          if (configuracionResult == "Cross click") {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
+          if (
+            configuracionResult == "Cross click"
+          ) {
             return;
           }
-          this.configuracionCarritoSeleccionado = configuracionResult;
-          const index = order.carrito.findIndex(
-            (carrito) =>
-              carrito.producto.identificacion.referencia ===
-              configuracionResult?.producto.identificacion.referencia,
-          );
-          if (index !== -1) {
-            order.carrito[index] = configuracionResult;
+          if (
+            order.carrito &&
+            configuracionResult?.producto?.identificacion?.referencia
+          ) {
+            const index = order.carrito.findIndex(
+              (carrito) =>
+                carrito.producto &&
+                carrito.producto.identificacion &&
+                carrito.producto.identificacion.referencia ===
+                  configuracionResult?.producto?.identificacion?.referencia,
+            );
+            if (index !== -1) {
+              order.carrito[index] = configuracionResult;
+            }
           }
-
-          // ===== NUEVO: Recalcular valor de envío (domicilio) =====
-          // Si alguna línea del carrito tiene una forma de entrega que incluya la palabra "domicilio",
-          // se calcula el envío con base en la zona de cobro; de lo contrario se pone en 0 (recoge en tienda).
           const tieneDomicilio = (order.carrito ?? []).some((car) => {
             const forma = car?.configuracion?.datosEntrega?.formaEntrega || "";
             return forma.toLowerCase().includes("domicilio");
           });
-
+          // ===== NUEVO: Recalcular valor de envío (domicilio) =====
+          // Si alguna línea del carrito tiene una forma de entrega que incluya la palabra "domicilio",
+          // se calcula el envío con base en la zona de cobro; de lo contrario se pone en 0 (recoge en tienda).
           if (tieneDomicilio) {
             // Utilizar el servicio utilitario para obtener el costo de envío según la zona
             this.pedidoUtilService.pedido = order;
@@ -1908,7 +1980,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   addProductToCart(content: any, order: Pedido) {
-    // Verificar si se pueden modificar productos
     if (!this.canModifyProducts(order)) {
       this.toastrService.warning(
         `No se pueden agregar productos. El pedido está en estado: ${order.estadoProceso}`,
@@ -1916,9 +1987,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       );
       return;
     }
-
-    // Guardar referencia al pedido actual para que la configuración del nuevo producto
-    // pueda heredar datos de entrega (forma, fecha, horario, etc.)
+    this.scrollStack.push(window.scrollY);
     this.pedidoUtilService.pedido = order;
     this.ciudadSeleccionada = order.envio?.ciudad;
     this.modalService
@@ -1931,16 +2000,27 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       })
       .result.then(
         (result) => {
-          console.log(result);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (configuracionResult) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
           if (configuracionResult == "Cross click") {
             return;
           }
-          order.carrito?.push(configuracionResult);
-          // actualizar valores del pedido
+          if (order.carrito) {
+            order.carrito.push(configuracionResult);
+          }
           order = this.actualizarValoresPedido(order);
-
           this.editOrder(order);
         },
       );
@@ -2076,8 +2156,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   AsentarPago(content, order: Pedido) {
-    //validar sino hace falta por pagar
-
+    this.scrollStack.push(window.scrollY);
     this.pedidoSeleccionado = order;
     this.modalService
       .open(content, {
@@ -2087,31 +2166,32 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         fullscreen: false,
         ariaLabelledBy: "modal-basic-title",
       })
-
       .result.then(
         (result) => {
-          console.log(result);
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
         },
         (reason) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
           if (reason == "Cross click") {
             return;
           }
-
-          // El reason contiene el pedido actualizado con los pagos
           if (reason && reason.nroPedido) {
-            // Actualizar el pedido en la lista inmediatamente
             const index = this.orders.findIndex(
               (p) => p.nroPedido === reason.nroPedido,
             );
             if (index !== -1) {
               this.orders[index] = { ...reason };
-              console.log(
-                "✅ Pedido actualizado en lista con pagos:",
-                reason.PagosAsentados?.length || 0,
-              );
             }
-
-            // Usar método específico para pagos en lugar de editOrder general
             this.updatePagosOnly(reason);
           }
         },
