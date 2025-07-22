@@ -44,12 +44,11 @@ import { takeUntil, switchMap, tap, catchError } from "rxjs/operators";
 })
 export class ConfProductToCartComponent
   implements
-    OnInit,
-    AfterContentChecked,
-    AfterContentInit,
-    AfterViewInit,
-    OnDestroy
-{
+  OnInit,
+  AfterContentChecked,
+  AfterContentInit,
+  AfterViewInit,
+  OnDestroy {
   active = 1;
   private subs: Subscription[] = [];
   private destroy$ = new Subject<void>();
@@ -248,7 +247,7 @@ export class ConfProductToCartComponent
     // this.getAdiciones();
   }
 
-  ngAfterContentInit(): void {}
+  ngAfterContentInit(): void { }
 
   /**
    * 🔄 Inicializa el monitoreo del estado de maestros
@@ -364,13 +363,13 @@ export class ConfProductToCartComponent
       this.tiemposEntrega = r.tiempoEntrega;
       this.generos = producto.procesoComercial?.genero
         ? r.generos?.filter((p: { id: number }) =>
-            producto.procesoComercial!.genero.find((g: number) => g == p.id),
-          )
+          producto.procesoComercial!.genero.find((g: number) => g == p.id),
+        )
         : [];
       this.ocasiones = producto.procesoComercial?.ocasion
         ? r.ocasiones?.filter((p: { id: string }) =>
-            producto.procesoComercial!.ocasion.find((g: string) => g == p.id),
-          )
+          producto.procesoComercial!.ocasion.find((g: string) => g == p.id),
+        )
         : [];
       this.formasEntrega = r.formaEntrega;
       this.adicionesPreferencias = r.adiciones.filter((p) => p.esPreferencia);
@@ -463,7 +462,7 @@ export class ConfProductToCartComponent
     }
   }
 
-  ngAfterContentChecked(): void {}
+  ngAfterContentChecked(): void { }
   refreshCartWithProducts(): void {
     // this.carsingleton.setProductInCart();
     const context = this;
@@ -539,8 +538,8 @@ export class ConfProductToCartComponent
       if (rangoActual && this.rangoPreciosActual !== rangoActual) {
         this.toastrService.show(
           '<p class="mb-0 mt-1">El nuevo precio por unidad de su producto es: ' +
-            precioFormateado +
-            "</p>",
+          precioFormateado +
+          "</p>",
           "",
           {
             closeButton: true,
@@ -600,8 +599,8 @@ export class ConfProductToCartComponent
         if (rangoActual && this.rangoPreciosActual !== rangoActual) {
           this.toastrService.show(
             '<p class="mb-0 mt-1">El nuevo precio por unidad de su producto es: ' +
-              precioFormateado +
-              "</p>",
+            precioFormateado +
+            "</p>",
             "",
             {
               closeButton: true,
@@ -958,19 +957,25 @@ export class ConfProductToCartComponent
     });
 
     if (this.producto && this.producto.crearProducto) {
+      // Inicializar array de imágenes principales
       this.imagesRect =
         this.producto.crearProducto.imagenesPrincipales?.map(
           (x, index) => new Image(index, { img: x.urls }, { img: x.urls }),
         ) || [];
+      
+      // Agregar imágenes secundarias con índices únicos
       if (!this.producto.crearProducto.imagenesSecundarias) {
         this.producto.crearProducto.imagenesSecundarias = [];
       }
+      
+      const imagenesPrincipalesCount = this.imagesRect.length;
       this.producto.crearProducto.imagenesSecundarias
-        ?.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls }))
+        ?.map((x, index) => new Image(imagenesPrincipalesCount + index, { img: x.urls }, { img: x.urls }))
         .forEach((image) => {
           this.imagesRect.push(image);
         });
 
+      // Crear nueva referencia del array para detectar cambios
       this.imagesRect = [...this.imagesRect];
 
       const itemsArray = this.formulario.get("variables") as FormArray;
@@ -1536,117 +1541,134 @@ export class ConfProductToCartComponent
     }
   }
 
-  // deprecado
   selectedProductPreference(event: any, item: FormControl) {
-    const selectedIndex = event.target.value;
+    const selectedIndex = event.target?.value;
     let selectedValue = null;
+
+    // Si existen opciones predefinidas, usar el índice seleccionado
     if (item.value.children.length > 0) {
       selectedValue = item.value.children[selectedIndex];
-    } else {
-      if (item.value.data.tipoImagen == "texto") {
-        item.value.children.data = {
-          imagen: "assets/images/other-images/sinimagen.webp",
-          porcentajeIva: 0,
-          precioTotalConIva: 0,
-          subtitulo: selectedIndex,
-          tipoImagen: "texto",
-          titulo: selectedIndex,
-          valorIva: 0,
-          valorUnitarioSinIva: 0,
-        };
-      } else if (item.value.data.tipoImagen == "imagen") {
-        const file = event.target.files[0];
-        if (!this.isValidFile(file)) {
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "Solo se aceptan archivos con extensiones .png, .jpg, .webp y .jpeg",
-          });
-          event.target.value = "";
-          return;
-        }
-        this.selectedFiles.push(file);
-        if (this.selectedFiles) {
-          Swal.fire({
-            title: "Subiendo archivo...",
-            text: "Por favor espere...",
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            willOpen: () => {
-              Swal.showLoading();
-            },
-          });
-          for (let index = 0; index < this.selectedFiles.length; index++) {
-            const file = this.selectedFiles[index];
-            const filePath = `almara/configuracionProducto/${this.producto?.crearProducto?.titulo.replace(/\s+/g, "")}/preferencia/${file.name}`;
-
-            const fileRef = this.storage.ref(filePath);
-            const task = this.storage.upload(filePath, file);
-            task
-              .snapshotChanges()
-              .pipe(
-                finalize(() => {
-                  fileRef.getDownloadURL().subscribe((url) => {
-                    item.value.children.data = {
-                      imagen: url,
-                      porcentajeIva: item.value.data.porcentajeIva,
-                      precioTotalConIva: item.value.data.precioTotalConIva,
-                      subtitulo: selectedIndex,
-                      tipoImagen: "imagen",
-                      titulo: selectedIndex,
-                      valorIva: item.value.data.valorIva,
-                      valorUnitarioSinIva: item.value.data.valorUnitarioSinIva,
-                    };
-                    Swal.close();
-                    selectedValue = item.value.children;
-                    const preference = {
-                      titulo: item.value.data.titulo,
-                      subtitulo: item.value.data.titulo,
-                      valorUnitarioSinIva:
-                        (selectedValue as any)?.data?.valorUnitarioSinIva || 0,
-                      valorIva: (selectedValue as any)?.data?.valorIva || 0,
-                      porcentajeIva:
-                        (selectedValue as any)?.data?.porcentajeIva || 0,
-                      precioTotalConIva:
-                        (selectedValue as any)?.data?.precioTotalConIva || 0,
-                      imagen:
-                        (selectedValue as any)?.data?.imagen ||
-                        "assets/images/other-images/sinimagen.webp",
-                      tipo: "preferencia",
-                      cantidad: 1,
-                    };
-
-                    const index = this.productPreference.findIndex(
-                      (p) => p.titulo === preference.titulo,
-                    );
-                    if (index !== -1) {
-                      this.productPreference[index] = preference;
-                    } else {
-                      this.productPreference.push(preference);
-                    }
-                  });
-                }),
-              )
-              .subscribe();
-            return;
-          }
-        }
-      }
-
-      selectedValue = item.value.children;
+      this.updateProductPreference(item, selectedValue);
+      return;
     }
 
+    // Manejar entrada personalizada según el tipo
+    if (item.value.data.tipoImagen === "texto") {
+      this.handleTextInput(event, item, selectedIndex);
+    } else if (item.value.data.tipoImagen === "imagen") {
+      this.handleImageUpload(event, item, selectedIndex);
+    }
+  }
+
+  private handleTextInput(event: any, item: FormControl, selectedIndex: string) {
+    const textValue = event.target?.value || selectedIndex;
+    
+    item.value.children.data = {
+      imagen: "assets/images/other-images/sinimagen.webp",
+      porcentajeIva: item.value.data.porcentajeIva || 0,
+      precioTotalConIva: item.value.data.precioTotalConIva || 0,
+      subtitulo: textValue,
+      tipoImagen: "texto",
+      titulo: textValue,
+      valorIva: item.value.data.valorIva || 0,
+      valorUnitarioSinIva: item.value.data.valorUnitarioSinIva || 0,
+    };
+
+    this.updateProductPreference(item, item.value.children);
+  }
+
+  private handleImageUpload(event: any, item: FormControl, selectedIndex: string) {
+    const file = event.target?.files?.[0];
+    
+    if (!file) {
+      console.warn('No se seleccionó ningún archivo');
+      return;
+    }
+
+    if (!this.isValidFile(file)) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Solo se aceptan archivos con extensiones .png, .jpg, .webp y .jpeg",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    this.uploadSingleFile(file, item, event.target);
+  }
+
+  private uploadSingleFile(file: File, item: FormControl, inputElement: any) {
+    const companyStorage = localStorage.getItem("currentCompany");
+    const company = JSON.parse(companyStorage || '{}');
+    
+    // Generar nombre único para el archivo
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+    
+    const filePath = `${company?.nomComercial || 'katuq'}/configuracionProducto/${this.producto?.crearProducto?.titulo?.replace(/\s+/g, "") || 'producto'}/preferencia/${fileName}`;
+    const fileRef = this.storage.ref(filePath);
+    const task = this.storage.upload(filePath, file);
+
+    Swal.fire({
+      title: "Subiendo archivo...",
+      text: "Por favor espere...",
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    task.snapshotChanges().pipe(
+      finalize(() => {
+        fileRef.getDownloadURL().subscribe({
+          next: (url) => {
+            item.value.children.data = {
+              imagen: url,
+              porcentajeIva: item.value.data.porcentajeIva || 0,
+              precioTotalConIva: item.value.data.precioTotalConIva || 0,
+              subtitulo: file.name,
+              tipoImagen: "imagen",
+              titulo: file.name,
+              valorIva: item.value.data.valorIva || 0,
+              valorUnitarioSinIva: item.value.data.valorUnitarioSinIva || 0,
+            };
+
+            this.updateProductPreference(item, item.value.children);
+            Swal.close();
+          },
+          error: (error) => {
+            console.error('Error al obtener URL de descarga:', error);
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: "Error al subir el archivo. Por favor intente nuevamente.",
+            });
+          }
+        });
+      })
+    ).subscribe({
+      error: (error) => {
+        console.error('Error en la subida del archivo:', error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Error al subir el archivo. Por favor intente nuevamente.",
+        });
+      }
+    });
+  }
+
+  private updateProductPreference(item: FormControl, selectedValue: any) {
     const preference = {
       titulo: item.value.data.titulo,
-      subtitulo: (selectedValue as any)?.data?.titulo || "",
-      valorUnitarioSinIva:
-        (selectedValue as any)?.data?.valorUnitarioSinIva || 0,
-      valorIva: (selectedValue as any)?.data?.valorIva || 0,
-      porcentajeIva: (selectedValue as any)?.data?.porcentajeIva || 0,
-      precioTotalConIva: (selectedValue as any)?.data?.precioTotalConIva || 0,
-      imagen:
-        (selectedValue as any)?.data?.imagen ||
-        "assets/images/other-images/sinimagen.webp",
+      subtitulo: selectedValue?.data?.titulo || selectedValue?.data?.subtitulo || "",
+      valorUnitarioSinIva: selectedValue?.data?.valorUnitarioSinIva || 0,
+      valorIva: selectedValue?.data?.valorIva || 0,
+      porcentajeIva: selectedValue?.data?.porcentajeIva || 0,
+      precioTotalConIva: selectedValue?.data?.precioTotalConIva || 0,
+      imagen: selectedValue?.data?.imagen || "assets/images/other-images/sinimagen.webp",
       tipo: "preferencia",
       paraProduccion: false,
       cantidad: 1,
@@ -1655,12 +1677,14 @@ export class ConfProductToCartComponent
     const index = this.productPreference.findIndex(
       (p) => p.titulo === preference.titulo,
     );
+
     if (index !== -1) {
       this.productPreference[index] = preference;
     } else {
       this.productPreference.push(preference);
     }
   }
+
 
   getImgAdicion(adicion: any) {
     const adiciones = this.adicionesPreferencias.find(
@@ -1705,7 +1729,7 @@ export class ConfProductToCartComponent
 
     return fileExtension
       ? allowedExtensions.filter((extension) => extension === fileExtension)
-          .length > 0
+        .length > 0
       : false;
   }
   getVariablesControls() {
