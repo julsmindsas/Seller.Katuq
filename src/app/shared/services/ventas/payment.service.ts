@@ -763,6 +763,13 @@ export class PaymentService extends BaseService {
           <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIva)}</td>
           <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioUnitarioConIva)}</td>
         </tr>
+        ${isComanda && producto?.crearProducto?.descripcion ? `
+          <tr>
+            <td colspan="8" style="border: 1px solid #ddd; padding: 8px; color: #555; font-style: italic;">
+              <strong>Descripción:</strong> ${producto.crearProducto.descripcion}
+            </td>
+          </tr>
+        ` : ""}
       `;
 
       // Preferencias
@@ -1195,6 +1202,50 @@ export class PaymentService extends BaseService {
     </div>`
       : "";
 
+    // Layout de dos columnas: si isComanda es true, solo mostrar datos del cliente ocupando todo el ancho
+    const twoColumnSection = !isComanda ? `
+      <div class="two-column-container">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="width: 48%; vertical-align: top; padding-right: ${styles.spacing.lg};">
+              <!-- Datos del Cliente -->
+${htmlDatosClienteModerno}
+            </td>
+            <td style="width: 48%; vertical-align: top; padding-left: ${styles.spacing.lg};">
+              <!-- Datos de Facturación -->
+              ${htmlFacturacionModerno || `
+                  <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; opacity: 0.6;">
+                    <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="vertical-align: middle; padding: 0;">
+                            <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">🧾</span>
+                            <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Datos de Facturación</h2>
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                    <div style="padding: 4px 0;">
+                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px; font-style: italic;">No se requiere facturación electrónica para este pedido</p>
+                    </div>
+                  </div>`}
+            </td>
+          </tr>
+        </table>
+      </div>
+    ` : `
+      <div class="two-column-container">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="width: 100%; vertical-align: top;">
+              <!-- Solo datos del cliente para comanda -->
+${htmlDatosClienteModerno}
+            </td>
+          </tr>
+        </table>
+      </div>
+    `;
+
     const htmlString = `
     <!DOCTYPE html>
     <html lang="es">
@@ -1621,35 +1672,7 @@ export class PaymentService extends BaseService {
           </div>
 
           <!-- Cliente y Facturación - Layout de Dos Columnas -->
-          <div class="two-column-container">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="width: 48%; vertical-align: top; padding-right: ${styles.spacing.lg};">
-                  <!-- Datos del Cliente -->
-${htmlDatosClienteModerno}
-                </td>
-                <td style="width: 48%; vertical-align: top; padding-left: ${styles.spacing.lg};">
-                  <!-- Datos de Facturación -->
-${htmlFacturacionModerno || `
-                  <div style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #f3f4f6; opacity: 0.6;">
-                    <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;">
-                      <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                          <td style="vertical-align: middle; padding: 0;">
-                            <span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; text-align: center; line-height: 20px; border-radius: 50%; margin-right: 6px;">🧾</span>
-                            <h2 style="margin: 0; color: #1f2937; font-size: 14px; font-weight: 600; display: inline-block;">Datos de Facturación</h2>
-                          </td>
-                        </tr>
-                      </table>
-                    </div>
-                    <div style="padding: 4px 0;">
-                      <p style="margin: 2px 0; color: #6b7280; font-size: 11px; font-style: italic;">No se requiere facturación electrónica para este pedido</p>
-                    </div>
-                  </div>`}
-                </td>
-              </tr>
-            </table>
-          </div>
+          ${twoColumnSection}
 
           ${htmlEnvioModerno}
           
