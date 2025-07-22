@@ -322,6 +322,8 @@ export class DespachosComponent implements OnInit {
       { id: 2, nombre: "Pagado" },
       { id: 3, nombre: "Anulado" },
       { id: 4, nombre: "Devuelto" },
+      { id: 5, nombre: "Pospendiente" },
+
     ];
     // Inicializar las columnas seleccionadas al cargar
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
@@ -352,6 +354,7 @@ export class DespachosComponent implements OnInit {
         EstadoProceso.ProducidoTotalmente,
         EstadoProceso.SinProducir,
         EstadoProceso.ProducidoParcialmente,
+        EstadoProceso.EnProduccion,
         EstadoProceso.Entregado,
         EstadoProceso.Despachado,
         EstadoProceso.Empacado,
@@ -420,7 +423,7 @@ export class DespachosComponent implements OnInit {
     // Para cada pedido, calcular los días restantes hasta la entrega
     this.orders.forEach((pedido) => {
       // Primero verificar si es un pedido sin producir
-      if (pedido.estadoProceso === EstadoProceso.SinProducir) {
+      if (pedido.estadoProceso === EstadoProceso.SinProducir || pedido.estadoProceso === EstadoProceso.EnProduccion) {
         this.procesarPedidoSinProducir(pedido, hoy);
         return; // Salir temprano, ya que se ha procesado como sin producir
       }
@@ -2190,6 +2193,7 @@ export class DespachosComponent implements OnInit {
         EstadoProceso.ParaDespachar,
         EstadoProceso.ProducidoTotalmente,
         EstadoProceso.SinProducir,
+        EstadoProceso.EnProduccion,
         EstadoProceso.Producido,
         EstadoProceso.Entregado,
         EstadoProceso.Despachado,

@@ -210,6 +210,7 @@ export class GenerarOrdenComponent implements OnInit {
           const estadoValido =
             o.estadoProceso !== EstadoProceso.Entregado &&
             o.estadoProceso !== EstadoProceso.Despachado &&
+            o.estadoProceso !== EstadoProceso.EnProduccion &&
             o.estadoProceso !== EstadoProceso.SinProducir;
           const formaEntregaValida = o.carrito
             ? o.carrito[0].configuracion?.datosEntrega.formaEntrega
