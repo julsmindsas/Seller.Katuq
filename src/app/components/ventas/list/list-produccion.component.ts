@@ -83,6 +83,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   isColumnVisibleProduccion(field: string): boolean {
     if (this.fixedFields.includes(field)) return true;
     return this.selectedColumns.some(col => col.field === field && col.visible);
+    
   }
 
   handleColumnSelectionChange(newSelected: ColumnDefinition[]) {

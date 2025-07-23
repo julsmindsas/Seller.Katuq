@@ -24,6 +24,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
   private productosCatalogo: Producto[] = [];
   private empresaActual: any;
   private allBillingZone: any[] = [];
+  private pasoActual: number = 1; // Paso actual del proceso (1-8)
 
   constructor(
     private ventasService: VentasService,
@@ -48,6 +49,8 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     const user = JSON.parse(localStorage.getItem('user') || '{}') as UserLogged;
     const asesor: UserLite = { name: user.name, email: user.email, nit: user.nit };
 
+    this.pasoActual = 1; // Reiniciar al primer paso
+
     this.pedidoEnProgreso = {
         referencia: `VOICE-REF-${Date.now()}`,
         nroPedido: 'VPI' + Math.floor(Math.random() * 100000), // Venta Por Interfaz
@@ -68,9 +71,75 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
 
   private updateVisualStep(stepName: string) {
     const steps = this.getInitialProcessSteps();
-    const stepIndex = steps.findIndex(s => s.caption.toLowerCase().includes(stepName.toLowerCase()));
-    if (stepIndex !== -1) {
+    let stepIndex = -1;
+    
+    // Mapeo inteligente de acciones a pasos visuales
+    const stepMapping: { [key: string]: number } = {
+      'catalogo': 0,
+      'bodega': 0,
+      'warehouse': 0,
+      'carrito': 1,
+      'cart': 1,
+      'productos': 1,
+      'cliente': 2,
+      'client': 2,
+      'facturacion': 3,
+      'billing': 3,
+      'entrega': 4,
+      'delivery': 4,
+      'envio': 4,
+      'pago': 5,
+      'payment': 5,
+      'confirmacion': 6,
+      'confirmation': 6
+    };
+    
+    // Buscar por mapeo directo primero
+    stepIndex = stepMapping[stepName.toLowerCase()];
+    
+    // Si no se encuentra, buscar por contenido de caption
+    if (stepIndex === undefined || stepIndex === -1) {
+      stepIndex = steps.findIndex(s => s.caption.toLowerCase().includes(stepName.toLowerCase()));
+    }
+    
+    if (stepIndex !== -1 && stepIndex < steps.length) {
       this.voiceAgentService.goToStep(stepIndex);
+      
+      // Actualizar el paso basado en el estado actual del proceso
+      const processStatus = this._getProcessStatus();
+      const completionPercentage = this.calculateCompletionPercentage(processStatus);
+      
+      // Agregar información contextual al paso visual
+      const updatedSteps = steps.map((step, index) => {
+        if (index === stepIndex) {
+          return {
+            ...step,
+            caption: `${step.caption.replace(' ✅', '')} ✅`,
+            completed: true,
+            active: true
+          };
+        } else if (index < stepIndex) {
+          return {
+            ...step,
+            caption: step.caption.replace(' ✅', '') + ' ✅',
+            completed: true,
+            active: false
+          };
+        } else {
+          return {
+            ...step,
+            caption: step.caption.replace(' ✅', ''),
+            completed: false,
+            active: false
+          };
+        }
+      });
+      
+      this.voiceAgentService.setVisualSteps(updatedSteps);
+      
+      console.log(`📍 Paso visual actualizado: ${stepName} (índice ${stepIndex}) - Progreso: ${completionPercentage}%`);
+    } else {
+      console.warn(`⚠️ No se pudo encontrar el paso visual para: ${stepName}`);
     }
   }
 
@@ -158,6 +227,37 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         readyForPayment: hasWarehouse && hasProducts && hasClient && hasDeliveryInfo && hasBillingInfo
     };
   }
+
+  private calculateCompletionPercentage(processStatus: any): number {
+    const completedSteps = Object.values(processStatus.completedSteps).filter(Boolean).length;
+    const totalSteps = Object.keys(processStatus.completedSteps).length;
+    return Math.round((completedSteps / totalSteps) * 100);
+  }
+
+  private getNextActions(processStatus: any): string[] {
+    const actions: string[] = [];
+    
+    if (!processStatus.completedSteps.warehouse) {
+      actions.push('Seleccionar bodega con selectWarehouse');
+    }
+    if (!processStatus.completedSteps.products) {
+      actions.push('Agregar productos con addToCart');
+    }
+    if (!processStatus.completedSteps.client) {
+      actions.push('Configurar cliente con searchClient o setClientToOrder');
+    }
+    if (!processStatus.completedSteps.delivery) {
+      actions.push('Configurar datos de entrega con setDeliveryInfo');
+    }
+    if (!processStatus.completedSteps.billing) {
+      actions.push('Configurar datos de facturación con setBillingInfo');
+    }
+    if (processStatus.readyForPayment) {
+      actions.push('Procesar venta con processSale');
+    }
+    
+    return actions;
+  }
   register(adapter: ToolAdapter): void {
     
     // Herramienta para listar bodegas disponibles
@@ -170,9 +270,28 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         async () => {
             try {
                 const bodegas = (await this.bodegaService.getBodegas().toPromise()) || [];
-                return { success: true, warehouses: bodegas.map(b => ({id: b.idBodega, nombre: b.nombre})) };
+                const warehouseList = bodegas.map(b => ({id: b.idBodega, nombre: b.nombre}));
+                
+                if (warehouseList.length === 0) {
+                    return { 
+                        success: false, 
+                        error: 'No hay bodegas disponibles en este momento. Contacta al administrador del sistema.',
+                        warehouses: []
+                    };
+                }
+                
+                return { 
+                    success: true, 
+                    warehouses: warehouseList,
+                    count: warehouseList.length,
+                    message: `Encontré ${warehouseList.length} bodega${warehouseList.length > 1 ? 's' : ''} disponible${warehouseList.length > 1 ? 's' : ''} para realizar ventas.`
+                };
             } catch (error: any) {
-                return { success: false, error: `No se pudieron cargar las bodegas: ${error.message}` };
+                return { 
+                    success: false, 
+                    error: `Error al cargar las bodegas: ${error.message}. Intenta nuevamente o contacta soporte técnico.`,
+                    warehouses: []
+                };
             }
         }
     );
@@ -196,7 +315,11 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
                 this.bodegaSeleccionada = bodegas.find(b => b.idBodega === warehouseId);
 
                 if (!this.bodegaSeleccionada) {
-                    return { success: false, error: `Bodega con ID ${warehouseId} no encontrada.` };
+                    return { 
+                        success: false, 
+                        error: `No encontré la bodega con ID "${warehouseId}". Verifica el ID y usa la herramienta listWarehouses para ver las bodegas disponibles.`,
+                        availableWarehouses: bodegas.map(b => ({id: b.idBodega, nombre: b.nombre}))
+                    };
                 }
                 
                 this.pedidoEnProgreso.bodegaId = this.bodegaSeleccionada.idBodega;
@@ -210,12 +333,23 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
                     bodegaId: item.bodegaId || warehouseId,
                 }));
 
-                this.toastr.info(`Catálogo de ${this.bodegaSeleccionada.nombre} cargado.`, 'Bodega Seleccionada');
+                this.toastr.success(`Bodega "${this.bodegaSeleccionada.nombre}" seleccionada correctamente.`, 'Bodega Configurada');
                 this.updateVisualStep('catalogo');
 
-                return { success: true, selectedWarehouse: this.bodegaSeleccionada.nombre, productsLoaded: this.productosCatalogo.length };
+                return { 
+                    success: true, 
+                    selectedWarehouse: this.bodegaSeleccionada.nombre, 
+                    warehouseId: this.bodegaSeleccionada.idBodega,
+                    productsLoaded: this.productosCatalogo.length,
+                    message: `Perfecto! Seleccioné la bodega "${this.bodegaSeleccionada.nombre}" y cargué ${this.productosCatalogo.length} productos disponibles. Ya puedes buscar productos para agregar al carrito.`,
+                    nextStep: 'Ahora puedes usar searchProducts para buscar productos específicos o addToCart para agregar productos al pedido.'
+                };
             } catch (error: any) {
-                return { success: false, error: `Error al seleccionar la bodega: ${error.message}` };
+                return { 
+                    success: false, 
+                    error: `Error al cargar la bodega: ${error.message}. Verifica tu conexión a internet o intenta con otra bodega.`,
+                    suggestion: 'Usa listWarehouses para ver otras bodegas disponibles.'
+                };
             }
         }
     );
@@ -224,32 +358,282 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     adapter.registerTool(
       {
         name: 'searchProducts',
-        description: 'Busca productos en el catálogo de la bodega actualmente seleccionada.',
+        description: 'Busca productos en el catálogo con filtros avanzados. Puedes buscar por nombre, código de barras, referencia, filtrar por precio, categoría, stock mínimo y ordenar los resultados.',
         parameters: {
           type: 'object',
           properties: {
-            query: { type: 'string', description: 'Término de búsqueda para el nombre del producto.' },
-            category: { type: 'string', description: 'Categoría para filtrar los productos.' },
-            limit: { type: 'integer', description: 'Número máximo de resultados a devolver.' }
+            query: { 
+              type: 'string', 
+              description: 'Término de búsqueda para nombre, código de barras o referencia del producto.' 
+            },
+            category: { 
+              type: 'string', 
+              description: 'Categoría específica para filtrar los productos.' 
+            },
+            minPrice: { 
+              type: 'number', 
+              description: 'Precio mínimo del producto (incluye IVA).' 
+            },
+            maxPrice: { 
+              type: 'number', 
+              description: 'Precio máximo del producto (incluye IVA).' 
+            },
+            minStock: { 
+              type: 'integer', 
+              description: 'Stock mínimo disponible requerido.' 
+            },
+            sortBy: { 
+              type: 'string', 
+              enum: ['name', 'price-asc', 'price-desc', 'stock-desc', 'stock-asc'],
+              description: 'Ordenar por: name (alfabético), price-asc/desc (precio), stock-asc/desc (disponibilidad).' 
+            },
+            limit: { 
+              type: 'integer', 
+              description: 'Número máximo de resultados a devolver (por defecto 10, máximo 50).' 
+            }
           }
         }
       },
-      async ({ query, category, limit }) => {
+      async ({ query, category, minPrice, maxPrice, minStock, sortBy, limit = 10 }) => {
         if (!this.bodegaSeleccionada) {
-            return { success: false, error: "Por favor, selecciona primero una bodega usando la herramienta 'selectWarehouse'." };
+            return { 
+                success: false, 
+                error: "Primero necesitas seleccionar una bodega. Usa la herramienta 'selectWarehouse' con el ID de la bodega que deseas usar.",
+                suggestion: "Prueba con 'listWarehouses' para ver las bodegas disponibles."
+            };
         }
+        
+        // Validar límite
+        const safeLimit = Math.min(limit || 10, 50);
+        
         let results: Producto[] = this.productosCatalogo;
+        let appliedFilters: string[] = [];
+        
+        // Filtro por búsqueda de texto (nombre, código de barras, referencia)
         if (query) {
-          const q = query.toLowerCase();
-          results = results.filter(p => p.crearProducto?.titulo.toLowerCase().includes(q));
+          const q = query.toLowerCase().trim();
+          results = results.filter(p => {
+            const titulo = p.crearProducto?.titulo?.toLowerCase() || '';
+            const codigoBarras = p.identificacion?.codigoBarras?.toLowerCase() || '';
+            const referencia = p.identificacion?.referencia?.toLowerCase() || '';
+            
+            return titulo.includes(q) || codigoBarras.includes(q) || referencia.includes(q);
+          });
+          appliedFilters.push(`búsqueda: "${query}"`);
         }
+        
+        // Filtro por categoría
         if (category) {
-          results = results.filter(p => p.exposicion?.etiquetas?.includes(category));
+          results = results.filter(p => {
+            const etiquetas = p.exposicion?.etiquetas || [];
+            const categoriasNombre = p.categorias?.label?.toLowerCase() || '';
+            return etiquetas.includes(category) || categoriasNombre.includes(category.toLowerCase());
+          });
+          appliedFilters.push(`categoría: "${category}"`);
         }
-        if (limit && limit > 0) {
-          results = results.slice(0, limit);
+        
+        // Filtro por rango de precios
+        if (minPrice !== undefined) {
+          results = results.filter(p => {
+            const precio = p.precio?.precioUnitarioConIva || 0;
+            return precio >= minPrice;
+          });
+          appliedFilters.push(`precio mín: $${minPrice.toLocaleString()}`);
         }
-        return { success: true, products: results.map(p => ({id: p.cd, nombre: p.crearProducto?.titulo, precio: p.precio?.precioUnitarioConIva})) };
+        
+        if (maxPrice !== undefined) {
+          results = results.filter(p => {
+            const precio = p.precio?.precioUnitarioConIva || 0;
+            return precio <= maxPrice;
+          });
+          appliedFilters.push(`precio máx: $${maxPrice.toLocaleString()}`);
+        }
+        
+        // Filtro por stock mínimo
+        if (minStock !== undefined) {
+          results = results.filter(p => {
+            const stock = p.disponibilidad?.cantidadDisponible || 0;
+            return stock >= minStock;
+          });
+          appliedFilters.push(`stock mín: ${minStock}`);
+        }
+        
+        // Ordenamiento
+        if (sortBy) {
+          switch (sortBy) {
+            case 'name':
+              results.sort((a, b) => {
+                const nameA = a.crearProducto?.titulo || '';
+                const nameB = b.crearProducto?.titulo || '';
+                return nameA.localeCompare(nameB);
+              });
+              appliedFilters.push('ordenado por nombre');
+              break;
+            case 'price-asc':
+              results.sort((a, b) => {
+                const priceA = a.precio?.precioUnitarioConIva || 0;
+                const priceB = b.precio?.precioUnitarioConIva || 0;
+                return priceA - priceB;
+              });
+              appliedFilters.push('ordenado por precio (menor a mayor)');
+              break;
+            case 'price-desc':
+              results.sort((a, b) => {
+                const priceA = a.precio?.precioUnitarioConIva || 0;
+                const priceB = b.precio?.precioUnitarioConIva || 0;
+                return priceB - priceA;
+              });
+              appliedFilters.push('ordenado por precio (mayor a menor)');
+              break;
+            case 'stock-desc':
+              results.sort((a, b) => {
+                const stockA = a.disponibilidad?.cantidadDisponible || 0;
+                const stockB = b.disponibilidad?.cantidadDisponible || 0;
+                return stockB - stockA;
+              });
+              appliedFilters.push('ordenado por stock (mayor a menor)');
+              break;
+            case 'stock-asc':
+              results.sort((a, b) => {
+                const stockA = a.disponibilidad?.cantidadDisponible || 0;
+                const stockB = b.disponibilidad?.cantidadDisponible || 0;
+                return stockA - stockB;
+              });
+              appliedFilters.push('ordenado por stock (menor a mayor)');
+              break;
+          }
+        }
+        
+        const totalFound = results.length;
+        
+        // Aplicar límite
+        if (safeLimit > 0) {
+          results = results.slice(0, safeLimit);
+        }
+        
+        if (totalFound === 0) {
+            const filterText = appliedFilters.length > 0 ? ` con ${appliedFilters.join(', ')}` : '';
+            return { 
+                success: false, 
+                error: `No encontré productos${filterText}.`,
+                suggestion: 'Intenta ajustar los filtros o usa términos más generales. Puedes usar searchProducts sin parámetros para ver todos los productos disponibles.',
+                totalInCatalog: this.productosCatalogo.length,
+                appliedFilters: appliedFilters,
+                availableCategories: this.getAvailableCategories(),
+                priceRange: this.getPriceRange()
+            };
+        }
+        
+        const productList = results.map(p => ({
+            id: p.cd, 
+            nombre: p.crearProducto?.titulo, 
+            precio: p.precio?.precioUnitarioConIva || 0,
+            disponible: p.disponibilidad?.cantidadDisponible || 0,
+            categoria: p.exposicion?.etiquetas?.[0] || p.categorias?.label || 'Sin categoría',
+            referencia: p.identificacion?.referencia || '',
+            codigoBarras: p.identificacion?.codigoBarras || '',
+            marca: p.identificacion?.marca || '',
+            precioFormateado: `$${(p.precio?.precioUnitarioConIva || 0).toLocaleString()}`
+        }));
+        
+        const filtersText = appliedFilters.length > 0 ? ` (filtros: ${appliedFilters.join(', ')})` : '';
+        const limitText = results.length < totalFound ? ` Mostrando ${results.length} de ${totalFound}.` : '';
+        
+        return { 
+            success: true, 
+            products: productList,
+            totalFound: totalFound,
+            totalShowing: results.length,
+            appliedFilters: appliedFilters,
+            searchSummary: {
+                query: query || null,
+                category: category || null,
+                priceRange: {
+                    min: minPrice || null,
+                    max: maxPrice || null
+                },
+                minStock: minStock || null,
+                sortBy: sortBy || null,
+                limit: safeLimit
+            },
+            message: `Encontré ${totalFound} producto${totalFound > 1 ? 's' : ''}${filtersText}.${limitText}`,
+            nextActions: [
+                'Usa addToCart con el ID del producto para agregarlo al carrito',
+                'Usa searchProducts con otros filtros para refinar la búsqueda',
+                'Usa getAvailableSteps para ver el progreso del pedido'
+            ],
+            helpfulInfo: results.length < totalFound ? 
+                `Hay ${totalFound - results.length} productos más. Usa un límite mayor o filtros más específicos.` : 
+                null
+        };
+      }
+    );
+
+    // Herramienta para obtener información de filtros disponibles para búsqueda
+    adapter.registerTool(
+      {
+        name: 'getProductFilters',
+        description: 'Obtiene información sobre los filtros disponibles para la búsqueda de productos, incluyendo categorías, rangos de precios y opciones de ordenamiento.',
+        parameters: { type: 'object', properties: {} }
+      },
+      () => {
+        if (!this.bodegaSeleccionada) {
+            return { 
+                success: false, 
+                error: "Primero necesitas seleccionar una bodega para ver los filtros disponibles.",
+                suggestion: "Usa 'selectWarehouse' para seleccionar una bodega."
+            };
+        }
+
+        const categoriesAvailable = this.getAvailableCategories();
+        const priceRange = this.getPriceRange();
+        const totalProducts = this.productosCatalogo.length;
+
+        return {
+            success: true,
+            warehouse: this.bodegaSeleccionada.nombre,
+            totalProducts: totalProducts,
+            availableFilters: {
+                categories: {
+                    count: categoriesAvailable.length,
+                    options: categoriesAvailable,
+                    usage: 'Usa el parámetro "category" con uno de estos valores'
+                },
+                priceRange: {
+                    min: priceRange.min,
+                    max: priceRange.max,
+                    average: priceRange.average,
+                    formatted: {
+                        min: `$${priceRange.min.toLocaleString()}`,
+                        max: `$${priceRange.max.toLocaleString()}`,
+                        average: `$${priceRange.average.toLocaleString()}`
+                    },
+                    usage: 'Usa "minPrice" y/o "maxPrice" con valores numéricos'
+                },
+                sortOptions: [
+                    { value: 'name', description: 'Ordenar alfabéticamente por nombre' },
+                    { value: 'price-asc', description: 'Ordenar por precio de menor a mayor' },
+                    { value: 'price-desc', description: 'Ordenar por precio de mayor a menor' },
+                    { value: 'stock-asc', description: 'Ordenar por stock de menor a mayor' },
+                    { value: 'stock-desc', description: 'Ordenar por stock de mayor a menor' }
+                ],
+                searchFields: [
+                    'Nombre del producto',
+                    'Código de barras',
+                    'Referencia del producto'
+                ]
+            },
+            exampleUsage: [
+                'searchProducts con query="pantalón" - buscar por nombre',
+                'searchProducts con category="Ropa" - filtrar por categoría',
+                'searchProducts con minPrice=50000 maxPrice=200000 - rango de precios',
+                'searchProducts con minStock=5 - solo productos con stock mínimo',
+                'searchProducts con sortBy="price-asc" - ordenar por precio',
+                'searchProducts con query="123456" - buscar por código de barras'
+            ],
+            message: `Bodega: ${this.bodegaSeleccionada.nombre} | ${totalProducts} productos | ${categoriesAvailable.length} categorías | Precios: $${priceRange.min.toLocaleString()} - $${priceRange.max.toLocaleString()}`,
+            nextStep: 'Usa searchProducts con los filtros que necesites para encontrar productos específicos.'
+        };
       }
     );
 
@@ -262,39 +646,82 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
           type: 'object',
           properties: {
             productId: { type: 'string', description: 'El ID (cd) del producto a añadir.' },
-            quantity: { type: 'integer', default: 1, description: 'La cantidad a añadir.' }
+            quantity: { type: 'integer', default: 1, description: 'La cantidad a añadir (mínimo 1).' }
           },
           required: ['productId']
         }
       },
-      ({ productId, quantity }) => {
+      ({ productId, quantity = 1 }) => {
         if (!this.bodegaSeleccionada) {
-            return { success: false, error: "Por favor, selecciona primero una bodega." };
-        }
-        const product = this.productosCatalogo.find(p => p.cd === productId);
-        if (!product) {
-          return { success: false, error: `Producto con ID '${productId}' no encontrado en el catálogo de la bodega actual.` };
+            return { 
+                success: false, 
+                error: "Necesitas seleccionar una bodega antes de agregar productos al carrito.",
+                suggestion: "Usa 'selectWarehouse' para elegir una bodega primero."
+            };
         }
         
-        const cantidad = quantity || 1;
+        const product = this.productosCatalogo.find(p => p.cd === productId);
+        if (!product) {
+          return { 
+              success: false, 
+              error: `No encontré el producto con ID "${productId}" en la bodega "${this.bodegaSeleccionada.nombre}".`,
+              suggestion: "Usa 'searchProducts' para buscar productos disponibles en esta bodega.",
+              currentWarehouse: this.bodegaSeleccionada.nombre
+          };
+        }
+        
+        if (quantity < 1) {
+            return {
+                success: false,
+                error: "La cantidad debe ser al menos 1.",
+                suggestion: "Especifica una cantidad válida (número entero positivo)."
+            };
+        }
+        
+        const cantidadDisponible = product.disponibilidad?.cantidadDisponible || 0;
+        if (quantity > cantidadDisponible) {
+            return {
+                success: false,
+                error: `Solo hay ${cantidadDisponible} unidades disponibles de "${product.crearProducto?.titulo}". Solicitas ${quantity} unidades.`,
+                available: cantidadDisponible,
+                suggested: Math.min(quantity, cantidadDisponible)
+            };
+        }
+        
         const productoCompra = {
             producto: product,
             configuracion: {
                 producto: product,
                 datosEntrega: null,
-                cantidad,
+                cantidad: quantity,
                 preferencias: [],
                 adiciones: [],
                 tarjetas: []
             },
-            cantidad
+            cantidad: quantity
         };
+        
         this.cartService.addToCart(productoCompra);
         this.pedidoEnProgreso.carrito = this.cartService.productInCart.getValue();
         this.toastr.success(`${product.crearProducto?.titulo} añadido al carrito.`, 'Producto Añadido');
         this.updateVisualStep('carrito');
 
-        return { success: true, ...this._getCartStatus(), processStatus: this._getProcessStatus() };
+        const cartStatus = this._getCartStatus();
+        const processStatus = this._getProcessStatus();
+        
+        return { 
+            success: true, 
+            productAdded: {
+                name: product.crearProducto?.titulo,
+                price: product.precio?.precioUnitarioConIva || 0,
+                quantity: quantity,
+                total: (product.precio?.precioUnitarioConIva || 0) * quantity
+            },
+            cart: cartStatus,
+            process: processStatus,
+            message: `Perfecto! Agregué ${quantity} unidad${quantity > 1 ? 'es' : ''} de "${product.crearProducto?.titulo}" al carrito. Total del carrito: $${cartStatus.subtotal?.toLocaleString() || 0}`,
+            nextStep: cartStatus.count === 1 ? 'Puedes seguir agregando productos o continuar con setClientToOrder para configurar el cliente.' : 'Carrito actualizado. Puedes continuar agregando productos o proceder con el cliente.'
+        };
       }
     );
 
@@ -316,22 +743,74 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             name: 'searchClient',
             description: 'Busca un cliente existente por su número de documento.',
             parameters: {
-                type: 'object', properties: { document: { type: 'string', description: 'Número de documento del cliente.'} }, required: ['document']
+                type: 'object', 
+                properties: { 
+                    document: { 
+                        type: 'string', 
+                        description: 'Número de documento del cliente (sin puntos ni espacios).'
+                    } 
+                }, 
+                required: ['document']
             }
         },
         async ({ document }) => {
+            if (!document || document.trim().length === 0) {
+                return {
+                    success: false,
+                    error: 'El número de documento es requerido.',
+                    suggestion: 'Proporciona un número de documento válido sin puntos ni espacios.'
+                };
+            }
+
+            // Limpiar el documento de caracteres especiales
+            const cleanDocument = document.replace(/[^0-9]/g, '');
+            
+            if (cleanDocument.length < 6) {
+                return {
+                    success: false,
+                    error: 'El número de documento debe tener al menos 6 dígitos.',
+                    suggestion: 'Verifica que el documento esté completo y sea válido.'
+                };
+            }
+
             try {
-                const client: any = await this.maestroService.getClientByDocument({documento: document}).toPromise();
-                if (client) {
+                const client: any = await this.maestroService.getClientByDocument({documento: cleanDocument}).toPromise();
+                if (client && client.documento) {
                     this.pedidoEnProgreso.cliente = client;
-                    this.toastr.info(`Cliente ${client.nombres_completos} seleccionado.`, 'Cliente Encontrado');
+                    this.toastr.success(`Cliente encontrado: ${client.nombres_completos}`, 'Cliente Seleccionado');
                     this.updateVisualStep('cliente');
-                    return { success: true, client: client, processStatus: this._getProcessStatus() };
+                    
+                    return { 
+                        success: true, 
+                        client: {
+                            name: client.nombres_completos,
+                            document: client.documento,
+                            email: client.correo_electronico_comprador,
+                            phone: client.numero_celular_comprador,
+                            status: client.estado || 'Activo'
+                        },
+                        message: `¡Perfecto! Encontré al cliente ${client.nombres_completos} (${client.documento}). El cliente está configurado para el pedido.`,
+                        nextStep: 'Ahora puedes continuar con setDeliveryInfo para configurar los datos de entrega.',
+                        processStatus: this._getProcessStatus() 
+                    };
                 } else {
-                    return { success: false, error: 'Cliente no encontrado. Se puede crear con la herramienta setClientToOrder.', processStatus: this._getProcessStatus() };
+                    return { 
+                        success: false, 
+                        error: `No encontré ningún cliente con el documento "${cleanDocument}".`,
+                        suggestion: 'Puedes crear un nuevo cliente usando la herramienta setClientToOrder con todos los datos necesarios.',
+                        documentSearched: cleanDocument,
+                        nextStep: 'Usa setClientToOrder para registrar un nuevo cliente.',
+                        processStatus: this._getProcessStatus() 
+                    };
                 }
             } catch (error: any) {
-                return { success: false, error: `Error al buscar el cliente: ${error.message}`, processStatus: this._getProcessStatus() };
+                return { 
+                    success: false, 
+                    error: `Error al consultar la base de datos: ${error.message}`,
+                    suggestion: 'Verifica tu conexión a internet o intenta nuevamente. Si el problema persiste, contacta soporte técnico.',
+                    documentSearched: cleanDocument,
+                    troubleshooting: 'Error de conexión con la base de datos de clientes.'
+                };
             }
         }
     );
@@ -445,7 +924,50 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         description: 'Obtiene el estado completo del pedido que se está creando.',
         parameters: { type: 'object', properties: {} }
       },
-      () => ({ success: true, order: this.pedidoEnProgreso, processStatus: this._getProcessStatus() })
+      () => {
+        const processStatus = this._getProcessStatus();
+        const cartStatus = this._getCartStatus();
+        
+        return {
+            success: true,
+            order: {
+                orderNumber: this.pedidoEnProgreso.nroPedido,
+                reference: this.pedidoEnProgreso.referencia,
+                warehouse: this.bodegaSeleccionada?.nombre || 'No seleccionada',
+                client: this.pedidoEnProgreso.cliente ? {
+                    name: this.pedidoEnProgreso.cliente.nombres_completos,
+                    document: this.pedidoEnProgreso.cliente.documento,
+                    email: this.pedidoEnProgreso.cliente.correo_electronico_comprador
+                } : null,
+                cart: cartStatus,
+                delivery: this.pedidoEnProgreso.envio ? {
+                    address: this.pedidoEnProgreso.envio.direccionEntrega,
+                    city: this.pedidoEnProgreso.envio.ciudad,
+                    method: this.pedidoEnProgreso.formaEntrega
+                } : null,
+                billing: this.pedidoEnProgreso.facturacion ? {
+                    name: this.pedidoEnProgreso.facturacion.nombres,
+                    document: this.pedidoEnProgreso.facturacion.documento,
+                    address: this.pedidoEnProgreso.facturacion.direccion
+                } : null,
+                totals: {
+                    subtotal: this.pedidoEnProgreso.subtotal || 0,
+                    shipping: this.pedidoEnProgreso.totalEnvio || 0,
+                    taxes: this.pedidoEnProgreso.totalImpuesto || 0,
+                    total: this.pedidoEnProgreso.totalPedididoConDescuento || 0
+                },
+                paymentMethod: this.pedidoEnProgreso.formaDePago || 'No seleccionado',
+                status: {
+                    process: this.pedidoEnProgreso.estadoProceso,
+                    payment: this.pedidoEnProgreso.estadoPago
+                }
+            },
+            process: processStatus,
+            message: `Estado del pedido ${this.pedidoEnProgreso.nroPedido}: ${processStatus.currentStep}. ${processStatus.nextStep}`,
+            completionPercentage: this.calculateCompletionPercentage(processStatus),
+            nextActions: this.getNextActions(processStatus)
+        };
+      }
     );
 
     // Herramienta para obtener opciones de entrega
@@ -514,41 +1036,960 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
           }
         }
       },
-      async ({ paymentMethod, notes }) => {
+      async ({ paymentMethod = 'Efectivo', notes }) => {
+        // Validación exhaustiva antes de procesar
+        const validationErrors: string[] = [];
         const cart = this.cartService.productInCart.getValue();
-        if (!this.pedidoEnProgreso.cliente || !this.pedidoEnProgreso.envio || !this.pedidoEnProgreso.carrito || this.pedidoEnProgreso.carrito.length === 0) {
-          return { success: false, error: 'Información incompleta. Se requiere cliente, datos de envío y productos en el carrito.' };
+        
+        if (!this.bodegaSeleccionada) {
+            validationErrors.push('No hay bodega seleccionada');
+        }
+        if (!this.pedidoEnProgreso.cliente) {
+            validationErrors.push('Falta información del cliente');
+        }
+        if (!this.pedidoEnProgreso.envio) {
+            validationErrors.push('Faltan datos de envío');
+        }
+        if (!this.pedidoEnProgreso.facturacion) {
+            validationErrors.push('Faltan datos de facturación');
+        }
+        if (!cart || cart.length === 0) {
+            validationErrors.push('El carrito está vacío');
+        }
+        
+        if (validationErrors.length > 0) {
+            return { 
+                success: false, 
+                error: `No se puede procesar la venta. Problemas encontrados: ${validationErrors.join(', ')}.`,
+                missingData: validationErrors,
+                suggestion: 'Completa la información faltante usando las herramientas apropiadas.',
+                currentStep: this._getProcessStatus().currentStep
+            };
         }
 
         this.pedidoEnProgreso.carrito = cart;
-        this.pedidoEnProgreso.formaDePago = paymentMethod || 'Efectivo';
+        this.pedidoEnProgreso.formaDePago = paymentMethod;
+        
         if (notes) {
-            if (!this.pedidoEnProgreso.notasPedido) this.pedidoEnProgreso.notasPedido = {} as any;
-            this.pedidoEnProgreso.notasPedido!.notasFacturacionPagos = [{ nota: notes, fecha: new Date().toISOString(), usuario: 'KAI' }];
+            if (!this.pedidoEnProgreso.notasPedido) {
+                this.pedidoEnProgreso.notasPedido = {
+                    notasCliente: [],
+                    notasProduccion: [],
+                    notasDespachos: [],
+                    notasEntregas: [],
+                    notasFacturacionPagos: []
+                };
+            }
+            this.pedidoEnProgreso.notasPedido.notasFacturacionPagos.push({
+                nota: notes, 
+                fecha: new Date().toISOString(), 
+                usuario: 'KAI'
+            });
         }
 
         // Calcular totales usando el servicio de utilidades
         this.pedidosUtilService.pedido = this.pedidoEnProgreso;
         this.pedidoEnProgreso.subtotal = this.pedidosUtilService.getSubtotal();
         this.pedidoEnProgreso.totalImpuesto = this.pedidosUtilService.checkIVAPrice();
-        // El envío ya se calculó en setDeliveryInfo
         this.pedidoEnProgreso.totalPedididoConDescuento = (this.pedidoEnProgreso.subtotal || 0) + (this.pedidoEnProgreso.totalImpuesto || 0) + (this.pedidoEnProgreso.totalEnvio || 0);
         
         try {
+          // Validar número de pedido
           await this.ventasService.validateNroPedido(this.pedidoEnProgreso.nroPedido as string).toPromise();
-          const htmlContent = this.paymentService.getHtmlContent(this.pedidoEnProgreso);
-          const result = await this.ventasService.createOrder({ order: this.pedidoEnProgreso, emailHtml: htmlContent }).toPromise();
           
-          this.toastr.success(`Pedido ${this.pedidoEnProgreso.nroPedido} creado con éxito.`, 'Venta Completada');
+          // Generar contenido HTML para email
+          const htmlContent = this.paymentService.getHtmlContent(this.pedidoEnProgreso);
+          
+          // Crear el pedido
+          const result = await this.ventasService.createOrder({ 
+              order: this.pedidoEnProgreso, 
+              emailHtml: htmlContent 
+          }).toPromise();
+          
+          this.toastr.success(`¡Venta completada exitosamente!`, 'Pedido Creado');
           this.updateVisualStep('confirmacion');
 
-          const createdOrder = { ...this.pedidoEnProgreso }; // Guardar copia antes de reiniciar
-          this.inicializarNuevoPedido(); // Reiniciar para la siguiente venta
+          const orderSummary = {
+              orderNumber: this.pedidoEnProgreso.nroPedido,
+              client: this.pedidoEnProgreso.cliente?.nombres_completos,
+              total: this.pedidoEnProgreso.totalPedididoConDescuento,
+              paymentMethod: paymentMethod,
+              itemsCount: cart.length
+          };
+
+          // Guardar copia antes de reiniciar
+          const createdOrder = { ...this.pedidoEnProgreso };
+          this.inicializarNuevoPedido();
           
-          return { success: true, order: result, processStatus: this._getProcessStatus() };
+          return { 
+              success: true, 
+              order: result,
+              summary: orderSummary,
+              message: `¡Excelente! Pedido ${orderSummary.orderNumber} creado exitosamente para ${orderSummary.client}. Total: $${orderSummary.total?.toLocaleString()}. Sistema listo para la siguiente venta.`,
+              nextStep: 'El sistema está listo para procesar una nueva venta. Puedes empezar seleccionando una bodega.'
+          };
         } catch (e: any) {
-          this.toastr.error(e?.message || 'Error desconocido al crear el pedido', 'Error en Creación');
-          return { success: false, error: `Error al crear el pedido: ${e?.message}`, processStatus: this._getProcessStatus() };
+          this.toastr.error('Error al procesar la venta', 'Error');
+          return { 
+              success: false, 
+              error: `Error al crear el pedido: ${e?.message || 'Error desconocido'}`,
+              suggestion: 'Verifica los datos del pedido y tu conexión a internet. Intenta nuevamente.',
+              currentOrder: this.pedidoEnProgreso.nroPedido,
+              troubleshooting: 'Si el error persiste, contacta soporte técnico con el número de pedido.'
+          };
+        }
+      }
+    );
+
+    // === HERRAMIENTAS PARA OPTIMIZACIÓN DEL FLUJO DE CONFIRMACIÓN ===
+
+    // Herramienta para validar pedido antes del pago
+    adapter.registerTool(
+      {
+        name: 'validateOrderBeforePay',
+        description: 'Realiza una validación completa del pedido antes del pago, identificando todos los problemas que deben resolverse.',
+        parameters: { type: 'object', properties: {} }
+      },
+      () => {
+        const validationReport = {
+          passed: [] as string[],
+          warnings: [] as string[],
+          errors: [] as string[],
+          canProceed: true
+        };
+
+        const cart = this.cartService.productInCart.getValue();
+
+        // Validación de bodega
+        if (this.bodegaSeleccionada) {
+          validationReport.passed.push(`✓ Bodega seleccionada: ${this.bodegaSeleccionada.nombre}`);
+        } else {
+          validationReport.errors.push('❌ No hay bodega seleccionada');
+          validationReport.canProceed = false;
+        }
+
+        // Validación de cliente
+        if (this.pedidoEnProgreso.cliente) {
+          validationReport.passed.push(`✓ Cliente: ${this.pedidoEnProgreso.cliente.nombres_completos}`);
+          
+          // Validar datos críticos del cliente
+          if (!this.pedidoEnProgreso.cliente.correo_electronico_comprador) {
+            validationReport.warnings.push('⚠️ Cliente sin email - no podrá recibir confirmación');
+          }
+          if (!this.pedidoEnProgreso.cliente.numero_celular_comprador) {
+            validationReport.warnings.push('⚠️ Cliente sin teléfono - contacto limitado');
+          }
+        } else {
+          validationReport.errors.push('❌ No hay cliente seleccionado');
+          validationReport.canProceed = false;
+        }
+
+        // Validación de carrito
+        if (cart && cart.length > 0) {
+          validationReport.passed.push(`✓ Carrito con ${cart.length} producto${cart.length > 1 ? 's' : ''}`);
+          
+          // Validar stock de productos
+          let stockIssues = 0;
+          cart.forEach((item, index) => {
+            const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+            const stockDisponible = producto?.disponibilidad?.cantidadDisponible || 0;
+            const cantidadSolicitada = item.cantidad || 0;
+            
+            if (cantidadSolicitada > stockDisponible) {
+              validationReport.warnings.push(`⚠️ Producto ${index + 1}: Stock insuficiente (solicitas ${cantidadSolicitada}, disponible ${stockDisponible})`);
+              stockIssues++;
+            }
+          });
+          
+          if (stockIssues === 0) {
+            validationReport.passed.push('✓ Todos los productos tienen stock suficiente');
+          }
+        } else {
+          validationReport.errors.push('❌ El carrito está vacío');
+          validationReport.canProceed = false;
+        }
+
+        // Validación de facturación
+        if (this.pedidoEnProgreso.facturacion?.nombres) {
+          validationReport.passed.push(`✓ Datos de facturación: ${this.pedidoEnProgreso.facturacion.nombres}`);
+          
+          if (!this.pedidoEnProgreso.facturacion.documento) {
+            validationReport.warnings.push('⚠️ Documento de facturación faltante');
+          }
+          if (!this.pedidoEnProgreso.facturacion.direccion) {
+            validationReport.warnings.push('⚠️ Dirección de facturación faltante');
+          }
+        } else {
+          validationReport.errors.push('❌ Faltan datos de facturación');
+          validationReport.canProceed = false;
+        }
+
+        // Validación de entrega
+        if (this.pedidoEnProgreso.envio?.direccionEntrega) {
+          validationReport.passed.push(`✓ Dirección de entrega: ${this.pedidoEnProgreso.envio.direccionEntrega}`);
+          
+          if (!this.pedidoEnProgreso.envio.ciudad) {
+            validationReport.warnings.push('⚠️ Ciudad de entrega no especificada');
+          }
+          if (!this.pedidoEnProgreso.envio.celular) {
+            validationReport.warnings.push('⚠️ Teléfono de entrega faltante');
+          }
+        } else {
+          validationReport.errors.push('❌ Falta dirección de entrega');
+          validationReport.canProceed = false;
+        }
+
+        // Calcular totales preliminares
+        let subtotal = 0;
+        if (cart) {
+          cart.forEach(item => {
+            const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+            const precio = producto?.precio?.precioUnitarioConIva || 0;
+            subtotal += precio * (item.cantidad || 0);
+          });
+        }
+
+        const finalReport = {
+          success: true,
+          validationStatus: validationReport.canProceed ? 'READY_TO_PAY' : 'NEEDS_ATTENTION',
+          passed: validationReport.passed,
+          warnings: validationReport.warnings,
+          errors: validationReport.errors,
+          canProceedToPay: validationReport.canProceed,
+          estimatedTotal: subtotal,
+          estimatedTotalFormatted: `$${subtotal.toLocaleString()}`,
+          summary: {
+            totalChecks: validationReport.passed.length + validationReport.warnings.length + validationReport.errors.length,
+            passedChecks: validationReport.passed.length,
+            warningCount: validationReport.warnings.length,
+            errorCount: validationReport.errors.length
+          },
+          message: validationReport.canProceed ? 
+            `✅ Pedido listo para pago. ${validationReport.passed.length} validaciones exitosas${validationReport.warnings.length > 0 ? `, ${validationReport.warnings.length} advertencias` : ''}.` :
+            `❌ Pedido NO listo. ${validationReport.errors.length} errores deben corregirse.`,
+          nextActions: validationReport.canProceed ? 
+            ['Usa processSale para finalizar el pedido', 'Usa getOrderSummary para ver el resumen completo'] :
+            ['Corrige los errores listados', 'Usa las herramientas apropiadas para completar la información faltante']
+        };
+
+        return finalReport;
+      }
+    );
+
+    // Herramienta para obtener resumen detallado del pedido
+    adapter.registerTool(
+      {
+        name: 'getOrderSummary',
+        description: 'Obtiene un resumen completo y detallado del pedido actual, incluyendo totales, productos, cliente y datos de entrega.',
+        parameters: {
+          type: 'object',
+          properties: {
+            includeProductDetails: { 
+              type: 'boolean', 
+              description: 'Incluir detalles completos de cada producto (por defecto true)' 
+            }
+          }
+        }
+      },
+      ({ includeProductDetails = true }) => {
+        const cart = this.cartService.productInCart.getValue();
+        
+        if (!cart || cart.length === 0) {
+          return {
+            success: false,
+            error: 'No hay productos en el carrito para mostrar resumen',
+            suggestion: 'Usa searchProducts para encontrar productos y addToCart para agregarlos'
+          };
+        }
+
+        // Calcular totales detallados
+        let subtotalSinIVA = 0;
+        let totalIVA = 0;
+        let subtotalConIVA = 0;
+        const productDetails = [];
+
+        for (const item of cart) {
+          const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+          if (producto) {
+            const precioUnitario = producto.precio?.precioUnitarioConIva || 0;
+            const precioSinIVA = producto.precio?.precioUnitarioSinIva || precioUnitario;
+            const cantidad = item.cantidad || 0;
+            
+            const subtotalProducto = precioUnitario * cantidad;
+            const subtotalSinIVAProducto = precioSinIVA * cantidad;
+            const ivaProducto = subtotalProducto - subtotalSinIVAProducto;
+            
+            subtotalConIVA += subtotalProducto;
+            subtotalSinIVA += subtotalSinIVAProducto;
+            totalIVA += ivaProducto;
+
+            if (includeProductDetails) {
+              productDetails.push({
+                nombre: producto.crearProducto?.titulo || 'Sin nombre',
+                referencia: producto.identificacion?.referencia || '',
+                cantidad: cantidad,
+                precioUnitario: precioUnitario,
+                precioUnitarioFormateado: `$${precioUnitario.toLocaleString()}`,
+                subtotal: subtotalProducto,
+                subtotalFormateado: `$${subtotalProducto.toLocaleString()}`,
+                disponible: producto.disponibilidad?.cantidadDisponible || 0,
+                categoria: producto.exposicion?.etiquetas?.[0] || 'Sin categoría'
+              });
+            }
+          }
+        }
+
+        const costoEnvio = this.pedidoEnProgreso.totalEnvio || 0;
+        const descuentos = this.pedidoEnProgreso.totalDescuento || 0;
+        const totalFinal = subtotalConIVA + costoEnvio - descuentos;
+
+        const summary = {
+          success: true,
+          orderNumber: this.pedidoEnProgreso.nroPedido || 'Por generar',
+          currentStep: this.pasoActual,
+          stepName: this.getStepName(this.pasoActual),
+          
+          // Información del cliente
+          customer: {
+            name: this.pedidoEnProgreso.cliente?.nombres_completos || 'No seleccionado',
+            document: this.pedidoEnProgreso.cliente?.documento || '',
+            email: this.pedidoEnProgreso.cliente?.correo_electronico_comprador || '',
+            phone: this.pedidoEnProgreso.cliente?.numero_celular_comprador || ''
+          },
+
+          // Información de entrega
+          shipping: {
+            address: this.pedidoEnProgreso.envio?.direccionEntrega || 'No configurada',
+            city: this.pedidoEnProgreso.envio?.ciudad || '',
+            department: this.pedidoEnProgreso.envio?.departamento || '',
+            phone: this.pedidoEnProgreso.envio?.celular || '',
+            cost: costoEnvio,
+            costFormatted: `$${costoEnvio.toLocaleString()}`
+          },
+
+          // Información de facturación
+          billing: {
+            name: this.pedidoEnProgreso.facturacion?.nombres || 'No configurada',
+            document: this.pedidoEnProgreso.facturacion?.documento || '',
+            address: this.pedidoEnProgreso.facturacion?.direccion || '',
+            city: this.pedidoEnProgreso.facturacion?.ciudad || ''
+          },
+
+          // Productos (solo si se solicita)
+          products: includeProductDetails ? productDetails : {
+            count: cart.length,
+            message: 'Usa includeProductDetails=true para ver detalles completos'
+          },
+
+          // Totales financieros
+          totals: {
+            itemCount: cart.length,
+            subtotalSinIVA: subtotalSinIVA,
+            totalIVA: totalIVA,
+            subtotalConIVA: subtotalConIVA,
+            shippingCost: costoEnvio,
+            discounts: descuentos,
+            finalTotal: totalFinal,
+            formatted: {
+              subtotalSinIVA: `$${subtotalSinIVA.toLocaleString()}`,
+              totalIVA: `$${totalIVA.toLocaleString()}`,
+              subtotalConIVA: `$${subtotalConIVA.toLocaleString()}`,
+              shippingCost: `$${costoEnvio.toLocaleString()}`,
+              discounts: descuentos > 0 ? `-$${descuentos.toLocaleString()}` : '$0',
+              finalTotal: `$${totalFinal.toLocaleString()}`
+            }
+          },
+
+          // Información del warehouse
+          warehouse: {
+            name: this.bodegaSeleccionada?.nombre || 'No seleccionada',
+            id: this.bodegaSeleccionada?.idBodega || ''
+          },
+
+          // Estado del pedido
+          status: {
+            paymentMethod: this.pedidoEnProgreso.formaDePago || 'No seleccionado',
+            paymentStatus: this.pedidoEnProgreso.estadoPago || 'Pendiente',
+            processStatus: this.pedidoEnProgreso.estadoProceso || 'SinProducir'
+          },
+
+          message: `Resumen del pedido: ${cart.length} producto${cart.length > 1 ? 's' : ''} por $${totalFinal.toLocaleString()} para ${this.pedidoEnProgreso.cliente?.nombres_completos || 'cliente sin seleccionar'}`,
+          
+          nextActions: [
+            'Usa validateOrderBeforePay para validar el pedido completo',
+            'Usa processSale para finalizar la venta',
+            'Usa las herramientas de navegación para ir a pasos específicos'
+          ]
+        };
+
+        return summary;
+      }
+    );
+
+    // Herramienta para validar datos específicos del pedido
+    adapter.registerTool(
+      {
+        name: 'validateSpecificData',
+        description: 'Valida datos específicos del pedido: cliente, productos, facturación, entrega o totales.',
+        parameters: {
+          type: 'object',
+          properties: {
+            dataType: {
+              type: 'string',
+              enum: ['cliente', 'productos', 'facturacion', 'entrega', 'totales', 'todo'],
+              description: 'Tipo de datos a validar específicamente'
+            }
+          },
+          required: ['dataType']
+        }
+      },
+      ({ dataType }) => {
+        const validation = { success: true, issues: [] as string[], passed: [] as string[] };
+
+        switch (dataType) {
+          case 'cliente':
+            if (this.pedidoEnProgreso.cliente) {
+              validation.passed.push('Cliente seleccionado');
+              if (!this.pedidoEnProgreso.cliente.correo_electronico_comprador) {
+                validation.issues.push('Email del cliente faltante');
+              }
+              if (!this.pedidoEnProgreso.cliente.numero_celular_comprador) {
+                validation.issues.push('Teléfono del cliente faltante');
+              }
+              if (!this.pedidoEnProgreso.cliente.documento) {
+                validation.issues.push('Documento del cliente faltante');
+              }
+            } else {
+              validation.issues.push('No hay cliente seleccionado');
+            }
+            break;
+
+          case 'productos':
+            const cart = this.cartService.productInCart.getValue();
+            if (cart && cart.length > 0) {
+              validation.passed.push(`${cart.length} productos en el carrito`);
+              // Validar stock para cada producto
+              cart.forEach((item, index) => {
+                const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+                const stockDisponible = producto?.disponibilidad?.cantidadDisponible || 0;
+                const cantidadSolicitada = item.cantidad || 0;
+                
+                if (cantidadSolicitada > stockDisponible) {
+                  validation.issues.push(`Producto ${index + 1}: Stock insuficiente (${cantidadSolicitada}/${stockDisponible})`);
+                } else {
+                  validation.passed.push(`Producto ${index + 1}: Stock OK`);
+                }
+              });
+            } else {
+              validation.issues.push('Carrito vacío');
+            }
+            break;
+
+          case 'facturacion':
+            if (this.pedidoEnProgreso.facturacion?.nombres) {
+              validation.passed.push('Datos de facturación presentes');
+              if (!this.pedidoEnProgreso.facturacion.documento) {
+                validation.issues.push('Documento de facturación faltante');
+              }
+              if (!this.pedidoEnProgreso.facturacion.direccion) {
+                validation.issues.push('Dirección de facturación faltante');
+              }
+            } else {
+              validation.issues.push('Datos de facturación faltantes');
+            }
+            break;
+
+          case 'entrega':
+            if (this.pedidoEnProgreso.envio?.direccionEntrega) {
+              validation.passed.push('Dirección de entrega configurada');
+              if (!this.pedidoEnProgreso.envio.ciudad) {
+                validation.issues.push('Ciudad de entrega faltante');
+              }
+              if (!this.pedidoEnProgreso.envio.celular) {
+                validation.issues.push('Teléfono de entrega faltante');
+              }
+            } else {
+              validation.issues.push('Dirección de entrega faltante');
+            }
+            break;
+
+          case 'totales':
+            const cartItems = this.cartService.productInCart.getValue();
+            if (cartItems && cartItems.length > 0) {
+              let total = 0;
+              cartItems.forEach(item => {
+                const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+                const precio = producto?.precio?.precioUnitarioConIva || 0;
+                total += precio * (item.cantidad || 0);
+              });
+              validation.passed.push(`Total calculado: $${total.toLocaleString()}`);
+            } else {
+              validation.issues.push('No hay productos para calcular totales');
+            }
+            break;
+
+          case 'todo':
+            // Ejecutar todas las validaciones
+            return this.internalValidateOrderBeforePay();
+        }
+
+        return {
+          success: true,
+          dataType: dataType,
+          validationPassed: validation.passed,
+          validationIssues: validation.issues,
+          isValid: validation.issues.length === 0,
+          message: validation.issues.length === 0 ? 
+            `✅ Validación de ${dataType} exitosa` : 
+            `⚠️ Validación de ${dataType} encontró ${validation.issues.length} problema${validation.issues.length > 1 ? 's' : ''}`,
+          nextActions: validation.issues.length > 0 ? 
+            ['Corrige los problemas identificados', 'Usa las herramientas apropiadas para completar la información'] :
+            ['Continúa con el siguiente paso del proceso']
+        };
+      }
+    );
+
+    // === HERRAMIENTAS SHORTCUTS PARA ACCIONES FRECUENTES ===
+
+    // Shortcut: Búsqueda rápida y adición al carrito
+    adapter.registerTool(
+      {
+        name: 'quickAddToCart',
+        description: 'Shortcut que busca un producto y lo agrega directamente al carrito en una sola operación.',
+        parameters: {
+          type: 'object',
+          properties: {
+            productQuery: { 
+              type: 'string', 
+              description: 'Nombre, código de barras o referencia del producto a buscar' 
+            },
+            quantity: { 
+              type: 'integer', 
+              description: 'Cantidad a agregar (por defecto 1)' 
+            },
+            useFirstMatch: { 
+              type: 'boolean', 
+              description: 'Si es true, agrega automáticamente el primer resultado encontrado (por defecto false)' 
+            }
+          },
+          required: ['productQuery']
+        }
+      },
+      async ({ productQuery, quantity = 1, useFirstMatch = false }) => {
+        if (!this.bodegaSeleccionada) {
+          return { 
+            success: false, 
+            error: 'Primero selecciona una bodega',
+            suggestion: 'Usa selectWarehouse para seleccionar una bodega'
+          };
+        }
+
+        // Buscar productos usando los parámetros correctos
+        const searchParams = {
+          query: productQuery,
+          limit: 5
+        };
+        
+        // Ejecutar la búsqueda usando la lógica interna de searchProducts
+        let results: Producto[] = this.productosCatalogo;
+        const q = productQuery.toLowerCase().trim();
+        results = results.filter(p => {
+          const titulo = p.crearProducto?.titulo?.toLowerCase() || '';
+          const codigoBarras = p.identificacion?.codigoBarras?.toLowerCase() || '';
+          const referencia = p.identificacion?.referencia?.toLowerCase() || '';
+          
+          return titulo.includes(q) || codigoBarras.includes(q) || referencia.includes(q);
+        });
+
+        const searchResults = {
+          success: results.length > 0,
+          products: results.slice(0, 5).map(p => ({
+            id: p.cd, 
+            nombre: p.crearProducto?.titulo, 
+            precio: p.precio?.precioUnitarioConIva || 0,
+            disponible: p.disponibilidad?.cantidadDisponible || 0,
+            precioFormateado: `$${(p.precio?.precioUnitarioConIva || 0).toLocaleString()}`
+          }))
+        };
+        
+        if (!searchResults.success || !searchResults.products || searchResults.products.length === 0) {
+          return {
+            success: false,
+            error: `No se encontraron productos con "${productQuery}"`,
+            suggestion: 'Intenta con otros términos de búsqueda o usa searchProducts para ver opciones disponibles'
+          };
+        }
+
+        let selectedProduct;
+        
+        if (useFirstMatch || searchResults.products.length === 1) {
+          selectedProduct = searchResults.products[0];
+        } else {
+          // Mostrar opciones para que el usuario elija
+          return {
+            success: false,
+            error: `Se encontraron ${searchResults.products.length} productos. Especifica cuál quieres agregar.`,
+            foundProducts: searchResults.products.map((p, index) => ({
+              option: index + 1,
+              id: p.id,
+              name: p.nombre,
+              price: p.precioFormateado,
+              available: p.disponible
+            })),
+            suggestion: 'Usa addToCart con el ID específico del producto que deseas, o quickAddToCart con useFirstMatch=true para agregar el primero automáticamente'
+          };
+        }
+
+        // Agregar al carrito
+        const addResult = await this.internalAddToCart(selectedProduct.id, quantity);
+
+        if (addResult.success) {
+          return {
+            success: true,
+            productAdded: {
+              name: selectedProduct.nombre,
+              quantity: quantity,
+              price: selectedProduct.precioFormateado,
+              subtotal: `$${(selectedProduct.precio * quantity).toLocaleString()}`
+            },
+            cartTotal: addResult.cartTotal,
+            message: `✅ ${selectedProduct.nombre} (${quantity} unidades) agregado al carrito`,
+            nextActions: [
+              'Usa quickAddToCart para agregar más productos',
+              'Usa getOrderSummary para ver el resumen del pedido',
+              'Usa nextStep para continuar con el proceso'
+            ]
+          };
+        } else {
+          return addResult;
+        }
+      }
+    );
+
+    // Shortcut: Crear cliente rápido con datos mínimos
+    adapter.registerTool(
+      {
+        name: 'quickCreateClient',
+        description: 'Shortcut para crear un cliente rápidamente con datos básicos y seleccionarlo automáticamente.',
+        parameters: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Nombre completo del cliente' },
+            document: { type: 'string', description: 'Documento de identificación' },
+            email: { type: 'string', description: 'Correo electrónico (opcional)' },
+            phone: { type: 'string', description: 'Número de teléfono (opcional)' }
+          },
+          required: ['name', 'document']
+        }
+      },
+      async ({ name, document, email, phone }) => {
+        // Validar datos básicos
+        if (!name.trim() || !document.trim()) {
+          return {
+            success: false,
+            error: 'Nombre y documento son obligatorios',
+            suggestion: 'Proporciona al menos el nombre completo y documento del cliente'
+          };
+        }
+
+        // Crear objeto cliente con datos mínimos
+        const clienteData = {
+          nombres_completos: name.trim(),
+          documento: document.trim(),
+          correo_electronico_comprador: email?.trim() || '',
+          numero_celular_comprador: phone?.trim() || '',
+          datosFacturacionElectronica: {
+            nombres: name.trim(),
+            documento: document.trim(),
+            correoElectronico: email?.trim() || '',
+            celular: phone?.trim() || '',
+            tipoDocumento: 'CC', // Por defecto cédula
+            ciudad: '',
+            direccion: '',
+            departamento: '',
+            pais: 'Colombia'
+          }
+        };
+
+        try {
+          // Seleccionar cliente (esto internamente lo crea si no existe)
+          const selectResult = await this.internalSelectClient(clienteData);
+          
+          if (selectResult.success) {
+            // Actualizar paso actual
+            this.pasoActual = 2; // Ir al paso de productos
+            this.updateVisualStep('productos');
+
+            return {
+              success: true,
+              clientCreated: {
+                name: name,
+                document: document,
+                email: email || 'No proporcionado',
+                phone: phone || 'No proporcionado'
+              },
+              message: `✅ Cliente ${name} creado y seleccionado exitosamente`,
+              currentStep: 2,
+              stepName: 'Selección de Productos',
+              nextActions: [
+                'Usa searchProducts o quickAddToCart para agregar productos',
+                'Usa getAvailableSteps para ver el progreso completo'
+              ]
+            };
+          } else {
+            return selectResult;
+          }
+        } catch (error: any) {
+          return {
+            success: false,
+            error: `Error al crear cliente: ${error.message}`,
+            suggestion: 'Verifica que los datos sean válidos e intenta nuevamente'
+          };
+        }
+      }
+    );
+
+    // Shortcut: Avance rápido con validación automática
+    adapter.registerTool(
+      {
+        name: 'smartNextStep',
+        description: 'Shortcut que avanza al siguiente paso automáticamente completando datos básicos si es posible.',
+        parameters: {
+          type: 'object',
+          properties: {
+            autoComplete: { 
+              type: 'boolean', 
+              description: 'Intentar completar automáticamente datos faltantes con valores por defecto (por defecto true)' 
+            }
+          }
+        }
+      },
+      ({ autoComplete = true }) => {
+        const validation = this.validateCurrentStep();
+        
+        if (validation.canProceed) {
+          // Si puede proceder, avanzar normalmente
+          return this.internalNextStep();
+        }
+
+        if (!autoComplete) {
+          return {
+            success: false,
+            error: 'No se puede avanzar sin completar los requisitos',
+            missingRequirements: validation.missingRequirements,
+            suggestion: 'Completa la información faltante o usa smartNextStep con autoComplete=true'
+          };
+        }
+
+        // Intentar autocompletar según el paso actual
+        const completionAttempts = [];
+        let canProceedAfterCompletion = false;
+
+        switch (this.pasoActual) {
+          case 4: // Facturación
+            if (!this.pedidoEnProgreso.facturacion?.nombres && this.pedidoEnProgreso.cliente) {
+              // Autocompletar facturación con datos del cliente
+              this.pedidoEnProgreso.facturacion = {
+                nombres: this.pedidoEnProgreso.cliente.nombres_completos || '',
+                documento: this.pedidoEnProgreso.cliente.documento || '',
+                correoElectronico: this.pedidoEnProgreso.cliente.correo_electronico_comprador || '',
+                celular: this.pedidoEnProgreso.cliente.numero_celular_comprador || '',
+                tipoDocumento: 'CC',
+                ciudad: 'Bogotá', // Por defecto
+                direccion: 'Dirección por confirmar',
+                departamento: 'Cundinamarca',
+                pais: 'Colombia',
+                codigoPostal: '',
+                indicativoCel: '57',
+                alias: 'Facturación principal'
+              };
+              completionAttempts.push('✓ Datos de facturación autocompletados con información del cliente');
+              canProceedAfterCompletion = true;
+            }
+            break;
+
+          case 5: // Entrega
+            if (!this.pedidoEnProgreso.envio?.direccionEntrega && this.pedidoEnProgreso.cliente) {
+              // Autocompletar entrega básica
+              this.pedidoEnProgreso.envio = {
+                apellidos: '',
+                nombres: this.pedidoEnProgreso.cliente.nombres_completos || '',
+                direccionEntrega: 'Por confirmar con el cliente',
+                ciudad: 'Bogotá',
+                departamento: 'Cundinamarca',
+                pais: 'Colombia',
+                celular: this.pedidoEnProgreso.cliente.numero_celular_comprador || '',
+                observaciones: 'Confirmar dirección exacta antes del despacho',
+                barrio: '',
+                indicativoOtroNumero: '',
+                especificacionesInternas: '',
+                otroNumero: '',
+                indicativoCel: '57',
+                alias: 'Entrega principal',
+                codigoPV: '',
+                nombreUnidad: '',
+                zonaCobro: ''
+              };
+              completionAttempts.push('✓ Datos de entrega autocompletados (requieren confirmación posterior)');
+              canProceedAfterCompletion = true;
+            }
+            break;
+
+          case 7: // Pago
+            if (!this.pedidoEnProgreso.formaDePago) {
+              // Seleccionar método de pago por defecto
+              this.pedidoEnProgreso.formaDePago = 'Efectivo';
+              completionAttempts.push('✓ Método de pago establecido como Efectivo (se puede cambiar)');
+              canProceedAfterCompletion = true;
+            }
+            break;
+        }
+
+        if (completionAttempts.length > 0 && canProceedAfterCompletion) {
+          // Intentar avanzar después del autocompletado
+          this.pasoActual++;
+          this.updateVisualStep(this.getStepKeyForNumber(this.pasoActual));
+
+          return {
+            success: true,
+            autoCompletions: completionAttempts,
+            previousStep: this.pasoActual - 1,
+            currentStep: this.pasoActual,
+            stepName: this.getStepName(this.pasoActual),
+            message: `✅ Paso avanzado con autocompletado. ${completionAttempts.length} elemento${completionAttempts.length > 1 ? 's' : ''} completado${completionAttempts.length > 1 ? 's' : ''} automáticamente.`,
+            note: 'Los datos autocompletados pueden necesitar revisión y confirmación',
+            nextActions: this.getNextActions(this._getProcessStatus())
+          };
+        } else {
+          return {
+            success: false,
+            error: 'No se pudo autocompletar la información faltante para este paso',
+            missingRequirements: validation.missingRequirements,
+            currentStep: this.pasoActual,
+            suggestion: 'Usa las herramientas específicas para completar la información requerida'
+          };
+        }
+      }
+    );
+
+    // Shortcut: Estado completo del proceso en una vista
+    adapter.registerTool(
+      {
+        name: 'getQuickStatus',
+        description: 'Shortcut que muestra el estado completo del proceso de venta en un formato compacto y fácil de leer.',
+        parameters: { type: 'object', properties: {} }
+      },
+      () => {
+        const cart = this.cartService.productInCart.getValue();
+        const currentStepName = this.getStepName(this.pasoActual);
+        
+        // Calcular total rápido
+        let totalEstimado = 0;
+        if (cart) {
+          cart.forEach(item => {
+            const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+            const precio = producto?.precio?.precioUnitarioConIva || 0;
+            totalEstimado += precio * (item.cantidad || 0);
+          });
+        }
+
+        const quickStatus = {
+          success: true,
+          snapshot: {
+            timestamp: new Date().toLocaleString('es-CO'),
+            orderNumber: this.pedidoEnProgreso.nroPedido || 'Por generar',
+            currentStep: `${this.pasoActual}/8 - ${currentStepName}`,
+            warehouse: this.bodegaSeleccionada?.nombre || '❌ No seleccionada',
+            client: this.pedidoEnProgreso.cliente?.nombres_completos || '❌ No seleccionado',
+            itemsInCart: cart?.length || 0,
+            estimatedTotal: `$${totalEstimado.toLocaleString()}`,
+            paymentMethod: this.pedidoEnProgreso.formaDePago || '⏳ Pendiente'
+          },
+          
+          completionStatus: {
+            warehouse: !!this.bodegaSeleccionada,
+            client: !!this.pedidoEnProgreso.cliente,
+            products: cart && cart.length > 0,
+            billing: !!this.pedidoEnProgreso.facturacion?.nombres,
+            shipping: !!this.pedidoEnProgreso.envio?.direccionEntrega,
+            payment: !!this.pedidoEnProgreso.formaDePago
+          },
+
+          progress: {
+            completed: this.calculateCompletionPercentage(this._getProcessStatus()),
+            readyToPay: this.pasoActual >= 7 && this.isReadyForPayment(),
+            canProceed: this.validateCurrentStep().canProceed
+          },
+
+          quickActions: this.getQuickActionsForCurrentStep(),
+
+          message: (this.pasoActual >= 7 && this.isReadyForPayment()) ? 
+            `🎉 Pedido listo para procesar (${this.calculateCompletionPercentage(this._getProcessStatus())}% completo)` :
+            `⚡ Proceso en curso: Paso ${this.pasoActual}/8 (${this.calculateCompletionPercentage(this._getProcessStatus())}% completo)`,
+
+          suggestedNextAction: this.getSuggestedNextAction()
+        };
+
+        return quickStatus;
+      }
+    );
+
+    // Shortcut: Finalizar pedido con validación express
+    adapter.registerTool(
+      {
+        name: 'expressCheckout',
+        description: 'Shortcut para finalizar el pedido rápidamente con validación automática y procesamiento express.',
+        parameters: {
+          type: 'object',
+          properties: {
+            paymentMethod: { 
+              type: 'string', 
+              description: 'Método de pago (por defecto Efectivo)' 
+            },
+            skipFinalValidation: { 
+              type: 'boolean', 
+              description: 'Omitir validación final detallada (por defecto false)' 
+            }
+          }
+        }
+      },
+      async ({ paymentMethod = 'Efectivo', skipFinalValidation = false }) => {
+        // Validación express
+        if (!skipFinalValidation) {
+          const validation = this.internalValidateOrderBeforePay();
+          if (!validation.canProceedToPay) {
+            return {
+              success: false,
+              error: 'El pedido no está listo para procesamiento express',
+              validationErrors: validation.errors,
+              suggestion: 'Usa validateOrderBeforePay para ver todos los problemas, o expressCheckout con skipFinalValidation=true para forzar el procesamiento'
+            };
+          }
+        }
+
+        // Ir directamente al paso de confirmación
+        this.pasoActual = 8;
+        this.updateVisualStep('confirmacion');
+
+        // Procesar la venta
+        const saleResult = await this.internalProcessSale(paymentMethod);
+
+        if (saleResult.success) {
+          return {
+            success: true,
+            expressProcessing: true,
+            orderCreated: saleResult.summary,
+            processingTime: 'Express (validación automática)',
+            message: `🚀 ¡Pedido procesado exitosamente en modo express! ${saleResult.summary.orderNumber}`,
+            nextAction: 'Sistema listo para nueva venta'
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Error en procesamiento express',
+            details: saleResult.error,
+            suggestion: 'Intenta con processSale normal o revisa los datos del pedido'
+          };
         }
       }
     );
@@ -700,29 +2141,76 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
       },
       () => {
         const cart = this.cartService.productInCart.getValue();
+        
+        if (!cart || cart.length === 0) {
+          return {
+            success: false,
+            error: 'No hay productos en el carrito para validar.',
+            suggestion: 'Agrega productos al carrito usando addToCart antes de validar el stock.'
+          };
+        }
+
         const stockIssues: any[] = [];
+        const validProducts: any[] = [];
+        let totalProductsChecked = 0;
 
         cart.forEach((item: any) => {
+          totalProductsChecked++;
           const stockDisponible = item.producto?.disponibilidad?.cantidadDisponible || 0;
+          const productName = item.producto.crearProducto?.titulo || 'Producto sin nombre';
+          
           if (item.cantidad > stockDisponible) {
             stockIssues.push({
               productId: item.producto.cd,
-              productName: item.producto.crearProducto?.titulo,
+              productName: productName,
               requested: item.cantidad,
+              available: stockDisponible,
+              shortage: item.cantidad - stockDisponible,
+              suggestedAction: stockDisponible > 0 ? 
+                `Reduce la cantidad a ${stockDisponible} unidades` : 
+                'Remueve este producto del carrito (sin stock)'
+            });
+          } else {
+            validProducts.push({
+              productId: item.producto.cd,
+              productName: productName,
+              quantity: item.cantidad,
               available: stockDisponible
             });
           }
         });
 
         if (stockIssues.length > 0) {
+          const totalShortage = stockIssues.reduce((sum, issue) => sum + issue.shortage, 0);
           return { 
             success: false, 
-            error: 'Stock insuficiente para algunos productos.',
-            stockIssues 
+            error: `Stock insuficiente para ${stockIssues.length} de ${totalProductsChecked} productos en el carrito.`,
+            stockIssues,
+            validProducts,
+            summary: {
+              totalProducts: totalProductsChecked,
+              productsWithIssues: stockIssues.length,
+              productsValid: validProducts.length,
+              totalShortage: totalShortage
+            },
+            suggestion: 'Ajusta las cantidades o remueve los productos sin stock usando updateCartQuantity o removeFromCart.',
+            nextActions: stockIssues.map(issue => 
+              `updateCartQuantity(${issue.productId}, ${issue.available}) para "${issue.productName}"`
+            )
           };
         }
 
-        return { success: true, message: 'Stock validado correctamente.' };
+        return { 
+          success: true, 
+          message: `Stock validado correctamente para todos los ${totalProductsChecked} productos en el carrito.`,
+          validProducts,
+          summary: {
+            totalProducts: totalProductsChecked,
+            allProductsValid: true,
+            totalUnitsValidated: validProducts.reduce((sum, p) => sum + p.quantity, 0)
+          },
+          nextStep: 'El stock está confirmado. Puedes proceder con la configuración del cliente o procesar la venta.'
+        };
       }
     );
 
@@ -854,48 +2342,170 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         parameters: { type: 'object', properties: {} }
       },
       () => {
-        const validationErrors: string[] = [];
+        const validationResults = {
+          warehouse: { valid: false, message: '', action: '' },
+          cart: { valid: false, message: '', action: '' },
+          client: { valid: false, message: '', action: '' },
+          delivery: { valid: false, message: '', action: '' },
+          billing: { valid: false, message: '', action: '' },
+          stock: { valid: false, message: '', action: '', issues: [] as any[] }
+        };
 
-        if (!this.bodegaSeleccionada) {
-          validationErrors.push('Debe seleccionar una bodega.');
+        // Validar bodega
+        if (this.bodegaSeleccionada) {
+          validationResults.warehouse = {
+            valid: true,
+            message: `Bodega "${this.bodegaSeleccionada.nombre}" seleccionada ✅`,
+            action: ''
+          };
+        } else {
+          validationResults.warehouse = {
+            valid: false,
+            message: 'No hay bodega seleccionada ❌',
+            action: 'Usa selectWarehouse para elegir una bodega'
+          };
         }
 
-        if (!this.pedidoEnProgreso.carrito || this.pedidoEnProgreso.carrito.length === 0) {
-          validationErrors.push('El carrito está vacío.');
-        }
-
-        if (!this.pedidoEnProgreso.cliente) {
-          validationErrors.push('Debe configurar la información del cliente.');
-        }
-
-        if (!this.pedidoEnProgreso.envio || !this.pedidoEnProgreso.envio.direccionEntrega) {
-          validationErrors.push('Debe configurar la información de entrega.');
-        }
-
-        if (!this.pedidoEnProgreso.facturacion || !this.pedidoEnProgreso.facturacion.documento) {
-          validationErrors.push('Debe configurar la información de facturación.');
-        }
-
-        // Validar stock
+        // Validar carrito
         const cart = this.cartService.productInCart.getValue();
-        cart.forEach((item: any) => {
-          const stockDisponible = item.producto?.disponibilidad?.cantidadDisponible || 0;
-          if (item.cantidad > stockDisponible) {
-            validationErrors.push(`Stock insuficiente para ${item.producto.crearProducto?.titulo}`);
-          }
-        });
+        if (cart && cart.length > 0) {
+          validationResults.cart = {
+            valid: true,
+            message: `${cart.length} producto${cart.length > 1 ? 's' : ''} en el carrito ✅`,
+            action: ''
+          };
+        } else {
+          validationResults.cart = {
+            valid: false,
+            message: 'El carrito está vacío ❌',
+            action: 'Usa addToCart para agregar productos'
+          };
+        }
 
-        if (validationErrors.length > 0) {
+        // Validar cliente
+        if (this.pedidoEnProgreso.cliente) {
+          validationResults.client = {
+            valid: true,
+            message: `Cliente: ${this.pedidoEnProgreso.cliente.nombres_completos} ✅`,
+            action: ''
+          };
+        } else {
+          validationResults.client = {
+            valid: false,
+            message: 'No hay cliente configurado ❌',
+            action: 'Usa searchClient o setClientToOrder para configurar el cliente'
+          };
+        }
+
+        // Validar entrega
+        if (this.pedidoEnProgreso.envio && this.pedidoEnProgreso.envio.direccionEntrega) {
+          validationResults.delivery = {
+            valid: true,
+            message: `Entrega: ${this.pedidoEnProgreso.envio.direccionEntrega} ✅`,
+            action: ''
+          };
+        } else {
+          validationResults.delivery = {
+            valid: false,
+            message: 'No hay información de entrega ❌',
+            action: 'Usa setDeliveryInfo para configurar la entrega'
+          };
+        }
+
+        // Validar facturación
+        if (this.pedidoEnProgreso.facturacion && this.pedidoEnProgreso.facturacion.documento) {
+          validationResults.billing = {
+            valid: true,
+            message: `Facturación: ${this.pedidoEnProgreso.facturacion.nombres} ✅`,
+            action: ''
+          };
+        } else {
+          validationResults.billing = {
+            valid: false,
+            message: 'No hay información de facturación ❌',
+            action: 'Usa setBillingInfo para configurar la facturación'
+          };
+        }
+
+        // Validar stock detalladamente
+        if (cart && cart.length > 0) {
+          const stockIssues: any[] = [];
+          cart.forEach((item: any) => {
+            const stockDisponible = item.producto?.disponibilidad?.cantidadDisponible || 0;
+            if (item.cantidad > stockDisponible) {
+              stockIssues.push({
+                product: item.producto.crearProducto?.titulo,
+                requested: item.cantidad,
+                available: stockDisponible,
+                action: `updateCartQuantity("${item.producto.cd}", ${stockDisponible})`
+              });
+            }
+          });
+
+          if (stockIssues.length === 0) {
+            validationResults.stock = {
+              valid: true,
+              message: `Stock validado para todos los productos ✅`,
+              action: '',
+              issues: []
+            };
+          } else {
+            validationResults.stock = {
+              valid: false,
+              message: `Stock insuficiente para ${stockIssues.length} producto${stockIssues.length > 1 ? 's' : ''} ❌`,
+              action: 'Ajusta las cantidades con updateCartQuantity',
+              issues: stockIssues
+            };
+          }
+        }
+
+        // Contar validaciones pasadas
+        const validationCount = Object.values(validationResults).filter(r => r.valid).length;
+        const totalValidations = Object.keys(validationResults).length;
+        const completionPercentage = Math.round((validationCount / totalValidations) * 100);
+        
+        // Obtener errores y acciones pendientes
+        const pendingActions = Object.entries(validationResults)
+          .filter(([key, result]) => !result.valid)
+          .map(([key, result]) => ({
+            section: key,
+            issue: result.message,
+            action: result.action
+          }));
+
+        if (pendingActions.length > 0) {
           return { 
-            success: false, 
-            errors: validationErrors,
-            message: 'El pedido tiene errores que deben corregirse antes del pago.'
+            success: false,
+            validation: validationResults,
+            summary: {
+              completionPercentage,
+              validationsCompleted: validationCount,
+              totalValidations,
+              pendingActions: pendingActions.length
+            },
+            pendingActions,
+            message: `El pedido está ${completionPercentage}% completo. Quedan ${pendingActions.length} validación${pendingActions.length > 1 ? 'es' : ''} pendiente${pendingActions.length > 1 ? 's' : ''}.`,
+            nextSteps: pendingActions.map(a => a.action).slice(0, 3) // Mostrar solo las primeras 3 acciones
           };
         }
 
         return { 
-          success: true, 
-          message: 'El pedido está listo para procesar el pago.' 
+          success: true,
+          validation: validationResults,
+          summary: {
+            completionPercentage: 100,
+            validationsCompleted: validationCount,
+            totalValidations,
+            pendingActions: 0
+          },
+          message: '¡Perfecto! El pedido está completo y listo para procesar el pago. 🎉',
+          nextStep: 'Usa processSale para finalizar la venta.',
+          orderSummary: {
+            orderNumber: this.pedidoEnProgreso.nroPedido,
+            warehouse: this.bodegaSeleccionada?.nombre,
+            client: this.pedidoEnProgreso.cliente?.nombres_completos,
+            itemsCount: cart?.length || 0
+          }
         };
       }
     );
@@ -1251,5 +2861,646 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         };
       }
     );
+
+    // === HERRAMIENTAS DE NAVEGACIÓN DEL PROCESO ===
+
+    // Herramienta para ir a un paso específico del proceso
+    adapter.registerTool(
+      {
+        name: 'goToStep',
+        description: 'Navega a un paso específico del proceso de creación de pedidos. Los pasos disponibles son: cliente, productos, carrito, facturacion, entrega, notas, pago, confirmacion.',
+        parameters: {
+          type: 'object',
+          properties: {
+            step: {
+              type: 'string',
+              enum: ['cliente', 'productos', 'carrito', 'facturacion', 'entrega', 'notas', 'pago', 'confirmacion'],
+              description: 'El paso al que se desea navegar'
+            }
+          },
+          required: ['step']
+        }
+      },
+      (args: { step: string }) => {
+        const stepMapping = {
+          'cliente': { number: 1, name: 'Selección de Cliente' },
+          'productos': { number: 2, name: 'Selección de Productos' },
+          'carrito': { number: 3, name: 'Revisión del Carrito' },
+          'facturacion': { number: 4, name: 'Datos de Facturación' },
+          'entrega': { number: 5, name: 'Información de Entrega' },
+          'notas': { number: 6, name: 'Notas del Pedido' },
+          'pago': { number: 7, name: 'Método de Pago' },
+          'confirmacion': { number: 8, name: 'Confirmación Final' }
+        };
+
+        const targetStep = stepMapping[args.step];
+        if (!targetStep) {
+          return { 
+            success: false, 
+            error: `Paso no válido: ${args.step}. Pasos disponibles: ${Object.keys(stepMapping).join(', ')}` 
+          };
+        }
+
+        this.pasoActual = targetStep.number;
+        this.updateVisualStep(targetStep.key);
+
+        return {
+          success: true,
+          currentStep: targetStep.number,
+          stepName: targetStep.name,
+          message: `Navegado al paso ${targetStep.number}: ${targetStep.name}`,
+          availableActions: this.getNextActions(this._getProcessStatus())
+        };
+      }
+    );
+
+    // Herramienta para avanzar al siguiente paso
+    adapter.registerTool(
+      {
+        name: 'nextStep',
+        description: 'Avanza al siguiente paso en el proceso de creación de pedidos si es posible.',
+        parameters: { type: 'object', properties: {} }
+      },
+      () => {
+        if (this.pasoActual >= 8) {
+          return { 
+            success: false, 
+            error: 'Ya estás en el último paso del proceso',
+            currentStep: this.pasoActual
+          };
+        }
+
+        // Validaciones básicas antes de avanzar
+        const validationResult = this.validateCurrentStep();
+        if (!validationResult.canProceed) {
+          return {
+            success: false,
+            error: `No se puede avanzar: ${validationResult.reason}`,
+            currentStep: this.pasoActual,
+            missingRequirements: validationResult.missingRequirements
+          };
+        }
+
+        this.pasoActual++;
+        this.updateVisualStep(this.getStepKeyForNumber(this.pasoActual));
+
+        const stepNames = {
+          1: 'Selección de Cliente',
+          2: 'Selección de Productos', 
+          3: 'Revisión del Carrito',
+          4: 'Datos de Facturación',
+          5: 'Información de Entrega',
+          6: 'Notas del Pedido',
+          7: 'Método de Pago',
+          8: 'Confirmación Final'
+        };
+
+        return {
+          success: true,
+          previousStep: this.pasoActual - 1,
+          currentStep: this.pasoActual,
+          stepName: stepNames[this.pasoActual],
+          message: `Avanzado al paso ${this.pasoActual}: ${stepNames[this.pasoActual]}`,
+          availableActions: this.getNextActions(this._getProcessStatus())
+        };
+      }
+    );
+
+    // Herramienta para retroceder al paso anterior
+    adapter.registerTool(
+      {
+        name: 'previousStep',
+        description: 'Retrocede al paso anterior en el proceso de creación de pedidos.',
+        parameters: { type: 'object', properties: {} }
+      },
+      () => {
+        if (this.pasoActual <= 1) {
+          return { 
+            success: false, 
+            error: 'Ya estás en el primer paso del proceso',
+            currentStep: this.pasoActual
+          };
+        }
+
+        this.pasoActual--;
+        this.updateVisualStep(this.getStepKeyForNumber(this.pasoActual));
+
+        const stepNames = {
+          1: 'Selección de Cliente',
+          2: 'Selección de Productos', 
+          3: 'Revisión del Carrito',
+          4: 'Datos de Facturación',
+          5: 'Información de Entrega',
+          6: 'Notas del Pedido',
+          7: 'Método de Pago',
+          8: 'Confirmación Final'
+        };
+
+        return {
+          success: true,
+          previousStep: this.pasoActual + 1,
+          currentStep: this.pasoActual,
+          stepName: stepNames[this.pasoActual],
+          message: `Retrocedido al paso ${this.pasoActual}: ${stepNames[this.pasoActual]}`,
+          availableActions: this.getNextActions(this._getProcessStatus())
+        };
+      }
+    );
+
+    // Herramienta para obtener los pasos disponibles y el estado actual
+    adapter.registerTool(
+      {
+        name: 'getAvailableSteps',
+        description: 'Muestra todos los pasos disponibles en el proceso de creación de pedidos, incluyendo el paso actual y su estado de completitud.',
+        parameters: { type: 'object', properties: {} }
+      },
+      () => {
+        const allSteps = [
+          {
+            number: 1,
+            name: 'Selección de Cliente',
+            key: 'cliente',
+            completed: !!this.pedidoEnProgreso.cliente,
+            current: this.pasoActual === 1,
+            description: 'Seleccionar o crear un cliente para el pedido'
+          },
+          {
+            number: 2,
+            name: 'Selección de Productos',
+            key: 'productos',
+            completed: this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0,
+            current: this.pasoActual === 2,
+            description: 'Agregar productos al carrito'
+          },
+          {
+            number: 3,
+            name: 'Revisión del Carrito',
+            key: 'carrito',
+            completed: this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0,
+            current: this.pasoActual === 3,
+            description: 'Revisar y modificar productos en el carrito'
+          },
+          {
+            number: 4,
+            name: 'Datos de Facturación',
+            key: 'facturacion',
+            completed: !!this.pedidoEnProgreso.facturacion?.nombres,
+            current: this.pasoActual === 4,
+            description: 'Completar información de facturación'
+          },
+          {
+            number: 5,
+            name: 'Información de Entrega',
+            key: 'entrega',
+            completed: !!this.pedidoEnProgreso.envio?.direccionEntrega,
+            current: this.pasoActual === 5,
+            description: 'Configurar dirección y método de entrega'
+          },
+          {
+            number: 6,
+            name: 'Notas del Pedido',
+            key: 'notas',
+            completed: true, // Las notas son opcionales
+            current: this.pasoActual === 6,
+            description: 'Agregar notas opcionales para el pedido'
+          },
+          {
+            number: 7,
+            name: 'Método de Pago',
+            key: 'pago',
+            completed: !!this.pedidoEnProgreso.formaDePago,
+            current: this.pasoActual === 7,
+            description: 'Seleccionar método de pago'
+          },
+          {
+            number: 8,
+            name: 'Confirmación Final',
+            key: 'confirmacion',
+            completed: false, // Solo se completa al procesar la venta
+            current: this.pasoActual === 8,
+            description: 'Revisar y confirmar el pedido'
+          }
+        ];
+
+        const completedSteps = allSteps.filter(step => step.completed).length;
+        const progressPercentage = Math.round((completedSteps / allSteps.length) * 100);
+
+        return {
+          success: true,
+          currentStep: this.pasoActual,
+          currentStepName: allSteps.find(step => step.current)?.name,
+          allSteps: allSteps,
+          progress: {
+            completed: completedSteps,
+            total: allSteps.length,
+            percentage: progressPercentage
+          },
+          message: `Proceso en paso ${this.pasoActual}/8 (${progressPercentage}% completado)`,
+          nextActions: this.getNextActions(this._getProcessStatus())
+        };
+      }
+    );
+  }
+
+  // Método auxiliar para validar si se puede avanzar desde el paso actual
+  private validateCurrentStep(): { canProceed: boolean; reason?: string; missingRequirements?: string[] } {
+    const missing: string[] = [];
+
+    switch (this.pasoActual) {
+      case 1: // Cliente
+        if (!this.pedidoEnProgreso.cliente) {
+          missing.push('Seleccionar un cliente');
+        }
+        break;
+      
+      case 2: // Productos
+        if (!this.pedidoEnProgreso.carrito || this.pedidoEnProgreso.carrito.length === 0) {
+          missing.push('Agregar al menos un producto al carrito');
+        }
+        break;
+      
+      case 3: // Carrito - ya validado que tenga productos
+        break;
+      
+      case 4: // Facturación
+        if (!this.pedidoEnProgreso.facturacion?.nombres) {
+          missing.push('Completar datos de facturación');
+        }
+        break;
+      
+      case 5: // Entrega
+        if (!this.pedidoEnProgreso.envio?.direccionEntrega) {
+          missing.push('Completar dirección de entrega');
+        }
+        break;
+      
+      case 6: // Notas - opcional
+        break;
+      
+      case 7: // Pago
+        if (!this.pedidoEnProgreso.formaDePago) {
+          missing.push('Seleccionar método de pago');
+        }
+        break;
+      
+      case 8: // Confirmación - último paso
+        break;
+    }
+
+    if (missing.length > 0) {
+      return {
+        canProceed: false,
+        reason: `Faltan requisitos en el paso actual`,
+        missingRequirements: missing
+      };
+    }
+
+    return { canProceed: true };
+  }
+
+  // Métodos auxiliares para mejorar la búsqueda de productos
+  private getAvailableCategories(): string[] {
+    const categories = new Set<string>();
+    
+    this.productosCatalogo.forEach(producto => {
+      // Agregar etiquetas de exposición
+      if (producto.exposicion?.etiquetas) {
+        producto.exposicion.etiquetas.forEach(etiqueta => categories.add(etiqueta));
+      }
+      
+      // Agregar categorías principales
+      if (producto.categorias?.label) {
+        categories.add(producto.categorias.label);
+      }
+      
+      // Agregar subcategorías si existen
+      if (producto.categorias?.children) {
+        producto.categorias.children.forEach(child => {
+          if (child.label) categories.add(child.label);
+        });
+      }
+    });
+    
+    return Array.from(categories).sort();
+  }
+
+  private getPriceRange(): { min: number; max: number; average: number } {
+    const prices = this.productosCatalogo
+      .map(p => p.precio?.precioUnitarioConIva || 0)
+      .filter(price => price > 0);
+    
+    if (prices.length === 0) {
+      return { min: 0, max: 0, average: 0 };
+    }
+    
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const average = Math.round(prices.reduce((sum, price) => sum + price, 0) / prices.length);
+    
+    return { min, max, average };
+  }
+
+  private getStepName(stepNumber: number): string {
+    const stepNames = {
+      1: 'Selección de Cliente',
+      2: 'Selección de Productos', 
+      3: 'Revisión del Carrito',
+      4: 'Datos de Facturación',
+      5: 'Información de Entrega',
+      6: 'Notas del Pedido',
+      7: 'Método de Pago',
+      8: 'Confirmación Final'
+    };
+    
+    return stepNames[stepNumber] || 'Paso desconocido';
+  }
+  
+  private getStepKeyForNumber(stepNumber: number): string {
+    const stepKeys = {
+      1: 'cliente',
+      2: 'productos', 
+      3: 'carrito',
+      4: 'facturacion',
+      5: 'entrega',
+      6: 'notas',
+      7: 'pago',
+      8: 'confirmacion'
+    };
+    
+    return stepKeys[stepNumber] || 'cliente';
+  }
+
+  // Métodos auxiliares para shortcuts
+  private getQuickActionsForCurrentStep(): string[] {
+    const actions = [];
+    
+    switch (this.pasoActual) {
+      case 1: // Cliente
+        actions.push('quickCreateClient - Crear cliente rápido');
+        actions.push('searchClient - Buscar cliente existente');
+        break;
+      case 2: // Productos
+        actions.push('quickAddToCart - Agregar producto rápido');
+        actions.push('searchProducts - Buscar productos');
+        break;
+      case 3: // Carrito
+        actions.push('getOrderSummary - Ver resumen del pedido');
+        actions.push('smartNextStep - Avanzar automáticamente');
+        break;
+      case 4: // Facturación
+        actions.push('smartNextStep - Autocompletar facturación');
+        break;
+      case 5: // Entrega
+        actions.push('smartNextStep - Autocompletar entrega');
+        break;
+      case 6: // Notas
+        actions.push('nextStep - Continuar a pago');
+        break;
+      case 7: // Pago
+        actions.push('validateOrderBeforePay - Validar pedido');
+        actions.push('expressCheckout - Finalizar rápido');
+        break;
+      case 8: // Confirmación
+        actions.push('processSale - Procesar venta');
+        actions.push('getOrderSummary - Ver resumen final');
+        break;
+    }
+    
+    return actions;
+  }
+
+  private getSuggestedNextAction(): string {
+    const cart = this.cartService.productInCart.getValue();
+    
+    if (!this.bodegaSeleccionada) {
+      return 'Selecciona una bodega con selectWarehouse';
+    }
+    
+    if (!this.pedidoEnProgreso.cliente) {
+      return 'Crea o selecciona un cliente con quickCreateClient';
+    }
+    
+    if (!cart || cart.length === 0) {
+      return 'Agrega productos al carrito con quickAddToCart';
+    }
+    
+    if (this.pasoActual < 4) {
+      return 'Avanza al siguiente paso con smartNextStep';
+    }
+    
+    if (!this.pedidoEnProgreso.facturacion?.nombres) {
+      return 'Completa datos de facturación con smartNextStep';
+    }
+    
+    if (!this.pedidoEnProgreso.envio?.direccionEntrega) {
+      return 'Completa datos de entrega con smartNextStep';
+    }
+    
+    if (this.pasoActual >= 7) {
+      return 'Finaliza el pedido con expressCheckout';
+    }
+    
+    return 'Continúa con nextStep o smartNextStep';
+  }
+
+  private isReadyForPayment(): boolean {
+    const cart = this.cartService.productInCart.getValue();
+    return !!(
+      this.bodegaSeleccionada &&
+      this.pedidoEnProgreso.cliente &&
+      cart && cart.length > 0 &&
+      this.pedidoEnProgreso.facturacion?.nombres &&
+      this.pedidoEnProgreso.envio?.direccionEntrega
+    );
+  }
+
+  // Métodos internos para evitar dependencias circulares
+  private internalValidateOrderBeforePay() {
+    const cart = this.cartService.productInCart.getValue();
+    const canProceed = !!(
+      this.bodegaSeleccionada &&
+      this.pedidoEnProgreso.cliente &&
+      cart && cart.length > 0 &&
+      this.pedidoEnProgreso.facturacion?.nombres &&
+      this.pedidoEnProgreso.envio?.direccionEntrega
+    );
+
+    return {
+      canProceedToPay: canProceed,
+      errors: canProceed ? [] : ['Faltan datos requeridos para el procesamiento']
+    };
+  }
+
+  private async internalProcessSale(paymentMethod: string) {
+    try {
+      const cart = this.cartService.productInCart.getValue();
+      
+      // Validaciones básicas
+      if (!this.bodegaSeleccionada || !this.pedidoEnProgreso.cliente || !cart || cart.length === 0) {
+        return {
+          success: false,
+          error: 'Faltan datos requeridos para procesar la venta'
+        };
+      }
+
+      // Configurar datos del pedido
+      this.pedidoEnProgreso.carrito = cart;
+      this.pedidoEnProgreso.formaDePago = paymentMethod;
+      
+      // Calcular totales
+      this.pedidosUtilService.pedido = this.pedidoEnProgreso;
+      this.pedidoEnProgreso.subtotal = this.pedidosUtilService.getSubtotal();
+      this.pedidoEnProgreso.totalImpuesto = this.pedidosUtilService.checkIVAPrice();
+      this.pedidoEnProgreso.totalPedididoConDescuento = (this.pedidoEnProgreso.subtotal || 0) + (this.pedidoEnProgreso.totalImpuesto || 0) + (this.pedidoEnProgreso.totalEnvio || 0);
+      
+      // Generar contenido HTML para email
+      const htmlContent = this.paymentService.getHtmlContent(this.pedidoEnProgreso);
+      
+      // Crear el pedido
+      const result = await this.ventasService.createOrder({ 
+          order: this.pedidoEnProgreso, 
+          emailHtml: htmlContent 
+      }).toPromise();
+      
+      const orderSummary = {
+          orderNumber: this.pedidoEnProgreso.nroPedido,
+          client: this.pedidoEnProgreso.cliente?.nombres_completos,
+          total: this.pedidoEnProgreso.totalPedididoConDescuento,
+          paymentMethod: paymentMethod,
+          itemsCount: cart.length
+      };
+
+      // Guardar copia antes de reiniciar
+      const createdOrder = { ...this.pedidoEnProgreso };
+      this.inicializarNuevoPedido();
+      
+      this.toastr.success(`¡Venta completada exitosamente!`, 'Pedido Creado');
+      
+      return { 
+          success: true, 
+          order: result,
+          summary: orderSummary,
+          message: `¡Excelente! Pedido ${orderSummary.orderNumber} creado exitosamente para ${orderSummary.client}. Total: $${orderSummary.total?.toLocaleString()}. Sistema listo para la siguiente venta.`
+      };
+    } catch (e: any) {
+      this.toastr.error('Error al procesar la venta', 'Error');
+      return { 
+          success: false, 
+          error: `Error al crear el pedido: ${e?.message || 'Error desconocido'}`
+      };
+    }
+  }
+
+  private async internalAddToCart(productId: string, quantity: number = 1) {
+    const product = this.productosCatalogo.find(p => p.cd === productId);
+    
+    if (!product) {
+      return {
+        success: false,
+        error: `Producto con ID ${productId} no encontrado`
+      };
+    }
+
+    const cantidadDisponible = product.disponibilidad?.cantidadDisponible || 0;
+    
+    if (quantity > cantidadDisponible) {
+      return {
+        success: false,
+        error: `Stock insuficiente. Disponible: ${cantidadDisponible}, solicitado: ${quantity}`
+      };
+    }
+
+    const productoCompra = {
+      producto: product,
+      configuracion: {
+        producto: product,
+        datosEntrega: null,
+        cantidad: quantity,
+        preferencias: [],
+        adiciones: [],
+        tarjetas: []
+      },
+      cantidad: quantity
+    };
+
+    this.cartService.addToCart(productoCompra);
+    this.pedidoEnProgreso.carrito = this.cartService.productInCart.getValue();
+
+    return {
+      success: true,
+      productAdded: {
+        name: product.crearProducto?.titulo,
+        quantity: quantity,
+        price: product.precio?.precioUnitarioConIva || 0
+      },
+      cartTotal: this.calculateCartTotal()
+    };
+  }
+
+  private async internalSelectClient(clienteData: any) {
+    this.pedidoEnProgreso.cliente = clienteData;
+    
+    return {
+      success: true,
+      clientInfo: this.pedidoEnProgreso.cliente
+    };
+  }
+
+  private internalNextStep() {
+    if (this.pasoActual >= 8) {
+      return { 
+        success: false, 
+        error: 'Ya estás en el último paso del proceso',
+        currentStep: this.pasoActual
+      };
+    }
+
+    const validation = this.validateCurrentStep();
+    if (!validation.canProceed) {
+      return {
+        success: false,
+        error: `No se puede avanzar: ${validation.reason}`,
+        currentStep: this.pasoActual,
+        missingRequirements: validation.missingRequirements
+      };
+    }
+
+    this.pasoActual++;
+    this.updateVisualStep(this.getStepKeyForNumber(this.pasoActual));
+
+    const stepNames = {
+      1: 'Selección de Cliente',
+      2: 'Selección de Productos', 
+      3: 'Revisión del Carrito',
+      4: 'Datos de Facturación',
+      5: 'Información de Entrega',
+      6: 'Notas del Pedido',
+      7: 'Método de Pago',
+      8: 'Confirmación Final'
+    };
+
+    return {
+      success: true,
+      previousStep: this.pasoActual - 1,
+      currentStep: this.pasoActual,
+      stepName: stepNames[this.pasoActual],
+      message: `Avanzado al paso ${this.pasoActual}: ${stepNames[this.pasoActual]}`
+    };
+  }
+
+  private calculateCartTotal(): string {
+    const cart = this.cartService.productInCart.getValue();
+    if (!cart || cart.length === 0) {
+      return '$0';
+    }
+
+    const total = cart.reduce((acc, item) => {
+      const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+      const precio = producto?.precio?.precioUnitarioConIva || 0;
+      const cantidad = item.cantidad || 0;
+      return acc + (precio * cantidad);
+    }, 0);
+
+    return `$${total.toLocaleString()}`;
   }
 } 

@@ -38,6 +38,7 @@ import { ServiciosService } from "../../../shared/services/servicios.service";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 import { ToastrService } from "ngx-toastr";
+import { LoaderService } from "../../../shared/services/loader.service";
 
 import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
@@ -85,6 +86,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   private lastScrollTop = 0;
   // Reemplazar la propiedad de scroll simple por una pila
   private scrollStack: number[] = [];
+  private tableScrollStack: number[] = [];
 
   productoSeleccionado: any;
 
@@ -108,6 +110,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   openOptionsModal(order: any, producto?: any) {
+    this.scrollStack.push(window.scrollY);
+
+    // Capturar scroll de la tabla si existe
+    const tableElement = document.querySelector('.p-datatable-scrollable-body');
+    if (tableElement) {
+      this.tableScrollStack.push(tableElement.scrollTop);
+    }
+
     this.selectedOrder = order;
     if (producto) {
       this.productoSeleccionado = producto;
@@ -121,10 +131,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     this.selectedOrder = null;
     // Remover la clase CSS para restaurar el scroll
     document.body.classList.remove("modal-open");
-    const last = this.scrollStack.pop();
-    if (last !== undefined) {
+    const lastWindowScroll = this.scrollStack.pop();
+    const lastTableScroll = this.tableScrollStack.pop();
+
+    if (lastWindowScroll !== undefined) {
       setTimeout(() => {
-        window.scrollTo({ top: last });
+        window.scrollTo({ top: lastWindowScroll });
+
+        // Restaurar scroll de la tabla si existe
+        if (lastTableScroll !== undefined) {
+          const tableElement = document.querySelector('.p-datatable-scrollable-body');
+          if (tableElement) {
+            tableElement.scrollTop = lastTableScroll;
+          }
+        }
       }, 0);
     }
   }
@@ -413,6 +433,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     private maestroService: MaestroService,
     private bodegaService: BodegaService,
     private toastrService: ToastrService,
+    private loaderService: LoaderService,
   ) {
     this.registerCustomFilters();
 
@@ -1176,10 +1197,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     );
     this.modalService
       .open(content, {
-        size: "lg",
+        size: "xl",
         scrollable: true,
         centered: true,
-        fullscreen: true,
+        fullscreen: false,
         ariaLabelledBy: "modal-basic-title",
       })
       .result.then(
@@ -1306,8 +1327,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Actualiza printContents con el HTML modificado
     printContents = tempDiv.innerHTML;
 
-    // Crear una nueva ventana/pestaña con el contenido del PDF
-    const newWindow = window.open('', '_blank');
+    // Cerrar todos los modales inmediatamente antes de abrir el popup
+    this.closeOptionsModal();
+    // Cerrar cualquier modal de NgBootstrap que pueda estar abierto
+    this.modalService.dismissAll();
+    // Limpiar cualquier clase modal remanente del body
+    document.body.classList.remove("modal-open");
+    // Forzar el ocultado del loader
+    this.loaderService.hide();
+    
+    // Crear una nueva ventana/pestaña independiente con el contenido del PDF
+    const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
     if (newWindow) {
       newWindow.document.write(`
         <!DOCTYPE html>
@@ -1333,6 +1363,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
               }
             }
           </style>
+          <script>
+            window.onload = function() {
+              // Auto-print después de cargar, pero sin bloquear la ventana padre
+              setTimeout(function() {
+                window.print();
+              }, 100);
+            };
+          </script>
         </head>
         <body>
           ${printContents}
@@ -1340,11 +1378,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         </html>
       `);
       newWindow.document.close();
-
-      // Opcional: Automáticamente abrir el diálogo de impresión en la nueva ventana
-      setTimeout(() => {
-        newWindow.print();
-      }, 500);
+      // Liberar la referencia inmediatamente para evitar bloqueos
+      newWindow.focus();
     }
   }
 
@@ -1947,7 +1982,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
                 carrito.producto &&
                 carrito.producto.identificacion &&
                 carrito.producto.identificacion.referencia ===
-                  configuracionResult?.producto?.identificacion?.referencia,
+                configuracionResult?.producto?.identificacion?.referencia,
             );
             if (index !== -1) {
               order.carrito[index] = configuracionResult;
