@@ -529,7 +529,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     let totalPrecioSinIVA = 0;
     let totalPrecioSinIVADef = 0;
     pedido.carrito.map((itemCarrito) => {
-      if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
+      if (itemCarrito?.producto?.precio?.preciosVolumen?.length > 0) {
         itemCarrito.producto.precio.preciosVolumen.map((x) => {
           if (
             itemCarrito.cantidad >= x.numeroUnidadesInicial &&
@@ -582,7 +582,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     let totalPrecioIVA = 0;
     let totalPrecioIVADef = 0;
     pedido.carrito.forEach((itemCarrito) => {
-      if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
+      if (itemCarrito?.producto?.precio?.preciosVolumen?.length > 0) {
         itemCarrito.producto.precio.preciosVolumen.forEach((x) => {
           if (
             itemCarrito.cantidad >= x.numeroUnidadesInicial &&
