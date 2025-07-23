@@ -702,7 +702,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         .nomComercial,
       tipoFecha: "fechaEntrega",
       estadoProceso: this.isFromProduction
-        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion]
+        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente]
         : ["Todos"],
     };
 
@@ -715,9 +715,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       filter.estadoProceso = [this.quickFilters.estadoProceso];
     }
 
-    // if (this.isFromProduction) {
-    //   filter['estadosPago'] = ['Prependiente', 'PreAprobado', 'Aprobado']
-    // }
+    if (this.isFromProduction) {
+      filter['estadosPago'] = ['Prependiente', 'PreAprobado', 'Aprobado']
+    }
 
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
       console.log(data);
@@ -2157,7 +2157,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       company: JSON.parse(localStorage.getItem("currentCompany")!)
         .nomComercial,
       estadoProceso: this.isFromProduction
-        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion]
+        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente]
         : ["Todos"],
     };
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
