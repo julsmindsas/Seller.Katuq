@@ -1,0 +1,115 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12 p-2">
+      <div class="card">
+        <div class="card-body">
+          <!-- Selector de columnas -->
+          <div class="d-flex align-items-center mb-3">
+            <label class="me-2 fw-bold">Columnas:</label>
+            <p-multiSelect [options]="displayedColumns" [(ngModel)]="selectedColumns" optionLabel="header"
+              defaultLabel="Seleccionar columnas" selectedItemsLabel="{0} columnas seleccionadas"
+              styleClass="me-2 column-selector" [style]="{'min-width': '250px'}"
+              (onChange)="handleColumnSelectionChange($event.value)">
+            </p-multiSelect>
+          </div>
+          <p-table [value]="productsView" [responsiveLayout]="'scroll'" styleClass="p-datatable-sm modern-prod-table" [scrollable]="true" scrollHeight="500px">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 56px;">Imagen</th>
+                <th *ngIf="isColumnVisibleProduccion('producto')">Producto</th>
+                <th *ngIf="isColumnVisibleProduccion('referencia')">Referencia</th>
+                <th style="width: 3rem; text-align: center;">Opciones</th>
+                <th *ngIf="isColumnVisibleProduccion('nroPedido')"># Pedido</th>
+                <th *ngIf="isColumnVisibleProduccion('cantidad')">Cantidad</th>
+                <th *ngIf="isColumnVisibleProduccion('cliente')">Cliente</th>
+                <th *ngIf="isColumnVisibleProduccion('estadoPago')">Estado Pago</th>
+                <th *ngIf="isColumnVisibleProduccion('estadoProceso')">Estado Proceso</th>
+                <th *ngIf="isColumnVisibleProduccion('validacion')">Validación</th>
+                <th *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')">Valor Bruto</th>
+                <th *ngIf="isColumnVisibleProduccion('totalDescuento')">Descuento</th>
+                <th *ngIf="isColumnVisibleProduccion('totalEnvio')">Domicilio</th>
+                <th *ngIf="isColumnVisibleProduccion('subtotal')">Subtotal</th>
+                <th *ngIf="isColumnVisibleProduccion('totalImpuesto')">IVA</th>
+                <th *ngIf="isColumnVisibleProduccion('totalPedididoConDescuento')">Total</th>
+                <th *ngIf="isColumnVisibleProduccion('anticipo')">Anticipo</th>
+                <th *ngIf="isColumnVisibleProduccion('faltaPorPagar')">Falta por Pagar</th>
+                <th *ngIf="isColumnVisibleProduccion('fechaEntrega')">Fecha Entrega</th>
+                <th *ngIf="isColumnVisibleProduccion('fechaCreacion')">Fecha de compra</th>
+                <th *ngIf="isColumnVisibleProduccion('ciudad')">Ciudad</th>
+                <th *ngIf="isColumnVisibleProduccion('zonaCobro')">Zona de Entrega</th>
+                <th *ngIf="isColumnVisibleProduccion('formaEntrega')">Forma de Entrega</th>
+                <th *ngIf="isColumnVisibleProduccion('horarioEntrega')">Horario de Entrega</th>
+                <th *ngIf="isColumnVisibleProduccion('channel')">Canal</th>
+                <th *ngIf="isColumnVisibleProduccion('vendedor')">Vendedor</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td style="width: 56px;">
+                  <ng-container *ngIf="row.producto?.crearProducto?.imagenesPrincipales?.length > 0 && row.producto?.crearProducto?.imagenesPrincipales[0]?.urls as imgUrl">
+                    <img *ngIf="!row._imgError" [src]="imgUrl" width="48" height="48" style="object-fit:cover; border-radius:6px; border:1px solid #eee;" (error)="row._imgError = true" [alt]="row.producto?.crearProducto?.titulo" />
+                    <p-avatar *ngIf="row._imgError" [label]="row.producto?.crearProducto?.titulo ? row.producto.crearProducto.titulo.charAt(0) : '?'" [shape]="'square'" size="large" style="border-radius:6px; border:1px solid #eee; width:48px; height:48px; background:#f3f6fb; color:#888; font-weight:600;">
+                      <i *ngIf="!row.producto?.crearProducto?.titulo" class="pi pi-image"></i>
+                    </p-avatar>
+                  </ng-container>
+                  <p-avatar *ngIf="!row.producto?.crearProducto?.imagenesPrincipales?.length || !row.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                    [label]="row.producto?.crearProducto?.titulo ? row.producto.crearProducto.titulo.charAt(0) : '?'"
+                    [shape]="'square'" size="large" style="border-radius:6px; border:1px solid #eee; width:48px; height:48px; background:#f3f6fb; color:#888; font-weight:600;">
+                    <i *ngIf="!row.producto?.crearProducto?.titulo" class="pi pi-image"></i>
+                  </p-avatar>
+                </td>
+                <td *ngIf="isColumnVisibleProduccion('producto')" style="max-width: 180px; width: 180px;">
+                  <span class="fw-bold nombre-ellipsis" pTooltip="{{ row.producto?.crearProducto?.titulo }}" tooltipPosition="top">
+                    {{ row.producto?.crearProducto?.titulo }}
+                  </span>
+                </td>
+                <td *ngIf="isColumnVisibleProduccion('referencia')">
+                  <span class="referencia-ellipsis" pTooltip="{{ row.producto?.crearProducto?.referencia }}" tooltipPosition="top">
+                    {{ row.producto?.crearProducto?.referencia }}
+                  </span>
+                </td>
+                <td style="width: 3rem; text-align: center;">
+                  <p-button *ngIf="isFromProduction" icon="pi pi-cog" class="p-button-text p-button-rounded p-button-secondary" (onClick)="openOptionsModalProduccion(row)" pTooltip="Opciones" tooltipPosition="top"></p-button>
+                </td>
+                <td *ngIf="isColumnVisibleProduccion('nroPedido')">{{ row.nroPedido }}</td>
+                <td *ngIf="isColumnVisibleProduccion('cantidad')">{{ row.cantidad }}</td>
+                <td *ngIf="isColumnVisibleProduccion('cliente')">{{ row.cliente?.nombres_completos }}</td>
+                <td *ngIf="isColumnVisibleProduccion('estadoPago')">
+                  <span class="badge bg-info text-dark">{{ row.estadoPago }}</span>
+                </td>
+                <td *ngIf="isColumnVisibleProduccion('estadoProceso')">
+                  <span class="badge bg-primary">{{ row.estadoProceso }}</span>
+                </td>
+                <td *ngIf="isColumnVisibleProduccion('validacion')">
+                  <span [ngClass]="{'text-success': row.validacion, 'text-danger': !row.validacion}">
+                    {{ row.validacion ? 'Sí' : 'No' }}
+                  </span>
+                </td>
+                <td *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')">{{ row.totalPedidoSinDescuento | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalDescuento')">{{ row.totalDescuento | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalEnvio')">{{ row.totalEnvio | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('subtotal')">{{ row.subtotal | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalImpuesto')">{{ row.totalImpuesto | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalPedididoConDescuento')">{{ row.totalPedididoConDescuento | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('anticipo')">{{ row.anticipo | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('faltaPorPagar')">{{ row.faltaPorPagar | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('fechaEntrega')">
+                  {{ isValidDate(row.fechaEntrega) ? (row.fechaEntrega | date: 'dd/MM/yyyy') : '-' }}
+                </td>
+                <td *ngIf="isColumnVisibleProduccion('fechaCreacion')">
+                  {{ isValidDate(row.fechaCreacion) ? (row.fechaCreacion | date: 'dd/MM/yyyy') : '-' }}
+                </td>
+                <td *ngIf="isColumnVisibleProduccion('ciudad')">{{ row.ciudad }}</td>
+                <td *ngIf="isColumnVisibleProduccion('zonaCobro')">{{ row.zonaCobro }}</td>
+                <td *ngIf="isColumnVisibleProduccion('formaEntrega')">{{ row.formaEntrega }}</td>
+                <td *ngIf="isColumnVisibleProduccion('horarioEntrega')">{{ row.horarioEntrega }}</td>
+                <td *ngIf="isColumnVisibleProduccion('channel')">{{ row.channel?.name || 'Regular' }}</td>
+                <td *ngIf="isColumnVisibleProduccion('vendedor')">{{ row.vendedor }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

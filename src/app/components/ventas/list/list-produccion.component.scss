@@ -1,0 +1,83 @@
+.card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.table {
+  font-size: 0.95em;
+  th, td {
+    vertical-align: middle;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 2;
+    border-bottom: 2px solid #007bff;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  tbody tr:nth-child(even) {
+    background: #f6fafd;
+  }
+  tbody tr:hover {
+    background: #e3f2fd;
+  }
+  td:last-child, th:last-child {
+    background: #f3f6fb;
+    text-align: center;
+  }
+}
+
+.btn {
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-size: 0.95em;
+}
+.btn-outline-primary {
+  border-width: 2px;
+  font-weight: 600;
+}
+.btn-outline-primary:hover {
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+  color: #fff;
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.12);
+}
+
+.descripcion-ellipsis {
+  display: block;
+  max-width: 220px;
+  width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.referencia-ellipsis {
+  display: block;
+  max-width: 120px;
+  width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nombre-ellipsis {
+  display: block;
+  max-width: 180px;
+  width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 991px) {
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table {
+    min-width: 1200px;
+  }
+} 

@@ -86,6 +86,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   // Reemplazar la propiedad de scroll simple por una pila
   private scrollStack: number[] = [];
 
+  productoSeleccionado: any;
+
   ngAfterViewInit() {
     // Limpiar funciones del menú anterior
   }
@@ -105,11 +107,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Modal handles its own click-outside behavior
   }
 
-  openOptionsModal(order: any) {
-    this.scrollStack.push(window.scrollY);
+  openOptionsModal(order: any, producto?: any) {
     this.selectedOrder = order;
+    if (producto) {
+      this.productoSeleccionado = producto;
+    }
     this.modalVisible = true;
-    // Usar clase CSS en lugar de manipulación directa del style
     document.body.classList.add("modal-open");
   }
 
@@ -336,6 +339,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     {
       field: "ciudad",
       header: "Ciudad",
+      visible: false,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "referencia",
+      header: "Referencia",
       visible: false,
       type: "text",
       filterable: true,
@@ -2721,5 +2731,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     } else {
       this.ciudadSeleccionada = "";
     }
+  }
+
+  onPrintProduct(event: { pedido: any, producto: any }) {
+    console.log('Imprimir producto:', event.producto, 'del pedido:', event.pedido);
+    // Aquí puedes llamar a la lógica de impresión específica por producto
+  }
+
+  onOptionsProduccion(event: { pedido: any, producto: any }) {
+    this.selectedOrder = event.pedido;
+    this.productoSeleccionado = event.producto;
+    this.openOptionsModal(event.pedido, event.producto);
   }
 }

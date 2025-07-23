@@ -16,7 +16,7 @@
                         <p class="text-left text-muted fs-18 m-0 p-0">{{ "Listado de pedidos" | translate }}</p>
                     </div>
                 </div>
-<br>
+                <br>
 
                 <div class="col-sm-12">
                     <div class="">
@@ -37,28 +37,31 @@
                                             <!-- Header compacto y colapsable -->
                                             <div class="filters-compact-header">
                                                 <div class="d-flex justify-content-between align-items-center">
-                                                    <div class="filter-toggle-section" style="cursor: pointer;" (click)="toggleFilters()">
-                                                        <i class="pi me-2 text-primary" [ngClass]="showFilters ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                                                    <div class="filter-toggle-section" style="cursor: pointer;"
+                                                        (click)="toggleFilters()">
+                                                        <i class="pi me-2 text-primary"
+                                                            [ngClass]="showFilters ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
                                                         <i class="pi pi-filter me-2 text-primary"></i>
-                                                        <span class="fw-bold text-dark">{{ 'Filtros' | translate }}</span>
+                                                        <span class="fw-bold text-dark">{{ 'Filtros' | translate
+                                                            }}</span>
                                                         <span class="filter-count ms-2" *ngIf="hasActiveFilters()">
-                                                            <span class="badge bg-primary">{{ getActiveFiltersCount() }}</span>
+                                                            <span class="badge bg-primary">{{ getActiveFiltersCount()
+                                                                }}</span>
                                                         </span>
                                                     </div>
                                                     <div class="quick-actions d-flex align-items-center">
                                                         <!-- Filtros rápidos en header -->
                                                         <div class="header-quick-filters d-flex align-items-center">
-                                                            <span class="shortcuts-label me-2">{{ 'Rápidos:' | translate }}</span>
+                                                            <span class="shortcuts-label me-2">{{ 'Rápidos:' | translate
+                                                                }}</span>
                                                             <div class="shortcuts-group d-flex">
-                                                                <button type="button"
-                                                                    class="btn btn-sm shortcut-btn"
+                                                                <button type="button" class="btn btn-sm shortcut-btn"
                                                                     [ngClass]="{'btn-primary': quickFilters.estadoPago === 'Pendiente', 'btn-outline-secondary': quickFilters.estadoPago !== 'Pendiente'}"
                                                                     (click)="setQuickFilter('estadoPago', quickFilters.estadoPago === 'Pendiente' ? 'all' : 'Pendiente')"
                                                                     pTooltip="{{ 'Pendientes' | translate }}">
                                                                     <i class="pi pi-clock"></i>
                                                                 </button>
-                                                                <button type="button"
-                                                                    class="btn btn-sm shortcut-btn"
+                                                                <button type="button" class="btn btn-sm shortcut-btn"
                                                                     [ngClass]="{'btn-success': quickFilters.estadoPago === 'Aprobado', 'btn-outline-secondary': quickFilters.estadoPago !== 'Aprobado'}"
                                                                     (click)="setQuickFilter('estadoPago', quickFilters.estadoPago === 'Aprobado' ? 'all' : 'Aprobado')"
                                                                     pTooltip="{{ 'Aprobados' | translate }}">
@@ -76,22 +79,20 @@
                                                         <div class="vertical-separator mx-3"></div>
 
                                                         <div class="action-buttons d-flex align-items-center">
-                                                            <span class="actions-label me-2">{{ 'Acciones:' | translate }}</span>
+                                                            <span class="actions-label me-2">{{ 'Acciones:' | translate
+                                                                }}</span>
                                                             <div class="actions-group d-flex">
-                                                                <button pButton type="button"
-                                                                    icon="pi pi-search"
+                                                                <button pButton type="button" icon="pi pi-search"
                                                                     class="p-button-sm p-button-primary action-btn"
                                                                     pTooltip="{{ 'Filtrar' | translate }}"
                                                                     (click)="refrescar(dt1)">
                                                                 </button>
-                                                                <button pButton type="button"
-                                                                    icon="pi pi-refresh"
+                                                                <button pButton type="button" icon="pi pi-refresh"
                                                                     class="p-button-sm p-button-text action-btn"
                                                                     pTooltip="{{ 'Limpiar filtros' | translate }}"
                                                                     (click)="clearAllFilters()">
                                                                 </button>
-                                                                <button pButton type="button"
-                                                                    icon="pi pi-file-excel"
+                                                                <button pButton type="button" icon="pi pi-file-excel"
                                                                     class="p-button-sm p-button-success action-btn"
                                                                     [disabled]="orders.length == 0"
                                                                     pTooltip="{{ 'Exportar Excel' | translate }}"
@@ -104,7 +105,8 @@
                                             </div>
 
                                             <!-- Contenido expandible de filtros -->
-                                            <div class="filters-expanded-content mt-3" [ngClass]="{'d-none': !showFilters}">
+                                            <div class="filters-expanded-content mt-3"
+                                                [ngClass]="{'d-none': !showFilters}">
 
                                                 <!-- Indicadores de filtros activos en la parte superior -->
                                                 <div class="active-filters-summary mb-3" *ngIf="hasActiveFilters()">
@@ -116,23 +118,30 @@
                                                         <div class="filter-tags d-flex flex-wrap gap-1">
                                                             <span class="filter-tag" *ngIf="fechaInicial">
                                                                 {{ 'Desde: ' + (fechaInicial | date:'dd/MM/yyyy') }}
-                                                                <i class="pi pi-times ms-1" (click)="clearDateFilter('inicial')"></i>
+                                                                <i class="pi pi-times ms-1"
+                                                                    (click)="clearDateFilter('inicial')"></i>
                                                             </span>
                                                             <span class="filter-tag" *ngIf="fechaFinal">
                                                                 {{ 'Hasta: ' + (fechaFinal | date:'dd/MM/yyyy') }}
-                                                                <i class="pi pi-times ms-1" (click)="clearDateFilter('final')"></i>
+                                                                <i class="pi pi-times ms-1"
+                                                                    (click)="clearDateFilter('final')"></i>
                                                             </span>
                                                             <span class="filter-tag" *ngIf="nroPedido">
                                                                 {{ 'Pedido: ' + (nroPedido.nroPedido || nroPedido) }}
-                                                                <i class="pi pi-times ms-1" (click)="clearSearchFilter()"></i>
+                                                                <i class="pi pi-times ms-1"
+                                                                    (click)="clearSearchFilter()"></i>
                                                             </span>
-                                                            <span class="filter-tag status-filter-tag" *ngIf="quickFilters.estadoPago !== 'all'">
+                                                            <span class="filter-tag status-filter-tag"
+                                                                *ngIf="quickFilters.estadoPago !== 'all'">
                                                                 {{ 'Estado Pago: ' + quickFilters.estadoPago }}
-                                                                <i class="pi pi-times ms-1" (click)="clearQuickFilter('estadoPago')"></i>
+                                                                <i class="pi pi-times ms-1"
+                                                                    (click)="clearQuickFilter('estadoPago')"></i>
                                                             </span>
-                                                            <span class="filter-tag status-filter-tag" *ngIf="quickFilters.estadoProceso !== 'all'">
+                                                            <span class="filter-tag status-filter-tag"
+                                                                *ngIf="quickFilters.estadoProceso !== 'all'">
                                                                 {{ 'Estado Proceso: ' + quickFilters.estadoProceso }}
-                                                                <i class="pi pi-times ms-1" (click)="clearQuickFilter('estadoProceso')"></i>
+                                                                <i class="pi pi-times ms-1"
+                                                                    (click)="clearQuickFilter('estadoProceso')"></i>
                                                             </span>
                                                             <button type="button"
                                                                 class="btn btn-outline-secondary btn-sm ms-2"
@@ -146,24 +155,25 @@
 
                                                 <!-- Configuración de columnas colapsible -->
                                                 <div class="column-config-section mb-4">
-                                                    <div class="config-header" style="cursor: pointer;" (click)="toggleColumnConfig()">
-                                                        <i class="pi" [ngClass]="showColumnConfig ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
-                                                        <span class="ms-2 fw-medium">{{ 'Configurar Columnas' | translate }}</span>
+                                                    <div class="config-header" style="cursor: pointer;"
+                                                        (click)="toggleColumnConfig()">
+                                                        <i class="pi"
+                                                            [ngClass]="showColumnConfig ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                                                        <span class="ms-2 fw-medium">{{ 'Configurar Columnas' |
+                                                            translate }}</span>
                                                     </div>
-                                                    <div class="config-content mt-2" [ngClass]="{'d-none': !showColumnConfig}">
+                                                    <div class="config-content mt-2"
+                                                        [ngClass]="{'d-none': !showColumnConfig}">
                                                         <div class="d-flex align-items-center flex-wrap">
-                                                            <p-multiSelect
-                                                                [options]="displayedColumns"
-                                                                [(ngModel)]="selectedColumns"
-                                                                optionLabel="header"
+                                                            <p-multiSelect [options]="displayedColumns"
+                                                                [(ngModel)]="selectedColumns" optionLabel="header"
                                                                 defaultLabel="{{ 'Seleccionar columnas' | translate }}"
                                                                 selectedItemsLabel="{0} columnas seleccionadas"
                                                                 styleClass="me-2 column-selector"
                                                                 [style]="{'min-width': '250px'}"
                                                                 (onChange)="onColumnSelectionChange()">
                                                             </p-multiSelect>
-                                                            <button pButton type="button"
-                                                                icon="pi pi-undo"
+                                                            <button pButton type="button" icon="pi pi-undo"
                                                                 label="{{ 'Restaurar' | translate }}"
                                                                 class="p-button-outlined p-button-sm"
                                                                 pTooltip="{{ 'Restaurar columnas por defecto' | translate }}"
@@ -173,236 +183,242 @@
                                                     </div>
                                                 </div>
 
-                                            <!-- Filtros principales -->
-                                            <div class="main-filters-grid">
-                                                <!-- Grupo de fechas -->
-                                                <div class="filter-group date-filters">
-                                                    <div class="filter-group-header">
-                                                        <i class="pi pi-calendar me-2 text-primary"></i>
-                                                        <span class="fw-medium">{{ 'Rango de Fechas' | translate }}</span>
-                                                    </div>
-                                                    <div class="filter-group-content">
-                                                        <div class="date-range-container">
-                                                            <div class="date-input-wrapper">
-                                                                <label class="filter-label">{{ 'Desde' | translate }}</label>
-                                                                <input type="date"
-                                                                    class="form-control modern-date-input"
-                                                                    [(ngModel)]="fechaInicial"
-                                                                    (change)="firstEvent($event.target.value)" />
-                                                            </div>
-                                                            <div class="date-separator">
-                                                                <i class="pi pi-arrow-right"></i>
-                                                            </div>
-                                                            <div class="date-input-wrapper">
-                                                                <label class="filter-label">{{ 'Hasta' | translate }}</label>
-                                                                <input type="date"
-                                                                    class="form-control modern-date-input"
-                                                                    [(ngModel)]="fechaFinal"
-                                                                    (change)="secondEvent($event.target.value)" />
-                                                            </div>
+                                                <!-- Filtros principales -->
+                                                <div class="main-filters-grid">
+                                                    <!-- Grupo de fechas -->
+                                                    <div class="filter-group date-filters">
+                                                        <div class="filter-group-header">
+                                                            <i class="pi pi-calendar me-2 text-primary"></i>
+                                                            <span class="fw-medium">{{ 'Rango de Fechas' | translate
+                                                                }}</span>
                                                         </div>
-                                                        <!-- Filtros rápidos de fecha -->
-                                                        <div class="quick-date-filters mt-2">
-                                                            <button type="button"
-                                                                class="btn btn-outline-primary btn-sm me-2"
-                                                                (click)="filtrarParaHoy()">
-                                                                <i class="pi pi-sun me-1"></i>
-                                                                {{ 'Hoy' | translate }}
-                                                            </button>
-                                                            <button type="button"
-                                                                class="btn btn-outline-primary btn-sm me-2"
-                                                                (click)="filtrarParaManana()">
-                                                                <i class="pi pi-forward me-1"></i>
-                                                                {{ 'Mañana' | translate }}
-                                                            </button>
-                                                        </div>
-                                                        <!-- Rangos predefinidos -->
-                                                        <div class="predefined-ranges mt-2">
-                                                            <small class="text-muted d-block mb-2">{{ 'Rangos predefinidos:' | translate }}</small>
-                                                            <div class="d-flex gap-1 flex-wrap">
+                                                        <div class="filter-group-content">
+                                                            <div class="date-range-container">
+                                                                <div class="date-input-wrapper">
+                                                                    <label class="filter-label">{{ 'Desde' | translate
+                                                                        }}</label>
+                                                                    <input type="date"
+                                                                        class="form-control modern-date-input"
+                                                                        [(ngModel)]="fechaInicial"
+                                                                        (change)="firstEvent($event.target.value)" />
+                                                                </div>
+                                                                <div class="date-separator">
+                                                                    <i class="pi pi-arrow-right"></i>
+                                                                </div>
+                                                                <div class="date-input-wrapper">
+                                                                    <label class="filter-label">{{ 'Hasta' | translate
+                                                                        }}</label>
+                                                                    <input type="date"
+                                                                        class="form-control modern-date-input"
+                                                                        [(ngModel)]="fechaFinal"
+                                                                        (change)="secondEvent($event.target.value)" />
+                                                                </div>
+                                                            </div>
+                                                            <!-- Filtros rápidos de fecha -->
+                                                            <div class="quick-date-filters mt-2">
                                                                 <button type="button"
-                                                                    class="btn btn-outline-secondary btn-xs"
-                                                                    (click)="setDateRange('today')">
+                                                                    class="btn btn-outline-primary btn-sm me-2"
+                                                                    (click)="filtrarParaHoy()">
+                                                                    <i class="pi pi-sun me-1"></i>
                                                                     {{ 'Hoy' | translate }}
                                                                 </button>
                                                                 <button type="button"
-                                                                    class="btn btn-outline-secondary btn-xs"
-                                                                    (click)="setDateRange('week')">
-                                                                    {{ 'Esta semana' | translate }}
+                                                                    class="btn btn-outline-primary btn-sm me-2"
+                                                                    (click)="filtrarParaManana()">
+                                                                    <i class="pi pi-forward me-1"></i>
+                                                                    {{ 'Mañana' | translate }}
                                                                 </button>
-                                                                <button type="button"
-                                                                    class="btn btn-outline-secondary btn-xs"
-                                                                    (click)="setDateRange('month')">
-                                                                    {{ 'Este mes' | translate }}
+                                                            </div>
+                                                            <!-- Rangos predefinidos -->
+                                                            <div class="predefined-ranges mt-2">
+                                                                <small class="text-muted d-block mb-2">{{ 'Rangos
+                                                                    predefinidos:' | translate }}</small>
+                                                                <div class="d-flex gap-1 flex-wrap">
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-secondary btn-xs"
+                                                                        (click)="setDateRange('today')">
+                                                                        {{ 'Hoy' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-secondary btn-xs"
+                                                                        (click)="setDateRange('week')">
+                                                                        {{ 'Esta semana' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-secondary btn-xs"
+                                                                        (click)="setDateRange('month')">
+                                                                        {{ 'Este mes' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-secondary btn-xs"
+                                                                        (click)="setDateRange('lastWeek')">
+                                                                        {{ 'Semana pasada' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-secondary btn-xs"
+                                                                        (click)="setDateRange('lastMonth')">
+                                                                        {{ 'Mes pasado' | translate }}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Filtros rápidos por estado -->
+                                                    <div class="filter-group status-filters">
+                                                        <div class="filter-group-header">
+                                                            <i class="pi pi-flag me-2 text-primary"></i>
+                                                            <span class="fw-medium">{{ 'Filtros Rápidos' | translate
+                                                                }}</span>
+                                                        </div>
+                                                        <div class="filter-group-content">
+                                                            <div class="status-filter-section">
+                                                                <label class="filter-label">{{ 'Estado de Pago' |
+                                                                    translate }}</label>
+                                                                <div class="status-chips mb-3">
+                                                                    <button type="button" class="status-chip"
+                                                                        [ngClass]="{'active': quickFilters.estadoPago === 'all'}"
+                                                                        (click)="setQuickFilter('estadoPago', 'all')">
+                                                                        <i class="pi pi-list me-1"></i>
+                                                                        {{ 'Todos' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="status-chip status-success"
+                                                                        [ngClass]="{'active': quickFilters.estadoPago === 'Aprobado'}"
+                                                                        (click)="setQuickFilter('estadoPago', 'Aprobado')">
+                                                                        <i class="pi pi-check me-1"></i>
+                                                                        {{ 'Aprobados' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="status-chip status-warning"
+                                                                        [ngClass]="{'active': quickFilters.estadoPago === 'Pendiente'}"
+                                                                        (click)="setQuickFilter('estadoPago', 'Pendiente')">
+                                                                        <i class="pi pi-clock me-1"></i>
+                                                                        {{ 'Pendientes' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="status-chip status-info"
+                                                                        [ngClass]="{'active': quickFilters.estadoPago === 'PreAprobado'}"
+                                                                        (click)="setQuickFilter('estadoPago', 'PreAprobado')">
+                                                                        <i class="pi pi-eye me-1"></i>
+                                                                        {{ 'Pre-aprobados' | translate }}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="status-filter-section">
+                                                                <label class="filter-label">{{ 'Estado de Proceso' |
+                                                                    translate }}</label>
+                                                                <div class="status-chips">
+                                                                    <button type="button" class="status-chip"
+                                                                        [ngClass]="{'active': quickFilters.estadoProceso === 'all'}"
+                                                                        (click)="setQuickFilter('estadoProceso', 'all')">
+                                                                        <i class="pi pi-list me-1"></i>
+                                                                        {{ 'Todos' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="status-chip status-secondary"
+                                                                        [ngClass]="{'active': quickFilters.estadoProceso === 'SinProducir'}"
+                                                                        (click)="setQuickFilter('estadoProceso', 'SinProducir')">
+                                                                        <i class="pi pi-circle me-1"></i>
+                                                                        {{ 'Sin Producir' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="status-chip status-info"
+                                                                        [ngClass]="{'active': quickFilters.estadoProceso === 'Producido'}"
+                                                                        (click)="setQuickFilter('estadoProceso', 'Producido')">
+                                                                        <i class="pi pi-cog me-1"></i>
+                                                                        {{ 'Producido' | translate }}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="status-chip status-success"
+                                                                        [ngClass]="{'active': quickFilters.estadoProceso === 'Entregado'}"
+                                                                        (click)="setQuickFilter('estadoProceso', 'Entregado')">
+                                                                        <i class="pi pi-check-circle me-1"></i>
+                                                                        {{ 'Entregado' | translate }}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Búsqueda de pedidos -->
+                                                    <div class="filter-group search-filters">
+                                                        <div class="filter-group-header">
+                                                            <i class="pi pi-search me-2 text-primary"></i>
+                                                            <span class="fw-medium">{{ 'Búsqueda' | translate }}</span>
+                                                        </div>
+                                                        <div class="filter-group-content">
+                                                            <div class="search-input-wrapper">
+                                                                <label class="filter-label">{{ 'Número de Pedido' |
+                                                                    translate }}</label>
+                                                                <p-autoComplete [(ngModel)]="nroPedido"
+                                                                    [suggestions]="filteredOrderNumbers"
+                                                                    (completeMethod)="filtroGlobal($event)"
+                                                                    field="nroPedido"
+                                                                    placeholder="{{ 'Buscar por número...' | translate }}"
+                                                                    (onSelect)="onOrderSelect($event)"
+                                                                    styleClass="modern-autocomplete w-100">
+                                                                    <ng-template let-item pTemplate="item">
+                                                                        <div class="suggestion-item">
+                                                                            <span class="fw-bold">#{{ item.nroPedido
+                                                                                }}</span>
+                                                                            <small class="text-muted ms-2">{{
+                                                                                item.cliente?.nombres_completos
+                                                                                }}</small>
+                                                                        </div>
+                                                                    </ng-template>
+                                                                </p-autoComplete>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Acciones -->
+                                                    <div class="filter-group action-filters">
+                                                        <div class="filter-group-header">
+                                                            <i class="pi pi-cog me-2 text-primary"></i>
+                                                            <span class="fw-medium">{{ 'Acciones' | translate }}</span>
+                                                        </div>
+                                                        <div class="filter-group-content">
+                                                            <div class="action-buttons">
+                                                                <button pButton type="button" icon="pi pi-search"
+                                                                    label="{{ 'Filtrar' | translate }}"
+                                                                    class="p-button-primary action-btn"
+                                                                    (click)="refrescar(dt1)">
                                                                 </button>
-                                                                <button type="button"
-                                                                    class="btn btn-outline-secondary btn-xs"
-                                                                    (click)="setDateRange('lastWeek')">
-                                                                    {{ 'Semana pasada' | translate }}
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="btn btn-outline-secondary btn-xs"
-                                                                    (click)="setDateRange('lastMonth')">
-                                                                    {{ 'Mes pasado' | translate }}
+                                                                <button pButton type="button" icon="pi pi-file-excel"
+                                                                    label="{{ 'Exportar' | translate }}"
+                                                                    class="p-button-success action-btn"
+                                                                    [disabled]="orders.length == 0"
+                                                                    (click)="exportarExcel()">
                                                                 </button>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                <!-- Filtros rápidos por estado -->
-                                                <div class="filter-group status-filters">
-                                                    <div class="filter-group-header">
-                                                        <i class="pi pi-flag me-2 text-primary"></i>
-                                                        <span class="fw-medium">{{ 'Filtros Rápidos' | translate }}</span>
-                                                    </div>
-                                                    <div class="filter-group-content">
-                                                        <div class="status-filter-section">
-                                                            <label class="filter-label">{{ 'Estado de Pago' | translate }}</label>
-                                                            <div class="status-chips mb-3">
-                                                                <button type="button"
-                                                                    class="status-chip"
-                                                                    [ngClass]="{'active': quickFilters.estadoPago === 'all'}"
-                                                                    (click)="setQuickFilter('estadoPago', 'all')">
-                                                                    <i class="pi pi-list me-1"></i>
-                                                                    {{ 'Todos' | translate }}
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="status-chip status-success"
-                                                                    [ngClass]="{'active': quickFilters.estadoPago === 'Aprobado'}"
-                                                                    (click)="setQuickFilter('estadoPago', 'Aprobado')">
-                                                                    <i class="pi pi-check me-1"></i>
-                                                                    {{ 'Aprobados' | translate }}
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="status-chip status-warning"
-                                                                    [ngClass]="{'active': quickFilters.estadoPago === 'Pendiente'}"
-                                                                    (click)="setQuickFilter('estadoPago', 'Pendiente')">
-                                                                    <i class="pi pi-clock me-1"></i>
-                                                                    {{ 'Pendientes' | translate }}
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="status-chip status-info"
-                                                                    [ngClass]="{'active': quickFilters.estadoPago === 'PreAprobado'}"
-                                                                    (click)="setQuickFilter('estadoPago', 'PreAprobado')">
-                                                                    <i class="pi pi-eye me-1"></i>
-                                                                    {{ 'Pre-aprobados' | translate }}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="status-filter-section">
-                                                            <label class="filter-label">{{ 'Estado de Proceso' | translate }}</label>
-                                                            <div class="status-chips">
-                                                                <button type="button"
-                                                                    class="status-chip"
-                                                                    [ngClass]="{'active': quickFilters.estadoProceso === 'all'}"
-                                                                    (click)="setQuickFilter('estadoProceso', 'all')">
-                                                                    <i class="pi pi-list me-1"></i>
-                                                                    {{ 'Todos' | translate }}
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="status-chip status-secondary"
-                                                                    [ngClass]="{'active': quickFilters.estadoProceso === 'SinProducir'}"
-                                                                    (click)="setQuickFilter('estadoProceso', 'SinProducir')">
-                                                                    <i class="pi pi-circle me-1"></i>
-                                                                    {{ 'Sin Producir' | translate }}
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="status-chip status-info"
-                                                                    [ngClass]="{'active': quickFilters.estadoProceso === 'Producido'}"
-                                                                    (click)="setQuickFilter('estadoProceso', 'Producido')">
-                                                                    <i class="pi pi-cog me-1"></i>
-                                                                    {{ 'Producido' | translate }}
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="status-chip status-success"
-                                                                    [ngClass]="{'active': quickFilters.estadoProceso === 'Entregado'}"
-                                                                    (click)="setQuickFilter('estadoProceso', 'Entregado')">
-                                                                    <i class="pi pi-check-circle me-1"></i>
-                                                                    {{ 'Entregado' | translate }}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Búsqueda de pedidos -->
-                                                <div class="filter-group search-filters">
-                                                    <div class="filter-group-header">
-                                                        <i class="pi pi-search me-2 text-primary"></i>
-                                                        <span class="fw-medium">{{ 'Búsqueda' | translate }}</span>
-                                                    </div>
-                                                    <div class="filter-group-content">
-                                                        <div class="search-input-wrapper">
-                                                            <label class="filter-label">{{ 'Número de Pedido' | translate }}</label>
-                                                            <p-autoComplete
-                                                                [(ngModel)]="nroPedido"
-                                                                [suggestions]="filteredOrderNumbers"
-                                                                (completeMethod)="filtroGlobal($event)"
-                                                                field="nroPedido"
-                                                                placeholder="{{ 'Buscar por número...' | translate }}"
-                                                                (onSelect)="onOrderSelect($event)"
-                                                                styleClass="modern-autocomplete w-100">
-                                                                <ng-template let-item pTemplate="item">
-                                                                    <div class="suggestion-item">
-                                                                        <span class="fw-bold">#{{ item.nroPedido }}</span>
-                                                                        <small class="text-muted ms-2">{{ item.cliente?.nombres_completos }}</small>
-                                                                    </div>
-                                                                </ng-template>
-                                                            </p-autoComplete>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Acciones -->
-                                                <div class="filter-group action-filters">
-                                                    <div class="filter-group-header">
-                                                        <i class="pi pi-cog me-2 text-primary"></i>
-                                                        <span class="fw-medium">{{ 'Acciones' | translate }}</span>
-                                                    </div>
-                                                    <div class="filter-group-content">
-                                                        <div class="action-buttons">
-                                                            <button pButton
-                                                                type="button"
-                                                                icon="pi pi-search"
-                                                                label="{{ 'Filtrar' | translate }}"
-                                                                class="p-button-primary action-btn"
-                                                                (click)="refrescar(dt1)">
-                                                            </button>
-                                                            <button pButton
-                                                                type="button"
-                                                                icon="pi pi-file-excel"
-                                                                label="{{ 'Exportar' | translate }}"
-                                                                class="p-button-success action-btn"
-                                                                [disabled]="orders.length == 0"
-                                                                (click)="exportarExcel()">
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
 
                                             </div> <!-- Cierre de filters-expanded-content -->
                                         </div> <!-- Cierre de modern-filters-container -->
                                     </ng-template>
 
                                     <!-- HEADER: Dos filas (títulos y filtros) -->
-                                    <ng-template pTemplate="header">
+                                    <ng-template *ngIf="!isFromProduction" pTemplate="header">
                                         <!-- <tr>
                                     <th colspan="8" style="text-align: center;">Título de la Tabla</th>
                                 </tr> -->
                                         <!-- Fila de encabezados y filtros por columna -->
                                         <tr style="font-size: 0.8em;">
                                             <!-- Columna Detalles -->
-                                            <th *ngIf="isColumnVisible('detalles')" style="width: 2.5rem; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('detalles')"
+                                                style="width: 2.5rem; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex justify-content-center">
                                                     {{'Detalles' | translate}}
                                                 </div>
                                             </th>
 
                                             <!-- Columna # Pedido -->
-                                            <th *ngIf="isColumnVisible('nroPedido')" style="width: 8rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('nroPedido')"
+                                                style="width: 8rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex text-center align-items-center">
                                                     {{'# Pedido' | translate}}
                                                     <p-columnFilter type="text" field="nroPedido" display="menu"
@@ -413,7 +429,8 @@
                                             </th>
 
                                             <!-- Columna Fecha Entrega -->
-                                            <th *ngIf="isColumnVisible('fechaEntrega')" style="width: 7rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('fechaEntrega')"
+                                                style="width: 7rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Fecha entrega' | translate}}
                                                     <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega"
@@ -438,7 +455,8 @@
                                             </th>
 
                                             <!-- Columna Estado de Pago -->
-                                            <th *ngIf="isColumnVisible('estadoPago')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('estadoPago')"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex text-center align-items-center">
                                                     {{'Estado de Pago' | translate}}
                                                     <p-columnFilter field="estadoPago" matchMode="equals"
@@ -456,7 +474,8 @@
                                             </th>
 
                                             <!-- Columna Estado de Proceso -->
-                                            <th *ngIf="isColumnVisible('estadoProceso')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('estadoProceso')"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Estado de Proceso' | translate}}
                                                     <p-columnFilter field="estadoProceso" matchMode="equals"
@@ -474,7 +493,8 @@
                                             </th>
 
                                             <!-- Columna Validación -->
-                                            <th *ngIf="isColumnVisible('validacion') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('validacion') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Validación' | translate}}
                                                     <p-columnFilter field="validacion" matchMode="equals"
@@ -493,7 +513,8 @@
                                             </th>
 
                                             <!-- Columna Cliente -->
-                                            <th *ngIf="isColumnVisible('cliente') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('cliente') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Cliente' | translate}}
                                                     <p-columnFilter type="text" field="cliente.nombres_completos"
@@ -504,7 +525,8 @@
                                             </th>
 
                                             <!-- Columna Valor Bruto -->
-                                            <th *ngIf="isColumnVisible('valorBruto') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('valorBruto') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Valor Bruto' | translate}}
                                                     <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
@@ -515,7 +537,8 @@
                                             </th>
 
                                             <!-- Columna Descuento -->
-                                            <th *ngIf="isColumnVisible('descuento') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('descuento') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Descuento' | translate}}
                                                     <p-columnFilter type="numeric" field="totalDescuento"
@@ -526,7 +549,8 @@
                                             </th>
 
                                             <!-- Columna Domicilio -->
-                                            <th *ngIf="isColumnVisible('domicilio') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('domicilio') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Domicilio' | translate}}
                                                     <p-columnFilter type="numeric" field="totalEnvio"
@@ -537,7 +561,8 @@
                                             </th>
 
                                             <!-- Columna Subtotal -->
-                                            <th *ngIf="isColumnVisible('subtotal') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('subtotal') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Subtotal' | translate}}
                                                     <p-columnFilter type="numeric" field="subtotal" matchMode="contains"
@@ -548,7 +573,8 @@
                                             </th>
 
                                             <!-- Columna IVA -->
-                                            <th *ngIf="isColumnVisible('iva') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('iva') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'IVA' | translate}}
                                                     <p-columnFilter type="numeric" field="totalImpuesto"
@@ -559,7 +585,8 @@
                                             </th>
 
                                             <!-- Columna Total -->
-                                            <th *ngIf="isColumnVisible('total') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('total') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Total' | translate}}
                                                     <p-columnFilter type="numeric" field="totalPedididoConDescuento"
@@ -570,7 +597,8 @@
                                             </th>
 
                                             <!-- Columna Anticipo -->
-                                            <th *ngIf="isColumnVisible('anticipo') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('anticipo') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Anticipo' | translate}}
                                                     <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
@@ -581,7 +609,8 @@
                                             </th>
 
                                             <!-- Columna Falta por Pagar -->
-                                            <th *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Falta por Pagar' | translate}}
                                                     <p-columnFilter type="numeric" field="faltaPorPagar"
@@ -592,7 +621,8 @@
                                             </th>
 
                                             <!-- Columna Fecha de compra -->
-                                            <th *ngIf="isColumnVisible('fechaCreacion')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('fechaCreacion')"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Fecha de compra' | translate}}
                                                     <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion"
@@ -609,7 +639,8 @@
                                             </th>
 
                                             <!-- Columna Ciudad -->
-                                            <th *ngIf="isColumnVisible('ciudad') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('ciudad') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Ciudad' | translate}}
                                                     <p-columnFilter type="text" field="envio.ciudad"
@@ -620,7 +651,8 @@
                                             </th>
 
                                             <!-- Columna Zona de Entrega -->
-                                            <th *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('zonaCobro') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Zona de Entrega' | translate}}
                                                     <p-columnFilter type="text" field="envio.zonaCobro"
@@ -631,7 +663,8 @@
                                             </th>
 
                                             <!-- Columna Forma de Entrega -->
-                                            <th *ngIf="isColumnVisible('formaEntrega')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('formaEntrega')"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Forma de Entrega' | translate}}
                                                     <p-columnFilter type="text" field="formaEntrega"
@@ -642,7 +675,8 @@
                                             </th>
 
                                             <!-- Columna Horario de Entrega -->
-                                            <th *ngIf="isColumnVisible('horarioEntrega')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('horarioEntrega')"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Horario de Entrega' | translate}}
                                                     <p-columnFilter type="text" field="horarioEntrega"
@@ -653,7 +687,8 @@
                                             </th>
 
                                             <!-- Columna Canal -->
-                                            <th *ngIf="isColumnVisible('channel')" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('channel')"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Canal' | translate}}
                                                     <p-columnFilter type="text" field="channel.name"
@@ -664,7 +699,8 @@
                                             </th>
 
                                             <!-- Columna Vendedor -->
-                                            <th *ngIf="isColumnVisible('vendedor') && !isFromProduction" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                            <th *ngIf="isColumnVisible('vendedor') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 <div class="flex align-items-center">
                                                     {{'Vendedor' | translate}}
                                                     <p-columnFilter type="text" field="asesorAsignado.name"
@@ -677,31 +713,37 @@
                                     </ng-template>
 
                                     <!-- CUERPO: filas y row expansion -->
-                                    <ng-template pTemplate="body" let-pedido let-expanded="expanded">
+                                    <ng-template *ngIf="!isFromProduction" pTemplate="body" let-pedido
+                                        let-expanded="expanded">
                                         <tr class="p-table-tr-td" style="font-size: 0.85em;">
                                             <!-- Columna Detalles -->
-                                            <td *ngIf="isColumnVisible('detalles')" style="width: 2.0rem; text-align: center; vertical-align: middle; padding: 0.5rem 0.25rem;">
+                                            <td *ngIf="isColumnVisible('detalles')"
+                                                style="width: 2.0rem; text-align: center; vertical-align: middle; padding: 0.5rem 0.25rem;">
                                                 <button type="button" pButton pRipple [pRowToggler]="pedido"
                                                     class="p-button-text p-button-rounded p-button-plain p-button-sm"
                                                     [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
                                             </td>
 
                                             <!-- Columna # Pedido -->
-                                            <td *ngIf="isColumnVisible('nroPedido')" class="pedido-number-cell" style="width: 8rem;">
+                                            <td *ngIf="isColumnVisible('nroPedido')" class="pedido-number-cell"
+                                                style="width: 8rem;">
                                                 <span class="pedido-number">{{ pedido.nroPedido }}</span>
                                             </td>
 
                                             <!-- Columna Fecha Entrega -->
-                                            <td *ngIf="isColumnVisible('fechaEntrega')" class="fecha-cell" style="width: 7rem;">
-                                                {{ convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega) }}
+                                            <td *ngIf="isColumnVisible('fechaEntrega')" class="fecha-cell"
+                                                style="width: 7rem;">
+                                                {{
+                                                convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega)
+                                                }}
                                             </td>
 
                                             <!-- Columna Opciones -->
-                                            <td *ngIf="isColumnVisible('opciones')" class="text-center options-cell" style="width: 5rem; padding: 0.5rem 0.25rem;">
-                                                <button class="btn btn-outline-primary btn-sm"
-                                                        type="button"
-                                                        (click)="openOptionsModal(pedido)"
-                                                        [title]="'Opciones del pedido' | translate">
+                                            <td *ngIf="isColumnVisible('opciones')" class="text-center options-cell"
+                                                style="width: 5rem; padding: 0.5rem 0.25rem;">
+                                                <button class="btn btn-outline-primary btn-sm" type="button"
+                                                    (click)="openOptionsModal(pedido)"
+                                                    [title]="'Opciones del pedido' | translate">
                                                     <i class="pi pi-cog"></i>
                                                 </button>
                                             </td>
@@ -725,7 +767,8 @@
                                             </td>
 
                                             <!-- Columna Estado de Proceso -->
-                                            <td *ngIf="isColumnVisible('estadoProceso')" class="estado-cell text-center">
+                                            <td *ngIf="isColumnVisible('estadoProceso')"
+                                                class="estado-cell text-center">
                                                 <div class="estado-container">
                                                     <span class="modern-badge" [ngClass]="{
                                                         'badge-secondary': pedido?.estadoProceso === 'SinProducir',
@@ -748,8 +791,8 @@
                                                         {{ pedido?.estadoProceso }}
                                                     </span>
                                                     <!-- Indicador de pedido congelado -->
-                                                    <div *ngIf="isPedidoCongelado(pedido)" class="frozen-indicator" 
-                                                         [title]="'Pedido congelado - No se pueden modificar productos'">
+                                                    <div *ngIf="isPedidoCongelado(pedido)" class="frozen-indicator"
+                                                        [title]="'Pedido congelado - No se pueden modificar productos'">
                                                         <i class="fa fa-snowflake-o frozen-icon"></i>
                                                         <span class="frozen-text">Congelado</span>
                                                     </div>
@@ -757,7 +800,8 @@
                                             </td>
 
                                             <!-- Columna Validación -->
-                                            <td *ngIf="isColumnVisible('validacion') && !isFromProduction" class="estado-cell text-center">
+                                            <td *ngIf="isColumnVisible('validacion') && !isFromProduction"
+                                                class="estado-cell text-center">
                                                 <span class="modern-badge validation-badge" [ngClass]="{
                                                     'badge-success': pedido.validacion == true,
                                                     'badge-secondary': pedido.validacion == false
@@ -771,50 +815,61 @@
                                             </td>
 
                                             <!-- Columna Cliente -->
-                                            <td *ngIf="isColumnVisible('cliente') && !isFromProduction" class="text-nowrap cliente-cell">
-                                                <span class="cliente-info" (click)="editDatosClientes(clientesModal,pedido)">
+                                            <td *ngIf="isColumnVisible('cliente') && !isFromProduction"
+                                                class="text-nowrap cliente-cell">
+                                                <span class="cliente-info"
+                                                    (click)="editDatosClientes(clientesModal,pedido)">
                                                     {{ pedido.cliente.nombres_completos }}
                                                     {{ pedido.cliente.apellidos_completos }}
                                                 </span>
                                             </td>
 
                                             <!-- Columna Valor Bruto -->
-                                            <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction" class="td-money text-nowrap money-cell">
+                                            <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction"
+                                                class="td-money text-nowrap money-cell">
                                                 {{ pedido?.totalPedidoSinDescuento | currency }}
                                             </td>
 
                                             <!-- Columna Descuento -->
-                                            <td *ngIf="isColumnVisible('descuento') && !isFromProduction" class="td-money text-nowrap">
+                                            <td *ngIf="isColumnVisible('descuento') && !isFromProduction"
+                                                class="td-money text-nowrap">
                                                 {{ pedido?.totalDescuento | currency }}
                                             </td>
 
                                             <!-- Columna Domicilio -->
-                                            <td *ngIf="isColumnVisible('domicilio') && !isFromProduction" class="td-money text-nowrap">
+                                            <td *ngIf="isColumnVisible('domicilio') && !isFromProduction"
+                                                class="td-money text-nowrap">
                                                 {{ pedido?.totalEnvio | currency }}
                                             </td>
 
                                             <!-- Columna Subtotal -->
-                                            <td *ngIf="isColumnVisible('subtotal') && !isFromProduction" class="td-money text-nowrap">
+                                            <td *ngIf="isColumnVisible('subtotal') && !isFromProduction"
+                                                class="td-money text-nowrap">
                                                 {{ pedido?.subtotal | currency }}
                                             </td>
 
                                             <!-- Columna IVA -->
-                                            <td *ngIf="isColumnVisible('iva') && !isFromProduction" class="td-money text-nowrap">
+                                            <td *ngIf="isColumnVisible('iva') && !isFromProduction"
+                                                class="td-money text-nowrap">
                                                 {{ pedido?.totalImpuesto | currency }}
                                             </td>
 
                                             <!-- Columna Total -->
-                                            <td *ngIf="isColumnVisible('total') && !isFromProduction" class="td-money text-nowrap money-cell total-cell">
-                                                <span class="total-amount">{{ pedido.totalPedididoConDescuento | currency }}</span>
+                                            <td *ngIf="isColumnVisible('total') && !isFromProduction"
+                                                class="td-money text-nowrap money-cell total-cell">
+                                                <span class="total-amount">{{ pedido.totalPedididoConDescuento |
+                                                    currency }}</span>
                                             </td>
 
                                             <!-- Columna Anticipo -->
-                                            <td *ngIf="isColumnVisible('anticipo') && !isFromProduction" class="td-money text-nowrap">
+                                            <td *ngIf="isColumnVisible('anticipo') && !isFromProduction"
+                                                class="td-money text-nowrap">
                                                 {{ pedido?.anticipo | currency }}
                                             </td>
 
                                             <!-- Columna Falta por Pagar -->
-                                            <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" class="td-money text-nowrap">
+                                            <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction"
+                                                class="td-money text-nowrap">
                                                 {{ pedido?.faltaPorPagar | currency }}
                                             </td>
 
@@ -824,33 +879,40 @@
                                             </td>
 
                                             <!-- Columna Ciudad -->
-                                            <td *ngIf="isColumnVisible('ciudad') && !isFromProduction" class="text-nowrap">{{ pedido.envio?.ciudad }}</td>
+                                            <td *ngIf="isColumnVisible('ciudad') && !isFromProduction"
+                                                class="text-nowrap">{{ pedido.envio?.ciudad }}</td>
 
                                             <!-- Columna Zona de Entrega -->
-                                            <td *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" class="text-nowrap">{{ pedido.envio?.zonaCobro }}</td>
+                                            <td *ngIf="isColumnVisible('zonaCobro') && !isFromProduction"
+                                                class="text-nowrap">{{ pedido.envio?.zonaCobro }}</td>
 
                                             <!-- Columna Forma de Entrega -->
-                                            <td *ngIf="isColumnVisible('formaEntrega')" class="text-nowrap">{{ pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
+                                            <td *ngIf="isColumnVisible('formaEntrega')" class="text-nowrap">{{
+                                                pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
 
                                             <!-- Columna Horario de Entrega -->
-                                            <td *ngIf="isColumnVisible('horarioEntrega')" class="text-nowrap">{{ pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
+                                            <td *ngIf="isColumnVisible('horarioEntrega')" class="text-nowrap">{{
+                                                pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
 
                                             <!-- Columna Canal -->
-                                            <td *ngIf="isColumnVisible('channel')" class="text-nowrap">{{ pedido.channel?.name || 'Regular' }}</td>
+                                            <td *ngIf="isColumnVisible('channel')" class="text-nowrap">{{
+                                                pedido.channel?.name || 'Regular' }}</td>
 
                                             <!-- Columna Vendedor -->
-                                            <td *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="text-nowrap">
+                                            <td *ngIf="isColumnVisible('vendedor') && !isFromProduction"
+                                                class="text-nowrap">
                                                 {{ pedido.asesorAsignado?.name }}
                                             </td>
                                         </tr>
                                     </ng-template>
 
                                     <!-- EXPANSIÓN DE FILAS -->
-                                    <ng-template pTemplate="rowexpansion" let-pedido>
+                                    <ng-template *ngIf="!isFromProduction" pTemplate="rowexpansion" let-pedido>
                                         <tr style="font-size: 0.85em;">
                                             <td [attr.colspan]="getVisibleColumnsCount()">
                                                 <div class="p-2">
-                                                    <p-table [value]="pedido.carrito" dataKey="pedido.carrito" styleClass="p-datatable-sm expanded-table">
+                                                    <p-table [value]="pedido.carrito" dataKey="pedido.carrito"
+                                                        styleClass="p-datatable-sm expanded-table">
                                                         <ng-template pTemplate="header">
                                         <tr>
                                             <th style="width: 2rem;"></th>
@@ -885,7 +947,8 @@
                                                     [ngClass]="{'disabled-btn': !canModifyProducts(pedido)}"
                                                     style="font-size: 0.8em;">
                                                     <i class="fa fa-cogs"></i>
-                                                    <i *ngIf="!canModifyProducts(pedido)" class="fa fa-lock" style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
+                                                    <i *ngIf="!canModifyProducts(pedido)" class="fa fa-lock"
+                                                        style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -897,7 +960,8 @@
                                                 <div class="p-2">
                                                     <h5>{{'Preferencias' | translate}}</h5>
                                                     <p-table [value]="configuracion?.configuracion?.preferencias"
-                                                        dataKey="configuracion.id" styleClass="p-datatable-sm expanded-table">
+                                                        dataKey="configuracion.id"
+                                                        styleClass="p-datatable-sm expanded-table">
                                                         <ng-template pTemplate="header">
                                         <tr>
                                             <th>{{'Imagen' | translate}}</th>
@@ -978,7 +1042,7 @@
                         </ng-template>
 
                         <!-- MENSAJE SI LA TABLA ESTÁ VACÍA -->
-                        <ng-template pTemplate="emptymessage">
+                        <ng-template *ngIf="!isFromProduction" pTemplate="emptymessage">
                             <tr>
                                 <td [attr.colspan]="getVisibleColumnsCount()" class="text-center">
                                     <div class="p-4">
@@ -991,15 +1055,18 @@
                         </ng-template>
 
                         <!-- FILA DE RESUMEN -->
-                        <ng-template pTemplate="summary">
-                            <tr class="summary-row" style="font-size: 0.85em; background-color: #f8f9fa; border-top: 2px solid #007bff;">
+                        <ng-template *ngIf="!isFromProduction" pTemplate="summary">
+                            <tr class="summary-row"
+                                style="font-size: 0.85em; background-color: #f8f9fa; border-top: 2px solid #007bff;">
                                 <!-- Columna Detalles -->
-                                <td *ngIf="isColumnVisible('detalles')" class="summary-cell" style="width: 2.5rem; text-align: center; font-weight: bold; color: #495057;">
+                                <td *ngIf="isColumnVisible('detalles')" class="summary-cell"
+                                    style="width: 2.5rem; text-align: center; font-weight: bold; color: #495057;">
                                     <i class="pi pi-chart-bar text-primary"></i>
                                 </td>
 
                                 <!-- Columna # Pedido -->
-                                <td *ngIf="isColumnVisible('nroPedido')" class="summary-cell" style="width: 8rem; text-align: center; font-weight: bold; color: #495057;">
+                                <td *ngIf="isColumnVisible('nroPedido')" class="summary-cell"
+                                    style="width: 8rem; text-align: center; font-weight: bold; color: #495057;">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Pedidos' | translate }}</div>
                                         <div class="summary-value">{{ getTotalPedidos() }}</div>
@@ -1022,12 +1089,12 @@
                                         <div class="summary-label">{{ 'Estados' | translate }}</div>
                                         <div class="summary-badges">
                                             <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                                <span class="mini-badge badge-success" 
-                                                      [title]="'Aprobados: ' + getEstadoCount('Aprobado')">
+                                                <span class="mini-badge badge-success"
+                                                    [title]="'Aprobados: ' + getEstadoCount('Aprobado')">
                                                     {{ getEstadoCount('Aprobado') }}
                                                 </span>
-                                                <span class="mini-badge badge-warning" 
-                                                      [title]="'Pendientes: ' + getEstadoCount('Pendiente')">
+                                                <span class="mini-badge badge-warning"
+                                                    [title]="'Pendientes: ' + getEstadoCount('Pendiente')">
                                                     {{ getEstadoCount('Pendiente') }}
                                                 </span>
                                             </div>
@@ -1041,12 +1108,12 @@
                                         <div class="summary-label">{{ 'Procesos' | translate }}</div>
                                         <div class="summary-badges">
                                             <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                                <span class="mini-badge badge-secondary" 
-                                                      [title]="'Sin Producir: ' + getProcesoCount('SinProducir')">
+                                                <span class="mini-badge badge-secondary"
+                                                    [title]="'Sin Producir: ' + getProcesoCount('SinProducir')">
                                                     {{ getProcesoCount('SinProducir') }}
                                                 </span>
-                                                <span class="mini-badge badge-success" 
-                                                      [title]="'Entregados: ' + getProcesoCount('Entregado')">
+                                                <span class="mini-badge badge-success"
+                                                    [title]="'Entregados: ' + getProcesoCount('Entregado')">
                                                     {{ getProcesoCount('Entregado') }}
                                                 </span>
                                             </div>
@@ -1055,7 +1122,8 @@
                                 </td>
 
                                 <!-- Columna Validación -->
-                                <td *ngIf="isColumnVisible('validacion') && !isFromProduction" class="summary-cell text-center">
+                                <td *ngIf="isColumnVisible('validacion') && !isFromProduction"
+                                    class="summary-cell text-center">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Validados' | translate }}</div>
                                         <div class="summary-value text-success">{{ getValidacionCount() }}</div>
@@ -1071,66 +1139,82 @@
                                 </td>
 
                                 <!-- Columna Valor Bruto -->
-                                <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction" class="summary-cell summary-money">
+                                <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction"
+                                    class="summary-cell summary-money">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Bruto' | translate }}</div>
-                                        <div class="summary-value money-value">{{ getFilteredCalculateValorBruto() | currency }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateValorBruto() |
+                                            currency }}</div>
                                     </div>
                                 </td>
 
                                 <!-- Columna Descuento -->
-                                <td *ngIf="isColumnVisible('descuento') && !isFromProduction" class="summary-cell summary-money">
+                                <td *ngIf="isColumnVisible('descuento') && !isFromProduction"
+                                    class="summary-cell summary-money">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Desc.' | translate }}</div>
-                                        <div class="summary-value money-value text-warning">{{ getFilteredCalculateDescuento() | currency }}</div>
+                                        <div class="summary-value money-value text-warning">{{
+                                            getFilteredCalculateDescuento() | currency }}</div>
                                     </div>
                                 </td>
 
                                 <!-- Columna Domicilio -->
-                                <td *ngIf="isColumnVisible('domicilio') && !isFromProduction" class="summary-cell summary-money">
+                                <td *ngIf="isColumnVisible('domicilio') && !isFromProduction"
+                                    class="summary-cell summary-money">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Envío' | translate }}</div>
-                                        <div class="summary-value money-value">{{ getFilteredCalculateEnvio() | currency }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateEnvio() | currency
+                                            }}</div>
                                     </div>
                                 </td>
 
                                 <!-- Columna Subtotal -->
-                                <td *ngIf="isColumnVisible('subtotal') && !isFromProduction" class="summary-cell summary-money">
+                                <td *ngIf="isColumnVisible('subtotal') && !isFromProduction"
+                                    class="summary-cell summary-money">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Subtotal' | translate }}</div>
-                                        <div class="summary-value money-value">{{ getFilteredCalculateSubtotal() | currency }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateSubtotal() |
+                                            currency }}</div>
                                     </div>
                                 </td>
 
                                 <!-- Columna IVA -->
-                                <td *ngIf="isColumnVisible('iva') && !isFromProduction" class="summary-cell summary-money">
+                                <td *ngIf="isColumnVisible('iva') && !isFromProduction"
+                                    class="summary-cell summary-money">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total IVA' | translate }}</div>
-                                        <div class="summary-value money-value">{{ getFilteredCalculateTotalImpuestos() | currency }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateTotalImpuestos() |
+                                            currency }}</div>
                                     </div>
                                 </td>
 
                                 <!-- Columna Total -->
-                                <td *ngIf="isColumnVisible('total') && !isFromProduction" class="summary-cell summary-money summary-total">
+                                <td *ngIf="isColumnVisible('total') && !isFromProduction"
+                                    class="summary-cell summary-money summary-total">
                                     <div class="summary-content total-highlight">
                                         <div class="summary-label">{{ 'TOTAL GENERAL' | translate }}</div>
-                                        <div class="summary-value total-value">{{ getFilteredCalculateTotal() | currency }}</div>
+                                        <div class="summary-value total-value">{{ getFilteredCalculateTotal() | currency
+                                            }}</div>
                                     </div>
                                 </td>
 
                                 <!-- Columna Anticipo -->
-                                <td *ngIf="isColumnVisible('anticipo') && !isFromProduction" class="summary-cell summary-money">
+                                <td *ngIf="isColumnVisible('anticipo') && !isFromProduction"
+                                    class="summary-cell summary-money">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Anticipo' | translate }}</div>
-                                        <div class="summary-value money-value text-info">{{ getFilteredCalculateAnticipo() | currency }}</div>
+                                        <div class="summary-value money-value text-info">{{
+                                            getFilteredCalculateAnticipo() | currency }}</div>
                                     </div>
                                 </td>
 
                                 <!-- Columna Falta por Pagar -->
-                                <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" class="summary-cell summary-money">
+                                <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction"
+                                    class="summary-cell summary-money">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Pendiente' | translate }}</div>
-                                        <div class="summary-value money-value text-danger">{{ getFilteredCalculateFaltaPorPagar() | currency }}</div>
+                                        <div class="summary-value money-value text-danger">{{
+                                            getFilteredCalculateFaltaPorPagar() | currency }}</div>
                                     </div>
                                 </td>
 
@@ -1251,16 +1335,14 @@
         </button>
     </div>
     <div class="modal-body">
-        <app-notas #notaspedidos
-                   [pedido]="pedidoSeleccionado"
-                   [isEdit]="true"
-                   (notasActualizadas)="onNotasActualizadas($event)"></app-notas>
+        <app-notas #notaspedidos [pedido]="pedidoSeleccionado" [isEdit]="true"
+            (notasActualizadas)="onNotasActualizadas($event)"></app-notas>
     </div>
 </ng-template>
 
 <ng-template #cambioEstadoPagoModal let-modal>
     <div class="modal-header">
-        <h4  *ngIf="!isFromProduction" class="modal-title" id="modal-basic-title">
+        <h4 *ngIf="!isFromProduction" class="modal-title" id="modal-basic-title">
             <i class="fa fa-credit-card-alt me-2"></i>
             {{'Cambiar estado de pago y proceso' | translate}}
         </h4>
@@ -1293,15 +1375,17 @@
             </select>
         </div>
 
-        <div class="mb-3" >
+        <div class="mb-3">
             <label class="form-label fw-bold">{{ 'Estado de proceso:' | translate }}</label>
-            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso" [disabled]="isPedidoCongelado(pedidoSeleccionado) && !canDeleteOrder()">
+            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso"
+                [disabled]="isPedidoCongelado(pedidoSeleccionado) && !canDeleteOrder()">
                 <option *ngFor="let estado of estadosProcesos" [value]="estado">
-                     {{ estado }}
+                    {{ estado }}
                 </option>
             </select>
             <small class="form-text text-muted">
-                {{ 'Estados que congelan el pedido: EnProduccion, ProducidoParcialmente, Cerrado, Entregado, Despachado' | translate }}
+                {{ 'Estados que congelan el pedido: EnProduccion, ProducidoParcialmente, Cerrado, Entregado, Despachado'
+                | translate }}
             </small>
             <small class="form-text text-muted" *ngIf="isPedidoCongelado(pedidoSeleccionado) && !canDeleteOrder()">
                 {{ 'El pedido está congelado y no se puede modificar.' | translate }}
@@ -1320,7 +1404,8 @@
             {{ 'Este pedido estará congelado y no se podrán modificar productos.' | translate }}
         </div>
 
-        <div class="alert alert-danger" *ngIf="pedidoSeleccionado?.estadoPago === 'Cancelado' || pedidoSeleccionado?.estadoPago === 'Rechazado'">
+        <div class="alert alert-danger"
+            *ngIf="pedidoSeleccionado?.estadoPago === 'Cancelado' || pedidoSeleccionado?.estadoPago === 'Rechazado'">
             <i class="fa fa-exclamation-triangle me-2"></i>
             <strong>{{ 'Advertencia:' | translate }}</strong>
             {{ 'Este cambio afectará el estado del pedido permanentemente.' | translate }}
@@ -1331,10 +1416,8 @@
             <i class="fa fa-times me-1"></i>
             {{'Cancelar' | translate}}
         </button>
-        <button type="button"
-                class="btn btn-primary"
-                (click)="cambiarEstadoPago(pedidoSeleccionado)"
-                [disabled]="!pedidoSeleccionado?.estadoPago">
+        <button type="button" class="btn btn-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)"
+            [disabled]="!pedidoSeleccionado?.estadoPago">
             <i class="fa fa-check me-1"></i>
             {{'Confirmar cambio' | translate}}
         </button>
@@ -1393,13 +1476,9 @@
             </div>
         </div>
 
-        <app-ecomerce-products #recompra
-                              [ciudadSelector]="ciudadesEntrega"
-                              [selectedCity]="ciudadSeleccionada"
-                              [ciudad]="ciudadSeleccionada"
-                              [bodega]="selectedWarehouse"
-                              [isRebuy]="true"
-                              (citySelected)="onCitySelect($event)">
+        <app-ecomerce-products #recompra [ciudadSelector]="ciudadesEntrega" [selectedCity]="ciudadSeleccionada"
+            [ciudad]="ciudadSeleccionada" [bodega]="selectedWarehouse" [isRebuy]="true"
+            (citySelected)="onCitySelect($event)">
         </app-ecomerce-products>
     </div>
 </ng-template>
@@ -1420,218 +1499,244 @@
 
 <!-- Modal de Opciones -->
 <div *ngIf="modalVisible" class="custom-modal-overlay" (click)="onBackdropClick($event)">
-  <div class="custom-modal">
-    <div class="custom-modal-content">
-      <!-- Modal Header -->
-      <div class="modal-header border-0 pb-2">
-        <div class="d-flex align-items-center">
-          <div class="option-modal-icon me-3">
-            <i class="pi pi-cog"></i>
-          </div>
-          <div>
-            <h5 class="modal-title mb-0">{{ 'Opciones del Pedido' | translate }}</h5>
-            <small class="text-muted">{{ 'Pedido #' | translate }}{{ selectedOrder?.nroPedido }}</small>
-          </div>
+    <div class="custom-modal">
+        <div class="custom-modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header border-0 pb-2">
+                <div class="d-flex align-items-center">
+                    <div class="option-modal-icon me-3">
+                        <i class="pi pi-cog"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0">{{ 'Opciones del Pedido' | translate }}</h5>
+                        <small class="text-muted">{{ 'Pedido #' | translate }}{{ selectedOrder?.nroPedido }}</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" (click)="closeOptionsModal()" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body pt-2">
+                <div class="options-grid">
+
+                    <!-- Imprimir PDF -->
+                    <button class="option-btn" type="button"
+                        (click)="pdfOrder(modalContent, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon pdf-icon">
+                            <i class="fa fa-file-pdf-o"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Imprimir PDF' | translate }}</span>
+                            <small class="option-description">{{ 'Generar documento del pedido' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Producción (solo si isFromProduction) -->
+                    <button *ngIf="isFromProduction" class="option-btn" type="button"
+                        (click)="produceOrder(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon production-icon">
+                            <i class="fa fa-sitemap"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Producción' | translate }}</span>
+                            <small class="option-description">{{ 'Gestionar proceso productivo' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Editar Cliente -->
+                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        [disabled]="!canModifyBasicData(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
+                        (click)="editDatosClientes(clientesModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon client-icon">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Editar Cliente' | translate }}</span>
+                            <small class="option-description">
+                                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar datos del cliente' |
+                                    translate }}</span>
+                                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible
+                                    - Pedido entregado' | translate }}</span>
+                            </small>
+                        </div>
+                    </button>
+
+                    <!-- Editar Dirección -->
+                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        [disabled]="!canModifyBasicData(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
+                        (click)="editDatosEntrega(datosEnregaModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon address-icon">
+                            <i class="fa fa-map-marker"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Editar Dirección' | translate }}</span>
+                            <small class="option-description">
+                                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar dirección de entrega' |
+                                    translate }}</span>
+                                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible
+                                    - Pedido entregado' | translate }}</span>
+                            </small>
+                        </div>
+                    </button>
+
+                    <!-- Editar Facturación -->
+                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        [disabled]="!canModifyBasicData(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
+                        (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon billing-icon">
+                            <i class="fa fa-credit-card"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Editar Facturación' | translate }}</span>
+                            <small class="option-description">
+                                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar datos de facturación' |
+                                    translate }}</span>
+                                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible
+                                    - Pedido entregado' | translate }}</span>
+                            </small>
+                        </div>
+                    </button>
+
+                    <!-- Editar Notas -->
+                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        (click)="editNotas(notasModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon notes-icon">
+                            <i class="fa fa-sticky-note"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Editar Notas' | translate }}</span>
+                            <small class="option-description">{{ 'Agregar o modificar notas' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Estado de Pago -->
+                    <button class="option-btn" type="button"
+                        (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon payment-icon">
+                            <i class="fa fa-credit-card-alt"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Estado de Pago' | translate }}</span>
+                            <small class="option-description">{{ 'Cambiar estado del pago' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Agregar Productos -->
+                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        [disabled]="!canModifyProducts(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canModifyProducts(selectedOrder)}"
+                        (click)="addProductToCart(recompraModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon cart-icon"
+                            [ngClass]="{'frozen-icon': !canModifyProducts(selectedOrder)}">
+                            <i class="fa fa-shopping-cart"></i>
+                            <i *ngIf="!canModifyProducts(selectedOrder)" class="fa fa-lock frozen-lock"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Agregar Productos' | translate }}</span>
+                            <small class="option-description">
+                                <span *ngIf="canModifyProducts(selectedOrder)">{{ 'Añadir más productos al pedido' |
+                                    translate }}</span>
+                                <span *ngIf="!canModifyProducts(selectedOrder)" class="text-warning">
+                                    <i class="fa fa-lock me-1"></i>
+                                    {{ 'Pedido congelado - Estado: ' + selectedOrder?.estadoProceso | translate }}
+                                </span>
+                            </small>
+                        </div>
+                    </button>
+
+                    <!-- Asignar Asesor -->
+                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        (click)="editSeller(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon seller-icon">
+                            <i class="fa fa-users"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Asignar Asesor' | translate }}</span>
+                            <small class="option-description">{{ 'Cambiar asesor responsable' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Historial de Pagos -->
+                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        (click)="AsentarPago(pagosModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon history-icon">
+                            <i class="fa fa-history"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Historial Pagos' | translate }}</span>
+                            <small class="option-description">{{ 'Ver historial de pagos' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Ver Detalles de Entrega (Solo cuando está entregado) -->
+                    <button *ngIf="selectedOrder?.estadoProceso === 'Entregado'" class="option-btn" type="button"
+                        (click)="mostrarDetalleEntrega(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon delivery-icon">
+                            <i class="fa fa-truck"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Ver Detalles de Entrega' | translate }}</span>
+                            <small class="option-description">{{ 'Información de la entrega realizada' | translate
+                                }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Eliminar Pedido (Solo usuarios autorizados) -->
+                    <button *ngIf="canDeleteOrder() && !isFromProduction" class="option-btn danger-btn" type="button"
+                        (click)="confirmDeleteOrder(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon delete-icon">
+                            <i class="fa fa-trash"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Eliminar Pedido' | translate }}</span>
+                            <small class="option-description">{{ 'Eliminar permanentemente' | translate }}</small>
+                        </div>
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer border-0 pt-2">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="closeOptionsModal()">
+                    <i class="fa fa-times me-1"></i>
+                    {{ 'Cancelar' | translate }}
+                </button>
+            </div>
         </div>
-        <button type="button" class="btn-close" (click)="closeOptionsModal()" aria-label="Close"></button>
-      </div>
-
-      <!-- Modal Body -->
-      <div class="modal-body pt-2">
-        <div class="options-grid">
-
-          <!-- Imprimir PDF -->
-          <button class="option-btn" type="button" (click)="pdfOrder(modalContent, selectedOrder); closeOptionsModal()">
-            <div class="option-icon pdf-icon">
-              <i class="fa fa-file-pdf-o"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Imprimir PDF' | translate }}</span>
-              <small class="option-description">{{ 'Generar documento del pedido' | translate }}</small>
-            </div>
-          </button>
-
-          <!-- Producción (solo si isFromProduction) -->
-          <button *ngIf="isFromProduction" class="option-btn" type="button" (click)="produceOrder(selectedOrder); closeOptionsModal()">
-            <div class="option-icon production-icon">
-              <i class="fa fa-sitemap"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Producción' | translate }}</span>
-              <small class="option-description">{{ 'Gestionar proceso productivo' | translate }}</small>
-            </div>
-          </button>
-
-          <!-- Editar Cliente -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" 
-                  [disabled]="!canModifyBasicData(selectedOrder)"
-                  [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
-                  (click)="editDatosClientes(clientesModal, selectedOrder); closeOptionsModal()">
-            <div class="option-icon client-icon">
-              <i class="fa fa-user"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Editar Cliente' | translate }}</span>
-              <small class="option-description">
-                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar datos del cliente' | translate }}</span>
-                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible - Pedido entregado' | translate }}</span>
-              </small>
-            </div>
-          </button>
-
-          <!-- Editar Dirección -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" 
-                  [disabled]="!canModifyBasicData(selectedOrder)"
-                  [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
-                  (click)="editDatosEntrega(datosEnregaModal, selectedOrder); closeOptionsModal()">
-            <div class="option-icon address-icon">
-              <i class="fa fa-map-marker"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Editar Dirección' | translate }}</span>
-              <small class="option-description">
-                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar dirección de entrega' | translate }}</span>
-                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible - Pedido entregado' | translate }}</span>
-              </small>
-            </div>
-          </button>
-
-          <!-- Editar Facturación -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" 
-                  [disabled]="!canModifyBasicData(selectedOrder)"
-                  [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
-                  (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder); closeOptionsModal()">
-            <div class="option-icon billing-icon">
-              <i class="fa fa-credit-card"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Editar Facturación' | translate }}</span>
-              <small class="option-description">
-                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar datos de facturación' | translate }}</span>
-                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible - Pedido entregado' | translate }}</span>
-              </small>
-            </div>
-          </button>
-
-          <!-- Editar Notas -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editNotas(notasModal, selectedOrder); closeOptionsModal()">
-            <div class="option-icon notes-icon">
-              <i class="fa fa-sticky-note"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Editar Notas' | translate }}</span>
-              <small class="option-description">{{ 'Agregar o modificar notas' | translate }}</small>
-            </div>
-          </button>
-
-          <!-- Estado de Pago -->
-          <button class="option-btn" type="button" (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
-            <div class="option-icon payment-icon">
-              <i class="fa fa-credit-card-alt"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Estado de Pago' | translate }}</span>
-              <small class="option-description">{{ 'Cambiar estado del pago' | translate }}</small>
-            </div>
-          </button>
-
-          <!-- Agregar Productos -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" 
-                  [disabled]="!canModifyProducts(selectedOrder)"
-                  [ngClass]="{'disabled-option': !canModifyProducts(selectedOrder)}"
-                  (click)="addProductToCart(recompraModal, selectedOrder); closeOptionsModal()">
-            <div class="option-icon cart-icon" [ngClass]="{'frozen-icon': !canModifyProducts(selectedOrder)}">
-              <i class="fa fa-shopping-cart"></i>
-              <i *ngIf="!canModifyProducts(selectedOrder)" class="fa fa-lock frozen-lock"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Agregar Productos' | translate }}</span>
-              <small class="option-description">
-                <span *ngIf="canModifyProducts(selectedOrder)">{{ 'Añadir más productos al pedido' | translate }}</span>
-                <span *ngIf="!canModifyProducts(selectedOrder)" class="text-warning">
-                  <i class="fa fa-lock me-1"></i>
-                  {{ 'Pedido congelado - Estado: ' + selectedOrder?.estadoProceso | translate }}
-                </span>
-              </small>
-            </div>
-          </button>
-
-          <!-- Asignar Asesor -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="editSeller(selectedOrder); closeOptionsModal()">
-            <div class="option-icon seller-icon">
-              <i class="fa fa-users"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Asignar Asesor' | translate }}</span>
-              <small class="option-description">{{ 'Cambiar asesor responsable' | translate }}</small>
-            </div>
-          </button>
-
-          <!-- Historial de Pagos -->
-          <button *ngIf="!isFromProduction" class="option-btn" type="button" (click)="AsentarPago(pagosModal, selectedOrder); closeOptionsModal()">
-            <div class="option-icon history-icon">
-              <i class="fa fa-history"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Historial Pagos' | translate }}</span>
-              <small class="option-description">{{ 'Ver historial de pagos' | translate }}</small>
-            </div>
-          </button>
-
-          <!-- Ver Detalles de Entrega (Solo cuando está entregado) -->
-          <button *ngIf="selectedOrder?.estadoProceso === 'Entregado'" class="option-btn" type="button" (click)="mostrarDetalleEntrega(selectedOrder); closeOptionsModal()">
-            <div class="option-icon delivery-icon">
-              <i class="fa fa-truck"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Ver Detalles de Entrega' | translate }}</span>
-              <small class="option-description">{{ 'Información de la entrega realizada' | translate }}</small>
-            </div>
-          </button>
-
-          <!-- Eliminar Pedido (Solo usuarios autorizados) -->
-          <button *ngIf="canDeleteOrder() && !isFromProduction" class="option-btn danger-btn" type="button" (click)="confirmDeleteOrder(selectedOrder); closeOptionsModal()">
-            <div class="option-icon delete-icon">
-              <i class="fa fa-trash"></i>
-            </div>
-            <div class="option-content">
-              <span class="option-title">{{ 'Eliminar Pedido' | translate }}</span>
-              <small class="option-description">{{ 'Eliminar permanentemente' | translate }}</small>
-            </div>
-          </button>
-
-        </div>
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="modal-footer border-0 pt-2">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="closeOptionsModal()">
-          <i class="fa fa-times me-1"></i>
-          {{ 'Cancelar' | translate }}
-        </button>
-      </div>
     </div>
-  </div>
 </div>
 
 <!-- Modal de Detalles de Entrega -->
 <div *ngIf="detalleEntregaVisible" class="custom-modal-overlay" (click)="cerrarDetalleEntrega()">
-  <div class="delivery-modal-container" (click)="$event.stopPropagation()">
-    <!-- DEBUG: Test de visibilidad del modal -->
+    <div class="delivery-modal-container" (click)="$event.stopPropagation()">
+        <!-- DEBUG: Test de visibilidad del modal -->
 
-    
-    <app-detalle-entrega 
-      *ngIf="pedidoEntregaData"
-      [pedido]="pedidoEntregaData"
-      (onImageClick)="onImageClick($event)"
-      (onClose)="cerrarDetalleEntrega()">
-    </app-detalle-entrega>
-    
-    <!-- DEBUG: Si no hay datos -->
-    <div *ngIf="!pedidoEntregaData" style="background: orange; color: white; padding: 20px; text-align: center;">
-      No hay datos de pedidoEntregaData
+
+        <app-detalle-entrega *ngIf="pedidoEntregaData" [pedido]="pedidoEntregaData"
+            (onImageClick)="onImageClick($event)" (onClose)="cerrarDetalleEntrega()">
+        </app-detalle-entrega>
+
+        <!-- DEBUG: Si no hay datos -->
+        <div *ngIf="!pedidoEntregaData" style="background: orange; color: white; padding: 20px; text-align: center;">
+            No hay datos de pedidoEntregaData
+        </div>
     </div>
-  </div>
 </div>
 
 <!--Fin Modales-->
+
+<div *ngIf="isFromProduction; else normalList">
+    <app-list-produccion-orders [isFromProduction]="isFromProduction" [pedidos]="orders"
+        [displayedColumns]="displayedColumns" [selectedColumns]="selectedColumns"
+        (onPrintProduct)="onPrintProduct($event)" (onOptions)="onOptionsProduccion($event)"
+        (onColumnSelectionChange)="selectedColumns = $event">
+    </app-list-produccion-orders>
+</div>
+<ng-template #normalList>
+    <!-- Aquí va la tabla original (todo el contenido actual de la tabla) -->
+    <!-- ... existente ... -->
+</ng-template>

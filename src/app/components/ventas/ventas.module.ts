@@ -61,6 +61,7 @@ import {
 } from "../../shared/services/ventas/pos-checkout.service";
 import { ReporteCierreComponent } from "./pos2/widgets/cash-closing/reporte-cierre/reporte-cierre.component";
 import { DespachosModule } from "../despachos/despachos.module";
+import { ListProduccionComponent } from './list/list-produccion.component';
 
 @NgModule({
   imports: [
@@ -120,6 +121,7 @@ import { DespachosModule } from "../despachos/despachos.module";
     CustomerSectionComponent,
     CartSummaryComponent,
     PaymentSelectorComponent,
+    ListProduccionComponent,
   ],
   exports: [
     CrearVentasComponent,
