@@ -12,35 +12,303 @@
               (onChange)="handleColumnSelectionChange($event.value)">
             </p-multiSelect>
           </div>
-          <p-table [value]="productsView" [responsiveLayout]="'scroll'" styleClass="p-datatable-sm modern-prod-table" [scrollable]="true" scrollHeight="500px">
+          <p-table #dt1 [value]="productsView" [responsiveLayout]="'scroll'" 
+            styleClass="p-datatable-sm modern-prod-table p-datatable-gridlines p-datatable-striped" 
+            [scrollable]="true" scrollHeight="500px" [rows]="50" [paginator]="true" 
+            [rowsPerPageOptions]="[5,10,25,50]" [showCurrentPageReport]="true"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
+            [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.crearProducto.referencia','cliente.nombres_completos','estadoPago','estadoProceso']">
             <ng-template pTemplate="header">
-              <tr>
-                <th style="width: 56px;">Imagen</th>
-                <th *ngIf="isColumnVisibleProduccion('producto')">Producto</th>
-                <th *ngIf="isColumnVisibleProduccion('referencia')">Referencia</th>
+              <tr style="font-size: 0.8em;">
+                <!-- Columna Imagen -->
+                <th style="width: 56px; text-align: center;">Imagen</th>
+                
+                <!-- Columna Producto -->
+                <th *ngIf="isColumnVisibleProduccion('producto')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Producto
+                    <p-columnFilter type="text" field="producto.crearProducto.titulo" 
+                      matchMode="contains" placeholder="Buscar producto" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Referencia -->
+                <th *ngIf="isColumnVisibleProduccion('referencia')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Referencia
+                    <p-columnFilter type="text" field="producto.crearProducto.referencia" 
+                      matchMode="contains" placeholder="Buscar referencia" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Opciones -->
                 <th style="width: 3rem; text-align: center;">Opciones</th>
-                <th *ngIf="isColumnVisibleProduccion('nroPedido')"># Pedido</th>
-                <th *ngIf="isColumnVisibleProduccion('cantidad')">Cantidad</th>
-                <th *ngIf="isColumnVisibleProduccion('cliente')">Cliente</th>
-                <th *ngIf="isColumnVisibleProduccion('estadoPago')">Estado Pago</th>
-                <th *ngIf="isColumnVisibleProduccion('estadoProceso')">Estado Proceso</th>
-                <th *ngIf="isColumnVisibleProduccion('validacion')">Validación</th>
-                <th *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')">Valor Bruto</th>
-                <th *ngIf="isColumnVisibleProduccion('totalDescuento')">Descuento</th>
-                <th *ngIf="isColumnVisibleProduccion('totalEnvio')">Domicilio</th>
-                <th *ngIf="isColumnVisibleProduccion('subtotal')">Subtotal</th>
-                <th *ngIf="isColumnVisibleProduccion('totalImpuesto')">IVA</th>
-                <th *ngIf="isColumnVisibleProduccion('totalPedididoConDescuento')">Total</th>
-                <th *ngIf="isColumnVisibleProduccion('anticipo')">Anticipo</th>
-                <th *ngIf="isColumnVisibleProduccion('faltaPorPagar')">Falta por Pagar</th>
-                <th *ngIf="isColumnVisibleProduccion('fechaEntrega')">Fecha Entrega</th>
-                <th *ngIf="isColumnVisibleProduccion('fechaCreacion')">Fecha de compra</th>
-                <th *ngIf="isColumnVisibleProduccion('ciudad')">Ciudad</th>
-                <th *ngIf="isColumnVisibleProduccion('zonaCobro')">Zona de Entrega</th>
-                <th *ngIf="isColumnVisibleProduccion('formaEntrega')">Forma de Entrega</th>
-                <th *ngIf="isColumnVisibleProduccion('horarioEntrega')">Horario de Entrega</th>
-                <th *ngIf="isColumnVisibleProduccion('channel')">Canal</th>
-                <th *ngIf="isColumnVisibleProduccion('vendedor')">Vendedor</th>
+                <!-- Columna # Pedido -->
+                <th *ngIf="isColumnVisibleProduccion('nroPedido')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    # Pedido
+                    <p-columnFilter type="text" field="nroPedido" 
+                      matchMode="contains" placeholder="Buscar pedido" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Cantidad -->
+                <th *ngIf="isColumnVisibleProduccion('cantidad')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Cantidad
+                    <p-columnFilter type="numeric" field="cantidad" 
+                      matchMode="contains" placeholder="Cantidad" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Cliente -->
+                <th *ngIf="isColumnVisibleProduccion('cliente')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Cliente
+                    <p-columnFilter type="text" field="cliente.nombres_completos" 
+                      matchMode="contains" placeholder="Cliente" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Estado Pago -->
+                <th *ngIf="isColumnVisibleProduccion('estadoPago')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Estado de Pago
+                    <p-columnFilter field="estadoPago" matchMode="equals" 
+                      [showMenu]="true" display="menu">
+                      <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-multiSelect [ngModel]="value" [options]="estadosPago" 
+                          placeholder="Seleccione" (onChange)="filter($event.value)" 
+                          style="width: 100%; font-size: 0.8em;">
+                        </p-multiSelect>
+                      </ng-template>
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Estado Proceso -->
+                <th *ngIf="isColumnVisibleProduccion('estadoProceso')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Estado de Proceso
+                    <p-columnFilter field="estadoProceso" matchMode="equals" 
+                      [showMenu]="true" display="menu">
+                      <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-multiSelect [ngModel]="value" [options]="estadosProcesos" 
+                          placeholder="Seleccione" (onChange)="filter($event.value)" 
+                          style="width: 100%; font-size: 0.8em;">
+                        </p-multiSelect>
+                      </ng-template>
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Validación -->
+                <th *ngIf="isColumnVisibleProduccion('validacion')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Validación
+                    <p-columnFilter field="validacion" matchMode="equals" 
+                      [showMenu]="true" display="menu">
+                      <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-multiSelect [ngModel]="value" [options]="validaciones" 
+                          optionLabel="nombre" optionValue="value" 
+                          placeholder="Seleccione" (onChange)="filter($event.value)" 
+                          style="width: 100%; font-size: 0.8em;">
+                        </p-multiSelect>
+                      </ng-template>
+                    </p-columnFilter>
+                  </div>
+                </th>
+                <!-- Columna Valor Bruto -->
+                <th *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Valor Bruto
+                    <p-columnFilter type="numeric" field="totalPedidoSinDescuento" 
+                      matchMode="contains" placeholder="V. Bruto" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Descuento -->
+                <th *ngIf="isColumnVisibleProduccion('totalDescuento')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Descuento
+                    <p-columnFilter type="numeric" field="totalDescuento" 
+                      matchMode="contains" placeholder="Desc." 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Domicilio -->
+                <th *ngIf="isColumnVisibleProduccion('totalEnvio')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Domicilio
+                    <p-columnFilter type="numeric" field="totalEnvio" 
+                      matchMode="contains" placeholder="Domicilio" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Subtotal -->
+                <th *ngIf="isColumnVisibleProduccion('subtotal')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Subtotal
+                    <p-columnFilter type="numeric" field="subtotal" 
+                      matchMode="contains" placeholder="Subt." 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna IVA -->
+                <th *ngIf="isColumnVisibleProduccion('totalImpuesto')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    IVA
+                    <p-columnFilter type="numeric" field="totalImpuesto" 
+                      matchMode="contains" placeholder="IVA" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Total -->
+                <th *ngIf="isColumnVisibleProduccion('totalPedididoConDescuento')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Total
+                    <p-columnFilter type="numeric" field="totalPedididoConDescuento" 
+                      matchMode="contains" placeholder="Total" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Anticipo -->
+                <th *ngIf="isColumnVisibleProduccion('anticipo')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Anticipo
+                    <p-columnFilter type="numeric" field="anticipo" 
+                      matchMode="contains" placeholder="Anticipo" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Falta por Pagar -->
+                <th *ngIf="isColumnVisibleProduccion('faltaPorPagar')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Falta por Pagar
+                    <p-columnFilter type="numeric" field="faltaPorPagar" 
+                      matchMode="contains" placeholder="Falta" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                <!-- Columna Fecha Entrega -->
+                <th *ngIf="isColumnVisibleProduccion('fechaEntrega')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Fecha Entrega
+                    <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega" 
+                      type="date" display="menu" [showMatchModes]="false" 
+                      [showOperator]="false" [showAddButton]="false">
+                      <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-calendar (onSelect)="filter($event)" dateFormat="yy-mm-dd">
+                        </p-calendar>
+                      </ng-template>
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Fecha de compra -->
+                <th *ngIf="isColumnVisibleProduccion('fechaCreacion')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Fecha de compra
+                    <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion" 
+                      type="date" display="menu" [showMatchModes]="false" 
+                      [showOperator]="false" [showAddButton]="false">
+                      <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-calendar (onSelect)="filter($event)" dateFormat="yy-mm-dd">
+                        </p-calendar>
+                      </ng-template>
+                    </p-columnFilter>
+                  </div>
+                </th>
+                <!-- Columna Ciudad -->
+                <th *ngIf="isColumnVisibleProduccion('ciudad')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Ciudad
+                    <p-columnFilter type="text" field="ciudad" 
+                      matchMode="contains" placeholder="Ciudad" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Zona de Entrega -->
+                <th *ngIf="isColumnVisibleProduccion('zonaCobro')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Zona de Entrega
+                    <p-columnFilter type="text" field="zonaCobro" 
+                      matchMode="contains" placeholder="Zona" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Forma de Entrega -->
+                <th *ngIf="isColumnVisibleProduccion('formaEntrega')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Forma de Entrega
+                    <p-columnFilter type="text" field="formaEntrega" 
+                      matchMode="contains" placeholder="Entrega" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Horario de Entrega -->
+                <th *ngIf="isColumnVisibleProduccion('horarioEntrega')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Horario de Entrega
+                    <p-columnFilter type="text" field="horarioEntrega" 
+                      matchMode="contains" placeholder="Horario" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Canal -->
+                <th *ngIf="isColumnVisibleProduccion('channel')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Canal
+                    <p-columnFilter type="text" field="channel.name" 
+                      matchMode="contains" placeholder="Canal" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
+                
+                <!-- Columna Vendedor -->
+                <th *ngIf="isColumnVisibleProduccion('vendedor')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Vendedor
+                    <p-columnFilter type="text" field="vendedor" 
+                      matchMode="contains" placeholder="Vendedor" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
+                  </div>
+                </th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
@@ -74,15 +342,59 @@
                 <td *ngIf="isColumnVisibleProduccion('nroPedido')">{{ row.nroPedido }}</td>
                 <td *ngIf="isColumnVisibleProduccion('cantidad')">{{ row.cantidad }}</td>
                 <td *ngIf="isColumnVisibleProduccion('cliente')">{{ row.cliente?.nombres_completos }}</td>
-                <td *ngIf="isColumnVisibleProduccion('estadoPago')">
-                  <span class="badge bg-info text-dark">{{ row.estadoPago }}</span>
+                <!-- Columna Estado Pago -->
+                <td *ngIf="isColumnVisibleProduccion('estadoPago')" class="estado-cell text-center">
+                  <span class="modern-badge" [ngClass]="{
+                    'badge-warning': row?.estadoPago === 'Pendiente' || row?.estadoPago === 'Pospendiente',
+                    'badge-success': row?.estadoPago === 'Aprobado',
+                    'badge-info': row?.estadoPago === 'PreAprobado',
+                    'badge-danger': row?.estadoPago === 'Rechazado' || row?.estadoPago === 'Cancelado' || row?.estadoPago === 'Precancelado'
+                  }">
+                    <i class="status-icon pi" [ngClass]="{
+                      'pi-clock': row?.estadoPago === 'Pendiente' || row?.estadoPago === 'Pospendiente',
+                      'pi-check-circle': row?.estadoPago === 'Aprobado',
+                      'pi-eye': row?.estadoPago === 'PreAprobado',
+                      'pi-times-circle': row?.estadoPago === 'Rechazado' || row?.estadoPago === 'Cancelado' || row?.estadoPago === 'Precancelado'
+                    }"></i>
+                    {{ row?.estadoPago }}
+                  </span>
                 </td>
-                <td *ngIf="isColumnVisibleProduccion('estadoProceso')">
-                  <span class="badge bg-primary">{{ row.estadoProceso }}</span>
+                
+                <!-- Columna Estado Proceso -->
+                <td *ngIf="isColumnVisibleProduccion('estadoProceso')" class="estado-cell text-center">
+                  <span class="modern-badge" [ngClass]="{
+                    'badge-secondary': row?.estadoProceso === 'SinProducir',
+                    'badge-info': row?.estadoProceso === 'EnProduccion' || row?.estadoProceso === 'Producido' || row?.estadoProceso === 'ProducidoTotalmente' || row?.estadoProceso === 'ProducidoParcialmente',
+                    'badge-primary': row?.estadoProceso === 'Empacado',
+                    'badge-warning': row?.estadoProceso === 'Despachado' || row?.estadoProceso === 'ParaDespachar',
+                    'badge-success': row?.estadoProceso === 'Entregado',
+                    'badge-danger': row?.estadoProceso === 'Rechazado',
+                    'badge-dark': row?.estadoProceso === 'Cerrado'
+                  }">
+                    <i class="status-icon pi" [ngClass]="{
+                      'pi-circle': row?.estadoProceso === 'SinProducir',
+                      'pi-cog': row?.estadoProceso === 'EnProduccion' || row?.estadoProceso === 'Producido' || row?.estadoProceso === 'ProducidoTotalmente' || row?.estadoProceso === 'ProducidoParcialmente',
+                      'pi-box': row?.estadoProceso === 'Empacado',
+                      'pi-truck': row?.estadoProceso === 'Despachado' || row?.estadoProceso === 'ParaDespachar',
+                      'pi-check-circle': row?.estadoProceso === 'Entregado',
+                      'pi-times-circle': row?.estadoProceso === 'Rechazado',
+                      'pi-lock': row?.estadoProceso === 'Cerrado'
+                    }"></i>
+                    {{ row?.estadoProceso }}
+                  </span>
                 </td>
-                <td *ngIf="isColumnVisibleProduccion('validacion')">
-                  <span [ngClass]="{'text-success': row.validacion, 'text-danger': !row.validacion}">
-                    {{ row.validacion ? 'Sí' : 'No' }}
+                
+                <!-- Columna Validación -->
+                <td *ngIf="isColumnVisibleProduccion('validacion')" class="estado-cell text-center">
+                  <span class="modern-badge validation-badge" [ngClass]="{
+                    'badge-success': row.validacion == true,
+                    'badge-secondary': row.validacion == false
+                  }">
+                    <i class="status-icon pi" [ngClass]="{
+                      'pi-check': row.validacion == true,
+                      'pi-times': row.validacion == false
+                    }"></i>
+                    {{ row.validacion ? 'Validado' : 'No validado' }}
                   </span>
                 </td>
                 <td *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')">{{ row.totalPedidoSinDescuento | currency }}</td>

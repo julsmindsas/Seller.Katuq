@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
-import { Pedido, Carrito } from '../modelo/pedido';
+import { Pedido, Carrito, EstadoPago, EstadoProcesoFiltros } from '../modelo/pedido';
 import { ColumnDefinition } from '../interfaces/column-definition.interface';
 
 @Component({
@@ -17,12 +17,18 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   @Output() onColumnSelectionChange = new EventEmitter<ColumnDefinition[]>();
   productsView: any[] = [];
 
+  // Arrays para filtros
+  estadosPago = Object.values(EstadoPago);
+  estadosProcesos: EstadoProcesoFiltros[];
+  validaciones: { value: boolean; nombre: string }[];
+
   // Columnas fijas para producción
   readonly fixedFields = ['imagen', 'producto', 'descripcion', 'opciones'];
 
   constructor() {}
 
   ngOnInit(): void {
+    this.initializeFilterArrays();
     this.transformPedidosToProductsView();
   }
 
@@ -40,7 +46,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     // Para cada pedido, crear una fila por cada producto en el carrito
     this.productsView = this.pedidos.flatMap((pedido) => {
       if (!pedido.carrito || pedido.carrito.length === 0) return [];
-      return pedido.carrito.map((carrito: Carrito, idx: number) => ({
+      return pedido.carrito.map((carrito: Carrito) => ({
         nroPedido: pedido.nroPedido,
         producto: carrito.producto,
         referencia: carrito.producto?.crearProducto?.referencia || '-',
@@ -101,5 +107,23 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.textContent || div.innerText || '';
+  }
+
+  private initializeFilterArrays(): void {
+    // Estados de proceso para producción
+    this.estadosProcesos = Object.values(EstadoProcesoFiltros);
+    if (this.isFromProduction) {
+      this.estadosProcesos = this.estadosProcesos.filter(estado => 
+        estado === EstadoProcesoFiltros.SinProducir || 
+        estado === EstadoProcesoFiltros.EnProduccion || 
+        estado === EstadoProcesoFiltros.ProducidoParcialmente
+      );
+    }
+    
+    // Opciones de validación
+    this.validaciones = [
+      { value: true, nombre: 'Validado' },
+      { value: false, nombre: 'No validado' }
+    ];
   }
 } 
