@@ -402,9 +402,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     {
       field: "vendedor",
       header: "Vendedor",
-      visible: false,
+      visible: true,
       type: "text",
       filterable: true,
+    },
+    {
+      field: "ultimaImpresion",
+      header: "Última impresión",
+      visible: true,
+      type: "date",
+      filterable: false,
     },
   ];
 
@@ -716,7 +723,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     }
 
     if (this.isFromProduction) {
-      filter['estadosPago'] = ['Prependiente', 'PreAprobado', 'Aprobado']
+      filter['estadosPago'] = ['Prependiente', 'PreAprobado', 'Aprobado','Pendiente']
     }
 
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
@@ -1195,6 +1202,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       order,
       this.isFromProduction,
     );
+    // Registrar la fecha/hora de impresión
+    const now = new Date().toISOString();
+    order.ultimaImpresion = now;
+    this.ventasService.editOrder(order).subscribe({
+      next: () => {
+        // Opcional: mostrar notificación de éxito
+        this.toastrService.success('Fecha de impresión registrada', 'Pedido actualizado');
+      },
+      error: () => {
+        this.toastrService.error('No se pudo actualizar la fecha de impresión', 'Error');
+      }
+    });
     this.modalService
       .open(content, {
         size: "xl",
@@ -2514,9 +2533,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       {
         field: "vendedor",
         header: "Vendedor",
-        visible: false,
+        visible: true,
         type: "text",
         filterable: true,
+      },
+      {
+        field: "ultimaImpresion",
+        header: "Última impresión",
+        visible: true,
+        type: "date",
+        filterable: false,
       },
     ];
 

@@ -62,6 +62,15 @@ export interface Pedido {
   fotosEvidencia?: string[];
   fotoEvidencia?: string;
   signatureImage?: string;
+  historialEstadoProceso?: HistorialEstadoProceso[];
+  ultimaImpresion?: string; // Fecha/hora de la última impresión
+}
+
+export interface HistorialEstadoProceso {
+  estado: EstadoProceso;
+  fecha: string;
+  usuario: string;
+  notas?: string;
 }
 
 export interface Channel {

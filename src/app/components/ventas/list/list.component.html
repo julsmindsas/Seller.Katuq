@@ -709,6 +709,14 @@
                                                     </p-columnFilter>
                                                 </div>
                                             </th>
+
+                                            <!-- Columna Fecha Última Impresión -->
+                                            <th *ngIf="isColumnVisible('ultimaImpresion')"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                <div class="flex align-items-center">
+                                                    {{'Última impresión' | translate}}
+                                                </div>
+                                            </th>
                                         </tr>
                                     </ng-template>
 
@@ -902,6 +910,11 @@
                                             <td *ngIf="isColumnVisible('vendedor') && !isFromProduction"
                                                 class="text-nowrap">
                                                 {{ pedido.asesorAsignado?.name }}
+                                            </td>
+
+                                            <!-- Columna Fecha Última Impresión -->
+                                            <td *ngIf="isColumnVisible('ultimaImpresion')" class="text-nowrap">
+                                                {{ pedido.ultimaImpresion ? (pedido.ultimaImpresion | date: 'dd/MM/yyyy HH:mm') : '-' }}
                                             </td>
                                         </tr>
                                     </ng-template>
@@ -1257,6 +1270,11 @@
                                         <div class="summary-label">{{ 'Vendedores' | translate }}</div>
                                         <div class="summary-value">{{ getVendedoresUnicos() }}</div>
                                     </div>
+                                </td>
+
+                                <!-- Columna Fecha Última Impresión -->
+                                <td *ngIf="isColumnVisible('ultimaImpresion')" class="summary-cell">
+                                    <!-- Vacía -->
                                 </td>
                             </tr>
                         </ng-template>

@@ -309,6 +309,12 @@
                     </p-columnFilter>
                   </div>
                 </th>
+                <!-- Columna Última Impresión -->
+                <th *ngIf="isColumnVisibleProduccion('ultimaImpresion')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Última impresión
+                  </div>
+                </th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
@@ -417,6 +423,10 @@
                 <td *ngIf="isColumnVisibleProduccion('horarioEntrega')">{{ row.horarioEntrega }}</td>
                 <td *ngIf="isColumnVisibleProduccion('channel')">{{ row.channel?.name || 'Regular' }}</td>
                 <td *ngIf="isColumnVisibleProduccion('vendedor')">{{ row.vendedor }}</td>
+                <!-- Columna Última Impresión -->
+                <td *ngIf="isColumnVisibleProduccion('ultimaImpresion')">
+                  {{ row.pedidoOriginal?.ultimaImpresion ? (row.pedidoOriginal.ultimaImpresion | date: 'dd/MM/yyyy HH:mm') : '-' }}
+                </td>
               </tr>
             </ng-template>
           </p-table>

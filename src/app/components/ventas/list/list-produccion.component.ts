@@ -1,6 +1,8 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { Pedido, Carrito, EstadoPago, EstadoProcesoFiltros } from '../modelo/pedido';
 import { ColumnDefinition } from '../interfaces/column-definition.interface';
+import { VentasService } from '../../../shared/services/ventas/ventas.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-list-produccion-orders',
@@ -23,9 +25,9 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   validaciones: { value: boolean; nombre: string }[];
 
   // Columnas fijas para producción
-  readonly fixedFields = ['imagen', 'producto', 'descripcion', 'opciones'];
+  readonly fixedFields = ['imagen', 'producto', 'descripcion', 'opciones', 'ultimaImpresion'];
 
-  constructor() {}
+  constructor(private ventasService: VentasService, private toastrService: ToastrService) {}
 
   ngOnInit(): void {
     this.initializeFilterArrays();
@@ -79,6 +81,17 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   }
 
   printProduct(row: any) {
+    // Registrar la fecha/hora de impresión
+    const now = new Date().toISOString();
+    row.pedidoOriginal.ultimaImpresion = now;
+    this.ventasService.editOrder(row.pedidoOriginal).subscribe({
+      next: () => {
+        this.toastrService.success('Fecha de impresión registrada', 'Pedido actualizado');
+      },
+      error: () => {
+        this.toastrService.error('No se pudo actualizar la fecha de impresión', 'Error');
+      }
+    });
     this.onPrintProduct.emit({ pedido: row.pedidoOriginal, producto: row.carritoOriginal });
   }
 
