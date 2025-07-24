@@ -47,6 +47,12 @@
                 
                 <!-- Columna Opciones -->
                 <th style="width: 3rem; text-align: center;">Opciones</th>
+                <!-- Columna Última Impresión -->
+                <th *ngIf="isColumnVisibleProduccion('ultimaImpresion')" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Última impresión
+                  </div>
+                </th>
                 <!-- Columna # Pedido -->
                 <th *ngIf="isColumnVisibleProduccion('nroPedido')" style="white-space: nowrap;">
                   <div class="flex align-items-center">
@@ -309,12 +315,6 @@
                     </p-columnFilter>
                   </div>
                 </th>
-                <!-- Columna Última Impresión -->
-                <th *ngIf="isColumnVisibleProduccion('ultimaImpresion')" style="white-space: nowrap;">
-                  <div class="flex align-items-center">
-                    Última impresión
-                  </div>
-                </th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
@@ -344,6 +344,10 @@
                 </td>
                 <td style="width: 3rem; text-align: center;">
                   <p-button *ngIf="isFromProduction" icon="pi pi-cog" class="p-button-text p-button-rounded p-button-secondary" (onClick)="openOptionsModalProduccion(row)" pTooltip="Opciones" tooltipPosition="top"></p-button>
+                </td>
+                <!-- Columna Última Impresión -->
+                <td *ngIf="isColumnVisibleProduccion('ultimaImpresion')">
+                  {{ row.pedidoOriginal?.ultimaImpresion ? (row.pedidoOriginal.ultimaImpresion | date: 'dd/MM/yyyy HH:mm') : '-' }}
                 </td>
                 <td *ngIf="isColumnVisibleProduccion('nroPedido')">{{ row.nroPedido }}</td>
                 <td *ngIf="isColumnVisibleProduccion('cantidad')">{{ row.cantidad }}</td>
@@ -423,10 +427,6 @@
                 <td *ngIf="isColumnVisibleProduccion('horarioEntrega')">{{ row.horarioEntrega }}</td>
                 <td *ngIf="isColumnVisibleProduccion('channel')">{{ row.channel?.name || 'Regular' }}</td>
                 <td *ngIf="isColumnVisibleProduccion('vendedor')">{{ row.vendedor }}</td>
-                <!-- Columna Última Impresión -->
-                <td *ngIf="isColumnVisibleProduccion('ultimaImpresion')">
-                  {{ row.pedidoOriginal?.ultimaImpresion ? (row.pedidoOriginal.ultimaImpresion | date: 'dd/MM/yyyy HH:mm') : '-' }}
-                </td>
               </tr>
             </ng-template>
           </p-table>
