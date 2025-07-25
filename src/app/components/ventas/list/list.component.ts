@@ -416,6 +416,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   ];
 
   selectedColumns: ColumnDefinition[] = [];
+  
+  // Configuración de columnas específica para producción
+  displayedColumnsProduccion: ColumnDefinition[] = [
+    { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
+    { field: "referencia", header: "Referencia", visible: true, type: "text", filterable: true },
+    { field: "ultimaImpresion", header: "Última impresión", visible: true, type: "date", filterable: false },
+    { field: "nroPedido", header: "# Pedido", visible: true, type: "text", filterable: true },
+    { field: "cantidad", header: "Cantidad", visible: true, type: "text", filterable: true },
+    { field: "cliente", header: "Cliente", visible: true, type: "text", filterable: true },
+    { field: "estadoPago", header: "Estado de Pago", visible: true, type: "status", filterable: true },
+    { field: "estadoProceso", header: "Estado de Proceso", visible: true, type: "status", filterable: true },
+    { field: "validacion", header: "Validación", visible: false, type: "status", filterable: true },
+    { field: "totalPedidoSinDescuento", header: "Valor Bruto", visible: false, type: "currency", filterable: true },
+    { field: "totalDescuento", header: "Descuento", visible: false, type: "currency", filterable: true },
+    { field: "totalEnvio", header: "Domicilio", visible: false, type: "currency", filterable: true },
+    { field: "subtotal", header: "Subtotal", visible: false, type: "currency", filterable: true },
+    { field: "totalImpuesto", header: "IVA", visible: false, type: "currency", filterable: true },
+    { field: "totalPedididoConDescuento", header: "Total", visible: false, type: "currency", filterable: true },
+    { field: "anticipo", header: "Anticipo", visible: false, type: "currency", filterable: true },
+    { field: "faltaPorPagar", header: "Falta por Pagar", visible: false, type: "currency", filterable: true },
+    { field: "fechaEntrega", header: "Fecha Entrega", visible: false, type: "date", filterable: true },
+    { field: "fechaCreacion", header: "Fecha de compra", visible: false, type: "date", filterable: true },
+    { field: "ciudad", header: "Ciudad", visible: false, type: "text", filterable: true },
+    { field: "zonaCobro", header: "Zona de Entrega", visible: false, type: "text", filterable: true },
+    { field: "formaEntrega", header: "Forma de Entrega", visible: false, type: "text", filterable: true },
+    { field: "horarioEntrega", header: "Horario de Entrega", visible: false, type: "text", filterable: true },
+    { field: "channel", header: "Canal", visible: false, type: "text", filterable: true },
+    { field: "vendedor", header: "Vendedor", visible: false, type: "text", filterable: true }
+  ];
+  selectedColumnsProduccion: ColumnDefinition[] = [];
+  
   showColumnConfig: boolean = false;
   showFilters: boolean = false;
   nroPedido: any;
@@ -498,6 +529,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    // Initialize default date range if not set
+    if (!this.fechaInicial || !this.fechaFinal) {
+      const today = new Date();
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      
+      this.fechaInicial = this.fechaInicial || thirtyDaysAgo.toISOString().split('T')[0];
+      this.fechaFinal = this.fechaFinal || today.toISOString().split('T')[0];
+    }
+
     this.estadosPago = Object.values(EstadoPago);
     // this.estadosProcesos = Object.values(EstadoProceso)
     this.estadosProcesos = Object.values(EstadoProcesoFiltros);
@@ -511,6 +552,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
     // Cargar configuración de columnas guardada
     this.loadColumnConfiguration();
+    // Cargar configuración de columnas de producción
+    this.loadColumnConfigurationProduccion();
 
     // Asegurar que las columnas estén en el orden correcto
     this.initializeColumns();
@@ -699,8 +742,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   }
 
   refrescarDatos() {
-    // this.fechaInicial.setHours(0, 0, 0, 0);
-    // this.fechaFinal.setHours(23, 59, 59, 999);
+    // Ensure dates are set with fallback to today
+    if (!this.fechaInicial || !this.fechaFinal) {
+      const today = new Date().toISOString().split('T')[0];
+      this.fechaInicial = this.fechaInicial || today;
+      this.fechaFinal = this.fechaFinal || today;
+    }
 
     const filter: any = {
       fechaInicial: this.fechaInicial + "T00:00:00.0000Z",
@@ -713,17 +760,29 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         : ["Todos"],
     };
 
-    // Aplicar filtros rápidos
+    // Apply quick filters for payment status
     if (this.quickFilters.estadoPago !== "all") {
       filter.estadosPago = [this.quickFilters.estadoPago];
     }
 
-    if (this.quickFilters.estadoProceso !== "all" && !this.isFromProduction) {
-      filter.estadoProceso = [this.quickFilters.estadoProceso];
+    // Apply quick filters for process status (fixed logic)
+    if (this.quickFilters.estadoProceso !== "all") {
+      if (this.isFromProduction) {
+        // For production view, still allow process filtering but maintain production states
+        const productionStates = [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente];
+        if (productionStates.includes(this.quickFilters.estadoProceso as EstadoProceso)) {
+          filter.estadoProceso = [this.quickFilters.estadoProceso];
+        }
+      } else {
+        filter.estadoProceso = [this.quickFilters.estadoProceso];
+      }
     }
 
+    // --- AJUSTE: Solo sobreescribir estadosPago por defecto si el filtro rápido está en 'all' ---
     if (this.isFromProduction) {
-      filter['estadosPago'] = ['Prependiente', 'PreAprobado', 'Aprobado','Pendiente']
+      if (this.quickFilters.estadoPago === "all") {
+        filter['estadosPago'] = ['Prependiente', 'PreAprobado', 'Aprobado','Pendiente'];
+      } // Si no, ya fue puesto arriba por el filtro rápido
     }
 
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
@@ -2552,6 +2611,76 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Asegurar que selectedColumns mantenga el orden correcto con 'detalles' primero
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
     this.saveColumnConfiguration();
+  }
+
+  // Métodos específicos para manejo de columnas de producción
+  loadColumnConfigurationProduccion(): void {
+    const savedColumns = localStorage.getItem("ventasListProduccionColumns");
+    if (savedColumns) {
+      try {
+        const parsed = JSON.parse(savedColumns);
+        // Validar que las columnas guardadas coincidan con las actuales
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.displayedColumnsProduccion = parsed;
+        }
+      } catch (e) {
+        console.error("Error parsing saved production columns configuration", e);
+      }
+    }
+    // Inicializar columnas seleccionadas de producción
+    this.selectedColumnsProduccion = this.displayedColumnsProduccion.filter((col) => col.visible);
+  }
+
+  saveColumnConfigurationProduccion(): void {
+    localStorage.setItem(
+      "ventasListProduccionColumns",
+      JSON.stringify(this.displayedColumnsProduccion),
+    );
+  }
+
+  onColumnSelectionChangeProduccion(newSelected: ColumnDefinition[]): void {
+    this.selectedColumnsProduccion = newSelected;
+    // Actualizar la propiedad visible en displayedColumnsProduccion basado en selectedColumnsProduccion
+    this.displayedColumnsProduccion.forEach((col) => {
+      col.visible = this.selectedColumnsProduccion.some(
+        (selected) => selected.field === col.field,
+      );
+    });
+    // Guardar la configuración en localStorage
+    this.saveColumnConfigurationProduccion();
+  }
+
+  resetColumnConfigProduccion(): void {
+    this.displayedColumnsProduccion = [
+      { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
+      { field: "referencia", header: "Referencia", visible: true, type: "text", filterable: true },
+      { field: "ultimaImpresion", header: "Última impresión", visible: true, type: "date", filterable: false },
+      { field: "nroPedido", header: "# Pedido", visible: true, type: "text", filterable: true },
+      { field: "cantidad", header: "Cantidad", visible: true, type: "text", filterable: true },
+      { field: "cliente", header: "Cliente", visible: true, type: "text", filterable: true },
+      { field: "estadoPago", header: "Estado de Pago", visible: true, type: "status", filterable: true },
+      { field: "estadoProceso", header: "Estado de Proceso", visible: true, type: "status", filterable: true },
+      { field: "validacion", header: "Validación", visible: false, type: "status", filterable: true },
+      { field: "totalPedidoSinDescuento", header: "Valor Bruto", visible: false, type: "currency", filterable: true },
+      { field: "totalDescuento", header: "Descuento", visible: false, type: "currency", filterable: true },
+      { field: "totalEnvio", header: "Domicilio", visible: false, type: "currency", filterable: true },
+      { field: "subtotal", header: "Subtotal", visible: false, type: "currency", filterable: true },
+      { field: "totalImpuesto", header: "IVA", visible: false, type: "currency", filterable: true },
+      { field: "totalPedididoConDescuento", header: "Total", visible: false, type: "currency", filterable: true },
+      { field: "anticipo", header: "Anticipo", visible: false, type: "currency", filterable: true },
+      { field: "faltaPorPagar", header: "Falta por Pagar", visible: false, type: "currency", filterable: true },
+      { field: "fechaEntrega", header: "Fecha Entrega", visible: false, type: "date", filterable: true },
+      { field: "fechaCreacion", header: "Fecha de compra", visible: false, type: "date", filterable: true },
+      { field: "ciudad", header: "Ciudad", visible: false, type: "text", filterable: true },
+      { field: "zonaCobro", header: "Zona de Entrega", visible: false, type: "text", filterable: true },
+      { field: "formaEntrega", header: "Forma de Entrega", visible: false, type: "text", filterable: true },
+      { field: "horarioEntrega", header: "Horario de Entrega", visible: false, type: "text", filterable: true },
+      { field: "channel", header: "Canal", visible: false, type: "text", filterable: true },
+      { field: "vendedor", header: "Vendedor", visible: false, type: "text", filterable: true }
+    ];
+    // Asegurar que selectedColumnsProduccion mantenga la nueva configuración
+    this.selectedColumnsProduccion = this.displayedColumnsProduccion.filter((col) => col.visible);
+    this.saveColumnConfigurationProduccion();
   }
 
   private initializeColumns(): void {
