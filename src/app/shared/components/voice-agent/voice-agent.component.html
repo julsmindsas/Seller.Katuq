@@ -9,7 +9,7 @@
        'session-active': state.isListening
      }"
      [style.transform]="!isMobile && uiConfig.allowDragging ? 'translate3d(' + windowPosition.x + 'px, ' + windowPosition.y + 'px, 0)' : ''"
-     *ngIf="state.isListening">
+     *ngIf="shouldShowComponent">
      
   <div class="voice-call-interface">
     <!-- Barra de título arrastrable -->
@@ -30,7 +30,14 @@
 
     <!-- Avatar y estado -->
     <div class="call-avatar-container">
-      <div class="call-avatar"></div>
+      <!-- Canvas del Avatar Interactivo -->
+      <div class="interactive-avatar-wrapper">
+        <canvas #avatarCanvas 
+                class="interactive-avatar-canvas"
+                width="120" 
+                height="120">
+        </canvas>
+      </div>
       <div class="call-name">{{ config.agentName || 'K.A.I.' }}</div>
       <div class="call-status-text">
         {{ state.currentText || 'Escuchando...' }}

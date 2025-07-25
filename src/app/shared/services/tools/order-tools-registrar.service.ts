@@ -73,31 +73,66 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     const steps = this.getInitialProcessSteps();
     let stepIndex = -1;
     
-    // Mapeo inteligente de acciones a pasos visuales
+    // Mapeo mejorado de acciones a pasos visuales (basado en el wizard real)
     const stepMapping: { [key: string]: number } = {
+      // Paso 1: Productos/Catálogo
+      'productos': 0,
       'catalogo': 0,
       'bodega': 0,
       'warehouse': 0,
+      'producto': 0,
+      'catalog': 0,
+      
+      // Paso 2: Carrito
       'carrito': 1,
       'cart': 1,
-      'productos': 1,
+      'notas': 1,
+      'notes': 1,
+      
+      // Paso 3: Cliente
       'cliente': 2,
       'client': 2,
-      'facturacion': 3,
-      'billing': 3,
-      'entrega': 4,
-      'delivery': 4,
-      'envio': 4,
+      'customer': 2,
+      'datos_cliente': 2,
+      
+      // Paso 4: Envío/Entrega
+      'envio': 3,
+      'entrega': 3,
+      'delivery': 3,
+      'shipping': 3,
+      'direccion': 3,
+      'address': 3,
+      
+      // Paso 5: Facturación
+      'facturacion': 4,
+      'billing': 4,
+      'factura': 4,
+      'invoice': 4,
+      
+      // Paso 6: Pago/Resumen
       'pago': 5,
       'payment': 5,
+      'resumen': 5,
+      'summary': 5,
+      'checkout': 5,
+      
+      // Paso 7: Confirmación
       'confirmacion': 6,
-      'confirmation': 6
+      'confirmation': 6,
+      'confirmed': 6,
+      'finalizado': 6,
+      'completed': 6
     };
     
     // Buscar por mapeo directo primero
     stepIndex = stepMapping[stepName.toLowerCase()];
     
-    // Si no se encuentra, buscar por contenido de caption
+    // Si no se encuentra, buscar por stepKey en los pasos
+    if (stepIndex === undefined || stepIndex === -1) {
+      stepIndex = steps.findIndex(s => s.stepKey === stepName.toLowerCase());
+    }
+    
+    // Si aún no se encuentra, buscar por contenido de caption
     if (stepIndex === undefined || stepIndex === -1) {
       stepIndex = steps.findIndex(s => s.caption.toLowerCase().includes(stepName.toLowerCase()));
     }
@@ -146,32 +181,46 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
   private getInitialProcessSteps() {
     return [
       {
-        imageUrl: 'assets/images/ventas/paso1-catalogo.png',
-        caption: '1. Catálogo: Selecciona una ubicación de destino y elige los productos del catálogo'
+        imageUrl: 'assets/images/ventas/paso1-productos.png',
+        caption: '1. Productos: Selecciona una bodega y elige productos del catálogo disponible',
+        icon: 'fa-shopping-basket',
+        stepKey: 'productos'
       },
       {
         imageUrl: 'assets/images/ventas/paso2-carrito.png',
-        caption: '2. Carrito y Notas: Revisa tus productos seleccionados y agrega notas al pedido'
+        caption: '2. Carrito: Revisa tus productos seleccionados y agrega notas al pedido',
+        icon: 'fa-shopping-cart',
+        stepKey: 'carrito'
       },
       {
         imageUrl: 'assets/images/ventas/paso3-cliente.png',
-        caption: '3. Datos Cliente: Busca un cliente existente o crea uno nuevo con sus datos completos'
+        caption: '3. Cliente: Busca un cliente existente o crea uno nuevo con sus datos completos',
+        icon: 'fa-user',
+        stepKey: 'cliente'
       },
       {
-        imageUrl: 'assets/images/ventas/paso4-facturacion.png',
-        caption: '4. Datos de Facturación: Completa la información para la facturación electrónica'
+        imageUrl: 'assets/images/ventas/paso4-envio.png',
+        caption: '4. Envío: Define la dirección y detalles para la entrega del pedido',
+        icon: 'fa-truck',
+        stepKey: 'envio'
       },
       {
-        imageUrl: 'assets/images/ventas/paso5-entrega.png',
-        caption: '5. Datos de Entrega: Define la dirección y detalles para la entrega del pedido'
+        imageUrl: 'assets/images/ventas/paso5-facturacion.png',
+        caption: '5. Facturación: Completa la información para la facturación electrónica',
+        icon: 'fa-file-invoice',
+        stepKey: 'facturacion'
       },
       {
         imageUrl: 'assets/images/ventas/paso6-pago.png',
-        caption: '6. Resumen y Pago: Revisa el pedido completo y procede al pago'
+        caption: '6. Pago: Revisa el pedido completo y procede al pago',
+        icon: 'fa-credit-card',
+        stepKey: 'pago'
       },
       {
         imageUrl: 'assets/images/ventas/paso7-confirmacion.png',
-        caption: '7. Confirmación: ¡Venta completada exitosamente!'
+        caption: '7. Confirmación: ¡Venta completada exitosamente!',
+        icon: 'fa-check-circle',
+        stepKey: 'confirmacion'
       }
     ];
   }
@@ -3100,6 +3149,401 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         };
       }
     );
+
+    // =================== HERRAMIENTAS DE NAVEGACIÓN DE PASOS DEL WIZARD ===================
+
+    // Herramienta para ir directamente a un paso específico del wizard
+    adapter.registerTool(
+      {
+        name: 'goToWizardStep',
+        description: 'Navega directamente a un paso específico del proceso de ventas si las validaciones lo permiten.',
+        parameters: {
+          type: 'object',
+          properties: {
+            stepNumber: { 
+              type: 'integer', 
+              description: 'Número del paso al que ir (1-7): 1=Productos, 2=Carrito, 3=Cliente, 4=Envío, 5=Facturación, 6=Pago, 7=Confirmación',
+              minimum: 1,
+              maximum: 7
+            }
+          },
+          required: ['stepNumber']
+        }
+      },
+      ({ stepNumber }) => {
+        if (stepNumber < 1 || stepNumber > 7) {
+          return {
+            success: false,
+            error: 'Número de paso inválido. Debe ser entre 1 y 7.',
+            availableSteps: [
+              '1: Productos (Selección de bodega y productos)',
+              '2: Carrito (Revisión de productos)',
+              '3: Cliente (Datos del cliente)',
+              '4: Envío (Dirección de entrega)',
+              '5: Facturación (Datos de facturación)',
+              '6: Pago (Métodos de pago y resumen)',
+              '7: Confirmación (Finalización del pedido)'
+            ]
+          };
+        }
+
+        // Validar si se puede ir al paso solicitado
+        const currentStatus = this._getProcessStatus();
+        const steps = this.getInitialProcessSteps();
+        
+        // Lógica de validación para cada paso
+        const validationMessages: string[] = [];
+        
+        if (stepNumber >= 2) { // Carrito requiere bodega y productos
+          if (!this.bodegaSeleccionada) {
+            validationMessages.push('Debe seleccionar una bodega antes de ir al paso de carrito');
+          }
+          if (!this.pedidoEnProgreso.carrito || this.pedidoEnProgreso.carrito.length === 0) {
+            validationMessages.push('Debe agregar productos al carrito');
+          }
+        }
+        
+        if (stepNumber >= 3) { // Cliente requiere carrito con productos
+          if (!currentStatus.completedSteps.products) {
+            validationMessages.push('Debe completar la selección de productos antes de configurar el cliente');
+          }
+        }
+        
+        if (stepNumber >= 4) { // Envío requiere cliente
+          if (!currentStatus.completedSteps.client) {
+            validationMessages.push('Debe configurar los datos del cliente antes del envío');
+          }
+        }
+        
+        if (stepNumber >= 5) { // Facturación requiere envío (excepto si es recogida)
+          const esRecogida = this.pedidoEnProgreso.formaEntrega?.toLowerCase().includes('recoge');
+          if (!esRecogida && !currentStatus.completedSteps.delivery) {
+            validationMessages.push('Debe configurar los datos de entrega antes de la facturación');
+          }
+        }
+        
+        if (stepNumber >= 6) { // Pago requiere facturación
+          if (!currentStatus.completedSteps.billing) {
+            validationMessages.push('Debe configurar los datos de facturación antes del pago');
+          }
+        }
+
+        if (validationMessages.length > 0) {
+          return {
+            success: false,
+            error: `No se puede avanzar al paso ${stepNumber}`,
+            validationErrors: validationMessages,
+            currentStep: this.pasoActual,
+            suggestion: 'Complete los pasos anteriores antes de continuar',
+            nextActions: this.getNextActions(currentStatus)
+          };
+        }
+
+        // Si pasa todas las validaciones, ir al paso
+        this.pasoActual = stepNumber;
+        this.updateVisualStep(steps[stepNumber - 1].stepKey);
+
+        return {
+          success: true,
+          currentStep: stepNumber,
+          stepName: steps[stepNumber - 1].caption,
+          stepKey: steps[stepNumber - 1].stepKey,
+          message: `Navegando al paso ${stepNumber}: ${steps[stepNumber - 1].caption}`,
+          processStatus: this._getProcessStatus()
+        };
+      }
+    );
+
+    // Herramienta para obtener información detallada del paso actual
+    adapter.registerTool(
+      {
+        name: 'getCurrentStepInfo',
+        description: 'Obtiene información detallada del paso actual del proceso de ventas.',
+        parameters: { type: 'object', properties: {} }
+      },
+      () => {
+        const steps = this.getInitialProcessSteps();
+        const currentStepIndex = Math.max(0, Math.min(this.pasoActual - 1, steps.length - 1));
+        const currentStep = steps[currentStepIndex];
+        const processStatus = this._getProcessStatus();
+
+        // Información específica según el paso actual
+        let stepSpecificInfo: any = {};
+        
+        switch (this.pasoActual) {
+          case 1: // Productos
+            stepSpecificInfo = {
+              warehouses: this.bodegaSeleccionada ? 
+                { selected: this.bodegaSeleccionada.nombre, id: this.bodegaSeleccionada.idBodega } :
+                { message: 'No hay bodega seleccionada' },
+              productsInCatalog: this.productosCatalogo.length,
+              nextAction: !this.bodegaSeleccionada ? 
+                'Usa selectWarehouse para elegir una bodega' :
+                'Usa searchProducts para buscar productos o addToCart para agregar al carrito'
+            };
+            break;
+            
+          case 2: // Carrito
+            const cart = this.cartService.productInCart.getValue();
+            stepSpecificInfo = {
+              itemsInCart: cart?.length || 0,
+              cartTotal: this.calculateCartTotal(),
+              nextAction: (cart?.length || 0) > 0 ? 
+                'Revisa tu carrito y procede con setClientToOrder' :
+                'Agrega productos al carrito con addToCart'
+            };
+            break;
+            
+          case 3: // Cliente
+            stepSpecificInfo = {
+              clientConfigured: !!this.pedidoEnProgreso.cliente,
+              clientInfo: this.pedidoEnProgreso.cliente ? {
+                name: this.pedidoEnProgreso.cliente.nombres_completos,
+                document: this.pedidoEnProgreso.cliente.documento,
+                email: this.pedidoEnProgreso.cliente.correo_electronico_comprador
+              } : null,
+              nextAction: !this.pedidoEnProgreso.cliente ?
+                'Usa searchClient para buscar un cliente o setClientToOrder para crear uno nuevo' :
+                'Cliente configurado. Procede con setDeliveryInfo'
+            };
+            break;
+            
+          case 4: // Envío
+            stepSpecificInfo = {
+              deliveryConfigured: !!this.pedidoEnProgreso.envio,
+              deliveryInfo: this.pedidoEnProgreso.envio ? {
+                address: this.pedidoEnProgreso.envio.direccionEntrega,
+                city: this.pedidoEnProgreso.envio.ciudad,
+                method: this.pedidoEnProgreso.formaEntrega
+              } : null,
+              isPickup: this.pedidoEnProgreso.formaEntrega?.toLowerCase().includes('recoge'),
+              nextAction: !this.pedidoEnProgreso.envio ?
+                'Usa setDeliveryInfo para configurar la entrega' :
+                'Entrega configurada. Procede con setBillingInfo'
+            };
+            break;
+            
+          case 5: // Facturación
+            stepSpecificInfo = {
+              billingConfigured: !!this.pedidoEnProgreso.facturacion,
+              billingInfo: this.pedidoEnProgreso.facturacion ? {
+                name: this.pedidoEnProgreso.facturacion.nombres,
+                document: this.pedidoEnProgreso.facturacion.documento,
+                address: this.pedidoEnProgreso.facturacion.direccion
+              } : null,
+              nextAction: !this.pedidoEnProgreso.facturacion ?
+                'Usa setBillingInfo para configurar la facturación' :
+                'Facturación configurada. Procede al resumen y pago'
+            };
+            break;
+            
+          case 6: // Pago
+            stepSpecificInfo = {
+              paymentMethodSelected: !!this.pedidoEnProgreso.formaDePago,
+              paymentMethod: this.pedidoEnProgreso.formaDePago || 'No seleccionado',
+              orderTotals: {
+                subtotal: this.pedidoEnProgreso.subtotal || 0,
+                shipping: this.pedidoEnProgreso.totalEnvio || 0,
+                taxes: this.pedidoEnProgreso.totalImpuesto || 0,
+                total: this.pedidoEnProgreso.totalPedididoConDescuento || 0
+              },
+              readyToProcess: processStatus.readyForPayment,
+              nextAction: processStatus.readyForPayment ?
+                'Usa processSale para finalizar la venta' :
+                'Completa la información faltante antes de procesar'
+            };
+            break;
+            
+          case 7: // Confirmación
+            stepSpecificInfo = {
+              orderProcessed: this.pedidoEnProgreso.estadoProceso !== 'SinProducir',
+              orderNumber: this.pedidoEnProgreso.nroPedido,
+              orderStatus: this.pedidoEnProgreso.estadoProceso,
+              paymentStatus: this.pedidoEnProgreso.estadoPago,
+              nextAction: 'Proceso completado. El pedido ha sido creado exitosamente.'
+            };
+            break;
+        }
+
+        return {
+          success: true,
+          currentStep: {
+            number: this.pasoActual,
+            name: currentStep.caption,
+            key: currentStep.stepKey,
+            icon: currentStep.icon,
+            description: this.getStepDescription(this.pasoActual)
+          },
+          stepSpecificInfo,
+          processStatus,
+          navigation: {
+            canGoBack: this.pasoActual > 1,
+            canGoForward: this.pasoActual < 7 && this.validateCurrentStep().canProceed,
+            availableSteps: steps.map((step, index) => ({
+              number: index + 1,
+              name: step.caption,
+              key: step.stepKey,
+              accessible: this.canAccessStep(index + 1)
+            }))
+          },
+          completionPercentage: this.calculateCompletionPercentage(processStatus),
+          nextActions: this.getNextActions(processStatus)
+        };
+      }
+    );
+
+    // Herramienta para obtener el mapa completo del proceso y navegación
+    adapter.registerTool(
+      {
+        name: 'getWizardMap',
+        description: 'Obtiene un mapa completo del proceso de ventas con el estado de cada paso.',
+        parameters: { type: 'object', properties: {} }
+      },
+      () => {
+        const steps = this.getInitialProcessSteps();
+        const processStatus = this._getProcessStatus();
+        
+        const stepMap = steps.map((step, index) => {
+          const stepNumber = index + 1;
+          const isCurrent = stepNumber === this.pasoActual;
+          const canAccess = this.canAccessStep(stepNumber);
+          const isCompleted = this.isStepCompleted(stepNumber);
+          
+          return {
+            number: stepNumber,
+            name: step.caption,
+            key: step.stepKey,
+            icon: step.icon,
+            status: {
+              isCurrent,
+              isCompleted,
+              canAccess,
+              description: this.getStepStatusDescription(stepNumber)
+            },
+            requirements: this.getStepRequirements(stepNumber),
+            actions: this.getStepAvailableActions(stepNumber)
+          };
+        });
+
+        return {
+          success: true,
+          wizardMap: stepMap,
+          currentStep: this.pasoActual,
+          processStatus,
+          summary: {
+            totalSteps: steps.length,
+            completedSteps: stepMap.filter(s => s.status.isCompleted).length,
+            accessibleSteps: stepMap.filter(s => s.status.canAccess).length,
+            completionPercentage: this.calculateCompletionPercentage(processStatus)
+          },
+          navigation: {
+            canGoBack: this.pasoActual > 1,
+            canGoForward: this.pasoActual < steps.length && this.validateCurrentStep().canProceed,
+            recommendedNextStep: this.getRecommendedNextStep()
+          },
+          quickActions: this.getQuickActionsForCurrentStep()
+        };
+      }
+    );
+  }
+
+  // Métodos auxiliares requeridos por las nuevas herramientas de navegación
+  private getStepDescription(stepNumber: number): string {
+    const stepDescriptions: { [key: number]: string } = {
+      1: 'Productos: Selecciona una bodega y elige productos del catálogo disponible para tu pedido',
+      2: 'Carrito: Revisa los productos seleccionados, ajusta cantidades y aplica descuentos si necesario',
+      3: 'Cliente: Selecciona o crea el cliente que realizará la compra',
+      4: 'Envío: Configura la información de entrega del pedido (dirección, método, costos)',
+      5: 'Facturación: Define los datos de facturación electrónica y tipo de documento',
+      6: 'Pago: Selecciona el método de pago y completa la información financiera',
+      7: 'Confirmación: Revisa y confirma todos los detalles antes de crear el pedido'
+    };
+    return stepDescriptions[stepNumber] || 'Paso no identificado';
+  }
+
+  private canAccessStep(stepNumber: number): boolean {
+    // Lógica para determinar si se puede acceder a un paso específico
+    if (stepNumber <= 1) return true; // Siempre se puede acceder al primer paso
+    
+    // Se puede acceder a un paso si todos los pasos anteriores están completos o es el paso siguiente
+    for (let i = 1; i < stepNumber; i++) {
+      if (!this.isStepCompleted(i) && i < this.pasoActual) {
+        return false;
+      }
+    }
+    return stepNumber <= this.pasoActual + 1; // Permitir el paso actual + 1
+  }
+
+  private isStepCompleted(stepNumber: number): boolean {
+    switch (stepNumber) {
+      case 1: // Productos
+        return this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0;
+      case 2: // Carrito  
+        return this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0;
+      case 3: // Cliente
+        return !!this.pedidoEnProgreso.cliente;
+      case 4: // Envío
+        return !!this.pedidoEnProgreso.envio && !!this.pedidoEnProgreso.envio.direccionEntrega;
+      case 5: // Facturación
+        return !!this.pedidoEnProgreso.facturacion;
+      case 6: // Pago
+        return !!this.pedidoEnProgreso.formaDePago;
+      case 7: // Confirmación
+        return !!this.pedidoEnProgreso._id; // Completado si ya tiene ID (pedido creado)
+      default:
+        return false;
+    }
+  }
+
+  private getStepStatusDescription(stepNumber: number): string {
+    const isCompleted = this.isStepCompleted(stepNumber);
+    const canAccess = this.canAccessStep(stepNumber);
+    const isCurrent = this.pasoActual === stepNumber;
+    
+    if (isCurrent) return 'Paso actual';
+    if (isCompleted) return 'Completado';
+    if (canAccess) return 'Disponible';
+    return 'Bloqueado';
+  }
+
+  private getStepRequirements(stepNumber: number): string[] {
+    const requirements: { [key: number]: string[] } = {
+      1: ['Tener una bodega seleccionada'],
+      2: ['Al menos un producto en el carrito'],
+      3: ['Productos seleccionados'],
+      4: ['Cliente seleccionado'],
+      5: ['Información de envío configurada'],
+      6: ['Datos de facturación completos'],
+      7: ['Método de pago seleccionado']
+    };
+    return requirements[stepNumber] || [];
+  }
+
+  private getStepAvailableActions(stepNumber: number): string[] {
+    const actions: { [key: number]: string[] } = {
+      1: ['Buscar productos', 'Agregar al carrito', 'Cambiar bodega'],
+      2: ['Modificar cantidades', 'Aplicar descuentos', 'Eliminar productos'],
+      3: ['Buscar cliente', 'Crear cliente nuevo', 'Editar cliente'],
+      4: ['Configurar dirección', 'Seleccionar método de envío', 'Calcular costos'],
+      5: ['Completar datos fiscales', 'Seleccionar tipo de documento'],
+      6: ['Elegir método de pago', 'Configurar datos de pago'],
+      7: ['Revisar pedido', 'Confirmar y crear', 'Volver a pasos anteriores']
+    };
+    return actions[stepNumber] || [];
+  }
+
+  private getRecommendedNextStep(): number {
+    // Recomienda el siguiente paso lógico basado en el estado actual
+    for (let step = 1; step <= 7; step++) {
+      if (!this.isStepCompleted(step)) {
+        return step;
+      }
+    }
+    return 7; // Si todo está completo, ir a confirmación
+  }
+
+  private getQuickActionsForCurrentStep(): string[] {
+    return this.getStepAvailableActions(this.pasoActual);
   }
 
   // Método auxiliar para validar si se puede avanzar desde el paso actual
@@ -3107,43 +3551,37 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     const missing: string[] = [];
 
     switch (this.pasoActual) {
-      case 1: // Cliente
-        if (!this.pedidoEnProgreso.cliente) {
-          missing.push('Seleccionar un cliente');
-        }
-        break;
-      
-      case 2: // Productos
+      case 1: // Productos
         if (!this.pedidoEnProgreso.carrito || this.pedidoEnProgreso.carrito.length === 0) {
           missing.push('Agregar al menos un producto al carrito');
         }
         break;
-      
-      case 3: // Carrito - ya validado que tenga productos
-        break;
-      
-      case 4: // Facturación
-        if (!this.pedidoEnProgreso.facturacion?.nombres) {
-          missing.push('Completar datos de facturación');
+      case 2: // Carrito
+        if (!this.pedidoEnProgreso.carrito || this.pedidoEnProgreso.carrito.length === 0) {
+          missing.push('El carrito no puede estar vacío');
         }
         break;
-      
-      case 5: // Entrega
+      case 3: // Cliente
+        if (!this.pedidoEnProgreso.cliente) {
+          missing.push('Seleccionar un cliente');
+        }
+        break;
+      case 4: // Envío
         if (!this.pedidoEnProgreso.envio?.direccionEntrega) {
           missing.push('Completar dirección de entrega');
         }
         break;
-      
-      case 6: // Notas - opcional
+      case 5: // Facturación
+        if (!this.pedidoEnProgreso.facturacion?.nombres) {
+          missing.push('Completar datos de facturación');
+        }
         break;
-      
-      case 7: // Pago
+      case 6: // Pago
         if (!this.pedidoEnProgreso.formaDePago) {
           missing.push('Seleccionar método de pago');
         }
         break;
-      
-      case 8: // Confirmación - último paso
+      case 7: // Confirmación - último paso
         break;
     }
 
@@ -3230,44 +3668,6 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     return stepKeys[stepNumber] || 'cliente';
   }
 
-  // Métodos auxiliares para shortcuts
-  private getQuickActionsForCurrentStep(): string[] {
-    const actions = [];
-    
-    switch (this.pasoActual) {
-      case 1: // Cliente
-        actions.push('quickCreateClient - Crear cliente rápido');
-        actions.push('searchClient - Buscar cliente existente');
-        break;
-      case 2: // Productos
-        actions.push('quickAddToCart - Agregar producto rápido');
-        actions.push('searchProducts - Buscar productos');
-        break;
-      case 3: // Carrito
-        actions.push('getOrderSummary - Ver resumen del pedido');
-        actions.push('smartNextStep - Avanzar automáticamente');
-        break;
-      case 4: // Facturación
-        actions.push('smartNextStep - Autocompletar facturación');
-        break;
-      case 5: // Entrega
-        actions.push('smartNextStep - Autocompletar entrega');
-        break;
-      case 6: // Notas
-        actions.push('nextStep - Continuar a pago');
-        break;
-      case 7: // Pago
-        actions.push('validateOrderBeforePay - Validar pedido');
-        actions.push('expressCheckout - Finalizar rápido');
-        break;
-      case 8: // Confirmación
-        actions.push('processSale - Procesar venta');
-        actions.push('getOrderSummary - Ver resumen final');
-        break;
-    }
-    
-    return actions;
-  }
 
   private getSuggestedNextAction(): string {
     const cart = this.cartService.productInCart.getValue();

@@ -4,7 +4,7 @@
 
 export const environment = {
   production: true,
-  version: "2025.07.23.6 - 23 de Julio 2025 (Beta)",
+  version: "2025.07.23.8 - 23 de Julio 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -14,10 +14,9 @@ export const environment = {
     appId: "1:262274219539:web:bd63a33f16779c7d4689e6",
     measurementId: "G-LFYSZ78R7F",
   },
-  urlPermitidas:
-    "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
-   urlApi: "http://localhost:3300", // API Local,
-  //urlApi: "https://api.katuq.com", // API AWS
+  urlPermitidas:   "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
+  //urlApi: "http://localhost:3300", // API Local,
+  urlApi: "https://api.katuq.com", // API AWS
   wompi: {
     prod_intrity: "test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD",
     public_key_test: "pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy",

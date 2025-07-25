@@ -133,6 +133,32 @@ $transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     flex-direction: column;
     align-items: center;
     
+    // Avatar interactivo con canvas
+    .interactive-avatar-wrapper {
+      position: relative;
+      margin-bottom: 12px;
+      
+      .interactive-avatar-canvas {
+        display: block;
+        border-radius: 50%;
+        border: 3px solid rgba(76, 175, 80, 0.3);
+        background: transparent;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        cursor: pointer;
+        
+        &:hover {
+          border-color: rgba(76, 175, 80, 0.6);
+          transform: scale(1.05);
+          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        }
+        
+        &:active {
+          transform: scale(0.98);
+        }
+      }
+    }
+
+    // Mantener el avatar estático como fallback (oculto por defecto)
     .call-avatar {
       width: 80px;
       height: 80px;
@@ -143,6 +169,7 @@ $transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       background-position: center;
       margin-bottom: 12px;
       border: 3px solid rgba(0, 0, 0, 0.1);
+      display: none; // Oculto porque usamos el canvas
     }
     
     .call-name {
@@ -475,6 +502,20 @@ $transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
           max-height: 250px;
         }
       }
+      
+      // Avatar más pequeño en móvil
+      .call-avatar-container {
+        .interactive-avatar-wrapper {
+          .interactive-avatar-canvas {
+            width: 100px !important;
+            height: 100px !important;
+            
+            &:hover {
+              transform: scale(1.02); // Hover más sutil en móvil
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -490,11 +531,30 @@ $transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         height: 40px;
       }
     }
+    
+    .call-avatar-container {
+      .interactive-avatar-wrapper {
+        .interactive-avatar-canvas {
+          border-width: 2px;
+          
+          &:hover {
+            transform: scale(1.02);
+          }
+        }
+      }
+    }
   }
   
   &.theme-compact {
     .call-avatar-container {
       padding: 15px;
+      
+      .interactive-avatar-wrapper {
+        .interactive-avatar-canvas {
+          width: 90px !important;
+          height: 90px !important;
+        }
+      }
       
       .call-avatar {
         width: 60px;
@@ -506,4 +566,4 @@ $transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
     }
   }
-} 
+}

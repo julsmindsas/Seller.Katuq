@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VoiceAgentComponent } from './voice-agent.component';
 import { VoiceAgentService } from '../../services/voice-agent.service';
+import { AvatarCanvasService } from '../../services/avatar-canvas.service';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { VoiceAgentService } from '../../services/voice-agent.service';
     VoiceAgentComponent
   ],
   providers: [
-    VoiceAgentService
+    VoiceAgentService,
+    AvatarCanvasService
   ]
 })
 export class VoiceAgentModule { } 

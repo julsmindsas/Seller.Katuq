@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ToolAdapter, TOOL_ADAPTER } from './tools/tool-adapter';
+import { AvatarCanvasService, AvatarState } from './avatar-canvas.service';
 
 // Interfaces para los eventos del agente de voz
 export interface VoiceAgentConfig {
@@ -65,7 +66,8 @@ export class VoiceAgentService implements OnDestroy {
 
   constructor(
     private httpClient: HttpClient,
-    @Inject(TOOL_ADAPTER) private toolAdapter: ToolAdapter
+    @Inject(TOOL_ADAPTER) private toolAdapter: ToolAdapter,
+    private avatarService: AvatarCanvasService
   ) {}
 
   async startVoiceSession(config?: VoiceAgentConfig): Promise<void> {
@@ -89,6 +91,9 @@ export class VoiceAgentService implements OnDestroy {
         isProcessing: false,
         currentText: 'Escuchando...' 
       });
+
+      // Actualizar estado del avatar
+      this.avatarService.setState(AvatarState.LISTENING);
 
     } catch (error: any) {
       console.error('Error al iniciar sesión de voz:', error);
@@ -122,6 +127,9 @@ export class VoiceAgentService implements OnDestroy {
 
       if (this.audioElement) {
         this.audioElement.srcObject = e.streams[0];
+
+        // Conectar el stream al avatar para análisis de audio
+        this.avatarService.connectAudioStream(e.streams[0]);
 
         const playPromise = this.audioElement.play();
         if (playPromise !== undefined) {
@@ -215,8 +223,12 @@ export class VoiceAgentService implements OnDestroy {
         // Actualizar texto actual basado en el tipo de mensaje
         if (msg.type === 'response.text.delta') {
           this.updateState({ currentText: msg.delta || 'Procesando...' });
+          // Avatar está procesando/pensando
+          this.avatarService.setState(AvatarState.THINKING);
         } else if (msg.type === 'response.text.done') {
           this.updateState({ currentText: msg.text || 'Escuchando...' });
+          // Avatar vuelve a escuchar
+          this.avatarService.setState(AvatarState.LISTENING);
         }
 
         // Procesar llamadas a funciones
@@ -225,6 +237,9 @@ export class VoiceAgentService implements OnDestroy {
             const args = msg.arguments ? JSON.parse(msg.arguments) : {};
             const result = await this.toolAdapter.executeTool(msg.name, args);
             console.log('Tool result:', result);
+
+            // Hacer que el avatar reaccione al resultado de la herramienta
+            this.avatarService.reactToOrderEvent(msg.name, result);
 
             const event = {
               type: 'conversation.item.create',
@@ -239,6 +254,8 @@ export class VoiceAgentService implements OnDestroy {
             this.dataChannel?.send(JSON.stringify({ type: "response.create" }));
           } catch (error: any) {
             console.error(`Error ejecutando herramienta ${msg.name}:`, error);
+            // Avatar reacciona al error
+            this.avatarService.setState(AvatarState.ERROR);
           }
         }
       };
@@ -284,6 +301,10 @@ export class VoiceAgentService implements OnDestroy {
         currentText: '',
         errorMessage: null
       });
+
+      // Desconectar y resetear avatar
+      this.avatarService.disconnectAudioStream();
+      this.avatarService.setState(AvatarState.IDLE);
 
       // Limpiar contenido visual
       this.clearVisualContent();
@@ -404,6 +425,11 @@ export class VoiceAgentService implements OnDestroy {
   // Obtener estado actual
   getCurrentState(): VoiceAgentState {
     return this.stateSubject.value;
+  }
+
+  // Obtener servicio del avatar para uso externo
+  getAvatarService(): AvatarCanvasService {
+    return this.avatarService;
   }
 
   // Verificar si hay sesión activa

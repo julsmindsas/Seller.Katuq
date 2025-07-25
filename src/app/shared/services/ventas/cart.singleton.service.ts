@@ -6,13 +6,48 @@ import { BehaviorSubject } from "rxjs";
   providedIn: "root",
 })
 export class CartSingletonService {
+  private readonly CART_STORAGE_KEY = 'carrito';
   public productInCart: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
 
   // Suscripción para detectar cambios en el carrito
   productInCartChanges$ = this.productInCart.asObservable();
 
   constructor(private httpClient: HttpClient) {
-    // Solo inicializar con array vacío, sin localStorage
+    // Inicializar desde localStorage si existe
+    this.initializeFromLocalStorage();
+  }
+
+  /**
+   * Inicializa el carrito desde localStorage
+   */
+  private initializeFromLocalStorage(): void {
+    try {
+      const carritoGuardado = localStorage.getItem(this.CART_STORAGE_KEY);
+      if (carritoGuardado) {
+        const carrito = JSON.parse(carritoGuardado);
+        if (Array.isArray(carrito)) {
+          this.productInCart.next(carrito);
+          console.log('🛒 Carrito inicializado desde localStorage:', carrito.length, 'productos');
+        }
+      }
+    } catch (error) {
+      console.error('Error al inicializar carrito desde localStorage:', error);
+      // Si hay error, limpiar localStorage y empezar con carrito vacío
+      localStorage.removeItem(this.CART_STORAGE_KEY);
+      this.productInCart.next([]);
+    }
+  }
+
+  /**
+   * Sincroniza el estado actual con localStorage
+   */
+  private syncWithLocalStorage(carrito: any[]): void {
+    try {
+      localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(carrito));
+      console.log('💾 Carrito sincronizado con localStorage:', carrito.length, 'productos');
+    } catch (error) {
+      console.error('Error al sincronizar carrito con localStorage:', error);
+    }
   }
 
   // Refrescar el estado del BehaviorSubject
@@ -24,7 +59,10 @@ export class CartSingletonService {
   addToCart(productoCompra: any) {
     const carrito = this.productInCart.value;
     carrito.push(productoCompra);
-    this.productInCart.next([...carrito]); // Crear nuevo array para triggering change
+    const nuevoCarrito = [...carrito];
+    this.productInCart.next(nuevoCarrito);
+    this.syncWithLocalStorage(nuevoCarrito);
+    console.log('➕ Producto agregado al carrito:', productoCompra.producto?.crearProducto?.titulo || 'Producto sin nombre');
   }
 
   // Remover producto
@@ -33,7 +71,10 @@ export class CartSingletonService {
     const index = products.findIndex((p: any) => p.producto.crearProducto.cd === producto.producto.crearProducto.cd);
     if (index !== -1) {
       products.splice(index, 1);
-      this.productInCart.next([...products]); // Crear nuevo array para triggering change
+      const nuevoCarrito = [...products];
+      this.productInCart.next(nuevoCarrito);
+      this.syncWithLocalStorage(nuevoCarrito);
+      console.log('➖ Producto removido del carrito:', producto.producto?.crearProducto?.titulo || 'Producto sin nombre');
     }
   }
 
@@ -43,13 +84,19 @@ export class CartSingletonService {
     const index = products.findIndex((p: any) => p.producto.crearProducto.cd === producto.producto.crearProducto.cd);
     if (index !== -1) {
       products[index] = producto;
-      this.productInCart.next([...products]); // Crear nuevo array para triggering change
+      const nuevoCarrito = [...products];
+      this.productInCart.next(nuevoCarrito);
+      this.syncWithLocalStorage(nuevoCarrito);
+      console.log('🔄 Cantidad actualizada:', producto.producto?.crearProducto?.titulo, 'nueva cantidad:', producto.cantidad);
     }
   }
 
   // Limpiar carrito
   clearCart() {
-    this.productInCart.next([]); // Actualizar BehaviorSubject
+    const carritoVacio: any[] = [];
+    this.productInCart.next(carritoVacio);
+    this.syncWithLocalStorage(carritoVacio);
+    console.log('🧹 Carrito limpiado completamente');
   }
 
   // Calcular total del carrito

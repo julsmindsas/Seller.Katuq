@@ -1396,7 +1396,7 @@
         <div class="mb-3">
             <label class="form-label fw-bold">{{ 'Estado de proceso:' | translate }}</label>
             <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso"
-                [disabled]="isPedidoCongelado(pedidoSeleccionado) && !canDeleteOrder()">
+                [disabled]="isPedidoCongelado(pedidoSeleccionado) && canDeleteOrder()">
                 <option *ngFor="let estado of estadosProcesos" [value]="estado">
                     {{ estado }}
                 </option>

@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { VoiceAgentService, VoiceAgentConfig, VoiceAgentState, VisualStep } from '../../services/voice-agent.service';
+import { AvatarCanvasService, AvatarConfig } from '../../services/avatar-canvas.service';
 
 export interface VoiceAgentUIConfig {
   showVisualSteps?: boolean;
@@ -15,7 +16,7 @@ export interface VoiceAgentUIConfig {
   templateUrl: './voice-agent.component.html',
   styleUrls: ['./voice-agent.component.scss']
 })
-export class VoiceAgentComponent implements OnInit, OnDestroy, OnChanges {
+export class VoiceAgentComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
   @Input() config: VoiceAgentConfig = {};
   @Input() uiConfig: VoiceAgentUIConfig = {
     showVisualSteps: true,
@@ -32,6 +33,9 @@ export class VoiceAgentComponent implements OnInit, OnDestroy, OnChanges {
   @Output() textReceived = new EventEmitter<string>();
   @Output() stepChanged = new EventEmitter<{ stepIndex: number; step: VisualStep }>();
   @Output() errorOccurred = new EventEmitter<string>();
+
+  // Referencias a elementos del DOM
+  @ViewChild('avatarCanvas', { static: false }) avatarCanvas!: ElementRef<HTMLCanvasElement>;
 
   // Estado del componente
   public state: VoiceAgentState = {
@@ -55,7 +59,9 @@ export class VoiceAgentComponent implements OnInit, OnDestroy, OnChanges {
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private voiceAgentService: VoiceAgentService) {
+  constructor(
+    private voiceAgentService: VoiceAgentService
+  ) {
     this.detectMobileDevice();
     
     // Escuchar cambios de orientación y tamaño de ventana
@@ -65,6 +71,7 @@ export class VoiceAgentComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnInit(): void {
+    console.log('🚀 VoiceAgentComponent inicializando...');
     this.setupSubscriptions();
     
     if (this.autoStart) {
@@ -75,6 +82,28 @@ export class VoiceAgentComponent implements OnInit, OnDestroy, OnChanges {
     if (this.demoSteps.length > 0) {
       this.voiceAgentService.setVisualSteps(this.demoSteps);
     }
+
+    console.log('📊 Estado inicial:', this.state);
+    console.log('⚙️ Configuración UI:', this.uiConfig);
+  }
+
+  ngAfterViewInit(): void {
+    console.log('👁️ Vista inicializada, preparando avatar...');
+    // Inicializar el canvas del avatar después de que la vista esté lista
+    this.initializeAvatar();
+    
+    // También intentar inicializar si el estado cambia a conectado
+    this.subscriptions.push(
+      this.voiceAgentService.state$.subscribe(state => {
+        if (state.isConnected && this.avatarCanvas?.nativeElement) {
+          const avatarService = this.voiceAgentService.getAvatarService();
+          if (avatarService && avatarService.getCurrentState() === 'idle') {
+            console.log('🔄 Reintentando inicialización del avatar por cambio de estado');
+            this.tryInitializeCanvas(avatarService);
+          }
+        }
+      })
+    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -131,6 +160,78 @@ export class VoiceAgentComponent implements OnInit, OnDestroy, OnChanges {
         }
       })
     );
+  }
+
+  // Inicializar el avatar canvas
+  private initializeAvatar(): void {
+    console.log('🎯 Iniciando inicialización del avatar...');
+    
+    // Verificar que el servicio esté disponible
+    if (!this.voiceAgentService) {
+      console.error('❌ VoiceAgentService no está disponible');
+      return;
+    }
+
+    const avatarService = this.voiceAgentService.getAvatarService();
+    if (!avatarService) {
+      console.error('❌ AvatarCanvasService no está disponible');
+      return;
+    }
+
+    // Usar setTimeout para asegurar que el ViewChild esté disponible
+    setTimeout(() => {
+      if (!this.avatarCanvas?.nativeElement) {
+        console.error('❌ Canvas del avatar no está disponible después del timeout');
+        // Reintentar una vez más después de un segundo
+        setTimeout(() => {
+          this.tryInitializeCanvas(avatarService);
+        }, 1000);
+        return;
+      }
+
+      this.tryInitializeCanvas(avatarService);
+    }, 100);
+  }
+
+  private tryInitializeCanvas(avatarService: AvatarCanvasService): void {
+    if (!this.avatarCanvas?.nativeElement) {
+      console.error('❌ Canvas del avatar aún no está disponible');
+      return;
+    }
+
+    try {
+      // Configuración del avatar
+      const avatarConfig: Partial<AvatarConfig> = {
+        size: 100,
+        primaryColor: '#4caf50',
+        secondaryColor: '#81c784',
+        backgroundColor: 'transparent',
+        particleCount: 15,
+        animationSpeed: 1.0
+      };
+
+      // Personalizar según el tema
+      switch (this.uiConfig.theme) {
+        case 'minimal':
+          avatarConfig.particleCount = 8;
+          avatarConfig.animationSpeed = 0.8;
+          avatarConfig.size = 80;
+          break;
+        case 'compact':
+          avatarConfig.size = 80;
+          avatarConfig.particleCount = 10;
+          break;
+      }
+
+      console.log('🎨 Configurando avatar canvas con:', avatarConfig);
+
+      // Inicializar el canvas con la configuración
+      avatarService.initializeCanvas(this.avatarCanvas.nativeElement, avatarConfig);
+      
+      console.log('✅ Avatar canvas inicializado correctamente');
+    } catch (error) {
+      console.error('❌ Error inicializando avatar canvas:', error);
+    }
   }
 
   // Métodos públicos para controlar la sesión
@@ -212,6 +313,17 @@ export class VoiceAgentComponent implements OnInit, OnDestroy, OnChanges {
 
   get isSessionActive(): boolean {
     return this.voiceAgentService.isSessionActive();
+  }
+
+  get shouldShowComponent(): boolean {
+    // Mostrar el componente si hay una sesión activa, está conectado, escuchando, o si autoStart está activado
+    return this.isSessionActive || this.state.isConnected || this.state.isListening || this.autoStart;
+  }
+
+  // Método público para forzar la inicialización del avatar
+  public forceInitializeAvatar(): void {
+    console.log('🔧 Forzando inicialización del avatar...');
+    this.initializeAvatar();
   }
 
   // Limpiar recursos
