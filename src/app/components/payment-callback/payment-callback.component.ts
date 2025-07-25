@@ -32,7 +32,8 @@ export class PaymentCallbackComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.paymentReference = params['reference'] || null;
       this.transactionId = params['id'] || null;
-      this.environment = params['env'] || 'prod';
+      //this.environment = params['env'] || 'prod';
+      this.environment = 'prod';
       
       console.log('Referencia de pago recibida:', this.paymentReference);
       console.log('ID de transacción:', this.transactionId);
