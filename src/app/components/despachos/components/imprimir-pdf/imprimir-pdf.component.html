@@ -7,7 +7,26 @@
 
 <div class="modal-body">
   <div class="pdf-container">
-    <div class="pdf-preview" id="htmlPdf" [innerHTML]="safeHtmlContent"></div>
+    <!-- Loading State -->
+    <div *ngIf="isLoadingContent" class="text-center p-4">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <h6>{{ 'Cargando contenido...' | translate }}</h6>
+      <p class="text-muted">{{ 'Por favor espere mientras se cargan los datos maestros' | translate }}</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError && !isLoadingContent" class="alert alert-warning text-center p-4">
+      <h6>⚠️ {{ 'Error cargando contenido' | translate }}</h6>
+      <p>{{ errorMessage }}</p>
+      <button class="btn btn-outline-primary btn-sm mt-2" (click)="retryLoadContent()">
+        <i class="pi pi-refresh me-1"></i>{{ 'Reintentar' | translate }}
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!isLoadingContent && !hasError" class="pdf-preview" id="htmlPdf" [innerHTML]="safeHtmlContent"></div>
   </div>
 </div>
 
@@ -15,7 +34,13 @@
   <button type="button" class="btn btn-secondary" (click)="closeModal()">
     {{ 'Cerrar' | translate }}
   </button>
-  <button type="button" class="btn btn-primary" (click)="imprimirPdf()">
-    <i class="pi pi-print me-1"></i>{{ 'Imprimir PDF' | translate }}
+  <button 
+    type="button" 
+    class="btn btn-primary" 
+    [disabled]="isLoadingContent || hasError"
+    (click)="imprimirPdf()">
+    <div *ngIf="isLoadingContent" class="spinner-border spinner-border-sm me-2" role="status"></div>
+    <i *ngIf="!isLoadingContent" class="pi pi-print me-1"></i>
+    {{ (isLoadingContent ? 'Cargando...' : 'Imprimir PDF') | translate }}
   </button>
 </div> 

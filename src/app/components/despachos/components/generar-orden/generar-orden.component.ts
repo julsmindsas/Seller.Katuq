@@ -99,11 +99,21 @@ export class GenerarOrdenComponent implements OnInit {
     this.ordenEnvioForm = this.formBuilder.group({
       fechaEnvio: ["", Validators.required],
       metodoEnvio: ["", Validators.required],
+      transportadora: [""], // Se agrega el campo transportadora
     });
 
     // Suscribirse a cambios en metodoEnvio
     this.ordenEnvioForm.get("metodoEnvio")?.valueChanges.subscribe((value) => {
       this.metodoEnvio = value;
+      // Si el método es transportadora, hacer el campo requerido, si no, quitar el validador y limpiar
+      const transportadoraCtrl = this.ordenEnvioForm.get('transportadora');
+      if (value === 'transportadora') {
+        transportadoraCtrl?.setValidators([Validators.required]);
+      } else {
+        transportadoraCtrl?.clearValidators();
+        transportadoraCtrl?.setValue('');
+      }
+      transportadoraCtrl?.updateValueAndValidity();
       if (value && this.ordenEnvioForm.get("fechaEnvio")?.valid) {
         this.actualizarPedidosDisponibles();
       }

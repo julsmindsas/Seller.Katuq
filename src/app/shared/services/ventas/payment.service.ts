@@ -15,7 +15,7 @@ import {
   Preferencia,
   Tarjeta,
 } from "../../../components/ventas/modelo/pedido"; // Importar tipos necesarios
-import { forkJoin, map, Observable, of } from "rxjs"; // Importar operadores RxJS
+import { forkJoin, map, Observable, of, switchMap, catchError } from "rxjs"; // Importar operadores RxJS
 
 declare var WidgetCheckout: any;
 
@@ -624,27 +624,70 @@ export class PaymentService extends BaseService {
     };
   }
 
-  // Método principal para generar el HTML del correo/comanda
+  // Método principal reactivo para generar el HTML del correo/comanda
+  getHtmlContentObservable(pedido: Pedido, isComanda: boolean = false): Observable<SafeHtml | null> {
+    if (!pedido) {
+      return of(null);
+    }
+
+    return this.pedidoUtilService.waitUntilLoaded().pipe(
+      switchMap(() => {
+        // Asegurarse que allBillingZone esté cargado
+        if (!this.allBillingZone) {
+          this.allBillingZone = JSON.parse(
+            sessionStorage.getItem("allBillingZone") || "null",
+          );
+        }
+
+        // Todo está listo, generar HTML
+        return of(this.generateHtmlContentInternal(pedido, isComanda));
+      }),
+      catchError(error => {
+        console.error('Error generando HTML content:', error);
+        return of(this.sanitizer.bypassSecurityTrustHtml(
+          `<div class="alert alert-warning text-center p-3">
+            <h6>⚠️ Error cargando datos</h6>
+            <p>Los datos maestros no están disponibles. Por favor, intente nuevamente.</p>
+            <small>Error: ${error.message}</small>
+          </div>`
+        ));
+      })
+    );
+  }
+
+  // Método principal para generar el HTML del correo/comanda (sincrónico, mejorado)
   getHtmlContent(pedido: Pedido, isComanda: boolean = false): SafeHtml | null {
     if (!pedido) return null;
 
-    // Cargar sistema de estilos moderno
-    const styles = this.getEmailStyles();
-
-    // Asegurarse que los maestros estén cargados
-    if (!this.maestros || Object.keys(this.maestros).length === 0) {
-      console.warn(
-        "Maestros not loaded for HTML generation. Trying to load now...",
-      );
-      // Podríamos intentar cargarlos aquí de forma síncrona si fuera posible,
-      // pero como es asíncrono, es mejor asegurarse que se carguen antes.
-      // Por ahora, devolvemos null o un HTML indicando el problema.
-      // Alternativa: Usar un observable y que el componente espere.
-      // this.loadInitialData(); // Llamar aquí no garantiza que estén listos
+    // Verificar si los maestros están listos
+    if (!this.pedidoUtilService.isMaestrosReady()) {
+      console.warn("Maestros not ready for synchronous HTML generation");
       return this.sanitizer.bypassSecurityTrustHtml(
-        "<p>Error: Datos maestros no cargados.</p>",
+        `<div class="alert alert-info text-center p-3">
+          <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+          <span>Cargando datos maestros...</span>
+        </div>`
       );
     }
+
+    // Asegurarse que los maestros estén en this.maestros
+    if (!this.maestros || Object.keys(this.maestros).length === 0) {
+      console.warn("Maestros not loaded in PaymentService, refreshing...");
+      // Intentar refrescar maestros desde el servicio
+      this.pedidoUtilService.getAllMaestro$().subscribe({
+        next: (value: any) => {
+          this.maestros = value;
+        }
+      });
+      
+      return this.sanitizer.bypassSecurityTrustHtml(
+        `<div class="alert alert-warning text-center p-3">
+          <h6>⚠️ Recargando datos maestros</h6>
+          <p>Use getHtmlContentObservable() para mejor manejo asíncrono.</p>
+        </div>`
+      );
+    }
+
     // Asegurarse que allBillingZone esté cargado
     if (!this.allBillingZone) {
       console.warn("Billing zones not loaded for HTML generation.");
@@ -653,10 +696,20 @@ export class PaymentService extends BaseService {
       );
       if (!this.allBillingZone) {
         return this.sanitizer.bypassSecurityTrustHtml(
-          "<p>Error: Zonas de facturación no cargadas.</p>",
+          `<div class="alert alert-warning text-center p-3">
+            <h6>⚠️ Zonas de facturación no disponibles</h6>
+            <p>Los datos de facturación no están cargados.</p>
+          </div>`
         );
       }
     }
+
+    return this.generateHtmlContentInternal(pedido, isComanda);
+  }
+
+  private generateHtmlContentInternal(pedido: Pedido, isComanda: boolean = false): SafeHtml {
+    // Cargar sistema de estilos moderno
+    const styles = this.getEmailStyles();
 
     let carritoHtml = "";
     let notasProduccionHtml = "";

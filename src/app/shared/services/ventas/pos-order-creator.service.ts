@@ -109,14 +109,14 @@ export class PosOrderCreatorService {
    */
   savePedido(pedido: Pedido): void {
     // Validar número de pedido
-    this.ventasService.validateNroPedido(pedido.nroPedido!).subscribe({
-      next: (res: any) => {
+   // this.ventasService.validateNroPedido(pedido.nroPedido!).subscribe({
+     // next: (res: any) => {
         // Actualizar número de pedido si es necesario
-        if (res.nextConsecutive !== -1) {
+    //    if (res.nextConsecutive !== -1) {
           const texto = pedido.company?.toString() || '';
           const ultimasLetras = texto.substring(texto.length - 3);
-          pedido.nroPedido = ultimasLetras + '-' + res.nextConsecutive.toString().padStart(6, '0');
-        }
+          pedido.nroPedido = ultimasLetras + '-' + '1'.toString().padStart(6, '0');
+      //  }
 
         //asentar el pago
         pedido.PagosAsentados = [{
@@ -159,11 +159,11 @@ export class PosOrderCreatorService {
             this.showErrorAlert('Error al crear el pedido: ' + (err.error?.msg || ''));
           }
         });
-      },
-      error: () => {
-        this.showErrorAlert('Error al validar el número de pedido');
-      }
-    });
+      //},
+      //error: () => {
+      //  this.showErrorAlert('Error al validar el número de pedido');
+      //} 
+    //});
   }
 
   /**

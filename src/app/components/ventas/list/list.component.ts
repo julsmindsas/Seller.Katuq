@@ -167,7 +167,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       "jarango@almara.com",
       "danielmauriciogarcia@hotmail.com",
       "dgarciar@gmail.com",
-      "gerencia@almara.com",
+      "gerencia@almara.com.co",
       "danielmauriciog2@hotmail.com",
     ];
     return !!(
@@ -1261,18 +1261,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       order,
       this.isFromProduction,
     );
-    // Registrar la fecha/hora de impresión
-    const now = new Date().toISOString();
-    order.ultimaImpresion = now;
-    this.ventasService.editOrder(order).subscribe({
-      next: () => {
-        // Opcional: mostrar notificación de éxito
-        this.toastrService.success('Fecha de impresión registrada', 'Pedido actualizado');
-      },
-      error: () => {
-        this.toastrService.error('No se pudo actualizar la fecha de impresión', 'Error');
-      }
-    });
+    
+    // Registrar la fecha/hora de impresión solo cuando se usa desde producción
+    if (this.isFromProduction) {
+      const now = new Date().toISOString();
+      order.ultimaImpresion = now;
+      this.ventasService.editOrder(order).subscribe({
+        next: () => {
+          // Opcional: mostrar notificación de éxito
+          this.toastrService.success('Fecha de impresión registrada', 'Pedido actualizado');
+        },
+        error: () => {
+          this.toastrService.error('No se pudo actualizar la fecha de impresión', 'Error');
+        }
+      });
+    }
     this.modalService
       .open(content, {
         size: "xl",

@@ -18,6 +18,9 @@ export class ImprimirPdfComponent implements OnInit {
   @Output() onPrint = new EventEmitter<void>();
   
   safeHtmlContent: SafeHtml = '';
+  isLoadingContent: boolean = false;
+  hasError: boolean = false;
+  errorMessage: string = '';
   
   constructor(
     private paymentService: PaymentService,
@@ -26,23 +29,83 @@ export class ImprimirPdfComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.pedido && !this.htmlContent) {
-      const content = this.paymentService.getHtmlContent(this.pedido);
-      if (content) {
-        this.htmlContent = content;
-      } else {
-        this.htmlContent = '<div class="text-center p-3"><p>No hay contenido disponible para mostrar</p></div>';
-      }
-    }
-    
-    // Asegurarse de que htmlContent sea SafeHtml
-    if (typeof this.htmlContent === 'string') {
-      this.safeHtmlContent = this.sanitizer.bypassSecurityTrustHtml(this.htmlContent);
+      this.loadHtmlContent();
     } else {
-      this.safeHtmlContent = this.htmlContent;
+      this.setHtmlContent(this.htmlContent);
     }
+  }
+
+  private loadHtmlContent(): void {
+    this.isLoadingContent = true;
+    this.hasError = false;
+    this.errorMessage = '';
+
+    // Usar el método observable para mejor manejo de estados
+    this.paymentService.getHtmlContentObservable(this.pedido).subscribe({
+      next: (content) => {
+        this.isLoadingContent = false;
+        if (content) {
+          this.setHtmlContent(content);
+        } else {
+          this.setErrorState('No hay contenido disponible para mostrar');
+        }
+      },
+      error: (error) => {
+        console.error('Error loading HTML content:', error);
+        this.isLoadingContent = false;
+        this.setErrorState(`Error cargando contenido: ${error.message || 'Error desconocido'}`);
+      }
+    });
+  }
+
+  private setHtmlContent(content: string | SafeHtml): void {
+    // Asegurarse de que htmlContent sea SafeHtml
+    if (typeof content === 'string') {
+      this.safeHtmlContent = this.sanitizer.bypassSecurityTrustHtml(content);
+    } else {
+      this.safeHtmlContent = content;
+    }
+    this.htmlContent = content;
+  }
+
+  private setErrorState(message: string): void {
+    this.hasError = true;
+    this.errorMessage = message;
+    const errorHtml = `
+      <div class="alert alert-danger text-center p-4">
+        <h6>⚠️ Error cargando contenido</h6>
+        <p>${message}</p>
+        <button class="btn btn-outline-danger btn-sm mt-2" onclick="window.location.reload()">
+          Recargar página
+        </button>
+      </div>
+    `;
+    this.safeHtmlContent = this.sanitizer.bypassSecurityTrustHtml(errorHtml);
+  }
+
+  retryLoadContent(): void {
+    if (this.pedido) {
+      this.loadHtmlContent();
+    }
+  }
+
+  closeModal(): void {
+    this.onClose.emit();
   }
   
   imprimirPdf(): void {
+    // Verificar que el contenido esté listo
+    if (this.isLoadingContent) {
+      console.warn('Content is still loading, cannot generate PDF yet');
+      return;
+    }
+
+    if (this.hasError) {
+      console.warn('Content has errors, cannot generate PDF');
+      this.retryLoadContent();
+      return;
+    }
+
     const printContent = document.getElementById('htmlPdf');
     if (printContent) {
       // Opciones para mejorar la calidad de la imagen generada por html2canvas
@@ -97,9 +160,5 @@ export class ImprimirPdfComponent implements OnInit {
         this.onPrint.emit();
       });
     }
-  }
-  
-  closeModal(): void {
-    this.onClose.emit();
   }
 } 

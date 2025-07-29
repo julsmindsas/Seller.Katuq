@@ -6,7 +6,7 @@ import { CacheService } from "../../../shared/services/cache/cache.service";
 import Swal from "sweetalert2";
 import { parse } from "flatted";
 import { Pedido } from "../modelo/pedido";
-import { map, catchError, retry, shareReplay, switchMap, takeUntil } from 'rxjs/operators';
+import { map, catchError, retry, shareReplay, switchMap, takeUntil, filter, timeout, take } from 'rxjs/operators';
 
 interface MaestrosData {
     formaEntrega: any[];
@@ -84,9 +84,54 @@ export class PedidosUtilService {
     public initializeMaestros(): void {
         const user = localStorage.getItem('user');
         if (user) {
+            this.warmupCriticalData();
             this.loadMaestrosInBackground();
             this.setupAutoReload();
         }
+    }
+
+    /**
+     * Pre-carga datos críticos para el mercado colombiano
+     */
+    private warmupCriticalData(): void {
+        console.log('🔥 Iniciando cache warming para datos críticos...');
+        
+        // Pre-cargar formas de pago (crítico para Colombia)
+        this.maestroService.consultarFormaPago().pipe(
+            takeUntil(this.destroy$),
+            catchError(error => {
+                console.warn('⚠️ Error pre-cargando formas de pago:', error);
+                return of([]);
+            })
+        ).subscribe(formasPago => {
+            if (Array.isArray(formasPago) && formasPago.length > 0) {
+                this.formasPago = formasPago;
+                console.log('✅ Formas de pago pre-cargadas:', formasPago.length);
+            }
+        });
+
+        // Pre-cargar géneros y ocasiones (críticos para personalización)
+        const criticalWarmup$ = forkJoin({
+            generos: this.maestroService.consultarGenero().pipe(catchError(() => of([]))),
+            ocasiones: this.maestroService.consultarOcasion().pipe(catchError(() => of([])))
+        });
+
+        criticalWarmup$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe({
+            next: (results) => {
+                if (Array.isArray(results.generos)) {
+                    this.generos = results.generos;
+                }
+                if (Array.isArray(results.ocasiones)) {
+                    this.ocasiones = results.ocasiones;
+                }
+                console.log('✅ Datos críticos pre-cargados - Géneros:', this.generos.length, 'Ocasiones:', this.ocasiones.length);
+            },
+            error: (error) => {
+                console.warn('⚠️ Error en cache warming crítico:', error);
+            }
+        });
     }
 
     /**
@@ -364,7 +409,7 @@ export class PedidosUtilService {
     /**
      * Construye el objeto de datos maestros
      */
-    private buildMaestrosData(): any {
+    public buildMaestrosData(): any {
         return {
             empresaActual: this.empresaActual,
             formaEntrega: this.formaEntrega || [],
@@ -383,6 +428,75 @@ export class PedidosUtilService {
      */
     getMaestrosState(): Observable<MaestrosState> {
         return this.maestrosState.asObservable();
+    }
+
+    /**
+     * Espera hasta que los maestros estén completamente cargados
+     * @param timeoutMs Timeout en milisegundos (default: 10 segundos)
+     * @returns Observable que emite true cuando los maestros están listos
+     */
+    waitUntilLoaded(timeoutMs: number = 10000): Observable<boolean> {
+        return new Observable<boolean>(observer => {
+            const currentState = this.maestrosState.value;
+            
+            // Si ya están cargados, emitir inmediatamente
+            if (currentState.loaded && !currentState.error && this.areMaestrosDataComplete()) {
+                observer.next(true);
+                observer.complete();
+                return;
+            }
+
+            // Si hay error y no hay datos, intentar recargar
+            if (currentState.error && !currentState.data) {
+                console.log('Maestros en error, intentando recargar...');
+                this.forceReloadMaestros().subscribe({
+                    next: () => {
+                        observer.next(true);
+                        observer.complete();
+                    },
+                    error: (err) => {
+                        console.error('Error recargando maestros:', err);
+                        observer.error(new Error('No se pudieron cargar los datos maestros'));
+                    }
+                });
+                return;
+            }
+
+            // Esperar hasta que se carguen
+            const subscription = this.maestrosState.pipe(
+                filter(state => state.loaded && !state.error),
+                map(() => this.areMaestrosDataComplete()),
+                filter(complete => complete),
+                timeout(timeoutMs),
+                take(1)
+            ).subscribe({
+                next: () => {
+                    observer.next(true);
+                    observer.complete();
+                },
+                error: (err) => {
+                    if (err.name === 'TimeoutError') {
+                        console.error('Timeout esperando maestros');
+                        observer.error(new Error('Timeout esperando datos maestros'));
+                    } else {
+                        console.error('Error esperando maestros:', err);
+                        observer.error(err);
+                    }
+                }
+            });
+
+            // Cleanup en caso de unsubscribe
+            return () => subscription.unsubscribe();
+        });
+    }
+
+    /**
+     * Verifica si los maestros están listos de forma síncrona
+     * @returns true si los maestros están cargados y completos
+     */
+    isMaestrosReady(): boolean {
+        const state = this.maestrosState.value;
+        return state.loaded && !state.error && this.areMaestrosDataComplete();
     }
 
     //setear productos en el carrito
