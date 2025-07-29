@@ -282,27 +282,91 @@
                                                                         <i class="pi pi-list me-1"></i>
                                                                         {{ 'Todos' | translate }}
                                                                     </button>
-                                                                    <button type="button"
-                                                                        class="status-chip status-success"
-                                                                        [ngClass]="{'active': quickFilters.estadoPago === 'Aprobado'}"
-                                                                        (click)="setQuickFilter('estadoPago', 'Aprobado')">
-                                                                        <i class="pi pi-check me-1"></i>
-                                                                        {{ 'Aprobados' | translate }}
-                                                                    </button>
-                                                                    <button type="button"
-                                                                        class="status-chip status-warning"
-                                                                        [ngClass]="{'active': quickFilters.estadoPago === 'Pendiente'}"
-                                                                        (click)="setQuickFilter('estadoPago', 'Pendiente')">
-                                                                        <i class="pi pi-clock me-1"></i>
-                                                                        {{ 'Pendientes' | translate }}
-                                                                    </button>
-                                                                    <button type="button"
-                                                                        class="status-chip status-info"
-                                                                        [ngClass]="{'active': quickFilters.estadoPago === 'PreAprobado'}"
-                                                                        (click)="setQuickFilter('estadoPago', 'PreAprobado')">
-                                                                        <i class="pi pi-eye me-1"></i>
-                                                                        {{ 'Pre-aprobados' | translate }}
-                                                                    </button>
+                                                                    
+                                                                    <!-- Filtros para modo producción -->
+                                                                    <ng-container *ngIf="isFromProduction">
+                                                                        <button type="button"
+                                                                            class="status-chip status-success"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Aprobado'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Aprobado')">
+                                                                            <i class="pi pi-check me-1"></i>
+                                                                            {{ 'Aprobados' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-warning"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Pendiente'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Pendiente')">
+                                                                            <i class="pi pi-clock me-1"></i>
+                                                                            {{ 'Pendientes' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'PreAprobado'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'PreAprobado')">
+                                                                            <i class="pi pi-eye me-1"></i>
+                                                                            {{ 'Pre-aprobados' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-warning"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Pospendiente'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Pospendiente')">
+                                                                            <i class="pi pi-clock me-1"></i>
+                                                                            {{ 'Pospendientes' | translate }}
+                                                                        </button>
+                                                                    </ng-container>
+                                                                    
+                                                                    <!-- Filtros para modo normal (no producción) - TODOS los estados -->
+                                                                    <ng-container *ngIf="!isFromProduction">
+                                                                        <button type="button"
+                                                                            class="status-chip status-success"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Aprobado'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Aprobado')">
+                                                                            <i class="pi pi-check me-1"></i>
+                                                                            {{ 'Aprobados' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-warning"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Pendiente'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Pendiente')">
+                                                                            <i class="pi pi-clock me-1"></i>
+                                                                            {{ 'Pendientes' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-warning"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Pospendiente'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Pospendiente')">
+                                                                            <i class="pi pi-clock me-1"></i>
+                                                                            {{ 'Pospendientes' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'PreAprobado'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'PreAprobado')">
+                                                                            <i class="pi pi-eye me-1"></i>
+                                                                            {{ 'Pre-aprobados' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-danger"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Rechazado'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Rechazado')">
+                                                                            <i class="pi pi-times-circle me-1"></i>
+                                                                            {{ 'Rechazados' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-danger"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Precancelado'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Precancelado')">
+                                                                            <i class="pi pi-times-circle me-1"></i>
+                                                                            {{ 'Precancelados' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-danger"
+                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Cancelado'}"
+                                                                            (click)="setQuickFilter('estadoPago', 'Cancelado')">
+                                                                            <i class="pi pi-ban me-1"></i>
+                                                                            {{ 'Cancelados' | translate }}
+                                                                        </button>
+                                                                    </ng-container>
                                                                 </div>
                                                             </div>
 
@@ -316,27 +380,119 @@
                                                                         <i class="pi pi-list me-1"></i>
                                                                         {{ 'Todos' | translate }}
                                                                     </button>
-                                                                    <button type="button"
-                                                                        class="status-chip status-secondary"
-                                                                        [ngClass]="{'active': quickFilters.estadoProceso === 'SinProducir'}"
-                                                                        (click)="setQuickFilter('estadoProceso', 'SinProducir')">
-                                                                        <i class="pi pi-circle me-1"></i>
-                                                                        {{ 'Sin Producir' | translate }}
-                                                                    </button>
-                                                                    <button type="button"
-                                                                        class="status-chip status-info"
-                                                                        [ngClass]="{'active': quickFilters.estadoProceso === 'Producido'}"
-                                                                        (click)="setQuickFilter('estadoProceso', 'Producido')">
-                                                                        <i class="pi pi-cog me-1"></i>
-                                                                        {{ 'Producido' | translate }}
-                                                                    </button>
-                                                                    <button type="button"
-                                                                        class="status-chip status-success"
-                                                                        [ngClass]="{'active': quickFilters.estadoProceso === 'Entregado'}"
-                                                                        (click)="setQuickFilter('estadoProceso', 'Entregado')">
-                                                                        <i class="pi pi-check-circle me-1"></i>
-                                                                        {{ 'Entregado' | translate }}
-                                                                    </button>
+                                                                    
+                                                                    <!-- Filtros para modo producción -->
+                                                                    <ng-container *ngIf="isFromProduction">
+                                                                        <button type="button"
+                                                                            class="status-chip status-secondary"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'SinProducir'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'SinProducir')">
+                                                                            <i class="pi pi-circle me-1"></i>
+                                                                            {{ 'Sin Producir' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'EnProduccion'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'EnProduccion')">
+                                                                            <i class="pi pi-cog me-1"></i>
+                                                                            {{ 'En Producción' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ProducidoParcialmente'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'ProducidoParcialmente')">
+                                                                            <i class="pi pi-cog me-1"></i>
+                                                                            {{ 'Producido Parcialmente' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ProducidoTotalmente'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'ProducidoTotalmente')">
+                                                                            <i class="pi pi-check-circle me-1"></i>
+                                                                            {{ 'Producido Totalmente' | translate }}
+                                                                        </button>
+                                                                    </ng-container>
+                                                                    
+                                                                    <!-- Filtros para modo normal (no producción) - TODOS los estados -->
+                                                                    <ng-container *ngIf="!isFromProduction">
+                                                                        <button type="button"
+                                                                            class="status-chip status-secondary"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'SinProducir'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'SinProducir')">
+                                                                            <i class="pi pi-circle me-1"></i>
+                                                                            {{ 'Sin Producir' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'EnProduccion'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'EnProduccion')">
+                                                                            <i class="pi pi-cog me-1"></i>
+                                                                            {{ 'En Producción' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Producido'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'Producido')">
+                                                                            <i class="pi pi-cog me-1"></i>
+                                                                            {{ 'Producido' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ProducidoParcialmente'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'ProducidoParcialmente')">
+                                                                            <i class="pi pi-cog me-1"></i>
+                                                                            {{ 'Producido Parcialmente' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ProducidoTotalmente'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'ProducidoTotalmente')">
+                                                                            <i class="pi pi-check-circle me-1"></i>
+                                                                            {{ 'Producido Totalmente' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-primary"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Empacado'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'Empacado')">
+                                                                            <i class="pi pi-box me-1"></i>
+                                                                            {{ 'Empacado' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-warning"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ParaDespachar'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'ParaDespachar')">
+                                                                            <i class="pi pi-truck me-1"></i>
+                                                                            {{ 'Para Despachar' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-warning"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Despachado'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'Despachado')">
+                                                                            <i class="pi pi-truck me-1"></i>
+                                                                            {{ 'Despachado' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-success"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Entregado'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'Entregado')">
+                                                                            <i class="pi pi-check-circle me-1"></i>
+                                                                            {{ 'Entregado' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-danger"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Rechazado'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'Rechazado')">
+                                                                            <i class="pi pi-times-circle me-1"></i>
+                                                                            {{ 'Rechazado' | translate }}
+                                                                        </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-dark"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Cerrado'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'Cerrado')">
+                                                                            <i class="pi pi-lock me-1"></i>
+                                                                            {{ 'Cerrado' | translate }}
+                                                                        </button>
+                                                                    </ng-container>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -780,7 +936,7 @@
                                                 <div class="estado-container">
                                                     <span class="modern-badge" [ngClass]="{
                                                         'badge-secondary': pedido?.estadoProceso === 'SinProducir',
-                                                        'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                        'badge-info': pedido?.estadoProceso === 'EnProduccion' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
                                                         'badge-primary': pedido?.estadoProceso === 'Empacado',
                                                         'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
                                                         'badge-success': pedido?.estadoProceso === 'Entregado',
@@ -789,7 +945,7 @@
                                                     }">
                                                         <i class="status-icon pi" [ngClass]="{
                                                             'pi-circle': pedido?.estadoProceso === 'SinProducir',
-                                                            'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                            'pi-cog': pedido?.estadoProceso === 'EnProduccion' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
                                                             'pi-box': pedido?.estadoProceso === 'Empacado',
                                                             'pi-truck': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
                                                             'pi-check-circle': pedido?.estadoProceso === 'Entregado',

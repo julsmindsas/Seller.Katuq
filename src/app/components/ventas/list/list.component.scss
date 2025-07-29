@@ -1209,27 +1209,93 @@ $border-radius: 8px;
 
           .status-chips {
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+            flex-wrap: nowrap;
+            gap: 0.25rem;
+            max-height: 40px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.125rem 0.25rem;
+            scroll-behavior: smooth;
+            position: relative;
+            align-items: center;
+
+            // Estilos para scrollbar horizontal
+            &::-webkit-scrollbar {
+              height: 4px;
+            }
+
+            &::-webkit-scrollbar-track {
+              background: #f1f3f4;
+              border-radius: 2px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+              background: #c1c1c1;
+              border-radius: 2px;
+              
+              &:hover {
+                background: #a8a8a8;
+              }
+            }
+
+            // Efecto fade en los extremos cuando hay scroll
+            &::before,
+            &::after {
+              content: '';
+              position: absolute;
+              top: 0;
+              bottom: 0;
+              width: 15px;
+              pointer-events: none;
+              z-index: 1;
+              transition: opacity 0.3s ease;
+            }
+
+            &::before {
+              left: 0;
+              background: linear-gradient(to right, rgba(255, 255, 255, 0.9), transparent);
+            }
+
+            &::after {
+              right: 0;
+              background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
+            }
 
             .status-chip {
-              padding: 0.4rem 0.8rem;
+              padding: 0.2rem 0.4rem;
               border: 1px solid #dee2e6;
-              border-radius: 20px;
+              border-radius: 14px;
               background-color: white;
               color: #6c757d;
-              font-size: 0.75rem;
+              font-size: 0.65rem;
               font-weight: 500;
               cursor: pointer;
-              transition: all 0.2s ease;
+              transition: all 0.15s ease;
               display: flex;
               align-items: center;
+              justify-content: center;
+              white-space: nowrap;
+              height: 28px;
+              min-width: fit-content;
+              flex-shrink: 0;
+              line-height: 1.2;
+
+              // Íconos dentro de los chips
+              i {
+                font-size: 0.6rem;
+                margin-right: 0.3rem;
+                transition: transform 0.2s ease;
+              }
 
               &:hover {
                 border-color: $primary-color;
                 color: $primary-color;
                 transform: translateY(-1px);
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+                i {
+                  transform: scale(1.1);
+                }
               }
 
               &.active {
@@ -1237,27 +1303,97 @@ $border-radius: 8px;
                 border-color: $primary-color;
                 color: white;
                 box-shadow: 0 2px 8px rgba($primary-color, 0.3);
+                font-weight: 600;
+
+                i {
+                  color: white;
+                }
               }
 
+              // Estados específicos activos
               &.status-success.active {
                 background-color: $success-color;
                 border-color: $success-color;
+                box-shadow: 0 2px 8px rgba($success-color, 0.3);
               }
 
               &.status-warning.active {
                 background-color: $warning-color;
                 border-color: $warning-color;
                 color: #212529;
+                box-shadow: 0 2px 8px rgba($warning-color, 0.3);
+
+                i {
+                  color: #212529;
+                }
               }
 
               &.status-info.active {
                 background-color: $info-color;
                 border-color: $info-color;
+                box-shadow: 0 2px 8px rgba($info-color, 0.3);
               }
 
               &.status-secondary.active {
                 background-color: $secondary-color;
                 border-color: $secondary-color;
+                box-shadow: 0 2px 8px rgba($secondary-color, 0.3);
+              }
+
+              &.status-danger.active {
+                background-color: $danger-color;
+                border-color: $danger-color;
+                box-shadow: 0 2px 8px rgba($danger-color, 0.3);
+              }
+
+              &.status-primary.active {
+                background-color: $primary-color;
+                border-color: $primary-color;
+                box-shadow: 0 2px 8px rgba($primary-color, 0.3);
+              }
+
+              &.status-dark.active {
+                background-color: #343a40;
+                border-color: #343a40;
+                box-shadow: 0 2px 8px rgba(52, 58, 64, 0.3);
+              }
+            }
+
+            // Responsive behavior
+            @media (max-width: 768px) {
+              flex-wrap: wrap;
+              overflow-x: visible;
+              max-height: none;
+
+              &::before,
+              &::after {
+                display: none;
+              }
+
+              .status-chip {
+                font-size: 0.65rem;
+                padding: 0.2rem 0.4rem;
+                min-height: 26px;
+
+                i {
+                  font-size: 0.55rem;
+                  margin-right: 0.25rem;
+                }
+              }
+            }
+
+            @media (max-width: 576px) {
+              gap: 0.25rem;
+
+              .status-chip {
+                font-size: 0.6rem;
+                padding: 0.15rem 0.35rem;
+                min-height: 24px;
+
+                i {
+                  font-size: 0.5rem;
+                  margin-right: 0.2rem;
+                }
               }
             }
           }

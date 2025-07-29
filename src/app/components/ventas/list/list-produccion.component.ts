@@ -32,6 +32,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.initializeFilterArrays();
     this.transformPedidosToProductsView();
+    this.loadColumnConfiguration();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -106,6 +107,8 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   }
 
   handleColumnSelectionChange(newSelected: ColumnDefinition[]) {
+    this.selectedColumns = newSelected;
+    this.saveColumnConfiguration();
     this.onColumnSelectionChange.emit(newSelected);
   }
 
@@ -138,5 +141,42 @@ export class ListProduccionComponent implements OnInit, OnChanges {
       { value: true, nombre: 'Validado' },
       { value: false, nombre: 'No validado' }
     ];
+  }
+
+  private loadColumnConfiguration(): void {
+    const savedColumns = localStorage.getItem('produccionColumnsConfig');
+    if (savedColumns) {
+      try {
+        const parsed = JSON.parse(savedColumns);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Validar que las columnas guardadas coincidan con las actuales
+          const validColumns = parsed.filter(savedCol => 
+            this.displayedColumns.some(displayCol => displayCol.field === savedCol.field)
+          );
+          if (validColumns.length > 0) {
+            this.selectedColumns = validColumns;
+            // Emitir cambios al componente padre para mantener sincronización
+            this.onColumnSelectionChange.emit(validColumns);
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing saved production columns configuration', e);
+      }
+    }
+  }
+
+  private saveColumnConfiguration(): void {
+    if (this.selectedColumns && this.selectedColumns.length > 0) {
+      localStorage.setItem('produccionColumnsConfig', JSON.stringify(this.selectedColumns));
+    }
+  }
+
+  resetColumnConfiguration(): void {
+    localStorage.removeItem('produccionColumnsConfig');
+    // Restaurar configuración por defecto - mostrar solo columnas fijas y las visibles por defecto
+    const defaultColumns = this.displayedColumns.filter(col => 
+      this.fixedFields.includes(col.field) || col.visible
+    );
+    this.handleColumnSelectionChange(defaultColumns);
   }
 } 

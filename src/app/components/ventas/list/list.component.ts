@@ -2343,6 +2343,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       this.clearFilter();
       this.refrescarDatos();
     }
+    this.saveFiltersState();
   }
 
   secondEvent(ev): void {
@@ -2350,6 +2351,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       this.fechaInicial = ev;
       this.clearFilter();
     }
+    this.saveFiltersState();
   }
 
   clearFilter(): void {
@@ -2755,12 +2757,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
       this.fechaFinal = "";
     }
     this.refrescarDatos();
+    this.saveFiltersState();
   }
 
   clearSearchFilter(): void {
     this.nroPedido = null;
     this.orders = [];
     this.refrescarDatos();
+    this.saveFiltersState();
   }
 
   // Métodos para rangos de fecha predefinidos
@@ -2823,6 +2827,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         break;
     }
     this.refrescarDatos();
+    this.saveFiltersState();
   }
 
   // Métodos para filtros rápidos (movido abajo para evitar duplicación)
@@ -2830,6 +2835,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   clearQuickFilter(type: "estadoPago" | "estadoProceso"): void {
     this.quickFilters[type] = "all";
     this.refrescarDatos();
+    this.saveFiltersState();
   }
 
   clearAllFilters(): void {
@@ -2843,9 +2849,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Cerrar filtros si no hay filtros activos
     if (!this.hasActiveFilters()) {
       this.showFilters = false;
-      this.saveFiltersState();
     }
     this.refrescarDatos();
+    this.saveFiltersState();
   }
 
   // Métodos para persistir estado de filtros
@@ -2854,8 +2860,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     if (savedState) {
       try {
         const state = JSON.parse(savedState);
+        
+        // Restore UI state (existing logic)
         this.showFilters = state.showFilters || false;
-        // Si hay filtros activos, abrir automáticamente
+        
+        // Restore filter values (NEW)
+        if (state.fechaInicial) this.fechaInicial = state.fechaInicial;
+        if (state.fechaFinal) this.fechaFinal = state.fechaFinal;
+        if (state.nroPedido) this.nroPedido = state.nroPedido;
+        if (state.quickFilters) {
+          this.quickFilters = { ...this.quickFilters, ...state.quickFilters };
+        }
+        
+        // Auto-open filters if there are active filters
         if (this.hasActiveFilters()) {
           this.showFilters = true;
         }
@@ -2869,6 +2886,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   private saveFiltersState(): void {
     const state = {
       showFilters: this.showFilters,
+      fechaInicial: this.fechaInicial,
+      fechaFinal: this.fechaFinal,
+      nroPedido: this.nroPedido,
+      quickFilters: { ...this.quickFilters },
       timestamp: new Date().getTime(),
     };
     localStorage.setItem("ventasFiltersState", JSON.stringify(state));
@@ -2880,9 +2901,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     // Abrir filtros si se aplica un filtro
     if (value !== "all" && !this.showFilters) {
       this.showFilters = true;
-      this.saveFiltersState();
     }
     this.refrescarDatos();
+    this.saveFiltersState();
   }
 
   // ==================== BODEGAS ====================
