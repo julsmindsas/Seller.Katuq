@@ -244,6 +244,12 @@
                                                         (click)="clearAllFilters()">
                                                     </button>
                                                     <button pButton type="button"
+                                                        [icon]="agruparSoloPorArticulo ? 'pi pi-th-large' : 'pi pi-grid'"
+                                                        [class]="agruparSoloPorArticulo ? 'p-button-sm p-button-warning action-btn' : 'p-button-sm p-button-outlined action-btn'"
+                                                        [pTooltip]="agruparSoloPorArticulo ? 'Agrupar por Producto+Artículo' : 'Agrupar solo por Artículo'"
+                                                        (click)="toggleGrouping()">
+                                                    </button>
+                                                    <button pButton type="button"
                                                         icon="pi pi-inbox"
                                                         class="p-button-sm p-button-outlined action-btn"
                                                         pTooltip="Cerrar productos"

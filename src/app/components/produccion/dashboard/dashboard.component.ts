@@ -82,6 +82,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   selectedProcesosFilter: any;
   procesoGlobal = "Proceso Empaque Producción"
   productsToClose: DatosProducto[];
+  // Control para tipo de agrupación
+  agruparSoloPorArticulo: boolean = false;
   filterProcessCombo: any[];
 
   columns = [
@@ -523,6 +525,114 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     // Aquí puedes añadir lógica adicional según necesites
   }
 
+  /**
+   * Alterna entre los modos de agrupación y refresca los datos
+   */
+  toggleGrouping() {
+    this.agruparSoloPorArticulo = !this.agruparSoloPorArticulo;
+    this.refrescarDatosEnsamble();
+  }
+
+  /**
+   * Agrupa los datos solo por artículo, concatenando productos separados por comas
+   */
+  private agruparPorArticulo(dataEnsamble: any[]): PedidosParaProduccionEnsamble[] {
+    console.log('🧮 [DEBUG] Iniciando agrupación por artículo - Items de entrada:', dataEnsamble.length);
+    const resultadoAgrupado = dataEnsamble.reduce((acumulador, item) => {
+      const clave = item.nombreArticulo; // Solo por artículo
+      
+      if (!acumulador[clave]) {
+        acumulador[clave] = {
+          nombreProducto: item.nombreProducto, // Primer producto
+          nombreArticulo: item.nombreArticulo,
+          productos: [item.nombreProducto], // Array de productos
+          detalles: [],
+          detallePedido: [],
+          cantidadTotalProducto: 0,
+          cantidadTotalProductoEnsamble: 0
+        };
+      }
+
+      // Agregar producto si no existe ya en la lista
+      if (!acumulador[clave].productos.includes(item.nombreProducto)) {
+        acumulador[clave].productos.push(item.nombreProducto);
+      }
+
+      const detalle: Detalle = {
+        nombreProceso: item.nombreProceso,
+        centroTrabajo: item.centroTrabajo,
+        cantidadArticulo: item.cantidadArticulo,
+        nroPedido: item.nroPedido
+      };
+
+      const detallePedido: DetallePedido = {
+        orderId: item.orderId,
+        nroPedido: item.nroPedido,
+        estadoPago: item.estadoPago,
+        fechaCompra: item.fechaCompra,
+        fechaEntrega: item.fechaEntrega,
+        formaEntrega: item.formaEntrega,
+        horarioEntrega: item.horarioEntrega,
+        estadoProceso: item.estadoProceso,
+        cantidad: item.cantidadProducto,
+        cantidadArticulosPorPedido: item.cantidadArticulo * item.cantidadTotalProductoEnsamble,
+        historialPiezasProducidas: item.historialPiezasProducidas || [],
+        piezasProducidas: 0,
+        proceso: item.nombreProceso
+      };
+
+      // Crear clave compuesta para evitar duplicados por producto+pedido
+      const claveDetallePedido = `${detallePedido.nroPedido}|${item.nombreProducto}`;
+      
+      // Validar duplicados usando clave compuesta
+      if (acumulador[clave].detallePedido.findIndex((detalle) => 
+        `${detalle.nroPedido}|${item.nombreProducto}` === claveDetallePedido) === -1) {
+        
+        // Convertir valores a números para evitar concatenación de strings
+        const cantidadProductoNum = Number(item.cantidadProducto) || 0;
+        const cantidadArticuloNum = Number(item.cantidadArticulo) || 0;
+        
+        console.log(`🧮 [DEBUG] Agregando: ${item.nombreProducto} -> ${item.nombreArticulo} (Pedido: ${item.nroPedido})`);
+        console.log(`🧮 [DEBUG] - Cantidad Producto: ${item.cantidadProducto} (tipo: ${typeof item.cantidadProducto}) -> ${cantidadProductoNum} (número)`);
+        console.log(`🧮 [DEBUG] - Cantidad Artículo: ${item.cantidadArticulo} (tipo: ${typeof item.cantidadArticulo}) -> ${cantidadArticuloNum} (número)`);
+        
+        acumulador[clave].detallePedido.push(detallePedido);
+        // Usar valores numéricos para evitar concatenación de strings
+        acumulador[clave].cantidadTotalProducto += cantidadProductoNum;
+        acumulador[clave].cantidadTotalProductoEnsamble += cantidadArticuloNum;
+        
+        console.log(`🧮 [DEBUG] - Totales acumulados: Productos=${acumulador[clave].cantidadTotalProducto} (tipo: ${typeof acumulador[clave].cantidadTotalProducto}), Artículos=${acumulador[clave].cantidadTotalProductoEnsamble} (tipo: ${typeof acumulador[clave].cantidadTotalProductoEnsamble})`);
+      }
+      
+      acumulador[clave].detalles.push(detalle);
+      
+      return acumulador;
+    }, {});
+
+    // Convertir a resultado final, concatenando productos con comas
+    const resultado = Object.values(resultadoAgrupado).map((grupo: any) => {
+      console.log(`🧮 [DEBUG] Procesando artículo final: ${grupo.nombreArticulo}`);
+      console.log(`🧮 [DEBUG] - Productos: ${grupo.productos.join(', ')}`);
+      console.log(`🧮 [DEBUG] - Cantidad total productos: ${grupo.cantidadTotalProducto}`);
+      console.log(`🧮 [DEBUG] - Cantidad total artículos: ${grupo.cantidadTotalProductoEnsamble}`);
+      
+      return {
+        nombreProducto: grupo.productos.join(', '), // Concatenar con comas
+        nombreArticulo: grupo.nombreArticulo,
+        cantidadTotalProducto: grupo.cantidadTotalProducto,
+        detallePedido: grupo.detallePedido,
+        fechaEntrega: this.getFechaEntregaProgramada(grupo.detallePedido),
+        horarioEntrega: this.getHorarioEntregaProgramada(grupo.detallePedido),
+        tracking: [],
+        // Para agrupación por artículo, usar directamente la cantidad acumulada de artículos
+        cantidadTotalProductoEnsamble: grupo.cantidadTotalProductoEnsamble,
+        detalles: grupo.detalles
+      } as PedidosParaProduccionEnsamble;
+    });
+
+    console.log('🧮 [DEBUG] Resultado final agrupación por artículo:', resultado.length, 'grupos');
+    return resultado;
+  }
 
   refrescarDatosEnsamble() {
     let fechaInicial = this.fechaInicial;
@@ -712,10 +822,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         //validar si ya existe el nroPedido
         if (acumulador[clave].detallePedido.findIndex((detalle) => detalle.nroPedido === detallePedido.nroPedido) === -1) {
           acumulador[clave].detallePedido.push(detallePedido);
-          acumulador[clave].cantidadTotalProducto += item.cantidadProducto;
+          // Convertir a número para evitar concatenación de strings
+          acumulador[clave].cantidadTotalProducto += Number(item.cantidadProducto) || 0;
         }
         acumulador[clave].detalles.push(detalle);
-        acumulador[clave].cantidadTotalProductoEnsamble = item.cantidadArticulo;
+        // Convertir a número para evitar concatenación de strings
+        acumulador[clave].cantidadTotalProductoEnsamble = Number(item.cantidadArticulo) || 0;
         return acumulador;
       }, {});
 
@@ -761,12 +873,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         // Validar si ya existe el nroPedido
         if (acumulador[clave].detallePedido.findIndex((detalle) => detalle.nroPedido === detallePedido.nroPedido) === -1) {
           acumulador[clave].detallePedido.push(detallePedido);
-          acumulador[clave].cantidadTotalProducto += item.cantidadProducto;
+          // Convertir a número para evitar concatenación de strings
+          acumulador[clave].cantidadTotalProducto += Number(item.cantidadProducto) || 0;
         }
 
         if (!acumulador[clave].detalles.find((detalle) => detalle.nombreProceso === detalle.nombreProceso)) {
           acumulador[clave].detalles.push(detalle);
-          acumulador[clave].cantidadTotalProductoEnsamble += item.cantidadArticulo;
+          // Convertir a número para evitar concatenación de strings
+          acumulador[clave].cantidadTotalProductoEnsamble += Number(item.cantidadArticulo) || 0;
         }
 
 
@@ -823,7 +937,20 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       console.log('🧩 [DEBUG] Resultado procesado:', resultado.length, 'órdenes');
       console.log('🧩 [DEBUG] Procesos encontrados en resultado:', [...new Set(resultado.flatMap(order => order.detalles.map(d => d.nombreProceso)))]);
       
-      this.ordersEnsamble = resultado;
+      // Usar agrupación condicional basada en la configuración
+      if (this.agruparSoloPorArticulo) {
+        this.ordersEnsamble = this.agruparPorArticulo(dataEnsamble);
+        console.log('🧩 [DEBUG] Usando agrupación solo por artículo:', this.ordersEnsamble.length, 'grupos');
+      } else {
+        this.ordersEnsamble = resultado;
+        console.log('🧩 [DEBUG] Usando agrupación por producto+artículo:', this.ordersEnsamble.length, 'grupos');
+        // Verificar tipos de datos en agrupación original
+        if (this.ordersEnsamble.length > 0) {
+          console.log('🧩 [DEBUG] Muestra de cantidades en agrupación original:');
+          console.log(`🧩 [DEBUG] - cantidadTotalProducto: ${this.ordersEnsamble[0].cantidadTotalProducto} (tipo: ${typeof this.ordersEnsamble[0].cantidadTotalProducto})`);
+          console.log(`🧩 [DEBUG] - cantidadTotalProductoEnsamble: ${this.ordersEnsamble[0].cantidadTotalProductoEnsamble} (tipo: ${typeof this.ordersEnsamble[0].cantidadTotalProductoEnsamble})`);
+        }
+      }
       this.AllOrdersEnsamble = this.utilService.deepClone(this.ordersEnsamble);
       
       console.log('💾 [DEBUG] AllOrdersEnsamble actualizado:', this.AllOrdersEnsamble.length, 'órdenes');
