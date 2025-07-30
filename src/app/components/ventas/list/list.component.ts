@@ -9,6 +9,7 @@ import {
   ViewChild,
   AfterViewInit,
   HostListener,
+  OnDestroy,
 } from "@angular/core";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import {
@@ -44,13 +45,15 @@ import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: "app-list-orders",
   templateUrl: "./list.component.html",
   styleUrls: ["./list.component.scss"],
 })
-export class ListOrdersComponent implements OnInit, AfterViewInit {
+export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
   @ViewChild("entrega", { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild("htmlPdf", { static: true }) htmlPdf: ElementRef;
@@ -89,6 +92,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   private tableScrollStack: number[] = [];
 
   productoSeleccionado: any;
+
+  // Propiedades para búsqueda mejorada
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
+  isSearching: boolean = false;
+  searchError: string | null = null;
+  searchMinLength: number = 2;
+  searchDebounceTime: number = 300;
 
   ngAfterViewInit() {
     // Limpiar funciones del menú anterior
@@ -238,6 +249,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
   filteredOrderNumbers: any;
   ordenes: any;
   ordersByName: any;
+  searchQuery: string = '';
+  showSuggestions: boolean = false;
   UserLogged: UserLogged;
   allBillingZone: any;
   selectedOrder: any;
@@ -474,12 +487,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     private loaderService: LoaderService,
   ) {
     this.registerCustomFilters();
+    this.setupSearchDebounce();
 
     const unaSemana = 7 * 24 * 60 * 60 * 1000;
-    // this.fechaInicial = new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
-    // this.fechaFinal = new Date(); //new Date().getTime() + unaSemana);
-    // this.fechaFinal.setHours(23, 59, 59, 999);
-
     this.numberProduct =
       this.route.snapshot.queryParamMap?.get("nroPedido") || "";
 
@@ -492,11 +502,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
         });
     }
 
-    // this.fechaInicialCtrl.nativeElement.value = new Date().toISOString().split('T')[0] + '00:00:00.0000Z'; //new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear());
-    // this.fechaFinalCtrl.nativeElement.value = new Date().toISOString().split('T')[0] + '23:59:59.0000Z'; //new Date(new Date().getTime() + unaSemana);
-
     this.fechaInicial = new Date().toISOString().split("T")[0];
-    //    new Date('01-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear()).toISOString().split('T')[0];
     this.fechaFinal = new Date().toISOString().split("T")[0];
 
     this.UserLogged = JSON.parse(localStorage.getItem("user")!) as UserLogged;
@@ -505,27 +511,179 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
 
     // Cargar listado de bodegas disponibles para el modal de recompra
     this.cargarBodegas();
+  }
 
-    // Cargar ciudades de entrega disponibles (igual que en Crear-Ventas)
-    try {
-      const currentCompany = JSON.parse(
-        localStorage.getItem("currentCompany") || "{}",
-      );
-      if (currentCompany?.ciudadess?.ciudadesEntrega) {
-        this.ciudadesEntrega = currentCompany.ciudadess.ciudadesEntrega;
+  /**
+   * Configura el debounce para la búsqueda
+   */
+  private setupSearchDebounce(): void {
+    this.searchSubject.pipe(
+      debounceTime(this.searchDebounceTime),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      console.log('Debounce ejecutado con query:', query);
+      this.performSearch(query);
+    });
+  }
+
+  /**
+   * Valida el formato del número de pedido
+   */
+  private validateOrderNumber(query: string): boolean {
+    if (!query || query.trim().length === 0) {
+      return false;
+    }
+    
+    // Validar longitud mínima (reducir a 1 para ser más flexible)
+    if (query.trim().length < 1) {
+      return false;
+    }
+    
+    // Permitir caracteres más flexibles (letras, números, guiones, espacios, puntos)
+    const orderNumberPattern = /^[A-Za-z0-9\-_.\s]+$/;
+    return orderNumberPattern.test(query.trim());
+  }
+
+  /**
+   * Realiza la búsqueda con el servicio correcto
+   */
+  private performSearch(query: string): void {
+    const trimmedQuery = query?.trim();
+    
+    if (!this.validateOrderNumber(trimmedQuery)) {
+      this.filteredOrderNumbers = [];
+      this.ordersByName = [];
+      this.isSearching = false;
+      this.searchError = null;
+      return;
+    }
+    
+    this.isSearching = true;
+    this.searchError = null;
+    
+    // Usar el servicio principal para búsqueda
+    this.ventasService.getOrdersByNroPedido(trimmedQuery).subscribe({
+      next: (res: any) => {
+        // Asegurar que la respuesta sea un array
+        const results = Array.isArray(res) ? res : (res ? [res] : []);
+        this.filteredOrderNumbers = results;
+        this.ordersByName = results;
+        this.isSearching = false;
+        this.searchError = null;
+      },
+      error: (err) => {
+        // Fallback al servicio original si el nuevo falla
+        this.service.getOrderByName(trimmedQuery).then((res: any) => {
+          const results = Array.isArray(res) ? res : (res ? [res] : []);
+          this.filteredOrderNumbers = results;
+          this.ordersByName = results;
+          this.isSearching = false;
+          this.searchError = null;
+        }).catch((fallbackErr: any) => {
+          this.searchError = 'Error al buscar pedido. Intente nuevamente.';
+          this.filteredOrderNumbers = [];
+          this.ordersByName = [];
+          this.isSearching = false;
+          this.toastrService.error(this.searchError, 'Error de Búsqueda');
+        });
       }
-    } catch (e) {
-      console.error("No se pudo obtener ciudadesEntrega de currentCompany", e);
-    }
+    });
+  }
 
-    // Fallback: intentar vía servicio util si no existen
-    if (this.ciudadesEntrega.length === 0) {
-      this.pedidoUtilService.getAllMaestro$().subscribe((data: any) => {
-        if (data?.empresaActual?.ciudadess?.ciudadesEntrega) {
-          this.ciudadesEntrega = data.empresaActual.ciudadess.ciudadesEntrega;
-        }
-      });
+  /**
+   * Maneja la entrada de texto en el campo de búsqueda
+   */
+  onSearchInput(event: any): void {
+    const query = event.target.value;
+    this.searchQuery = query;
+    
+    // Validar entrada
+    if (!query || typeof query !== 'string') {
+      this.filteredOrderNumbers = [];
+      this.showSuggestions = false;
+      return;
     }
+    
+    this.showSuggestions = true;
+    // Emitir al subject para aplicar debounce
+    this.searchSubject.next(query);
+  }
+
+  /**
+   * Maneja la pérdida de foco del input
+   */
+  onInputBlur(): void {
+    // Usar setTimeout para permitir que el click en las sugerencias funcione
+    setTimeout(() => {
+      this.showSuggestions = false;
+    }, 200);
+  }
+
+  /**
+   * Selecciona un pedido de las sugerencias
+   */
+  selectOrder(item: any): void {
+    if (!item || !item.nroPedido) {
+      this.toastrService.warning('Pedido inválido seleccionado', 'Advertencia');
+      return;
+    }
+    
+    // Establecer el valor del campo de búsqueda
+    this.searchQuery = item.nroPedido;
+    this.nroPedido = item;
+    
+    // Ocultar sugerencias
+    this.showSuggestions = false;
+    this.filteredOrderNumbers = [];
+    
+    // Mostrar solo el pedido seleccionado
+    this.orders = [item];
+    
+    // Mostrar notificación de éxito
+    this.toastrService.success(
+      `Pedido #${item.nroPedido} cargado correctamente`, 
+      'Pedido Encontrado'
+    );
+    
+    // Limpiar errores de búsqueda
+    this.searchError = null;
+  }
+
+  /**
+   * Limpia el filtro de búsqueda
+   */
+  clearSearchFilter(): void {
+    this.nroPedido = null;
+    this.searchQuery = '';
+    this.filteredOrderNumbers = [];
+    this.ordersByName = [];
+    this.searchError = null;
+    this.isSearching = false;
+    this.showSuggestions = false;
+    this.refrescarDatos();
+    this.saveFiltersState();
+    
+    // Mostrar notificación
+    this.toastrService.info('Filtro de búsqueda limpiado', 'Filtro Limpiado');
+  }
+
+  /**
+   * Obtiene el estado de búsqueda para mostrar en la UI
+   */
+  getSearchStatus(): { isSearching: boolean; hasError: boolean; errorMessage: string | null } {
+    return {
+      isSearching: this.isSearching,
+      hasError: !!this.searchError,
+      errorMessage: this.searchError
+    };
+  }
+
+  /**
+   * Verifica si hay una búsqueda activa
+   */
+  hasActiveSearch(): boolean {
+    return this.isSearching || !!this.searchError || (this.filteredOrderNumbers && this.filteredOrderNumbers.length > 0);
   }
 
   ngOnInit(): void {
@@ -580,20 +738,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     });
 
     this.cargando = false;
-  }
-
-  filtroGlobal(event: any) {
-    const query = event.query;
-    this.service.getOrderByName(query).then((res) => {
-      this.filteredOrderNumbers = res;
-      this.ordersByName = res;
-    });
-  }
-
-  onOrderSelect(event) {
-    console.log(event);
-    this.orders = [event];
-    // this.orders= this.ordersByName.filter(P=>)
   }
 
   checkPriceScale(pedido) {
@@ -2760,12 +2904,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     this.saveFiltersState();
   }
 
-  clearSearchFilter(): void {
-    this.nroPedido = null;
-    this.orders = [];
-    this.refrescarDatos();
-    this.saveFiltersState();
-  }
+
 
   // Métodos para rangos de fecha predefinidos
   setDateRange(range: string): void {
@@ -2956,5 +3095,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit {
     this.selectedOrder = event.pedido;
     this.productoSeleccionado = event.producto;
     this.openOptionsModal(event.pedido, event.producto);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
