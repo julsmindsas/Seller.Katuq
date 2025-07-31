@@ -574,8 +574,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         formaEntrega: item.formaEntrega,
         horarioEntrega: item.horarioEntrega,
         estadoProceso: item.estadoProceso,
-        cantidad: item.cantidadProducto,
-        cantidadArticulosPorPedido: item.cantidadArticulo * item.cantidadTotalProductoEnsamble,
+        cantidad: Number(item.cantidadProducto) || 0,
+        cantidadArticulosPorPedido: (Number(item.cantidadArticulo) || 0) * (Number(item.cantidadTotalProductoEnsamble) || 0),
         historialPiezasProducidas: item.historialPiezasProducidas || [],
         piezasProducidas: 0,
         proceso: item.nombreProceso
@@ -813,8 +813,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           formaEntrega: item.formaEntrega,
           horarioEntrega: item.horarioEntrega,
           estadoProceso: item.estadoProceso,
-          cantidad: item.cantidadProducto,
-          cantidadArticulosPorPedido: item.cantidadArticulo * item.cantidadTotalProductoEnsamble,
+          cantidad: Number(item.cantidadProducto) || 0,
+          cantidadArticulosPorPedido: (Number(item.cantidadArticulo) || 0) * (Number(item.cantidadTotalProductoEnsamble) || 0),
           historialPiezasProducidas: item.historialPiezasProducidas || [],
           piezasProducidas: 0,
           proceso: item.nombreProceso
@@ -862,8 +862,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           formaEntrega: item.formaEntrega,
           horarioEntrega: item.horarioEntrega,
           estadoProceso: item.estadoProceso,
-          cantidad: item.cantidadProducto,
-          cantidadArticulosPorPedido: item.cantidadArticulo * item.cantidadTotalProductoEnsamble,
+          cantidad: Number(item.cantidadProducto) || 0,
+          cantidadArticulosPorPedido: (Number(item.cantidadArticulo) || 0) * (Number(item.cantidadTotalProductoEnsamble) || 0),
           historialPiezasProducidas: item.historialPiezasProducidas || [],
           piezasProducidas: 0,
           nombreArticulo: item.nombreArticulo,
@@ -1380,7 +1380,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
         this.selectedOrdersEnsamble.forEach((item, index) => {
           this.ordersEnsamble.forEach((order) => {
-            if (order.nombreProducto === item.nombreProducto && order.nombreArticulo === item.nombreArticulo) {
+            // Filtro condicional según modo de agrupación para actualización de estado local
+            const isProductMatch = this.agruparSoloPorArticulo ? 
+              item.nombreProducto.includes(order.nombreProducto) :
+              order.nombreProducto === item.nombreProducto;
+            
+            if (isProductMatch && order.nombreArticulo === item.nombreArticulo) {
               order.piezasProducidas = item.detallePedido.reduce((acc, item) => acc + item.piezasProducidas, 0);
             }
           });
@@ -1394,11 +1399,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           item.detallePedido.forEach((detallePedido) => {
 
             this.orders
-              .filter(
-                (order) =>
-                  order.producto.crearProducto.titulo === item.nombreProducto &&
-                  order.nroPedido == detallePedido.nroPedido
-              )
+              .filter((order) => {
+                // Filtro condicional según modo de agrupación para búsqueda de órdenes
+                const isProductMatch = this.agruparSoloPorArticulo ?
+                  item.nombreProducto.includes(order.producto.crearProducto.titulo) :
+                  order.producto.crearProducto.titulo === item.nombreProducto;
+                
+                return isProductMatch && order.nroPedido == detallePedido.nroPedido;
+              })
               .forEach((order) => {
                 const produccion = order.producto.otrosProcesos.modulosVariables.produccion.find(
                   (prod) => prod.titulo === item.nombreArticulo
@@ -1729,7 +1737,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         if (reason === 'cerrar') {
 
           this.productsToClose.forEach(product => {
-            this.AllOrdersEnsamble.filter(x => x.nombreProducto == product.producto).forEach(z => {
+            // Filtro condicional según modo de agrupación
+            const filteredOrders = this.agruparSoloPorArticulo ? 
+              // En modo agrupación por artículo: usar includes para productos concatenados
+              this.AllOrdersEnsamble.filter(x => product.producto.includes(x.nombreProducto)) :
+              // En modo normal: comparación directa del producto
+              this.AllOrdersEnsamble.filter(x => x.nombreProducto === product.producto);
+            
+            filteredOrders.forEach(z => {
               z.estadoProductoArticulo = product.estadoProcesoProducto;
               z.detallePedido.forEach(detallePedido => {
                 product.articulosConProcesos.forEach(articulo => {
@@ -1741,9 +1756,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
                 });
               });
 
-              this.orders.filter(p => {
-                p.producto.crearProducto.titulo == product.producto
-              }).forEach(x => {
+              // Filtro condicional según modo de agrupación para órdenes
+              const filteredOrders = this.agruparSoloPorArticulo ? 
+                this.orders.filter(p => product.producto.includes(p.producto.crearProducto.titulo)) :
+                this.orders.filter(p => p.producto.crearProducto.titulo === product.producto);
+
+              filteredOrders.forEach(x => {
                 x.producto.otrosProcesos.modulosVariables.produccion.filter(
                   y => y.titulo == z.nombreArticulo
                 ).forEach(p => {
@@ -1767,27 +1785,36 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             this.orderResponse.ordersRaw
               .filter(x => x.carrito && Array.isArray(x.carrito))
               .forEach(order => {
-                // Buscar el carrito correspondiente con verificaciones de nulidad
-                const carritoSelected = order.carrito.find(x =>
-                  x && x.producto && x.producto.crearProducto &&
-                  x.producto.crearProducto.titulo === product.producto
-                );
+                // Buscar el carrito correspondiente con verificaciones de nulidad y lógica condicional
+                const carritoSelected = this.agruparSoloPorArticulo ?
+                  order.carrito.find(x => x && x.producto && x.producto.crearProducto && 
+                    product.producto.includes(x.producto.crearProducto.titulo)) :
+                  order.carrito.find(x => x && x.producto && x.producto.crearProducto &&
+                    x.producto.crearProducto.titulo === product.producto);
 
-                // Si no se encuentra el carrito, saltar este elemento
+                // Si no se encuentra el carrito, saltar este elemento con logging mejorado
                 if (!carritoSelected) {
-                  console.warn(`No se encontró un carrito para el producto ${product.producto}`);
+                  console.warn(`[Cierre Artículo] No se encontró un carrito para el producto: ${product.producto}`);
+                  console.warn(`[Cierre Artículo] Modo agrupación: ${this.agruparSoloPorArticulo ? 'Solo por artículo' : 'Producto + artículo'}`);
+                  console.warn(`[Cierre Artículo] Productos disponibles en carrito:`, order.carrito.map(x => x?.producto?.crearProducto?.titulo).filter(Boolean));
                   return;
                 }
 
                 carritoSelected.estadoProcesoProducto = EstadoProceso.ProducidoTotalmente;
                 let orderToUpdate = order;
 
-                // Verificar la estructura del producto
+                // Verificar la estructura del producto con logging mejorado
                 if (!carritoSelected.producto ||
                   !carritoSelected.producto.otrosProcesos ||
                   !carritoSelected.producto.otrosProcesos.modulosVariables ||
                   !carritoSelected.producto.otrosProcesos.modulosVariables.produccion) {
-                  console.warn(`Estructura incompleta en el producto ${product.producto}`);
+                  console.warn(`[Cierre Artículo] Estructura incompleta en el producto: ${product.producto}`);
+                  console.warn(`[Cierre Artículo] Estructura disponible:`, {
+                    hasProducto: !!carritoSelected.producto,
+                    hasOtrosProcesos: !!carritoSelected.producto?.otrosProcesos,
+                    hasModulosVariables: !!carritoSelected.producto?.otrosProcesos?.modulosVariables,
+                    hasProduccion: !!carritoSelected.producto?.otrosProcesos?.modulosVariables?.produccion
+                  });
                   return;
                 }
 
