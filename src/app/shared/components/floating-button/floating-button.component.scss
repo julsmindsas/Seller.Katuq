@@ -2,6 +2,7 @@
 $primary-color: #3f51b5;
 $secondary-color: #ff4081;
 $tertiary-color: #4caf50;
+$live-audio-color: #9c27b0; // Color específico para Live Audio
 $light-color: #ffffff;
 $dark-color: #333333;
 $shadow-standard: 0 3px 8px rgba(0, 0, 0, 0.2);
@@ -904,6 +905,107 @@ a {
     }
 }
 
+// Estilos para Live Audio
+.live-audio-container {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 400px;
+    height: 300px;
+    background: linear-gradient(135deg, #100c14 0%, #1a1625 100%);
+    border-radius: $radius-standard;
+    box-shadow: $shadow-standard;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .close-live-audio-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: $live-audio-color;
+        color: $light-color;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: $transition-standard;
+        z-index: 1001;
+
+        &:hover {
+            background: darken($live-audio-color, 10%);
+            transform: scale(1.1);
+        }
+
+        i {
+            font-size: 14px;
+        }
+    }
+
+    app-live-audio {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        position: relative;
+
+        // Estilos específicos para el componente live-audio
+        ::ng-deep {
+            // Contenedor principal
+            > div {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                overflow: hidden;
+            }
+
+            // Controles más pequeños
+            .controls {
+                bottom: 20px !important;
+                gap: 8px !important;
+
+                button {
+                    width: 40px !important;
+                    height: 40px !important;
+                    font-size: 16px !important;
+                    border-radius: 8px !important;
+
+                    svg {
+                        width: 20px !important;
+                        height: 20px !important;
+                    }
+                }
+            }
+
+            // Status texto más pequeño
+            #status {
+                bottom: 5px !important;
+                font-size: 12px !important;
+                color: rgba(255, 255, 255, 0.8);
+            }
+
+            // Canvas de la animación 3D
+            app-visual3d {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+
+                canvas {
+                    width: 100% !important;
+                    height: 100% !important;
+                    display: block;
+                }
+            }
+        }
+    }
+}
+
 // Media queries para responsividad
 @media (max-width: 768px) {
     .floating-button-container {
@@ -941,5 +1043,25 @@ a {
     
     .floating-chat-overlay {
         border-radius: 0;
+    }
+
+    // Live Audio en móvil
+    .live-audio-container {
+        width: calc(100% - 20px);
+        height: 60%;
+        bottom: 10px;
+        right: 10px;
+        max-width: none;
+
+        app-live-audio ::ng-deep {
+            .controls {
+                bottom: 15px !important;
+                
+                button {
+                    width: 50px !important;
+                    height: 50px !important;
+                }
+            }
+        }
     }
 }

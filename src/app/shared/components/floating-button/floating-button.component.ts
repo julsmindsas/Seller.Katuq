@@ -165,6 +165,9 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       case 'voice':
         this.startVoiceMode(event);
         break;
+      case 'live-audio':
+        this.startLiveAudioMode(event);
+        break;
       case 'help':
         this.openHelpGuide(event);
         break;
@@ -206,6 +209,28 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     console.log('🛑 Deteniendo modo de voz');
     
     this.voiceAgentService.stopVoiceSession();
+    this.saveState();
+  }
+
+  // Método para iniciar el modo live-audio
+  startLiveAudioMode(event: MouseEvent) {
+    event.stopPropagation();
+    console.log('🎵 Iniciando modo Live Audio');
+    
+    // Cerrar otros paneles
+    this.optionsPanelVisible = false;
+    this.chatFormVisible = false;
+    this.chatMinimized = false;
+    
+    this.saveState();
+  }
+
+  // Método para detener el modo live-audio
+  stopLiveAudioMode(event: MouseEvent | null) {
+    if (event) event.stopPropagation();
+    console.log('🛑 Deteniendo modo Live Audio');
+    
+    this.selectedMode = 'chat'; // Volver al modo por defecto
     this.saveState();
   }
 
@@ -281,6 +306,11 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     // Detener sesión de voz si está activa
     if (this.voiceAgentService.isSessionActive()) {
       this.voiceAgentService.stopVoiceSession();
+    }
+
+    // Resetear modo si es live-audio
+    if (this.selectedMode === 'live-audio') {
+      this.selectedMode = 'chat';
     }
 
     this.saveState();
