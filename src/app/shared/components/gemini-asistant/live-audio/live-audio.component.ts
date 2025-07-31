@@ -31,7 +31,9 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initSubscriptions();
-    this.geminiService.initSession();
+    console.log('🎤 [LiveAudio] Iniciando componente con herramientas Katuq...');
+    // Inicializar con herramientas de Katuq en lugar de sesión básica
+    this.geminiService.initSessionWithKatuqTools();
   }
 
   ngOnDestroy(): void {
@@ -81,6 +83,41 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
       }
     );
     this.subscriptions.push(audioDataSub);
+
+    // Subscribe to tool calls (nuevo)
+    const toolCallSub = this.geminiService.toolCall$.subscribe(
+      (toolCall) => {
+        if (toolCall) {
+          console.log('🛠️ [LiveAudio] Llamada a herramienta detectada:', toolCall);
+          this.status = `Herramienta llamada: ${toolCall.name}`;
+          
+          // Procesar la herramienta Katuq
+          const response = this.geminiService.handleKatuqToolResponse(toolCall);
+          console.log('📤 [LiveAudio] Respuesta de herramienta:', response);
+          
+          // Enviar la respuesta de vuelta al modelo con delay
+          setTimeout(() => {
+            console.log('⏳ [LiveAudio] Enviando respuesta después de delay...');
+            this.geminiService.sendToolResponse({
+              toolCallId: toolCall.id,
+              response: response
+            });
+          }, 500); // Delay de 500ms para asegurar estabilidad
+        }
+      }
+    );
+    this.subscriptions.push(toolCallSub);
+
+    // Subscribe to text responses (nuevo)
+    const textResponseSub = this.geminiService.textResponse$.subscribe(
+      (text) => {
+        if (text) {
+          console.log('💬 [LiveAudio] Respuesta de texto recibida:', text);
+          this.status = `Respuesta: ${text.substring(0, 50)}...`;
+        }
+      }
+    );
+    this.subscriptions.push(textResponseSub);
   }
 
   async startRecording(): Promise<void> {
@@ -96,5 +133,29 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
   reset(): void {
     this.geminiService.resetSession();
     this.status = 'Session cleared.';
+  }
+
+  /**
+   * Método para probar las herramientas de Katuq
+   */
+  testKatuqTools(): void {
+    console.log('🧪 [LiveAudio] Probando herramientas Katuq...');
+    this.geminiService.testKatuqTools();
+  }
+
+  /**
+   * Enviar mensaje de prueba para activar herramientas
+   */
+  sendTestMessage(message: string): void {
+    console.log('📤 [LiveAudio] Enviando mensaje de prueba:', message);
+    this.geminiService.sendTextMessage(message);
+  }
+
+  /**
+   * Probar el flujo completo de herramientas
+   */
+  testCompleteFlow(): void {
+    console.log('🧪 [LiveAudio] Probando flujo completo de herramientas...');
+    this.geminiService.testCompleteToolFlow();
   }
 }
