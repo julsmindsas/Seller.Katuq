@@ -26,6 +26,16 @@ export interface ToolResponse {
   response: any;
 }
 
+export interface FunctionResponse {
+  id: string;
+  name: string;
+  response: any;
+}
+
+export interface ToolResponseWithFunctions {
+  functionResponses: FunctionResponse[];
+}
+
 export interface GeminiToolsConfig {
   googleSearch?: boolean;
   functionDeclarations?: FunctionDeclaration[];
@@ -49,19 +59,23 @@ export interface GeminiLiveConfig {
 export class GeminiAudioService {
   private client!: GoogleGenAI;
   private session!: Session;
-  private connectionStatusSubject = new BehaviorSubject<ConnectionStatus>({ 
-    status: 'disconnected', 
-    message: 'Not connected' 
+  private connectionStatusSubject = new BehaviorSubject<ConnectionStatus>({
+    status: 'disconnected',
+    message: 'Not connected'
   });
   private audioDataSubject = new BehaviorSubject<any>(null);
-  
+
   // Nuevos subjects para herramientas
   private toolCallSubject = new BehaviorSubject<ToolCall | null>(null);
   private textResponseSubject = new BehaviorSubject<string>('');
 
+  // Sistema de turnos según documentación oficial
+  private responseQueue: LiveServerMessage[] = [];
+  private isProcessingTurn = false;
+
   connectionStatus$: Observable<ConnectionStatus> = this.connectionStatusSubject.asObservable();
   audioData$: Observable<any> = this.audioDataSubject.asObservable();
-  
+
   // Nuevos observables para herramientas
   toolCall$: Observable<ToolCall | null> = this.toolCallSubject.asObservable();
   textResponse$: Observable<string> = this.textResponseSubject.asObservable();
@@ -70,10 +84,176 @@ export class GeminiAudioService {
     this.initClient();
   }
 
+  /**
+   * Espera por un mensaje en la cola de respuestas
+   * Optimizado para menor latencia
+   */
+  private async waitMessage(): Promise<LiveServerMessage> {
+    let done = false;
+    let message: LiveServerMessage | undefined = undefined;
+    while (!done) {
+      message = this.responseQueue.shift();
+      if (message) {
+        done = true;
+      } else {
+        // Reducir polling de 100ms a 10ms para respuesta más rápida
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+    }
+    return message!;
+  }
+
+  /**
+   * Maneja un turno completo (mensajes hasta que se complete)
+   * Optimizado con timeout para evitar bloqueos
+   */
+  private async handleTurn(): Promise<LiveServerMessage[]> {
+    const turns: LiveServerMessage[] = [];
+    let done = false;
+    const startTime = Date.now();
+    const maxTurnTime = 5000; // 5 segundos máximo por turno
+
+    while (!done) {
+      // Verificar timeout
+      if (Date.now() - startTime > maxTurnTime) {
+        console.warn('⚠️ [Turn] Timeout de turno alcanzado, completando con mensajes actuales');
+        done = true;
+        break;
+      }
+
+      const message = await this.waitMessage();
+      turns.push(message);
+
+      console.log('🔄 [Turn] Mensaje procesado en turno:', {
+        hasServerContent: !!message.serverContent,
+        turnComplete: message.serverContent?.turnComplete,
+        hasToolCall: !!message.toolCall,
+        messageType: this.getMessageType(message)
+      });
+
+      // Optimizar detección de turnos completos
+      if (message.serverContent?.turnComplete === true) {
+        console.log('✅ [Turn] Turno completado por turnComplete flag');
+        done = true;
+      } else if (message.toolCall) {
+        console.log('🛠️ [Turn] Turno completado por toolCall');
+        done = true;
+      } else if (message.serverContent?.modelTurn?.parts) {
+        // Si recibimos contenido del modelo, verificar si parece completo
+        const hasText = message.serverContent.modelTurn.parts.some(part => part.text);
+        const hasAudio = message.serverContent.modelTurn.parts.some(part => part.inlineData);
+        if (hasText || hasAudio) {
+          // Esperar un momento muy breve para ver si hay más mensajes
+          await new Promise(resolve => setTimeout(resolve, 25));
+          if (this.responseQueue.length === 0) {
+            console.log('⚡ [Turn] Turno completado por contenido aparentemente final');
+            done = true;
+          }
+        }
+      }
+    }
+    return turns;
+  }
+
+  /**
+   * Determina el tipo de mensaje para logging
+   */
+  private getMessageType(message: LiveServerMessage): string {
+    if (message.toolCall) return 'toolCall';
+    if (message.serverContent?.modelTurn) return 'modelTurn';
+    if (message.serverContent?.interrupted) return 'interrupted';
+    if (message.serverContent?.turnComplete) return 'turnComplete';
+    return 'unknown';
+  }
+
   private initClient() {
     this.client = new GoogleGenAI({
       apiKey: environment.GEMINI_API_KEY,
     });
+  }
+
+  /**
+   * Procesa los turnos recibidos manteniendo la funcionalidad existente
+   */
+  private async processTurns(turns: LiveServerMessage[]): Promise<void> {
+    console.log(`🔄 [Turn] Procesando ${turns.length} mensajes en el turno`);
+
+    for (const turn of turns) {
+      console.log('📨 [Turn] Procesando mensaje:', this.getMessageType(turn));
+
+      // Procesar audio del modelo (funcionalidad existente)
+      const audio = turn.serverContent?.modelTurn?.parts?.[0]?.inlineData;
+      if (audio) {
+        console.log('🔊 [Turn] Audio recibido del modelo');
+        this.audioDataSubject.next(audio);
+      }
+
+      // Procesar texto del modelo (funcionalidad existente)
+      const text = turn.serverContent?.modelTurn?.parts?.[0]?.text;
+      if (text) {
+        console.log('💬 [Turn] Texto recibido del modelo:', text.substring(0, 100) + '...');
+        this.textResponseSubject.next(text);
+      }
+
+      // Procesar llamadas a herramientas según patrón oficial
+      if (turn.toolCall && turn.toolCall.functionCalls) {
+        console.log('🛠️ [Turn] Procesando llamadas a herramientas');
+
+        // Procesar todas las llamadas a herramientas en el turno
+        const functionResponses: any[] = [];
+
+        for (const functionCall of turn.toolCall.functionCalls) {
+          console.log('🔧 [Turn] Procesando función:', {
+            name: functionCall.name,
+            args: functionCall.args,
+            id: functionCall.id
+          });
+
+          // Crear toolCall para compatibilidad con el sistema existente
+          const toolCall: ToolCall = {
+            name: functionCall.name || '',
+            args: functionCall.args || {},
+            id: functionCall.id || ''
+          };
+
+          // Notificar al componente (para compatibilidad)
+          this.toolCallSubject.next(toolCall);
+
+          // Procesar la herramienta directamente aquí (patrón oficial)
+          try {
+            const response = this.handleKatuqToolResponse(toolCall);
+            functionResponses.push({
+              id: functionCall.id,
+              name: functionCall.name,
+              response: response
+            });
+            console.log('✅ [Turn] Herramienta procesada:', functionCall.name);
+          } catch (error) {
+            console.error('❌ [Turn] Error procesando herramienta:', functionCall.name, error);
+            functionResponses.push({
+              id: functionCall.id,
+              name: functionCall.name,
+              response: { error: 'Error procesando herramienta' }
+            });
+          }
+        }
+
+        // Enviar todas las respuestas de herramientas (patrón oficial)
+        if (functionResponses.length > 0) {
+          console.log('📤 [Turn] Enviando respuestas de herramientas:', functionResponses.length);
+          this.sendToolResponseWithFunctions({ functionResponses });
+        }
+      }
+
+      // Procesar interrupciones (funcionalidad existente)
+      const interrupted = turn.serverContent?.interrupted;
+      if (interrupted) {
+        console.log('⏸️ [Turn] Interrupción detectada');
+        this.audioDataSubject.next({ interrupted: true });
+      }
+    }
+
+    console.log('✅ [Turn] Procesamiento de turno completado');
   }
 
   /**
@@ -122,9 +302,9 @@ export class GeminiAudioService {
       warnings.push('URL Context solo está disponible en gemini-live-2.5-flash-preview');
     }
 
-    if (toolsConfig?.functionDeclarations && 
-        !model.includes('gemini-live-2.5-flash-preview') && 
-        !model.includes('gemini-2.0-flash-live-001')) {
+    if (toolsConfig?.functionDeclarations &&
+      !model.includes('gemini-live-2.5-flash-preview') &&
+      !model.includes('gemini-2.0-flash-live-001')) {
       warnings.push('Function Calls solo está disponible en gemini-live-2.5-flash-preview y gemini-2.0-flash-live-001');
     }
 
@@ -133,16 +313,16 @@ export class GeminiAudioService {
 
   async initSession(config?: GeminiLiveConfig): Promise<void> {
     const model = config?.model || 'gemini-2.5-flash-preview-native-audio-dialog';
-    const systemInstruction = config?.systemInstruction || 
-      "Eres un asistente de IA que responde en español con acento colombiano, y solo habla de que puedes hacer en el sistema como crear pedidos";
-    
+    const systemInstruction = config?.systemInstruction ||
+      "Eres un asistente de IA que responde en español, solo habla de que puedes hacer en el sistema como crear pedidos";
+
     console.log('🚀 Iniciando sesión Gemini Live...');
     console.log('📋 Configuración:', {
       modelo: model,
       instruccion: systemInstruction,
       herramientas: config?.tools ? 'Configuradas' : 'Sin herramientas'
     });
-    
+
     // Validar herramientas para el modelo
     const warnings = this.validateToolsForModel(model, config?.tools);
     if (warnings.length > 0) {
@@ -151,15 +331,27 @@ export class GeminiAudioService {
 
     // Construir configuración de herramientas
     const tools = this.buildToolsConfig(config?.tools);
+
     
     const sessionConfig = {
       responseModalities: config?.responseModalities || [Modality.AUDIO],
       systemInstruction: systemInstruction,
       speechConfig: config?.speechConfig || {
-        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Orus'} }
+        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Orus'} },
+        languageCode: 'es-US'
       },
       ...(tools.length > 0 && { tools }) // Solo agregar tools si hay herramientas configuradas
     };
+    
+    /*const sessionConfig = {
+      responseModalities: [Modality.AUDIO],
+      model: 'gemini-2.5-flash-preview',
+      speechConfig: {
+        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Orus' } },
+        languageCode: 'es-US'
+      },
+      tools: tools
+    }*/
 
     console.log('🔧 Configuración de sesión:', {
       model,
@@ -169,9 +361,9 @@ export class GeminiAudioService {
     });
 
     try {
-      this.connectionStatusSubject.next({ 
-        status: 'connecting', 
-        message: 'Connecting to Gemini Live API...' 
+      this.connectionStatusSubject.next({
+        status: 'connecting',
+        message: 'Connecting to Gemini Live API...'
       });
 
       console.log('🔌 Conectando a Gemini Live API...');
@@ -180,74 +372,62 @@ export class GeminiAudioService {
         callbacks: {
           onopen: () => {
             console.log('✅ Conexión establecida con Gemini Live API');
-            this.connectionStatusSubject.next({ 
-              status: 'connected', 
-              message: 'Connected to Gemini Live API' 
+            this.connectionStatusSubject.next({
+              status: 'connected',
+              message: 'Connected to Gemini Live API'
             });
           },
           onmessage: async (message: LiveServerMessage) => {
-            console.log('📨 Mensaje recibido del servidor:', message);
+            console.log('📨 [Message] Mensaje recibido del servidor:', this.getMessageType(message));
+
+            // Procesamiento inmediato para ciertos tipos de mensajes
+            const messageType = this.getMessageType(message);
             
-            // Manejo de audio (funcionalidad existente)
-            const audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData;
-            if (audio) {
-              console.log('🔊 Audio recibido del modelo');
-              this.audioDataSubject.next(audio);
-            }
-
-            // Manejo de llamadas a herramientas (nuevo)
-            if (message.toolCall) {
-              console.log('🛠️ Llamada a herramienta detectada:', message.toolCall);
-              const functionCall = message.toolCall.functionCalls?.[0];
-              if (functionCall) {
-                console.log('🔧 Función específica llamada:', {
-                  name: functionCall.name,
-                  args: functionCall.args,
-                  id: functionCall.id
-                });
-                
-                const toolCall: ToolCall = {
-                  name: functionCall.name || '',
-                  args: functionCall.args || {},
-                  id: functionCall.id || ''
-                };
-                console.log('📤 Publicando llamada a herramienta:', toolCall);
-                this.toolCallSubject.next(toolCall);
-                
-                // Esperar un momento para que el componente procese la herramienta
-                setTimeout(() => {
-                  console.log('⏳ Esperando respuesta de herramienta...');
-                }, 100);
-              }
-            }
-
-            // Manejo de respuestas del modelo después de herramientas
-            const text = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (text) {
-              console.log('💬 Texto recibido del modelo (posible respuesta a herramienta):', text);
-              this.textResponseSubject.next(text);
-            }
-
-            // Manejo de interrupciones (funcionalidad existente)
-            const interrupted = message.serverContent?.interrupted;
-            if (interrupted) {
-              console.log('⏸️ Interrupción detectada');
+            if (messageType === 'interrupted') {
+              // Procesar interrupciones inmediatamente
+              console.log('⏸️ [Message] Interrupción procesada inmediatamente');
               this.audioDataSubject.next({ interrupted: true });
+              return;
+            }
+
+            // Agregar el mensaje a la cola para procesamiento por turnos
+            this.responseQueue.push(message);
+
+            // Si no estamos procesando un turno, iniciar el procesamiento
+            if (!this.isProcessingTurn) {
+              this.isProcessingTurn = true;
+
+              try {
+                console.log('🔄 [Message] Iniciando procesamiento de turno...');
+                const turns = await this.handleTurn();
+                await this.processTurns(turns);
+              } catch (error) {
+                console.error('❌ [Message] Error procesando turno:', error);
+                this.connectionStatusSubject.next({
+                  status: 'error',
+                  message: `Turn processing error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                });
+              } finally {
+                this.isProcessingTurn = false;
+                console.log('✅ [Message] Procesamiento de turno finalizado');
+              }
+            } else {
+              console.log('⏳ [Message] Turno ya en procesamiento, mensaje agregado a cola');
             }
           },
           onerror: (e: ErrorEvent) => {
-            this.connectionStatusSubject.next({ 
-              status: 'error', 
-              message: `Connection error: ${e.message}` 
+            this.connectionStatusSubject.next({
+              status: 'error',
+              message: `Connection error: ${e.message}`
             });
           },
           onclose: (e: CloseEvent) => {
             console.log('🔌 Conexión cerrada:', e.reason, 'Código:', e.code);
-            this.connectionStatusSubject.next({ 
-              status: 'disconnected', 
-              message: `Connection closed: ${e.reason}` 
+            this.connectionStatusSubject.next({
+              status: 'disconnected',
+              message: `Connection closed: ${e.reason}`
             });
-            
+
             // Si la conexión se cierra inesperadamente, intentar reconectar
             if (e.code !== 1000) { // 1000 = cierre normal
               console.log('🔄 Intentando reconectar en 3 segundos...');
@@ -261,9 +441,9 @@ export class GeminiAudioService {
       });
     } catch (e: any) {
       console.error(e);
-      this.connectionStatusSubject.next({ 
-        status: 'error', 
-        message: `Failed to initialize session: ${e.message}` 
+      this.connectionStatusSubject.next({
+        status: 'error',
+        message: `Failed to initialize session: ${e.message}`
       });
     }
   }
@@ -280,7 +460,7 @@ export class GeminiAudioService {
   private isSessionReady(): boolean {
     const status = this.getConnectionStatus();
     const isReady = this.session && status.status === 'connected';
-    
+
     if (!isReady) {
       console.warn('⚠️ Sesión no está lista:', {
         session: !!this.session,
@@ -288,35 +468,73 @@ export class GeminiAudioService {
         message: status.message
       });
     }
-    
+
     return isReady;
   }
 
   /**
    * Envía respuesta a una llamada de herramienta
-   * Basado en la documentación oficial: https://ai.google.dev/gemini-api/docs/live-tools
+   * Mejorado para funcionar con el sistema de turnos
    */
   sendToolResponse(toolResponse: ToolResponse): void {
     if (!this.isSessionReady()) {
-      console.error('❌ No se puede enviar respuesta: sesión no está lista');
+      console.error('❌ [Tool] No se puede enviar respuesta: sesión no está lista');
       return;
     }
 
-    console.log('📤 Enviando respuesta de herramienta al modelo:', toolResponse);
-    
+    console.log('📤 [Tool] Enviando respuesta de herramienta al modelo:', {
+      toolCallId: toolResponse.toolCallId,
+      responseType: typeof toolResponse.response,
+      responsePreview: JSON.stringify(toolResponse.response).substring(0, 100) + '...'
+    });
+
     try {
-      // Usar el método específico para respuestas de herramientas
-      // En lugar de sendClientContent, usamos la estructura correcta
-      this.session.sendClientContent({
+      // Estructura recomendada para respuestas de herramientas
+      const responseContent = {
         turns: [{
           parts: [{
             text: JSON.stringify(toolResponse.response)
           }]
         }]
-      });
-      console.log('✅ Respuesta de herramienta enviada exitosamente');
+      };
+
+      this.session.sendClientContent(responseContent);
+      console.log('✅ [Tool] Respuesta de herramienta enviada exitosamente');
+
+      // Limpiar la llamada a herramienta pendiente inmediatamente
+      setTimeout(() => {
+        this.toolCallSubject.next(null);
+      }, 25);
+
     } catch (error) {
-      console.error('❌ Error enviando respuesta de herramienta:', error);
+      console.error('❌ [Tool] Error enviando respuesta de herramienta:', error);
+    }
+  }
+
+  /**
+   * Envía respuesta de herramientas con múltiples funciones
+   * Basado en el ejemplo oficial de Gemini Live Tools
+   */
+  sendToolResponseWithFunctions(toolResponse: ToolResponseWithFunctions): void {
+    if (!this.isSessionReady()) {
+      console.error('❌ [Tool] No se puede enviar respuesta: sesión no está lista');
+      return;
+    }
+
+    console.log('📤 [Tool] Enviando respuestas de herramientas con funciones:', toolResponse.functionResponses.length);
+
+    try {
+      // Usar el método específico para respuestas de herramientas con funciones
+      this.session.sendToolResponse(toolResponse);
+      console.log('✅ [Tool] Respuestas de herramientas enviadas exitosamente');
+
+      // Limpiar las llamadas a herramientas pendientes
+      setTimeout(() => {
+        this.toolCallSubject.next(null);
+      }, 25);
+
+    } catch (error) {
+      console.error('❌ [Tool] Error enviando respuestas de herramientas:', error);
     }
   }
 
@@ -538,7 +756,7 @@ export class GeminiAudioService {
    */
   async testKatuqTools(): Promise<void> {
     console.log('🧪 Iniciando prueba de herramientas Katuq...');
-    
+
     // Inicializar sesión con herramientas de Katuq
     console.log('🔧 Configurando sesión con herramientas Katuq...');
     await this.initSessionWithKatuqTools();
@@ -548,10 +766,10 @@ export class GeminiAudioService {
     this.toolCall$.subscribe(toolCall => {
       if (toolCall) {
         console.log('🛠️ Llamada a herramienta Katuq recibida:', toolCall);
-        
+
         // Procesar la llamada a la herramienta
         const response = this.handleKatuqToolResponse(toolCall);
-        
+
         // Enviar respuesta (comentado por ahora para evitar errores de tipos)
         console.log('📤 Respuesta de herramienta:', response);
         // this.sendToolResponse({
@@ -579,7 +797,7 @@ export class GeminiAudioService {
     testMessages.forEach((msg, index) => {
       console.log(`${index + 1}. ${msg}`);
     });
-    
+
     console.log('✅ Configuración de prueba completada. Puedes enviar mensajes de voz o texto.');
   }
 
@@ -588,19 +806,19 @@ export class GeminiAudioService {
    */
   async testCompleteToolFlow(): Promise<void> {
     console.log('🧪 Iniciando prueba del flujo completo de herramientas...');
-    
+
     // Inicializar sesión con herramientas
     await this.initSessionWithKatuqTools();
-    
+
     // Suscribirse a todo el flujo
     this.toolCall$.subscribe(toolCall => {
       if (toolCall) {
         console.log('🛠️ [Test] Herramienta llamada:', toolCall);
-        
+
         // Procesar herramienta
         const response = this.handleKatuqToolResponse(toolCall);
         console.log('📤 [Test] Respuesta generada:', response);
-        
+
         // Enviar respuesta al modelo
         this.sendToolResponse({
           toolCallId: toolCall.id,
@@ -608,26 +826,30 @@ export class GeminiAudioService {
         });
       }
     });
-    
+
     this.textResponse$.subscribe(text => {
       console.log('💬 [Test] Respuesta del modelo:', text);
     });
-    
+
     // Enviar mensaje de prueba después de un momento
     setTimeout(() => {
       console.log('📤 [Test] Enviando mensaje de prueba...');
       this.sendTextMessage("¿Cuál es el estado del sistema Katuq?");
     }, 2000);
-    
+
     console.log('✅ [Test] Configuración completada. Revisa la consola para el flujo completo.');
   }
 
   closeSession(): void {
+    // Limpiar estado de turnos
+    this.responseQueue = [];
+    this.isProcessingTurn = false;
+
     if (this.session) {
       this.session.close();
-      this.connectionStatusSubject.next({ 
-        status: 'disconnected', 
-        message: 'Session closed' 
+      this.connectionStatusSubject.next({
+        status: 'disconnected',
+        message: 'Session closed'
       });
     }
   }
@@ -643,6 +865,10 @@ export class GeminiAudioService {
   async reconnectSession(): Promise<void> {
     console.log('🔄 Reintentando conexión...');
     try {
+      // Limpiar estado de turnos antes de reconectar
+      this.responseQueue = [];
+      this.isProcessingTurn = false;
+
       await this.initSession();
       console.log('✅ Reconexión exitosa');
     } catch (error) {
@@ -668,17 +894,17 @@ export class GeminiAudioService {
         console.log('📦 Procesando get_inventory_info con args:', toolCall.args);
         response = this.handleInventoryInfo(toolCall.args);
         break;
-      
+
       case 'get_system_status':
         console.log('🖥️ Procesando get_system_status con args:', toolCall.args);
         response = this.handleSystemStatus(toolCall.args);
         break;
-      
+
       case 'search_products':
         console.log('🔍 Procesando search_products con args:', toolCall.args);
         response = this.handleSearchProducts(toolCall.args);
         break;
-      
+
       default:
         console.warn('⚠️ Herramienta no reconocida:', toolCall.name);
         response = { error: 'Herramienta no implementada' };
@@ -694,7 +920,7 @@ export class GeminiAudioService {
   private handleInventoryInfo(args: any): any {
     console.log('📦 handleInventoryInfo llamado con args:', args);
     const { product_name, category } = args;
-    
+
     // Simulación de datos del inventario
     const mockInventory = {
       total_products: 1250,
@@ -750,7 +976,7 @@ export class GeminiAudioService {
   private handleSystemStatus(args: any): any {
     console.log('🖥️ handleSystemStatus llamado con args:', args);
     const { include_metrics } = args;
-    
+
     const systemStatus = {
       status: 'online',
       uptime: '15 días, 8 horas, 32 minutos',
@@ -784,7 +1010,7 @@ export class GeminiAudioService {
   private handleSearchProducts(args: any): any {
     console.log('🔍 handleSearchProducts llamado con args:', args);
     const { query, limit = 10 } = args;
-    
+
     // Simulación de búsqueda de productos
     const mockProducts = [
       { id: 1, name: 'Laptop HP Pavilion', category: 'Electrónicos', price: 899.99, stock: 15 },
@@ -798,7 +1024,7 @@ export class GeminiAudioService {
 
     // Filtrar productos que coincidan con la búsqueda
     const filteredProducts = mockProducts
-      .filter(product => 
+      .filter(product =>
         product.name.toLowerCase().includes(query.toLowerCase()) ||
         product.category.toLowerCase().includes(query.toLowerCase())
       )

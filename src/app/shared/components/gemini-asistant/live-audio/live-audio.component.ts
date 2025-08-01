@@ -84,25 +84,13 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
     );
     this.subscriptions.push(audioDataSub);
 
-    // Subscribe to tool calls (nuevo)
+    // Subscribe to tool calls (solo para mostrar status - el procesamiento es automático)
     const toolCallSub = this.geminiService.toolCall$.subscribe(
       (toolCall) => {
         if (toolCall) {
-          console.log('🛠️ [LiveAudio] Llamada a herramienta detectada:', toolCall);
-          this.status = `Herramienta llamada: ${toolCall.name}`;
-          
-          // Procesar la herramienta Katuq
-          const response = this.geminiService.handleKatuqToolResponse(toolCall);
-          console.log('📤 [LiveAudio] Respuesta de herramienta:', response);
-          
-          // Enviar la respuesta de vuelta al modelo con delay
-          setTimeout(() => {
-            console.log('⏳ [LiveAudio] Enviando respuesta después de delay...');
-            this.geminiService.sendToolResponse({
-              toolCallId: toolCall.id,
-              response: response
-            });
-          }, 500); // Delay de 500ms para asegurar estabilidad
+          console.log('🛠️ [LiveAudio] Llamada a herramienta detectada:', toolCall.name);
+          this.status = `Herramienta ejecutada: ${toolCall.name}`;
+          // Nota: El procesamiento y respuesta de herramientas ahora es automático en processTurns()
         }
       }
     );
