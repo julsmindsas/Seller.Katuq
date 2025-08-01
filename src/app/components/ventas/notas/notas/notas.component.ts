@@ -1079,10 +1079,23 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     const notasDelProducto = this.obtenerNotasDelProducto(producto);
     if (indiceNota < 0 || indiceNota >= notasDelProducto.length) return;
 
-    // Confirmar eliminación
+    const notaAEliminar = notasDelProducto[indiceNota];
+    const nombreProducto = producto?.producto?.crearProducto?.titulo || 'Producto';
+    const descripcionNota = this.getDescripcionNota(notaAEliminar);
+
+    // Confirmar eliminación con información específica
     Swal.fire({
-      title: "¿Eliminar nota existente?",
-      text: "¿Está seguro de que desea eliminar esta nota de producción?",
+      title: "¿Eliminar nota de producción?",
+      html: `
+        <div class="text-start">
+          <p><strong>Producto:</strong> ${nombreProducto}</p>
+          <p><strong>Nota:</strong> ${descripcionNota}</p>
+          <p class="text-warning mt-2">
+            <i class="fa fa-exclamation-triangle me-1"></i>
+            Esta acción no se puede deshacer.
+          </p>
+        </div>
+      `,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -1092,7 +1105,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }).then((result) => {
       if (result.isConfirmed) {
         // Encontrar el índice real en el array completo de notas de producción
-        const notaAEliminar = notasDelProducto[indiceNota];
         const indiceRealEnPedido =
           this.pedido.notasPedido.notasProduccion.findIndex(
             (nota) => nota === notaAEliminar,
@@ -1102,6 +1114,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           // Eliminar la nota específica
           this.pedido.notasPedido.notasProduccion.splice(indiceRealEnPedido, 1);
 
+          // Forzar detección de cambios
+          this.cdr.detectChanges();
+
           // Emitir evento de actualización
           this.notasActualizadas.emit({
             carrito: this.pedido.carrito,
@@ -1110,6 +1125,15 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           });
 
           // Mostrar mensaje de éxito
+          Swal.fire({
+            icon: "success",
+            title: "Nota eliminada",
+            text: `La nota de producción para "${nombreProducto}" ha sido eliminada correctamente.`,
+            confirmButtonText: "Aceptar",
+            timer: 2000,
+            timerProgressBar: true
+          });
+
           console.log("✅ Nota de producción eliminada correctamente");
 
           // Si después de eliminar no quedan notas para este producto, habilitar campo para nueva nota
@@ -1129,6 +1153,14 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
               this.agregarNota(indiceProducto);
             }
           }
+        } else {
+          // Si no se encuentra la nota, mostrar error
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudo encontrar la nota para eliminar.",
+            confirmButtonText: "Aceptar"
+          });
         }
       }
     });

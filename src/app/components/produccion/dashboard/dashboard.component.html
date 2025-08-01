@@ -1157,7 +1157,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let item of listaPorProcesoParaImprimir | orderBy:'cantidad':'desc'; let i = index" 
+                    <tr *ngFor="let item of listaPorProcesoParaImprimir; let i = index" 
                         [ngClass]="{'print-highpriority': item.cantidad > 5}">
                         <td>{{i+1}}</td>
                         <td *ngIf="shouldShowDateColumnForPrint()">{{item.fecha}}</td>

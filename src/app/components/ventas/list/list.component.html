@@ -282,7 +282,7 @@
                                                                         <i class="pi pi-list me-1"></i>
                                                                         {{ 'Todos' | translate }}
                                                                     </button>
-                                                                    
+
                                                                     <!-- Filtros para modo producción -->
                                                                     <ng-container *ngIf="isFromProduction">
                                                                         <button type="button"
@@ -314,7 +314,7 @@
                                                                             {{ 'Pospendientes' | translate }}
                                                                         </button>
                                                                     </ng-container>
-                                                                    
+
                                                                     <!-- Filtros para modo normal (no producción) - TODOS los estados -->
                                                                     <ng-container *ngIf="!isFromProduction">
                                                                         <button type="button"
@@ -380,7 +380,7 @@
                                                                         <i class="pi pi-list me-1"></i>
                                                                         {{ 'Todos' | translate }}
                                                                     </button>
-                                                                    
+
                                                                     <!-- Filtros para modo producción -->
                                                                     <ng-container *ngIf="isFromProduction">
                                                                         <button type="button"
@@ -411,8 +411,15 @@
                                                                             <i class="pi pi-check-circle me-1"></i>
                                                                             {{ 'Producido Totalmente' | translate }}
                                                                         </button>
+                                                                        <button type="button"
+                                                                            class="status-chip status-info"
+                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ParaDespachar'}"
+                                                                            (click)="setQuickFilter('estadoProceso', 'ParaDespachar')">
+                                                                            <i class="pi pi-cog me-1"></i>
+                                                                            {{ 'Para Despachar' | translate }}
+                                                                        </button>
                                                                     </ng-container>
-                                                                    
+
                                                                     <!-- Filtros para modo normal (no producción) - TODOS los estados -->
                                                                     <ng-container *ngIf="!isFromProduction">
                                                                         <button type="button"
@@ -509,76 +516,89 @@
                                                                 <label class="filter-label">{{ 'Número de Pedido' |
                                                                     translate }}</label>
                                                                 <div class="search-container">
-                                                                    <div class="custom-autocomplete-container position-relative">
-                                                                        <input type="text" 
-                                                                               class="form-control modern-autocomplete"
-                                                                               [(ngModel)]="searchQuery"
-                                                                               (input)="onSearchInput($event)"
-                                                                               (focus)="showSuggestions = true"
-                                                                               (blur)="onInputBlur()"
-                                                                               [disabled]="isSearching"
-                                                                               placeholder="{{ 'Buscar por número...' | translate }}"
-                                                                               [class.searching]="isSearching"
-                                                                               [class.has-error]="searchError">
-                                                                        
+                                                                    <div
+                                                                        class="custom-autocomplete-container position-relative">
+                                                                        <input type="text"
+                                                                            class="form-control modern-autocomplete"
+                                                                            [(ngModel)]="searchQuery"
+                                                                            (input)="onSearchInput($event)"
+                                                                            (focus)="showSuggestions = true"
+                                                                            (blur)="onInputBlur()"
+                                                                            [disabled]="isSearching"
+                                                                            placeholder="{{ 'Buscar por número...' | translate }}"
+                                                                            [class.searching]="isSearching"
+                                                                            [class.has-error]="searchError">
+
                                                                         <!-- Dropdown de sugerencias -->
-                                                                        <div *ngIf="showSuggestions && (filteredOrderNumbers?.length > 0 || isSearching || searchError)" 
-                                                                             class="suggestions-dropdown">
-                                                                            
+                                                                        <div *ngIf="showSuggestions && (filteredOrderNumbers?.length > 0 || isSearching || searchError)"
+                                                                            class="suggestions-dropdown">
+
                                                                             <!-- Loading indicator -->
-                                                                            <div *ngIf="isSearching" class="suggestion-item loading-item">
-                                                                                <i class="pi pi-spin pi-spinner me-2"></i>
-                                                                                <span>{{ 'Buscando...' | translate }}</span>
+                                                                            <div *ngIf="isSearching"
+                                                                                class="suggestion-item loading-item">
+                                                                                <i
+                                                                                    class="pi pi-spin pi-spinner me-2"></i>
+                                                                                <span>{{ 'Buscando...' | translate
+                                                                                    }}</span>
                                                                             </div>
-                                                                            
+
                                                                             <!-- Error message -->
-                                                                            <div *ngIf="searchError" class="suggestion-item error-item">
-                                                                                <i class="pi pi-exclamation-triangle me-2 text-danger"></i>
-                                                                                <span class="text-danger">{{ searchError }}</span>
+                                                                            <div *ngIf="searchError"
+                                                                                class="suggestion-item error-item">
+                                                                                <i
+                                                                                    class="pi pi-exclamation-triangle me-2 text-danger"></i>
+                                                                                <span class="text-danger">{{ searchError
+                                                                                    }}</span>
                                                                             </div>
-                                                                            
+
                                                                             <!-- Sugerencias -->
-                                                                            <div *ngFor="let item of filteredOrderNumbers" 
-                                                                                 class="suggestion-item clickable-item"
-                                                                                 (mousedown)="selectOrder(item)">
-                                                                                <span class="fw-bold">#{{ item?.nroPedido }}</span>
-                                                                                <small class="text-muted ms-2" *ngIf="item?.cliente?.nombres_completos">
+                                                                            <div *ngFor="let item of filteredOrderNumbers"
+                                                                                class="suggestion-item clickable-item"
+                                                                                (mousedown)="selectOrder(item)">
+                                                                                <span class="fw-bold">#{{
+                                                                                    item?.nroPedido }}</span>
+                                                                                <small class="text-muted ms-2"
+                                                                                    *ngIf="item?.cliente?.nombres_completos">
                                                                                     {{ item.cliente.nombres_completos }}
                                                                                 </small>
-                                                                                <small class="text-muted ms-2" *ngIf="item?.fechaCreacion">
-                                                                                    {{ item.fechaCreacion | date:'dd/MM/yyyy' }}
+                                                                                <small class="text-muted ms-2"
+                                                                                    *ngIf="item?.fechaCreacion">
+                                                                                    {{ item.fechaCreacion |
+                                                                                    date:'dd/MM/yyyy' }}
                                                                                 </small>
                                                                             </div>
-                                                                            
+
                                                                             <!-- No results message -->
-                                                                            <div *ngIf="!isSearching && !searchError && filteredOrderNumbers?.length === 0 && searchQuery?.length > 0" 
-                                                                                 class="suggestion-item no-results-item">
+                                                                            <div *ngIf="!isSearching && !searchError && filteredOrderNumbers?.length === 0 && searchQuery?.length > 0"
+                                                                                class="suggestion-item no-results-item">
                                                                                 <i class="pi pi-info-circle me-2"></i>
-                                                                                <span>{{ 'No se encontraron pedidos' | translate }}</span>
+                                                                                <span>{{ 'No se encontraron pedidos' |
+                                                                                    translate }}</span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    
+
                                                                     <!-- Indicador de carga -->
                                                                     <div *ngIf="isSearching" class="search-loading">
                                                                         <i class="pi pi-spin pi-spinner"></i>
                                                                         <span class="ms-2">Buscando...</span>
                                                                     </div>
-                                                                    
+
                                                                     <!-- Botón de limpiar búsqueda -->
-                                                                    <button *ngIf="searchQuery && !isSearching" 
-                                                                        type="button" 
+                                                                    <button *ngIf="searchQuery && !isSearching"
+                                                                        type="button"
                                                                         class="btn btn-sm btn-outline-secondary clear-search-btn"
                                                                         (click)="clearSearchFilter()"
                                                                         pTooltip="Limpiar búsqueda">
                                                                         <i class="pi pi-times"></i>
                                                                     </button>
                                                                 </div>
-                                                                
+
                                                                 <!-- Mensaje de ayuda -->
                                                                 <small class="text-muted mt-1 d-block">
                                                                     <i class="pi pi-info-circle me-1"></i>
-                                                                    Ingrese al menos {{ searchMinLength }} caracteres para buscar
+                                                                    Ingrese al menos {{ searchMinLength }} caracteres
+                                                                    para buscar
                                                                 </small>
                                                             </div>
                                                         </div>
@@ -1125,7 +1145,8 @@
 
                                             <!-- Columna Fecha Última Impresión -->
                                             <td *ngIf="isColumnVisible('ultimaImpresion')" class="text-nowrap">
-                                                {{ pedido.ultimaImpresion ? (pedido.ultimaImpresion | date: 'dd/MM/yyyy HH:mm') : '-' }}
+                                                {{ pedido.ultimaImpresion ? (pedido.ultimaImpresion | date: 'dd/MM/yyyy
+                                                HH:mm') : '-' }}
                                             </td>
                                         </tr>
                                     </ng-template>
@@ -1566,6 +1587,16 @@
     <div class="modal-body">
         <app-notas #notaspedidos [pedido]="pedidoSeleccionado" [isEdit]="true"
             (notasActualizadas)="onNotasActualizadas($event)"></app-notas>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('save')">
+            <i class="fa fa-check me-1"></i>
+            {{'Guardar' | translate}}
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('Cross click')">
+            <i class="fa fa-times me-1"></i>
+            {{'Cancelar' | translate}}
+        </button>
     </div>
 </ng-template>
 

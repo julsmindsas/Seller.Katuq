@@ -1205,6 +1205,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  getNombreVariable(titulo: string) {
+    const variable = this.variables.find(
+      (v) => v.children.find(c => c.data.titulo == titulo) !== undefined  
+    );
+    return variable ?  'Proceso comercial ' + variable.data.titulo + ': ' : "";
+  }
+
   addChild(node: TreeNode) {
     //Aquí podría ir la logica para agregar un hijo a la categoria seleccionada
     if (node.children == undefined) {

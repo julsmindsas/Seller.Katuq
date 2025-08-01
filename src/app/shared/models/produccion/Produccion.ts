@@ -57,8 +57,8 @@ export interface DetallePedido {
     proceso: string;
     cantidadArticulosPorPedido: number;
     piezasPorRepartir?: number;
-    historialPiezasProducidas?: PiezasProduccion[]
-
+    historialPiezasProducidas?: PiezasProduccion[],
+    nombreProducto?: string
 }
 
 export interface PedidosParaProduccionEnsamble {
