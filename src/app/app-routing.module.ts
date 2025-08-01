@@ -56,6 +56,18 @@ const routes: Routes = [
     path: 'terms-conditions',
     component: TermsConditionsComponent
   },
+  // Nueva ruta para live-audio en pantalla completa
+  {
+    path: 'live-audio',
+    component: BlankComponent,
+    canActivate: [AdminGuard],
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./shared/components/gemini-asistant/live-audio/live-audio.module').then(m => m.LiveAudioModule)
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,

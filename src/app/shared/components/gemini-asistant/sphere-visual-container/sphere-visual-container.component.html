@@ -1,0 +1,68 @@
+<div class="sphere-visual-container-wrapper">
+  <!-- Contenedor principal de visualización esférica -->
+  <div class="sphere-main-container" [class.celebration-mode]="isCelebrationMode" [class.audio-reactive]="isAudioReactive">
+    
+    <!-- Componente de visualización esférica 3D -->
+    <app-sphere-visual 
+      *ngIf="currentConfig"
+      [sphereConfig]="currentConfig"
+      [inputNode]="inputNode"
+      [outputNode]="outputNode">
+    </app-sphere-visual>
+
+    <!-- Información del paso actual -->
+    <div class="step-info" *ngIf="currentConfig">
+      <div class="step-name">{{ currentConfig.stepName | titlecase }}</div>
+      <div class="animation-type">{{ currentConfig.animationType | uppercase }}</div>
+      <div class="particle-count">{{ currentConfig.particleCount }} partículas</div>
+    </div>
+
+    <!-- Controles de visualización -->
+    <div class="visual-controls">
+      <button 
+        class="control-btn audio-btn" 
+        [class.active]="isAudioReactive"
+        (click)="toggleAudioReactivity(!isAudioReactive)"
+        title="Activar/Desactivar reactividad al audio">
+        <i class="fas fa-volume-up"></i>
+      </button>
+      
+      <button 
+        class="control-btn celebration-btn" 
+        [class.active]="isCelebrationMode"
+        (click)="toggleCelebrationMode(!isCelebrationMode)"
+        title="Activar/Desactivar modo celebración">
+        <i class="fas fa-star"></i>
+      </button>
+      
+      <button 
+        class="control-btn clear-btn"
+        (click)="clearVisual()"
+        title="Limpiar visualización">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Evento actual -->
+    <div class="current-event" *ngIf="currentEvent">
+      <div class="event-type">{{ currentEvent.type | uppercase }}</div>
+      <div class="event-data" *ngIf="currentEvent.data">
+        {{ currentEvent.data.message || currentEvent.data.celebrationType }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de prueba para desarrollo -->
+  <div class="test-controls" *ngIf="false">
+    <button (click)="createSphereVisual('bodega')">Bodega</button>
+    <button (click)="createSphereVisual('productos')">Productos</button>
+    <button (click)="createSphereVisual('carrito')">Carrito</button>
+    <button (click)="createSphereVisual('cliente')">Cliente</button>
+    <button (click)="createSphereVisual('envio')">Envío</button>
+    <button (click)="createSphereVisual('facturacion')">Facturación</button>
+    <button (click)="createSphereVisual('pago')">Pago</button>
+    <button (click)="createSphereVisual('confirmacion')">Confirmación</button>
+    <button (click)="activateCelebration('success')">Celebración</button>
+    <button (click)="showNotification('¡Prueba exitosa!', 'success')">Notificación</button>
+  </div>
+</div> 

@@ -138,19 +138,18 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
   toggleOptionsPanel(event?: MouseEvent) {
     if (event) event.stopPropagation();
+    console.log('🔄 Toggle options panel clicked');
 
-    if (this.chatFormVisible) {
-      // Si el chat está abierto, lo minimizamos en lugar de mostrar opciones
-      this.minimizeChat(event);
-      return;
-    }
-
+    // Simplemente alternar el panel de opciones
     this.optionsPanelVisible = !this.optionsPanelVisible;
-
-    if (!this.optionsPanelVisible) {
-      // Si cerramos el panel de opciones, cerramos todo
-      this.closeEverything(event || null);
+    
+    // Si cerramos el panel, cerrar también el chat si está abierto
+    if (!this.optionsPanelVisible && this.chatFormVisible) {
+      this.chatFormVisible = false;
+      this.chatMinimized = false;
     }
+
+    this.saveState();
   }
 
   selectMode(mode: string, event: MouseEvent) {
@@ -215,14 +214,219 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   // Método para iniciar el modo live-audio
   startLiveAudioMode(event: MouseEvent) {
     event.stopPropagation();
-    console.log('🎵 Iniciando modo Live Audio');
+    console.log('🎵 Iniciando modo Live Audio en pantalla completa');
     
     // Cerrar otros paneles
     this.optionsPanelVisible = false;
     this.chatFormVisible = false;
     this.chatMinimized = false;
     
+    // Navegar a la ruta de live-audio en pantalla completa
+    this.router.navigate(['/live-audio']);
+    
     this.saveState();
+  }
+
+  private openLiveAudioFullscreen() {
+    // Crear un contenedor de pantalla completa
+    const fullscreenContainer = document.createElement('div');
+    fullscreenContainer.id = 'live-audio-fullscreen';
+    fullscreenContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: 'Arial', sans-serif;
+    `;
+
+    // Agregar contenido del live audio
+    fullscreenContainer.innerHTML = `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        position: relative;
+      ">
+        <!-- Header con título y botón de cerrar -->
+        <div style="
+          position: absolute;
+          top: 20px;
+          left: 20px;
+          right: 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          z-index: 10000;
+        ">
+          <h1 style="
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 300;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+          ">🎤 Live Audio - Katuq Assistant</h1>
+          <button id="close-live-audio" style="
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+          ">✕ Cerrar</button>
+        </div>
+
+        <!-- Contenedor principal para el live audio -->
+        <div id="live-audio-content" style="
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 80px 20px 20px 20px;
+        ">
+          <!-- Contenedor para el componente live-audio -->
+          <div id="live-audio-component-container" style="
+            width: 100%;
+            max-width: 800px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+          ">
+            <div style="
+              font-size: 1.5rem;
+              margin-bottom: 20px;
+              text-align: center;
+              color: #ffffff;
+            ">
+              🎵 Live Audio Iniciado
+            </div>
+            <div style="
+              width: 200px;
+              height: 200px;
+              border-radius: 50%;
+              background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              animation: pulse 2s infinite;
+              margin-bottom: 20px;
+            ">
+              <i class="fa fa-microphone" style="font-size: 3rem; color: white;"></i>
+            </div>
+            <div style="
+              font-size: 1rem;
+              text-align: center;
+              color: rgba(255,255,255,0.8);
+              max-width: 400px;
+            ">
+              Habla con Katuq Assistant usando tu micrófono para interactuar con las herramientas de ventas
+            </div>
+            <div style="
+              margin-top: 20px;
+              padding: 15px;
+              background: rgba(255,255,255,0.1);
+              border-radius: 10px;
+              border: 1px solid rgba(255,255,255,0.2);
+            ">
+              <div style="font-size: 0.9rem; margin-bottom: 10px; color: #ffffff;">
+                <strong>Comandos disponibles:</strong>
+              </div>
+              <div style="font-size: 0.8rem; color: rgba(255,255,255,0.8); line-height: 1.4;">
+                • "Buscar productos" - Buscar en el catálogo<br>
+                • "Agregar al carrito" - Añadir productos<br>
+                • "Ver carrito" - Mostrar contenido del carrito<br>
+                • "Buscar cliente" - Buscar o crear clientes<br>
+                • "Configurar facturación" - Configurar datos de facturación<br>
+                • "Configurar envío" - Configurar opciones de envío<br>
+                • "Procesar venta" - Finalizar la venta
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer con instrucciones -->
+        <div style="
+          position: absolute;
+          bottom: 20px;
+          left: 20px;
+          right: 20px;
+          text-align: center;
+          color: rgba(255,255,255,0.7);
+          font-size: 0.9rem;
+        ">
+          💡 Di "ayuda" para ver todas las herramientas disponibles
+        </div>
+      </div>
+
+      <style>
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+      </style>
+    `;
+
+    // Agregar al DOM
+    document.body.appendChild(fullscreenContainer);
+
+    // Agregar evento para cerrar
+    const closeButton = document.getElementById('close-live-audio');
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        this.closeLiveAudioFullscreen();
+      });
+    }
+
+    // Agregar evento para cerrar con Escape
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        this.closeLiveAudioFullscreen();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    // Guardar referencia para poder cerrar después
+    (fullscreenContainer as any).handleEscape = handleEscape;
+  }
+
+  private closeLiveAudioFullscreen() {
+    const fullscreenContainer = document.getElementById('live-audio-fullscreen');
+    if (fullscreenContainer) {
+      // Remover evento de Escape
+      const handleEscape = (fullscreenContainer as any).handleEscape;
+      if (handleEscape) {
+        document.removeEventListener('keydown', handleEscape);
+      }
+      
+      // Remover el contenedor
+      document.body.removeChild(fullscreenContainer);
+      
+      // Resetear modo
+      this.selectedMode = 'chat';
+      this.saveState();
+    }
   }
 
   // Método para detener el modo live-audio

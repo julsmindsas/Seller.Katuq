@@ -17,10 +17,20 @@ import { Producto } from '../../../models/productos/Producto';
 import { UserLogged } from '../../../models/User/UserLogged';
 import { UserLite } from '../../../models/User/UserLite';
 import { VoiceAgentService } from '../../../services/voice-agent.service';
+import { SphereVisualService } from './sphere-visual.service';
 
 export interface ConnectionStatus {
   status: 'connecting' | 'connected' | 'disconnected' | 'error';
   message: string;
+}
+
+// Interfaces para eventos de herramientas de Katuq
+export interface KatuqToolEvent {
+  toolName: string;
+  stepName?: string;
+  data?: any;
+  success?: boolean;
+  message?: string;
 }
 
 // Nuevas interfaces para herramientas
@@ -76,6 +86,9 @@ export interface VisualStep {
   stepKey: string;
   completed?: boolean;
   active?: boolean;
+  sphereAnimation?: string;
+  sphereColor?: string;
+  sphereVisual?: any;
 }
 
 export interface OrderStatus {
@@ -118,6 +131,7 @@ export class GeminiAudioService {
   // Nuevos subjects para herramientas
   private toolCallSubject = new BehaviorSubject<ToolCall | null>(null);
   private textResponseSubject = new BehaviorSubject<string>('');
+  private katuqToolEventSubject = new BehaviorSubject<KatuqToolEvent | null>(null);
 
   // Sistema de turnos según documentación oficial
   private responseQueue: LiveServerMessage[] = [];
@@ -125,10 +139,9 @@ export class GeminiAudioService {
 
   connectionStatus$: Observable<ConnectionStatus> = this.connectionStatusSubject.asObservable();
   audioData$: Observable<any> = this.audioDataSubject.asObservable();
-
-  // Nuevos observables para herramientas
   toolCall$: Observable<ToolCall | null> = this.toolCallSubject.asObservable();
   textResponse$: Observable<string> = this.textResponseSubject.asObservable();
+  katuqToolEvent$: Observable<KatuqToolEvent | null> = this.katuqToolEventSubject.asObservable();
 
   // Estado del sistema de ventas
   private pedidoEnProgreso: Pedido;
@@ -147,7 +160,7 @@ export class GeminiAudioService {
   orderStatus$: Observable<OrderStatus | null> = this.orderStatusSubject.asObservable();
   progress$: Observable<number> = this.progressSubject.asObservable();
 
-  constructor() {
+  constructor(private sphereVisualService: SphereVisualService) {
     this.initClient();
     this.initSalesSystem();
   }
@@ -329,52 +342,68 @@ export class GeminiAudioService {
   private getInitialProcessSteps(): VisualStep[] {
     return [
       {
-        imageUrl: 'assets/images/ventas/paso1-productos.png',
-        caption: '1. Bodega: Selecciona una bodega para iniciar la venta',
-        icon: 'fa-warehouse',
-        stepKey: 'bodega'
+        imageUrl: 'assets/images/ventas/paso1-bodega-esfera.png',
+        caption: '1. 🌐 Bodega: Selecciona una bodega para iniciar la venta',
+        icon: 'fa-globe',
+        stepKey: 'bodega',
+        sphereAnimation: 'pulse',
+        sphereColor: '#4CAF50'
       },
       {
-        imageUrl: 'assets/images/ventas/paso2-productos.png',
-        caption: '2. Productos: Busca y selecciona productos del catálogo',
+        imageUrl: 'assets/images/ventas/paso2-productos-esfera.png',
+        caption: '2. 🛍️ Productos: Busca y selecciona productos del catálogo',
         icon: 'fa-shopping-basket',
-        stepKey: 'productos'
+        stepKey: 'productos',
+        sphereAnimation: 'bounce',
+        sphereColor: '#2196F3'
       },
       {
-        imageUrl: 'assets/images/ventas/paso3-carrito.png',
-        caption: '3. Carrito: Revisa los productos seleccionados',
+        imageUrl: 'assets/images/ventas/paso3-carrito-esfera.png',
+        caption: '3. 🛒 Carrito: Revisa los productos seleccionados',
         icon: 'fa-shopping-cart',
-        stepKey: 'carrito'
+        stepKey: 'carrito',
+        sphereAnimation: 'rotate',
+        sphereColor: '#FF9800'
       },
       {
-        imageUrl: 'assets/images/ventas/paso4-cliente.png',
-        caption: '4. Cliente: Configura la información del cliente',
+        imageUrl: 'assets/images/ventas/paso4-cliente-esfera.png',
+        caption: '4. 👤 Cliente: Configura la información del cliente',
         icon: 'fa-user',
-        stepKey: 'cliente'
+        stepKey: 'cliente',
+        sphereAnimation: 'wave',
+        sphereColor: '#9C27B0'
       },
       {
-        imageUrl: 'assets/images/ventas/paso5-envio.png',
-        caption: '5. Envío: Define los datos de entrega',
+        imageUrl: 'assets/images/ventas/paso5-envio-esfera.png',
+        caption: '5. 🚚 Envío: Define los datos de entrega',
         icon: 'fa-truck',
-        stepKey: 'envio'
+        stepKey: 'envio',
+        sphereAnimation: 'slide',
+        sphereColor: '#607D8B'
       },
       {
-        imageUrl: 'assets/images/ventas/paso6-facturacion.png',
-        caption: '6. Facturación: Completa los datos de facturación',
+        imageUrl: 'assets/images/ventas/paso6-facturacion-esfera.png',
+        caption: '6. 📄 Facturación: Completa los datos de facturación',
         icon: 'fa-file-invoice',
-        stepKey: 'facturacion'
+        stepKey: 'facturacion',
+        sphereAnimation: 'glow',
+        sphereColor: '#E91E63'
       },
       {
-        imageUrl: 'assets/images/ventas/paso7-pago.png',
-        caption: '7. Pago: Procesa el pago del pedido',
+        imageUrl: 'assets/images/ventas/paso7-pago-esfera.png',
+        caption: '7. 💳 Pago: Procesa el pago del pedido',
         icon: 'fa-credit-card',
-        stepKey: 'pago'
+        stepKey: 'pago',
+        sphereAnimation: 'pulse',
+        sphereColor: '#4CAF50'
       },
       {
-        imageUrl: 'assets/images/ventas/paso8-confirmacion.png',
-        caption: '8. Confirmación: ¡Venta completada exitosamente!',
+        imageUrl: 'assets/images/ventas/paso8-confirmacion-esfera.png',
+        caption: '8. ✨ Confirmación: ¡Venta completada exitosamente!',
         icon: 'fa-check-circle',
-        stepKey: 'confirmacion'
+        stepKey: 'confirmacion',
+        sphereAnimation: 'celebrate',
+        sphereColor: '#FFD700'
       }
     ];
   }
@@ -395,6 +424,18 @@ export class GeminiAudioService {
       
       this.visualStepsSubject.next(updatedSteps);
       console.log(`📍 Paso visual actualizado: ${stepName} (índice ${stepIndex})`);
+
+      // Activar la visualización esférica para el paso actual
+      const currentStep = updatedSteps[stepIndex];
+      if (currentStep) {
+        this.sphereVisualService.createSphereVisual(stepName.toLowerCase(), {
+          animationType: currentStep.sphereAnimation as any,
+          sphereColor: currentStep.sphereColor || '#4CAF50',
+          particleCount: 50,
+          audioReactive: true,
+          celebrationMode: stepName.toLowerCase() === 'confirmacion'
+        });
+      }
     }
     
     this.updateProgress();
@@ -998,23 +1039,25 @@ export class GeminiAudioService {
       systemInstruction: `Eres un asistente de voz inteligente del sistema Katuq Seller, especializado en ventas y gestión comercial. 
 
 CAPACIDADES PRINCIPALES:
-- Gestión completa de ventas paso a paso con feedback visual
+- Gestión completa de ventas paso a paso con feedback visual esférico
 - Selección de bodegas y catálogo de productos
 - Búsqueda avanzada y gestión de carrito de compras
 - Creación y búsqueda de clientes
+- Configuración completa de facturación y envío
 - Procesamiento completo de pedidos y pagos
-- Actualizaciones visuales en tiempo real para demos
+- Actualizaciones visuales en tiempo real con animaciones esféricas
 
 PERSONALIDAD:
 - Profesional pero amigable, con acento colombiano
 - Proactivo en sugerir siguientes pasos
 - Enfocado en eficiencia y experiencia de usuario
 - Explica claramente cada acción realizada
+- Crea experiencias visuales inolvidables
 
-FLUJO DE VENTAS:
-1. Seleccionar bodega → 2. Buscar productos → 3. Agregar al carrito → 4. Configurar cliente → 5. Procesar venta
+FLUJO DE VENTAS COMPLETO:
+1. Seleccionar bodega → 2. Buscar productos → 3. Agregar al carrito → 4. Configurar cliente → 5. Configurar envío → 6. Configurar facturación → 7. Procesar venta → 8. Confirmación
 
-Siempre proporciona retroalimentación clara sobre el progreso y sugieres las mejores acciones a seguir.`,
+Siempre proporciona retroalimentación clara sobre el progreso y sugieres las mejores acciones a seguir. Crea experiencias visuales únicas en cada paso.`,
       responseModalities: [Modality.AUDIO],
       tools: {
         functionDeclarations: [
@@ -1111,6 +1154,93 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
             }
           },
 
+          // === NUEVAS HERRAMIENTAS DE FACTURACIÓN ===
+          {
+            name: 'configureBilling',
+            description: 'Configura los datos de facturación del pedido con información completa',
+            parameters: {
+              type: 'object',
+              properties: {
+                nombres: { type: 'string', description: 'Nombres completos para facturación' },
+                documento: { type: 'string', description: 'Número de documento de identificación' },
+                tipoDocumento: { type: 'string', description: 'Tipo de documento (CC, CE, NIT, etc.)', default: 'CC' },
+                correoElectronico: { type: 'string', description: 'Correo electrónico para facturación' },
+                celular: { type: 'string', description: 'Número de celular para facturación' },
+                direccion: { type: 'string', description: 'Dirección completa para facturación' },
+                ciudad: { type: 'string', description: 'Ciudad para facturación' },
+                departamento: { type: 'string', description: 'Departamento para facturación' },
+                pais: { type: 'string', description: 'País para facturación', default: 'Colombia' },
+                codigoPostal: { type: 'string', description: 'Código postal (opcional)' },
+                indicativoCel: { type: 'string', description: 'Indicativo del país para celular', default: '57' },
+                alias: { type: 'string', description: 'Alias para la dirección', default: 'Principal' }
+              },
+              required: ['nombres', 'documento']
+            }
+          },
+          {
+            name: 'getBillingZones',
+            description: 'Obtiene las zonas de facturación disponibles con sus costos',
+            parameters: { type: 'object', properties: {} }
+          },
+          {
+            name: 'selectBillingZone',
+            description: 'Selecciona una zona de facturación específica para el pedido',
+            parameters: {
+              type: 'object',
+              properties: {
+                zoneId: { type: 'string', description: 'ID de la zona de facturación (ej: BOG, MED, CALI)' }
+              },
+              required: ['zoneId']
+            }
+          },
+
+          // === NUEVAS HERRAMIENTAS DE ENVÍO ===
+          {
+            name: 'configureShipping',
+            description: 'Configura los datos de envío del pedido con información completa',
+            parameters: {
+              type: 'object',
+              properties: {
+                nombres: { type: 'string', description: 'Nombres completos para envío' },
+                apellidos: { type: 'string', description: 'Apellidos para envío' },
+                direccionEntrega: { type: 'string', description: 'Dirección completa de entrega' },
+                ciudad: { type: 'string', description: 'Ciudad de entrega' },
+                departamento: { type: 'string', description: 'Departamento de entrega' },
+                pais: { type: 'string', description: 'País de entrega', default: 'Colombia' },
+                celular: { type: 'string', description: 'Número de celular para envío' },
+                barrio: { type: 'string', description: 'Barrio o sector de entrega' },
+                codigoPV: { type: 'string', description: 'Código de punto de venta (opcional)' },
+                especificacionesInternas: { type: 'string', description: 'Especificaciones adicionales de la dirección' },
+                indicativoCel: { type: 'string', description: 'Indicativo del país para celular', default: '57' },
+                indicativoOtroNumero: { type: 'string', description: 'Indicativo para otro número (opcional)' },
+                nombreUnidad: { type: 'string', description: 'Nombre de la unidad (apartamento, oficina, etc.)' },
+                otroNumero: { type: 'string', description: 'Otro número de contacto' },
+                observaciones: { type: 'string', description: 'Observaciones adicionales para el envío' },
+                alias: { type: 'string', description: 'Alias para la dirección de envío', default: 'Principal' },
+                zonaCobro: { type: 'string', description: 'Zona de cobro para el envío' }
+              },
+              required: ['nombres', 'direccionEntrega', 'ciudad']
+            }
+          },
+          {
+            name: 'getShippingOptions',
+            description: 'Obtiene las opciones de envío disponibles con sus costos y tiempos',
+            parameters: { type: 'object', properties: {} }
+          },
+          {
+            name: 'selectShippingOption',
+            description: 'Selecciona una opción de envío específica para el pedido',
+            parameters: {
+              type: 'object',
+              properties: {
+                optionId: { type: 'string', description: 'ID de la opción de envío' },
+                estimatedDays: { type: 'integer', description: 'Días estimados de entrega' },
+                cost: { type: 'number', description: 'Costo del envío' }
+              },
+              required: ['optionId']
+            }
+          },
+
           // === PROCESAMIENTO DE PEDIDOS ===
           {
             name: 'getOrderSummary',
@@ -1138,6 +1268,59 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
             name: 'getDemoStatus',
             description: 'Obtiene el estado actual del proceso de venta con progreso visual y siguientes acciones',
             parameters: { type: 'object', properties: {} }
+          },
+
+          // === NUEVAS HERRAMIENTAS VISUALES ESFÉRICAS ===
+          {
+            name: 'createSphereVisual',
+            description: 'Crea una experiencia visual esférica única para el paso actual',
+            parameters: {
+              type: 'object',
+              properties: {
+                stepName: { type: 'string', description: 'Nombre del paso para crear la esfera visual' },
+                animationType: { type: 'string', enum: ['pulse', 'bounce', 'rotate', 'wave', 'slide', 'glow', 'celebrate'], description: 'Tipo de animación esférica' },
+                sphereColor: { type: 'string', description: 'Color de la esfera (hex, rgb, o nombre)' },
+                particleCount: { type: 'integer', description: 'Número de partículas en la esfera (opcional)' }
+              },
+              required: ['stepName']
+            }
+          },
+          {
+            name: 'showSphereProgress',
+            description: 'Muestra el progreso del proceso de venta en una esfera interactiva',
+            parameters: {
+              type: 'object',
+              properties: {
+                includeAnimations: { type: 'boolean', description: 'Incluir animaciones en la esfera de progreso', default: true },
+                showDetails: { type: 'boolean', description: 'Mostrar detalles de cada paso en la esfera', default: true }
+              }
+            }
+          },
+          {
+            name: 'createSphereCelebration',
+            description: 'Crea una celebración esférica especial cuando se completa una venta',
+            parameters: {
+              type: 'object',
+              properties: {
+                celebrationType: { type: 'string', enum: ['success', 'milestone', 'completion'], description: 'Tipo de celebración' },
+                particleEffects: { type: 'boolean', description: 'Incluir efectos de partículas', default: true },
+                soundEffects: { type: 'boolean', description: 'Incluir efectos de sonido', default: true }
+              }
+            }
+          },
+          {
+            name: 'showSphereNotification',
+            description: 'Muestra una notificación esférica con animaciones únicas',
+            parameters: {
+              type: 'object',
+              properties: {
+                message: { type: 'string', description: 'Mensaje a mostrar en la notificación esférica' },
+                type: { type: 'string', enum: ['info', 'success', 'warning', 'error'], description: 'Tipo de notificación' },
+                duration: { type: 'integer', description: 'Duración en milisegundos (opcional)' },
+                sphereSize: { type: 'string', enum: ['small', 'medium', 'large'], description: 'Tamaño de la esfera', default: 'medium' }
+              },
+              required: ['message']
+            }
           },
 
           // === HERRAMIENTAS ORIGINALES (compatibilidad) ===
@@ -1242,7 +1425,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     // Suscribirse a todo el flujo
     this.toolCall$.subscribe(toolCall => {
       if (toolCall) {
-        console.log('🛠️ [Test] Herramienta llamada:', toolCall);
+        console.log('��️ [Test] Herramienta llamada:', toolCall);
 
         // Procesar herramienta
         const response = this.handleKatuqToolResponse(toolCall);
@@ -1309,100 +1492,155 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
    * Maneja las respuestas de herramientas específicas del sistema Katuq
    */
   handleKatuqToolResponse(toolCall: ToolCall): any {
-    console.log('🛠️ Procesando llamada a herramienta Katuq:', toolCall);
-    console.log('📋 Detalles de la herramienta:', {
-      nombre: toolCall.name,
-      argumentos: toolCall.args,
-      id: toolCall.id
-    });
+    const { name, args } = toolCall;
+    console.log(`🔧 Ejecutando herramienta Katuq: ${name}`, args);
 
-    let response: any;
+    try {
+      let response: any;
 
-    switch (toolCall.name) {
-      // Herramientas originales (mantenidas para compatibilidad)
-      case 'get_inventory_info':
-        console.log('📦 Procesando get_inventory_info con args:', toolCall.args);
-        response = this.handleInventoryInfo(toolCall.args);
-        break;
+      switch (name) {
+        case 'listWarehouses':
+          response = this.handleListWarehouses(args);
+          this.emitKatuqToolEvent('listWarehouses', response.data, response.success, response.message);
+          break;
 
-      case 'get_system_status':
-        console.log('🖥️ Procesando get_system_status con args:', toolCall.args);
-        response = this.handleSystemStatus(toolCall.args);
-        break;
+        case 'selectWarehouse':
+          response = this.handleSelectWarehouse(args);
+          this.emitKatuqToolEvent('selectWarehouse', response.data, response.success, response.message);
+          break;
 
-      case 'search_products':
-        console.log('🔍 Procesando search_products con args:', toolCall.args);
-        response = this.handleSearchProducts(toolCall.args);
-        break;
+        case 'searchProductsAdvanced':
+          response = this.handleSearchProductsAdvanced(args);
+          this.emitKatuqToolEvent('searchProductsAdvanced', response.data, response.success, response.message);
+          break;
 
-      // Nuevas herramientas de gestión de ventas
-      case 'listWarehouses':
-        console.log('🏪 Procesando listWarehouses con args:', toolCall.args);
-        response = this.handleListWarehouses(toolCall.args);
-        break;
+        case 'addToCart':
+          response = this.handleAddToCart(args);
+          this.emitKatuqToolEvent('addToCart', response.data, response.success, response.message);
+          break;
 
-      case 'selectWarehouse':
-        console.log('🏭 Procesando selectWarehouse con args:', toolCall.args);
-        response = this.handleSelectWarehouse(toolCall.args);
-        break;
+        case 'quickAddToCart':
+          response = this.handleQuickAddToCart(args);
+          this.emitKatuqToolEvent('quickAddToCart', response.data, response.success, response.message);
+          break;
 
-      case 'searchProductsAdvanced':
-        console.log('🔍 Procesando searchProductsAdvanced con args:', toolCall.args);
-        response = this.handleSearchProductsAdvanced(toolCall.args);
-        break;
+        case 'getCartContents':
+          response = this.handleGetCartContents(args);
+          this.emitKatuqToolEvent('getCartContents', response.data, response.success, response.message);
+          break;
 
-      case 'addToCart':
-        console.log('🛒 Procesando addToCart con args:', toolCall.args);
-        response = this.handleAddToCart(toolCall.args);
-        break;
+        case 'searchClient':
+          response = this.handleSearchClient(args);
+          this.emitKatuqToolEvent('searchClient', response.data, response.success, response.message);
+          break;
 
-      case 'quickAddToCart':
-        console.log('⚡ Procesando quickAddToCart con args:', toolCall.args);
-        response = this.handleQuickAddToCart(toolCall.args);
-        break;
+        case 'quickCreateClient':
+          response = this.handleQuickCreateClient(args);
+          this.emitKatuqToolEvent('quickCreateClient', response.data, response.success, response.message);
+          break;
 
-      case 'searchClient':
-        console.log('👤 Procesando searchClient con args:', toolCall.args);
-        response = this.handleSearchClient(toolCall.args);
-        break;
+        case 'getOrderSummary':
+          response = this.handleGetOrderSummary(args);
+          this.emitKatuqToolEvent('getOrderSummary', response.data, response.success, response.message);
+          break;
 
-      case 'quickCreateClient':
-        console.log('👥 Procesando quickCreateClient con args:', toolCall.args);
-        response = this.handleQuickCreateClient(toolCall.args);
-        break;
+        case 'validateOrderBeforePay':
+          response = this.handleValidateOrderBeforePay(args);
+          this.emitKatuqToolEvent('validateOrderBeforePay', response.data, response.success, response.message);
+          break;
 
-      case 'getOrderSummary':
-        console.log('📋 Procesando getOrderSummary con args:', toolCall.args);
-        response = this.handleGetOrderSummary(toolCall.args);
-        break;
+        case 'processSale':
+          response = this.handleProcessSale(args);
+          this.emitKatuqToolEvent('processSale', response.data, response.success, response.message);
+          break;
 
-      case 'validateOrderBeforePay':
-        console.log('✅ Procesando validateOrderBeforePay con args:', toolCall.args);
-        response = this.handleValidateOrderBeforePay(toolCall.args);
-        break;
+        case 'getDemoStatus':
+          response = this.handleGetDemoStatus(args);
+          this.emitKatuqToolEvent('getDemoStatus', response.data, response.success, response.message);
+          break;
 
-      case 'processSale':
-        console.log('💳 Procesando processSale con args:', toolCall.args);
-        response = this.handleProcessSale(toolCall.args);
-        break;
+        case 'configureBilling':
+          response = this.handleConfigureBilling(args);
+          this.emitKatuqToolEvent('configureBilling', response.data, response.success, response.message);
+          break;
 
-      case 'getCartContents':
-        console.log('🛒 Procesando getCartContents con args:', toolCall.args);
-        response = this.handleGetCartContents(toolCall.args);
-        break;
+        case 'getBillingZones':
+          response = this.handleGetBillingZones(args);
+          this.emitKatuqToolEvent('getBillingZones', response.data, response.success, response.message);
+          break;
 
-      case 'getDemoStatus':
-        console.log('📊 Procesando getDemoStatus con args:', toolCall.args);
-        response = this.handleGetDemoStatus(toolCall.args);
-        break;
+        case 'selectBillingZone':
+          response = this.handleSelectBillingZone(args);
+          this.emitKatuqToolEvent('selectBillingZone', response.data, response.success, response.message);
+          break;
 
-      default:
-        console.warn('⚠️ Herramienta no reconocida:', toolCall.name);
-        response = { error: 'Herramienta no implementada' };
+        case 'configureShipping':
+          response = this.handleConfigureShipping(args);
+          this.emitKatuqToolEvent('configureShipping', response.data, response.success, response.message);
+          break;
+
+        case 'getShippingOptions':
+          response = this.handleGetShippingOptions(args);
+          this.emitKatuqToolEvent('getShippingOptions', response.data, response.success, response.message);
+          break;
+
+        case 'selectShippingOption':
+          response = this.handleSelectShippingOption(args);
+          this.emitKatuqToolEvent('selectShippingOption', response.data, response.success, response.message);
+          break;
+
+        case 'createSphereVisual':
+          response = this.handleCreateSphereVisual(args);
+          this.emitKatuqToolEvent('createSphereVisual', response.data, response.success, response.message);
+          break;
+
+        case 'showSphereProgress':
+          response = this.handleShowSphereProgress(args);
+          this.emitKatuqToolEvent('showSphereProgress', response.data, response.success, response.message);
+          break;
+
+        case 'createSphereCelebration':
+          response = this.handleCreateSphereCelebration(args);
+          this.emitKatuqToolEvent('createSphereCelebration', response.data, response.success, response.message);
+          break;
+
+        case 'showSphereNotification':
+          response = this.handleShowSphereNotification(args);
+          this.emitKatuqToolEvent('showSphereNotification', response.data, response.success, response.message);
+          break;
+
+        default:
+          console.warn(`❌ Herramienta no reconocida: ${name}`);
+          response = {
+            success: false,
+            error: `Herramienta no reconocida: ${name}`
+          };
+          this.emitKatuqToolEvent(name, null, false, `Herramienta no reconocida: ${name}`);
+          break;
+      }
+
+      return response;
+    } catch (error) {
+      console.error(`❌ Error ejecutando herramienta ${name}:`, error);
+      const errorResponse = {
+        success: false,
+        error: `Error ejecutando ${name}: ${error}`
+      };
+      this.emitKatuqToolEvent(name, null, false, `Error ejecutando ${name}: ${error}`);
+      return errorResponse;
     }
+  }
 
-    console.log('📤 Respuesta generada:', response);
-    return response;
+  // Método para emitir eventos de herramientas de Katuq
+  private emitKatuqToolEvent(toolName: string, data?: any, success: boolean = true, message?: string): void {
+    const event: KatuqToolEvent = {
+      toolName,
+      stepName: this.getCurrentStepName(),
+      data,
+      success,
+      message
+    };
+    this.katuqToolEventSubject.next(event);
   }
 
   // === HERRAMIENTAS DE GESTIÓN DE BODEGAS ===
@@ -2212,13 +2450,23 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     this.updateVisualStep('confirmacion');
     this.updateOrderStatus();
 
+    // Crear celebración esférica especial
+    const celebrationData = {
+      celebrationType: 'success',
+      particleEffects: true,
+      soundEffects: true
+    };
+    
+    // Llamar internamente a la celebración esférica
+    const celebrationResponse = this.handleCreateSphereCelebration(celebrationData);
+
     // Mostrar notificación
     this.showToast('¡Venta completada exitosamente!', 'Pedido Creado');
 
     // Preparar nuevo pedido para la siguiente venta
     setTimeout(() => {
       this.inicializarNuevoPedido();
-    }, 3000);
+    }, 5000); // Aumentado para dar tiempo a la celebración
 
     return {
       success: true,
@@ -2227,10 +2475,15 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         total: total,
         totalFormatted: `$${total.toLocaleString()}`,
         paymentMethod: paymentMethod,
-        customer: this.pedidoEnProgreso.cliente?.nombres_completos
+        customer: this.pedidoEnProgreso.cliente?.nombres_completos,
+        celebration: celebrationResponse.data
       },
       message: `🎉 ¡Venta completada! Pedido ${this.pedidoEnProgreso.nroPedido} por $${total.toLocaleString()}`,
-      visualUpdate: { stepName: 'confirmacion', progress: 100, nextActions: ['Sistema listo para nueva venta'] }
+      visualUpdate: { 
+        stepName: 'confirmacion', 
+        progress: 100, 
+        nextActions: ['¡Celebración esférica activada!', 'Sistema listo para nueva venta'] 
+      }
     };
   }
 
@@ -2252,5 +2505,674 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       message: `Estado: ${this.getCurrentStepName()} (${progress}% completo)`,
       visualUpdate: { stepName: 'status', progress: progress, nextActions: [status?.nextStep || 'Continuar proceso'] }
     };
+  }
+
+  // === NUEVAS HERRAMIENTAS DE FACTURACIÓN ===
+
+  /**
+   * Maneja la configuración de datos de facturación
+   */
+  private handleConfigureBilling(args: any): DemoResponse {
+    console.log('📄 handleConfigureBilling llamado con args:', args);
+    const { nombres, documento, tipoDocumento = 'CC', correoElectronico, celular, direccion, ciudad, departamento, pais = 'Colombia', codigoPostal, indicativoCel = '57', alias = 'Principal' } = args;
+
+    if (!nombres || !documento) {
+      return {
+        success: false,
+        message: 'Se requieren nombres y documento para la facturación',
+        error: 'Datos obligatorios faltantes'
+      };
+    }
+
+    // Crear objeto de facturación
+    const facturacion: Facturacion = {
+      nombres,
+      documento,
+      tipoDocumento,
+      correoElectronico: correoElectronico || `${documento}@email.com`,
+      celular: celular || `300${Math.floor(Math.random() * 1000000)}`,
+      direccion: direccion || 'Dirección por confirmar',
+      ciudad: ciudad || 'Bogotá',
+      departamento: departamento || 'Cundinamarca',
+      pais,
+      codigoPostal: codigoPostal || '',
+      indicativoCel,
+      alias
+    };
+
+    this.pedidoEnProgreso.facturacion = facturacion;
+    this.pasoActual = 6;
+    this.updateVisualStep('facturacion');
+    this.updateOrderStatus();
+
+    // Mostrar notificación
+    this.showToast(`Facturación configurada para ${nombres}`, 'Facturación Configurada');
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        billing: facturacion,
+        customer: this.pedidoEnProgreso.cliente?.nombres_completos
+      },
+      message: `✅ Facturación configurada exitosamente para ${nombres} con documento ${documento}`,
+      visualUpdate: {
+        stepName: 'facturacion',
+        progress: 75,
+        nextActions: ['Configura el envío con configureShipping', 'Procesa la venta con processSale']
+      }
+    };
+
+    console.log('📤 Facturación configurada:', response);
+    return response;
+  }
+
+  /**
+   * Maneja la obtención de zonas de facturación
+   */
+  private handleGetBillingZones(args: any): DemoResponse {
+    console.log('🏢 handleGetBillingZones llamado con args:', args);
+
+    const billingZones = [
+      { id: 'BOG', nombre: 'Bogotá', costo: 5000, descripcion: 'Zona metropolitana de Bogotá' },
+      { id: 'MED', nombre: 'Medellín', costo: 8000, descripcion: 'Área metropolitana de Medellín' },
+      { id: 'CALI', nombre: 'Cali', costo: 10000, descripcion: 'Valle del Cauca' },
+      { id: 'BARR', nombre: 'Barranquilla', costo: 12000, descripcion: 'Costa Atlántica' },
+      { id: 'CART', nombre: 'Cartagena', costo: 15000, descripcion: 'Costa Caribe' }
+    ];
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        zones: billingZones,
+        total: billingZones.length
+      },
+      message: `Se encontraron ${billingZones.length} zonas de facturación disponibles`,
+      visualUpdate: {
+        stepName: 'facturacion',
+        progress: 70,
+        nextActions: ['Selecciona una zona con selectBillingZone', 'Configura facturación con configureBilling']
+      }
+    };
+
+    console.log('📤 Zonas de facturación:', response);
+    return response;
+  }
+
+  /**
+   * Maneja la selección de zona de facturación
+   */
+  private handleSelectBillingZone(args: any): DemoResponse {
+    console.log('📍 handleSelectBillingZone llamado con args:', args);
+    const { zoneId } = args;
+
+    if (!zoneId) {
+      return {
+        success: false,
+        message: 'Se requiere el ID de la zona de facturación',
+        error: 'ZoneId es obligatorio'
+      };
+    }
+
+    const billingZones = [
+      { id: 'BOG', nombre: 'Bogotá', costo: 5000 },
+      { id: 'MED', nombre: 'Medellín', costo: 8000 },
+      { id: 'CALI', nombre: 'Cali', costo: 10000 },
+      { id: 'BARR', nombre: 'Barranquilla', costo: 12000 },
+      { id: 'CART', nombre: 'Cartagena', costo: 15000 }
+    ];
+
+    const selectedZone = billingZones.find(z => z.id === zoneId);
+    if (!selectedZone) {
+      return {
+        success: false,
+        message: `No se encontró la zona de facturación con ID: ${zoneId}`,
+        error: 'Zona no encontrada'
+      };
+    }
+
+    // Actualizar el pedido con la zona seleccionada
+    if (!this.pedidoEnProgreso.facturacion) {
+      this.pedidoEnProgreso.facturacion = {} as Facturacion;
+    }
+    this.pedidoEnProgreso.facturacion.zonaCobro = selectedZone.nombre;
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        selectedZone,
+        billingCost: selectedZone.costo
+      },
+      message: `✅ Zona de facturación "${selectedZone.nombre}" seleccionada. Costo: $${selectedZone.costo.toLocaleString()}`,
+      visualUpdate: {
+        stepName: 'facturacion',
+        progress: 72,
+        nextActions: ['Completa la configuración de facturación con configureBilling']
+      }
+    };
+
+    console.log('📤 Zona de facturación seleccionada:', response);
+    return response;
+  }
+
+  // === NUEVAS HERRAMIENTAS DE ENVÍO ===
+
+  /**
+   * Maneja la configuración de datos de envío
+   */
+  private handleConfigureShipping(args: any): DemoResponse {
+    console.log('🚚 handleConfigureShipping llamado con args:', args);
+    const { nombres, apellidos, direccionEntrega, ciudad, departamento, pais = 'Colombia', celular, barrio, codigoPV, especificacionesInternas, indicativoCel = '57', indicativoOtroNumero, nombreUnidad, otroNumero, observaciones, alias = 'Principal', zonaCobro } = args;
+
+    if (!nombres || !direccionEntrega || !ciudad) {
+      return {
+        success: false,
+        message: 'Se requieren nombres, dirección de entrega y ciudad para el envío',
+        error: 'Datos obligatorios faltantes'
+      };
+    }
+
+    // Crear objeto de envío
+    const envio: Envio = {
+      nombres,
+      apellidos: apellidos || '',
+      direccionEntrega,
+      ciudad,
+      departamento: departamento || 'Cundinamarca',
+      pais,
+      celular: celular || `300${Math.floor(Math.random() * 1000000)}`,
+      barrio: barrio || '',
+      codigoPV: codigoPV || '',
+      especificacionesInternas: especificacionesInternas || '',
+      indicativoCel,
+      indicativoOtroNumero: indicativoOtroNumero || '',
+      nombreUnidad: nombreUnidad || '',
+      otroNumero: otroNumero || '',
+      observaciones: observaciones || '',
+      alias,
+      zonaCobro: zonaCobro || ''
+    };
+
+    this.pedidoEnProgreso.envio = envio;
+    this.pasoActual = 5;
+    this.updateVisualStep('envio');
+    this.updateOrderStatus();
+
+    // Mostrar notificación
+    this.showToast(`Envío configurado para ${nombres} en ${ciudad}`, 'Envío Configurado');
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        shipping: envio,
+        customer: this.pedidoEnProgreso.cliente?.nombres_completos
+      },
+      message: `✅ Envío configurado exitosamente para ${nombres} en ${ciudad}`,
+      visualUpdate: {
+        stepName: 'envio',
+        progress: 65,
+        nextActions: ['Configura la facturación con configureBilling', 'Procesa la venta con processSale']
+      }
+    };
+
+    console.log('📤 Envío configurado:', response);
+    return response;
+  }
+
+  /**
+   * Maneja la obtención de opciones de envío
+   */
+  private handleGetShippingOptions(args: any): DemoResponse {
+    console.log('📦 handleGetShippingOptions llamado con args:', args);
+
+    const shippingOptions = [
+      { id: 'ESTANDAR', nombre: 'Envío Estándar', costo: 8000, diasEstimados: 3, descripcion: 'Entrega en 3 días hábiles' },
+      { id: 'EXPRESS', nombre: 'Envío Express', costo: 15000, diasEstimados: 1, descripcion: 'Entrega en 24 horas' },
+      { id: 'PREMIUM', nombre: 'Envío Premium', costo: 25000, diasEstimados: 1, descripcion: 'Entrega el mismo día' },
+      { id: 'GRATIS', nombre: 'Envío Gratis', costo: 0, diasEstimados: 5, descripcion: 'Envío gratis para compras superiores a $200,000' }
+    ];
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        options: shippingOptions,
+        total: shippingOptions.length
+      },
+      message: `Se encontraron ${shippingOptions.length} opciones de envío disponibles`,
+      visualUpdate: {
+        stepName: 'envio',
+        progress: 60,
+        nextActions: ['Selecciona una opción con selectShippingOption', 'Configura envío con configureShipping']
+      }
+    };
+
+    console.log('📤 Opciones de envío:', response);
+    return response;
+  }
+
+  /**
+   * Maneja la selección de opción de envío
+   */
+  private handleSelectShippingOption(args: any): DemoResponse {
+    console.log('✅ handleSelectShippingOption llamado con args:', args);
+    const { optionId, estimatedDays, cost } = args;
+
+    if (!optionId) {
+      return {
+        success: false,
+        message: 'Se requiere el ID de la opción de envío',
+        error: 'OptionId es obligatorio'
+      };
+    }
+
+    const shippingOptions = [
+      { id: 'ESTANDAR', nombre: 'Envío Estándar', costo: 8000, diasEstimados: 3 },
+      { id: 'EXPRESS', nombre: 'Envío Express', costo: 15000, diasEstimados: 1 },
+      { id: 'PREMIUM', nombre: 'Envío Premium', costo: 25000, diasEstimados: 1 },
+      { id: 'GRATIS', nombre: 'Envío Gratis', costo: 0, diasEstimados: 5 }
+    ];
+
+    const selectedOption = shippingOptions.find(o => o.id === optionId);
+    if (!selectedOption) {
+      return {
+        success: false,
+        message: `No se encontró la opción de envío con ID: ${optionId}`,
+        error: 'Opción no encontrada'
+      };
+    }
+
+    // Actualizar el pedido con la opción seleccionada
+    this.pedidoEnProgreso.totalEnvio = selectedOption.costo;
+    this.pedidoEnProgreso.formaEntrega = selectedOption.nombre;
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        selectedOption,
+        shippingCost: selectedOption.costo,
+        estimatedDays: selectedOption.diasEstimados
+      },
+      message: `✅ Opción de envío "${selectedOption.nombre}" seleccionada. Costo: $${selectedOption.costo.toLocaleString()}, entrega en ${selectedOption.diasEstimados} día${selectedOption.diasEstimados > 1 ? 's' : ''}`,
+      visualUpdate: {
+        stepName: 'envio',
+        progress: 62,
+        nextActions: ['Completa la configuración de envío con configureShipping']
+      }
+    };
+
+    console.log('📤 Opción de envío seleccionada:', response);
+    return response;
+  }
+
+  // === NUEVAS HERRAMIENTAS VISUALES ESFÉRICAS ===
+
+  /**
+   * Maneja la creación de experiencias visuales esféricas únicas
+   */
+  private handleCreateSphereVisual(args: any): DemoResponse {
+    console.log('🌐 handleCreateSphereVisual llamado con args:', args);
+    const { stepName, animationType = 'pulse', sphereColor = '#4CAF50', particleCount = 50 } = args;
+
+    if (!stepName) {
+      return {
+        success: false,
+        message: 'Se requiere el nombre del paso para crear la esfera visual',
+        error: 'StepName es obligatorio'
+      };
+    }
+
+    // Usar el servicio de visualización esférica
+    this.sphereVisualService.createSphereVisual(stepName, {
+      animationType,
+      sphereColor,
+      particleCount,
+      audioReactive: true
+    });
+
+    // Actualizar el paso visual con la esfera
+    this.updateVisualStepWithSphere(stepName, {
+      stepName,
+      animationType,
+      sphereColor,
+      particleCount,
+      timestamp: Date.now(),
+      uniqueId: `sphere_${stepName}_${Date.now()}`,
+      visualElements: {
+        mainSphere: {
+          color: sphereColor,
+          animation: animationType,
+          size: 'large',
+          glow: true
+        },
+        particles: {
+          count: particleCount,
+          colors: this.generateParticleColors(sphereColor),
+          movement: 'orbital'
+        },
+        effects: {
+          ripple: true,
+          sparkle: animationType === 'celebrate',
+          pulse: animationType === 'pulse'
+        }
+      }
+    });
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        sphereVisual: {
+          stepName,
+          animationType,
+          sphereColor,
+          particleCount
+        },
+        stepName,
+        animationType,
+        sphereColor
+      },
+      message: `✨ Esfera visual creada para "${stepName}" con animación ${animationType} y color ${sphereColor}`,
+      visualUpdate: {
+        stepName: stepName.toLowerCase(),
+        progress: this.getStepProgress(stepName),
+        nextActions: ['Continúa con el siguiente paso', 'Usa showSphereProgress para ver el progreso completo']
+      }
+    };
+
+    console.log('📤 Esfera visual creada:', response);
+    return response;
+  }
+
+  /**
+   * Maneja la visualización del progreso en esfera interactiva
+   */
+  private handleShowSphereProgress(args: any): DemoResponse {
+    console.log('📊 handleShowSphereProgress llamado con args:', args);
+    const { includeAnimations = true, showDetails = true } = args;
+
+    const currentProgress = this.progressSubject.value;
+    const status = this.orderStatusSubject.value;
+
+    // Crear esfera de progreso interactiva usando el servicio
+    const sphereProgress = {
+      overallProgress: currentProgress,
+      currentStep: this.getCurrentStepName(),
+      steps: this.visualStepsSubject.value.map((step, index) => ({
+        name: step.stepKey,
+        completed: step.completed || false,
+        active: step.active || false,
+        progress: this.getStepProgress(step.stepKey),
+        sphereColor: step.sphereColor || '#4CAF50',
+        animation: step.sphereAnimation || 'pulse'
+      })),
+      animations: includeAnimations ? {
+        rotation: true,
+        particleFlow: true,
+        colorTransitions: true,
+        progressPulse: true
+      } : {},
+      details: showDetails ? {
+        orderNumber: this.pedidoEnProgreso.nroPedido,
+        customer: this.pedidoEnProgreso.cliente?.nombres_completos,
+        warehouse: this.bodegaSeleccionada?.nombre,
+        itemsInCart: this.pedidoEnProgreso.carrito?.length || 0
+      } : {}
+    };
+
+    // Actualizar la visualización esférica con el progreso
+    this.sphereVisualService.updateSphereVisual({
+      audioReactive: true,
+      celebrationMode: currentProgress === 100
+    });
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        sphereProgress,
+        currentProgress,
+        totalSteps: this.visualStepsSubject.value.length,
+        completedSteps: this.visualStepsSubject.value.filter(s => s.completed).length
+      },
+      message: `📊 Progreso actual: ${currentProgress}% completado. ${sphereProgress.steps.filter(s => s.completed).length} de ${sphereProgress.steps.length} pasos terminados.`,
+      visualUpdate: {
+        stepName: 'progress',
+        progress: currentProgress,
+        nextActions: ['Continúa con el siguiente paso', 'Usa createSphereVisual para crear experiencias únicas']
+      }
+    };
+
+    console.log('📤 Progreso esférico mostrado:', response);
+    return response;
+  }
+
+  /**
+   * Maneja la creación de celebraciones esféricas
+   */
+  private handleCreateSphereCelebration(args: any): DemoResponse {
+    console.log('🎉 handleCreateSphereCelebration llamado con args:', args);
+    const { celebrationType = 'success', particleEffects = true, soundEffects = true } = args;
+
+    // Usar el servicio de visualización esférica para la celebración
+    this.sphereVisualService.activateCelebration(celebrationType);
+
+    // Crear celebración esférica única
+    const celebration = {
+      type: celebrationType,
+      timestamp: Date.now(),
+      duration: 5000, // 5 segundos
+      effects: {
+        particles: particleEffects ? {
+          count: 200,
+          colors: ['#FFD700', '#FFA500', '#FF69B4', '#00CED1', '#32CD32'],
+          movement: 'explosion',
+          speed: 'fast'
+        } : {},
+        sound: soundEffects ? {
+          type: celebrationType === 'success' ? 'success_chime' : 'celebration_fanfare',
+          volume: 0.7
+        } : {},
+        visual: {
+          mainSphere: {
+            color: '#FFD700',
+            animation: 'celebrate',
+            size: 'extra-large',
+            glow: true,
+            pulse: true
+          },
+          secondarySpheres: [
+            { color: '#FF69B4', animation: 'bounce', size: 'medium' },
+            { color: '#00CED1', animation: 'rotate', size: 'medium' },
+            { color: '#32CD32', animation: 'wave', size: 'medium' }
+          ]
+        }
+      },
+      message: this.getCelebrationMessage(celebrationType)
+    };
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        celebration,
+        type: celebrationType,
+        effects: celebration.effects
+      },
+      message: `🎉 ¡Celebración esférica creada! ${celebration.message}`,
+      visualUpdate: {
+        stepName: 'celebration',
+        progress: 100,
+        nextActions: ['Disfruta de la celebración', 'Continúa con la siguiente venta']
+      }
+    };
+
+    console.log('📤 Celebración esférica creada:', response);
+    return response;
+  }
+
+  /**
+   * Maneja la visualización de notificaciones esféricas
+   */
+  private handleShowSphereNotification(args: any): DemoResponse {
+    console.log('🔔 handleShowSphereNotification llamado con args:', args);
+    const { message, type = 'info', duration = 3000, sphereSize = 'medium' } = args;
+
+    if (!message) {
+      return {
+        success: false,
+        message: 'Se requiere un mensaje para la notificación esférica',
+        error: 'Message es obligatorio'
+      };
+    }
+
+    // Usar el servicio de visualización esférica para la notificación
+    this.sphereVisualService.showSphereNotification(message, type);
+
+    // Crear notificación esférica
+    const notification = {
+      message,
+      type,
+      duration,
+      sphereSize,
+      timestamp: Date.now(),
+      visual: {
+        sphere: {
+          color: this.getNotificationColor(type),
+          animation: this.getNotificationAnimation(type),
+          size: sphereSize,
+          glow: type === 'success' || type === 'error',
+          pulse: type === 'warning'
+        },
+        text: {
+          color: this.getNotificationTextColor(type),
+          animation: 'fadeIn',
+          position: 'center'
+        }
+      }
+    };
+
+    // Mostrar notificación
+    this.showToast(message, `Notificación ${type}`);
+
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        notification,
+        type,
+        message
+      },
+      message: `🔔 Notificación esférica mostrada: ${message}`,
+      visualUpdate: {
+        stepName: 'notification',
+        progress: this.progressSubject.value,
+        nextActions: ['Continúa con el proceso', 'Usa createSphereVisual para más experiencias']
+      }
+    };
+
+    console.log('📤 Notificación esférica mostrada:', response);
+    return response;
+  }
+
+  /**
+   * Genera colores de partículas basados en el color principal
+   */
+  private generateParticleColors(mainColor: string): string[] {
+    const colors = [
+      mainColor,
+      this.adjustColor(mainColor, 20),
+      this.adjustColor(mainColor, -20),
+      this.adjustColor(mainColor, 40),
+      this.adjustColor(mainColor, -40)
+    ];
+    return colors;
+  }
+
+  /**
+   * Ajusta un color para crear variaciones
+   */
+  private adjustColor(color: string, amount: number): string {
+    // Implementación simple de ajuste de color
+    return color; // Por simplicidad, retorna el color original
+  }
+
+  /**
+   * Actualiza el paso visual con esfera
+   */
+  private updateVisualStepWithSphere(stepName: string, sphereVisual: any): void {
+    const steps = this.visualStepsSubject.value;
+    const stepIndex = steps.findIndex(s => s.stepKey === stepName.toLowerCase());
+    
+    if (stepIndex !== -1) {
+      const updatedSteps = steps.map((step, index) => ({
+        ...step,
+        sphereVisual: index === stepIndex ? sphereVisual : step.sphereVisual
+      }));
+      
+      this.visualStepsSubject.next(updatedSteps);
+    }
+  }
+
+  /**
+   * Obtiene el progreso de un paso específico
+   */
+  private getStepProgress(stepName: string): number {
+    const stepProgress = {
+      bodega: 10,
+      productos: 25,
+      carrito: 40,
+      cliente: 55,
+      envio: 65,
+      facturacion: 75,
+      pago: 85,
+      confirmacion: 100
+    };
+    return stepProgress[stepName.toLowerCase()] || 0;
+  }
+
+  /**
+   * Obtiene el mensaje de celebración según el tipo
+   */
+  private getCelebrationMessage(type: string): string {
+    const messages = {
+      success: '¡Venta completada exitosamente! 🎉',
+      milestone: '¡Hito alcanzado! 🚀',
+      completion: '¡Proceso completado! ✨'
+    };
+    return messages[type] || '¡Celebración! 🎊';
+  }
+
+  /**
+   * Obtiene el color de notificación según el tipo
+   */
+  private getNotificationColor(type: string): string {
+    const colors = {
+      info: '#2196F3',
+      success: '#4CAF50',
+      warning: '#FF9800',
+      error: '#F44336'
+    };
+    return colors[type] || '#2196F3';
+  }
+
+  /**
+   * Obtiene la animación de notificación según el tipo
+   */
+  private getNotificationAnimation(type: string): string {
+    const animations = {
+      info: 'pulse',
+      success: 'bounce',
+      warning: 'shake',
+      error: 'pulse'
+    };
+    return animations[type] || 'pulse';
+  }
+
+  /**
+   * Obtiene el color del texto de notificación según el tipo
+   */
+  private getNotificationTextColor(type: string): string {
+    const colors = {
+      info: '#FFFFFF',
+      success: '#FFFFFF',
+      warning: '#000000',
+      error: '#FFFFFF'
+    };
+    return colors[type] || '#FFFFFF';
   }
 }
