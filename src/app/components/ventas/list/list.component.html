@@ -1991,9 +1991,9 @@
 
 <div *ngIf="isFromProduction; else normalList">
     <app-list-produccion-orders [isFromProduction]="isFromProduction" [pedidos]="orders"
-        [displayedColumns]="displayedColumns" [selectedColumns]="selectedColumns"
+        [displayedColumns]="displayedColumnsProduccion" [selectedColumns]="selectedColumnsProduccion"
         (onPrintProduct)="onPrintProduct($event)" (onOptions)="onOptionsProduccion($event)"
-        (onColumnSelectionChange)="selectedColumns = $event">
+        (onColumnSelectionChange)="onColumnSelectionChangeProduccion($event)">
     </app-list-produccion-orders>
 </div>
 <ng-template #normalList>

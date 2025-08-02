@@ -17,7 +17,7 @@
             [scrollable]="true" scrollHeight="500px" [rows]="50" [paginator]="true" 
             [rowsPerPageOptions]="[5,10,25,50]" [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
-            [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.crearProducto.referencia','cliente.nombres_completos','estadoPago','estadoProceso']">
+            [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.identificacion.referencia','cliente.nombres_completos','estadoPago','estadoProceso']">
             <ng-template pTemplate="header">
               <tr style="font-size: 0.8em;">
                 <!-- Columna Imagen -->
@@ -38,7 +38,7 @@
                 <th *ngIf="isColumnVisibleProduccion('referencia')" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Referencia
-                    <p-columnFilter type="text" field="producto.crearProducto.referencia" 
+                    <p-columnFilter type="text" field="producto.identificacion.referencia" 
                       matchMode="contains" placeholder="Buscar referencia" 
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
@@ -48,7 +48,7 @@
                 <!-- Columna Opciones -->
                 <th style="width: 3rem; text-align: center;">Opciones</th>
                 <!-- Columna Última Impresión -->
-                <th *ngIf="isColumnVisibleProduccion('ultimaImpresion')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('ultimaImpresion')" style= "white-space: nowrap;">
                   <div class="flex align-items-center">
                     Última impresión
                   </div>
@@ -338,8 +338,8 @@
                   </span>
                 </td>
                 <td *ngIf="isColumnVisibleProduccion('referencia')">
-                  <span class="referencia-ellipsis" pTooltip="{{ row.producto?.crearProducto?.referencia }}" tooltipPosition="top">
-                    {{ row.producto?.crearProducto?.referencia }}
+                  <span class="referencia-ellipsis" pTooltip="{{ row.producto?.identificacion?.referencia }}" tooltipPosition="top">
+                    {{ row.producto?.identificacion?.referencia }}
                   </span>
                 </td>
                 <td style="width: 3rem; text-align: center;">
