@@ -2748,9 +2748,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     let fechasFiltro: Date[] = [];
     const filtrarPorFecha = this.fechaParaImprimir !== null && this.fechaParaImprimir !== undefined;
 
-    console.log('[IMPRESIÓN] Filtrar por fecha:', filtrarPorFecha);
-    console.log('[IMPRESIÓN] Fecha seleccionada:', this.fechaParaImprimir);
-
     if (filtrarPorFecha) {
       if (Array.isArray(this.fechaParaImprimir)) {
         const startDate = this.fechaParaImprimir[0];
@@ -2782,10 +2779,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         f.setHours(0, 0, 0, 0);
         fechasFiltro = [f];
       }
-      console.log('[IMPRESIÓN] Fechas para filtrar:', fechasFiltro.map(f => f.toLocaleDateString()));
     }
 
-    console.log('[IMPRESIÓN] Total pedidos a revisar:', this.ordersEnsamble.length);
 
     const sonMismaFecha = (fecha1: Date, fecha2: Date): boolean => {
       return fecha1.getDate() === fecha2.getDate() &&
@@ -2795,8 +2790,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     // Recorremos los pedidos filtrando por proceso
     this.ordersEnsamble.forEach(order => {
-      console.log(`Revisando pedido: ${order.nombreProducto} - ${order.nombreArticulo.trim()}`);
-      console.log(`Tiene ${order.detallePedido.length} detalles`);
 
       order.detallePedido.forEach(detalle => {
         // Comparación de proceso insensible a mayúsculas/minúsculas
@@ -2804,7 +2797,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         const coincideProceso = procesoDetalle === proceso;
 
         if (coincideProceso) {
-          console.log(`Coincide proceso: ${procesoDetalle} = ${proceso}`);
           let coincideFecha = true;
 
           // Si hay que filtrar por fecha, verificar coincidencia
@@ -2812,12 +2804,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             const fechaEntrega = new Date(detalle.fechaEntrega);
             fechaEntrega.setHours(0, 0, 0, 0);
 
-            console.log(`Fecha entrega: ${fechaEntrega.toLocaleDateString()}`);
 
             // Comparar usando día/mes/año en vez de timestamp
             coincideFecha = fechasFiltro.some(f => sonMismaFecha(f, fechaEntrega));
 
-            console.log(`¿Coincide fecha? ${coincideFecha}`);
           }
 
           // Si coincide proceso y fecha (o no hay que filtrar por fecha)
@@ -2828,14 +2818,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
               cantidad: detalle.cantidadArticulosPorPedido,
               fecha: detalle.fechaEntrega ? new Date(detalle.fechaEntrega).toLocaleDateString() : 'Sin fecha'
             });
-            console.log(`[IMPRESIÓN] Añadido a la lista: ${order.nombreArticulo} - cantidad: ${detalle.cantidadArticulosPorPedido}`);
           }
         }
       });
     });
 
-    console.log(`[IMPRESIÓN] Total de artículos filtrados: ${lista.length}`);
-    
     // Ordenar alfabéticamente por artículo A-Z sin importar mayúsculas o minúsculas
     this.listaPorProcesoParaImprimir = lista.sort((a, b) => {
       // Asegurar que los valores no sean null o undefined
@@ -2849,25 +2836,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       });
     });
     
-    console.log(`[IMPRESIÓN] Lista ordenada alfabéticamente:`, this.listaPorProcesoParaImprimir.map(item => item.articulo));
 
     // Si no hay resultados, mostrar mensaje adicional
     if (lista.length === 0) {
-      console.warn('No se encontraron artículos con los criterios seleccionados:');
-      console.warn('- Proceso:', proceso);
-      console.warn('- Fechas:', fechasFiltro.map(f => f.toLocaleDateString()));
-
       // Contar cuántos pedidos tienen el proceso seleccionado (para diagnóstico)
       let pedidosConProceso = 0;
       this.ordersEnsamble.forEach(order => {
         order.detallePedido.forEach(detalle => {
           if (detalle.proceso?.toLowerCase()?.trim() === proceso) {
             pedidosConProceso++;
-            console.log(`Pedido con proceso "${proceso}" encontrado: fecha ${detalle.fechaEntrega}`);
           }
         });
       });
-      console.log(`Total pedidos con el proceso "${proceso}": ${pedidosConProceso}`);
     }
 
     parentModal.close();
