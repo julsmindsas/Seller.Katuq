@@ -2823,8 +2823,35 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       });
     });
 
+    // Aplicar agrupación por artículo si está habilitada
+    let listaFinal = lista;
+    
+    if (this.agruparSoloPorArticulo) {
+      // Agrupar por artículo sumando cantidades
+      const agrupadoPorArticulo = lista.reduce((acumulador, item) => {
+        const clave = item.articulo.trim();
+        
+        if (!acumulador[clave]) {
+          acumulador[clave] = {
+            producto: item.producto,
+            articulo: item.articulo,
+            cantidad: 0,
+            fecha: item.fecha
+          };
+        }
+        
+        // Sumar cantidades del mismo artículo
+        acumulador[clave].cantidad += item.cantidad;
+        
+        return acumulador;
+      }, {});
+      
+      // Convertir el objeto agrupado a array
+      listaFinal = Object.values(agrupadoPorArticulo);
+    }
+    
     // Ordenar alfabéticamente por artículo A-Z sin importar mayúsculas o minúsculas
-    this.listaPorProcesoParaImprimir = lista.sort((a, b) => {
+    this.listaPorProcesoParaImprimir = listaFinal.sort((a, b) => {
       // Asegurar que los valores no sean null o undefined
       const articuloA = (a.articulo || '').toString().trim();
       const articuloB = (b.articulo || '').toString().trim();
