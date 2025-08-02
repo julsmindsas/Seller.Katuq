@@ -211,6 +211,17 @@ export interface Notas {
   usuario?: string;
   productoId?: string;
   fromFormulario?: boolean;
+  // Propiedades para archivos adjuntos
+  archivos?: NotaArchivo[];
+}
+
+// Nueva interfaz para archivos adjuntos a notas
+export interface NotaArchivo {
+  url: string;
+  nombre: string;
+  path: string;
+  tipo: string; // 'imagen', 'video', 'documento'
+  fechaSubida: string;
 }
 
 export interface Envio {

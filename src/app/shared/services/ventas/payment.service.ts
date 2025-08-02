@@ -738,11 +738,64 @@ export class PaymentService extends BaseService {
 
       // Solo agregar la fila si hay una descripción válida
       if (descripcion && descripcion.trim() !== "") {
+        // Generar HTML para archivos adjuntos si existen
+        let archivosHtml = "";
+        if (nota.archivos && nota.archivos.length > 0) {
+          archivosHtml = `
+            <div style="margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+              <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px;">
+                <i class="fa fa-paperclip" style="margin-right: 4px;"></i>
+                Archivos adjuntos (${nota.archivos.length}):
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          `;
+          
+          nota.archivos.forEach((archivo) => {
+            if (archivo.tipo === 'imagen') {
+              archivosHtml += `
+                <div style="position: relative; display: inline-block;">
+                  <img src="${archivo.url}" alt="${archivo.nombre}" 
+                       style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                    ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                  </div>
+                </div>
+              `;
+            } else if (archivo.tipo === 'video') {
+              archivosHtml += `
+                <div style="position: relative; display: inline-block;">
+                  <video src="${archivo.url}" controls style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;"></video>
+                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                    ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                  </div>
+                </div>
+              `;
+            } else {
+              archivosHtml += `
+                <div style="display: inline-block; text-align: center; width: 80px; height: 80px; background: #e9ecef; border-radius: 4px; border: 1px solid #dee2e6; padding: 8px;">
+                  <div style="font-size: 24px; color: #6c757d; margin-bottom: 4px;">📄</div>
+                  <div style="font-size: 9px; color: #6c757d; word-break: break-word;">
+                    ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                  </div>
+                </div>
+              `;
+            }
+          });
+          
+          archivosHtml += `
+              </div>
+            </div>
+          `;
+        }
+
         notasProduccionHtml += `
           <tr>
             <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${producto}</td>
             <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${fechaNota}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${descripcion}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
+              ${descripcion}
+              ${archivosHtml}
+            </td>
           </tr>
         `;
       }
@@ -750,26 +803,185 @@ export class PaymentService extends BaseService {
 
     // Notas Generales del Pedido
     (pedido.notasPedido?.notasDespachos ?? []).forEach((nota) => {
+      // Generar HTML para archivos adjuntos si existen
+      let archivosHtml = "";
+      if (nota.archivos && nota.archivos.length > 0) {
+        archivosHtml = `
+          <div style="margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+            <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px;">
+              <i class="fa fa-paperclip" style="margin-right: 4px;"></i>
+              Archivos adjuntos (${nota.archivos.length}):
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        `;
+        
+        nota.archivos.forEach((archivo) => {
+          if (archivo.tipo === 'imagen') {
+            archivosHtml += `
+              <div style="position: relative; display: inline-block;">
+                <img src="${archivo.url}" alt="${archivo.nombre}" 
+                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          } else if (archivo.tipo === 'video') {
+            archivosHtml += `
+              <div style="position: relative; display: inline-block;">
+                <video src="${archivo.url}" controls style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;"></video>
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          } else {
+            archivosHtml += `
+              <div style="display: inline-block; text-align: center; width: 80px; height: 80px; background: #e9ecef; border-radius: 4px; border: 1px solid #dee2e6; padding: 8px;">
+                <div style="font-size: 24px; color: #6c757d; margin-bottom: 4px;">📄</div>
+                <div style="font-size: 9px; color: #6c757d; word-break: break-word;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          }
+        });
+        
+        archivosHtml += `
+            </div>
+          </div>
+        `;
+      }
+
       notasDespachosHtml += `
         <tr>
           <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota.nota ?? ""}</td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
+            ${nota.nota ?? ""}
+            ${archivosHtml}
+          </td>
         </tr>
       `;
     });
     (pedido.notasPedido?.notasEntregas ?? []).forEach((nota) => {
+      // Generar HTML para archivos adjuntos si existen
+      let archivosHtml = "";
+      if (nota.archivos && nota.archivos.length > 0) {
+        archivosHtml = `
+          <div style="margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+            <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px;">
+              <i class="fa fa-paperclip" style="margin-right: 4px;"></i>
+              Archivos adjuntos (${nota.archivos.length}):
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        `;
+        
+        nota.archivos.forEach((archivo) => {
+          if (archivo.tipo === 'imagen') {
+            archivosHtml += `
+              <div style="position: relative; display: inline-block;">
+                <img src="${archivo.url}" alt="${archivo.nombre}" 
+                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          } else if (archivo.tipo === 'video') {
+            archivosHtml += `
+              <div style="position: relative; display: inline-block;">
+                <video src="${archivo.url}" controls style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;"></video>
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          } else {
+            archivosHtml += `
+              <div style="display: inline-block; text-align: center; width: 80px; height: 80px; background: #e9ecef; border-radius: 4px; border: 1px solid #dee2e6; padding: 8px;">
+                <div style="font-size: 24px; color: #6c757d; margin-bottom: 4px;">📄</div>
+                <div style="font-size: 9px; color: #6c757d; word-break: break-word;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          }
+        });
+        
+        archivosHtml += `
+            </div>
+          </div>
+        `;
+      }
+
       notasEntregasHtml += `
         <tr>
           <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota.nota ?? ""}</td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
+            ${nota.nota ?? ""}
+            ${archivosHtml}
+          </td>
         </tr>
       `;
     });
     (pedido.notasPedido?.notasFacturacionPagos ?? []).forEach((nota) => {
+      // Generar HTML para archivos adjuntos si existen
+      let archivosHtml = "";
+      if (nota.archivos && nota.archivos.length > 0) {
+        archivosHtml = `
+          <div style="margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+            <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px;">
+              <i class="fa fa-paperclip" style="margin-right: 4px;"></i>
+              Archivos adjuntos (${nota.archivos.length}):
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        `;
+        
+        nota.archivos.forEach((archivo) => {
+          if (archivo.tipo === 'imagen') {
+            archivosHtml += `
+              <div style="position: relative; display: inline-block;">
+                <img src="${archivo.url}" alt="${archivo.nombre}" 
+                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          } else if (archivo.tipo === 'video') {
+            archivosHtml += `
+              <div style="position: relative; display: inline-block;">
+                <video src="${archivo.url}" controls style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;"></video>
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          } else {
+            archivosHtml += `
+              <div style="display: inline-block; text-align: center; width: 80px; height: 80px; background: #e9ecef; border-radius: 4px; border: 1px solid #dee2e6; padding: 8px;">
+                <div style="font-size: 24px; color: #6c757d; margin-bottom: 4px;">📄</div>
+                <div style="font-size: 9px; color: #6c757d; word-break: break-word;">
+                  ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                </div>
+              </div>
+            `;
+          }
+        });
+        
+        archivosHtml += `
+            </div>
+          </div>
+        `;
+      }
+
       notasFacturacionPagosHtml += `
         <tr>
           <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">${nota.nota ?? ""}</td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
+            ${nota.nota ?? ""}
+            ${archivosHtml}
+          </td>
         </tr>
       `;
     });

@@ -341,6 +341,243 @@
               </div>
             </div>
           </div>
+
+          <!-- Acordeón: Notas del Pedido -->
+          <div class="accordion-item" *ngIf="pedido?.notasPedido && tieneNotas()">
+            <h2 class="accordion-header" id="headingNotas">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotas"
+                [attr.aria-expanded]="activeStep === 'notas'" aria-controls="collapseNotas"
+                (click)="toggleStep('notas')">
+                <i class="fa fa-sticky-note me-2"></i>Notas del Pedido
+                <div class="accordion-summary ms-auto">
+                  <span><i class="fa fa-file-text me-1"></i>{{ getTotalNotas() }} nota(s)</span>
+                  <span><i class="fa fa-paperclip me-1"></i>{{ getTotalArchivos() }} archivo(s)</span>
+                  <span class="complete" *ngIf="getTotalNotas() > 0"><i class="fa fa-check-circle me-1"></i>Completo</span>
+                </div>
+              </button>
+            </h2>
+            <div id="collapseNotas" class="accordion-collapse collapse" [ngClass]="{'show': activeStep === 'notas'}"
+              aria-labelledby="headingNotas" data-bs-parent="#accordionCheckout">
+              <div class="accordion-body">
+                <div class="accordion-body-content">
+                  
+                  <!-- Notas de Producción -->
+                  <div *ngIf="pedido?.notasPedido?.notasProduccion?.length > 0" class="notes-section mb-4">
+                    <h6 class="notes-section-title">
+                      <i class="fa fa-cogs me-2 text-primary"></i>Notas de Producción
+                    </h6>
+                    <div class="notes-list">
+                      <div *ngFor="let nota of pedido.notasPedido.notasProduccion; let i = index" class="note-item">
+                        <div class="note-header">
+                          <span class="note-date">{{ nota.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+                          <span class="note-product" *ngIf="nota.producto">{{ nota.producto }}</span>
+                        </div>
+                        <div class="note-content">{{ nota.nota }}</div>
+                        
+                        <!-- Archivos adjuntos -->
+                        <div *ngIf="nota.archivos && nota.archivos.length > 0" class="note-attachments">
+                          <div class="attachments-title">
+                            <i class="fa fa-paperclip me-1"></i>Archivos adjuntos ({{ nota.archivos.length }})
+                          </div>
+                          <div class="attachments-grid">
+                            <div *ngFor="let archivo of nota.archivos" class="attachment-item">
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'imagen'">
+                                <img [src]="archivo.url" [alt]="archivo.nombre" class="attachment-image">
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-external-link-alt"></i>
+                                  </a>
+                                </div>
+                              </div>
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'video'">
+                                <video [src]="archivo.url" class="attachment-video" controls></video>
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-external-link-alt"></i>
+                                  </a>
+                                </div>
+                              </div>
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'documento'">
+                                <div class="attachment-document">
+                                  <i class="fa fa-file-alt"></i>
+                                  <span class="attachment-name">{{ archivo.nombre }}</span>
+                                </div>
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-download"></i>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Notas de Despacho -->
+                  <div *ngIf="pedido?.notasPedido?.notasDespachos?.length > 0" class="notes-section mb-4">
+                    <h6 class="notes-section-title">
+                      <i class="fa fa-truck me-2 text-info"></i>Notas de Despacho
+                    </h6>
+                    <div class="notes-list">
+                      <div *ngFor="let nota of pedido.notasPedido.notasDespachos; let i = index" class="note-item">
+                        <div class="note-header">
+                          <span class="note-date">{{ nota.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+                        </div>
+                        <div class="note-content">{{ nota.nota }}</div>
+                        
+                        <!-- Archivos adjuntos -->
+                        <div *ngIf="nota.archivos && nota.archivos.length > 0" class="note-attachments">
+                          <div class="attachments-title">
+                            <i class="fa fa-paperclip me-1"></i>Archivos adjuntos ({{ nota.archivos.length }})
+                          </div>
+                          <div class="attachments-grid">
+                            <div *ngFor="let archivo of nota.archivos" class="attachment-item">
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'imagen'">
+                                <img [src]="archivo.url" [alt]="archivo.nombre" class="attachment-image">
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-external-link-alt"></i>
+                                  </a>
+                                </div>
+                              </div>
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'video'">
+                                <video [src]="archivo.url" class="attachment-video" controls></video>
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-external-link-alt"></i>
+                                  </a>
+                                </div>
+                              </div>
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'documento'">
+                                <div class="attachment-document">
+                                  <i class="fa fa-file-alt"></i>
+                                  <span class="attachment-name">{{ archivo.nombre }}</span>
+                                </div>
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-download"></i>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Notas de Entrega -->
+                  <div *ngIf="pedido?.notasPedido?.notasEntregas?.length > 0" class="notes-section mb-4">
+                    <h6 class="notes-section-title">
+                      <i class="fa fa-box me-2 text-warning"></i>Notas de Entrega
+                    </h6>
+                    <div class="notes-list">
+                      <div *ngFor="let nota of pedido.notasPedido.notasEntregas; let i = index" class="note-item">
+                        <div class="note-header">
+                          <span class="note-date">{{ nota.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+                        </div>
+                        <div class="note-content">{{ nota.nota }}</div>
+                        
+                        <!-- Archivos adjuntos -->
+                        <div *ngIf="nota.archivos && nota.archivos.length > 0" class="note-attachments">
+                          <div class="attachments-title">
+                            <i class="fa fa-paperclip me-1"></i>Archivos adjuntos ({{ nota.archivos.length }})
+                          </div>
+                          <div class="attachments-grid">
+                            <div *ngFor="let archivo of nota.archivos" class="attachment-item">
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'imagen'">
+                                <img [src]="archivo.url" [alt]="archivo.nombre" class="attachment-image">
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-external-link-alt"></i>
+                                  </a>
+                                </div>
+                              </div>
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'video'">
+                                <video [src]="archivo.url" class="attachment-video" controls></video>
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-external-link-alt"></i>
+                                  </a>
+                                </div>
+                              </div>
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'documento'">
+                                <div class="attachment-document">
+                                  <i class="fa fa-file-alt"></i>
+                                  <span class="attachment-name">{{ archivo.nombre }}</span>
+                                </div>
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-download"></i>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Notas de Facturación -->
+                  <div *ngIf="pedido?.notasPedido?.notasFacturacionPagos?.length > 0" class="notes-section mb-4">
+                    <h6 class="notes-section-title">
+                      <i class="fa fa-file-invoice me-2 text-danger"></i>Notas de Facturación
+                    </h6>
+                    <div class="notes-list">
+                      <div *ngFor="let nota of pedido.notasPedido.notasFacturacionPagos; let i = index" class="note-item">
+                        <div class="note-header">
+                          <span class="note-date">{{ nota.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+                        </div>
+                        <div class="note-content">{{ nota.nota }}</div>
+                        
+                        <!-- Archivos adjuntos -->
+                        <div *ngIf="nota.archivos && nota.archivos.length > 0" class="note-attachments">
+                          <div class="attachments-title">
+                            <i class="fa fa-paperclip me-1"></i>Archivos adjuntos ({{ nota.archivos.length }})
+                          </div>
+                          <div class="attachments-grid">
+                            <div *ngFor="let archivo of nota.archivos" class="attachment-item">
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'imagen'">
+                                <img [src]="archivo.url" [alt]="archivo.nombre" class="attachment-image">
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-external-link-alt"></i>
+                                  </a>
+                                </div>
+                              </div>
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'video'">
+                                <video [src]="archivo.url" class="attachment-video" controls></video>
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-external-link-alt"></i>
+                                  </a>
+                                </div>
+                              </div>
+                              <div class="attachment-preview" *ngIf="archivo.tipo === 'documento'">
+                                <div class="attachment-document">
+                                  <i class="fa fa-file-alt"></i>
+                                  <span class="attachment-name">{{ archivo.nombre }}</span>
+                                </div>
+                                <div class="attachment-overlay">
+                                  <a [href]="archivo.url" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fa fa-download"></i>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
