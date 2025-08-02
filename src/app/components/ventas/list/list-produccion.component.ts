@@ -52,7 +52,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
       return pedido.carrito.map((carrito: Carrito) => ({
         nroPedido: pedido.nroPedido,
         producto: carrito.producto,
-        referencia: carrito.producto?.crearProducto?.referencia || '-',
+        referencia: carrito.producto?.identificacion?.referencia || '-',
         descripcion: carrito.producto?.crearProducto?.descripcion,
         cantidad: carrito.cantidad,
         totalPedidoSinDescuento: pedido.totalPedidoSinDescuento,

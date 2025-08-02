@@ -125,7 +125,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   // Propiedades para filtros modernos (inspirados en ventas/list)
   showFilters: boolean = false;
   nroPedido: string | null = null;
-  
+
   // Filtros rápidos para producción
   quickFilters = {
     estadoPago: 'all',
@@ -255,15 +255,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.estadosPago = Object.values(EstadoPago);
     this.ESTADOPAGO = [
       { id: 1, nombre: 'Pendiente' },
-      { id: 2, nombre: 'Pagado' },
-      { id: 3, nombre: 'Anulado' },
-      { id: 4, nombre: 'Devuelto' }
+      { id: 2, nombre: 'Pospendiente' },
+      { id: 3, nombre: 'PreAprobado' },
+      { id: 4, nombre: 'Aprobado' },
+      { id: 5, nombre: 'Rechazado' },
+      { id: 6, nombre: 'Precancelado' },
+      { id: 7, nombre: 'Cancelado' }
     ];
     this.selectedColumns = [...this.columns];
-    
+
     // Cargar estado de filtros guardado (incluye inicialización de defaults si no hay datos guardados)
     this.loadFiltersFromStorage();
-    
+
     this.refrescarDatosEnsamble();
   }
 
@@ -271,7 +274,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
-      estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
+      estadosPago: ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
       company: JSON.parse(localStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
     this.loading = true;
@@ -440,8 +443,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     }
 
     console.log(`editMultipleOrders: Processing ${orders.length} orders`);
-    
-    this.ventasService.editMultipleOrders({orders: orders}).subscribe(
+
+    this.ventasService.editMultipleOrders({ orders: orders }).subscribe(
       (data) => {
         console.log('editMultipleOrders: Success response:', data);
         this.refrescarDatos();
@@ -451,7 +454,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           showConfirmButton: false,
           timer: 1500
         });
-      }, 
+      },
       (error) => {
         console.error('editMultipleOrders: API error:', error);
         Swal.fire({
@@ -539,12 +542,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   private agruparPorArticulo(dataEnsamble: any[]): PedidosParaProduccionEnsamble[] {
     console.log('🧮 [DEBUG] Iniciando agrupación por artículo - Items de entrada:', dataEnsamble.length);
     const resultadoAgrupado = dataEnsamble.reduce((acumulador, item) => {
-      const clave = item.nombreArticulo; // Solo por artículo
-      
+      const clave = item.nombreArticulo.trim(); // Solo por artículo
+
       if (!acumulador[clave]) {
         acumulador[clave] = {
           nombreProducto: item.nombreProducto, // Primer producto
-          nombreArticulo: item.nombreArticulo,
+          nombreArticulo: item.nombreArticulo.trim(),
           productos: [item.nombreProducto], // Array de productos
           detalles: [],
           detallePedido: [],
@@ -574,38 +577,52 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         formaEntrega: item.formaEntrega,
         horarioEntrega: item.horarioEntrega,
         estadoProceso: item.estadoProceso,
-        cantidad: item.cantidadProducto,
-        cantidadArticulosPorPedido: item.cantidadArticulo * item.cantidadTotalProductoEnsamble,
+        cantidad: Number(item.cantidadProducto) || 0,
+        cantidadArticulosPorPedido: (Number(item.cantidadArticulo) || 0) * (Number(item.cantidadTotalProductoEnsamble) || 0),
         historialPiezasProducidas: item.historialPiezasProducidas || [],
         piezasProducidas: 0,
-        proceso: item.nombreProceso
+        proceso: item.nombreProceso,
+        nombreProducto: item.nombreProducto
       };
 
       // Crear clave compuesta para evitar duplicados por producto+pedido
       const claveDetallePedido = `${detallePedido.nroPedido}|${item.nombreProducto}`;
-      
+
       // Validar duplicados usando clave compuesta
-      if (acumulador[clave].detallePedido.findIndex((detalle) => 
-        `${detalle.nroPedido}|${item.nombreProducto}` === claveDetallePedido) === -1) {
-        
+      if (acumulador[clave].detallePedido.findIndex((detalle) =>
+        `${detalle.nroPedido}|${detalle.nombreProducto}` === claveDetallePedido) === -1) {
+
         // Convertir valores a números para evitar concatenación de strings
         const cantidadProductoNum = Number(item.cantidadProducto) || 0;
         const cantidadArticuloNum = Number(item.cantidadArticulo) || 0;
-        
+
         console.log(`🧮 [DEBUG] Agregando: ${item.nombreProducto} -> ${item.nombreArticulo} (Pedido: ${item.nroPedido})`);
         console.log(`🧮 [DEBUG] - Cantidad Producto: ${item.cantidadProducto} (tipo: ${typeof item.cantidadProducto}) -> ${cantidadProductoNum} (número)`);
         console.log(`🧮 [DEBUG] - Cantidad Artículo: ${item.cantidadArticulo} (tipo: ${typeof item.cantidadArticulo}) -> ${cantidadArticuloNum} (número)`);
-        
-        acumulador[clave].detallePedido.push(detallePedido);
+
+        //valida si el detallePedido ya existe
+        if (acumulador[clave].detallePedido.findIndex((detalle) => detalle.nroPedido === detallePedido.nroPedido) === -1) {
+          acumulador[clave].detallePedido.push(detallePedido);
+        }
+        else {
+          //sumar los valores de los detalles
+          acumulador[clave].detallePedido.forEach(detalle => {
+            if (detalle.nroPedido === detallePedido.nroPedido) {
+              detalle.cantidad += detallePedido.cantidad;
+              detalle.cantidadArticulosPorPedido += detallePedido.cantidadArticulosPorPedido;
+            }
+          });
+        }
+
         // Usar valores numéricos para evitar concatenación de strings
         acumulador[clave].cantidadTotalProducto += cantidadProductoNum;
         acumulador[clave].cantidadTotalProductoEnsamble += cantidadArticuloNum;
-        
+
         console.log(`🧮 [DEBUG] - Totales acumulados: Productos=${acumulador[clave].cantidadTotalProducto} (tipo: ${typeof acumulador[clave].cantidadTotalProducto}), Artículos=${acumulador[clave].cantidadTotalProductoEnsamble} (tipo: ${typeof acumulador[clave].cantidadTotalProductoEnsamble})`);
       }
-      
+
       acumulador[clave].detalles.push(detalle);
-      
+
       return acumulador;
     }, {});
 
@@ -615,7 +632,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       console.log(`🧮 [DEBUG] - Productos: ${grupo.productos.join(', ')}`);
       console.log(`🧮 [DEBUG] - Cantidad total productos: ${grupo.cantidadTotalProducto}`);
       console.log(`🧮 [DEBUG] - Cantidad total artículos: ${grupo.cantidadTotalProductoEnsamble}`);
-      
+
       return {
         nombreProducto: grupo.productos.join(', '), // Concatenar con comas
         nombreArticulo: grupo.nombreArticulo,
@@ -661,9 +678,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     fechaFinalFormatted.setHours(23, 59, 59, 999);
 
     // Configurar estados de pago basado en filtros modernos
-    let estadosPago = ['Prependiente', 'PreAprobado', 'Aprobado', 'Pendiente'];
+    let estadosPago = [EstadoPago.Pospendiente, EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente];
     if (this.quickFilters.estadoPago !== "all") {
-      estadosPago = [this.quickFilters.estadoPago];
+      estadosPago = [this.quickFilters.estadoPago as unknown as EstadoPago];
     }
 
     // Configurar estados de proceso basado en filtros modernos
@@ -692,7 +709,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
       // Aplicar filtro por número de pedido si existe
       if (this.nroPedido && this.nroPedido.trim() !== '') {
-        filteredOrders = filteredOrders.filter(pedido => 
+        filteredOrders = filteredOrders.filter(pedido =>
           pedido.nroPedido && pedido.nroPedido.toLowerCase().includes(this.nroPedido!.toLowerCase())
         );
       }
@@ -813,8 +830,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           formaEntrega: item.formaEntrega,
           horarioEntrega: item.horarioEntrega,
           estadoProceso: item.estadoProceso,
-          cantidad: item.cantidadProducto,
-          cantidadArticulosPorPedido: item.cantidadArticulo * item.cantidadTotalProductoEnsamble,
+          cantidad: Number(item.cantidadProducto) || 0,
+          cantidadArticulosPorPedido: (Number(item.cantidadArticulo) || 0) * (Number(item.cantidadTotalProductoEnsamble) || 0),
           historialPiezasProducidas: item.historialPiezasProducidas || [],
           piezasProducidas: 0,
           proceso: item.nombreProceso
@@ -862,8 +879,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           formaEntrega: item.formaEntrega,
           horarioEntrega: item.horarioEntrega,
           estadoProceso: item.estadoProceso,
-          cantidad: item.cantidadProducto,
-          cantidadArticulosPorPedido: item.cantidadArticulo * item.cantidadTotalProductoEnsamble,
+          cantidad: Number(item.cantidadProducto) || 0,
+          cantidadArticulosPorPedido: (Number(item.cantidadArticulo) || 0) * (Number(item.cantidadTotalProductoEnsamble) || 0),
           historialPiezasProducidas: item.historialPiezasProducidas || [],
           piezasProducidas: 0,
           nombreArticulo: item.nombreArticulo,
@@ -936,7 +953,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
       console.log('🧩 [DEBUG] Resultado procesado:', resultado.length, 'órdenes');
       console.log('🧩 [DEBUG] Procesos encontrados en resultado:', [...new Set(resultado.flatMap(order => order.detalles.map(d => d.nombreProceso)))]);
-      
+
       // Usar agrupación condicional basada en la configuración
       if (this.agruparSoloPorArticulo) {
         this.ordersEnsamble = this.agruparPorArticulo(dataEnsamble);
@@ -952,10 +969,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         }
       }
       this.AllOrdersEnsamble = this.utilService.deepClone(this.ordersEnsamble);
-      
+
       console.log('💾 [DEBUG] AllOrdersEnsamble actualizado:', this.AllOrdersEnsamble.length, 'órdenes');
       console.log('💾 [DEBUG] ordersEnsamble actual:', this.ordersEnsamble.length, 'órdenes');
-      
+
       // Si hay un filtro de proceso aplicado, aplicar filtrado local inmediatamente
       if (this.selectedProcesosFilter) {
         console.log('🔄 [DEBUG] Re-aplicando filtro de proceso después de refresh API:', this.selectedProcesosFilter.nombre);
@@ -968,7 +985,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         );
         console.log('✅ [DEBUG] Filtro re-aplicado:', this.ordersEnsamble.length, 'órdenes filtradas');
       }
-      
+
       this.loading = false;
 
       // Después de cargar los datos, clasificar los pedidos
@@ -1226,7 +1243,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       });
       return;
     }
-    
+
     this.selectedOrdersEnsamble = [event]
     // buscar el nombre del articulo seleccionado y obtener los procesos de ese articulo en orders
     // a filter process debe tener los procesos agrupados
@@ -1234,13 +1251,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.processStatusProductionProcess();
 
     // Verificar si hay algún proceso seleccionable (totalmente completado o en estado parcial)
-    const hayProcesosSeleccionables = this.filterProcess.some(proceso => 
-      proceso.statusJararquiaProcess || 
-      proceso.icon === 'pi-sync' || 
+    const hayProcesosSeleccionables = this.filterProcess.some(proceso =>
+      proceso.statusJararquiaProcess ||
+      proceso.icon === 'pi-sync' ||
       proceso.icon === 'pi-cog');
 
     // Verificar si quedan procesos por completar
-    const hayProcesosPendientes = this.filterProcess.some(proceso => 
+    const hayProcesosPendientes = this.filterProcess.some(proceso =>
       proceso.status !== EstadoProcesoItem.ProducidasTotalmente);
 
     // Si todos los procesos están completados, no abrir el modal
@@ -1277,9 +1294,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   selectProcess(proceso) {
     // Permitir selección para procesos con estado parcial (COG o SYNC)
-    if (!proceso.statusJararquiaProcess && 
-        proceso.icon !== 'pi-sync' && 
-        proceso.icon !== 'pi-cog') {
+    if (!proceso.statusJararquiaProcess &&
+      proceso.icon !== 'pi-sync' &&
+      proceso.icon !== 'pi-cog') {
       return; // No permitir seleccionar procesos deshabilitados que no están en estado parcial
     }
     this.selectedProcesos = proceso.label;
@@ -1380,7 +1397,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
         this.selectedOrdersEnsamble.forEach((item, index) => {
           this.ordersEnsamble.forEach((order) => {
-            if (order.nombreProducto === item.nombreProducto && order.nombreArticulo === item.nombreArticulo) {
+            // Filtro condicional según modo de agrupación para actualización de estado local
+            const isProductMatch = this.agruparSoloPorArticulo ?
+              item.nombreProducto.includes(order.nombreProducto) :
+              order.nombreProducto === item.nombreProducto;
+
+            if (isProductMatch && order.nombreArticulo === item.nombreArticulo) {
               order.piezasProducidas = item.detallePedido.reduce((acc, item) => acc + item.piezasProducidas, 0);
             }
           });
@@ -1394,14 +1416,17 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           item.detallePedido.forEach((detallePedido) => {
 
             this.orders
-              .filter(
-                (order) =>
-                  order.producto.crearProducto.titulo === item.nombreProducto &&
-                  order.nroPedido == detallePedido.nroPedido
-              )
+              .filter((order) => {
+                // Filtro condicional según modo de agrupación para búsqueda de órdenes
+                const isProductMatch = this.agruparSoloPorArticulo ?
+                  item.nombreProducto.includes(order.producto.crearProducto.titulo) :
+                  order.producto.crearProducto.titulo === item.nombreProducto;
+
+                return isProductMatch && order.nroPedido == detallePedido.nroPedido;
+              })
               .forEach((order) => {
                 const produccion = order.producto.otrosProcesos.modulosVariables.produccion.find(
-                  (prod) => prod.titulo === item.nombreArticulo
+                  (prod) => prod.titulo.trim() === item.nombreArticulo.trim()
                 );
 
                 if (produccion) {
@@ -1555,23 +1580,23 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           try {
             if (!this.isValidOrdersArray(ordersPushToUpdate)) {
               this.logOrdersValidationError(ordersPushToUpdate, 'editMultipleOrders call');
-              
+
               if (!ordersPushToUpdate || ordersPushToUpdate.length === 0) {
                 console.warn('No valid orders to update - skipping API call');
                 return;
               }
-              
+
               // Filter out invalid orders and log warnings
               const validOrders = ordersPushToUpdate.filter(order => this.isValidPedido(order));
               if (validOrders.length === 0) {
                 console.warn('All orders are invalid - skipping API call');
                 return;
               }
-              
+
               if (validOrders.length !== ordersPushToUpdate.length) {
                 console.warn(`Filtered ${ordersPushToUpdate.length - validOrders.length} invalid orders`);
               }
-              
+
               this.editMultipleOrders(validOrders);
             } else {
               this.editMultipleOrders(ordersPushToUpdate);
@@ -1619,10 +1644,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   filterOrderByProcess(event: any) {
     // Limpiar selección actual
     this.selectedOrdersEnsamble = [];
-    
+
     // Actualizar filtro de proceso
     this.selectedProcesosFilter = event.value;
-    
+
     // FILTRADO LOCAL INMEDIATO para feedback visual instantáneo
     if (event.value) {
       console.log('Filtrando localmente por proceso:', event.value.nombre);
@@ -1639,10 +1664,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       console.log('Removiendo filtro de proceso - mostrando todas las órdenes');
       this.ordersEnsamble = this.utilService.deepClone(this.AllOrdersEnsamble);
     }
-    
+
     // Guardar estado en sessionStorage
     this.saveFiltersToStorage();
-    
+
     // OPCIONAL: También refrescar desde API para persistencia (con debouncing)
     // this.debounceApiRefresh();
   }
@@ -1729,7 +1754,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         if (reason === 'cerrar') {
 
           this.productsToClose.forEach(product => {
-            this.AllOrdersEnsamble.filter(x => x.nombreProducto == product.producto).forEach(z => {
+            // Filtro condicional según modo de agrupación
+            const filteredOrders = this.agruparSoloPorArticulo ?
+              // En modo agrupación por artículo: usar includes para productos concatenados
+              this.AllOrdersEnsamble.filter(x => product.producto.includes(x.nombreProducto)) :
+              // En modo normal: comparación directa del producto
+              this.AllOrdersEnsamble.filter(x => x.nombreProducto === product.producto);
+
+            filteredOrders.forEach(z => {
               z.estadoProductoArticulo = product.estadoProcesoProducto;
               z.detallePedido.forEach(detallePedido => {
                 product.articulosConProcesos.forEach(articulo => {
@@ -1741,9 +1773,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
                 });
               });
 
-              this.orders.filter(p => {
-                p.producto.crearProducto.titulo == product.producto
-              }).forEach(x => {
+              // Filtro condicional según modo de agrupación para órdenes
+              const filteredOrders = this.agruparSoloPorArticulo ?
+                this.orders.filter(p => product.producto.includes(p.producto.crearProducto.titulo)) :
+                this.orders.filter(p => p.producto.crearProducto.titulo === product.producto);
+
+              filteredOrders.forEach(x => {
                 x.producto.otrosProcesos.modulosVariables.produccion.filter(
                   y => y.titulo == z.nombreArticulo
                 ).forEach(p => {
@@ -1767,27 +1802,36 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             this.orderResponse.ordersRaw
               .filter(x => x.carrito && Array.isArray(x.carrito))
               .forEach(order => {
-                // Buscar el carrito correspondiente con verificaciones de nulidad
-                const carritoSelected = order.carrito.find(x =>
-                  x && x.producto && x.producto.crearProducto &&
-                  x.producto.crearProducto.titulo === product.producto
-                );
+                // Buscar el carrito correspondiente con verificaciones de nulidad y lógica condicional
+                const carritoSelected = this.agruparSoloPorArticulo ?
+                  order.carrito.find(x => x && x.producto && x.producto.crearProducto &&
+                    product.producto.includes(x.producto.crearProducto.titulo)) :
+                  order.carrito.find(x => x && x.producto && x.producto.crearProducto &&
+                    x.producto.crearProducto.titulo === product.producto);
 
-                // Si no se encuentra el carrito, saltar este elemento
+                // Si no se encuentra el carrito, saltar este elemento con logging mejorado
                 if (!carritoSelected) {
-                  console.warn(`No se encontró un carrito para el producto ${product.producto}`);
+                  console.warn(`[Cierre Artículo] No se encontró un carrito para el producto: ${product.producto}`);
+                  console.warn(`[Cierre Artículo] Modo agrupación: ${this.agruparSoloPorArticulo ? 'Solo por artículo' : 'Producto + artículo'}`);
+                  console.warn(`[Cierre Artículo] Productos disponibles en carrito:`, order.carrito.map(x => x?.producto?.crearProducto?.titulo).filter(Boolean));
                   return;
                 }
 
                 carritoSelected.estadoProcesoProducto = EstadoProceso.ProducidoTotalmente;
                 let orderToUpdate = order;
 
-                // Verificar la estructura del producto
+                // Verificar la estructura del producto con logging mejorado
                 if (!carritoSelected.producto ||
                   !carritoSelected.producto.otrosProcesos ||
                   !carritoSelected.producto.otrosProcesos.modulosVariables ||
                   !carritoSelected.producto.otrosProcesos.modulosVariables.produccion) {
-                  console.warn(`Estructura incompleta en el producto ${product.producto}`);
+                  console.warn(`[Cierre Artículo] Estructura incompleta en el producto: ${product.producto}`);
+                  console.warn(`[Cierre Artículo] Estructura disponible:`, {
+                    hasProducto: !!carritoSelected.producto,
+                    hasOtrosProcesos: !!carritoSelected.producto?.otrosProcesos,
+                    hasModulosVariables: !!carritoSelected.producto?.otrosProcesos?.modulosVariables,
+                    hasProduccion: !!carritoSelected.producto?.otrosProcesos?.modulosVariables?.produccion
+                  });
                   return;
                 }
 
@@ -1978,18 +2022,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     // Enfoque mejorado que considera la jerarquía y dependencias entre procesos
     const procesosConEstado = this.getProcesosConEstado(row);
-    
+
     // Si todos los procesos están completados
     if (procesosConEstado.every(p => p.status === EstadoProcesoItem.ProducidasTotalmente)) {
       return 'status-complete';
-    } 
+    }
     // Si al menos un proceso está completo o parcial y todos los anteriores están completos
-    else if (procesosConEstado.some(p => 
-      (p.status === EstadoProcesoItem.ProducidasTotalmente || 
-       p.status === EstadoProcesoItem.ProducidasParcialmente) && 
-       p.statusJararquiaProcess)) {
+    else if (procesosConEstado.some(p =>
+      (p.status === EstadoProcesoItem.ProducidasTotalmente ||
+        p.status === EstadoProcesoItem.ProducidasParcialmente) &&
+      p.statusJararquiaProcess)) {
       return 'status-partial';
-    } 
+    }
     // En cualquier otro caso
     else {
       return 'status-pending';
@@ -2007,18 +2051,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     // Enfoque mejorado que considera la jerarquía y dependencias entre procesos
     const procesosConEstado = this.getProcesosConEstado(row);
-    
+
     // Si todos los procesos están completados
     if (procesosConEstado.every(p => p.status === EstadoProcesoItem.ProducidasTotalmente)) {
       return 'pi pi-check-circle';
-    } 
+    }
     // Si al menos un proceso está completo o parcial y todos los anteriores están completos
-    else if (procesosConEstado.some(p => 
-      (p.status === EstadoProcesoItem.ProducidasTotalmente || 
-       p.status === EstadoProcesoItem.ProducidasParcialmente) && 
-       p.statusJararquiaProcess)) {
+    else if (procesosConEstado.some(p =>
+      (p.status === EstadoProcesoItem.ProducidasTotalmente ||
+        p.status === EstadoProcesoItem.ProducidasParcialmente) &&
+      p.statusJararquiaProcess)) {
       return 'pi pi-sync'; // Importante: Este es el icono que debe coincidir con 'pi-sync'
-    } 
+    }
     // En cualquier otro caso
     else {
       return 'pi pi-clock';
@@ -2036,24 +2080,24 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     // Enfoque mejorado que considera la jerarquía y dependencias entre procesos
     const procesosConEstado = this.getProcesosConEstado(row);
-    
+
     // Contar estados
     const procesosCompletados = procesosConEstado.filter(p => p.status === EstadoProcesoItem.ProducidasTotalmente).length;
     const procesosParciales = procesosConEstado.filter(p => p.status === EstadoProcesoItem.ProducidasParcialmente).length;
-    const procesosPendientes = procesosConEstado.filter(p => p.status !== EstadoProcesoItem.ProducidasTotalmente && 
-                                                     p.status !== EstadoProcesoItem.ProducidasParcialmente).length;
-    
+    const procesosPendientes = procesosConEstado.filter(p => p.status !== EstadoProcesoItem.ProducidasTotalmente &&
+      p.status !== EstadoProcesoItem.ProducidasParcialmente).length;
+
     // Identificar procesos bloqueados por dependencias
     const procesosBloqueados = procesosConEstado.filter(p => !p.statusJararquiaProcess).length;
-    
+
     // Construir mensaje detallado
     let mensaje = `Estado: ${procesosCompletados} completados, ${procesosParciales} parciales, ${procesosPendientes} pendientes de ${procesosConEstado.length} procesos`;
-    
+
     // Agregar información sobre procesos bloqueados si existen
     if (procesosBloqueados > 0) {
       mensaje += `\n${procesosBloqueados} procesos bloqueados por dependencias sin completar`;
     }
-    
+
     return mensaje;
   }
 
@@ -2069,7 +2113,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     return row.detalles.map((detalle, index) => {
       const status = this.getProcessStatus(detalle.nombreProceso, row);
       const statusProcessPrevious = this.validatePreviousStatusProduced(row, index);
-      
+
       return {
         nombreProceso: detalle.nombreProceso,
         status,
@@ -2090,7 +2134,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     // Obtener todos los estados de pago únicos
     const estadosPago = [...new Set(row.detallePedido.map(detalle => detalle.estadoPago))];
-    
+
     // Si solo hay un estado, retornarlo
     if (estadosPago.length === 1) {
       return estadosPago[0] || 'Sin información';
@@ -2497,7 +2541,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   // Métodos para filtros modernos (inspirados en ventas/list)
-  
+
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
     this.saveFiltersToStorage();
@@ -2554,10 +2598,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (savedState) {
       try {
         const state = JSON.parse(savedState);
-        
+
         // Cargar estado de visibilidad de filtros
         this.showFilters = state.showFilters || false;
-        
+
         // Cargar valores de filtros
         if (state.fechaInicial) {
           this.fechaInicial = new Date(state.fechaInicial);
@@ -2574,12 +2618,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         if (state.quickFilters) {
           this.quickFilters = { ...this.quickFilters, ...state.quickFilters };
         }
-        
+
         // Si hay filtros activos, abrir automáticamente
         if (this.hasActiveFilters()) {
           this.showFilters = true;
         }
-        
+
         console.log("Filtros cargados desde sessionStorage:", state);
       } catch (e) {
         console.error("Error loading filters from sessionStorage", e);
@@ -2600,7 +2644,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       quickFilters: this.quickFilters,
       timestamp: new Date().getTime(),
     };
-    
+
     sessionStorage.setItem("produccionFiltersState", JSON.stringify(state));
     console.log("Filtros guardados en sessionStorage:", state);
   }
@@ -2662,7 +2706,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   clearProcessFilter(): void {
     this.selectedProcesosFilter = null;
     this.saveFiltersToStorage();
-    this.filterOrderByProcess({value: null});
+    this.filterOrderByProcess({ value: null });
   }
 
   abrirModalImprimirListaPorProceso(modalRef) {
@@ -2704,9 +2748,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     let fechasFiltro: Date[] = [];
     const filtrarPorFecha = this.fechaParaImprimir !== null && this.fechaParaImprimir !== undefined;
 
-    console.log('[IMPRESIÓN] Filtrar por fecha:', filtrarPorFecha);
-    console.log('[IMPRESIÓN] Fecha seleccionada:', this.fechaParaImprimir);
-
     if (filtrarPorFecha) {
       if (Array.isArray(this.fechaParaImprimir)) {
         const startDate = this.fechaParaImprimir[0];
@@ -2738,80 +2779,77 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         f.setHours(0, 0, 0, 0);
         fechasFiltro = [f];
       }
-      console.log('[IMPRESIÓN] Fechas para filtrar:', fechasFiltro.map(f => f.toLocaleDateString()));
     }
 
-    console.log('[IMPRESIÓN] Total pedidos a revisar:', this.ordersEnsamble.length);
 
     const sonMismaFecha = (fecha1: Date, fecha2: Date): boolean => {
-      return fecha1.getDate() === fecha2.getDate() && 
-             fecha1.getMonth() === fecha2.getMonth() && 
-             fecha1.getFullYear() === fecha2.getFullYear();
+      return fecha1.getDate() === fecha2.getDate() &&
+        fecha1.getMonth() === fecha2.getMonth() &&
+        fecha1.getFullYear() === fecha2.getFullYear();
     };
-    
+
     // Recorremos los pedidos filtrando por proceso
     this.ordersEnsamble.forEach(order => {
-      console.log(`Revisando pedido: ${order.nombreProducto} - ${order.nombreArticulo}`);
-      console.log(`Tiene ${order.detallePedido.length} detalles`);
-      
+
       order.detallePedido.forEach(detalle => {
         // Comparación de proceso insensible a mayúsculas/minúsculas
         const procesoDetalle = detalle.proceso?.toLowerCase()?.trim() || '';
         const coincideProceso = procesoDetalle === proceso;
-        
+
         if (coincideProceso) {
-          console.log(`Coincide proceso: ${procesoDetalle} = ${proceso}`);
           let coincideFecha = true;
-          
+
           // Si hay que filtrar por fecha, verificar coincidencia
           if (filtrarPorFecha && detalle.fechaEntrega) {
             const fechaEntrega = new Date(detalle.fechaEntrega);
-            fechaEntrega.setHours(0,0,0,0);
-            
-            console.log(`Fecha entrega: ${fechaEntrega.toLocaleDateString()}`);
-            
+            fechaEntrega.setHours(0, 0, 0, 0);
+
+
             // Comparar usando día/mes/año en vez de timestamp
             coincideFecha = fechasFiltro.some(f => sonMismaFecha(f, fechaEntrega));
-            
-            console.log(`¿Coincide fecha? ${coincideFecha}`);
+
           }
-          
+
           // Si coincide proceso y fecha (o no hay que filtrar por fecha)
           if (coincideFecha) {
             lista.push({
               producto: order.nombreProducto,
-              articulo: order.nombreArticulo,
+              articulo: order.nombreArticulo.trim(),
               cantidad: detalle.cantidadArticulosPorPedido,
               fecha: detalle.fechaEntrega ? new Date(detalle.fechaEntrega).toLocaleDateString() : 'Sin fecha'
             });
-            console.log(`[IMPRESIÓN] Añadido a la lista: ${order.nombreArticulo} - cantidad: ${detalle.cantidadArticulosPorPedido}`);
           }
         }
       });
     });
+
+    // Ordenar alfabéticamente por artículo A-Z sin importar mayúsculas o minúsculas
+    this.listaPorProcesoParaImprimir = lista.sort((a, b) => {
+      // Asegurar que los valores no sean null o undefined
+      const articuloA = (a.articulo || '').toString().trim();
+      const articuloB = (b.articulo || '').toString().trim();
+      
+      // Usar localeCompare para ordenamiento correcto en español
+      return articuloA.localeCompare(articuloB, 'es', { 
+        sensitivity: 'base',
+        numeric: true 
+      });
+    });
     
-    console.log(`[IMPRESIÓN] Total de artículos filtrados: ${lista.length}`);
-    this.listaPorProcesoParaImprimir = lista;
-    
+
     // Si no hay resultados, mostrar mensaje adicional
     if (lista.length === 0) {
-      console.warn('No se encontraron artículos con los criterios seleccionados:');
-      console.warn('- Proceso:', proceso);
-      console.warn('- Fechas:', fechasFiltro.map(f => f.toLocaleDateString()));
-      
       // Contar cuántos pedidos tienen el proceso seleccionado (para diagnóstico)
       let pedidosConProceso = 0;
       this.ordersEnsamble.forEach(order => {
         order.detallePedido.forEach(detalle => {
           if (detalle.proceso?.toLowerCase()?.trim() === proceso) {
             pedidosConProceso++;
-            console.log(`Pedido con proceso "${proceso}" encontrado: fecha ${detalle.fechaEntrega}`);
           }
         });
       });
-      console.log(`Total pedidos con el proceso "${proceso}": ${pedidosConProceso}`);
     }
-    
+
     parentModal.close();
     setTimeout(() => {
       this.modalService.open(this.vistaPreviaImpresionModal, { size: 'lg', centered: true });
@@ -2852,24 +2890,24 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     let procesoStr = '';
     // Extraer el nombre del proceso de forma segura
-      if (typeof this.procesoParaImprimir === 'string') {
-        procesoStr = this.procesoParaImprimir;
-      } else if (this.procesoParaImprimir && typeof this.procesoParaImprimir === 'object') {
-        if (this.procesoParaImprimir.value && typeof this.procesoParaImprimir.value === 'object' && this.procesoParaImprimir.value.nombre) {
-          procesoStr = this.procesoParaImprimir.value.nombre;
-        } else if (this.procesoParaImprimir.label && typeof this.procesoParaImprimir.label === 'string') {
-          procesoStr = this.procesoParaImprimir.label;
-        } else if (this.procesoParaImprimir.nombre && typeof this.procesoParaImprimir.nombre === 'string') {
-          procesoStr = this.procesoParaImprimir.nombre;
-        } else {
-          try {
-            procesoStr = String(this.procesoParaImprimir);
-          } catch (e) {
-            console.error('No se pudo convertir el proceso a string', this.procesoParaImprimir);
-            procesoStr = '';
-          }
+    if (typeof this.procesoParaImprimir === 'string') {
+      procesoStr = this.procesoParaImprimir;
+    } else if (this.procesoParaImprimir && typeof this.procesoParaImprimir === 'object') {
+      if (this.procesoParaImprimir.value && typeof this.procesoParaImprimir.value === 'object' && this.procesoParaImprimir.value.nombre) {
+        procesoStr = this.procesoParaImprimir.value.nombre;
+      } else if (this.procesoParaImprimir.label && typeof this.procesoParaImprimir.label === 'string') {
+        procesoStr = this.procesoParaImprimir.label;
+      } else if (this.procesoParaImprimir.nombre && typeof this.procesoParaImprimir.nombre === 'string') {
+        procesoStr = this.procesoParaImprimir.nombre;
+      } else {
+        try {
+          procesoStr = String(this.procesoParaImprimir);
+        } catch (e) {
+          console.error('No se pudo convertir el proceso a string', this.procesoParaImprimir);
+          procesoStr = '';
         }
       }
+    }
     const proceso = procesoStr.toLowerCase().trim();
 
     // Usar un Map para almacenar fechas únicas (clave YYYY-MM-DD, valor objeto Date)
@@ -2883,9 +2921,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           // Normalizar la fecha para usarla como clave única, ignorando la hora
           const key = `${fechaEntrega.getFullYear()}-${fechaEntrega.getMonth()}-${fechaEntrega.getDate()}`;
           if (!fechasMap.has(key)) {
-              // Guardar la fecha con la hora reseteada para evitar problemas de timezone
-              fechaEntrega.setHours(0, 0, 0, 0);
-              fechasMap.set(key, fechaEntrega);
+            // Guardar la fecha con la hora reseteada para evitar problemas de timezone
+            fechaEntrega.setHours(0, 0, 0, 0);
+            fechasMap.set(key, fechaEntrega);
           }
         }
       });
@@ -2893,7 +2931,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     // Convertir el Map a un array de fechas y ordenarlas
     const fechasArray = Array.from(fechasMap.values()).sort((a, b) => a.getTime() - b.getTime());
-    
+
     this.fechasDisponiblesParaUi = fechasArray;
 
     console.log(`📅 FECHAS DISPONIBLES PARA "${proceso.toUpperCase()}":`, this.fechasDisponiblesParaUi.map(d => d.toLocaleDateString()));
@@ -2902,14 +2940,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   // Verifica si dos fechas representan el mismo día (ignorando hora)
   isSameDay(fechaTag: Date, fechaSeleccionada: Date | Date[]): boolean {
     if (!fechaTag || !fechaSeleccionada) return false;
-    
+
     // El calendario en modo rango devuelve un array, tomamos la primera fecha
     const fechaAComparar = Array.isArray(fechaSeleccionada) ? fechaSeleccionada[0] : fechaSeleccionada;
     if (!fechaAComparar) return false;
 
-    return fechaTag.getDate() === fechaAComparar.getDate() && 
-           fechaTag.getMonth() === fechaAComparar.getMonth() && 
-           fechaTag.getFullYear() === fechaAComparar.getFullYear();
+    return fechaTag.getDate() === fechaAComparar.getDate() &&
+      fechaTag.getMonth() === fechaAComparar.getMonth() &&
+      fechaTag.getFullYear() === fechaAComparar.getFullYear();
   }
 
   // Mostrar fechas disponibles cuando se selecciona un proceso
@@ -2935,21 +2973,21 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (Array.isArray(this.fechaParaImprimir)) {
       const startDate = this.fechaParaImprimir[0];
       const endDate = this.fechaParaImprimir[1];
-      
+
       if (startDate && endDate) {
-        const startStr = startDate.toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'});
-        const endStr = endDate.toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        const startStr = startDate.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const endStr = endDate.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
         if (startStr === endStr) {
           return `Fecha: ${startStr}`;
         }
         return `Rango: ${startStr} - ${endStr}`;
       } else if (startDate) {
-        return `Fecha: ${startDate.toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'})}`;
+        return `Fecha: ${startDate.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
       }
     }
 
     if (this.fechaParaImprimir instanceof Date) {
-      return `Fecha: ${this.fechaParaImprimir.toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'})}`;
+      return `Fecha: ${this.fechaParaImprimir.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
     }
 
     return 'Todas las fechas';
@@ -2961,8 +2999,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       if (this.fechaParaImprimir[0] && this.fechaParaImprimir[1]) {
         const start = new Date(this.fechaParaImprimir[0]);
         const end = new Date(this.fechaParaImprimir[1]);
-        start.setHours(0,0,0,0);
-        end.setHours(0,0,0,0);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
         return start.getTime() !== end.getTime();
       }
     }

@@ -429,7 +429,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   selectedColumns: ColumnDefinition[] = [];
-  
+
   // Configuración de columnas específica para producción
   displayedColumnsProduccion: ColumnDefinition[] = [
     { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
@@ -459,7 +459,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     { field: "vendedor", header: "Vendedor", visible: false, type: "text", filterable: true }
   ];
   selectedColumnsProduccion: ColumnDefinition[] = [];
-  
+
   showColumnConfig: boolean = false;
   showFilters: boolean = false;
   nroPedido: any;
@@ -534,12 +534,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!query || query.trim().length === 0) {
       return false;
     }
-    
+
     // Validar longitud mínima (reducir a 1 para ser más flexible)
     if (query.trim().length < 1) {
       return false;
     }
-    
+
     // Permitir caracteres más flexibles (letras, números, guiones, espacios, puntos)
     const orderNumberPattern = /^[A-Za-z0-9\-_.\s]+$/;
     return orderNumberPattern.test(query.trim());
@@ -550,7 +550,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private performSearch(query: string): void {
     const trimmedQuery = query?.trim();
-    
+
     if (!this.validateOrderNumber(trimmedQuery)) {
       this.filteredOrderNumbers = [];
       this.ordersByName = [];
@@ -558,10 +558,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.searchError = null;
       return;
     }
-    
+
     this.isSearching = true;
     this.searchError = null;
-    
+
     // Usar el servicio principal para búsqueda
     this.ventasService.getOrdersByNroPedido(trimmedQuery).subscribe({
       next: (res: any) => {
@@ -597,14 +597,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   onSearchInput(event: any): void {
     const query = event.target.value;
     this.searchQuery = query;
-    
+
     // Validar entrada
     if (!query || typeof query !== 'string') {
       this.filteredOrderNumbers = [];
       this.showSuggestions = false;
       return;
     }
-    
+
     this.showSuggestions = true;
     // Emitir al subject para aplicar debounce
     this.searchSubject.next(query);
@@ -628,24 +628,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.toastrService.warning('Pedido inválido seleccionado', 'Advertencia');
       return;
     }
-    
+
     // Establecer el valor del campo de búsqueda
     this.searchQuery = item.nroPedido;
     this.nroPedido = item;
-    
+
     // Ocultar sugerencias
     this.showSuggestions = false;
     this.filteredOrderNumbers = [];
-    
+
     // Mostrar solo el pedido seleccionado
     this.orders = [item];
-    
+
     // Mostrar notificación de éxito
     this.toastrService.success(
-      `Pedido #${item.nroPedido} cargado correctamente`, 
+      `Pedido #${item.nroPedido} cargado correctamente`,
       'Pedido Encontrado'
     );
-    
+
     // Limpiar errores de búsqueda
     this.searchError = null;
   }
@@ -663,7 +663,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showSuggestions = false;
     this.refrescarDatos();
     this.saveFiltersState();
-    
+
     // Mostrar notificación
     this.toastrService.info('Filtro de búsqueda limpiado', 'Filtro Limpiado');
   }
@@ -692,7 +692,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const today = new Date();
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(today.getDate() - 30);
-      
+
       this.fechaInicial = this.fechaInicial || thirtyDaysAgo.toISOString().split('T')[0];
       this.fechaFinal = this.fechaFinal || today.toISOString().split('T')[0];
     }
@@ -900,7 +900,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         .nomComercial,
       tipoFecha: "fechaEntrega",
       estadoProceso: this.isFromProduction
-        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente]
+        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente, EstadoProceso.ParaDespachar]
         : ["Todos"],
     };
 
@@ -913,7 +913,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.quickFilters.estadoProceso !== "all") {
       if (this.isFromProduction) {
         // For production view, still allow process filtering but maintain production states
-        const productionStates = [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente];
+        const productionStates = [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente, EstadoProceso.ParaDespachar];
         if (productionStates.includes(this.quickFilters.estadoProceso as EstadoProceso)) {
           filter.estadoProceso = [this.quickFilters.estadoProceso];
         }
@@ -923,10 +923,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // --- AJUSTE: Solo sobreescribir estadosPago por defecto si el filtro rápido está en 'all' ---
-    if (this.isFromProduction) {
-      if (this.quickFilters.estadoPago === "all") {
-        filter['estadosPago'] = ['Prependiente', 'PreAprobado', 'Aprobado','Pendiente'];
-      } // Si no, ya fue puesto arriba por el filtro rápido
+    if (this.quickFilters.estadoPago === "all") {
+      if (this.isFromProduction) {
+        filter['estadosPago'] = ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente', 'Pospendiente'];
+      } else {
+        // Para modo no producción, incluir todos los estados de pago posibles
+        filter['estadosPago'] = ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente', 'Pospendiente', 'Rechazado', 'Precancelado', 'Cancelado'];
+      }
     }
 
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
@@ -1405,7 +1408,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       order,
       this.isFromProduction,
     );
-    
+
     // Registrar la fecha/hora de impresión solo cuando se usa desde producción
     if (this.isFromProduction) {
       const now = new Date().toISOString();
@@ -1451,6 +1454,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   produceOrder(order: Pedido) {
     this.producirPedido.emit(order);
+
+    setTimeout(() => {
+      this.refrescarDatos();
+    }, 1000);
   }
 
   async convertirImagenesAbase64YGenerarPDF(DATA: HTMLElement) {
@@ -1560,7 +1567,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     document.body.classList.remove("modal-open");
     // Forzar el ocultado del loader
     this.loaderService.hide();
-    
+
     // Crear una nueva ventana/pestaña independiente con el contenido del PDF
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
     if (newWindow) {
@@ -2999,10 +3006,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (savedState) {
       try {
         const state = JSON.parse(savedState);
-        
+
         // Restore UI state (existing logic)
         this.showFilters = state.showFilters || false;
-        
+
         // Restore filter values (NEW)
         if (state.fechaInicial) this.fechaInicial = state.fechaInicial;
         if (state.fechaFinal) this.fechaFinal = state.fechaFinal;
@@ -3010,7 +3017,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         if (state.quickFilters) {
           this.quickFilters = { ...this.quickFilters, ...state.quickFilters };
         }
-        
+
         // Auto-open filters if there are active filters
         if (this.hasActiveFilters()) {
           this.showFilters = true;

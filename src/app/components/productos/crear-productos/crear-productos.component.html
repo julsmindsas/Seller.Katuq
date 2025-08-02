@@ -475,7 +475,7 @@
 										<input id="Nombre" type="checkbox" placeholder="12344554" required=""
 											formControlName="inventariable" />
 									</div>
-								
+
 								</div>
 							</form>
 						</p-tabPanel>
@@ -744,13 +744,15 @@
 									<button *ngIf="activar" class="btn btn-lg btn-primary"
 										(click)="activarProcesoComercial()">Desactivar Configuración Proceso
 										Comercial</button>
-										<!-- Añadir indicador visual del estado de la configuración -->
-										<small class="text-info mt-2" *ngIf="activar">
-											Estado de configuración: <strong class="text-success">Activo</strong> (Este estado se guardará al guardar el producto)
-										</small>
-										<small class="text-info mt-2" *ngIf="!activar">
-											Estado de configuración: <strong class="text-danger">Inactivo</strong> (Este estado se guardará al guardar el producto)
-										</small>
+									<!-- Añadir indicador visual del estado de la configuración -->
+									<small class="text-info mt-2" *ngIf="activar">
+										Estado de configuración: <strong class="text-success">Activo</strong> (Este
+										estado se guardará al guardar el producto)
+									</small>
+									<small class="text-info mt-2" *ngIf="!activar">
+										Estado de configuración: <strong class="text-danger">Inactivo</strong> (Este
+										estado se guardará al guardar el producto)
+									</small>
 								</div>
 								<div class="grid-container-exposicion" *ngIf="activar">
 									<div class="grid-item">
@@ -1304,7 +1306,12 @@
 																</thead>
 																<tbody id="tbodyArticulos">
 																	<tr *ngFor="let producto of productosArticulos">
-																		<td>{{ producto.titulo }}</td>
+																		<td>
+																			<strong>{{
+																				getNombreVariable(producto.titulo)
+																				}}</strong> {{
+																			producto.titulo }}
+																		</td>
 																		<!-- <td>{{ producto.unidadMedida }}
 																		</td> -->
 																		<!-- <td class="right-align">{{
@@ -1370,7 +1377,8 @@
 
 					<div class="row">
 						<div class="col-sm-6">
-							<button *ngIf="mostrarCrear" class="btn btn-lg btn-primary" (click)="guardarProductos()" [disabled]="uploadingImages">Guardar</button>
+							<button *ngIf="mostrarCrear" class="btn btn-lg btn-primary" (click)="guardarProductos()"
+								[disabled]="uploadingImages">Guardar</button>
 							<button class="btn btn-lg btn-primary" (click)="viewProduct()">Vista
 								Previa</button>
 

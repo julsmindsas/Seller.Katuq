@@ -79,19 +79,17 @@
                 <!-- Mostrar notas existentes del producto (SOLO LECTURA en modo edición) -->
                 <div *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length > 0" class="existing-notes mb-3">
                   <h6 class="existing-notes-title">
-                    <i class="fa fa-history me-1"></i>Notas Existentes {{ isEdit ? '(Solo lectura)' : '' }}
+                    <i class="fa fa-history me-1"></i>Notas Existentes
                   </h6>
                   <div class="existing-note-item" *ngFor="let notaExistente of obtenerNotasDelProducto(pedido.carrito[i]); let idx = index">
                     <div class="existing-note-header">
                       <span class="note-date">{{getFechaFormateada(notaExistente) | date:'dd/MM/yyyy HH:mm'}}</span>
-                      <!-- Solo mostrar botón eliminar en modo creación -->
-                      <button *ngIf="!isEdit"
-                              class="btn btn-sm btn-outline-danger ms-2"
+                      <!-- Mostrar botón eliminar siempre -->
+                      <button class="btn btn-sm btn-outline-danger ms-2"
                               (click)="eliminarNotaExistente(pedido.carrito[i], idx)"
                               title="Eliminar nota existente">
                         <i class="fa fa-trash"></i>
                       </button>
-                      <span *ngIf="isEdit" class="badge bg-secondary ms-2">Solo lectura</span>
                     </div>
                     <div class="existing-note-content">{{getDescripcionNota(notaExistente)}}</div>
                   </div>

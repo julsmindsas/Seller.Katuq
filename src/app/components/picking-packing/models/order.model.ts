@@ -52,7 +52,7 @@ export interface Order {
     subtotal: number;
   }[];
   estadoProceso: 'pendiente' | 'picking' | 'packing' | 'enviado' | 'entregado' | 'cancelado';
-  estadoPago?: 'pendiente' | 'completado' | 'cancelado';
+  estadoPago?: 'pendiente' | 'pospendiente' | 'completado' | 'cancelado';
   fechaCreacion: Date | string;
   total: number;
 }
