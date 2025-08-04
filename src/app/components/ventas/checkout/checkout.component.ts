@@ -794,4 +794,64 @@ export class CheckOutComponent implements OnInit, OnChanges {
       this.pedido.carrito.length > 0
     );
   }
+
+  // Métodos para manejar notas y archivos adjuntos
+  tieneNotas(): boolean {
+    if (!this.pedido?.notasPedido) return false;
+    
+    return (
+      (this.pedido.notasPedido.notasProduccion && this.pedido.notasPedido.notasProduccion.length > 0) ||
+      (this.pedido.notasPedido.notasDespachos && this.pedido.notasPedido.notasDespachos.length > 0) ||
+      (this.pedido.notasPedido.notasEntregas && this.pedido.notasPedido.notasEntregas.length > 0) ||
+      (this.pedido.notasPedido.notasFacturacionPagos && this.pedido.notasPedido.notasFacturacionPagos.length > 0)
+    );
+  }
+
+  getTotalNotas(): number {
+    if (!this.pedido?.notasPedido) return 0;
+    
+    let total = 0;
+    if (this.pedido.notasPedido.notasProduccion) total += this.pedido.notasPedido.notasProduccion.length;
+    if (this.pedido.notasPedido.notasDespachos) total += this.pedido.notasPedido.notasDespachos.length;
+    if (this.pedido.notasPedido.notasEntregas) total += this.pedido.notasPedido.notasEntregas.length;
+    if (this.pedido.notasPedido.notasFacturacionPagos) total += this.pedido.notasPedido.notasFacturacionPagos.length;
+    
+    return total;
+  }
+
+  getTotalArchivos(): number {
+    if (!this.pedido?.notasPedido) return 0;
+    
+    let total = 0;
+    
+    // Contar archivos en notas de producción
+    if (this.pedido.notasPedido.notasProduccion) {
+      this.pedido.notasPedido.notasProduccion.forEach(nota => {
+        if (nota.archivos) total += nota.archivos.length;
+      });
+    }
+    
+    // Contar archivos en notas de despacho
+    if (this.pedido.notasPedido.notasDespachos) {
+      this.pedido.notasPedido.notasDespachos.forEach(nota => {
+        if (nota.archivos) total += nota.archivos.length;
+      });
+    }
+    
+    // Contar archivos en notas de entrega
+    if (this.pedido.notasPedido.notasEntregas) {
+      this.pedido.notasPedido.notasEntregas.forEach(nota => {
+        if (nota.archivos) total += nota.archivos.length;
+      });
+    }
+    
+    // Contar archivos en notas de facturación
+    if (this.pedido.notasPedido.notasFacturacionPagos) {
+      this.pedido.notasPedido.notasFacturacionPagos.forEach(nota => {
+        if (nota.archivos) total += nota.archivos.length;
+      });
+    }
+    
+    return total;
+  }
 }

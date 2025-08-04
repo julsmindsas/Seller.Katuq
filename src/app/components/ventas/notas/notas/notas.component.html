@@ -18,7 +18,15 @@
         <!-- Notas generales de producción -->
         <div *ngIf="pedido?.notasPedido?.notasProduccion && pedido.notasPedido.notasProduccion.length > 0"
           class="notes-list mt-3 mb-4">
-          <h6 class="list-header mb-3"><i class="fa fa-sticky-note me-1"></i> Notas de Producción Generales</h6>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="list-header mb-0"><i class="fa fa-sticky-note me-1"></i> Notas de Producción Generales</h6>
+            <button type="button" 
+                    class="btn btn-outline-info btn-sm"
+                    (click)="mostrarNotasGuardadas()"
+                    title="Ver notas guardadas con archivos">
+              <i class="fa fa-eye me-1"></i>Ver archivos
+            </button>
+          </div>
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
@@ -26,6 +34,7 @@
                   <th style="width: 180px">Fecha</th>
                   <th style="width: 200px">Producto</th>
                   <th>Nota</th>
+                  <th style="width: 100px">Archivos</th>
                 </tr>
               </thead>
               <tbody>
@@ -33,6 +42,16 @@
                   <td>{{ getFechaFormateada(nota) | date:'dd/MM/yyyy HH:mm' }}</td>
                   <td>{{ getProductoNombre(nota) }}</td>
                   <td>{{ getDescripcionNota(nota) }}</td>
+                  <td>
+                    <span *ngIf="nota.archivos && nota.archivos.length > 0" 
+                          class="badge bg-success">
+                      <i class="fa fa-paperclip me-1"></i>{{nota.archivos.length}}
+                    </span>
+                    <span *ngIf="!nota.archivos || nota.archivos.length === 0" 
+                          class="text-muted">
+                      <i class="fa fa-minus"></i>
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -101,21 +120,108 @@
                     <i class="fa fa-plus-circle me-1"></i>
                     {{ obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'Agregar Nueva Nota' : 'Nueva Nota' }}
                   </h6>
-                  <div *ngFor="let notaCtrl of notasFormArray.at(i).get('notas')?.controls; let j = index" class="mb-2">
-                    <div class="input-group">
-                      <span class="input-group-text bg-light">
-                        <i class="fa fa-pencil-alt"></i>
-                      </span>
-                      <textarea [formControlName]="j"
-                                class="form-control"
-                                placeholder="Escribe instrucciones especiales para la producción de este producto..."
-                                rows="2"></textarea>
-                      <button class="btn btn-outline-danger"
-                              type="button"
-                              (click)="eliminarNota(j, 'produccion', i)"
-                              *ngIf="notasFormArray.at(i).get('notas')?.controls.length > 1">
-                        <i class="fa fa-times"></i>
-                      </button>
+                  <div *ngFor="let notaCtrl of notasFormArray.at(i).get('notas')?.controls; let j = index" class="mb-3">
+                    <div class="note-input-container">
+                      <div class="input-group mb-2">
+                        <span class="input-group-text bg-light">
+                          <i class="fa fa-pencil-alt"></i>
+                        </span>
+                        <textarea [formControlName]="j"
+                                  class="form-control"
+                                  placeholder="Escribe instrucciones especiales para la producción de este producto..."
+                                  rows="2"></textarea>
+                        <button class="btn btn-outline-danger"
+                                type="button"
+                                (click)="eliminarNota(j, 'produccion', i)"
+                                *ngIf="notasFormArray.at(i).get('notas')?.controls.length > 1">
+                          <i class="fa fa-times"></i>
+                        </button>
+                      </div>
+                      
+                      <!-- Control para subir archivos -->
+                      <div class="file-upload-container produccion">
+                        <div class="input-group">
+                          <span class="input-group-text bg-light">
+                            <i class="fa fa-paperclip"></i>
+                          </span>
+                          <input type="file" 
+                                 class="form-control" 
+                                 [id]="'file-produccion-' + i + '-' + j"
+                                 (change)="onFileSelected($event, 'produccion', i, j)"
+                                 accept="image/*,.pdf,.doc,.docx,.txt"
+                                 multiple>
+                          <button class="btn btn-outline-secondary" 
+                                  type="button"
+                                  (click)="clearFileSelection('produccion', i, j)">
+                            <i class="fa fa-times"></i>
+                          </button>
+                        </div>
+                        <small class="text-muted">
+                          <i class="fa fa-info-circle me-1"></i>
+                          Puedes adjuntar imágenes, PDFs, documentos o archivos de texto
+                        </small>
+                        
+                        <!-- Vista previa de archivos -->
+                        <div class="file-preview-container mt-2" *ngIf="getSelectedFiles('produccion', i, j).length > 0">
+                          <h6 class="preview-title">
+                            <i class="fa fa-eye me-1"></i>Vista previa de archivos
+                          </h6>
+                          <div class="preview-grid">
+                            <div *ngFor="let file of getSelectedFiles('produccion', i, j); let fileIndex = index" 
+                                 class="preview-item">
+                              <!-- Vista previa de imagen -->
+                              <div *ngIf="isImageFile(file)" class="image-preview">
+                                <div class="preview-image-container">
+                                  <img [src]="getFilePreview(file)" 
+                                       [alt]="file.name"
+                                       class="preview-image">
+                                  <div class="image-overlay">
+                                    <span class="file-name">{{file.name}}</span>
+                                    <span class="file-size">{{formatFileSize(file.size)}}</span>
+                                  </div>
+                                </div>
+                                <div class="file-info">
+                                  <span class="file-name">{{file.name}}</span>
+                                  <span class="file-size">{{formatFileSize(file.size)}}</span>
+                                  <span class="badge bg-info">
+                                    <i class="fa fa-clock me-1"></i>Pendiente
+                                  </span>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger remove-file-btn"
+                                        (click)="removeFile('produccion', fileIndex, i, j)">
+                                  <i class="fa fa-times"></i>
+                                </button>
+                              </div>
+                              
+                              <!-- Vista previa de video -->
+                              <div *ngIf="isVideoFile(file)" class="video-preview">
+                                <div class="preview-video-container">
+                                  <video [src]="getFilePreview(file)" 
+                                         class="preview-video" 
+                                         controls>
+                                    Tu navegador no soporta el elemento video.
+                                  </video>
+                                  <div class="video-overlay">
+                                    <span class="file-name">{{file.name}}</span>
+                                    <span class="file-size">{{formatFileSize(file.size)}}</span>
+                                  </div>
+                                </div>
+                                <div class="file-info">
+                                  <span class="file-name">{{file.name}}</span>
+                                  <span class="file-size">{{formatFileSize(file.size)}}</span>
+                                  <span class="badge bg-info">
+                                    <i class="fa fa-clock me-1"></i>Pendiente
+                                  </span>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger remove-file-btn"
+                                        (click)="removeFile('produccion', fileIndex, i, j)">
+                                  <i class="fa fa-times"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -164,17 +270,39 @@
                 <div class="note-metadata mb-2">
                   <i class="fa fa-calendar me-1"></i> {{ fecha | date:'dd/MM/yyyy HH:mm' }}
                 </div>
-                <div class="input-group">
+                <div class="input-group mb-2">
                   <textarea id="notaDespacho" class="form-control" formControlName="nota"
                     placeholder="Escribir nota para despacho" rows="3"></textarea>
                   <button class="btn btn-primary" type="submit" [disabled]="notasDespachoForm.invalid">
                     <i class="fa fa-paper-plane"></i>
                   </button>
                 </div>
-                <div *ngIf="notasDespachoForm.get('nota')?.invalid && notasDespachoForm.get('nota')?.touched"
-                  class="text-danger mt-1">
-                  <small><i class="fa fa-exclamation-circle me-1"></i>La nota es requerida</small>
+                
+                <!-- Control para subir archivos -->
+                <div class="file-upload-container despacho">
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fa fa-paperclip"></i>
+                    </span>
+                    <input type="file" 
+                           class="form-control" 
+                           id="file-despacho"
+                           (change)="onFileSelected($event, 'despacho')"
+                           accept="image/*,.pdf,.doc,.docx,.txt"
+                           multiple>
+                    <button class="btn btn-outline-secondary" 
+                            type="button"
+                            (click)="clearFileSelection('despacho')">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                  <small class="text-muted">
+                    <i class="fa fa-info-circle me-1"></i>
+                    Puedes adjuntar imágenes, PDFs, documentos o archivos de texto
+                  </small>
                 </div>
+                
+
               </div>
             </div>
           </div>
@@ -221,13 +349,116 @@
                 <div class="note-metadata mb-2">
                   <i class="fa fa-calendar me-1"></i> {{ fecha | date:'dd/MM/yyyy HH:mm' }}
                 </div>
-                <div class="input-group">
+                <div class="input-group mb-2">
                   <textarea id="notaEntrega" class="form-control" formControlName="nota"
                     placeholder="Escribir nota para entrega" rows="3"></textarea>
                   <button class="btn btn-primary" type="submit" [disabled]="notasEntregasForm.invalid">
                     <i class="fa fa-paper-plane"></i>
                   </button>
                 </div>
+                
+                <!-- Control para subir archivos -->
+                <div class="file-upload-container entrega">
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fa fa-paperclip"></i>
+                    </span>
+                    <input type="file" 
+                           class="form-control" 
+                           id="file-entrega"
+                           (change)="onFileSelected($event, 'entrega')"
+                           accept="image/*,.pdf,.doc,.docx,.txt"
+                           multiple>
+                    <button class="btn btn-outline-secondary" 
+                            type="button"
+                            (click)="clearFileSelection('entrega')">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                  <small class="text-muted">
+                    <i class="fa fa-info-circle me-1"></i>
+                    Puedes adjuntar imágenes, PDFs, documentos o archivos de texto
+                  </small>
+                  
+                  <!-- Vista previa de archivos -->
+                  <div class="file-preview-container mt-2" *ngIf="getSelectedFiles('entrega').length > 0">
+                    <h6 class="preview-title">
+                      <i class="fa fa-eye me-1"></i>Vista previa de archivos
+                    </h6>
+                    <div class="preview-grid">
+                      <div *ngFor="let file of getSelectedFiles('entrega'); let fileIndex = index" 
+                           class="preview-item">
+                        <!-- Vista previa de imagen -->
+                        <div *ngIf="isImageFile(file)" class="image-preview">
+                          <div class="preview-image-container">
+                            <img [src]="getFilePreview(file)" 
+                                 [alt]="file.name"
+                                 class="preview-image">
+                            <div class="image-overlay">
+                              <span class="file-name">{{file.name}}</span>
+                              <span class="file-size">{{formatFileSize(file.size)}}</span>
+                            </div>
+                          </div>
+                          <div class="file-info">
+                            <span class="file-name">{{file.name}}</span>
+                            <span class="file-size">{{formatFileSize(file.size)}}</span>
+                            <span class="badge bg-warning">
+                              <i class="fa fa-clock me-1"></i>Pendiente
+                            </span>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger remove-file-btn"
+                                  (click)="removeFile('entrega', fileIndex, undefined, undefined)">
+                            <i class="fa fa-times"></i>
+                          </button>
+                        </div>
+                        
+                        <!-- Vista previa de video -->
+                        <div *ngIf="isVideoFile(file)" class="video-preview">
+                          <div class="preview-video-container">
+                            <video [src]="getFilePreview(file)" 
+                                   class="preview-video" 
+                                   controls>
+                              Tu navegador no soporta el elemento video.
+                            </video>
+                            <div class="video-overlay">
+                              <span class="file-name">{{file.name}}</span>
+                              <span class="file-size">{{formatFileSize(file.size)}}</span>
+                            </div>
+                          </div>
+                          <div class="file-info">
+                            <span class="file-name">{{file.name}}</span>
+                            <span class="file-size">{{formatFileSize(file.size)}}</span>
+                            <span class="badge bg-warning">
+                              <i class="fa fa-clock me-1"></i>Pendiente
+                            </span>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger remove-file-btn"
+                                  (click)="removeFile('entrega', fileIndex, undefined, undefined)">
+                            <i class="fa fa-times"></i>
+                          </button>
+                        </div>
+                        
+                        <!-- Vista previa de otros archivos -->
+                        <div *ngIf="!isImageFile(file) && !isVideoFile(file)" class="file-preview">
+                          <div class="file-icon">
+                            <i [class]="getFileIcon(file)"></i>
+                          </div>
+                          <div class="file-info">
+                            <span class="file-name">{{file.name}}</span>
+                            <span class="file-size">{{formatFileSize(file.size)}}</span>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger remove-file-btn"
+                                  (click)="removeFile('entrega', fileIndex, undefined, undefined)">
+                            <i class="fa fa-times"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                </div>
+                
                 <div *ngIf="notasEntregasForm.get('nota')?.invalid && notasEntregasForm.get('nota')?.touched"
                   class="text-danger mt-1">
                   <small><i class="fa fa-exclamation-circle me-1"></i>La nota es requerida</small>
@@ -278,13 +509,116 @@
                 <div class="note-metadata mb-2">
                   <i class="fa fa-calendar me-1"></i> {{ fecha | date:'dd/MM/yyyy HH:mm' }}
                 </div>
-                <div class="input-group">
+                <div class="input-group mb-2">
                   <textarea id="notaFacturacionPagos" class="form-control" formControlName="nota"
                     placeholder="Escribir nota para facturación o pago" rows="3"></textarea>
                   <button class="btn btn-primary" type="submit" [disabled]="notasFacturacionPagosForm.invalid">
                     <i class="fa fa-paper-plane"></i>
                   </button>
                 </div>
+                
+                <!-- Control para subir archivos -->
+                <div class="file-upload-container facturacion">
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fa fa-paperclip"></i>
+                    </span>
+                    <input type="file" 
+                           class="form-control" 
+                           id="file-facturacion"
+                           (change)="onFileSelected($event, 'facturacion')"
+                           accept="image/*,.pdf,.doc,.docx,.txt"
+                           multiple>
+                    <button class="btn btn-outline-secondary" 
+                            type="button"
+                            (click)="clearFileSelection('facturacion')">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                  <small class="text-muted">
+                    <i class="fa fa-info-circle me-1"></i>
+                    Puedes adjuntar imágenes, PDFs, documentos o archivos de texto
+                  </small>
+                  
+                  <!-- Vista previa de archivos -->
+                  <div class="file-preview-container mt-2" *ngIf="getSelectedFiles('facturacion').length > 0">
+                    <h6 class="preview-title">
+                      <i class="fa fa-eye me-1"></i>Vista previa de archivos
+                    </h6>
+                    <div class="preview-grid">
+                      <div *ngFor="let file of getSelectedFiles('facturacion'); let fileIndex = index" 
+                           class="preview-item">
+                        <!-- Vista previa de imagen -->
+                        <div *ngIf="isImageFile(file)" class="image-preview">
+                          <div class="preview-image-container">
+                            <img [src]="getFilePreview(file)" 
+                                 [alt]="file.name"
+                                 class="preview-image">
+                            <div class="image-overlay">
+                              <span class="file-name">{{file.name}}</span>
+                              <span class="file-size">{{formatFileSize(file.size)}}</span>
+                            </div>
+                          </div>
+                          <div class="file-info">
+                            <span class="file-name">{{file.name}}</span>
+                            <span class="file-size">{{formatFileSize(file.size)}}</span>
+                            <span class="badge bg-warning">
+                              <i class="fa fa-clock me-1"></i>Pendiente
+                            </span>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger remove-file-btn"
+                                  (click)="removeFile('facturacion', fileIndex, undefined, undefined)">
+                            <i class="fa fa-times"></i>
+                          </button>
+                        </div>
+                        
+                        <!-- Vista previa de video -->
+                        <div *ngIf="isVideoFile(file)" class="video-preview">
+                          <div class="preview-video-container">
+                            <video [src]="getFilePreview(file)" 
+                                   class="preview-video" 
+                                   controls>
+                              Tu navegador no soporta el elemento video.
+                            </video>
+                            <div class="video-overlay">
+                              <span class="file-name">{{file.name}}</span>
+                              <span class="file-size">{{formatFileSize(file.size)}}</span>
+                            </div>
+                          </div>
+                          <div class="file-info">
+                            <span class="file-name">{{file.name}}</span>
+                            <span class="file-size">{{formatFileSize(file.size)}}</span>
+                            <span class="badge bg-warning">
+                              <i class="fa fa-clock me-1"></i>Pendiente
+                            </span>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger remove-file-btn"
+                                  (click)="removeFile('facturacion', fileIndex, undefined, undefined)">
+                            <i class="fa fa-times"></i>
+                          </button>
+                        </div>
+                        
+                        <!-- Vista previa de otros archivos -->
+                        <div *ngIf="!isImageFile(file) && !isVideoFile(file)" class="file-preview">
+                          <div class="file-icon">
+                            <i [class]="getFileIcon(file)"></i>
+                          </div>
+                          <div class="file-info">
+                            <span class="file-name">{{file.name}}</span>
+                            <span class="file-size">{{formatFileSize(file.size)}}</span>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger remove-file-btn"
+                                  (click)="removeFile('facturacion', fileIndex, undefined, undefined)">
+                            <i class="fa fa-times"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                </div>
+                
                 <div *ngIf="notasFacturacionPagosForm.get('nota')?.invalid && notasFacturacionPagosForm.get('nota')?.touched"
                   class="text-danger mt-1">
                   <small><i class="fa fa-exclamation-circle me-1"></i>La nota es requerida</small>
