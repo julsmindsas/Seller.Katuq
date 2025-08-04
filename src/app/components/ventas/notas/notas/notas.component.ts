@@ -493,7 +493,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           notas: notasArray,
           productoId: [prod.producto?.identificacion?.referencia || ""],
           titulo: [
-            prod.producto?.crearProducto?.titulo || "Producto sin nombre",
+            this.crearNombreDistintivo(prod, index) || "Producto sin nombre",
           ],
         }),
       );
@@ -561,7 +561,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           notas: notasArray,
           productoId: [prod.producto?.identificacion?.referencia || ""],
           titulo: [
-            prod.producto?.crearProducto?.titulo || "Producto sin nombre",
+            this.crearNombreDistintivo(prod, index) || "Producto sin nombre",
           ],
         }),
       );
@@ -724,11 +724,14 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
       notasActualizadas.forEach((producto, pIndex) => {
         if (producto.notas && producto.notas.length > 0) {
-          const tituloProducto =
-            this.pedido?.carrito?.[pIndex]?.producto?.crearProducto?.titulo;
-          const productoId =
-            this.pedido?.carrito?.[pIndex]?.producto?.identificacion
-              ?.referencia;
+          const productoCarrito = this.pedido?.carrito?.[pIndex];
+          const tituloProducto = this.crearNombreDistintivo(productoCarrito, pIndex);
+          const productoId = productoCarrito?.producto?.identificacion?.referencia;
+          const productoCD = productoCarrito?.producto?.cd || (productoCarrito?.producto?.crearProducto as any)?.cd;
+          const productoBodegaId = productoCarrito?.producto?.bodegaId;
+          
+          // Crear identificador único para este producto
+          const identificadorUnico = this.crearIdentificadorUnico(productoCarrito, pIndex);
 
           producto.notas.forEach((textoNota: string) => {
             if (textoNota && textoNota.trim() !== "") {
@@ -738,6 +741,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
                 producto: tituloProducto || "Producto",
                 usuario: "Usuario",
                 productoId: productoId || "",
+                productoCD: productoCD || "",
+                productoBodegaId: productoBodegaId || "",
+                identificadorUnico: identificadorUnico,
                 fromFormulario: true,
               } as any);
               notasAgregadas++;
@@ -959,7 +965,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     productos.clear();
 
     // Recrear el formulario preservando la lógica de notas existentes
-    this.pedido.carrito.forEach((prod) => {
+    this.pedido.carrito.forEach((prod, index) => {
       // Crear FormArray para nuevas notas
       const notasArray = this.formBuilder.array([]);
 
@@ -977,7 +983,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           notas: notasArray,
           productoId: [prod.producto?.identificacion?.referencia || ""],
           titulo: [
-            prod.producto?.crearProducto?.titulo || "Producto sin nombre",
+            this.crearNombreDistintivo(prod, index) || "Producto sin nombre",
           ],
         }),
       );
@@ -992,21 +998,146 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       return [];
     }
 
+    // ESTRATEGIA ROBUSTA DE IDENTIFICACIÓN DE PRODUCTOS
+    // 1. Obtener todos los identificadores posibles del producto
     const productoId = producto?.producto?.identificacion?.referencia;
     const productoTitulo = producto?.producto?.crearProducto?.titulo;
+    const productoCD = producto?.producto?.cd || (producto?.producto?.crearProducto as any)?.cd;
+    const productoBodegaId = producto?.producto?.bodegaId;
+    
+    // 2. Obtener la posición del producto en el carrito (índice único)
+    const indiceProducto = this.pedido.carrito?.findIndex(p => p === producto) ?? -1;
+    
+    // 3. Crear un identificador único combinando múltiples campos
+    const identificadorUnico = this.crearIdentificadorUnico(producto, indiceProducto);
 
     const notasEncontradas = this.pedido.notasPedido.notasProduccion.filter(
       (nota) => {
-        // Priorizar filtrado por ID del producto, y solo usar título como fallback
+        // ESTRATEGIA DE FILTRADO JERÁRQUICO:
+        
+        // 1. PRIORIDAD MÁXIMA: Si la nota tiene identificador único, usarlo
+        if ((nota as any).identificadorUnico && identificadorUnico) {
+          return (nota as any).identificadorUnico === identificadorUnico;
+        }
+        
+        // 2. PRIORIDAD ALTA: Si ambos tienen productoId, comparar por ID
         if (productoId && (nota as any).productoId) {
           return (nota as any).productoId === productoId;
         }
-        // Solo usar título si no hay ID disponible
-        return (nota as any).producto === productoTitulo;
+        
+        // 3. PRIORIDAD MEDIA: Si ambos tienen CD, comparar por CD
+        if (productoCD && (nota as any).productoCD) {
+          return (nota as any).productoCD === productoCD;
+        }
+        
+        // 4. PRIORIDAD BAJA: Si ambos tienen bodegaId, comparar por bodega + título
+        if (productoBodegaId && (nota as any).productoBodegaId && productoTitulo) {
+          return (nota as any).productoBodegaId === productoBodegaId && 
+                 (nota as any).producto === productoTitulo;
+        }
+        
+        // 5. ÚLTIMO RECURSO: Solo usar título si no hay otros identificadores
+        // PERO solo si es el único producto con ese título en el carrito
+        if (productoTitulo && (nota as any).producto === productoTitulo) {
+          // Verificar que no haya otros productos con el mismo título
+          const productosConMismoTitulo = this.pedido.carrito?.filter(p => 
+            p.producto?.crearProducto?.titulo === productoTitulo
+          ) || [];
+          
+          // Solo usar título si es el único producto con ese nombre
+          if (productosConMismoTitulo.length === 1) {
+            return true;
+          }
+        }
+        
+        return false;
       },
     );
 
     return notasEncontradas;
+  }
+
+  // Método para crear un identificador único para cada producto
+  private crearIdentificadorUnico(producto: any, indiceProducto: number): string {
+    const productoId = producto?.producto?.identificacion?.referencia;
+    const productoTitulo = producto?.producto?.crearProducto?.titulo;
+    const productoCD = producto?.producto?.cd || (producto?.producto?.crearProducto as any)?.cd;
+    const productoBodegaId = producto?.producto?.bodegaId;
+    
+    // Crear un hash único combinando múltiples identificadores
+    const identificadores = [
+      productoId || '',
+      productoTitulo || '',
+      productoCD || '',
+      productoBodegaId || '',
+      indiceProducto.toString()
+    ].filter(id => id !== '');
+    
+    return identificadores.join('|');
+  }
+
+  // Método auxiliar para comparar si dos productos son el mismo
+  private sonElMismoProducto(producto1: any, producto2: any): boolean {
+    const p1Id = producto1?.producto?.identificacion?.referencia;
+    const p1Titulo = producto1?.producto?.crearProducto?.titulo;
+    const p1CD = producto1?.producto?.cd || (producto1?.producto?.crearProducto as any)?.cd;
+    const p1BodegaId = producto1?.producto?.bodegaId;
+    
+    const p2Id = producto2?.producto?.identificacion?.referencia;
+    const p2Titulo = producto2?.producto?.crearProducto?.titulo;
+    const p2CD = producto2?.producto?.cd || (producto2?.producto?.crearProducto as any)?.cd;
+    const p2BodegaId = producto2?.producto?.bodegaId;
+    
+    // Estrategia jerárquica de comparación
+    if (p1Id && p2Id) return p1Id === p2Id;
+    if (p1CD && p2CD) return p1CD === p2CD;
+    if (p1BodegaId && p2BodegaId && p1Titulo && p2Titulo) {
+      return p1BodegaId === p2BodegaId && p1Titulo === p2Titulo;
+    }
+    return p1Titulo === p2Titulo;
+  }
+
+  // Método para crear un nombre distintivo del producto
+  private crearNombreDistintivo(producto: any, indiceProducto: number): string {
+    const titulo = producto?.producto?.crearProducto?.titulo || 'Producto';
+    const productoId = producto?.producto?.identificacion?.referencia;
+    const productoCD = producto?.producto?.cd || (producto?.producto?.crearProducto as any)?.cd;
+    const productoBodegaId = producto?.producto?.bodegaId;
+    
+    // Array para almacenar los distintivos
+    const distintivos: string[] = [];
+    
+    // Agregar código del producto si existe
+    if (productoCD) {
+      distintivos.push(`Código: ${productoCD}`);
+    }
+    
+    // Agregar ID del producto si existe
+    if (productoId) {
+      distintivos.push(`ID: ${productoId}`);
+    }
+    
+    // Agregar bodega si existe
+    if (productoBodegaId) {
+      distintivos.push(`Bodega: ${productoBodegaId}`);
+    }
+    
+    // Agregar posición en carrito si hay múltiples productos con mismo nombre
+    const productosConMismoTitulo = this.pedido.carrito?.filter(p => 
+      p.producto?.crearProducto?.titulo === titulo
+    ) || [];
+    
+    if (productosConMismoTitulo.length > 1) {
+      distintivos.push(`Posición: ${indiceProducto + 1}`);
+    }
+    
+    // Si no hay distintivos, devolver solo el título
+    if (distintivos.length === 0) {
+      return titulo;
+    }
+    
+    // Crear el nombre distintivo
+    return `${titulo} (${distintivos.join(', ')})`;
   }
 
   // Método para limpiar datos fantasma de sessionStorage y localStorage
@@ -1080,7 +1211,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (indiceNota < 0 || indiceNota >= notasDelProducto.length) return;
 
     const notaAEliminar = notasDelProducto[indiceNota];
-    const nombreProducto = producto?.producto?.crearProducto?.titulo || 'Producto';
+    const nombreProducto = this.crearNombreDistintivo(producto, this.pedido.carrito?.findIndex(p => this.sonElMismoProducto(p, producto)) ?? -1) || 'Producto';
     const descripcionNota = this.getDescripcionNota(notaAEliminar);
 
     // Confirmar eliminación con información específica
@@ -1139,14 +1270,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           // Si después de eliminar no quedan notas para este producto, habilitar campo para nueva nota
           const notasRestantes = this.obtenerNotasDelProducto(producto);
           if (notasRestantes.length === 0) {
-            // Buscar el índice del producto en el carrito
-            const indiceProducto = this.pedido.carrito.findIndex(
-              (p) =>
-                p.producto?.identificacion?.referencia ===
-                  producto.producto?.identificacion?.referencia ||
-                p.producto?.crearProducto?.titulo ===
-                  producto.producto?.crearProducto?.titulo,
-            );
+            // Buscar el índice del producto en el carrito usando el método auxiliar
+            const indiceProducto = this.pedido.carrito?.findIndex(p => 
+              this.sonElMismoProducto(p, producto)
+            ) ?? -1;
 
             if (indiceProducto !== -1) {
               // Agregar un campo vacío para nueva nota

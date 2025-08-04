@@ -66,7 +66,7 @@
                   <span class="date-label"><i class="fa fa-calendar me-1"></i>{{ fecha | date: 'dd/MM/yyyy' }}</span>
                   <span class="product-label">
                     <i class="fa fa-box me-1"></i>
-                    {{ pedido.carrito[i]?.producto?.crearProducto?.titulo || 'Producto' }}
+                    {{ crearNombreDistintivo(pedido.carrito[i], i) }}
                   </span>
                   <span class="badge bg-info ms-2" *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length > 0">
                     {{obtenerNotasDelProducto(pedido.carrito[i]).length}} nota(s) existente(s)

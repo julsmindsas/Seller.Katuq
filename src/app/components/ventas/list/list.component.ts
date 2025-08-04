@@ -187,11 +187,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Verifica si el pedido está congelado y no permite modificaciones de productos
-   * Un pedido está congelado si:
-   * - Estado es ProducidoParcialmente
-   * - Estado es Cerrado
-   * - Estado es Entregado
+   * Verifica si el pedido está congelado según los grupos de estados
+   * GRUPO 1: EnProduccion, ProducidoParcialmente, ProducidoTotalmente, Empacado, Despachado
+   * GRUPO 2: Entregado, Cerrado
    * @param order Pedido a verificar
    * @returns true si está congelado, false si permite modificaciones
    */
@@ -200,13 +198,67 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return false;
     }
 
-    const estadosCongelados = [EstadoProcesoFiltros.EnProduccion, EstadoProcesoFiltros.ProducidoParcialmente, EstadoProcesoFiltros.Cerrado, EstadoProcesoFiltros.Despachado, EstadoProcesoFiltros.Entregado];
+    const estadosGrupo1 = [
+      EstadoProcesoFiltros.EnProduccion,
+      EstadoProcesoFiltros.ProducidoParcialmente,
+      EstadoProcesoFiltros.ProducidoTotalmente,
+      EstadoProcesoFiltros.Empacado,
+      EstadoProcesoFiltros.Despachado
+    ];
 
-    return estadosCongelados.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+    const estadosGrupo2 = [
+      EstadoProcesoFiltros.Entregado,
+      EstadoProcesoFiltros.Cerrado
+    ];
+
+    return estadosGrupo1.includes(order.estadoProceso as unknown as EstadoProcesoFiltros) ||
+           estadosGrupo2.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+  }
+
+  /**
+   * Verifica si el pedido está en GRUPO 1 (congelamiento parcial)
+   * Estados: EnProduccion, ProducidoParcialmente, ProducidoTotalmente, Empacado, Despachado
+   * @param order Pedido a verificar
+   * @returns true si está en grupo 1
+   */
+  isPedidoGrupo1(order: Pedido): boolean {
+    if (!order || !order.estadoProceso) {
+      return false;
+    }
+
+    const estadosGrupo1 = [
+      EstadoProcesoFiltros.EnProduccion,
+      EstadoProcesoFiltros.ProducidoParcialmente,
+      EstadoProcesoFiltros.ProducidoTotalmente,
+      EstadoProcesoFiltros.Empacado,
+      EstadoProcesoFiltros.Despachado
+    ];
+
+    return estadosGrupo1.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+  }
+
+  /**
+   * Verifica si el pedido está en GRUPO 2 (congelamiento total)
+   * Estados: Entregado, Cerrado
+   * @param order Pedido a verificar
+   * @returns true si está en grupo 2
+   */
+  isPedidoGrupo2(order: Pedido): boolean {
+    if (!order || !order.estadoProceso) {
+      return false;
+    }
+
+    const estadosGrupo2 = [
+      EstadoProcesoFiltros.Entregado,
+      EstadoProcesoFiltros.Cerrado
+    ];
+
+    return estadosGrupo2.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
   }
 
   /**
    * Verifica si se pueden modificar productos del pedido
+   * Los productos se pueden modificar solo si NO está congelado
    * @param order Pedido a verificar
    * @returns true si se pueden modificar productos, false si no
    */
@@ -215,14 +267,138 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Verifica si se pueden modificar datos básicos del pedido (cliente, entrega, facturación)
-   * Los datos básicos pueden modificarse incluso en pedidos congelados
+   * Verifica si se pueden editar notas de producción
+   * Solo se pueden editar si NO está en GRUPO 1
+   * @param order Pedido a verificar
+   * @returns true si se pueden editar notas de producción
+   */
+  canEditProductionNotes(order: Pedido): boolean {
+    return !this.isPedidoGrupo1(order);
+  }
+
+  /**
+   * Verifica si se pueden agregar productos al pedido
+   * Solo se pueden agregar si NO está congelado
+   * @param order Pedido a verificar
+   * @returns true si se pueden agregar productos
+   */
+  canAddProducts(order: Pedido): boolean {
+    return !this.isPedidoCongelado(order);
+  }
+
+  /**
+   * Verifica si se pueden editar observaciones de personalización
+   * Solo se pueden editar si NO está en GRUPO 1
+   * @param order Pedido a verificar
+   * @returns true si se pueden editar observaciones
+   */
+  canEditCustomizationObservations(order: Pedido): boolean {
+    return !this.isPedidoGrupo1(order);
+  }
+
+  /**
+   * Verifica si se pueden editar preferencias de producto
+   * Solo se pueden editar si NO está en GRUPO 1
+   * @param order Pedido a verificar
+   * @returns true si se pueden editar preferencias
+   */
+  canEditProductPreferences(order: Pedido): boolean {
+    return !this.isPedidoGrupo1(order);
+  }
+
+  /**
+   * Verifica si se pueden editar adiciones del producto
+   * Solo se pueden editar si NO está en GRUPO 1
+   * @param order Pedido a verificar
+   * @returns true si se pueden editar adiciones
+   */
+  canEditProductAdditions(order: Pedido): boolean {
+    return !this.isPedidoGrupo1(order);
+  }
+
+  /**
+   * Verifica si se pueden editar cantidades del producto
+   * Solo se pueden editar si NO está en GRUPO 1
+   * @param order Pedido a verificar
+   * @returns true si se pueden editar cantidades
+   */
+  canEditProductQuantities(order: Pedido): boolean {
+    return !this.isPedidoGrupo1(order);
+  }
+
+  /**
+   * Verifica si se puede editar la dirección de entrega
+   * Solo se puede editar si NO está en GRUPO 2
+   * @param order Pedido a verificar
+   * @returns true si se puede editar dirección de entrega
+   */
+  canEditDeliveryAddress(order: Pedido): boolean {
+    return !this.isPedidoGrupo2(order);
+  }
+
+  /**
+   * Verifica si se pueden editar datos básicos del pedido (cliente, entrega, facturación)
+   * Los datos básicos pueden modificarse incluso en pedidos congelados, excepto dirección en GRUPO 2
    * @param order Pedido a verificar
    * @returns true si se pueden modificar datos básicos
    */
   canModifyBasicData(order: Pedido): boolean {
-    // Solo se prohíbe modificar datos básicos si el pedido está entregado
-    return order?.estadoProceso !== "Entregado";
+    // Solo se prohíbe modificar datos básicos si el pedido está en GRUPO 2
+    return !this.isPedidoGrupo2(order);
+  }
+
+  /**
+   * Verifica si se puede editar la facturación
+   * Siempre disponible, excepto cuando se haya generado la factura
+   * @param order Pedido a verificar
+   * @returns true si se puede editar facturación
+   */
+  canEditBilling(order: Pedido): boolean {
+    // TODO: Implementar lógica cuando se tenga el módulo de facturación
+    // Por ahora siempre permite editar
+    return true;
+  }
+
+  /**
+   * Verifica si se puede ver el historial de pagos
+   * Siempre disponible para ver, pero no para editar cuando se administre desde tesorería
+   * @param order Pedido a verificar
+   * @returns true si se puede ver historial de pagos
+   */
+  canViewPaymentHistory(order: Pedido): boolean {
+    // TODO: Implementar lógica cuando se tenga el módulo de tesorería
+    // Por ahora siempre permite ver
+    return true;
+  }
+
+  /**
+   * Verifica si se puede editar el estado de pago
+   * Solo administradores pueden modificar estados de pago
+   * @param order Pedido a verificar
+   * @returns true si se puede editar estado de pago
+   */
+  canEditPaymentStatus(order: Pedido): boolean {
+    return this.canDeleteOrder(); // Solo administradores
+  }
+
+  /**
+   * Verifica si se puede editar el estado de proceso
+   * Solo administradores pueden modificar estados de proceso
+   * @param order Pedido a verificar
+   * @returns true si se puede editar estado de proceso
+   */
+  canEditProcessStatus(order: Pedido): boolean {
+    return this.canDeleteOrder(); // Solo administradores
+  }
+
+  /**
+   * Verifica si se puede asignar un asesor diferente
+   * Solo administradores pueden asignar asesores
+   * @param order Pedido a verificar
+   * @returns true si se puede asignar asesor
+   */
+  canAssignSeller(order: Pedido): boolean {
+    return this.canDeleteOrder(); // Solo administradores
   }
 
   confirmDeleteOrder(order: any) {
