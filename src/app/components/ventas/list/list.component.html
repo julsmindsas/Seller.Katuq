@@ -1628,40 +1628,54 @@
 
         <div class="mb-3">
             <label class="form-label fw-bold">{{ 'Nuevo estado de pago:' | translate }}</label>
-            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoPago">
+            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoPago"
+                [disabled]="!canEditPaymentStatus(pedidoSeleccionado)">
                 <option *ngFor="let estado of estadosPago" [value]="estado">
                     {{ estado }}
                 </option>
             </select>
+            <small class="form-text text-muted" *ngIf="!canEditPaymentStatus(pedidoSeleccionado)">
+                <i class="fa fa-lock me-1"></i>
+                {{ 'Solo administradores pueden cambiar el estado de pago' | translate }}
+            </small>
         </div>
 
         <div class="mb-3">
             <label class="form-label fw-bold">{{ 'Estado de proceso:' | translate }}</label>
             <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso"
-                [disabled]="isPedidoCongelado(pedidoSeleccionado) && canDeleteOrder()">
+                [disabled]="!canEditProcessStatus(pedidoSeleccionado)">
                 <option *ngFor="let estado of estadosProcesos" [value]="estado">
                     {{ estado }}
                 </option>
             </select>
             <small class="form-text text-muted">
-                {{ 'Estados que congelan el pedido: EnProduccion, ProducidoParcialmente, Cerrado, Entregado, Despachado'
-                | translate }}
+                {{ 'GRUPO 1 (Congela productos): EnProduccion, ProducidoParcialmente, ProducidoTotalmente, Empacado, Despachado' | translate }}
             </small>
-            <small class="form-text text-muted" *ngIf="isPedidoCongelado(pedidoSeleccionado) && !canDeleteOrder()">
-                {{ 'El pedido está congelado y no se puede modificar.' | translate }}
+            <small class="form-text text-muted">
+                {{ 'GRUPO 2 (Congela dirección): Entregado, Cerrado' | translate }}
             </small>
+            <small class="form-text text-muted" *ngIf="!canEditProcessStatus(pedidoSeleccionado)">
+                <i class="fa fa-lock me-1"></i>
+                {{ 'Solo administradores pueden cambiar el estado de proceso' | translate }}
+            </small>
+        </div>
+
+        <div class="alert alert-info" *ngIf="isPedidoGrupo1(pedidoSeleccionado)">
+            <i class="fa fa-snowflake-o me-2"></i>
+            <strong>{{ 'Pedido en GRUPO 1:' | translate }}</strong>
+            {{ 'Se congelarán: Editar notas de producción, Agregar productos, Observaciones de personalización, Preferencias, Adiciones y Cantidades' | translate }}
+        </div>
+
+        <div class="alert alert-warning" *ngIf="isPedidoGrupo2(pedidoSeleccionado)">
+            <i class="fa fa-lock me-2"></i>
+            <strong>{{ 'Pedido en GRUPO 2:' | translate }}</strong>
+            {{ 'Se congelará: Editar dirección de entrega' | translate }}
         </div>
 
         <div class="alert alert-warning" *ngIf="pedidoSeleccionado?.estadoPago === 'PreAprobado'">
             <i class="fa fa-exclamation-triangle me-2"></i>
             <strong>{{ 'Nota:' | translate }}</strong>
             {{ 'Al seleccionar PreAprobado, se marcará como aprobación manual.' | translate }}
-        </div>
-
-        <div class="alert alert-warning" *ngIf="isPedidoCongelado(pedidoSeleccionado)">
-            <i class="fa fa-snowflake-o me-2"></i>
-            <strong>{{ 'Advertencia:' | translate }}</strong>
-            {{ 'Este pedido estará congelado y no se podrán modificar productos.' | translate }}
         </div>
 
         <div class="alert alert-danger"
@@ -1803,64 +1817,54 @@
                         </div>
                     </button>
 
-                    <!-- Editar Cliente -->
+                    <!-- Editar Cliente - SIEMPRE DISPONIBLE -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canModifyBasicData(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
                         (click)="editDatosClientes(clientesModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon client-icon">
                             <i class="fa fa-user"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Editar Cliente' | translate }}</span>
-                            <small class="option-description">
-                                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar datos del cliente' |
-                                    translate }}</span>
-                                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible
-                                    - Pedido entregado' | translate }}</span>
-                            </small>
+                            <small class="option-description">{{ 'Modificar datos del cliente' | translate }}</small>
                         </div>
                     </button>
 
-                    <!-- Editar Dirección -->
+                    <!-- Editar Dirección - BLOQUEADA EN GRUPO 2 -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canModifyBasicData(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
+                        [disabled]="!canEditDeliveryAddress(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canEditDeliveryAddress(selectedOrder)}"
                         (click)="editDatosEntrega(datosEnregaModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon address-icon">
                             <i class="fa fa-map-marker"></i>
+                            <i *ngIf="!canEditDeliveryAddress(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Editar Dirección' | translate }}</span>
                             <small class="option-description">
-                                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar dirección de entrega' |
-                                    translate }}</span>
-                                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible
-                                    - Pedido entregado' | translate }}</span>
+                                <span *ngIf="canEditDeliveryAddress(selectedOrder)">{{ 'Modificar dirección de entrega' | translate }}</span>
+                                <span *ngIf="!canEditDeliveryAddress(selectedOrder)" class="text-warning">
+                                    <i class="fa fa-lock me-1"></i>
+                                    {{ 'No disponible - Pedido entregado/cerrado' | translate }}
+                                </span>
                             </small>
                         </div>
                     </button>
 
-                    <!-- Editar Facturación -->
+                    <!-- Editar Facturación - SIEMPRE DISPONIBLE (por ahora) -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canModifyBasicData(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canModifyBasicData(selectedOrder)}"
+                        [disabled]="!canEditBilling(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canEditBilling(selectedOrder)}"
                         (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon billing-icon">
                             <i class="fa fa-credit-card"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Editar Facturación' | translate }}</span>
-                            <small class="option-description">
-                                <span *ngIf="canModifyBasicData(selectedOrder)">{{ 'Modificar datos de facturación' |
-                                    translate }}</span>
-                                <span *ngIf="!canModifyBasicData(selectedOrder)" class="text-warning">{{ 'No disponible
-                                    - Pedido entregado' | translate }}</span>
-                            </small>
+                            <small class="option-description">{{ 'Modificar datos de facturación' | translate }}</small>
                         </div>
                     </button>
 
-                    <!-- Editar Notas -->
+                    <!-- Editar Notas - SIEMPRE DISPONIBLE -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
                         (click)="editNotas(notasModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon notes-icon">
@@ -1872,34 +1876,42 @@
                         </div>
                     </button>
 
-                    <!-- Estado de Pago -->
+                    <!-- Estado de Pago - SOLO ADMINISTRADORES -->
                     <button class="option-btn" type="button"
+                        [disabled]="!canEditPaymentStatus(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canEditPaymentStatus(selectedOrder)}"
                         (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon payment-icon">
                             <i class="fa fa-credit-card-alt"></i>
+                            <i *ngIf="!canEditPaymentStatus(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Estado de Pago' | translate }}</span>
-                            <small class="option-description">{{ 'Cambiar estado del pago' | translate }}</small>
+                            <small class="option-description">
+                                <span *ngIf="canEditPaymentStatus(selectedOrder)">{{ 'Cambiar estado del pago' | translate }}</span>
+                                <span *ngIf="!canEditPaymentStatus(selectedOrder)" class="text-warning">
+                                    <i class="fa fa-lock me-1"></i>
+                                    {{ 'Solo administradores' | translate }}
+                                </span>
+                            </small>
                         </div>
                     </button>
 
-                    <!-- Agregar Productos -->
+                    <!-- Agregar Productos - BLOQUEADO EN TODOS LOS ESTADOS CONGELADOS -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canModifyProducts(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canModifyProducts(selectedOrder)}"
+                        [disabled]="!canAddProducts(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canAddProducts(selectedOrder)}"
                         (click)="addProductToCart(recompraModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon cart-icon"
-                            [ngClass]="{'frozen-icon': !canModifyProducts(selectedOrder)}">
+                            [ngClass]="{'frozen-icon': !canAddProducts(selectedOrder)}">
                             <i class="fa fa-shopping-cart"></i>
-                            <i *ngIf="!canModifyProducts(selectedOrder)" class="fa fa-lock frozen-lock"></i>
+                            <i *ngIf="!canAddProducts(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Agregar Productos' | translate }}</span>
                             <small class="option-description">
-                                <span *ngIf="canModifyProducts(selectedOrder)">{{ 'Añadir más productos al pedido' |
-                                    translate }}</span>
-                                <span *ngIf="!canModifyProducts(selectedOrder)" class="text-warning">
+                                <span *ngIf="canAddProducts(selectedOrder)">{{ 'Añadir más productos al pedido' | translate }}</span>
+                                <span *ngIf="!canAddProducts(selectedOrder)" class="text-warning">
                                     <i class="fa fa-lock me-1"></i>
                                     {{ 'Pedido congelado - Estado: ' + selectedOrder?.estadoProceso | translate }}
                                 </span>
@@ -1907,19 +1919,28 @@
                         </div>
                     </button>
 
-                    <!-- Asignar Asesor -->
+                    <!-- Asignar Asesor - SOLO ADMINISTRADORES -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        [disabled]="!canAssignSeller(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canAssignSeller(selectedOrder)}"
                         (click)="editSeller(selectedOrder); closeOptionsModal()">
                         <div class="option-icon seller-icon">
                             <i class="fa fa-users"></i>
+                            <i *ngIf="!canAssignSeller(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Asignar Asesor' | translate }}</span>
-                            <small class="option-description">{{ 'Cambiar asesor responsable' | translate }}</small>
+                            <small class="option-description">
+                                <span *ngIf="canAssignSeller(selectedOrder)">{{ 'Cambiar asesor responsable' | translate }}</span>
+                                <span *ngIf="!canAssignSeller(selectedOrder)" class="text-warning">
+                                    <i class="fa fa-lock me-1"></i>
+                                    {{ 'Solo administradores' | translate }}
+                                </span>
+                            </small>
                         </div>
                     </button>
 
-                    <!-- Historial de Pagos -->
+                    <!-- Historial de Pagos - SIEMPRE DISPONIBLE -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
                         (click)="AsentarPago(pagosModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon history-icon">
