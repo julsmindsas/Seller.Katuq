@@ -36,7 +36,7 @@ import { PedidosUtilService } from "../../service/pedidos.util.service";
 import { parse } from "flatted";
 import { ToastrService } from "ngx-toastr";
 import { NotificationService } from "../../../../shared/services/notification.service";
-import { takeUntil, switchMap, tap, catchError } from "rxjs/operators";
+import { takeUntil, switchMap, tap, catchError, take } from "rxjs/operators";
 @Component({
   selector: "app-conf-product-to-cart",
   templateUrl: "./conf-product-to-cart.component.html",
@@ -284,6 +284,12 @@ export class ConfProductToCartComponent
       this.ocasiones == undefined ||
       this.tipoEntrega == undefined
     ) {
+      // Evitar suscripciones múltiples
+      if (this.maestrosCargando) {
+        console.log('⏳ Ya se están cargando los maestros, esperando...');
+        return;
+      }
+
       this.maestrosCargando = true;
       this.reintentosCarga++;
 
@@ -301,6 +307,7 @@ export class ConfProductToCartComponent
             throw error;
           }),
           takeUntil(this.destroy$),
+          take(1) // Asegurar que solo se ejecute una vez
         )
         .subscribe({
           next: (r: any) => {
@@ -334,15 +341,20 @@ export class ConfProductToCartComponent
                 this.errorCargaDatosMaestros = false;
                 this.reintentosCarga = 0; // Reset contador
 
-                this.toastrService.success(
-                  "Configuración del producto cargada correctamente",
-                  "Éxito",
-                  {
-                    timeOut: 3000,
-                    progressBar: true,
-                    positionClass: "toast-bottom-right",
-                  },
-                );
+                console.log('✅ Datos maestros procesados exitosamente');
+                
+                // Solo mostrar toast si no estamos en modo edición
+                if (!this.isEdit) {
+                  this.toastrService.success(
+                    "Configuración del producto cargada correctamente",
+                    "Éxito",
+                    {
+                      timeOut: 3000,
+                      progressBar: true,
+                      positionClass: "toast-bottom-right",
+                    },
+                  );
+                }
               }
             }
           },
@@ -351,6 +363,8 @@ export class ConfProductToCartComponent
             this.handleMaestrosError(error, producto);
           },
         });
+    } else {
+      console.log('✅ Datos maestros ya están cargados');
     }
   }
 
@@ -696,9 +710,22 @@ export class ConfProductToCartComponent
       }
     });
 
+    // Log de datos recibidos para debugging
+    console.log('🔍 Datos recibidos en ngOnInit:', {
+      isEdit: this.isEdit,
+      producto: this.producto?.crearProducto?.titulo,
+      configuracionCarrito: !!this.configuracionCarrito,
+      preferenciasEnConfiguracion: this.configuracionCarrito?.configuracion?.preferencias?.length || 0
+    });
+
+    // Manejo específico para modo edición
     if (this.isEdit && this.configuracionCarrito) {
+      console.log('🔄 Iniciando modo edición...');
+      // Inicializar formularios antes de llenar datos
+      this.initializeFormsIfNeeded();
       this.llenarCamposEdicion();
     } else if (this.producto) {
+      console.log('🔄 Iniciando modo creación...');
       this.addTarjeta();
       this.inicializacionConfigurarProducto(this.producto);
     }
@@ -1006,49 +1033,221 @@ export class ConfProductToCartComponent
     }
   }
 
-  llenarCamposEdicion() {
+  async llenarCamposEdicion() {
+    console.log('🔄 Iniciando llenarCamposEdicion...');
+    
+    // 1. Verificar que tenemos los datos básicos
+    if (!this.configuracionCarrito) {
+      console.error('❌ No hay configuración de carrito disponible');
+      return;
+    }
+
     const configuracion = this.configuracionCarrito?.configuracion;
+    
+    // 2. Establecer el producto
     if (this.configuracionCarrito?.producto) {
       this.producto = this.configuracionCarrito.producto;
-      this.inicializacionConfigurarProducto(this.producto);
+      console.log('✅ Producto establecido:', this.producto?.crearProducto?.titulo);
     }
-    if (configuracion) {
-      this.productoConfiguradoForm.patchValue(configuracion);
-      setTimeout(() => {
-        this.datosEntrega.patchValue(configuracion.datosEntrega);
 
-        this.productPreference = configuracion.preferencias;
+    // 3. Inicializar formularios si no están inicializados
+    this.initializeFormsIfNeeded();
 
-        this.adicionesrows = JSON.parse(this.rowsiniciales);
-        const adiciones = this.adicionesrows.filter(
-          (x) =>
-            configuracion.adiciones.find(
-              (y: any) => y.titulo == x.descripcion,
-            ) != null,
-        );
-        adiciones.forEach((adicion: any) => {
-          this.addAdicionToProduct(adicion);
-        });
-        this.addOpcionesPersonalizacion();
-      }, 1000);
+    // 4. Cargar datos maestros de forma asíncrona
+    await this.loadDataWithMaestros(configuracion);
+  }
 
-      this.cantidadTarjetas = configuracion.tarjetas.length;
-      configuracion.tarjetas.forEach((tarjeta: any) => {
-        const tarjetasArray = this.tarjetasForm.get("tarjetas") as FormArray;
-        tarjetasArray.push(this.crearTarjetaItem(tarjeta));
+  /**
+   * Inicializa los formularios si no están creados
+   */
+  private initializeFormsIfNeeded() {
+    if (!this.productoConfiguradoForm) {
+      console.log('📝 Inicializando productoConfiguradoForm...');
+      this.productoConfiguradoForm = this.fb.group({
+        // Agregar campos según sea necesario
+        variables: this.fb.array([]),
       });
     }
 
-    this.cantidad = this.configuracionCarrito?.cantidad || 1;
+    if (!this.datosEntrega) {
+      console.log('📝 Inicializando datosEntrega...');
+      this.datosEntrega = this.fb.group({
+        tipoEntrega: [''],
+        formaEntrega: [''],
+        fechaEntrega: [null],
+        horarioEntrega: [''],
+        genero: [''],
+        ocasion: [''],
+        colores: [''],
+        observaciones: [''],
+      });
+    }
 
-    // Intentar establecer el valor usando el método centralizado
-    setTimeout(() => {
-      this.actualizarTodosLosInputsCantidad();
-    }, 100);
-
-    this.isOnlyOneTarjeta = this.cantidadTarjetas == 1;
-    this.SinTarjeta = this.cantidadTarjetas == 0;
+    if (!this.tarjetasForm) {
+      console.log('📝 Inicializando tarjetasForm...');
+      this.tarjetasForm = this.fb.group({
+        tarjetas: this.fb.array([]),
+      });
+    }
   }
+
+  /**
+   * Carga los datos con manejo asíncrono de maestros
+   */
+  private async loadDataWithMaestros(configuracion: any) {
+    console.log('🔄 Cargando datos con maestros...');
+
+    // Verificar si los datos maestros ya están cargados
+    if (this.areMaestrosFullyLoaded()) {
+      console.log('✅ Datos maestros ya cargados, procediendo con llenado...');
+      this.fillDataFromConfiguration(configuracion);
+      return;
+    }
+
+    console.log('⏳ Datos maestros no cargados, iniciando carga...');
+    
+    // Usar el método existente que ya maneja la suscripción
+    this.inicializacionConfigurarProducto(this.producto);
+    
+    // Esperar a que los datos maestros estén completamente cargados
+    const maestrosLoaded = await this.waitForMaestrosToBeFullyLoaded();
+    
+    if (maestrosLoaded) {
+      console.log('✅ Datos maestros cargados completamente, procediendo con llenado...');
+      this.fillDataFromConfiguration(configuracion);
+    } else {
+      console.error('❌ Timeout esperando datos maestros');
+      this.toastrService.error(
+        'Error cargando configuración del producto. Intente nuevamente.',
+        'Error',
+        { timeOut: 4000 }
+      );
+    }
+  }
+
+
+
+  /**
+   * Llena los datos desde la configuración una vez que los maestros están cargados
+   */
+  private fillDataFromConfiguration(configuracion: any) {
+    console.log('🔄 Llenando datos desde configuración...');
+
+    if (!configuracion) {
+      console.warn('⚠️ No hay configuración disponible');
+      return;
+    }
+
+    try {
+      // 1. Llenar formulario principal
+      if (this.productoConfiguradoForm) {
+        this.productoConfiguradoForm.patchValue(configuracion);
+        console.log('✅ Formulario principal actualizado');
+      }
+
+      // 1.5. Procesar variables del producto (formulario dinámico)
+      this.processProductVariables(configuracion);
+
+      // 2. Llenar datos de entrega
+      if (this.datosEntrega && configuracion.datosEntrega) {
+        this.datosEntrega.patchValue(configuracion.datosEntrega);
+        console.log('✅ Datos de entrega actualizados');
+      }
+
+      // 3. Establecer preferencias
+      if (configuracion.preferencias) {
+        console.log('✅ Preferencias encontradas en configuración:', configuracion.preferencias.length, 'preferencias');
+        
+        // Procesar preferencias existentes inmediatamente
+        this.processExistingPreferences(configuracion.preferencias);
+      } else {
+        console.log('⚠️ No hay preferencias en la configuración');
+      }
+
+      // 4. Procesar adiciones
+      this.processAdditions(configuracion.adiciones);
+
+      // 5. Procesar tarjetas
+      this.processTarjetas(configuracion.tarjetas);
+
+      // 6. Establecer cantidad
+      this.cantidad = this.configuracionCarrito?.cantidad || 1;
+      console.log('✅ Cantidad establecida:', this.cantidad);
+
+      // 7. Actualizar inputs de cantidad
+      setTimeout(() => {
+        this.actualizarTodosLosInputsCantidad();
+      }, 100);
+
+      // 8. Configurar tarjetas
+      this.isOnlyOneTarjeta = this.cantidadTarjetas == 1;
+      this.SinTarjeta = this.cantidadTarjetas == 0;
+
+      console.log('✅ Llenado de datos completado exitosamente');
+
+    } catch (error) {
+      console.error('❌ Error llenando datos:', error);
+      this.toastrService.error(
+        'Error al cargar la configuración del producto',
+        'Error',
+        { timeOut: 3000 }
+      );
+    }
+  }
+
+  /**
+   * Procesa las adiciones del producto
+   */
+  private processAdditions(adiciones: any[]) {
+    if (!adiciones || !this.adicionesrows) {
+      console.warn('⚠️ No hay adiciones para procesar');
+      return;
+    }
+
+    try {
+      const adicionesFiltradas = this.adicionesrows.filter(
+        (x) => adiciones.find((y: any) => y.titulo == x.descripcion) != null
+      );
+
+      adicionesFiltradas.forEach((adicion: any) => {
+        this.addAdicionToProduct(adicion);
+      });
+
+      console.log('✅ Adiciones procesadas:', adicionesFiltradas.length);
+    } catch (error) {
+      console.error('❌ Error procesando adiciones:', error);
+    }
+  }
+
+  /**
+   * Procesa las tarjetas del producto
+   */
+  private processTarjetas(tarjetas: any[]) {
+    if (!tarjetas || !Array.isArray(tarjetas)) {
+      console.warn('⚠️ No hay tarjetas para procesar');
+      return;
+    }
+
+    try {
+      this.cantidadTarjetas = tarjetas.length;
+      
+      // Limpiar tarjetas existentes
+      const tarjetasArray = this.tarjetasForm.get("tarjetas") as FormArray;
+      while (tarjetasArray.length !== 0) {
+        tarjetasArray.removeAt(0);
+      }
+
+      // Agregar nuevas tarjetas
+      tarjetas.forEach((tarjeta: any) => {
+        tarjetasArray.push(this.crearTarjetaItem(tarjeta));
+      });
+
+      console.log('✅ Tarjetas procesadas:', tarjetas.length);
+    } catch (error) {
+      console.error('❌ Error procesando tarjetas:', error);
+    }
+  }
+
   crearTarjetaItem(tarjeta: any): any {
     return this.fb.group({
       para: [tarjeta.para, Validators.required],
@@ -1761,10 +1960,16 @@ export class ConfProductToCartComponent
   }
 
   addOpcionesPersonalizacion() {
-    const ocasionx = this.ocasiones.find(
+    // Verificar que los datos de entrega estén disponibles
+    if (!this.datosEntrega || !this.datosEntrega.value) {
+      console.warn('⚠️ Datos de entrega no disponibles para personalización');
+      return;
+    }
+
+    const ocasionx = this.ocasiones?.find(
       (x) => x.id == this.datosEntrega.value.ocasion,
     );
-    const generosx = this.generos.find(
+    const generosx = this.generos?.find(
       (x) => x.id == this.datosEntrega.value.genero,
     );
     const observacionesx = this.datosEntrega.value.observaciones;
@@ -1836,18 +2041,22 @@ export class ConfProductToCartComponent
       cantidad: 1,
     };
 
+    // Buscar si ya existe una preferencia de personalización
     let index = this.productPreference.findIndex(
       (p) => p.titulo === preference.titulo,
     );
-    if (index == undefined || index == null || index == -1) {
-      if (index !== -1) {
-        this.productPreference.splice(index, 1);
-        return;
-      }
+    
+    if (index === -1) {
+      // No existe, agregar nueva preferencia
       this.productPreference.push(preference);
+      console.log('✅ Nueva preferencia de personalización agregada');
     } else {
+      // Ya existe, actualizar la existente
       this.productPreference[index] = preference;
+      console.log('✅ Preferencia de personalización actualizada');
     }
+    
+    console.log('📋 Total de preferencias después de procesar:', this.productPreference.length);
   }
 
   addAdicionToProduct(adicion: any) {
@@ -3077,5 +3286,377 @@ export class ConfProductToCartComponent
       formaEntrega: formaDefault?.nombre || formaDefault,
       horarioEntrega: horarioDefault, // Si no se encuentra un horario válido, será null y el select quedará en "Seleccionar"
     });
+  }
+
+  /**
+   * Verifica el estado de carga y proporciona feedback al usuario
+   */
+  public checkLoadingStatus(): void {
+    console.log('📊 Estado de carga actual:');
+    console.log('- Datos maestros cargados:', this.datosMaestrosCargados);
+    console.log('- Error en carga de maestros:', this.errorCargaDatosMaestros);
+    console.log('- Maestros cargando:', this.maestrosCargando);
+    console.log('- Producto disponible:', !!this.producto);
+    console.log('- Configuración de carrito:', !!this.configuracionCarrito);
+    console.log('- Modo edición:', this.isEdit);
+    
+    if (this.maestrosCargando) {
+      this.toastrService.info(
+        'Cargando configuración del producto...',
+        'Cargando',
+        { timeOut: 2000 }
+      );
+    }
+    
+    if (this.errorCargaDatosMaestros) {
+      this.toastrService.warning(
+        'Hubo un problema cargando algunos datos. Algunas opciones pueden no estar disponibles.',
+        'Advertencia',
+        { timeOut: 4000 }
+      );
+    }
+  }
+
+  /**
+   * Método público para reintentar la carga de datos
+   */
+  public retryDataLoad(): void {
+    console.log('🔄 Reintentando carga de datos...');
+    this.errorCargaDatosMaestros = false;
+    this.reintentosCarga = 0;
+    
+    if (this.isEdit && this.configuracionCarrito) {
+      this.llenarCamposEdicion();
+    } else if (this.producto) {
+      this.inicializacionConfigurarProducto(this.producto);
+    }
+  }
+
+  /**
+   * Verifica si los datos maestros están completamente cargados
+   */
+  private areMaestrosFullyLoaded(): boolean {
+    return !!(
+      this.datosMaestrosCargados &&
+      this.tipoEntrega &&
+      this.adicionesrows &&
+      this.generos &&
+      this.ocasiones &&
+      this.formasEntrega
+    );
+  }
+
+  /**
+   * Espera a que los datos maestros estén completamente cargados
+   */
+  private waitForMaestrosToBeFullyLoaded(): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (this.areMaestrosFullyLoaded()) {
+        resolve(true);
+        return;
+      }
+
+      // Verificar cada 100ms si los datos están cargados
+      const checkInterval = setInterval(() => {
+        if (this.areMaestrosFullyLoaded()) {
+          clearInterval(checkInterval);
+          resolve(true);
+        }
+      }, 100);
+
+      // Timeout después de 10 segundos
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.warn('⚠️ Timeout esperando datos maestros');
+        resolve(false);
+      }, 10000);
+    });
+  }
+
+  /**
+   * Procesa las preferencias existentes del producto
+   */
+  private processExistingPreferences(preferencias: any[]) {
+    if (!preferencias || !Array.isArray(preferencias)) {
+      console.warn('⚠️ No hay preferencias para procesar');
+      return;
+    }
+
+    try {
+      console.log('🔄 Procesando preferencias existentes:', preferencias.length);
+      
+      // Limpiar preferencias existentes para evitar duplicados
+      this.productPreference = [];
+      
+      // Procesar cada preferencia existente
+      preferencias.forEach((preferencia, index) => {
+        console.log(`📋 Preferencia ${index + 1}:`, preferencia);
+        
+        // Agregar la preferencia al array
+        this.productPreference.push(preferencia);
+        
+        // Si es una preferencia de personalización, asegurar que se procese correctamente
+        if (preferencia.tipo === 'opcionPersonalizacion') {
+          console.log('✅ Preferencia de personalización procesada');
+        }
+        
+        // Si es una adición, asegurar que esté marcada como seleccionada
+        if (preferencia.titulo && preferencia.valorUnitarioSinIva > 0) {
+          console.log('✅ Preferencia de adición procesada');
+        }
+      });
+      
+      // Verificar si ya existe una preferencia de personalización
+      const tienePersonalizacion = this.productPreference.some(
+        pref => pref.tipo === 'opcionPersonalizacion'
+      );
+      
+      // Si no existe preferencia de personalización, agregarla basada en los datos de entrega
+      if (!tienePersonalizacion && this.datosEntrega?.value) {
+        setTimeout(() => {
+          this.addOpcionesPersonalizacion();
+          console.log('✅ Opciones de personalización agregadas (no existían)');
+        }, 100);
+      } else if (tienePersonalizacion) {
+        console.log('✅ Preferencia de personalización ya existía, no se regenera');
+      }
+      
+      console.log('📋 Total de preferencias después de procesar:', this.productPreference.length);
+      
+    } catch (error) {
+      console.error('❌ Error procesando preferencias:', error);
+    }
+  }
+
+  /**
+   * Verifica el estado de las preferencias y proporciona información de debugging
+   */
+  public checkPreferencesStatus(): void {
+    console.log('📊 Estado de preferencias:');
+    console.log('- Total de preferencias:', this.productPreference?.length || 0);
+    console.log('- Preferencias actuales:', this.productPreference);
+    console.log('- Datos de entrega:', this.datosEntrega?.value);
+    console.log('- Ocasiones disponibles:', this.ocasiones?.length || 0);
+    console.log('- Géneros disponibles:', this.generos?.length || 0);
+    
+    if (this.productPreference && this.productPreference.length > 0) {
+      this.productPreference.forEach((pref, index) => {
+        console.log(`📋 Preferencia ${index + 1}:`, {
+          titulo: pref.titulo,
+          tipo: pref.tipo,
+          valor: pref.valorUnitarioSinIva,
+          subtitulo: pref.subtitulo
+        });
+      });
+    } else {
+      console.log('⚠️ No hay preferencias cargadas');
+    }
+  }
+
+  /**
+   * Fuerza la actualización de las opciones de personalización
+   */
+  public forceUpdatePersonalization(): void {
+    console.log('🔄 Forzando actualización de personalización...');
+    this.addOpcionesPersonalizacion();
+    this.checkPreferencesStatus();
+  }
+
+  /**
+   * Procesa las variables del producto (formulario dinámico)
+   */
+  private processProductVariables(configuracion: any) {
+    console.log('🔄 Procesando variables del producto...');
+    
+    if (!this.producto || !this.producto.procesoComercial?.variablesForm) {
+      console.warn('⚠️ No hay variables de producto para procesar');
+      return;
+    }
+
+    try {
+      // Inicializar variables del producto
+      this.variables = this.producto.procesoComercial?.variablesForm
+        ? parse(this.producto.procesoComercial.variablesForm)
+        : [];
+
+      console.log('✅ Variables del producto inicializadas:', this.variables?.length || 0);
+
+      // Inicializar el formulario de variables si no existe
+      if (!this.formulario) {
+        this.initForm();
+      }
+
+      // Limpiar variables existentes
+      const itemsArray = this.formulario.get("variables") as FormArray;
+      while (itemsArray.length !== 0) {
+        itemsArray.removeAt(0);
+      }
+
+      // Agregar variables del producto
+      if (this.variables && this.variables.length > 0) {
+        this.variables.forEach((objeto) => {
+          itemsArray.push(this.crearItem(objeto));
+        });
+        console.log('✅ Variables agregadas al formulario:', this.variables.length);
+      }
+
+      // Si hay configuración de variables guardada, aplicarla
+      if (configuracion.variables && Array.isArray(configuracion.variables)) {
+        console.log('🔄 Aplicando configuración guardada de variables...');
+        this.applySavedVariables(configuracion.variables);
+      }
+
+    } catch (error) {
+      console.error('❌ Error procesando variables del producto:', error);
+    }
+  }
+
+  /**
+   * Aplica las variables guardadas al formulario
+   */
+  private applySavedVariables(savedVariables: any[]) {
+    try {
+      const itemsArray = this.formulario.get("variables") as FormArray;
+      
+      savedVariables.forEach((savedVar, index) => {
+        if (index < itemsArray.length) {
+          const control = itemsArray.at(index) as FormGroup;
+          
+          // Aplicar valores guardados
+          if (savedVar.data) {
+            control.patchValue({
+              data: savedVar.data
+            });
+          }
+          
+          // Aplicar valores de texto, imagen o archivo según el tipo
+          if (savedVar.textoIngresado) {
+            control.patchValue({
+              textoIngresado: savedVar.textoIngresado
+            });
+          }
+          
+          if (savedVar.imagenIngresado) {
+            control.patchValue({
+              imagenIngresado: savedVar.imagenIngresado
+            });
+          }
+          
+          if (savedVar.archivoIngresado) {
+            control.patchValue({
+              archivoIngresado: savedVar.archivoIngresado
+            });
+          }
+          
+          console.log(`✅ Variable ${index + 1} actualizada con valores guardados`);
+        }
+      });
+      
+      console.log('✅ Variables guardadas aplicadas correctamente');
+      
+    } catch (error) {
+      console.error('❌ Error aplicando variables guardadas:', error);
+    }
+  }
+
+  /**
+   * Verifica el estado de las variables del producto
+   */
+  public checkProductVariablesStatus(): void {
+    console.log('📊 Estado de variables del producto:');
+    console.log('- Variables disponibles:', this.variables?.length || 0);
+    console.log('- Formulario inicializado:', !!this.formulario);
+    console.log('- Variables en formulario:', this.variablesControls?.length || 0);
+    console.log('- Producto disponible:', !!this.producto);
+    console.log('- VariablesForm del producto:', this.producto?.procesoComercial?.variablesForm);
+    
+    if (this.variables && this.variables.length > 0) {
+      this.variables.forEach((variable, index) => {
+        console.log(`📋 Variable ${index + 1}:`, {
+          titulo: variable.data?.titulo,
+          tipoImagen: variable.data?.tipoImagen,
+          subtitulo: variable.data?.subtitulo
+        });
+      });
+    } else {
+      console.log('⚠️ No hay variables de producto disponibles');
+    }
+    
+    if (this.variablesControls && this.variablesControls.length > 0) {
+      console.log('✅ Variables cargadas en el formulario:', this.variablesControls.length);
+    } else {
+      console.log('⚠️ No hay variables en el formulario');
+    }
+  }
+
+  /**
+   * Fuerza la actualización de las variables del producto
+   */
+  public forceUpdateProductVariables(): void {
+    console.log('🔄 Forzando actualización de variables del producto...');
+    if (this.configuracionCarrito?.configuracion) {
+      this.processProductVariables(this.configuracionCarrito.configuracion);
+    }
+    this.checkProductVariablesStatus();
+  }
+
+  /**
+   * Verifica específicamente las preferencias de configuración
+   */
+  public checkConfigurationPreferences(): void {
+    console.log('🔍 Verificando preferencias de configuración...');
+    
+    if (!this.configuracionCarrito?.configuracion?.preferencias) {
+      console.warn('⚠️ No hay preferencias en la configuración del carrito');
+      return;
+    }
+    
+    const preferencias = this.configuracionCarrito.configuracion.preferencias;
+    console.log('📋 Preferencias en configuración:', preferencias);
+    
+    preferencias.forEach((pref: any, index: number) => {
+      console.log(`📋 Preferencia ${index + 1}:`, {
+        titulo: pref.titulo,
+        tipo: pref.tipo,
+        subtitulo: pref.subtitulo,
+        valorUnitarioSinIva: pref.valorUnitarioSinIva
+      });
+    });
+    
+    // Verificar si las preferencias están en el array actual
+    console.log('📋 Preferencias actuales en productPreference:', this.productPreference);
+    
+    if (this.productPreference.length > 0) {
+      this.productPreference.forEach((pref: any, index: number) => {
+        console.log(`📋 Preferencia actual ${index + 1}:`, {
+          titulo: pref.titulo,
+          tipo: pref.tipo,
+          subtitulo: pref.subtitulo,
+          valorUnitarioSinIva: pref.valorUnitarioSinIva
+        });
+      });
+    } else {
+      console.warn('⚠️ No hay preferencias en productPreference');
+    }
+  }
+
+  /**
+   * Fuerza la recarga de preferencias desde la configuración
+   */
+  public forceReloadPreferences(): void {
+    console.log('🔄 Forzando recarga de preferencias...');
+    
+    if (!this.configuracionCarrito?.configuracion?.preferencias) {
+      console.warn('⚠️ No hay configuración disponible para recargar');
+      return;
+    }
+    
+    // Limpiar preferencias actuales
+    this.productPreference = [];
+    
+    // Procesar preferencias desde la configuración
+    this.processExistingPreferences(this.configuracionCarrito.configuracion.preferencias);
+    
+    console.log('✅ Preferencias recargadas exitosamente');
   }
 }

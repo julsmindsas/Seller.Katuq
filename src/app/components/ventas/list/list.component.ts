@@ -2168,7 +2168,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.scrollStack.push(window.scrollY);
+    
+    // Verificar preferencias antes de establecer la configuración
+    this.verifyCartPreferences(carritoConfiguracion);
+    
     this.configuracionCarritoSeleccionado = carritoConfiguracion;
+    
+    // Establecer el producto seleccionado desde la configuración del carrito
+    this.productoSeleccionado = carritoConfiguracion?.producto;
+    
+    console.log('🔄 Abriendo modal de configuración:', {
+      configuracion: carritoConfiguracion,
+      producto: this.productoSeleccionado,
+      preferencias: carritoConfiguracion?.configuracion?.preferencias?.length || 0
+    });
     this.modalService
       .open(content, {
         size: "xl",
@@ -3100,5 +3113,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Verifica las preferencias del carrito antes de abrir el modal
+   */
+  private verifyCartPreferences(carritoConfiguracion: Carrito): void {
+    console.log('🔍 Verificando preferencias del carrito:', {
+      carrito: carritoConfiguracion,
+      configuracion: carritoConfiguracion?.configuracion,
+      preferencias: carritoConfiguracion?.configuracion?.preferencias,
+      cantidadPreferencias: carritoConfiguracion?.configuracion?.preferencias?.length || 0
+    });
+
+    if (carritoConfiguracion?.configuracion?.preferencias) {
+      carritoConfiguracion.configuracion.preferencias.forEach((pref: any, index: number) => {
+        console.log(`📋 Preferencia ${index + 1} del carrito:`, {
+          titulo: pref.titulo,
+          tipo: pref.tipo,
+          subtitulo: pref.subtitulo,
+          valorUnitarioSinIva: pref.valorUnitarioSinIva
+        });
+      });
+    } else {
+      console.warn('⚠️ No hay preferencias en la configuración del carrito');
+    }
   }
 }
