@@ -65,15 +65,17 @@
         </div>
 
         <!-- Formulario de notas de producción -->
-        <form *ngIf="pedido?.carrito?.length && notasProduccionForm" [formGroup]="notasProduccionForm" class="notes-form">
+        <form *ngIf="pedido?.carrito?.length && notasProduccionForm" [formGroup]="notasProduccionForm" class="notes-form" [class.disabled-section]="isProductionNotesDisabled">
           <!-- Mensaje cuando hay productos en modo edición -->
-          <div class="alert alert-info mb-3" *ngIf="isEdit && notasFormArray?.length > 0">
+          <div class="alert alert-warning mb-3" *ngIf="isProductionNotesDisabled">
+            <i class="fa fa-lock me-2"></i>
+            <strong>Notas de producción bloqueadas por estado del pedido.</strong>
+          </div>
+          <div class="alert alert-info mb-3" *ngIf="!isProductionNotesDisabled && isEdit && notasFormArray?.length > 0">
             <i class="fa fa-edit me-2"></i>
             <strong>Modo Edición:</strong> Solo puedes agregar nuevas notas. Las notas existentes se muestran abajo.
           </div>
-
-          <!-- Mensaje cuando hay productos en modo creación -->
-          <div class="alert alert-success mb-3" *ngIf="!isEdit && notasFormArray?.length > 0">
+          <div class="alert alert-success mb-3" *ngIf="!isProductionNotesDisabled && !isEdit && notasFormArray?.length > 0">
             <i class="fa fa-check-circle me-2"></i>
             <strong>¡Productos listos para notas!</strong> {{notasFormArray?.length}} producto(s) en tu carrito.
           </div>
@@ -95,7 +97,7 @@
                   </span>
                 </div>
 
-                <!-- Mostrar notas existentes del producto (SOLO LECTURA en modo edición) -->
+                <!-- Mostrar notas existentes del producto (SOLO LECTURA) -->
                 <div *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length > 0" class="existing-notes mb-3">
                   <h6 class="existing-notes-title">
                     <i class="fa fa-history me-1"></i>Notas Existentes
@@ -111,7 +113,8 @@
                       <!-- Mostrar botón eliminar siempre -->
                       <button class="btn btn-sm btn-outline-danger ms-2"
                               (click)="eliminarNotaExistente(pedido.carrito[i], idx)"
-                              title="Eliminar nota existente">
+                              title="Eliminar nota existente"
+                              [disabled]="isProductionNotesDisabled">
                         <i class="fa fa-trash"></i>
                       </button>
                     </div>
@@ -134,11 +137,13 @@
                         <textarea [formControlName]="j"
                                   class="form-control"
                                   placeholder="Escribe instrucciones especiales para la producción de este producto..."
-                                  rows="2"></textarea>
+                                  rows="2"
+                                  [disabled]="isProductionNotesDisabled"></textarea>
                         <button class="btn btn-outline-danger"
                                 type="button"
                                 (click)="eliminarNota(j, 'produccion', i)"
-                                *ngIf="notasFormArray.at(i).get('notas')?.controls.length > 1">
+                                *ngIf="notasFormArray.at(i).get('notas')?.controls.length > 1"
+                                [disabled]="isProductionNotesDisabled">
                           <i class="fa fa-times"></i>
                         </button>
                       </div>
@@ -154,10 +159,12 @@
                                  [id]="'file-produccion-' + i + '-' + j"
                                  (change)="onFileSelected($event, 'produccion', i, j)"
                                   accept="image/*"
-                                 multiple>
+                                 multiple
+                                 [disabled]="isProductionNotesDisabled">
                           <button class="btn btn-outline-secondary" 
                                   type="button"
-                                  (click)="clearFileSelection('produccion', i, j)">
+                                  (click)="clearFileSelection('produccion', i, j)"
+                                  [disabled]="isProductionNotesDisabled">
                             <i class="fa fa-times"></i>
                           </button>
                         </div>
@@ -230,14 +237,14 @@
                     </div>
                   </div>
 
-                  <button class="btn btn-sm btn-outline-primary mt-2" type="button" (click)="agregarNota(i)">
+                  <button class="btn btn-sm btn-outline-primary mt-2" type="button" (click)="agregarNota(i)" [disabled]="isProductionNotesDisabled">
                     <i class="fa fa-plus me-1"></i> Agregar Otra Nota
                   </button>
                 </div>
 
                 <!-- Botón para agregar primera nota cuando no hay campos -->
                 <div *ngIf="notasFormArray.at(i).get('notas')?.controls.length === 0" class="add-note-section">
-                  <button class="btn btn-sm btn-success" type="button" (click)="agregarNota(i)">
+                  <button class="btn btn-sm btn-success" type="button" (click)="agregarNota(i)" [disabled]="isProductionNotesDisabled">
                     <i class="fa fa-plus me-1"></i>
                     {{ obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'Agregar Nueva Nota' : 'Agregar Primera Nota' }}
                   </button>
@@ -257,7 +264,7 @@
             <button class="btn btn-success"
                     type="button"
                     (click)="guardarNotas()"
-                    [disabled]="!hayNotasParaGuardar()">
+                    [disabled]="isProductionNotesDisabled || !hayNotasParaGuardar()">
               <i class="fa fa-save me-1"></i>
               {{ isEdit ? 'Guardar Nuevas Notas' : 'Guardar Todas las Notas' }}
             </button>

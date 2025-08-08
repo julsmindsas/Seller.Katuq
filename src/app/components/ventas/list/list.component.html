@@ -1586,6 +1586,7 @@
     </div>
     <div class="modal-body">
         <app-notas #notaspedidos [pedido]="pedidoSeleccionado" [isEdit]="true"
+            [disableProductionNotes]="isPedidoGrupo1(pedidoSeleccionado)"
             (notasActualizadas)="onNotasActualizadas($event)"></app-notas>
     </div>
     <div class="modal-footer">
@@ -1628,16 +1629,11 @@
 
         <div class="mb-3">
             <label class="form-label fw-bold">{{ 'Nuevo estado de pago:' | translate }}</label>
-            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoPago"
-                [disabled]="!canEditPaymentStatus(pedidoSeleccionado)">
-                <option *ngFor="let estado of estadosPago" [value]="estado">
+            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoPago">
+                <option *ngFor="let estado of getAvailablePaymentStates()" [value]="estado">
                     {{ estado }}
                 </option>
             </select>
-            <small class="form-text text-muted" *ngIf="!canEditPaymentStatus(pedidoSeleccionado)">
-                <i class="fa fa-lock me-1"></i>
-                {{ 'Solo administradores pueden cambiar el estado de pago' | translate }}
-            </small>
         </div>
 
         <div class="mb-3">
@@ -1876,24 +1872,15 @@
                         </div>
                     </button>
 
-                    <!-- Estado de Pago - SOLO ADMINISTRADORES -->
+                    <!-- Estado de Pago - Disponible para todos (opciones limitadas para usuarios normales) -->
                     <button class="option-btn" type="button"
-                        [disabled]="!canEditPaymentStatus(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canEditPaymentStatus(selectedOrder)}"
                         (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon payment-icon">
                             <i class="fa fa-credit-card-alt"></i>
-                            <i *ngIf="!canEditPaymentStatus(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Estado de Pago' | translate }}</span>
-                            <small class="option-description">
-                                <span *ngIf="canEditPaymentStatus(selectedOrder)">{{ 'Cambiar estado del pago' | translate }}</span>
-                                <span *ngIf="!canEditPaymentStatus(selectedOrder)" class="text-warning">
-                                    <i class="fa fa-lock me-1"></i>
-                                    {{ 'Solo administradores' | translate }}
-                                </span>
-                            </small>
+                            <small class="option-description">{{ 'Cambiar estado del pago' | translate }}</small>
                         </div>
                     </button>
 
@@ -1952,16 +1939,15 @@
                         </div>
                     </button>
 
-                    <!-- Ver Detalles de Entrega (Solo cuando está entregado) -->
-                    <button *ngIf="selectedOrder?.estadoProceso === 'Entregado'" class="option-btn" type="button"
+                    <!-- Ver Detalles de Entrega (Desde Despachado en adelante) -->
+                    <button *ngIf="selectedOrder?.estadoProceso === 'Despachado' || selectedOrder?.estadoProceso === 'Entregado'" class="option-btn" type="button"
                         (click)="mostrarDetalleEntrega(selectedOrder); closeOptionsModal()">
                         <div class="option-icon delivery-icon">
                             <i class="fa fa-truck"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Ver Detalles de Entrega' | translate }}</span>
-                            <small class="option-description">{{ 'Información de la entrega realizada' | translate
-                                }}</small>
+                            <small class="option-description">{{ 'Información de la entrega realizada' | translate }}</small>
                         </div>
                     </button>
 

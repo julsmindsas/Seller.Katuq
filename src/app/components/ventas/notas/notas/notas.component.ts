@@ -28,6 +28,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   @Input() carrito: any;
   @Input() isEdit: boolean = false;
   @Output() notasActualizadas = new EventEmitter<any>();
+  @Input() disableProductionNotes: boolean = false;
 
   fecha: Date;
   notasProduccion: any[] = [];
@@ -2375,5 +2376,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
       return false;
     }
+  }
+
+  get isProductionNotesDisabled(): boolean {
+    return !!this.disableProductionNotes;
   }
 }

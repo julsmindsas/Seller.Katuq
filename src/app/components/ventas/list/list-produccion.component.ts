@@ -132,7 +132,8 @@ export class ListProduccionComponent implements OnInit, OnChanges {
       this.estadosProcesos = this.estadosProcesos.filter(estado => 
         estado === EstadoProcesoFiltros.SinProducir || 
         estado === EstadoProcesoFiltros.EnProduccion || 
-        estado === EstadoProcesoFiltros.ProducidoParcialmente
+        estado === EstadoProcesoFiltros.ProducidoParcialmente ||
+        estado === EstadoProcesoFiltros.ProducidoTotalmente
       );
     }
     

@@ -388,7 +388,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns true si se puede editar estado de proceso
    */
   canEditProcessStatus(order: Pedido): boolean {
-    return this.canDeleteOrder(); // Solo administradores
+    if (this.isFromProduction) {
+      return this.canProductionChangeProcess(order);
+    }
+    return this.canDeleteOrder();
+  }
+
+  /** Permite cambio de proceso en módulo de producción entre 4 estados básicos si no está bloqueado */
+  canProductionChangeProcess(order: Pedido): boolean {
+    if (!order || !order.estadoProceso) return false;
+    const bloqueados = [
+      EstadoProcesoFiltros.Empacado,
+      EstadoProcesoFiltros.Despachado,
+      EstadoProcesoFiltros.Entregado,
+      EstadoProcesoFiltros.Cerrado,
+    ];
+    return !bloqueados.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+  }
+
+  /** Devuelve estados de pago disponibles según permisos (usuarios normales: Pendiente, PreAprobado) */
+  getAvailablePaymentStates(): EstadoPago[] {
+    if (this.canDeleteOrder()) {
+      return this.estadosPago as EstadoPago[];
+    }
+    return [EstadoPago.Pendiente, EstadoPago.PreAprobado];
   }
 
   /**
@@ -877,7 +900,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // this.estadosProcesos = Object.values(EstadoProceso)
     this.estadosProcesos = Object.values(EstadoProcesoFiltros);
     if (this.isFromProduction) {
-      this.estadosProcesos = this.estadosProcesos.filter(estado => estado == EstadoProcesoFiltros.EnProduccion);
+      this.estadosProcesos = this.estadosProcesos.filter(
+        (estado) =>
+          estado === EstadoProcesoFiltros.SinProducir ||
+          estado === EstadoProcesoFiltros.EnProduccion ||
+          estado === EstadoProcesoFiltros.ProducidoParcialmente ||
+          estado === EstadoProcesoFiltros.ProducidoTotalmente
+      );
     }
     this.validaciones = [
       { value: false, nombre: "No" },
@@ -1119,7 +1148,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           order.totalPedidoSinDescuento +
           order.totalEnvio -
           order.totalDescuento;
-        order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
+        order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(
+          Number(order.totalEnvio || 0),
+        );
 
         // Calcular anticipo basado en PagosAsentados si existen
         if (order.PagosAsentados && order.PagosAsentados.length > 0) {
@@ -1693,58 +1724,43 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   imprimirToPdf() {
-    let printContents = document.getElementById("htmlPdf").innerHTML;
-    // Suponiendo que printContents es tu string HTML
+    const htmlPdfEl = document.getElementById("htmlPdf");
+    if (!htmlPdfEl) {
+      this.toastrService.error('No hay contenido para imprimir', 'Error');
+      return;
+    }
+    let printContents = htmlPdfEl.innerHTML;
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = printContents;
 
-    // Continuación después de eliminar los elementos no deseados
-
-    // Selecciona todos los elementos h2 dentro de tempDiv
     const h2Elements = tempDiv.querySelectorAll("h2");
-
     h2Elements.forEach((h2) => {
       const h3 = document.createElement("h3");
-
-      // Copia el contenido de h2 a h3
       h3.innerHTML = h2.innerHTML;
-
-      // Opcional: Copia los atributos de h2 a h3
       Array.from(h2.attributes).forEach((attr) => {
         h3.setAttribute(attr.name, attr.value);
       });
-
-      // Reemplaza h2 por h3 en el DOM
-      h2.parentNode.replaceChild(h3, h2);
+      if (h2.parentNode) {
+        h2.parentNode.replaceChild(h3, h2);
+      }
     });
 
-    // Continúa con el resto del código...
-
-    // IDs de los elementos a eliminar
     const idsToRemove = ["Encabezado", "piepagina", "publicidad"];
-
     idsToRemove.forEach((id) => {
       const element: any = tempDiv.querySelector(`#${id}`);
-      if (element) {
+      if (element && element.parentNode) {
         element.parentNode.removeChild(element);
       }
     });
 
-    // Añade una clase para hacer el texto más pequeño
     tempDiv.classList.add("texto-pequeno");
-    // Actualiza printContents con el HTML modificado
     printContents = tempDiv.innerHTML;
 
-    // Cerrar todos los modales inmediatamente antes de abrir el popup
     this.closeOptionsModal();
-    // Cerrar cualquier modal de NgBootstrap que pueda estar abierto
     this.modalService.dismissAll();
-    // Limpiar cualquier clase modal remanente del body
     document.body.classList.remove("modal-open");
-    // Forzar el ocultado del loader
     this.loaderService.hide();
 
-    // Crear una nueva ventana/pestaña independiente con el contenido del PDF
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
     if (newWindow) {
       newWindow.document.write(`
@@ -1893,28 +1909,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private editOrder(order: Pedido) {
-    if (order.carrito.length > 0) {
-      let fechaEntrega =
-        order.carrito[0].configuracion?.datosEntrega?.fechaEntrega;
-      let horarioEntrega =
-        order.carrito[0].configuracion?.datosEntrega?.horarioEntrega;
+    if (order.carrito && order.carrito.length > 0) {
+      const fechaEntrega = order.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega;
+      const horarioEntrega = order.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega;
 
-      // Solo actualizar fechas si existen en la configuración
       if (
         fechaEntrega &&
-        fechaEntrega.year &&
-        fechaEntrega.month &&
-        fechaEntrega.day
+        (fechaEntrega as any).year &&
+        (fechaEntrega as any).month &&
+        (fechaEntrega as any).day
       ) {
         order.fechaEntrega = new Date(
-          fechaEntrega.year,
-          fechaEntrega.month - 1,
-          fechaEntrega.day,
+          (fechaEntrega as any).year,
+          (fechaEntrega as any).month - 1,
+          (fechaEntrega as any).day,
         ).toISOString();
       }
 
       if (horarioEntrega) {
-        order.horarioEntrega = horarioEntrega;
+        order.horarioEntrega = horarioEntrega as any;
       }
     }
 
@@ -2098,10 +2111,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       signatureImage: order.signatureImage
     });
     console.log('📸 Debug fotos evidencia - Processed data:', {
-      fotosEvidencia: this.pedidoEntregaData.fotosEvidencia,
-      fotoEvidencia: this.pedidoEntregaData.fotoEvidencia,
-      signatureImage: this.pedidoEntregaData.signatureImage,
-      hayFotos: this.pedidoEntregaData.fotosEvidencia?.length > 0 || !!this.pedidoEntregaData.fotoEvidencia
+      fotosEvidencia: this.pedidoEntregaData?.fotosEvidencia,
+      fotoEvidencia: this.pedidoEntregaData?.fotoEvidencia,
+      signatureImage: this.pedidoEntregaData?.signatureImage,
+      hayFotos: (this.pedidoEntregaData?.fotosEvidencia?.length || 0) > 0 || !!this.pedidoEntregaData?.fotoEvidencia
     });
     console.log('Datos del pedido de entrega:', this.pedidoEntregaData);
     console.log('Mostrando modal con detalleEntregaVisible:', true);
@@ -2483,7 +2496,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     order.totalDescuento = this.pedidoUtilService.getDiscount();
     order.totalPedidoSinDescuento = this.pedidoUtilService.getSubtotal();
     order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(
-      order.totalEnvio,
+      Number(order.totalEnvio || 0),
     );
     return order;
   }
@@ -2521,7 +2534,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   editSeller(order: Pedido) {
-    if (order.asesorAsignado.nit === "9999") {
+    if (order?.asesorAsignado?.nit === "9999") {
       Swal.fire({
         title: "¿Estás seguro?",
         text: "Estás a punto de cambiar el asesor asignado a este pedido.",
@@ -2533,12 +2546,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         cancelButtonText: "No, cancelar",
       }).then((result) => {
         if (result.isConfirmed) {
-          const userString = localStorage.getItem("user");
+          const userString = localStorage.getItem("user") || "{}";
           const user = JSON.parse(userString) as UserLogged;
           const userLite: UserLite = {
-            name: user.name,
-            email: user.email,
-            nit: user.nit,
+            name: user?.name || '',
+            email: user?.email || '',
+            nit: user?.nit || '',
           };
           order.asesorAsignado = userLite;
           this.editOrder(order);
@@ -2888,6 +2901,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       {
         field: "ciudad",
         header: "Ciudad",
+        visible: false,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "referencia",
+        header: "Referencia",
         visible: false,
         type: "text",
         filterable: true,
