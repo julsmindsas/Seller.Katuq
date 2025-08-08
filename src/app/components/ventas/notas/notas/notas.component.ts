@@ -701,148 +701,143 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     if (productosAntes === 0) {
       console.error("🚨 ABORT GUARDAR: Carrito vacío");
-      if (!this.notasProduccionForm || !this.notasProduccionForm.valid) {
-        Swal.fire({
-          icon: "error",
-          title: "Error Crítico",
-          text: "El carrito está vacío. No se pueden guardar las notas.",
-          confirmButtonText: "Entendido",
-        });
-        return;
+      Swal.fire({
+        icon: "error",
+        title: "Error Crítico",
+        text: "El carrito está vacío. No se pueden guardar las notas.",
+        confirmButtonText: "Entendido",
+      });
+      return;
+    }
+
+    if (!this.notasProduccionForm || !this.notasProduccionForm.valid) {
+      Swal.fire({
+        icon: "warning",
+        title: "Formulario incompleto",
+        text: "Por favor, complete todos los campos requeridos.",
+        confirmButtonText: "Aceptar",
+      });
+      return;
+    }
+
+    this.carritoActualizado = true;
+    const notasActualizadas = this.notasFormArray.value;
+
+    if (this.pedido?.carrito) {
+      // Inicializar notasPedido si no existe
+      if (!this.pedido.notasPedido) {
+        this.pedido.notasPedido = {
+          notasProduccion: [],
+          notasCliente: [],
+          notasDespachos: [],
+          notasEntregas: [],
+          notasFacturacionPagos: [],
+        };
+      } else if (!this.pedido.notasPedido.notasProduccion) {
+        this.pedido.notasPedido.notasProduccion = [];
       }
+      console.log("🔍 Iniciando guardado de notas de producción...");
+      console.log("📁 Estado actual de uploadedFiles:", this.uploadedFiles);
 
-      if (!this.notasProduccionForm || !this.notasProduccionForm.valid) {
-        Swal.fire({
-          icon: "warning",
-          title: "Formulario incompleto",
-          text: "Por favor, complete todos los campos requeridos.",
-          confirmButtonText: "Aceptar",
-        });
-        return;
-      }
+      const productos = this.notasProduccionForm.get("productos") as FormArray;
+      let hayNotasValidas = false;
+      let notasConArchivos: { notaTexto: string; productoIndex: number; notaIndex: number; archivos: File[] }[] = [];
 
-      if (!this.notasProduccionForm || !this.notasProduccionForm.valid) {
-        Swal.fire({
-          icon: "warning",
-          title: "Formulario incompleto",
-          text: "Por favor, complete todos los campos requeridos.",
-          confirmButtonText: "Aceptar",
-        });
-        return;
-      }
-      this.carritoActualizado = true;
-      const notasActualizadas = this.notasFormArray.value;
+      // **CRÍTICO: PRESERVAR todas las notas existentes**
+      const notasExistentes = [
+        ...(this.pedido.notasPedido.notasProduccion || []),
+      ];
 
-      if (this.pedido?.carrito) {
-        // Inicializar notasPedido si no existe
-        if (!this.pedido.notasPedido) {
-          this.pedido.notasPedido = {
-            notasProduccion: [],
-            notasCliente: [],
-            notasDespachos: [],
-            notasEntregas: [],
-            notasFacturacionPagos: [],
-          };
-        } else if (!this.pedido.notasPedido.notasProduccion) {
-          this.pedido.notasPedido.notasProduccion = [];
-        }
-        console.log("🔍 Iniciando guardado de notas de producción...");
-        console.log("📁 Estado actual de uploadedFiles:", this.uploadedFiles);
+      // Solo agregar nuevas notas (no reemplazar)
+      let notasAgregadas = 0;
+      const nuevasNotas: any[] = [];
 
-        const productos = this.notasProduccionForm.get("productos") as FormArray;
-        let hayNotasValidas = false;
-        let notasConArchivos: { notaTexto: string; productoIndex: number; notaIndex: number; archivos: File[] }[] = [];
+      notasActualizadas.forEach((producto, pIndex) => {
+        if (producto.notas && producto.notas.length > 0) {
+          const productoCarrito = this.pedido?.carrito?.[pIndex];
+          const tituloProducto = this.crearNombreDistintivo(productoCarrito, pIndex);
+          const productoId = productoCarrito?.producto?.identificacion?.referencia;
+          const productoCD = productoCarrito?.producto?.cd || (productoCarrito?.producto?.crearProducto as any)?.cd;
+          const productoBodegaId = productoCarrito?.producto?.bodegaId;
 
-        // **CRÍTICO: PRESERVAR todas las notas existentes**
-        const notasExistentes = [
-          ...(this.pedido.notasPedido.notasProduccion || []),
-        ];
+          // Crear identificador único para este producto
+          const identificadorUnico = this.crearIdentificadorUnico(productoCarrito, pIndex);
 
-        // Solo agregar nuevas notas (no reemplazar)
-        let notasAgregadas = 0;
-        const nuevasNotas: any[] = [];
-
-        notasActualizadas.forEach((producto, pIndex) => {
-          if (producto.notas && producto.notas.length > 0) {
-            const productoCarrito = this.pedido?.carrito?.[pIndex];
-            const tituloProducto = this.crearNombreDistintivo(productoCarrito, pIndex);
-            const productoId = productoCarrito?.producto?.identificacion?.referencia;
-            const productoCD = productoCarrito?.producto?.cd || (productoCarrito?.producto?.crearProducto as any)?.cd;
-            const productoBodegaId = productoCarrito?.producto?.bodegaId;
-
-            // Crear identificador único para este producto
-            const identificadorUnico = this.crearIdentificadorUnico(productoCarrito, pIndex);
-
-            producto.notas.forEach((textoNota: string) => {
-              if (textoNota && textoNota.trim() !== "") {
-                nuevasNotas.push({
-                  fecha: new Date().toISOString(),
-                  descripcion: textoNota,
-                  producto: tituloProducto || "Producto",
-                  usuario: "Usuario",
-                  productoId: productoId || "",
-                  productoCD: productoCD || "",
-                  productoBodegaId: productoBodegaId || "",
-                  identificadorUnico: identificadorUnico,
-                  fromFormulario: true,
-                } as any);
-                notasAgregadas++;
-              }
-            });
-          }
-        });
-        // Recolectar todas las notas y archivos que necesitan ser procesados
-        productos.controls.forEach((productoCtrl, productoIndex) => {
-          const notasArray = productoCtrl.get("notas") as FormArray;
-
-          notasArray.controls.forEach((notaCtrl, notaIndex) => {
-            const notaTexto = notaCtrl.value;
-
-            if (notaTexto && notaTexto.trim() !== "") {
-              hayNotasValidas = true;
-
-              // Obtener archivos seleccionados para esta nota
-              const key = this.getFileKey('produccion', productoIndex, notaIndex);
-              const archivosSeleccionados = this.selectedFiles[key] || [];
-
-              if (archivosSeleccionados.length > 0) {
-                notasConArchivos.push({
-                  notaTexto: notaTexto.trim(),
-                  productoIndex,
-                  notaIndex,
-                  archivos: archivosSeleccionados
-                });
-              } else {
-                // Si no hay archivos, guardar la nota directamente
-                this.guardarNotaSinArchivos(notaTexto.trim(), productoIndex, notaIndex);
-              }
+          producto.notas.forEach((textoNota: string) => {
+            if (textoNota && textoNota.trim() !== "") {
+              nuevasNotas.push({
+                fecha: new Date().toISOString(),
+                descripcion: textoNota,
+                producto: tituloProducto || "Producto",
+                usuario: "Usuario",
+                productoId: productoId || "",
+                productoCD: productoCD || "",
+                productoBodegaId: productoBodegaId || "",
+                identificadorUnico: identificadorUnico,
+                fromFormulario: true,
+              } as any);
+              notasAgregadas++;
             }
           });
+        }
+      });
+      // Recolectar todas las notas y archivos que necesitan ser procesados
+      productos.controls.forEach((productoCtrl, productoIndex) => {
+        const notasArray = productoCtrl.get("notas") as FormArray;
+
+        notasArray.controls.forEach((notaCtrl, notaIndex) => {
+          const notaTexto = notaCtrl.value;
+
+          if (notaTexto && notaTexto.trim() !== "") {
+            hayNotasValidas = true;
+
+            // Obtener archivos seleccionados para esta nota
+            const key = this.getFileKey('produccion', productoIndex, notaIndex);
+            const archivosSeleccionados = this.selectedFiles[key] || [];
+
+            if (archivosSeleccionados.length > 0) {
+              notasConArchivos.push({
+                notaTexto: notaTexto.trim(),
+                productoIndex,
+                notaIndex,
+                archivos: archivosSeleccionados
+              });
+            } else {
+              // Si no hay archivos, guardar la nota directamente
+              this.guardarNotaSinArchivos(notaTexto.trim(), productoIndex, notaIndex);
+            }
+          }
         });
+      });
 
-        if (!hayNotasValidas) {
-          Swal.fire({
-            icon: "warning",
-            title: "No hay notas para guardar",
-            text: "Por favor, escriba al menos una nota antes de guardar.",
-            confirmButtonText: "Aceptar",
-          });
-          return;
-        }
+      if (!hayNotasValidas) {
+        Swal.fire({
+          icon: "warning",
+          title: "No hay notas para guardar",
+          text: "Por favor, escriba al menos una nota antes de guardar.",
+          confirmButtonText: "Aceptar",
+        });
+        return;
+      }
 
-        // Si hay notas con archivos, subir archivos primero
-        if (notasConArchivos.length > 0) {
-          this.subirArchivosYGuardarNotas(notasConArchivos);
-        } else {
-          // Si no hay archivos, finalizar guardado
-          this.finalizarGuardadoNotas();
-        }
+      // Si hay notas con archivos, subir archivos primero
+      if (notasConArchivos.length > 0) {
+        this.subirArchivosYGuardarNotas(notasConArchivos);
+      } else {
+        // Si no hay archivos, finalizar guardado
+        this.finalizarGuardadoNotas();
       }
     }
   }
 
   // Método para subir archivos y guardar notas
   private subirArchivosYGuardarNotas(notasConArchivos: { notaTexto: string; productoIndex: number; notaIndex: number; archivos: File[] }[]) {
+    // Filtrar para permitir solo imágenes
+    notasConArchivos = notasConArchivos.map(item => ({
+      ...item,
+      archivos: item.archivos.filter(file => this.isImageFile(file))
+    })).filter(item => item.archivos.length > 0);
+
     const totalArchivos = notasConArchivos.reduce((total, item) => total + item.archivos.length, 0);
     let archivosSubidos = 0;
     const resultadosSubida: { [key: string]: { url: string; name: string; path: string }[] } = {};
@@ -1943,23 +1938,36 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     // Convertir FileList a Array de Files con tipo correcto
     const fileArray = Array.from(files) as File[];
+    const imagenes = fileArray.filter(file => this.isImageFile(file));
+    const noImagenes = fileArray.filter(file => !this.isImageFile(file));
+
+    if (noImagenes.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Solo se permiten imágenes',
+        html: `Se ignoraron ${noImagenes.length} archivo(s) no válidos.<br/><small>Formatos permitidos: JPG, JPEG, PNG, GIF, WEBP, BMP.</small>`,
+        confirmButtonText: 'Entendido'
+      });
+    }
+
+    if (imagenes.length === 0) {
+      // Limpiar selección visual si no hay imágenes válidas
+      if (event?.target) { event.target.value = ''; }
+      return;
+    }
 
     // Guardar los archivos seleccionados localmente
     const key = this.getFileKey(tipo, productoIndex, notaIndex);
-    this.selectedFiles[key] = fileArray;
+    this.selectedFiles[key] = imagenes;
 
     // Generar vistas previas para imágenes y videos
     this.filePreviews[key] = [];
-    fileArray.forEach(file => {
-      if (this.isImageFile(file) || this.isVideoFile(file)) {
-        this.filePreviews[key].push(URL.createObjectURL(file));
-      } else {
-        this.filePreviews[key].push('');
-      }
+    imagenes.forEach(file => {
+      this.filePreviews[key].push(URL.createObjectURL(file));
     });
 
     // Mostrar información sobre los archivos seleccionados
-    const fileNames = fileArray.map(file => file.name).join(', ');
+    const fileNames = imagenes.map(file => file.name).join(', ');
 
     Swal.fire({
       title: 'Archivos seleccionados',
@@ -1988,10 +1996,25 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   // Método para subir archivos a Firebase Storage
   private uploadFilesToFirebase(files: File[], tipo: string, productoIndex?: number, notaIndex?: number): void {
+    // Aceptar solo imágenes
+    const imagenes = (files || []).filter(file => this.isImageFile(file));
+    const descartados = (files || []).filter(file => !this.isImageFile(file));
+    if (descartados.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Solo imágenes',
+        html: `Se ignoraron ${descartados.length} archivo(s) no válidos.<br/><small>Formatos permitidos: JPG, JPEG, PNG, GIF, WEBP, BMP.</small>`,
+        confirmButtonText: 'Entendido'
+      });
+    }
+    if (imagenes.length === 0) {
+      return;
+    }
+
     const key = this.getFileKey(tipo, productoIndex, notaIndex);
     const timestamp = new Date().getTime();
     let uploadedCount = 0;
-    const totalFiles = files.length;
+    const totalFiles = imagenes.length;
 
     // Mostrar progreso inicial
     Swal.fire({
@@ -2008,7 +2031,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       allowOutsideClick: false,
     });
 
-    files.forEach((file, index) => {
+    imagenes.forEach((file, index) => {
       // Crear nombre único para el archivo
       const fileName = `${timestamp}_${index}_${file.name}`;
       const filePath = `imagesNotas/${tipo}/${fileName}`;

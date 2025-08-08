@@ -103,6 +103,11 @@
                   <div class="existing-note-item" *ngFor="let notaExistente of obtenerNotasDelProducto(pedido.carrito[i]); let idx = index">
                     <div class="existing-note-header">
                       <span class="note-date">{{getFechaFormateada(notaExistente) | date:'dd/MM/yyyy HH:mm'}}</span>
+                      <span *ngIf="notaExistente?.archivos?.length > 0" 
+                            class="badge bg-success ms-2" 
+                            title="Adjuntos subidos">
+                        <i class="fa fa-paperclip me-1"></i>{{notaExistente.archivos.length}}
+                      </span>
                       <!-- Mostrar botón eliminar siempre -->
                       <button class="btn btn-sm btn-outline-danger ms-2"
                               (click)="eliminarNotaExistente(pedido.carrito[i], idx)"
@@ -148,7 +153,7 @@
                                  class="form-control" 
                                  [id]="'file-produccion-' + i + '-' + j"
                                  (change)="onFileSelected($event, 'produccion', i, j)"
-                                 accept="image/*,.pdf,.doc,.docx,.txt"
+                                  accept="image/*"
                                  multiple>
                           <button class="btn btn-outline-secondary" 
                                   type="button"
@@ -288,7 +293,7 @@
                            class="form-control" 
                            id="file-despacho"
                            (change)="onFileSelected($event, 'despacho')"
-                           accept="image/*,.pdf,.doc,.docx,.txt"
+                           accept="image/*"
                            multiple>
                     <button class="btn btn-outline-secondary" 
                             type="button"
@@ -323,6 +328,14 @@
                 <tr *ngFor="let nota of pedido.notasPedido?.notasDespachos; let i = index">
                   <td>{{nota.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
                   <td>{{nota.nota}}</td>
+                  <td>
+                    <span *ngIf="nota?.archivos?.length > 0" class="badge bg-success">
+                      <i class="fa fa-paperclip me-1"></i>{{nota.archivos.length}}
+                    </span>
+                    <span *ngIf="!nota?.archivos?.length" class="text-muted">
+                      <i class="fa fa-minus"></i>
+                    </span>
+                  </td>
                   <td>
                     <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i, 'despachos')">
                       <i class="fa fa-trash"></i>
@@ -367,7 +380,7 @@
                            class="form-control" 
                            id="file-entrega"
                            (change)="onFileSelected($event, 'entrega')"
-                           accept="image/*,.pdf,.doc,.docx,.txt"
+                           accept="image/*"
                            multiple>
                     <button class="btn btn-outline-secondary" 
                             type="button"
@@ -476,6 +489,7 @@
                 <tr>
                   <th style="width: 180px">Fecha</th>
                   <th>Nota</th>
+                  <th style="width: 100px">Archivos</th>
                   <th style="width: 60px">Acción</th>
                 </tr>
               </thead>
@@ -483,6 +497,14 @@
                 <tr *ngFor="let nota of pedido.notasPedido?.notasEntregas; let i = index">
                   <td>{{nota.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
                   <td>{{nota.nota}}</td>
+                  <td>
+                    <span *ngIf="nota?.archivos?.length > 0" class="badge bg-success">
+                      <i class="fa fa-paperclip me-1"></i>{{nota.archivos.length}}
+                    </span>
+                    <span *ngIf="!nota?.archivos?.length" class="text-muted">
+                      <i class="fa fa-minus"></i>
+                    </span>
+                  </td>
                   <td>
                     <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i, 'entregas')">
                       <i class="fa fa-trash"></i>
@@ -527,7 +549,7 @@
                            class="form-control" 
                            id="file-facturacion"
                            (change)="onFileSelected($event, 'facturacion')"
-                           accept="image/*,.pdf,.doc,.docx,.txt"
+                           accept="image/*"
                            multiple>
                     <button class="btn btn-outline-secondary" 
                             type="button"
@@ -636,6 +658,7 @@
                 <tr>
                   <th style="width: 180px">Fecha</th>
                   <th>Nota</th>
+                  <th style="width: 100px">Archivos</th>
                   <th style="width: 60px">Acción</th>
                 </tr>
               </thead>
@@ -643,6 +666,14 @@
                 <tr *ngFor="let nota of pedido.notasPedido?.notasFacturacionPagos; let i = index">
                   <td>{{nota.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
                   <td>{{nota.nota}}</td>
+                  <td>
+                    <span *ngIf="nota?.archivos?.length > 0" class="badge bg-success">
+                      <i class="fa fa-paperclip me-1"></i>{{nota.archivos.length}}
+                    </span>
+                    <span *ngIf="!nota?.archivos?.length" class="text-muted">
+                      <i class="fa fa-minus"></i>
+                    </span>
+                  </td>
                   <td>
                     <button class="btn btn-sm btn-outline-danger" (click)="eliminarNota(i, 'facturacionPagos')">
                       <i class="fa fa-trash"></i>
