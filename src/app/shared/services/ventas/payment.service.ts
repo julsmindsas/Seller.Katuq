@@ -794,6 +794,8 @@ export class PaymentService extends BaseService {
             <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${fechaNota}</td>
             <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
               ${descripcion}
+            </td>
+            <td style="border: 1px solid #ddd; padding: 8px; width: 200px;">
               ${archivosHtml}
             </td>
           </tr>
@@ -858,6 +860,8 @@ export class PaymentService extends BaseService {
           <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
           <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
             ${nota.nota ?? ""}
+          </td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 200px;">
             ${archivosHtml}
           </td>
         </tr>
@@ -919,6 +923,8 @@ export class PaymentService extends BaseService {
           <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
           <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
             ${nota.nota ?? ""}
+          </td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 200px;">
             ${archivosHtml}
           </td>
         </tr>
@@ -980,6 +986,8 @@ export class PaymentService extends BaseService {
           <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
           <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
             ${nota.nota ?? ""}
+          </td>
+          <td style="border: 1px solid #ddd; padding: 8px; width: 200px;">
             ${archivosHtml}
           </td>
         </tr>
@@ -1335,6 +1343,7 @@ export class PaymentService extends BaseService {
              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Producto</th>
              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fecha</th>
              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nota</th>
+             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Archivos Adjuntos</th>
            </tr>
          </thead>
          <tbody>
@@ -1354,6 +1363,7 @@ export class PaymentService extends BaseService {
                 <tr>
                     <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fecha</th>
                     <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nota</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Archivos Adjuntos</th>
                 </tr>
             </thead>
             <tbody>${notasDespachosHtml}</tbody>
@@ -1371,6 +1381,7 @@ export class PaymentService extends BaseService {
                 <tr>
                     <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fecha</th>
                     <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nota</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Archivos Adjuntos</th>
                 </tr>
             </thead>
             <tbody>${notasEntregasHtml}</tbody>
@@ -1388,6 +1399,7 @@ export class PaymentService extends BaseService {
                 <tr>
                     <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fecha</th>
                     <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nota</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Archivos Adjuntos</th>
                 </tr>
             </thead>
             <tbody>${notasFacturacionPagosHtml}</tbody>
