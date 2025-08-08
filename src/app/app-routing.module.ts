@@ -11,6 +11,8 @@ import { ChangePasswordComponent } from './components/change-password/change-pas
 import { PageNotFoundComponent } from './shared/components/page-not-found/page-not-found.component';
 // Importar el componente de términos y condiciones
 import { TermsConditionsComponent } from './components/terms-conditions/terms-conditions.component';
+// Importar el componente de política de privacidad
+import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-policy.component';
 
 const routes: Routes = [
 
@@ -56,6 +58,24 @@ const routes: Routes = [
     path: 'terms-conditions',
     component: TermsConditionsComponent
   },
+  // Agregar ruta para política de privacidad
+  {
+    path: 'privacy-policy',
+    component: PrivacyPolicyComponent
+  },
+  // Nueva ruta para live-audio en pantalla completa
+  // TODO: Implementar módulo live-audio cuando esté disponible
+  // {
+  //   path: 'live-audio',
+  //   component: BlankComponent,
+  //   canActivate: [AdminGuard],
+  //   children: [
+  //     {
+  //       path: '',
+  //       loadChildren: () => import('./shared/components/gemini-asistant/live-audio/live-audio.module').then(m => m.LiveAudioModule)
+  //     }
+  //   ]
+  // },
   {
     path: '',
     component: ContentComponent,

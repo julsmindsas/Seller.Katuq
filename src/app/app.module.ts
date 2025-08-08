@@ -45,6 +45,10 @@ import { AppTranslateModule } from './shared/modules/translate.module';
 import { VoiceInteractionModule } from './shared/components/voice-interaction/voice-interaction.module';
 import { VoiceAgentModule } from './shared/components/voice-agent/voice-agent.module';
 
+// Importar componentes
+import { TermsConditionsComponent } from './components/terms-conditions/terms-conditions.component';
+import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-policy.component';
+
 // Importar servicios
 import { AnalyticsService } from './services/analytics.service';
 import { CompaniesService } from './services/companies.service';
@@ -68,7 +72,9 @@ export function HttpLoaderFactory(http: HttpClient) {
     SafeUrlPipe,
     ChatComponent,
     FloatingButtonComponent,
-    ChatFormComponent
+    ChatFormComponent,
+    TermsConditionsComponent,
+    PrivacyPolicyComponent
   ],
   exports: [
   ],
