@@ -70,11 +70,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   ngAfterContentInit(): void {
     // En modo edición, asegurar que el formulario se inicialice SIEMPRE
     if (this.isEdit && this.pedido?.carrito?.length > 0) {
-      console.log(
-        "🔧 MODO EDICIÓN: Inicializando formulario con",
-        this.pedido.carrito.length,
-        "productos",
-      );
       this.initFormularios();
       return; // Salir temprano para evitar la lógica de modo creación
     }
@@ -123,11 +118,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
             }
           });
         } else if (this.isEdit) {
-          console.log(
-            "🛡️ MODO EDICIÓN: Carrito preservado con",
-            this.pedido.carrito?.length || 0,
-            "productos",
-          );
         }
       }
 
@@ -255,12 +245,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     // VERIFICACIÓN CRÍTICA DE INTEGRIDAD DEL CARRITO
     if (this.isEdit && this.pedido) {
       const productosIniciales = this.pedido.carrito?.length || 0;
-      console.log(
-        "🛡️ INICIO COMPONENTE NOTAS - Productos en carrito:",
-        productosIniciales,
-      );
-
       if (productosIniciales === 0) {
+        // mantener error para diagnóstico
         console.error(
           "🚨 ALERTA: Carrito vacío al inicializar componente de notas",
         );
@@ -277,11 +263,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     // Suscribirse a cambios del singleton para comunicación automática con carrito
     this.singleton.productInCartChanges$.subscribe((productos) => {
       if (!this.carritoActualizado && productos && productos.length > 0) {
-        console.log(
-          "📝 NOTAS: Detectados cambios en carrito -",
-          productos.length,
-          "productos",
-        );
+        
 
         // Actualizar el carrito del pedido si no estamos en modo edición
         if (!this.isEdit && this.pedido) {
@@ -317,11 +299,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         this.initFormulariosPreservandoNotas();
         this.carritoActualizado = false;
 
-        console.log(
-          "✅ NOTAS: Formulario actualizado preservando",
-          this.pedido?.notasPedido?.notasProduccion?.length || 0,
-          "notas existentes",
-        );
+        
       }
     });
   }
@@ -346,15 +324,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     // Llenar formulario si hay productos en el carrito
     if (this.pedido && this.pedido.carrito && this.pedido.carrito.length > 0) {
       this.llenarFormulario();
-      console.log(
-        "📝 NOTAS: Formulario inicializado con",
-        this.pedido.carrito.length,
-        "productos",
-      );
     } else {
-      console.log(
-        "📝 NOTAS: Formulario inicializado vacío - esperando productos",
-      );
+      
     }
   }
 
@@ -381,11 +352,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     // Llenar formulario preservando notas existentes
     if (this.pedido && this.pedido.carrito && this.pedido.carrito.length > 0) {
       this.llenarFormularioPreservandoNotas();
-      console.log(
-        "📝 NOTAS: Formulario actualizado preservando notas existentes con",
-        this.pedido.carrito.length,
-        "productos",
-      );
     }
   }
 
@@ -406,11 +372,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       // CRÍTICO: En modo edición, NUNCA tocar el carrito del pedido
       // Solo usar el carrito original del pedido que se está editando
       if (this.isEdit) {
-        console.log(
-          "🛡️ MODO EDICIÓN: Preservando carrito original con",
-          this.pedido?.carrito?.length || 0,
-          "productos",
-        );
         // Solo reinicializar formularios con el carrito existente
         if (this.pedido?.carrito?.length > 0) {
           this.initFormularios();
@@ -460,11 +421,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
               // Reinicializar formulario PRESERVANDO notas existentes
               this.initFormulariosPreservandoNotas();
-              console.log(
-                "📝 NOTAS: Formulario actualizado preservando",
-                notasExistentes.length,
-                "notas existentes",
-              );
+              
             }
           }
         });
@@ -474,16 +431,12 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   llenarFormulario() {
     if (!this.notasProduccionForm) {
-      console.log(
-        "⚠️ NOTAS: No se puede llenar formulario - notasProduccionForm no inicializado",
-      );
+      
       return;
     }
 
     if (!this.pedido?.carrito?.length) {
-      console.log(
-        "📝 NOTAS: No hay productos en el carrito para llenar formulario",
-      );
+      
       // Limpiar formulario si no hay productos
       const productos = this.notasProduccionForm.get("productos") as FormArray;
       productos.clear();
@@ -512,32 +465,19 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         }),
       );
 
-      console.log(
-        "📝 NOTAS: Campo habilitado para:",
-        prod.producto?.crearProducto?.titulo,
-      );
+      
     });
 
-    console.log(
-      "✅ NOTAS: Formulario llenado con",
-      this.pedido.carrito.length,
-      "productos",
-    );
+    
   }
 
   // Nuevo método para llenar formulario preservando notas existentes
   llenarFormularioPreservandoNotas() {
     if (!this.notasProduccionForm) {
-      console.log(
-        "⚠️ NOTAS: No se puede llenar formulario - notasProduccionForm no inicializado",
-      );
       return;
     }
 
     if (!this.pedido?.carrito?.length) {
-      console.log(
-        "📝 NOTAS: No hay productos en el carrito para llenar formulario",
-      );
       // Limpiar formulario si no hay productos
       const productos = this.notasProduccionForm.get("productos") as FormArray;
       productos.clear();
@@ -556,17 +496,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       if (notasExistentesProducto.length === 0) {
         // Si no hay notas existentes, agregar campo vacío para nueva nota
         notasArray.push(this.formBuilder.control("", Validators.required));
-        console.log(
-          "📝 NOTAS: Campo nuevo habilitado para:",
-          prod.producto?.crearProducto?.titulo,
-        );
       } else {
-        console.log(
-          "🔒 NOTAS: Producto ya tiene",
-          notasExistentesProducto.length,
-          "notas existentes:",
-          prod.producto?.crearProducto?.titulo,
-        );
       }
 
       // Añadir al FormArray principal con el identificador del producto
@@ -581,11 +511,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       );
     });
 
-    console.log(
-      "✅ NOTAS: Formulario actualizado preservando notas existentes con",
-      this.pedido.carrito.length,
-      "productos",
-    );
+    
   }
 
   get notasFormArray() {
@@ -600,10 +526,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       .get("notas") as FormArray;
     if (notasArray) {
       notasArray.push(this.formBuilder.control("", Validators.required));
-      console.log(
-        "📝 NOTAS: Campo de nota adicional agregado para producto",
-        productoIndex,
-      );
     }
   }
 
@@ -681,8 +603,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           pedidoCompleto: this.pedido,
         });
 
-        // Mostrar confirmación
-        console.log(`✅ Nota de ${tipo} eliminada correctamente`);
+      // Mostrar confirmación
       }
     }
   }
@@ -694,10 +615,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     // VERIFICACIÓN CRÍTICA ANTES DE GUARDAR
     const productosAntes = this.pedido?.carrito?.length || 0;
-    console.log(
-      "🛡️ VERIFICACIÓN ANTES DE GUARDAR - Productos:",
-      productosAntes,
-    );
+    
 
     if (productosAntes === 0) {
       console.error("🚨 ABORT GUARDAR: Carrito vacío");
@@ -736,8 +654,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       } else if (!this.pedido.notasPedido.notasProduccion) {
         this.pedido.notasPedido.notasProduccion = [];
       }
-      console.log("🔍 Iniciando guardado de notas de producción...");
-      console.log("📁 Estado actual de uploadedFiles:", this.uploadedFiles);
+      
 
       const productos = this.notasProduccionForm.get("productos") as FormArray;
       let hayNotasValidas = false;
@@ -867,7 +784,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         const fileName = `${timestamp}_${itemIndex}_${fileIndex}_${file.name}`;
         const filePath = `imagesNotas/produccion/${fileName}`;
 
-        console.log(`📤 Subiendo archivo ${archivosSubidos + 1}/${totalArchivos}: ${file.name} -> ${filePath}`);
+        
 
         const fileRef = this.storage.ref(filePath);
         const uploadTask = this.storage.upload(filePath, file);
@@ -886,7 +803,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
         uploadTask.snapshotChanges().pipe(
           finalize(() => {
             fileRef.getDownloadURL().subscribe(url => {
-              console.log(`✅ Archivo subido exitosamente: ${file.name} -> ${url}`);
+              
 
               resultadosSubida[key].push({
                 url: url,
@@ -943,7 +860,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       }
       this.pedido.notasPedido.notasProduccion.push(nuevaNota);
 
-      console.log(`📝 Nota guardada con archivos:`, nuevaNota);
+      
     });
 
     // Limpiar archivos locales
@@ -968,7 +885,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }
     this.pedido.notasPedido.notasProduccion.push(nuevaNota);
 
-    console.log(`📝 Nota guardada sin archivos:`, nuevaNota);
+    
   }
 
   // Método para limpiar archivos locales
@@ -981,8 +898,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   // Método para finalizar el guardado
   private finalizarGuardadoNotas() {
-    console.log("✅ Notas de producción guardadas:");
-    console.log("📋 Estado final de notasPedido:", this.pedido.notasPedido);
+    
 
     // Emitir evento con las notas actualizadas
     this.notasActualizadas.emit({
@@ -1004,7 +920,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       timerProgressBar: true,
     });
 
-    console.log("✅ Notas guardadas con archivos:", this.pedido.notasPedido.notasProduccion);
+    
 
     // Verificar que las URLs estén correctamente guardadas
     this.verificarURLsEnNotas();
@@ -1025,7 +941,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       }
     });
 
-    console.log("🧹 NOTAS: Campos del formulario limpiados");
+    
   }
 
   onSubmitDespachos() {
@@ -1089,7 +1005,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       const fileName = `${timestamp}_${index}_${file.name}`;
       const filePath = `imagesNotas/despacho/${fileName}`;
 
-      console.log(`📤 Subiendo archivo de despacho ${index + 1}/${totalArchivos}: ${file.name} -> ${filePath}`);
+      
 
       const fileRef = this.storage.ref(filePath);
       const uploadTask = this.storage.upload(filePath, file);
@@ -1108,7 +1024,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       uploadTask.snapshotChanges().pipe(
         finalize(() => {
           fileRef.getDownloadURL().subscribe(url => {
-            console.log(`✅ Archivo de despacho subido exitosamente: ${file.name} -> ${url}`);
+            
 
             archivosSubidosResultado.push({
               url: url,
@@ -1155,7 +1071,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }
     this.pedido.notasPedido.notasDespachos.push(nuevaNota);
 
-    console.log(`📝 Nota de despacho guardada con archivos:`, nuevaNota);
+    
 
     // Limpiar archivos locales
     this.selectedFiles['despacho'] = [];
@@ -1178,14 +1094,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }
     this.pedido.notasPedido.notasDespachos.push(nuevaNota);
 
-    console.log(`📝 Nota de despacho guardada sin archivos:`, nuevaNota);
+    
     this.finalizarGuardadoDespacho();
   }
 
   // Método para finalizar el guardado de despacho
   private finalizarGuardadoDespacho() {
-    console.log("✅ Nota de despacho guardada:");
-    console.log("📋 Estado final de notasDespachos:", this.pedido.notasPedido.notasDespachos);
+    
 
     // Emitir evento con las notas actualizadas
     this.notasActualizadas.emit({
@@ -1207,7 +1122,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       timerProgressBar: true,
     });
 
-    console.log("✅ Nota de despacho guardada:", this.pedido.notasPedido.notasDespachos);
+    
   }
 
   onSubmitEntregas() {
@@ -1271,7 +1186,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       const fileName = `${timestamp}_${index}_${file.name}`;
       const filePath = `imagesNotas/entrega/${fileName}`;
 
-      console.log(`📤 Subiendo archivo de entrega ${index + 1}/${totalArchivos}: ${file.name} -> ${filePath}`);
+      
 
       const fileRef = this.storage.ref(filePath);
       const uploadTask = this.storage.upload(filePath, file);
@@ -1290,7 +1205,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       uploadTask.snapshotChanges().pipe(
         finalize(() => {
           fileRef.getDownloadURL().subscribe(url => {
-            console.log(`✅ Archivo de entrega subido exitosamente: ${file.name} -> ${url}`);
+            
 
             archivosSubidosResultado.push({
               url: url,
@@ -1337,7 +1252,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }
     this.pedido.notasPedido.notasEntregas.push(nuevaNota);
 
-    console.log(`📝 Nota de entrega guardada con archivos:`, nuevaNota);
+    
 
     // Limpiar archivos locales
     this.selectedFiles['entrega'] = [];
@@ -1360,14 +1275,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }
     this.pedido.notasPedido.notasEntregas.push(nuevaNota);
 
-    console.log(`📝 Nota de entrega guardada sin archivos:`, nuevaNota);
+    
     this.finalizarGuardadoEntrega();
   }
 
   // Método para finalizar el guardado de entrega
   private finalizarGuardadoEntrega() {
-    console.log("✅ Nota de entrega guardada:");
-    console.log("📋 Estado final de notasEntregas:", this.pedido.notasPedido.notasEntregas);
+    
 
     // Emitir evento con las notas actualizadas
     this.notasActualizadas.emit({
@@ -1389,7 +1303,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       timerProgressBar: true,
     });
 
-    console.log("✅ Nota de entrega guardada:", this.pedido.notasPedido.notasEntregas);
+    
   }
 
   onSubmitFacturacionPagos() {
@@ -1453,7 +1367,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       const fileName = `${timestamp}_${index}_${file.name}`;
       const filePath = `imagesNotas/facturacion/${fileName}`;
 
-      console.log(`📤 Subiendo archivo de facturación ${index + 1}/${totalArchivos}: ${file.name} -> ${filePath}`);
+      
 
       const fileRef = this.storage.ref(filePath);
       const uploadTask = this.storage.upload(filePath, file);
@@ -1472,7 +1386,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       uploadTask.snapshotChanges().pipe(
         finalize(() => {
           fileRef.getDownloadURL().subscribe(url => {
-            console.log(`✅ Archivo de facturación subido exitosamente: ${file.name} -> ${url}`);
+            
 
             archivosSubidosResultado.push({
               url: url,
@@ -1519,7 +1433,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }
     this.pedido.notasPedido.notasFacturacionPagos.push(nuevaNota);
 
-    console.log(`📝 Nota de facturación guardada con archivos:`, nuevaNota);
+    
 
     // Limpiar archivos locales
     this.selectedFiles['facturacion'] = [];
@@ -1542,14 +1456,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     }
     this.pedido.notasPedido.notasFacturacionPagos.push(nuevaNota);
 
-    console.log(`📝 Nota de facturación guardada sin archivos:`, nuevaNota);
+    
     this.finalizarGuardadoFacturacion();
   }
 
   // Método para finalizar el guardado de facturación
   private finalizarGuardadoFacturacion() {
-    console.log("✅ Nota de facturación guardada:");
-    console.log("📋 Estado final de notasFacturacionPagos:", this.pedido.notasPedido.notasFacturacionPagos);
+    
 
     // Emitir evento con las notas actualizadas
     this.notasActualizadas.emit({
@@ -1571,7 +1484,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       timerProgressBar: true,
     });
 
-    console.log("✅ Nota de facturación guardada:", this.pedido.notasPedido.notasFacturacionPagos);
+    
   }
 
   // Verificar si hay notas nuevas para guardar
@@ -1624,7 +1537,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       );
     });
 
-    console.log("🧹 NOTAS: Formulario limpiado preservando notas existentes");
+    
   }
 
   // Obtener notas específicas de un producto desde la fuente centralizada
@@ -1779,9 +1692,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   private limpiarDatosFantasmaNotas(): void {
     // CRÍTICO: NO limpiar nada en modo edición para preservar datos
     if (this.isEdit) {
-      console.log(
-        "🛡️ MODO EDICIÓN: Omitiendo limpieza de datos fantasma para preservar carrito",
-      );
+    
       return;
     }
 
@@ -1900,7 +1811,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
             timerProgressBar: true
           });
 
-          console.log("✅ Nota de producción eliminada correctamente");
+          
 
           // Si después de eliminar no quedan notas para este producto, habilitar campo para nueva nota
           const notasRestantes = this.obtenerNotasDelProducto(producto);
@@ -1988,7 +1899,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       showCancelButton: false
     });
 
-    console.log(`📁 Archivos seleccionados para ${tipo}:`, fileArray);
+    
 
     // Forzar detección de cambios para mostrar las vistas previas
     this.cdr.detectChanges();
@@ -2083,7 +1994,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
                 showConfirmButton: false
               });
 
-              console.log(`✅ Archivos subidos a Firebase Storage:`, this.uploadedFiles[key]);
+              
             }
           });
         })
@@ -2214,8 +2125,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
         // Eliminar de Firebase Storage
         this.storage.ref(uploadedFile.path).delete().subscribe({
-          next: () => {
-            console.log(`✅ Archivo eliminado de Firebase Storage: ${uploadedFile.name}`);
+            next: () => {
           },
           error: (error) => {
             console.error(`❌ Error al eliminar archivo de Firebase Storage: ${uploadedFile.name}`, error);
@@ -2334,7 +2244,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       return;
     }
 
-    console.log(`🚀 Iniciando subida de archivos para ${tipo}:`, archivosSeleccionados);
+    
 
     // Marcar como subiendo
     this.isUploading[key] = true;
@@ -2363,7 +2273,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       const fileName = `${timestamp}_${index}_${file.name}`;
       const filePath = `imagesNotas/${tipo}/${fileName}`;
 
-      console.log(`📤 Subiendo archivo ${index + 1}/${archivosSeleccionados.length}: ${file.name} -> ${filePath}`);
+      
 
       const fileRef = this.storage.ref(filePath);
       const uploadTask = this.storage.upload(filePath, file);
@@ -2382,7 +2292,6 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       uploadTask.snapshotChanges().pipe(
         finalize(() => {
           fileRef.getDownloadURL().subscribe(url => {
-            console.log(`✅ Archivo subido exitosamente: ${file.name} -> ${url}`);
 
             archivosSubidosResultado.push({
               url: url,
@@ -2399,8 +2308,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
               // Guardar URLs en el array de archivos subidos
               this.uploadedFiles[key] = archivosSubidosResultado;
 
-              console.log(`🎉 Todos los archivos subidos para ${tipo}:`, archivosSubidosResultado);
-              console.log(`📁 Estado actual de uploadedFiles:`, this.uploadedFiles);
+              
 
               // Limpiar archivos locales
               this.selectedFiles[key] = [];
@@ -2418,7 +2326,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
                 showConfirmButton: false
               });
 
-              console.log(`✅ Archivos subidos a Firebase Storage para ${tipo}:`, archivosSubidosResultado);
+              
             }
           });
         })
@@ -2427,63 +2335,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
   }
 
   // Método para verificar el estado de las URLs en las notas
-  verificarURLsEnNotas(): void {
-    console.log("🔍 === VERIFICACIÓN DE URLS EN NOTAS ===");
-
-    // Verificar uploadedFiles
-    console.log("📁 Estado de uploadedFiles:", this.uploadedFiles);
-
-    // Verificar notas de producción
-    if (this.pedido.notasPedido.notasProduccion) {
-      console.log("📋 Notas de producción:");
-      this.pedido.notasPedido.notasProduccion.forEach((nota, index) => {
-        console.log(`   Nota ${index + 1}:`, {
-          texto: nota.nota,
-          fecha: nota.fecha,
-          producto: nota.producto,
-          archivos: nota.archivos
-        });
-      });
-    }
-
-    // Verificar notas de despacho
-    if (this.pedido.notasPedido.notasDespachos) {
-      console.log("📋 Notas de despacho:");
-      this.pedido.notasPedido.notasDespachos.forEach((nota, index) => {
-        console.log(`   Nota ${index + 1}:`, {
-          texto: nota.nota,
-          fecha: nota.fecha,
-          archivos: nota.archivos
-        });
-      });
-    }
-
-    // Verificar notas de entrega
-    if (this.pedido.notasPedido.notasEntregas) {
-      console.log("📋 Notas de entrega:");
-      this.pedido.notasPedido.notasEntregas.forEach((nota, index) => {
-        console.log(`   Nota ${index + 1}:`, {
-          texto: nota.nota,
-          fecha: nota.fecha,
-          archivos: nota.archivos
-        });
-      });
-    }
-
-    // Verificar notas de facturación
-    if (this.pedido.notasPedido.notasFacturacionPagos) {
-      console.log("📋 Notas de facturación:");
-      this.pedido.notasPedido.notasFacturacionPagos.forEach((nota, index) => {
-        console.log(`   Nota ${index + 1}:`, {
-          texto: nota.nota,
-          fecha: nota.fecha,
-          archivos: nota.archivos
-        });
-      });
-    }
-
-    console.log("✅ === FIN DE VERIFICACIÓN ===");
-  }
+  verificarURLsEnNotas(): void {}
 
   // Método para verificar si hay una nota escrita
   tieneNotaEscrita(tipo: string, productoIndex?: number, notaIndex?: number): boolean {
