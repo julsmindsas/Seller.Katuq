@@ -2356,6 +2356,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   confProductToCart(content, carritoConfiguracion: Carrito, order: Pedido) {
+    // Evitar warning de aria-hidden con foco persistente en botones bajo app-root
+    try {
+      const active = document.activeElement as HTMLElement | null;
+      if (active && typeof active.blur === 'function') {
+        active.blur();
+      }
+    } catch {}
     if (!this.canModifyProducts(order)) {
       this.toastrService.warning(
         `No se pueden modificar productos. El pedido está en estado: ${order.estadoProceso}`,
@@ -2502,10 +2509,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   deleteProductToCart(order: Pedido, carrito: Carrito) {
-    const index: any = order.carrito?.findIndex(
-      (carrito: any) =>
-        carrito.producto.identificacion.referencia ===
-        carrito.producto.identificacion.referencia,
+    // Usar una comparación correcta contra el ítem provisto
+    const index: number = (order.carrito ?? []).findIndex(
+      (c: any) =>
+        c?.producto?.identificacion?.referencia ===
+        carrito?.producto?.identificacion?.referencia,
     );
     if (index !== -1) {
       order.carrito?.splice(index, 1);

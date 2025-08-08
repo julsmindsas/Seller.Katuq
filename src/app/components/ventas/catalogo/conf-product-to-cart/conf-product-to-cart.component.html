@@ -603,7 +603,9 @@
 
                                             <div *ngIf="tieneHijos(item)" class="form-group mt-3">
                                                 <ng-select [items]="item.get('children').controls"
-                                                    bindLabel="value.data.titulo" bindValue="value.data.titulo"
+                                                    bindLabel="value.data.titulo" [bindValue]="null"
+                                                    [ngModel]="getSelectedChildControl(item)"
+                                                    [ngModelOptions]="{standalone: true}"
                                                     (change)="selectedProductPreferenceForNgSelect($event, item)"
                                                     placeholder="{{'Selecciona una opción' | translate}}"
                                                     [multiple]="false" [closeOnSelect]="true">

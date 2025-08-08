@@ -1703,7 +1703,7 @@
         </button>
     </div>
     <div class="modal-body">
-        <app-conf-product-to-cart #confProductToCart [producto]="productoSeleccionado"
+        <app-conf-product-to-cart #confProductToCart [producto]="configuracionCarritoSeleccionado?.producto || productoSeleccionado"
             [configuracionCarrito]="configuracionCarritoSeleccionado" [isEdit]="true"></app-conf-product-to-cart>
     </div>
 </ng-template>

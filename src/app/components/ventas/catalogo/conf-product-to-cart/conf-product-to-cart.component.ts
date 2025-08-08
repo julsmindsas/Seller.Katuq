@@ -239,8 +239,8 @@ export class ConfProductToCartComponent
     this.imagesRect = [
       new Image(
         1,
-        { img: "assets/images/ecommerce/02.jpg" },
-        { img: "assets/images/ecommerce/02.jpg" },
+        { img: "assets/images/other-images/sinimagen.webp" },
+        { img: "assets/images/other-images/sinimagen.webp" },
       ),
     ];
     this.initForm();
@@ -940,6 +940,23 @@ export class ConfProductToCartComponent
     });
   }
 
+  /**
+   * Devuelve el control hijo actualmente seleccionado (para preseleccionar en ng-select)
+   */
+  getSelectedChildControl(item: FormGroup): any | null {
+    try {
+      const children = item.get('children') as FormArray;
+      if (!children || children.length === 0) return null;
+      const selectedIdx = item.get('childrenSelected')?.value;
+      if (typeof selectedIdx === 'number' && selectedIdx >= 0 && selectedIdx < children.length) {
+        return children.at(selectedIdx);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   agregarItem(data: any) {
     const itemsArray = this.formulario.get("variables") as FormArray;
     itemsArray.push(this.crearItem(data));
@@ -1019,16 +1036,29 @@ export class ConfProductToCartComponent
 
         this.productPreference = configuracion.preferencias;
 
-        this.adicionesrows = JSON.parse(this.rowsiniciales);
-        const adiciones = this.adicionesrows.filter(
-          (x) =>
-            configuracion.adiciones.find(
-              (y: any) => y.titulo == x.descripcion,
-            ) != null,
-        );
-        adiciones.forEach((adicion: any) => {
-          this.addAdicionToProduct(adicion);
-        });
+        // Cargar adiciones seleccionadas de manera segura
+        const baseAdiciones: any[] =
+          (this.adicionesrows && this.adicionesrows.length > 0)
+            ? this.adicionesrows
+            : (() => {
+                try {
+                  return JSON.parse(this.rowsinicialesSinMod || '[]');
+                } catch {
+                  return [];
+                }
+              })();
+
+        if (Array.isArray(baseAdiciones) && Array.isArray(configuracion.adiciones)) {
+          const adiciones = baseAdiciones.filter(
+            (x: any) => configuracion.adiciones.find((y: any) => y.titulo === x.descripcion) != null,
+          );
+          adiciones.forEach((adicion: any) => {
+            this.addAdicionToProduct(adicion);
+          });
+        }
+
+        // Reconstruir árbol de variables desde las preferencias guardadas
+        this.reconstruirArbolDesdePedido(configuracion);
         this.addOpcionesPersonalizacion();
       }, 1000);
 
@@ -1048,6 +1078,122 @@ export class ConfProductToCartComponent
 
     this.isOnlyOneTarjeta = this.cantidadTarjetas == 1;
     this.SinTarjeta = this.cantidadTarjetas == 0;
+  }
+
+  /**
+   * Reconstruye el árbol de variables (FormArray) a partir de las preferencias guardadas en el pedido
+   * para que queden seleccionadas en la UI y en productPreference.
+   */
+  private reconstruirArbolDesdePedido(configuracion: any): void {
+    try {
+      const preferencias: any[] = Array.isArray(configuracion?.preferencias)
+        ? configuracion.preferencias
+        : [];
+      if (preferencias.length === 0) {
+        return;
+      }
+
+      const variablesArray = this.formulario.get('variables') as FormArray;
+      if (!variablesArray || variablesArray.length === 0) {
+        // Variables aún no listas: reintentar brevemente
+        setTimeout(() => this.reconstruirArbolDesdePedido(configuracion), 300);
+        return;
+      }
+
+      console.debug('[CONF DEBUG] reconstruirArbolDesdePedido: inicio', {
+        preferenciasCount: preferencias.length,
+        variablesCount: variablesArray.length,
+      });
+
+      preferencias
+        .filter((p) => p?.tipo === 'preferencia')
+        .forEach((pref) => {
+          const tituloVariable = pref.titulo;
+          const opcionElegida = pref.subtitulo || pref.titulo;
+
+          // Buscar el grupo de la variable por título
+          const idxVar = variablesArray.controls.findIndex((ctrl: any) => {
+            const data = ctrl.get('data')?.value;
+            return data && data.titulo === tituloVariable;
+          });
+
+          if (idxVar === -1) {
+            console.debug('[CONF DEBUG] pref sin variable matching', pref);
+            return;
+          }
+
+          const grupo = variablesArray.at(idxVar) as FormGroup;
+          const dataGrupo = grupo.get('data')?.value || {};
+          const childrenArray = grupo.get('children') as FormArray;
+
+          // Caso: variable con hijos (opciones predefinidas)
+          if (childrenArray && childrenArray.length > 0) {
+            let idxChild = childrenArray.controls.findIndex((childCtrl: any) => {
+              const dataChild = childCtrl.get('data')?.value;
+              return dataChild && dataChild.titulo === opcionElegida;
+            });
+
+            // Si no existe la opción exacta, crear un hijo sintético para representar la selección
+            if (idxChild === -1) {
+              const objetoHijo = {
+                data: {
+                  titulo: opcionElegida,
+                  subtitulo: pref.subtitulo || opcionElegida,
+                  imagen: pref.imagen || 'assets/images/other-images/sinimagen.webp',
+                  valorUnitarioSinIva: pref.valorUnitarioSinIva || 0,
+                  valorIva: pref.valorIva || 0,
+                  porcentajeIva: pref.porcentajeIva || 0,
+                  precioTotalConIva: pref.precioTotalConIva || 0,
+                },
+                parent: dataGrupo?.titulo || null,
+                children: [],
+              };
+              const nuevoHijo = this.crearItem(objetoHijo);
+              childrenArray.push(nuevoHijo);
+              idxChild = childrenArray.length - 1;
+              console.debug('[CONF DEBUG] hijo sintético creado', objetoHijo);
+            }
+
+            const childCtrl = childrenArray.at(idxChild) as FormGroup;
+            // Patch visual del ng-select: guardar índice seleccionado en el grupo
+            grupo.get('childrenSelected')?.setValue(idxChild);
+            // Marcar selección usando el handler existente (para actualizar productPreference y totales)
+            this.selectedProductPreferenceForNgSelect(childCtrl, grupo as any);
+            return;
+          }
+
+          // Caso: variable sin hijos (texto/imagen/archivo)
+          const tipoImagen = dataGrupo?.tipoImagen || '';
+          const selectedValue = {
+            data: {
+              titulo: opcionElegida,
+              subtitulo: pref.subtitulo || opcionElegida,
+              imagen: pref.imagen || 'assets/images/other-images/sinimagen.webp',
+              valorUnitarioSinIva: pref.valorUnitarioSinIva || 0,
+              valorIva: pref.valorIva || 0,
+              porcentajeIva: pref.porcentajeIva || 0,
+              precioTotalConIva: pref.precioTotalConIva || 0,
+              tipoImagen,
+            },
+          } as any;
+
+          if (tipoImagen === 'texto') {
+            grupo.get('textoIngresado')?.setValue(opcionElegida);
+          }
+          if (tipoImagen === 'imagen') {
+            // No subimos archivo. Solo reflejamos la imagen si existe en la preferencia
+            grupo.get('imagenIngresado')?.setValue('');
+          }
+
+          this.updateProductPreference(grupo as any, selectedValue);
+        });
+
+      console.debug('[CONF DEBUG] reconstruirArbolDesdePedido: fin', {
+        productPreference: this.productPreference,
+      });
+    } catch (e) {
+      console.error('[CONF DEBUG] reconstruirArbolDesdePedido: error', e);
+    }
   }
   crearTarjetaItem(tarjeta: any): any {
     return this.fb.group({
@@ -1116,10 +1262,13 @@ export class ConfProductToCartComponent
         this.datosEntrega.value,
       );
       this.productoConfiguradoForm.controls.cantidad.setValue(this.cantidad);
+      // Normalizar preferencias antes de guardar (como se llenaba originalmente)
+      const preferenciasRaw = this.productPreference.filter(
+        (preference) => preference.tipo === "preferencia",
+      );
+      const preferenciasNormalizadas = this.normalizeProductPreferences(preferenciasRaw);
       this.productoConfiguradoForm.controls.preferencias.setValue(
-        this.productPreference.filter(
-          (preference) => preference.tipo === "preferencia",
-        ),
+        preferenciasNormalizadas,
       );
       this.productoConfiguradoForm.controls.adiciones.setValue(
         this.productPreference.filter(
@@ -1176,6 +1325,42 @@ export class ConfProductToCartComponent
         "Error",
       );
     }
+  }
+
+  /**
+   * Normaliza las preferencias a la forma esperada por el backend/UI histórico
+   */
+  private normalizeProductPreferences(preferences: any[]): any[] {
+    return (preferences || []).map((p) => {
+      const titulo = (p?.titulo || "").trim();
+      const subtitulo = p?.subtitulo || "";
+      const valorUnitarioSinIva = Number(p?.valorUnitarioSinIva || 0);
+      const valorIva = Number(p?.valorIva || 0);
+      const porcentajeIva = Number(p?.porcentajeIva || 0);
+      const precioTotalConIva = Number(p?.precioTotalConIva || 0);
+      // Imagen: si no viene, intentar obtenerla desde adicionesPreferencias por el subtitulo (título del hijo)
+      let imagen = p?.imagen || "";
+      if (!imagen && subtitulo) {
+        try {
+          imagen = this.getImgAdicion(subtitulo) || "assets/images/other-images/sinimagen.webp";
+        } catch {
+          imagen = "assets/images/other-images/sinimagen.webp";
+        }
+      }
+
+      return {
+        titulo,
+        subtitulo,
+        valorUnitarioSinIva,
+        valorIva,
+        porcentajeIva,
+        precioTotalConIva,
+        imagen,
+        tipo: "preferencia",
+        paraProduccion: !!p?.paraProduccion,
+        cantidad: Number(p?.cantidad || 1),
+      };
+    });
   }
 
   /**
@@ -1695,7 +1880,9 @@ export class ConfProductToCartComponent
   }
 
   selectedProductPreferenceForNgSelect(event: any, item: FormControl) {
-    let selectedValue = event.value;
+    // Con [bindValue]="null" event será el propio objeto control del hijo o su valor
+    const selectedControl = event?.value ? event.value : event;
+    const selectedValue = selectedControl?.value ? selectedControl.value : selectedControl;
 
     const preference = {
       titulo: item.value.data.titulo,
