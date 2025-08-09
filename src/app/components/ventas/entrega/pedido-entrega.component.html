@@ -67,6 +67,13 @@
                             >
                                 Usar Esta Direccion
                             </button>
+                            <button
+                                class="btn btn-outline-secondary ms-2"
+                                type="button"
+                                (click)="noUsarDireccion()"
+                            >
+                                No usar direcciones
+                            </button>
                         </td>
                         <td>{{ item.alias }}</td>
                         <td>{{ item.nombres }} {{ item.apellidos }}</td>
@@ -428,6 +435,13 @@
                 (click)="guardarDatosEntrega()"
             >
                 Guardar
+            </button>
+            <button
+                type="button"
+                class="btn btn-outline-secondary ms-2"
+                (click)="noUsarDireccion()"
+            >
+                No usar direcciones
             </button>
         </div>
     </p-tabPanel>
