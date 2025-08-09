@@ -396,8 +396,17 @@
                 </div>
 
                 <!-- TODAS LAS SECCIONES EN UNA VISTA ÚNICA -->
-                <ngb-accordion #acc="ngbAccordion" [activeIds]="activeAccordionPanel" class="custom-accordion" 
-                               [ngClass]="{'disabled-accordion': errorCargaDatosMaestros || !datosMaestrosCargados}">
+                <div class="position-relative">
+                    <div class="loading-overlay" *ngIf="isConfigLoading || maestrosCargando">
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">{{'Cargando...' | translate}}</span>
+                            </div>
+                            <small class="text-muted mt-2">{{'Preparando configuración...' | translate}}</small>
+                        </div>
+                    </div>
+                    <ngb-accordion #acc="ngbAccordion" [activeIds]="activeAccordionPanel" class="custom-accordion" 
+                                   [ngClass]="{'disabled-accordion': errorCargaDatosMaestros || !datosMaestrosCargados || isConfigLoading}">
                     <!-- Sección 1: Datos entrega -->
                     <ngb-panel id="datosEntregaPanel">
                         <ng-template ngbPanelHeader>
@@ -859,7 +868,8 @@
                             </div>
                         </ng-template>
                     </ngb-panel>
-                </ngb-accordion>
+                    </ngb-accordion>
+                </div>
 
                 <!-- Botón flotante mejorado para agregar al carrito -->
                 <div class="cart-floating-container" [class.minimized]="isCartMinimized" [class.expanded]="isCartExpanded">

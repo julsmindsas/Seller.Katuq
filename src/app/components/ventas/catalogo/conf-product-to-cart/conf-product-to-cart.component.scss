@@ -1008,6 +1008,17 @@
   }
 }
 
+/* Overlay de carga para configuración */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
 /* Alertas dentro de formularios */
 .form-group .alert.alert-warning {
   margin-bottom: 0.5rem;

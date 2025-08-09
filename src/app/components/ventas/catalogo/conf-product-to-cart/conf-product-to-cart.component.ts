@@ -101,6 +101,7 @@ export class ConfProductToCartComponent
   public maestrosState: any = null;
   public reintentosCarga: number = 0;
   public maxReintentos: number = 3;
+  public isConfigLoading: boolean = false;
 
   // Propiedades computadas para verificar las propiedades no definidas en la interfaz
   /**
@@ -1024,6 +1025,7 @@ export class ConfProductToCartComponent
   }
 
   llenarCamposEdicion() {
+    this.isConfigLoading = true;
     const configuracion = this.configuracionCarrito?.configuracion;
     if (this.configuracionCarrito?.producto) {
       this.producto = this.configuracionCarrito.producto;
@@ -1060,6 +1062,7 @@ export class ConfProductToCartComponent
         // Reconstruir árbol de variables desde las preferencias guardadas
         this.reconstruirArbolDesdePedido(configuracion);
         this.addOpcionesPersonalizacion();
+        this.isConfigLoading = false;
       }, 1000);
 
       this.cantidadTarjetas = configuracion.tarjetas.length;
