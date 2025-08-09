@@ -1183,17 +1183,34 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           order.estadoPago !== "Precancelado" &&
           order.estadoPago !== "Cancelado"
         ) {
-          if (order.faltaPorPagar <= 0) {
-            order.estadoPago = "Aprobado";
-          } else if (
-            order.faltaPorPagar > 0 &&
-            order.faltaPorPagar < order.totalPedididoConDescuento
-          ) {
-            order.estadoPago = "PreAprobado";
-          } else if (order.preAprobadoManual) {
-            order.estadoPago = "PreAprobado";
-          } else {
+          // Regla: si la forma de entrega es "Recoge", el estado de pago debe ser siempre "Pendiente"
+          const formaEntregaActual =
+            (order.formaEntrega as string) ||
+            (order?.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega as string) ||
+            "";
+          const esRecoge =
+            typeof formaEntregaActual === "string" &&
+            formaEntregaActual.toLowerCase().includes("recoge");
+
+          if (esRecoge) {
             order.estadoPago = "Pendiente";
+          } else {
+            // Evitar marcar como Aprobado pedidos con total 0
+            const totalPedido = Number(order.totalPedididoConDescuento || 0);
+            if (totalPedido <= 0) {
+              order.estadoPago = "Pendiente";
+            } else if (order.faltaPorPagar <= 0) {
+              order.estadoPago = "Aprobado";
+            } else if (
+              order.faltaPorPagar > 0 &&
+              order.faltaPorPagar < totalPedido
+            ) {
+              order.estadoPago = "PreAprobado";
+            } else if (order.preAprobadoManual) {
+              order.estadoPago = "PreAprobado";
+            } else {
+              order.estadoPago = "Pendiente";
+            }
           }
         }
         // if (order.estadoPago != 'Precancelado' && order.estadoPago != 'Cancelado') {
