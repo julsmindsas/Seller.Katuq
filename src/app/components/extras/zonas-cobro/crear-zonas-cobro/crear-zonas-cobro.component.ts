@@ -30,10 +30,29 @@ export class CrearZonasCobroComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.ciudades = JSON.parse(sessionStorage.getItem('currentCompany')).ciudadess.ciudadesEntrega;
-    if (sessionStorage.getItem('billingZoneEdit')) {
-      this.editando = true;
-      this.zonasCorbroForm.patchValue(JSON.parse(sessionStorage.getItem('billingZoneEdit')));
+    // Cargar ciudades desde localStorage o sessionStorage de forma segura
+    try {
+      const companyStr = localStorage.getItem('currentCompany') || sessionStorage.getItem('currentCompany');
+      if (companyStr) {
+        const company = JSON.parse(companyStr);
+        this.ciudades = company?.ciudadess?.ciudadesEntrega || [];
+      } else {
+        this.ciudades = [];
+      }
+    } catch {
+      this.ciudades = [];
+    }
+
+    // Cargar datos a editar del sessionStorage (si existen) de forma segura
+    const editStr = sessionStorage.getItem('billingZoneEdit');
+    if (editStr) {
+      try {
+        const data = JSON.parse(editStr);
+        this.editando = true;
+        this.zonasCorbroForm.patchValue(data);
+      } catch {
+        this.editando = false;
+      }
     }
   }
 

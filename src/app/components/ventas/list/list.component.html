@@ -22,15 +22,16 @@
                     <div class="">
                         <div class="">
                             <div class="p-3">
-                                <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50"
-                                    [showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,25,50]"
-                                    [loading]="loading" [reorderableColumns]="true" [scrollable]="true"
-                                    [paginator]="true"
+                                    <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50"
+                                        [showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,25,50]"
+                                        [loading]="loading" [reorderableColumns]="true" [scrollable]="true"
+                                        [scrollHeight]="'flex'"
+                                        [paginator]="true"
                                     currentPageReportTemplate="{{'Mostrando {first} a {last} de {totalRecords} pedidos' | translate}}"
                                     [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
-                                    styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
-                                    [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }"
-                                    style="font-size: 0.7em; table-layout: auto;">
+                                        styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
+                                        [tableStyle]="{ 'min-width': '14rem', 'padding':'2px' }"
+                                        style="font-size: 0.65em; table-layout: fixed;">
                                     <!-- CAPTION: Filtros modernos y selector de columnas -->
                                     <ng-template pTemplate="caption">
                                         <div class="modern-filters-container">
@@ -985,6 +986,13 @@
                                                     [title]="'Opciones del pedido' | translate">
                                                     <i class="pi pi-cog"></i>
                                                 </button>
+                                                 <!-- Duplicar pedido -->
+                                                 <button class="btn btn-outline-success btn-sm ms-1" type="button"
+                                                     (click)="duplicarPedido(pedido)"
+                                                     [title]="'Duplicar pedido' | translate">
+                                                     <i class="pi pi-copy me-1"></i>
+                                                     <span class="d-none d-md-inline">{{ 'Duplicar' | translate }}</span>
+                                                 </button>
                                             </td>
 
                                             <!-- Columna Estado de Pago -->

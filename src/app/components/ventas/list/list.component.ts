@@ -3322,6 +3322,83 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.openOptionsModal(event.pedido, event.producto);
   }
 
+  /**
+   * Duplica un pedido: clona los datos relevantes, reinicia estados e identificadores
+   * y lo guarda como un nuevo pedido en la base de datos.
+   */
+  duplicarPedido(order: Pedido): void {
+    if (!order) {
+      this.toastrService.error('Pedido inválido', 'Error');
+      return;
+    }
+
+    try {
+      const empresaActual = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      const companyNom: string = empresaActual?.nomComercial || (order.company as unknown as string) || '';
+
+      // Clonar profundamente el pedido seleccionado
+      const cloned: Pedido = JSON.parse(JSON.stringify(order));
+
+      // Limpiar identificadores y campos que no deben heredarse
+      delete (cloned as any)._id;
+      delete (cloned as any).transaccionId;
+      delete (cloned as any).shippingOrder;
+      (cloned as any).nroShippingOrder = '';
+      cloned.referencia = '';
+      cloned.nroFactura = '';
+      cloned.fechaFactura = '';
+      cloned.fechaCreacion = new Date().toISOString();
+      cloned.company = companyNom as any;
+
+      // Reiniciar estados y datos de seguimiento/logística
+      cloned.estadoPago = EstadoPago.Pendiente;
+      cloned.estadoProceso = EstadoProceso.SinProducir;
+      cloned.PagosAsentados = [];
+      cloned.anticipo = 0;
+      cloned.faltaPorPagar = undefined as any;
+      (cloned as any).empacador = '';
+      (cloned as any).despachador = undefined;
+      (cloned as any).entregado = undefined;
+      (cloned as any).fechaYHorarioDespachado = '';
+      (cloned as any).fechaHoraEmpacado = '';
+      cloned.validacion = false;
+
+      // Recalcular totales
+      this.pedidoUtilService.pedido = cloned as any;
+      cloned.subtotal = this.pedidoUtilService.getSubtotal();
+      cloned.totalImpuesto = this.pedidoUtilService.checkIVAPrice();
+      cloned.totalEnvio = cloned.totalEnvio || 0;
+      cloned.totalDescuento = cloned.totalDescuento || 0;
+      cloned.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(Number(cloned.totalEnvio || 0));
+
+      // Obtener el siguiente consecutivo y crear el pedido duplicado
+      this.ventasService.getNextRef(companyNom).subscribe({
+        next: (res: any) => {
+          const texto = companyNom?.toString?.() || '';
+          const ultimasLetras = texto.substring(Math.max(0, texto.length - 3));
+          const nextConsecutive = (res?.nextConsecutive ?? res ?? 0).toString().padStart(6, '0');
+          cloned.nroPedido = `${ultimasLetras}-${nextConsecutive}`;
+
+          const html = this.paymentService.getHtmlContent(cloned, this.isFromProduction);
+          this.ventasService.createOrder({ order: cloned, emailHtml: html }).subscribe({
+            next: () => {
+              this.toastrService.success('Pedido duplicado correctamente', 'Éxito');
+              this.refrescarDatos();
+            },
+            error: () => {
+              this.toastrService.error('No se pudo duplicar el pedido', 'Error');
+            },
+          });
+        },
+        error: () => {
+          this.toastrService.error('No se pudo obtener el consecutivo para el nuevo pedido', 'Error');
+        },
+      });
+    } catch (e) {
+      this.toastrService.error('Ocurrió un error al duplicar el pedido', 'Error');
+    }
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

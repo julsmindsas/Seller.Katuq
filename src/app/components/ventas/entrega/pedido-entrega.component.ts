@@ -381,6 +381,26 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       this.overridePedido.emit(this.pedidoGral);
     }
   }
+
+  /**
+   * Limpia la dirección de entrega para no usar direcciones y evitar cobro de domicilio
+   */
+  noUsarDireccion(): void {
+    this.pedidoGral.envio = undefined as any;
+    this.pedidoGral = { ...this.pedidoGral };
+    Swal.fire({
+      title: 'Sin dirección',
+      text: 'No se usará dirección para la entrega y no se cobrará domicilio.',
+      icon: 'success',
+      confirmButtonText: 'Ok'
+    });
+
+    if (this.isEdit) {
+      this.modalService.dismissAll();
+    } else {
+      this.overridePedido.emit(this.pedidoGral);
+    }
+  }
   editarDatosEntrega() {
     const datosEntreg = {
       alias: this.alias_entrega,
