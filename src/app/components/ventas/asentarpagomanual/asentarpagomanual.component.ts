@@ -78,7 +78,9 @@ export class AsentarpagomanualComponent implements OnInit {
   }
 
   validateMaxValue(value: number) {
-    this.valorExcedido = value > this.pedido.faltaPorPagar;
+    const pagoIngresado = Number(value) || 0;
+    const faltaPorPagar = Number(this.pedido?.faltaPorPagar) || 0;
+    this.valorExcedido = faltaPorPagar > 0 && pagoIngresado > faltaPorPagar;
   }
 
   onFileChange(event) {
@@ -124,7 +126,9 @@ export class AsentarpagomanualComponent implements OnInit {
   }
 
   trackByPago(index: number, pago: Pago): string {
-    return pago.fechaHoraCarga + pago.numeroComprobante;
+    return (
+      pago?.fechaHoraCarga || pago?.numeroComprobante || index.toString()
+    );
   }
 
   cancelar() {
@@ -147,21 +151,81 @@ export class AsentarpagomanualComponent implements OnInit {
       console.log("Pagos existentes:", this.pedido.PagosAsentados?.length || 0);
       console.log("Nuevo valor a registrar:", this.transaccionForm.value.valor);
 
-      // Calcular nuevo estado de pago
-      const valorNuevoPago = this.transaccionForm.value.valor;
-      const nuevaFaltaPorPagar = this.pedido.faltaPorPagar - valorNuevoPago;
+      const valorNuevoPago = Number(this.transaccionForm.get("valor")?.value) || 0;
+      const formaPagoSeleccionada = this.transaccionForm.get("formaPago")?.value;
+      const formaPagoObj = Array.isArray(this.formasPago)
+        ? this.formasPago.find((f: any) => f?.id == formaPagoSeleccionada)
+        : null;
+      const formaPagoNombre: string = (formaPagoObj?.nombre || formaPagoSeleccionada || '').toString();
 
-      if (nuevaFaltaPorPagar <= 0) {
-        this.pedido.estadoPago = EstadoPago.Aprobado;
-      } else if (
-        nuevaFaltaPorPagar > 0 &&
-        nuevaFaltaPorPagar < this.pedido.totalPedididoConDescuento
-      ) {
-        this.pedido.estadoPago = EstadoPago.PreAprobado;
-      }
+      const crearYAplicarTransaccion = (archivoUrl?: string) => {
+        const transacionPago: Pago = {
+          fecha: this.transaccionForm.get("fecha")?.value,
+          formaPago: formaPagoNombre,
+          valor: valorNuevoPago,
+          numeroPedido: this.pedido.nroPedido,
+          numeroComprobante: this.transaccionForm.get("numeroComprobante")?.value,
+          archivo: archivoUrl || "",
+          notas: this.transaccionForm.get("notas")?.value,
+          fechaTransaccion: new Date().toISOString(),
+          valorTotalVenta: this.pedido.totalPedididoConDescuento,
+          valorRegistrado: valorNuevoPago,
+          archivoEvidencia: "",
+          usuarioRegistro: (JSON.parse(localStorage.getItem("user")) as UserLite).name,
+          estadoVerificacion: "Pendiente",
+          fechaHoraSistema: new Date().toISOString(),
+          fechaHoraCarga: new Date().toISOString(),
+          fechaHoraAprobacionRechazo: "",
+        };
+
+        const order = this.pedido;
+        if (!order.PagosAsentados) {
+          order.PagosAsentados = [];
+        }
+        order.PagosAsentados.push(transacionPago);
+
+        const totalPagosAsentados = order.PagosAsentados.reduce((acc, pago) => {
+          // Para Wompi, no sumar si está pendiente
+          if (
+            pago.formaPago?.toLowerCase().includes("wompi") &&
+            pago.estadoVerificacion === "Pendiente"
+          ) {
+            return acc;
+          }
+          const valorPago = Number(pago.valor || pago.valorRegistrado || 0) || 0;
+          return acc + valorPago;
+        }, 0);
+
+        order.anticipo = Math.round((totalPagosAsentados + Number.EPSILON) * 100) / 100;
+        order.faltaPorPagar = Math.max(
+          0,
+          Math.round(((order.totalPedididoConDescuento || 0) - totalPagosAsentados + Number.EPSILON) * 100) / 100,
+        );
+
+        if (order.faltaPorPagar <= 0) {
+          order.estadoPago = EstadoPago.Aprobado;
+        } else if (order.faltaPorPagar > 0 && order.faltaPorPagar < (order.totalPedididoConDescuento || 0)) {
+          order.estadoPago = EstadoPago.PreAprobado;
+        } else {
+          order.estadoPago = EstadoPago.Pendiente;
+        }
+
+        (order as any)._estadoCalculadoEnFrontend = true;
+        (order as any)._timestamp = new Date().getTime();
+
+        console.log("🔍 DESPUÉS DEL PAGO:");
+        console.log("Total pagos asentados:", totalPagosAsentados);
+        console.log("Nuevo anticipo:", order.anticipo);
+        console.log("Nueva falta por pagar:", order.faltaPorPagar);
+        console.log("Nuevo estado de pago:", order.estadoPago);
+        console.log("✅ Pedido marcado como calculado en frontend");
+
+        this.modalService.dismissAll(order);
+        Swal.close();
+        this.cancelar();
+      };
+
       if (this.selectedFile) {
-        // Muestra una alerta con una barra de carga
-
         Swal.fire({
           title: "Subiendo archivo...",
           text: "Por favor espere...",
@@ -172,123 +236,21 @@ export class AsentarpagomanualComponent implements OnInit {
           },
         });
 
-        // Genera un nombre único para el archivo
         const filePath = `comprobatensPago/${this.pedido.nroPedido}/${new Date().getTime()}_${this.selectedFile.name}`;
         const fileRef = this.storage.ref(filePath);
         const task = this.storage.upload(filePath, this.selectedFile);
 
-        // Obtiene la URL de descarga una vez que la subida se ha completado
         task
           .snapshotChanges()
           .pipe(
             finalize(() => {
-              fileRef.getDownloadURL().subscribe((url) => {
-                this.transaccionForm.get("archivo")?.setValue(url);
-
-                const transacionPago: Pago = {
-                  fecha: this.transaccionForm.get("fecha")?.value,
-                  formaPago: this.transaccionForm.get("formaPago")?.value,
-                  valor: this.transaccionForm.get("valor")?.value,
-                  numeroPedido: this.pedido.nroPedido,
-                  numeroComprobante:
-                    this.transaccionForm.get("numeroComprobante")?.value,
-                  archivo: this.transaccionForm.get("archivo")?.value,
-                  notas: this.transaccionForm.get("notas")?.value,
-                  fechaTransaccion: new Date().toISOString(),
-                  valorTotalVenta: this.pedido.totalPedididoConDescuento,
-                  valorRegistrado: this.transaccionForm.get("valor")?.value,
-                  valorRestante: Math.max(
-                    0,
-                    this.pedido.totalPedididoConDescuento -
-                      ((this.pedido?.PagosAsentados != undefined
-                        ? this.pedido?.PagosAsentados?.reduce(
-                            (a, b) => a + (b.valor || b.valorRegistrado || 0),
-                            0,
-                          )
-                        : 0) +
-                        this.transaccionForm.get("valor")?.value),
-                  ),
-                  archivoEvidencia: "",
-                  usuarioRegistro: (
-                    JSON.parse(localStorage.getItem("user")) as UserLite
-                  ).name,
-                  estadoVerificacion: "Pendiente",
-                  fechaHoraSistema: new Date().toISOString(),
-                  fechaHoraCarga: new Date().toISOString(),
-                  fechaHoraAprobacionRechazo: "",
-                };
-
-                const order = this.pedido;
-
-                if (!order.PagosAsentados) {
-                  order.PagosAsentados = [];
-                }
-
-                order.PagosAsentados.push(transacionPago);
-
-                // Recalcular valores con mayor precisión
-                const totalPagosAsentados = order.PagosAsentados.reduce(
-                  (acc, pago) => {
-                    // Para Wompi, verificar que no esté pendiente
-                    if (
-                      pago.formaPago?.toLowerCase().includes("wompi") &&
-                      pago.estadoVerificacion === "Pendiente"
-                    ) {
-                      return acc; // No sumar pagos de Wompi pendientes
-                    }
-                    // Considerar tanto valor como valorRegistrado
-                    const valorPago = pago.valor || pago.valorRegistrado || 0;
-                    return acc + valorPago;
-                  },
-                  0,
-                );
-                order.anticipo = totalPagosAsentados;
-                order.faltaPorPagar = Math.max(
-                  0,
-                  order.totalPedididoConDescuento - totalPagosAsentados,
-                );
-
-                // Actualizar estado basado en los nuevos cálculos
-                if (order.faltaPorPagar <= 0) {
-                  order.estadoPago = EstadoPago.Aprobado;
-                } else if (
-                  order.faltaPorPagar > 0 &&
-                  order.faltaPorPagar < order.totalPedididoConDescuento
-                ) {
-                  order.estadoPago = EstadoPago.PreAprobado;
-                } else {
-                  order.estadoPago = EstadoPago.Pendiente;
-                }
-
-                // MARCAR que este pedido tiene cálculos hechos en frontend
-                (order as any)._estadoCalculadoEnFrontend = true;
-                (order as any)._timestamp = new Date().getTime();
-
-                // DEBUG: Log después del cálculo
-                console.log("🔍 DESPUÉS DEL PAGO:");
-                console.log("Total pagos asentados:", totalPagosAsentados);
-                console.log("Nuevo anticipo:", order.anticipo);
-                console.log("Nueva falta por pagar:", order.faltaPorPagar);
-                console.log("Nuevo estado de pago:", order.estadoPago);
-                console.log("✅ Pedido marcado como calculado en frontend");
-
-                this.modalService.dismissAll(order);
-
-                // Cierra la alerta cuando la subida se ha completado
-                Swal.close();
-
-                // Limpiar formulario después del registro exitoso
-                this.cancelar();
-              });
+              fileRef.getDownloadURL().subscribe((url) => crearYAplicarTransaccion(url));
             }),
           )
           .subscribe();
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Por favor seleccione un archivo",
-        });
+        // Permitir registrar pago sin archivo
+        crearYAplicarTransaccion("");
       }
     } else {
       Swal.fire({
@@ -363,66 +325,73 @@ export class AsentarpagomanualComponent implements OnInit {
         console.log("Anticipo actual:", this.pedido.anticipo);
         console.log("Falta por pagar actual:", this.pedido.faltaPorPagar);
 
-        // Elimina el archivo de Firebase Storage
-        this.storage
-          .refFromURL(pago.archivo)
-          .delete()
-          .subscribe(() => {
-            // Actualiza los PagosAsentados una vez que el archivo se ha eliminado
-            this.pedido.PagosAsentados = this.pedido.PagosAsentados.filter(
-              (x) =>
-                x.fechaHoraCarga != pago.fechaHoraCarga &&
-                x.valor != pago.valor &&
-                x.numeroComprobante != pago.numeroComprobante,
-            );
+        const eliminarLocalYRecalcular = () => {
+          // Actualiza los PagosAsentados corrigiendo la condición de filtrado
+          this.pedido.PagosAsentados = (this.pedido.PagosAsentados || []).filter(
+            (x) => x.fechaHoraCarga !== pago.fechaHoraCarga,
+          );
 
-            // Recalcular valores después de eliminar
-            const totalPagosAsentados = this.pedido.PagosAsentados.reduce(
-              (acc, pago) => {
-                // Para Wompi, verificar que no esté pendiente
-                if (
-                  pago.formaPago?.toLowerCase().includes("wompi") &&
-                  pago.estadoVerificacion === "Pendiente"
-                ) {
-                  return acc; // No sumar pagos de Wompi pendientes
-                }
-                // Considerar tanto valor como valorRegistrado
-                const valorPago = pago.valor || pago.valorRegistrado || 0;
-                return acc + valorPago;
-              },
-              0,
-            );
-            this.pedido.anticipo = totalPagosAsentados;
-            this.pedido.faltaPorPagar = Math.max(
-              0,
-              this.pedido.totalPedididoConDescuento - totalPagosAsentados,
-            );
+          // Recalcular valores después de eliminar
+          const totalPagosAsentados = (this.pedido.PagosAsentados || []).reduce(
+            (acc, p) => {
+              if (
+                p.formaPago?.toLowerCase().includes("wompi") &&
+                p.estadoVerificacion === "Pendiente"
+              ) {
+                return acc;
+              }
+              const valorPago = Number(p.valor || p.valorRegistrado || 0) || 0;
+              return acc + valorPago;
+            },
+            0,
+          );
 
-            // Actualizar estado de pago
-            if (this.pedido.faltaPorPagar <= 0) {
-              this.pedido.estadoPago = EstadoPago.Aprobado;
-            } else if (
-              this.pedido.faltaPorPagar > 0 &&
-              this.pedido.faltaPorPagar < this.pedido.totalPedididoConDescuento
-            ) {
-              this.pedido.estadoPago = EstadoPago.PreAprobado;
-            } else {
-              this.pedido.estadoPago = EstadoPago.Pendiente;
-            }
+          this.pedido.anticipo = Math.round((totalPagosAsentados + Number.EPSILON) * 100) / 100;
+          this.pedido.faltaPorPagar = Math.max(
+            0,
+            Math.round(((this.pedido.totalPedididoConDescuento || 0) - totalPagosAsentados + Number.EPSILON) * 100) / 100,
+          );
 
-            // MARCAR que este pedido tiene cálculos hechos en frontend
-            (this.pedido as any)._estadoCalculadoEnFrontend = true;
-            (this.pedido as any)._timestamp = new Date().getTime();
+          if (this.pedido.faltaPorPagar <= 0) {
+            this.pedido.estadoPago = EstadoPago.Aprobado;
+          } else if (
+            this.pedido.faltaPorPagar > 0 &&
+            this.pedido.faltaPorPagar < (this.pedido.totalPedididoConDescuento || 0)
+          ) {
+            this.pedido.estadoPago = EstadoPago.PreAprobado;
+          } else {
+            this.pedido.estadoPago = EstadoPago.Pendiente;
+          }
 
-            // DEBUG: Log después de eliminar
-            console.log("🗑️ DESPUÉS DE ELIMINAR PAGO:");
-            console.log("Nuevo anticipo:", this.pedido.anticipo);
-            console.log("Nueva falta por pagar:", this.pedido.faltaPorPagar);
-            console.log("Nuevo estado:", this.pedido.estadoPago);
-            console.log("✅ Pedido marcado como calculado en frontend");
+          (this.pedido as any)._estadoCalculadoEnFrontend = true;
+          (this.pedido as any)._timestamp = new Date().getTime();
 
-            this.modalService.dismissAll(this.pedido);
-          });
+          // DEBUG: Log después de eliminar
+          console.log("🗑️ DESPUÉS DE ELIMINAR PAGO:");
+          console.log("Nuevo anticipo:", this.pedido.anticipo);
+          console.log("Nueva falta por pagar:", this.pedido.faltaPorPagar);
+          console.log("Nuevo estado:", this.pedido.estadoPago);
+          console.log("✅ Pedido marcado como calculado en frontend");
+
+          this.modalService.dismissAll(this.pedido);
+        };
+
+        // Elimina el archivo de Firebase Storage si existe, pero no bloquee el flujo si falla
+        if (pago.archivo) {
+          try {
+            this.storage
+              .refFromURL(pago.archivo)
+              .delete()
+              .subscribe({
+                next: () => eliminarLocalYRecalcular(),
+                error: () => eliminarLocalYRecalcular(),
+              });
+          } catch (e) {
+            eliminarLocalYRecalcular();
+          }
+        } else {
+          eliminarLocalYRecalcular();
+        }
       }
     });
   }

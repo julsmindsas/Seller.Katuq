@@ -1142,15 +1142,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.orders = data;
 
       this.orders.forEach((order: any) => {
-        order.totalPedidoSinDescuento = this.checkPriceScale(order);
-        order.totalImpuesto = this.checkIVAPrice(order);
-        order.subtotal =
-          order.totalPedidoSinDescuento +
-          order.totalEnvio -
-          order.totalDescuento;
-        order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(
-          Number(order.totalEnvio || 0),
-        );
+        // Recalcular montos base con consistencia
+        order.totalPedidoSinDescuento = Number(this.checkPriceScale(order) || 0);
+        order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
+        // Subtotal estándar: solo productos sin IVA
+        order.subtotal = Number(order.totalPedidoSinDescuento || 0);
+        // Total = subtotal + IVA + envío − descuento
+        const envio = Number(order.totalEnvio || 0);
+        const descuento = Number(order.totalDescuento || 0);
+        order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto + envio - descuento;
 
         // Calcular anticipo basado en PagosAsentados si existen
         if (order.PagosAsentados && order.PagosAsentados.length > 0) {
@@ -1171,10 +1171,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         // Calcular falta por pagar basado en el total y anticipo real
-        order.faltaPorPagar = Math.max(
-          0,
-          order.totalPedididoConDescuento - order.anticipo,
-        );
+        order.faltaPorPagar = Math.max(0, Number(order.totalPedididoConDescuento || 0) - Number(order.anticipo || 0));
 
         // Actualizar estado de pago basado en los cálculos reales
         // SOLO recalcular estado si no viene ya calculado del frontend

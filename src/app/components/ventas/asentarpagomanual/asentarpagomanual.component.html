@@ -212,8 +212,7 @@
             <div class="form-group full-width">
               <label class="form-label" for="archivo">
                 <i class="pi pi-upload"></i>
-                {{ 'Agregar archivo' | translate }}
-                <span class="required">*</span>
+                {{ 'Agregar archivo (opcional)' | translate }}
               </label>
               <div class="file-upload-area" 
                    [class.has-file]="selectedFile"
@@ -270,7 +269,7 @@
             <button type="submit" 
                     class="btn btn-primary"
                     (click)="registrarTransaccion()"
-                    [disabled]="!transaccionForm.valid || valorExcedido || !selectedFile">
+                    [disabled]="!transaccionForm.valid || valorExcedido">
               <i class="pi pi-check"></i>
               {{ 'Registrar transacción' | translate }}
             </button>
