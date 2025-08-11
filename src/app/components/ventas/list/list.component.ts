@@ -2520,11 +2520,48 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   actualizarValoresPedido(order: Pedido) {
     this.pedidoUtilService.pedido = order;
+    
+    // Recalcular descuentos
     order.totalDescuento = this.pedidoUtilService.getDiscount();
+    
+    // Recalcular subtotal sin descuentos
     order.totalPedidoSinDescuento = this.pedidoUtilService.getSubtotal();
+    
+    // Recalcular costo de envío (domicilio) si hay información de envío
+    if (order.envio && order.envio.zonaCobro) {
+      try {
+        // Usar el servicio utilitario para calcular el costo de envío
+        order.totalEnvio = Number(this.pedidoUtilService.getShippingCost(this.allBillingZone));
+      } catch (e) {
+        // Fallback si las zonas no están disponibles
+        console.warn('No se pudo calcular el costo de envío:', e);
+        order.totalEnvio = 0;
+      }
+    } else {
+      // Si no hay zona de cobro, no hay costo de envío
+      order.totalEnvio = 0;
+    }
+    
+    // Recalcular total con descuentos incluyendo el envío
     order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(
       Number(order.totalEnvio || 0),
     );
+    
+    // Recalcular falta por pagar si hay anticipos
+    if (order.PagosAsentados && order.PagosAsentados.length > 0) {
+      const anticipoReal = order.PagosAsentados.reduce((sum, pago) => {
+        if (pago.formaPago?.toLowerCase().includes("wompi") && 
+            pago.estadoVerificacion === "Pendiente") {
+          return sum; // No sumar pagos de Wompi pendientes
+        }
+        const valorPago = pago.valor || pago.valorRegistrado || 0;
+        return sum + valorPago;
+      }, 0);
+      
+      order.anticipo = anticipoReal;
+      order.faltaPorPagar = Math.max(0, order.totalPedididoConDescuento - anticipoReal);
+    }
+    
     return order;
   }
 

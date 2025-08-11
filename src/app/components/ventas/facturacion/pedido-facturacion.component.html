@@ -65,6 +65,19 @@
         </tbody>
       </table>
     </div>
+    
+    <!-- Botón para quitar dirección de facturación -->
+    <div class="row mt-3" *ngIf="pedidoGral?.facturacion">
+      <div class="col-12">
+        <button type="button" class="btn btn-outline-danger" (click)="quitarDireccionFacturacion()">
+          <i class="icofont icofont-trash me-2"></i>
+          {{ 'Quitar Dirección' | translate }}
+        </button>
+        <small class="form-text text-muted d-block mt-2">
+          {{ 'Al quitar la dirección, se eliminará la información de facturación del pedido' | translate }}
+        </small>
+      </div>
+    </div>
   </p-tabPanel>
   <p-tabPanel header="{{ 'Crear Datos de Facturación' | translate}}">
     <input [(ngModel)]="facturacionElectronica" type="checkbox" (change)="datosFacElect($event)" />
