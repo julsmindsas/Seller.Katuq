@@ -1013,6 +1013,9 @@ export class PaymentService extends BaseService {
       const valorIva = Number(producto?.precio?.valorIva) || 0;
       const precioUnitarioConIva =
         Number(producto?.precio?.precioUnitarioConIva) || 0;
+      // Totales por cantidad (respetando precio unitario en las columnas unitarias)
+      const valorIvaTotalProducto = valorIva * cantidad;
+      const totalConIvaProducto = precioUnitarioConIva * cantidad;
 
       // Cabecera de producto principal
       carritoHtml += `
@@ -1023,8 +1026,8 @@ export class PaymentService extends BaseService {
           <th style="border: 1px solid #ddd; padding: 8px;">Cantidad</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Precio Unit. Sin IVA</th>
           <th style="border: 1px solid #ddd; padding: 8px;">% IVA</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Valor IVA Unit.</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Precio Unit. Total (Con IVA)</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Valor IVA Total</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Total (Con IVA)</th>
         </tr>
         <tr>
           <td style="border: 1px solid #ddd; padding: 8px;"><img src="${imagenUrl}" alt="${tituloProducto}" style="width: 80px; height: auto; max-width: 100px;"></td>
@@ -1033,8 +1036,8 @@ export class PaymentService extends BaseService {
           <td style="border: 1px solid #ddd; padding: 8px;">${cantidad}</td>
           <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioUnitarioSinIva)}</td>
           <td style="border: 1px solid #ddd; padding: 8px;">${porcentajeIva}%</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioUnitarioConIva)}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaTotalProducto)}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(totalConIvaProducto)}</td>
         </tr>
         ${isComanda && producto?.crearProducto?.descripcion ? `
           <tr>
@@ -1056,6 +1059,8 @@ export class PaymentService extends BaseService {
           const valorUnitarioSinIvaPref = Number(pref.valorUnitarioSinIva) || 0;
           const valorIvaPref = Number(pref.valorIva) || 0;
           const precioTotalConIvaPref = Number(pref.precioTotalConIva) || 0;
+          const valorIvaPrefTotal = valorIvaPref * cantidad;
+          const precioTotalConIvaPrefTotal = precioTotalConIvaPref * cantidad;
           carritoHtml += `
             <tr style="background-color: #f9f9f9;">
               <td></td> <!-- Indentación -->
@@ -1063,8 +1068,8 @@ export class PaymentService extends BaseService {
               <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">${pref.titulo ?? ""}: ${pref.subtitulo ?? ""}</td>
               <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorUnitarioSinIvaPref)}</td>
               <td style="border: 1px solid #ddd; padding: 8px;">${pref.porcentajeIva ?? "0"}%</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaPref)}</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioTotalConIvaPref)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaPrefTotal)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioTotalConIvaPrefTotal)}</td>
             </tr>
           `;
         });
@@ -1078,6 +1083,8 @@ export class PaymentService extends BaseService {
           const valorUnitarioSinIvaAdic = Number(adic.valorUnitarioSinIva) || 0;
           const valorIvaAdic = Number(adic.valorIva) || 0;
           const precioTotalConIvaAdic = Number(adic.precioTotalConIva) || 0;
+          const valorIvaAdicTotal = valorIvaAdic * cantidad;
+          const precioTotalConIvaAdicTotal = precioTotalConIvaAdic * cantidad;
           carritoHtml += `
             <tr style="background-color: #f0f0f0;">
               <td></td> <!-- Indentación -->
@@ -1085,8 +1092,8 @@ export class PaymentService extends BaseService {
               <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">${adic.titulo ?? ""}: ${adic.subtitulo ?? ""}</td>
               <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorUnitarioSinIvaAdic)}</td>
               <td style="border: 1px solid #ddd; padding: 8px;">${adic.porcentajeIva ?? "0"}%</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaAdic)}</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioTotalConIvaAdic)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaAdicTotal)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioTotalConIvaAdicTotal)}</td>
             </tr>
           `;
         });
