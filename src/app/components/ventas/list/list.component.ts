@@ -421,7 +421,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns true si se puede asignar asesor
    */
   canAssignSeller(order: Pedido): boolean {
-    return this.canDeleteOrder(); // Solo administradores
+    // Solo administradores pueden asignar asesores
+    return !!(
+      this.UserLogged?.rol && 
+      (this.UserLogged.rol.toLowerCase() === 'administrador' || 
+       this.UserLogged.rol.toLowerCase() === 'admin' ||
+       this.UserLogged.rol.toLowerCase() === 'super administrador')
+    );
   }
 
   confirmDeleteOrder(order: any) {
@@ -2556,39 +2562,116 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   editSeller(order: Pedido) {
-    if (order?.asesorAsignado?.nit === "9999") {
+    // Obtener la empresa del pedido para filtrar usuarios
+    const empresaPedido = order.company;
+    
+    if (!empresaPedido) {
       Swal.fire({
-        title: "¿Estás seguro?",
-        text: "Estás a punto de cambiar el asesor asignado a este pedido.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Sí, cambiar asesor",
-        cancelButtonText: "No, cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const userString = localStorage.getItem("user") || "{}";
-          const user = JSON.parse(userString) as UserLogged;
-          const userLite: UserLite = {
-            name: user?.name || '',
-            email: user?.email || '',
-            nit: user?.nit || '',
-          };
-          order.asesorAsignado = userLite;
-          this.editOrder(order);
-          Swal.fire("Cambiado", "El asesor ha sido cambiado.", "success");
-        }
-      });
-    } else {
-      Swal.fire({
-        title: "¡Alerta!",
-        text: "Este pedido ya tiene un asesor asignado.",
-        icon: "warning",
+        title: "Error",
+        text: "No se puede determinar la empresa del pedido.",
+        icon: "error",
         confirmButtonColor: "#3085d6",
         confirmButtonText: "Aceptar",
       });
+      return;
     }
+
+    // Cargar la lista de usuarios para mostrar como opciones de asesores
+    this.maestroService.consultarUsuarios().subscribe((usuarios: any) => {
+      // Filtrar solo usuarios activos de la empresa específica que puedan ser asesores
+      const asesoresDisponibles = usuarios.filter((usuario: any) => 
+        usuario.activo && 
+        (usuario.empresa === empresaPedido || usuario.company === empresaPedido) &&
+        usuario.roles && 
+        (usuario.roles.toLowerCase().includes('vendedor') || 
+         usuario.roles.toLowerCase().includes('asesor') ||
+         usuario.roles.toLowerCase().includes('comercial') ||
+         usuario.roles.toLowerCase().includes('ventas'))
+      );
+
+      if (asesoresDisponibles.length === 0) {
+        Swal.fire({
+          title: "Error",
+          text: `No hay asesores disponibles en la empresa ${empresaPedido}.`,
+          icon: "error",
+          confirmButtonColor: "#3085d6",
+          confirmButtonText: "Aceptar",
+        });
+        return;
+      }
+
+      // Crear opciones para el select
+      const options = asesoresDisponibles.map((asesor: any) => ({
+        value: asesor.cd,
+        label: `${asesor.nombre} ${asesor.apellido} (${asesor.email})`
+      }));
+
+      // Agregar opción para el asesor actual si existe
+      if (order.asesorAsignado && order.asesorAsignado.nit !== "9999") {
+        const asesorActual = asesoresDisponibles.find((a: any) => a.nit === order.asesorAsignado?.nit);
+        if (asesorActual) {
+          options.unshift({
+            value: asesorActual.cd,
+            label: `${asesorActual.nombre} ${asesorActual.apellido} (${asesorActual.email}) - ACTUAL`
+          });
+        }
+      }
+
+      Swal.fire({
+        title: "Asignar Asesor",
+        text: `Selecciona el asesor que deseas asignar a este pedido de ${empresaPedido}:`,
+        input: 'select',
+        inputOptions: options.reduce((acc, option) => {
+          acc[option.value] = option.label;
+          return acc;
+        }, {} as any),
+        inputValue: order.asesorAsignado?.nit !== "9999" ? 
+          asesoresDisponibles.find((a: any) => a.nit === order.asesorAsignado?.nit)?.cd : '',
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Asignar Asesor",
+        cancelButtonText: "Cancelar",
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Debes seleccionar un asesor';
+          }
+          return null;
+        }
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          const asesorSeleccionado = asesoresDisponibles.find((a: any) => a.cd === result.value);
+          
+          if (asesorSeleccionado) {
+            const userLite: UserLite = {
+              name: `${asesorSeleccionado.nombre} ${asesorSeleccionado.apellido}`,
+              email: asesorSeleccionado.email,
+              nit: asesorSeleccionado.nit,
+            };
+            
+            order.asesorAsignado = userLite;
+            this.editOrder(order);
+            
+            Swal.fire({
+              title: "Asesor Asignado",
+              text: `El asesor ${userLite.name} ha sido asignado exitosamente al pedido.`,
+              icon: "success",
+              confirmButtonColor: "#3085d6",
+              confirmButtonText: "Aceptar",
+            });
+          }
+        }
+      });
+    }, (error) => {
+      console.error('Error al cargar usuarios:', error);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo cargar la lista de asesores. Intenta nuevamente.",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Aceptar",
+      });
+    });
   }
 
   buscarPorFechas(table?: Table): void {
