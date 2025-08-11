@@ -90,9 +90,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       };
       this.datosFacturacionElectronica = [];
       this.service.getClientByDocument(data).subscribe((res: any) => {
-        res.datosFacturacionElectronica.map((x) => {
-          this.datosFacturacionElectronica.push(x);
-        });
+        if (res.datosFacturacionElectronica && Array.isArray(res.datosFacturacionElectronica)) {
+          res.datosFacturacionElectronica.forEach((x: any) => {
+            this.datosFacturacionElectronica.push(x);
+          });
+        }
 
         // Agregar el consumidor final si no existe cuando se abre desde la lista
         if (!this.existeConsumidorFinal()) {
@@ -201,7 +203,16 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
   seleccionarDireccionFE(index) {
     this.pedidoGral.facturacion = this.datosFacturacionElectronica[index];
+    
+    // Recalcular el costo de envío (domicilio) si hay información de envío
+    if (this.pedidoGral.envio && this.pedidoGral.envio.zonaCobro) {
+      // Aquí deberías llamar al servicio para recalcular el totalEnvio
+      // Por ahora, mantenemos el valor actual
+      console.log('Dirección de facturación seleccionada, se debe recalcular totalEnvio');
+    }
+    
     this.pedidoGral = { ...this.pedidoGral };
+    
     Swal.fire({
       title: "Datos Seleccionados!",
       text: this.datosFacturacionElectronica[index].alias,
@@ -434,31 +445,66 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
   // Método para agregar un consumidor final a la lista de facturación
   agregarConsumidorFinal(): void {
-    // Obtener datos del cliente actual desde el formulario o pedido para usar datos reales
-    const clienteActual = this.formulario?.value || {};
-    const envioActual = this.pedidoGral?.envio || ({} as any);
-
     const consumidorFinal = {
       alias: "Consumidor Final",
       nombres: "Consumidor Final",
       tipoDocumento: "CC-NIT",
-      documento: "222222222222",
-      indicativoCel: clienteActual.indicativo_celular_comprador || "",
-      celular: clienteActual.numero_celular_comprador || "",
-      correoElectronico: clienteActual.correo_electronico_comprador || "",
-      direccion: this.direccionFacturacion || envioActual?.direccion || "N/A",
-      pais: this.paisInicial || envioActual?.pais || "Colombia",
-      departamento: this.departamentoInicial || envioActual?.departamento || "",
-      ciudad: this.ciudad || envioActual?.ciudad || "",
-      codigoPostal: this.codigoPostal || envioActual?.codigoPostal || "",
+      documento: "99999999",
+      indicativoCel: "57",
+      celular: "0000000000",
+      correoElectronico: "consumidor@final.com",
+      direccion: "N/A",
+      pais: "Colombia",
+      departamento: "N/A",
+      ciudad: "N/A",
+      codigoPostal: "000000",
     };
+    this.datosFacturacionElectronica.push(consumidorFinal);
+  }
 
-    // Si la lista no está inicializada, crearla
-    if (!this.datosFacturacionElectronica) {
-      this.datosFacturacionElectronica = [];
-    }
+  quitarDireccionFacturacion(): void {
+    Swal.fire({
+      title: "¿Estás seguro?",
+      text: "¿Deseas quitar la dirección de facturación del pedido?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, quitar dirección",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Quitar la dirección de facturación
+        this.pedidoGral.facturacion = undefined;
+        
+        // Recalcular el costo de envío (domicilio) si es necesario
+        if (this.pedidoGral.envio && this.pedidoGral.envio.zonaCobro) {
+          // Si hay zona de cobro, recalcular el costo de envío
+          this.pedidoGral.totalEnvio = this.calcularCostoEnvio(this.pedidoGral.envio.zonaCobro);
+        } else {
+          // Si no hay zona de cobro, el envío es 0
+          this.pedidoGral.totalEnvio = 0;
+        }
+        
+        // Emitir el pedido actualizado
+        if (this.isEdit) {
+          this.overridePedido.emit(this.pedidoGral);
+        }
+        
+        Swal.fire({
+          title: "Dirección Quitada",
+          text: "La dirección de facturación ha sido removida del pedido.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        });
+      }
+    });
+  }
 
-    // Agregar el consumidor final al INICIO de la lista para que aparezca de primero
-    this.datosFacturacionElectronica.unshift(consumidorFinal);
+  private calcularCostoEnvio(zonaCobro: string): number {
+    // Aquí deberías implementar la lógica para calcular el costo de envío
+    // basado en la zona de cobro. Por ahora retorno 0 como valor por defecto
+    // TODO: Implementar cálculo real del costo de envío
+    return 0;
   }
 }
