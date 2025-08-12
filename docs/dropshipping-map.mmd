@@ -1,0 +1,91 @@
+flowchart TD
+  A["Cliente"] --> B["Tienda (Katuq Seller)"]
+
+  subgraph PREV["Pre-venta"]
+    C["Catálogo con bandera 'Dropshipping' en productos<br/>SKU proveedor, lead time, reglas de precio"]
+    D["Sincronización stock/precio proveedor<br/>Pull (API) + Push (Webhooks)"]
+    C --> D
+  end
+
+  B --> C
+
+  subgraph CHECKOUT["Checkout y Pago"]
+    E["Cliente crea pedido"] --> F{"Pago aprobado?"}
+    F -- "No" --> F1["Cancelar/guardar borrador<br/>Notificar al cliente"]
+    F -- "Sí" --> G["Orquestación de pedido"]
+  end
+
+  subgraph ORQ["Orquestación de Pedido"]
+    G --> H{"¿Ítems con Dropshipping?"}
+    H -- "No (Solo local)" --> H1["Flujo normal de almacén local<br/>Descuento de stock local"]
+    H -- "Sí (Total o mixto)" --> I["Separar ítems: Local vs Proveedor"]
+    I --> I1["Para ítems DS: NO descontar stock local<br/>Usar stock virtual proveedor"]
+    I --> J["Crear Orden a Proveedor (API) via IntegrationsService"]
+    J --> K{"Proveedor acepta?"}
+    K -- "No" --> K1["Rechazo/Stock insuficiente<br/>Reintentos/Soporte/Cancelación parcial"]
+    K -- "Sí" --> L["Proveedor confirma y planifica despacho"]
+  end
+
+  subgraph FULF["Fulfillment Proveedor"]
+    L --> M["Proveedor prepara y despacha"]
+    M --> N["Tracking y nroShippingOrder (proveedor)"]
+    N --> O["Webhook/Callback proveedor → Backend → FE<br/>Actualizar Pedido: tracking, nroShippingOrder"]
+  end
+
+  subgraph ESTADOS["Estados y Tracking"]
+    P["EstadoPago: Pendiente → PreAprobado → Aprobado → (Rechazado/Cancelado)"]
+    Q["EstadoProceso (DS):<br/>Solicitado a Proveedor → Despachado por Proveedor → Entregado<br/>Opcionales: Empacado, ParaDespachar, Cerrado"]
+    R["Registro en Pedido:<br/>nroShippingOrder, transportador, fechaYHorarioDespachado,<br/>fotosEvidencia, signatureImage, historialEstadoProceso"]
+    P --- Q
+    Q --- R
+  end
+
+  subgraph DESP["Módulo Despachos"]
+    S["Crear/visualizar Shipping Orders (central)"]
+    T["Consolidar pedidos, asignar transportador (si aplica)"]
+    U["Despachar y actualizar estados en lote"]
+    S --> T --> U
+  end
+
+  subgraph INT["Integraciones"]
+    V["Configuración de proveedores (IntegrationsService)<br/>Credenciales, ambientes, validación"]
+    W["Categorías: ECOMMERCE, PAYMENT, LOGISTICS, OTHER"]
+    X["Webhooks entrantes: estado/stock/tracking"]
+    Y["APIs proveedor: crear orden, consultar estado, precios, stock"]
+    V --> W
+    V --> Y
+    X --> O
+  end
+
+  subgraph FACT["Facturación y Comunicación"]
+    Z1["Factura electrónica (opcional)"]
+    Z2["Email/SMS/WhatsApp con resumen, tracking y ETA"]
+    Z1 --- Z2
+  end
+
+  subgraph POST["Postventa y Excepciones"]
+    E1["Devoluciones/Reembolsos"]
+    E2["Reintentos automáticos (API/Webhook)"]
+    E3["Gestión de SLA, demoras, incidencias"]
+    E4["Conciliación y ajustes (stock, pagos)"]
+    E1 --- E2 --- E3 --- E4
+  end
+
+  D --> E
+  U --> O
+  G --> P
+  O --> Q
+  F --> Z1
+  O --> Z2
+  O --> POST
+
+  subgraph KPI["KPIs y Auditoría"]
+    KPI1["Fill rate proveedor"]
+    KPI2["On-time delivery / SLA"]
+    KPI3["Tasa de rechazo / stock mismatch"]
+    KPI4["Margen por proveedor / SKU"]
+    KPI5["Tiempo ciclo pedido DS"]
+  end
+
+  O --> KPI
+
