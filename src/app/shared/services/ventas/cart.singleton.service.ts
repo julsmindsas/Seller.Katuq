@@ -58,6 +58,10 @@ export class CartSingletonService {
   // Agregar producto al carrito
   addToCart(productoCompra: any) {
     const carrito = this.productInCart.value;
+    // Asignar un identificador único por ítem de carrito si no existe
+    if (!productoCompra.cartItemId && !productoCompra._cartUid) {
+      productoCompra.cartItemId = this.generateCartItemId(productoCompra);
+    }
     carrito.push(productoCompra);
     const nuevoCarrito = [...carrito];
     this.productInCart.next(nuevoCarrito);
@@ -68,7 +72,7 @@ export class CartSingletonService {
   // Remover producto
   removeProduct(producto: any) {
     let products = this.productInCart.value;
-    const index = products.findIndex((p: any) => p.producto.crearProducto.cd === producto.producto.crearProducto.cd);
+    const index = this.getCartItemIndex(products, producto);
     if (index !== -1) {
       products.splice(index, 1);
       const nuevoCarrito = [...products];
@@ -81,9 +85,13 @@ export class CartSingletonService {
   // Actualizar cantidad de producto
   updateProductQuantity(producto: any) {
     const products = this.productInCart.value;
-    const index = products.findIndex((p: any) => p.producto.crearProducto.cd === producto.producto.crearProducto.cd);
+    const index = this.getCartItemIndex(products, producto);
     if (index !== -1) {
-      products[index] = producto;
+      // Mantener el mismo objeto si es posible para evitar perder referencias internas
+      const updated = { ...products[index], ...producto };
+      // preservar id único si existía
+      updated.cartItemId = products[index]?.cartItemId || producto?.cartItemId || products[index]?._cartUid || producto?._cartUid;
+      products[index] = updated;
       const nuevoCarrito = [...products];
       this.productInCart.next(nuevoCarrito);
       this.syncWithLocalStorage(nuevoCarrito);
@@ -103,5 +111,45 @@ export class CartSingletonService {
   calculateTotal(): number {
     const products = this.productInCart.value;
     return products.reduce((total, p) => total + p.producto.crearProducto.precio, 0);
+  }
+
+  /**
+   * Busca el índice exacto del ítem del carrito a partir de la identidad del objeto
+   * o un identificador único, con retrocompatibilidad a `cd`.
+   */
+  private getCartItemIndex(products: any[], producto: any): number {
+    if (!Array.isArray(products)) return -1;
+
+    // 1) Coincidencia por referencia de objeto
+    let index = products.findIndex((p: any) => p === producto);
+    if (index !== -1) return index;
+
+    // 2) Coincidencia por id interno del ítem de carrito
+    const targetId = producto?.cartItemId || producto?._cartUid;
+    if (targetId) {
+      index = products.findIndex((p: any) => (p?.cartItemId || p?._cartUid) === targetId);
+      if (index !== -1) return index;
+    }
+
+    // 3) Coincidencia por cd (solo si existe), intentando además coincidir la configuración
+    const cd = producto?.producto?.crearProducto?.cd;
+    if (cd) {
+      index = products.findIndex((p: any) => p?.producto?.crearProducto?.cd === cd && p?.configuracion === producto?.configuracion);
+      if (index !== -1) return index;
+      index = products.findIndex((p: any) => p?.producto?.crearProducto?.cd === cd);
+      if (index !== -1) return index;
+    }
+
+    // 4) Coincidencia por objeto de producto anidado (último recurso)
+    index = products.findIndex((p: any) => p?.producto === producto?.producto);
+    return index;
+  }
+
+  /**
+   * Genera un id único del ítem de carrito.
+   */
+  private generateCartItemId(productoCompra: any): string {
+    const base = productoCompra?.producto?.crearProducto?.cd || productoCompra?.producto?.identificacion?.referencia || 'item';
+    return `${base}::${Date.now()}::${Math.random().toString(36).slice(2)}`;
   }
 }
