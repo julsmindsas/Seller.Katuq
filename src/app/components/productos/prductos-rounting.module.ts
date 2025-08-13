@@ -7,6 +7,10 @@ const routes: Routes = [
   {
     path: '',
     component: ProductosComponent
+  },
+  {
+    path: 'dropshipping-config/:id',
+    loadChildren: () => import('./productos-dropshipping-config/productos-dropshipping-config.module').then(m => m.ProductosDropshippingConfigModule)
   }
 ];
 

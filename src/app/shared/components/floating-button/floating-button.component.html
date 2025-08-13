@@ -143,9 +143,9 @@
   </div>
 
   <!-- Contenedor de chat completo -->
-  <div *ngIf="chatFormVisible && !chatMinimized" class="floating-chat-overlay">
+  <div *ngIf="chatFormVisible && !chatMinimized" class="floating-chat-overlay" [ngClass]="{'maximized': chatMaximized}">
     <!-- Barra de título del chat -->
-    <div class="chat-header">
+    <div class="chat-header" (dblclick)="toggleChatSize($event)">
       <span class="chat-title">K.A.I. - Asistente Virtual</span>
       <div class="chat-controls">
         <button class="chat-control-btn" (click)="toggleChatSize($event)" title="Cambiar tamaño">

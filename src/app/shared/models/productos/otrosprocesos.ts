@@ -8,6 +8,7 @@ export interface OtrosProcesos {
 
 export interface ModulosVariables {
     produccion: Produccion[];
+    dropshipping?: DropshippingModule;
 }
 
 export interface Produccion {
@@ -43,4 +44,18 @@ export interface CentroTrabajo {
     cd: string;
     company: string;
     nombre: string;
+}
+
+export interface DropshippingModule {
+    habilitado: boolean;
+    fechaActivacion?: string;
+    configuracion?: DropshippingConfig;
+}
+
+export interface DropshippingConfig {
+    proveedoresPermitidos?: string[];
+    margenMinimoPermitido?: number;
+    automatizacionActivada?: boolean;
+    notificacionesActivadas?: boolean;
+    tiempoLimiteOrden?: number; // en días
 }

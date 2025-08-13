@@ -100,6 +100,10 @@
                                     <!-- <p-sortIcon field="precio.precioUnitarioIva"></p-sortIcon> -->
                                 </th>
 
+                                <th class="text-center" *ngIf="!isMobile">
+                                    {{ "Tipo" | translate }}
+                                </th>
+
                                 <th  class="text-center">
                                     {{ "Acciones" | translate }}
                                 </th>
@@ -195,11 +199,27 @@
                                     }}
                                 </td>
 
+                                <!-- Tipo de producto (solo en desktop) -->
+                                <td *ngIf="!isMobile" class="text-center">
+                                    <span *ngIf="!row.dropshippingConfig || !row.dropshippingConfig.enabled" 
+                                          class="badge badge-primary">
+                                        {{ "Tradicional" | translate }}
+                                    </span>
+                                    <span *ngIf="row.dropshippingConfig?.enabled" 
+                                          class="badge badge-info">
+                                        {{ "Dropshipping" | translate }}
+                                    </span>
+                                </td>
+
                                 <!-- Acciones -->
                                 <td class="action-buttons">
                                     <i placement="top" ngbTooltip="{{ 'Edit' | translate }}" 
                                         class="icofont icofont-pencil-alt-5" (click)="editarProducto(row)"
                                         title="Editar producto"></i>
+                                    <i placement="top" ngbTooltip="Configurar Dropshipping" 
+                                        class="icofont icofont-truck" (click)="configurarDropshipping(row)"
+                                        title="Configurar Dropshipping"
+                                        style="color: #17a2b8; margin-left: 8px;"></i>
                                     <i placement="top" ngbTooltip="{{ 'Duplicar' | translate }}" 
                                         class="icofont icofont-copy" (click)="duplicarProducto(row)"
                                         title="Duplicar producto"></i>
@@ -213,7 +233,7 @@
                         <!-- MENSAJE CUANDO LA TABLA ESTÁ VACÍA -->
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td [attr.colspan]="11">
+                                <td [attr.colspan]="12">
                                     {{ "No hay datos disponibles" | translate }}
                                 </td>
                             </tr>

@@ -122,6 +122,12 @@ export enum EstadoProceso {
   ParaDespachar = "ParaDespachar",
   Cerrado = "Cerrado",
   EnProduccion = "EnProduccion",
+  // Estados específicos de Dropshipping
+  SolicitadoProveedor = "SolicitadoProveedor",
+  AceptadoProveedor = "AceptadoProveedor",
+  RechazadoProveedor = "RechazadoProveedor",
+  DespachadoProveedor = "DespachadoProveedor",
+  EnTransitoProveedor = "EnTransitoProveedor",
 }
 
 export enum EstadoProcesoFiltros {
@@ -135,6 +141,12 @@ export enum EstadoProcesoFiltros {
   ProducidoParcialmente = "ProducidoParcialmente",
   ParaDespachar = "ParaDespachar",
   Cerrado = "Cerrado",
+  // Filtros específicos de Dropshipping
+  SolicitadoProveedor = "SolicitadoProveedor",
+  AceptadoProveedor = "AceptadoProveedor",
+  RechazadoProveedor = "RechazadoProveedor",
+  DespachadoProveedor = "DespachadoProveedor",
+  EnTransitoProveedor = "EnTransitoProveedor",
 }
 
 export interface Cliente {

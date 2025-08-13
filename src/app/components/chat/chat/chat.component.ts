@@ -59,6 +59,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
 
   // Modo oscuro automático
   public isDarkMode: boolean = false;
+  public isGenerating: boolean = false;
+
+  // Adjuntos y prompts
+  public attachedImage: string | null = null;
+  public quickPrompts: string[] = [
+    'Resumen de mis pedidos pendientes',
+    '¿Qué productos tienen bajo stock?',
+    'Ayúdame a crear una oferta',
+    '¿Cómo configuro un nuevo producto?'
+  ];
+  public isDragOver: boolean = false;
 
   constructor(
     private chatService: ChatService,
@@ -183,14 +194,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   
   // Send Message to User - mejora con gestión de estados de scroll
   public sendMessage(form: NgForm) {
-    if(!form.value.message?.trim()){
+    if(!this.canSend()){
       this.error = true;
       return false;
     }
     
     this.error = false;
-    const message = form.value.message;
+    const message = form.value.message || '';
     this.chatText = '';
+    const imageToSend = this.attachedImage;
+    this.attachedImage = null;
     
     // Al enviar un mensaje, siempre debemos hacer scroll al fondo
     // Temporalmente ignoramos si el usuario ha scrolleado
@@ -204,11 +217,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
       receiver_name: this.chatUser.name,
       message: message,
       text: message, // Para compatibilidad con la interfaz actual
+      image: imageToSend || undefined,
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     };
     
     // Enviamos el mensaje
     this.chatService.sendMessage(chat);
+    this.isGenerating = true; // Simula estado de generación LLM
     
     // Actualizamos estado del chat
     this.chatUser.seen = 'online';
@@ -239,6 +254,119 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
     // Reiniciar altura para calcular scrollHeight correcto
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  /**
+   * Adjuntar imagen: abrir file picker y manejar selección
+   */
+  triggerFilePicker(): void {
+    const input = (document.querySelector('input[type="file"][hidden]') as HTMLInputElement);
+    if (input) {
+      input.value = '';
+      input.click();
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    if (!target?.files || !target.files.length) return;
+    const file = target.files[0];
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.attachedImage = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeAttachment(): void {
+    this.attachedImage = null;
+  }
+
+  canSend(): boolean {
+    const hasText = !!this.chatText && !!this.chatText.trim();
+    return hasText || !!this.attachedImage;
+  }
+
+  applyPrompt(prompt: string): void {
+    this.chatText = prompt;
+    // Enfocar y permitir edición inmediatamente
+    setTimeout(() => {
+      const textarea = document.querySelector('.message-input') as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+      }
+    }, 0);
+  }
+
+  // Drag & Drop de imágenes
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+    if (!event.dataTransfer || !event.dataTransfer.files?.length) return;
+    const file = event.dataTransfer.files[0];
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.attachedImage = reader.result as string;
+      this.cdRef.detectChanges();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Pegar imágenes directamente
+  onPaste(event: ClipboardEvent): void {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf('image') !== -1) {
+        const file = item.getAsFile();
+        if (!file) continue;
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.attachedImage = reader.result as string;
+          this.cdRef.detectChanges();
+        };
+        reader.readAsDataURL(file);
+        event.preventDefault();
+        break;
+      }
+    }
+  }
+
+  // Acciones UX para LLM
+  copyMessage(text: string): void {
+    if (!text) return;
+    navigator.clipboard?.writeText(text).catch(() => {});
+  }
+
+  regenerate(chat: any): void {
+    // Aquí podríamos re-enviar el último prompt; por ahora simulamos typing
+    this.isGenerating = true;
+    if (this.chatUser) {
+      this.chatUser.typing = true;
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onStopGeneration(): void {
+    this.isGenerating = false;
+    if (this.chatUser) {
+      this.chatUser.typing = false;
+      this.cdRef.detectChanges();
+    }
   }
 
   /**

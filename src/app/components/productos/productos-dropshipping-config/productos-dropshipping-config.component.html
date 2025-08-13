@@ -1,0 +1,392 @@
+<app-breadcrumb 
+  [title]="'Configuración Dropshipping'" 
+  [items]="['Productos', 'Configurar Dropshipping']"
+  [active_item]="'Configuración Dropshipping'">
+</app-breadcrumb>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      
+      <!-- Loader -->
+      <div class="loader-box" *ngIf="loading">
+        <div class="loader-8"></div>
+      </div>
+
+      <!-- Card Principal -->
+      <div class="card" *ngIf="!loading">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-md-8">
+              <h4 class="mb-1">Configuración de Dropshipping</h4>
+              <p class="text-muted mb-0" *ngIf="producto">
+                <strong>Producto:</strong> {{ producto.crearProducto?.titulo }} 
+                <span class="badge badge-secondary ml-2">{{ producto.identificacion?.referencia }}</span>
+              </p>
+            </div>
+            <div class="col-md-4 text-right">
+              <button type="button" class="btn btn-outline-secondary mr-2" (click)="onCancel()">
+                <i class="fa fa-arrow-left"></i> Volver a Productos
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <form [formGroup]="dropshippingForm" (ngSubmit)="onSubmit()">
+            
+            <!-- Habilitar Dropshipping -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <div class="form-group">
+                  <div class="form-check form-switch">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      id="enableDropshipping"
+                      formControlName="enabled"
+                      (change)="onToggleEnabled()">
+                    <label class="form-check-label" for="enableDropshipping">
+                      <strong>Habilitar Dropshipping para este producto</strong>
+                    </label>
+                  </div>
+                  <small class="text-muted">
+                    Al habilitar dropshipping, este producto será gestionado por un proveedor externo
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="dropshippingForm.get('enabled')?.value">
+              
+              <!-- Información del Proveedor -->
+              <div class="row">
+                <div class="col-12">
+                  <h5 class="mb-3"><i class="fa fa-truck text-primary"></i> Información del Proveedor</h5>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="supplierName">Nombre del Proveedor <span class="text-danger">*</span></label>
+                    <input 
+                      type="text" 
+                      class="form-control"
+                      [class.is-invalid]="isFieldInvalid('supplierName')"
+                      id="supplierName"
+                      formControlName="supplierName"
+                      placeholder="Ej: Proveedor ABC S.A.S">
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('supplierName')">
+                      {{ getFieldError('supplierName') }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="supplierId">ID del Proveedor <span class="text-danger">*</span></label>
+                    <input 
+                      type="text" 
+                      class="form-control"
+                      [class.is-invalid]="isFieldInvalid('supplierId')"
+                      id="supplierId"
+                      formControlName="supplierId"
+                      placeholder="Ej: PROV-001">
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('supplierId')">
+                      {{ getFieldError('supplierId') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="supplierSku">SKU del Proveedor</label>
+                    <input 
+                      type="text" 
+                      class="form-control"
+                      id="supplierSku"
+                      formControlName="supplierSku"
+                      placeholder="SKU del producto en el proveedor">
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="leadTimeDays">Tiempo de Entrega (días) <span class="text-danger">*</span></label>
+                    <input 
+                      type="number" 
+                      class="form-control"
+                      [class.is-invalid]="isFieldInvalid('leadTimeDays')"
+                      id="leadTimeDays"
+                      formControlName="leadTimeDays"
+                      min="1"
+                      placeholder="7">
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('leadTimeDays')">
+                      {{ getFieldError('leadTimeDays') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Información de Contacto -->
+              <div class="row mt-4">
+                <div class="col-12">
+                  <h6 class="mb-3"><i class="fa fa-phone text-info"></i> Contacto del Proveedor</h6>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="proveedorContacto">Contacto</label>
+                    <input 
+                      type="text" 
+                      class="form-control"
+                      id="proveedorContacto"
+                      formControlName="proveedorContacto"
+                      placeholder="Nombre del contacto">
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="proveedorTelefono">Teléfono</label>
+                    <input 
+                      type="text" 
+                      class="form-control"
+                      id="proveedorTelefono"
+                      formControlName="proveedorTelefono"
+                      placeholder="+57 300 123 4567">
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="proveedorEmail">Email</label>
+                    <input 
+                      type="email" 
+                      class="form-control"
+                      [class.is-invalid]="isFieldInvalid('proveedorEmail')"
+                      id="proveedorEmail"
+                      formControlName="proveedorEmail"
+                      placeholder="contacto@proveedor.com">
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('proveedorEmail')">
+                      {{ getFieldError('proveedorEmail') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuración de Precios -->
+              <div class="row mt-4">
+                <div class="col-12">
+                  <h5 class="mb-3"><i class="fa fa-dollar-sign text-success"></i> Configuración de Precios</h5>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="costoProveedor">Costo del Proveedor <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">$</span>
+                      </div>
+                      <input 
+                        type="number" 
+                        class="form-control"
+                        [class.is-invalid]="isFieldInvalid('costoProveedor')"
+                        id="costoProveedor"
+                        formControlName="costoProveedor"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00">
+                    </div>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('costoProveedor')">
+                      {{ getFieldError('costoProveedor') }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="tipoMargen">Tipo de Margen <span class="text-danger">*</span></label>
+                    <select 
+                      class="form-control"
+                      id="tipoMargen"
+                      formControlName="tipoMargen">
+                      <option *ngFor="let tipo of tiposMargen" [value]="tipo.value">
+                        {{ tipo.label }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-md-4" *ngIf="dropshippingForm.get('tipoMargen')?.value === 'porcentaje'">
+                  <div class="form-group">
+                    <label for="margenPorcentaje">Margen (%) <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <input 
+                        type="number" 
+                        class="form-control"
+                        [class.is-invalid]="isFieldInvalid('margenPorcentaje')"
+                        id="margenPorcentaje"
+                        formControlName="margenPorcentaje"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder="20">
+                      <div class="input-group-append">
+                        <span class="input-group-text">%</span>
+                      </div>
+                    </div>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('margenPorcentaje')">
+                      {{ getFieldError('margenPorcentaje') }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4" *ngIf="dropshippingForm.get('tipoMargen')?.value === 'fijo'">
+                  <div class="form-group">
+                    <label for="margenFijo">Margen Fijo <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">$</span>
+                      </div>
+                      <input 
+                        type="number" 
+                        class="form-control"
+                        [class.is-invalid]="isFieldInvalid('margenFijo')"
+                        id="margenFijo"
+                        formControlName="margenFijo"
+                        min="0"
+                        step="0.01"
+                        placeholder="5000">
+                    </div>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('margenFijo')">
+                      {{ getFieldError('margenFijo') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Calculadora de Precios -->
+              <div class="row">
+                <div class="col-12">
+                  <div class="alert alert-info">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <strong>Costo del Proveedor:</strong><br>
+                        <span class="h5">${{ (dropshippingForm.get('costoProveedor')?.value || 0) | number:'1.2-2' }}</span>
+                      </div>
+                      <div class="col-md-4">
+                        <strong>Ganancia:</strong><br>
+                        <span class="h5 text-success">${{ calcularGanancia() | number:'1.2-2' }}</span>
+                      </div>
+                      <div class="col-md-4">
+                        <strong>Precio de Venta Sugerido:</strong><br>
+                        <span class="h5 text-primary">${{ calcularPrecioVenta() | number:'1.2-2' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Información Adicional -->
+              <div class="row mt-4">
+                <div class="col-12">
+                  <h6 class="mb-3"><i class="fa fa-info-circle text-warning"></i> Información Adicional</h6>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="monedaProveedor">Moneda del Proveedor</label>
+                    <select class="form-control" id="monedaProveedor" formControlName="monedaProveedor">
+                      <option value="COP">COP - Peso Colombiano</option>
+                      <option value="USD">USD - Dólar Americano</option>
+                      <option value="EUR">EUR - Euro</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="supplierProductUrl">URL del Producto</label>
+                    <input 
+                      type="url" 
+                      class="form-control"
+                      id="supplierProductUrl"
+                      formControlName="supplierProductUrl"
+                      placeholder="https://proveedor.com/producto/123">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12">
+                  <div class="form-group">
+                    <label for="condicionesEspeciales">Condiciones Especiales</label>
+                    <textarea 
+                      class="form-control" 
+                      id="condicionesEspeciales"
+                      formControlName="condicionesEspeciales"
+                      rows="3"
+                      placeholder="Describe condiciones especiales, términos de pago, requisitos mínimos, etc.">
+                    </textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12">
+                  <div class="form-group">
+                    <div class="form-check">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        id="activo"
+                        formControlName="activo">
+                      <label class="form-check-label" for="activo">
+                        Configuración activa
+                      </label>
+                    </div>
+                    <small class="text-muted">
+                      Desmarcar para desactivar temporalmente la configuración sin eliminarla
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <div class="form-group text-right">
+                  <button type="button" class="btn btn-secondary mr-2" (click)="onCancel()">
+                    <i class="fa fa-times"></i> Cancelar
+                  </button>
+                  <button 
+                    type="submit" 
+                    class="btn btn-primary"
+                    [disabled]="!dropshippingForm.valid || saving">
+                    <i class="fa fa-save" *ngIf="!saving"></i>
+                    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+                    {{ saving ? 'Guardando...' : 'Guardar Configuración' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

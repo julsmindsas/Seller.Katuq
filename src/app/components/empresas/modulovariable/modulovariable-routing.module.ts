@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { CentrotrabajosComponent } from './produccion/centrotrabajos/centrotrabajos.component';
 import { ModuloVariableComponent } from './modulovariable.component';
 import { ProcesosComponent } from './produccion/procesos/procesos.component';
+import { DropshippingConfigComponent } from './dropshipping/dropshipping-config.component';
 
 const routes: Routes = [
 
@@ -17,6 +18,10 @@ const routes: Routes = [
     {
         path: 'produccion/opciones',
         component: ModuloVariableComponent
+    },
+    {
+        path: 'dropshipping/configuracion',
+        component: DropshippingConfigComponent
     },
 ];
 

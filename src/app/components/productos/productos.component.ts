@@ -105,6 +105,15 @@ export class ProductosComponent implements OnInit {
     this.router.navigateByUrl('productos/crearProductos');
   }
 
+  configurarDropshipping(row) {
+    if (row.cd || row._id) {
+      const productId = row.cd || row._id;
+      this.router.navigate([`/productos/dropshipping-config/${productId}`]);
+    } else {
+      console.error('No se pudo obtener el ID del producto');
+    }
+  }
+
   duplicarProducto(row) {
     console.log('Producto a duplicar:', row);
     

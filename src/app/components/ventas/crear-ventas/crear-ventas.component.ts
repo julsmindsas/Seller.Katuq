@@ -2018,14 +2018,30 @@ export class CrearVentasComponent
     // Asegurarnos de mantener la información correcta del pedido
     this.pedidoGral = { ...pedidoProcesado };
 
+    // Detectar si hay productos dropshipping en el carrito
+    const hasDropshippingProducts = this.detectDropshippingProducts();
+    
     // Añadir información de canal y tipo de orden
-    this.pedidoGral.typeOrder = "E-commerce";
-    this.pedidoGral.channel = {
-      name: "Venta Asistida",
-      tipo: "E-commerce",
-      activo: true,
-      createdAt: new Date().toISOString(),
-    };
+    if (hasDropshippingProducts) {
+      this.pedidoGral.typeOrder = "Dropshipping";
+      this.pedidoGral.channel = {
+        name: "Venta Asistida Dropshipping",
+        tipo: "Dropshipping",
+        activo: true,
+        createdAt: new Date().toISOString(),
+      };
+      
+      // Configurar estados específicos para productos dropshipping
+      this.configureDropshippingStates();
+    } else {
+      this.pedidoGral.typeOrder = "E-commerce";
+      this.pedidoGral.channel = {
+        name: "Venta Asistida",
+        tipo: "E-commerce",
+        activo: true,
+        createdAt: new Date().toISOString(),
+      };
+    }
 
     // Verificar que se haya seleccionado una bodega
     if (this.bodega) {
@@ -2937,6 +2953,47 @@ export class CrearVentasComponent
           positionClass: "toast-bottom-right",
         },
       );
+    }
+  }
+
+  /**
+   * Detecta si hay productos con configuración de dropshipping en el carrito
+   */
+  detectDropshippingProducts(): boolean {
+    try {
+      // Verificar el carrito del servicio
+      const currentCartProducts = this.cartService.productInCart.value;
+      if (currentCartProducts && currentCartProducts.length > 0) {
+        return currentCartProducts.some(item => 
+          item.producto?.dropshippingConfig?.enabled === true
+        );
+      }
+
+      // Verificar el carrito local si existe (fallback)
+      if (this.pedidoGral.carrito && this.pedidoGral.carrito.length > 0) {
+        return this.pedidoGral.carrito.some(item => 
+          item.producto?.dropshippingConfig?.enabled === true
+        );
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error detectando productos dropshipping:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Configura estados específicos para productos dropshipping en el pedido
+   */
+  configureDropshippingStates(): void {
+    if (this.pedidoGral.carrito) {
+      this.pedidoGral.carrito.forEach(item => {
+        if (item.producto?.dropshippingConfig?.enabled) {
+          // Asignar estado inicial específico para dropshipping
+          item.estadoProcesoProducto = 'SolicitadoProveedor' as any;
+        }
+      });
     }
   }
 

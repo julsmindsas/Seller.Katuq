@@ -29,21 +29,21 @@ a {
     bottom: 20px;    // Posición desde abajo
     right: 20px;     // Posición desde la derecha
     z-index: 1000;   // Asegura que esté sobre la mayoría del contenido
-    width: 60px;     // Ancho inicial (tamaño del botón)
-    height: 60px;    // Alto inicial (tamaño del botón)
+    width: 72px;     // Ancho inicial (tamaño del botón)
+    height: 72px;    // Alto inicial (tamaño del botón)
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); // Transición suave para cambios de tamaño/posición
 
     // Estado abierto (cuando el chat está visible)
     &.open {
-        width: 350px;
-        height: 500px;
+        width: 380px;
+        height: 560px;
         bottom: 100px; /* Aumentado de 0 a 80px para subir el chat */
         
         .floating-button {
             // Se elimina la rotación y estilos duplicados que ya maneja la clase .active
             // box-shadow: $shadow-standard; // Quitado, .active puede manejarlo
             position: absolute; /* Posicionamiento absoluto cuando el chat está abierto */
-            bottom: -66px; /* Mover el botón 30px por debajo del borde inferior del contenedor */
+            bottom: -78px; /* Ajuste por nuevo tamaño del botón */
             right: 0px; /* Mantiene la misma distancia desde el borde derecho */
             // transform: rotate(45deg); // Quitado, la clase .active ya rota el icono interno
             // background-color: $secondary-color; // Quitado, la clase .active ya cambia el color
@@ -73,8 +73,8 @@ a {
 
 // Botón flotante principal
 .floating-button {
-    width: 60px;
-    height: 60px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     background-color: $primary-color;
     color: $light-color;
@@ -87,7 +87,7 @@ a {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     position: relative;
     z-index: 1001;
-    font-size: 24px;
+    font-size: 26px;
     border: 2px solid rgba(255, 255, 255, 0.8); /* Borde blanco para mejor definición */
     overflow: hidden; /* Asegura que el contenido no desborde */
     
@@ -99,7 +99,7 @@ a {
     
     // Estilo para el icono principal
     .main-icon {
-        font-size: 24px;
+        font-size: 26px;
         transition: all 0.3s;
     }
     
@@ -395,8 +395,8 @@ a {
     position: fixed; // Cambiado de absolute a fixed para mejor posicionamiento
     bottom: 70px; // Ajustado para que no quede pegado al borde inferior de la pantalla
     right: 20px; // Ajuste para posicionamiento
-    width: 350px; // Ancho fijo para escritorio
-    height: 500px; // Altura fija para una mejor experiencia
+    width: 380px; // Ancho fijo para escritorio
+    height: 560px; // Altura fija para una mejor experiencia
     max-height: 80vh; // Límite máximo para pantallas pequeñas
     background-color: $light-color;
     border-radius: 12px; // Redondeado completo
@@ -406,6 +406,16 @@ a {
     flex-direction: column; // Estructura vertical
     animation: slideUpOverlay 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 1050; // Asegura que esté por encima de otros elementos
+    
+    &.maximized {
+        bottom: 0;
+        right: 0;
+        width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+    }
     
     .floating-chat-container {
         display: flex;

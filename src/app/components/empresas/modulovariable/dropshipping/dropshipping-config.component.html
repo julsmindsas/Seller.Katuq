@@ -1,0 +1,340 @@
+<app-breadcrumb 
+  [title]="'Configuración Dropshipping'" 
+  [items]="['Empresa', 'Módulos Variables', 'Dropshipping']"
+  [active_item]="'Configuración'">
+</app-breadcrumb>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      
+      <!-- Loader -->
+      <div class="loader-box" *ngIf="loading">
+        <div class="loader-8"></div>
+      </div>
+
+      <!-- Card Principal -->
+      <div class="card" *ngIf="!loading">
+        <div class="card-header bg-primary text-white">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h4 class="mb-1 text-white">
+                <i class="fa fa-truck mr-2"></i>Configuración de Dropshipping
+              </h4>
+              <p class="mb-0" *ngIf="currentCompany">
+                <strong>Empresa:</strong> {{ currentCompany.nomComercial }}
+              </p>
+            </div>
+            <div class="col-md-4 text-right">
+              <button type="button" class="btn btn-outline-light btn-sm" (click)="resetToDefaults()">
+                <i class="fa fa-refresh"></i> Restablecer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <form [formGroup]="dropshippingConfigForm" (ngSubmit)="onSubmit()">
+            
+            <!-- Configuración Principal -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                      <i class="fa fa-info-circle fa-2x text-info"></i>
+                    </div>
+                    <div class="col-md-10">
+                      <h6 class="mb-1">¿Qué es el Dropshipping?</h6>
+                      <p class="mb-0 text-muted">
+                        El dropshipping permite que tu empresa venda productos sin mantener inventario. 
+                        Cuando un cliente hace un pedido, el producto se envía directamente desde el proveedor.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Habilitar Dropshipping -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <div class="card border-left-primary">
+                  <div class="card-body">
+                    <div class="form-group mb-0">
+                      <div class="form-check form-switch">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          id="enableDropshipping"
+                          formControlName="habilitado"
+                          (change)="onHabilitadoChange()"
+                          style="transform: scale(1.5);">
+                        <label class="form-check-label ml-2" for="enableDropshipping">
+                          <strong style="font-size: 1.1em;">Habilitar módulo de Dropshipping para esta empresa</strong>
+                        </label>
+                      </div>
+                      <small class="text-muted ml-4 mt-2 d-block">
+                        Al habilitar este módulo, los usuarios podrán configurar productos como dropshipping y gestionar órdenes con proveedores externos.
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Configuración Avanzada - Solo visible cuando está habilitado -->
+            <div *ngIf="dropshippingConfigForm.get('habilitado')?.value" class="animate-fade-in">
+              
+              <!-- Configuraciones de Negocio -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h5 class="mb-3">
+                    <i class="fa fa-cogs text-primary"></i> Configuraciones de Negocio
+                  </h5>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="margenMinimoPermitido">
+                      Margen Mínimo Permitido (%) <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <input 
+                        type="number" 
+                        class="form-control"
+                        [class.is-invalid]="isFieldInvalid('margenMinimoPermitido')"
+                        id="margenMinimoPermitido"
+                        formControlName="margenMinimoPermitido"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder="0">
+                      <div class="input-group-append">
+                        <span class="input-group-text">%</span>
+                      </div>
+                    </div>
+                    <small class="form-text text-muted">
+                      Margen mínimo que deben tener los productos de dropshipping
+                    </small>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('margenMinimoPermitido')">
+                      {{ getFieldError('margenMinimoPermitido') }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="tiempoLimiteOrden">
+                      Tiempo Límite para Órdenes (días) <span class="text-danger">*</span>
+                    </label>
+                    <input 
+                      type="number" 
+                      class="form-control"
+                      [class.is-invalid]="isFieldInvalid('tiempoLimiteOrden')"
+                      id="tiempoLimiteOrden"
+                      formControlName="tiempoLimiteOrden"
+                      min="1"
+                      max="30"
+                      placeholder="7">
+                    <small class="form-text text-muted">
+                      Tiempo máximo para procesar órdenes de dropshipping
+                    </small>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('tiempoLimiteOrden')">
+                      {{ getFieldError('tiempoLimiteOrden') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuraciones de Sistema -->
+              <div class="row mt-4">
+                <div class="col-12">
+                  <h6 class="mb-3">
+                    <i class="fa fa-sliders text-info"></i> Configuraciones de Sistema
+                  </h6>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <div class="form-check">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        id="automatizacionActivada"
+                        formControlName="automatizacionActivada">
+                      <label class="form-check-label" for="automatizacionActivada">
+                        <strong>Automatización Activada</strong>
+                      </label>
+                    </div>
+                    <small class="text-muted ml-4 d-block">
+                      Enviar órdenes automáticamente a proveedores cuando se confirme el pago
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <div class="form-check">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        id="notificacionesActivadas"
+                        formControlName="notificacionesActivadas">
+                      <label class="form-check-label" for="notificacionesActivadas">
+                        <strong>Notificaciones Activadas</strong>
+                      </label>
+                    </div>
+                    <small class="text-muted ml-4 d-block">
+                      Recibir notificaciones sobre estados de órdenes dropshipping
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resumen de Configuración -->
+              <div class="row mt-4">
+                <div class="col-12">
+                  <div class="alert alert-secondary">
+                    <h6 class="mb-2">
+                      <i class="fa fa-check-circle text-success"></i> Resumen de Configuración
+                    </h6>
+                    <ul class="mb-0">
+                      <li>
+                        <strong>Estado:</strong> 
+                        <span class="badge badge-success">Dropshipping Habilitado</span>
+                      </li>
+                      <li>
+                        <strong>Margen mínimo:</strong> 
+                        {{ dropshippingConfigForm.get('margenMinimoPermitido')?.value || 0 }}%
+                      </li>
+                      <li>
+                        <strong>Tiempo límite de orden:</strong> 
+                        {{ dropshippingConfigForm.get('tiempoLimiteOrden')?.value || 7 }} días
+                      </li>
+                      <li>
+                        <strong>Automatización:</strong> 
+                        {{ dropshippingConfigForm.get('automatizacionActivada')?.value ? 'Activada' : 'Desactivada' }}
+                      </li>
+                      <li>
+                        <strong>Notificaciones:</strong> 
+                        {{ dropshippingConfigForm.get('notificacionesActivadas')?.value ? 'Activadas' : 'Desactivadas' }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Estado Deshabilitado -->
+            <div *ngIf="!dropshippingConfigForm.get('habilitado')?.value" class="row mt-4">
+              <div class="col-12">
+                <div class="alert alert-warning">
+                  <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                      <i class="fa fa-exclamation-triangle fa-2x text-warning"></i>
+                    </div>
+                    <div class="col-md-10">
+                      <h6 class="mb-1">Módulo Dropshipping Deshabilitado</h6>
+                      <p class="mb-0">
+                        Para utilizar las funcionalidades de dropshipping, debe habilitar el módulo usando el interruptor superior.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <div class="form-group text-right">
+                  <a 
+                    routerLink="/empresas/modulovariable" 
+                    class="btn btn-secondary mr-2">
+                    <i class="fa fa-arrow-left"></i> Volver
+                  </a>
+                  <button 
+                    type="submit" 
+                    class="btn btn-primary"
+                    [disabled]="!dropshippingConfigForm.valid || saving">
+                    <i class="fa fa-save" *ngIf="!saving"></i>
+                    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+                    {{ saving ? 'Guardando...' : 'Guardar Configuración' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Herramientas de Desarrollo (solo para pruebas) -->
+      <div class="card mt-3">
+        <div class="card-header bg-dark text-white">
+          <h6 class="mb-0">
+            <i class="fa fa-wrench mr-2"></i>Herramientas de Desarrollo
+            <small class="ml-2 badge badge-warning">Solo para pruebas</small>
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <p class="mb-2">
+              <strong>Nota:</strong> La configuración se está guardando en <strong>localStorage</strong> para efectos de prueba.
+            </p>
+            <p class="mb-0">
+              En producción, esta configuración se guardaría en la base de datos Firebase.
+            </p>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-4">
+              <button 
+                type="button" 
+                class="btn btn-info btn-block" 
+                (click)="viewAllConfigs()">
+                <i class="fa fa-eye"></i> Ver Configuraciones
+              </button>
+            </div>
+            <div class="col-md-4">
+              <button 
+                type="button" 
+                class="btn btn-warning btn-block" 
+                (click)="clearAllDropshippingConfigs()">
+                <i class="fa fa-trash"></i> Limpiar Todo
+              </button>
+            </div>
+            <div class="col-md-4">
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-block" 
+                onclick="console.log('localStorage keys:', Object.keys(localStorage).filter(k => k.includes('dropshipping')))">
+                <i class="fa fa-code"></i> Debug Console
+              </button>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="row">
+            <div class="col-12">
+              <h6>Estado del LocalStorage:</h6>
+              <div class="bg-light p-2 rounded">
+                <code>
+                  Keys de dropshipping: {{ getDropshippingKeysCount() }} encontradas
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
