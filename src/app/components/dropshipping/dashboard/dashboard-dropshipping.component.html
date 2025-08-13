@@ -1,0 +1,136 @@
+<div class="grid">
+  <!-- Header -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Dashboard Dropshipping</h5>
+        <p class="text-muted mb-0">Gestión y seguimiento de operaciones dropshipping</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas Principales -->
+  <div class="col-md-3">
+    <div class="card bg-primary text-white cursor-pointer" (click)="navegarA('proveedores')">
+      <div class="card-body text-center">
+        <i class="pi pi-building fs-1 mb-3"></i>
+        <h3 class="mb-2">{{ totalProveedores }}</h3>
+        <p class="mb-0">Proveedores Activos</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card bg-info text-white cursor-pointer" (click)="navegarA('productos')">
+      <div class="card-body text-center">
+        <i class="pi pi-box fs-1 mb-3"></i>
+        <h3 class="mb-2">{{ totalProductos }}</h3>
+        <p class="mb-0">Productos Disponibles</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card bg-warning text-white cursor-pointer" (click)="navegarA('ordenes')">
+      <div class="card-body text-center">
+        <i class="pi pi-clock fs-1 mb-3"></i>
+        <h3 class="mb-2">{{ ordenesPendientes }}</h3>
+        <p class="mb-0">Órdenes Pendientes</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card bg-success text-white">
+      <div class="card-body text-center">
+        <i class="pi pi-dollar fs-1 mb-3"></i>
+        <h3 class="mb-2">${{ ventasDelMes | number:'1.0-0' }}</h3>
+        <p class="mb-0">Ventas del Mes</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones Rápidas -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h6>Acciones Rápidas</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="d-grid">
+              <button 
+                pButton 
+                type="button" 
+                label="Gestionar Proveedores" 
+                icon="pi pi-building" 
+                class="p-button-outlined p-button-primary mb-3"
+                (click)="navegarA('proveedores')">
+              </button>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="d-grid">
+              <button 
+                pButton 
+                type="button" 
+                label="Catálogo de Productos" 
+                icon="pi pi-box" 
+                class="p-button-outlined p-button-info mb-3"
+                (click)="navegarA('productos')">
+              </button>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="d-grid">
+              <button 
+                pButton 
+                type="button" 
+                label="Ver Órdenes" 
+                icon="pi pi-list" 
+                class="p-button-outlined p-button-warning mb-3"
+                (click)="navegarA('ordenes')">
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información del Sistema -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h6>Estado del Sistema</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="d-flex align-items-center mb-3">
+              <i class="pi pi-check-circle text-success me-2"></i>
+              <span>Conexión con proveedores: Activa</span>
+            </div>
+            <div class="d-flex align-items-center mb-3">
+              <i class="pi pi-check-circle text-success me-2"></i>
+              <span>Sincronización de productos: OK</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex align-items-center mb-3">
+              <i class="pi pi-info-circle text-info me-2"></i>
+              <span>Última sincronización: Hace 2 horas</span>
+            </div>
+            <div class="d-flex align-items-center mb-3">
+              <i class="pi pi-info-circle text-info me-2"></i>
+              <span>Sistema operativo al 100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

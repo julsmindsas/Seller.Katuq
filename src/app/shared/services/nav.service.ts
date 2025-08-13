@@ -253,6 +253,14 @@ export class NavService implements OnDestroy {
 				{ path: 'ventas/ventas-pos', title: 'Ventas POS', type: 'link' }
 			]
 		},
+		{
+			title: 'Dropshipping', icon: 'truck', type: 'sub', active: false, children: [
+				{ path: 'dropshipping/dashboard', title: 'Dashboard', type: 'link' },
+				{ path: 'dropshipping/proveedores', title: 'Proveedores', type: 'link' },
+				{ path: 'dropshipping/productos', title: 'Productos', type: 'link' },
+				{ path: 'dropshipping/ordenes', title: 'Órdenes', type: 'link' }
+			]
+		},
 
 		// OPERACIONES
 		{ headTitle1: 'Operaciones' },

@@ -1,0 +1,143 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5>Gestión de Proveedores</h5>
+        <button 
+          pButton 
+          type="button" 
+          label="Nuevo Proveedor" 
+          icon="pi pi-plus" 
+          class="p-button-primary"
+          (click)="crearProveedor()">
+        </button>
+      </div>
+
+      <div class="card-body">
+        <!-- Filtros -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <span class="p-input-icon-left w-100">
+              <i class="pi pi-search"></i>
+              <input 
+                pInputText 
+                type="text" 
+                placeholder="Buscar proveedores..." 
+                class="w-100"
+                (input)="onGlobalFilter($event, dt)">
+            </span>
+          </div>
+        </div>
+
+        <!-- Tabla de Proveedores -->
+        <p-table 
+          [value]="proveedores" 
+          [loading]="loading"
+          [globalFilterFields]="['nombre', 'contacto', 'email']"
+          [paginator]="true" 
+          [rows]="10"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} proveedores"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          styleClass="p-datatable-gridlines"
+          #dt>
+          
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Nombre</th>
+              <th>Contacto</th>
+              <th>Email</th>
+              <th>Comisión (%)</th>
+              <th>Tiempo Proc. (días)</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </ng-template>
+          
+          <ng-template pTemplate="body" let-proveedor>
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <i class="pi pi-building me-2 text-primary"></i>
+                  <strong>{{ proveedor.nombre }}</strong>
+                </div>
+              </td>
+              <td>{{ proveedor.contacto }}</td>
+              <td>
+                <a [href]="'mailto:' + proveedor.email" class="text-primary">
+                  {{ proveedor.email }}
+                </a>
+              </td>
+              <td>
+                <span class="badge bg-info">
+                  {{ proveedor.comision_porcentaje }}%
+                </span>
+              </td>
+              <td>{{ proveedor.tiempo_procesamiento_dias }} días</td>
+              <td>
+                <p-tag 
+                  [value]="getTextEstado(proveedor.activo)" 
+                  [severity]="getSeverityEstado(proveedor.activo)">
+                </p-tag>
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button 
+                    pButton 
+                    type="button" 
+                    icon="pi pi-eye" 
+                    class="p-button-rounded p-button-text p-button-primary"
+                    pTooltip="Ver detalle"
+                    (click)="verDetalle(proveedor)">
+                  </button>
+                  
+                  <button 
+                    pButton 
+                    type="button" 
+                    icon="pi pi-pencil" 
+                    class="p-button-rounded p-button-text p-button-warning"
+                    pTooltip="Editar"
+                    (click)="editarProveedor(proveedor)">
+                  </button>
+                  
+                  <button 
+                    pButton 
+                    type="button" 
+                    [icon]="proveedor.activo ? 'pi pi-times' : 'pi pi-check'" 
+                    [class]="proveedor.activo ? 'p-button-rounded p-button-text p-button-danger' : 'p-button-rounded p-button-text p-button-success'"
+                    [pTooltip]="proveedor.activo ? 'Desactivar' : 'Activar'"
+                    (click)="toggleEstadoProveedor(proveedor)">
+                  </button>
+                  
+                  <button 
+                    pButton 
+                    type="button" 
+                    icon="pi pi-trash" 
+                    class="p-button-rounded p-button-text p-button-danger"
+                    pTooltip="Eliminar"
+                    (click)="confirmarEliminar(proveedor)">
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center py-4">
+                <i class="pi pi-info-circle me-2"></i>
+                No se encontraron proveedores
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Messages -->
+<p-toast></p-toast>
+
+<!-- Confirm Dialog -->
+<p-confirmDialog></p-confirmDialog>

@@ -165,5 +165,11 @@ export const content: Routes = [
     loadChildren: () => import('../../components/prospect-manager/prospect-manager.module').then(m => m.ProspectManagerModule),
     canActivate: [AuthGuard], // O AdminGuard si aplica
     data: { title: 'Gestión de Prospectos' }
+  },
+  {
+    path: 'dropshipping',
+    loadChildren: () => import('../../components/dropshipping/dropshipping.module').then(m => m.DropshippingModule),
+    canActivate: [AuthGuard],
+    data: { title: 'Dropshipping' }
   }
 ];

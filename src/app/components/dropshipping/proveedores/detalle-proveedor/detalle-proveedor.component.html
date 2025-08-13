@@ -1,0 +1,225 @@
+<div class="grid" *ngIf="!loading && proveedor">
+  <!-- Header -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+          <button 
+            pButton 
+            type="button" 
+            icon="pi pi-arrow-left" 
+            class="p-button-text p-button-rounded me-3"
+            (click)="volver()">
+          </button>
+          <div>
+            <h5 class="mb-1">{{ proveedor.nombre }}</h5>
+            <p-tag 
+              [value]="getTextEstado(proveedor.activo)" 
+              [severity]="getSeverityEstado(proveedor.activo)"
+              class="mb-0">
+            </p-tag>
+          </div>
+        </div>
+        <button 
+          pButton 
+          type="button" 
+          label="Editar" 
+          icon="pi pi-pencil" 
+          class="p-button-primary"
+          (click)="editarProveedor()">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas Resumidas -->
+  <div class="col-12" *ngIf="summary">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+          <div class="card-body">
+            <i class="pi pi-box fs-2 mb-2"></i>
+            <h3 class="mb-1">{{ summary.productos_activos }}</h3>
+            <p class="mb-0">Productos Activos</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+          <div class="card-body">
+            <i class="pi pi-clock fs-2 mb-2"></i>
+            <h3 class="mb-1">{{ summary.ordenes_pendientes }}</h3>
+            <p class="mb-0">Órdenes Pendientes</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+          <div class="card-body">
+            <i class="pi pi-dollar fs-2 mb-2"></i>
+            <h3 class="mb-1">${{ summary.total_ventas_mes | number:'1.0-0' }}</h3>
+            <p class="mb-0">Ventas del Mes</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+          <div class="card-body">
+            <i class="pi pi-percentage fs-2 mb-2"></i>
+            <h3 class="mb-1">{{ proveedor.comision_porcentaje }}%</h3>
+            <p class="mb-0">Comisión</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información Detallada -->
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h6 class="mb-0">Información de Contacto</h6>
+      </div>
+      <div class="card-body">
+        <div class="info-item">
+          <label>Persona de Contacto:</label>
+          <span>{{ proveedor.contacto }}</span>
+        </div>
+        
+        <div class="info-item">
+          <label>Email:</label>
+          <a [href]="'mailto:' + proveedor.email" class="text-primary">
+            {{ proveedor.email }}
+          </a>
+        </div>
+        
+        <div class="info-item" *ngIf="proveedor.telefono">
+          <label>Teléfono:</label>
+          <a [href]="'tel:' + proveedor.telefono" class="text-primary">
+            {{ proveedor.telefono }}
+          </a>
+        </div>
+        
+        <div class="info-item" *ngIf="proveedor.direccion">
+          <label>Dirección:</label>
+          <span>{{ proveedor.direccion }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h6 class="mb-0">Configuración Comercial</h6>
+      </div>
+      <div class="card-body">
+        <div class="info-item">
+          <label>Comisión:</label>
+          <span class="badge bg-info">{{ proveedor.comision_porcentaje }}%</span>
+        </div>
+        
+        <div class="info-item">
+          <label>Tiempo de Procesamiento:</label>
+          <span>{{ proveedor.tiempo_procesamiento_dias }} días</span>
+        </div>
+        
+        <div class="info-item">
+          <label>Estado:</label>
+          <p-tag 
+            [value]="getTextEstado(proveedor.activo)" 
+            [severity]="getSeverityEstado(proveedor.activo)">
+          </p-tag>
+        </div>
+        
+        <div class="info-item" *ngIf="proveedor.fecha_creacion">
+          <label>Fecha de Registro:</label>
+          <span>{{ proveedor.fecha_creacion | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuración de Integración -->
+  <div class="col-12" *ngIf="proveedor.api_config">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0">Configuración de Integración</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="info-item">
+              <label>Tipo de Integración:</label>
+              <span class="badge bg-secondary">
+                {{ getTipoIntegracionLabel(proveedor.api_config.tipo_integracion) }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="col-md-4" *ngIf="proveedor.api_config.endpoint">
+            <div class="info-item">
+              <label>Endpoint:</label>
+              <span class="text-break">{{ proveedor.api_config.endpoint }}</span>
+            </div>
+          </div>
+          
+          <div class="col-md-3" *ngIf="proveedor.api_config.api_key">
+            <div class="info-item">
+              <label>API Key:</label>
+              <span class="text-muted">••••••••••••</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones Rápidas -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0">Acciones Rápidas</h6>
+      </div>
+      <div class="card-body">
+        <div class="d-flex gap-2 flex-wrap">
+          <button 
+            pButton 
+            type="button" 
+            label="Ver Productos" 
+            icon="pi pi-box" 
+            class="p-button-outlined p-button-primary"
+            (click)="verProductos()">
+          </button>
+          
+          <button 
+            pButton 
+            type="button" 
+            label="Ver Órdenes" 
+            icon="pi pi-list" 
+            class="p-button-outlined p-button-secondary"
+            (click)="verOrdenes()">
+          </button>
+          
+          <button 
+            pButton 
+            type="button" 
+            label="Sincronizar Productos" 
+            icon="pi pi-refresh" 
+            class="p-button-outlined p-button-success">
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="col-12" *ngIf="loading">
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <i class="pi pi-spinner pi-spin text-primary fs-2"></i>
+      <p class="mt-3">Cargando información del proveedor...</p>
+    </div>
+  </div>
+</div>

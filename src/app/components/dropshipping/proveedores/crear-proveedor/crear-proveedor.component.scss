@@ -1,0 +1,56 @@
+.card-header {
+  background-color: var(--surface-50);
+  border-bottom: 1px solid var(--surface-200);
+  padding: 1rem 1.5rem;
+  
+  h5 {
+    margin: 0;
+    color: var(--text-color);
+  }
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+}
+
+h6 {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+::ng-deep {
+  .p-inputnumber {
+    width: 100%;
+    
+    .p-inputtext {
+      width: 100%;
+    }
+  }
+  
+  .p-dropdown {
+    width: 100%;
+  }
+  
+  .p-inputswitch {
+    .p-inputswitch-slider {
+      background-color: var(--surface-300);
+    }
+    
+    &.p-inputswitch-checked .p-inputswitch-slider {
+      background-color: var(--primary-color);
+    }
+  }
+}
