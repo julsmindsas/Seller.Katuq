@@ -6,6 +6,8 @@ import { SharedModule } from '../../../shared/shared.module';
 // PrimeNG
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
 
 // Component
 import { DashboardDropshippingComponent } from './dashboard-dropshipping.component';
@@ -20,7 +22,9 @@ import { DashboardDropshippingComponent } from './dashboard-dropshipping.compone
     RouterModule.forChild([{ path: '', component: DashboardDropshippingComponent }]),
     // PrimeNG
     CardModule,
-    TagModule
+    TagModule,
+    ButtonModule,
+    ToastModule
   ]
 })
 export class DashboardDropshippingModule { }

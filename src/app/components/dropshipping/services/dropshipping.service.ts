@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { BaseService } from '../../../shared/services/base.service';
 import { 
-  ProductoDropshipping, 
   OrdenDropshipping, 
   OrdenDropshippingSummary,
   EstadoOrdenDropshipping 
@@ -10,85 +11,33 @@ import {
 @Injectable({
   providedIn: 'root'
 })
-export class DropshippingService {
+export class DropshippingService extends BaseService {
 
-  private mockProductos: ProductoDropshipping[] = [];
-  private mockOrdenes: OrdenDropshipping[] = [];
-
-  constructor() {}
-
-  // Productos Dropshipping
-  getProductosDropshipping(): Observable<ProductoDropshipping[]> {
-    return of(this.mockProductos);
+  constructor(httpClient: HttpClient) {
+    super(httpClient);
   }
 
-  getProductoDropshipping(id: string): Observable<ProductoDropshipping> {
-    const producto = this.mockProductos.find(p => p.id === id);
-    return of(producto!);
-  }
-
-  createProductoDropshipping(producto: ProductoDropshipping): Observable<string> {
-    const newId = (this.mockProductos.length + 1).toString();
-    producto.id = newId;
-    producto.fecha_creacion = new Date().toISOString();
-    producto.fecha_actualizacion = new Date().toISOString();
-    producto.sincronizado = false;
-    this.mockProductos.push(producto);
-    return of(newId);
-  }
-
-  updateProductoDropshipping(id: string, producto: Partial<ProductoDropshipping>): Observable<void> {
-    const index = this.mockProductos.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.mockProductos[index] = {
-        ...this.mockProductos[index],
-        ...producto,
-        fecha_actualizacion: new Date().toISOString()
-      };
-    }
-    return of(void 0);
-  }
-
-  deleteProductoDropshipping(id: string): Observable<void> {
-    const index = this.mockProductos.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.mockProductos.splice(index, 1);
-    }
-    return of(void 0);
-  }
-
-  getProductosByProveedor(proveedorId: string): Observable<ProductoDropshipping[]> {
-    return of(this.mockProductos.filter(p => p.proveedor_id === proveedorId));
-  }
+  // Nota: Los productos dropshipping ahora se manejan a través del sistema de productos existente
+  // con configuración de dropshipping incluida en cada producto
 
   // Órdenes Dropshipping
   getOrdenesDropshipping(): Observable<OrdenDropshipping[]> {
-    return of(this.mockOrdenes);
+    return this.get<OrdenDropshipping[]>('/v1/dropshipping/ordenes');
   }
 
   getOrdenDropshipping(id: string): Observable<OrdenDropshipping> {
-    const orden = this.mockOrdenes.find(o => o.id === id);
-    return of(orden!);
+    return this.get<OrdenDropshipping>(`/v1/dropshipping/ordenes/${id}`);
   }
 
-  createOrdenDropshipping(orden: OrdenDropshipping): Observable<string> {
-    const newId = (this.mockOrdenes.length + 1).toString();
-    orden.id = newId;
-    orden.fecha_creacion = new Date().toISOString();
-    orden.numero_orden = this.generateOrderNumber();
-    this.mockOrdenes.push(orden);
-    return of(newId);
+  createOrdenDropshipping(orden: OrdenDropshipping): Observable<any> {
+    return this.post<any>('/v1/dropshipping/ordenes', orden);
   }
 
-  updateOrdenDropshipping(id: string, orden: Partial<OrdenDropshipping>): Observable<void> {
-    const index = this.mockOrdenes.findIndex(o => o.id === id);
-    if (index !== -1) {
-      this.mockOrdenes[index] = { ...this.mockOrdenes[index], ...orden };
-    }
-    return of(void 0);
+  updateOrdenDropshipping(id: string, orden: Partial<OrdenDropshipping>): Observable<any> {
+    return this.put<any>(`/v1/dropshipping/ordenes/${id}`, orden);
   }
 
-  updateEstadoOrden(id: string, estado: EstadoOrdenDropshipping): Observable<void> {
+  updateEstadoOrden(id: string, estado: EstadoOrdenDropshipping): Observable<any> {
     const updateData: Partial<OrdenDropshipping> = { estado };
     
     if (estado === 'enviado') {
@@ -101,33 +50,19 @@ export class DropshippingService {
   }
 
   getOrdenesByProveedor(proveedorId: string): Observable<OrdenDropshipping[]> {
-    return of(this.mockOrdenes.filter(o => o.proveedor_id === proveedorId));
+    return this.get<OrdenDropshipping[]>(`/v1/dropshipping/ordenes/proveedor/${proveedorId}`);
   }
 
   getOrdenesByEstado(estado: EstadoOrdenDropshipping): Observable<OrdenDropshipping[]> {
-    return of(this.mockOrdenes.filter(o => o.estado === estado));
+    return this.get<OrdenDropshipping[]>(`/v1/dropshipping/ordenes/estado/${estado}`);
   }
 
   // Analytics y Summary
   getDropshippingSummary(): Observable<OrdenDropshippingSummary> {
-    // TODO: Implementar lógica real con Firebase queries
-    return of({
-      total_ordenes: 0,
-      ordenes_pendientes: 0,
-      ordenes_en_proceso: 0,
-      ordenes_entregadas: 0,
-      valor_total_mes: 0,
-      ganancia_total_mes: 0
-    });
+    return this.get<OrdenDropshippingSummary>('/v1/dropshipping/summary');
   }
 
   // Utilidades
-  private generateOrderNumber(): string {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `DS-${timestamp}-${random}`;
-  }
-
   calcularMargenGanancia(precioProveedor: number, precioVenta: number): number {
     if (precioProveedor === 0) return 0;
     return ((precioVenta - precioProveedor) / precioProveedor) * 100;
@@ -137,16 +72,16 @@ export class DropshippingService {
     return orden.total - orden.comision_proveedor - orden.costo_envio;
   }
 
-  // Sincronización de productos
-  sincronizarProductosProveedor(proveedorId: string): Observable<boolean> {
-    // TODO: Implementar lógica de sincronización con API del proveedor
-    return of(true);
+  // Sincronización de productos (ahora integrada con sistema de productos existente)
+  sincronizarProductosProveedor(proveedorId: string): Observable<any> {
+    return this.post<any>('/v1/dropshipping/sincronizar-productos', { proveedorId });
   }
 
-  marcarProductoComoSincronizado(productoId: string): Observable<void> {
-    return this.updateDocument(this.COLLECTION_PRODUCTOS, productoId, {
-      sincronizado: true,
-      fecha_ultima_sincronizacion: new Date().toISOString()
+  // Crear orden dropshipping desde una venta regular
+  crearOrdenDesdeVenta(pedidoId: string, productosDropshipping: any[]): Observable<any> {
+    return this.post<any>('/v1/dropshipping/crear-desde-venta', {
+      pedidoId,
+      productosDropshipping
     });
   }
 }

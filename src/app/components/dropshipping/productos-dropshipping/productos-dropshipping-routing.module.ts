@@ -1,17 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { CatalogoDropshippingComponent } from './catalogo-dropshipping/catalogo-dropshipping.component';
-import { ImportarProductosComponent } from './importar-productos/importar-productos.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: CatalogoDropshippingComponent
-  },
-  {
-    path: 'importar',
-    component: ImportarProductosComponent
+    redirectTo: '/productos',
+    pathMatch: 'full'
   }
+  // Los productos dropshipping se gestionan desde el módulo de productos existente
 ];
 
 @NgModule({

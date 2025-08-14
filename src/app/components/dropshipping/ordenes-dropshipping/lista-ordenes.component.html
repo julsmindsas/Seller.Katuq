@@ -1,0 +1,262 @@
+<div class="grid">
+  <!-- Métricas rápidas -->
+  <div class="col-12">
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card bg-primary text-white">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h3 class="mb-0">{{getOrdenesDelMes()}}</h3>
+                <p class="mb-0">Órdenes del Mes</p>
+              </div>
+              <div class="ml-auto">
+                <i class="pi pi-calendar fs-1"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-warning text-white">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h3 class="mb-0">{{getOrdenesPendientes()}}</h3>
+                <p class="mb-0">Órdenes Pendientes</p>
+              </div>
+              <div class="ml-auto">
+                <i class="pi pi-clock fs-1"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-success text-white">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h3 class="mb-0">${{getTotalGanancias() | number:'1.0-0'}}</h3>
+                <p class="mb-0">Ganancias Entregadas</p>
+              </div>
+              <div class="ml-auto">
+                <i class="pi pi-dollar fs-1"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-info text-white">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h3 class="mb-0">{{ordenes.length}}</h3>
+                <p class="mb-0">Total Órdenes</p>
+              </div>
+              <div class="ml-auto">
+                <i class="pi pi-list fs-1"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de órdenes -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="pi pi-list mr-2"></i>
+          Órdenes Dropshipping
+        </h5>
+        <div>
+          <button type="button" class="btn btn-outline-success mr-2" (click)="exportarOrdenes()">
+            <i class="pi pi-download mr-2"></i>Exportar
+          </button>
+          <button type="button" class="btn btn-outline-secondary" (click)="loadData()">
+            <i class="pi pi-refresh mr-2"></i>Actualizar
+          </button>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <!-- Filtros -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon">
+                <i class="pi pi-search"></i>
+              </span>
+              <input 
+                type="text" 
+                pInputText 
+                placeholder="Buscar órdenes..."
+                [(ngModel)]="globalFilter"
+                (input)="onGlobalFilter($event, dt)">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <p-dropdown 
+              [options]="estadosOrden" 
+              [(ngModel)]="selectedEstadoFilter"
+              optionLabel="label" 
+              optionValue="value"
+              placeholder="Filtrar por estado"
+              [showClear]="true"
+              class="w-100">
+            </p-dropdown>
+          </div>
+          <div class="col-md-4">
+            <p-dropdown 
+              [options]="proveedores" 
+              [(ngModel)]="selectedProveedorFilter"
+              optionLabel="nombre" 
+              optionValue="id"
+              placeholder="Filtrar by proveedor"
+              [showClear]="true"
+              class="w-100">
+            </p-dropdown>
+          </div>
+        </div>
+
+        <!-- Tabla de órdenes -->
+        <p-table 
+          #dt
+          [value]="ordenes" 
+          [loading]="loading"
+          [paginator]="true" 
+          [rows]="10"
+          [rowsPerPageOptions]="[5,10,20,50]"
+          [globalFilterFields]="['numero_orden', 'cliente_info.nombre', 'cliente_info.email', 'proveedor_nombre']"
+          responsiveLayout="scroll"
+          [scrollable]="true"
+          scrollHeight="600px">
+          
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="numero_orden" style="min-width: 130px;">
+                Número Orden <p-sortIcon field="numero_orden"></p-sortIcon>
+              </th>
+              <th pSortableColumn="fecha_creacion" style="min-width: 100px;">
+                Fecha <p-sortIcon field="fecha_creacion"></p-sortIcon>
+              </th>
+              <th pSortableColumn="cliente_info.nombre" style="min-width: 150px;">
+                Cliente <p-sortIcon field="cliente_info.nombre"></p-sortIcon>
+              </th>
+              <th pSortableColumn="proveedor_nombre" style="min-width: 120px;">
+                Proveedor <p-sortIcon field="proveedor_nombre"></p-sortIcon>
+              </th>
+              <th pSortableColumn="total" style="min-width: 100px;">
+                Total <p-sortIcon field="total"></p-sortIcon>
+              </th>
+              <th pSortableColumn="ganancia_neta" style="min-width: 100px;">
+                Ganancia <p-sortIcon field="ganancia_neta"></p-sortIcon>
+              </th>
+              <th pSortableColumn="estado" style="min-width: 120px;">
+                Estado <p-sortIcon field="estado"></p-sortIcon>
+              </th>
+              <th style="min-width: 100px;">Tracking</th>
+              <th style="min-width: 150px;">Acciones</th>
+            </tr>
+          </ng-template>
+          
+          <ng-template pTemplate="body" let-orden>
+            <tr>
+              <td>
+                <div class="font-weight-bold">{{orden.numero_orden}}</div>
+                <small class="text-muted">{{orden.productos.length}} productos</small>
+              </td>
+              <td>
+                <div>{{orden.fecha_creacion | date:'dd/MM/yyyy'}}</div>
+                <small class="text-muted">{{orden.fecha_creacion | date:'HH:mm'}}</small>
+              </td>
+              <td>
+                <div class="font-weight-bold">{{orden.cliente_info.nombre}}</div>
+                <small class="text-muted">{{orden.cliente_info.email}}</small>
+              </td>
+              <td>{{orden.proveedor_nombre}}</td>
+              <td>
+                <span class="font-weight-bold">${{orden.total | number:'1.0-0'}}</span>
+              </td>
+              <td>
+                <span class="font-weight-bold text-success">${{orden.ganancia_neta | number:'1.0-0'}}</span>
+              </td>
+              <td>
+                <p-tag 
+                  [value]="getEstadoConfig(orden.estado).label"
+                  [severity]="getEstadoConfig(orden.estado).severity">
+                </p-tag>
+              </td>
+              <td>
+                <div *ngIf="orden.tracking_number; else noTracking">
+                  <code>{{orden.tracking_number}}</code>
+                </div>
+                <ng-template #noTracking>
+                  <span class="text-muted">Sin tracking</span>
+                </ng-template>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-info btn-sm"
+                    (click)="verDetalles(orden)"
+                    title="Ver detalles">
+                    <i class="pi pi-eye"></i>
+                  </button>
+                  
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                    title="Más acciones">
+                    <i class="pi pi-cog"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><h6 class="dropdown-header">Cambiar Estado</h6></li>
+                    <li *ngFor="let estado of estadosOrden">
+                      <a class="dropdown-item" 
+                         href="#" 
+                         (click)="$event.preventDefault(); cambiarEstado(orden, estado.value)"
+                         [class.disabled]="orden.estado === estado.value">
+                        {{estado.label}}
+                      </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <a class="dropdown-item" 
+                         href="#" 
+                         (click)="$event.preventDefault(); agregarTracking(orden)">
+                        <i class="pi pi-plus mr-2"></i>Agregar Tracking
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="9" class="text-center py-5">
+                <i class="pi pi-list fs-1 text-muted mb-3"></i>
+                <div>No hay órdenes de dropshipping registradas</div>
+                <p class="text-muted mt-2">
+                  Las órdenes se crean automáticamente cuando se realizan ventas de productos dropshipping
+                </p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Componentes de PrimeNG -->
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>

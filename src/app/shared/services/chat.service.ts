@@ -16,6 +16,7 @@ export class ChatService {
   public chat: any[] = []
   public users: any[] = []
   private activeStreams: { [receiverId: number]: any } = {};
+  private activeStreamSubscriptions: { [receiverId: number]: { unsubscribe: () => void } | null } = {};
 
   constructor(private kai: KatuqintelligenceService) {
     this.chat = ChatDB.chat
@@ -80,42 +81,39 @@ export class ChatService {
         }, 310)
         // this.responseMessage(chat)
 
-        this.kai.invokeKatuqAdvandceIntelligenceForProductRetriver(chat.message).subscribe(response => {
-          console.log(response)
-          if (response) {
-            this.chat.filter(chats => {
-              if (chats.id == chat.receiver) {
-                const user = this.users.find(u => u.id === chat.receiver);
-                if (user) { user.typing = true; }
-                // Insertar mensaje vacío y hacer streaming del resultado
-                const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
-                chats.message.push(assistantMsg);
-                const full = (response.result || '').toString();
-                let idx = 0;
-                const step = Math.max(1, Math.floor(full.length / 120)); // ~120 pasos
-                // Detener cualquier stream previo
-                this.stopStreaming(chat.receiver);
-                const interval = setInterval(() => {
-                  // Si se detuvo externamente
-                  if (!this.activeStreams[chat.receiver]) {
-                    clearInterval(interval);
-                    return;
-                  }
-                  const next = full.slice(idx, idx + step);
-                  assistantMsg.text += next;
-                  idx += step;
-                  document.querySelector(".chat-history")?.scrollBy({ top: 150, behavior: 'smooth' });
-                  if (idx >= full.length) {
-                    clearInterval(interval);
-                    delete this.activeStreams[chat.receiver];
-                    if (user) { user.typing = false; }
-                  }
-                }, 25);
-                this.activeStreams[chat.receiver] = interval;
-              }
-            })
-          }
-        });
+        // Intentar streaming SSE primero
+        try {
+          this.stopStreaming(chat.receiver);
+          const user = this.users.find(u => u.id === chat.receiver);
+          if (user) { user.typing = true; }
+          const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+          this.chat.filter(chats => {
+            if (chats.id == chat.receiver) {
+              chats.message.push(assistantMsg);
+            }
+          });
+
+          const sub = this.kai.streamProductRetriver(chat.message).subscribe({
+            next: (chunk: string) => {
+              assistantMsg.text += chunk;
+              document.querySelector(".chat-history")?.scrollBy({ top: 150, behavior: 'smooth' });
+            },
+            error: (_err) => {
+              // Fallback a llamada normal si el stream falla
+              this.invokeOnceFallback(chat, assistantMsg, user);
+            },
+            complete: () => {
+              if (user) { user.typing = false; }
+              this.activeStreamSubscriptions[chat.receiver] = null;
+            }
+          });
+          this.activeStreamSubscriptions[chat.receiver] = sub as any;
+        } catch (_e) {
+          // Fallback si falla
+          const user = this.users.find(u => u.id === chat.receiver);
+          const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+          this.invokeOnceFallback(chat, assistantMsg, user);
+        }
       }
     })
   }
@@ -126,8 +124,29 @@ export class ChatService {
       clearInterval(interval);
       delete this.activeStreams[receiverId];
     }
+    const sub = this.activeStreamSubscriptions[receiverId];
+    if (sub) {
+      try { sub.unsubscribe(); } catch {}
+      this.activeStreamSubscriptions[receiverId] = null;
+    }
     const user = this.users.find(u => u.id === receiverId);
     if (user) { user.typing = false; }
+  }
+
+  private invokeOnceFallback(chat, assistantMsg, user?: any) {
+    this.kai.invokeKatuqAdvandceIntelligenceForProductRetriver(chat.message).subscribe(response => {
+      if (response) {
+        this.chat.filter(chats => {
+          if (chats.id == chat.receiver) {
+            setTimeout(() => {
+              assistantMsg.text = (response.result || '').toString();
+              if (user) { user.typing = false; }
+              document.querySelector(".chat-history")?.scrollBy({ top: 250, behavior: 'smooth' });
+            }, 300);
+          }
+        })
+      }
+    });
   }
 
   public responseMessage(chat) {

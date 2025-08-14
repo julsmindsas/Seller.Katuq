@@ -50,8 +50,8 @@
           <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
         </div>
       <div class="message-bubble">
-          <!-- Mostrar siempre el texto directamente -->
-          <p class="message-text">{{ chat.text }}</p>
+          <!-- Mostrar siempre el texto directamente o render MD seguro -->
+          <div class="message-text" [innerHTML]="chat.text | markdown"></div>
           
           <!-- Imagen si existe -->
           <img *ngIf="chat.image" [src]="chat.image" class="message-image" alt="Imagen de respuesta" onerror="this.src='assets/images/default-avatar.png'">

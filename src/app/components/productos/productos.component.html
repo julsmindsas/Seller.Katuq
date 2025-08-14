@@ -38,6 +38,40 @@
                         </div>
                     </div>
 
+                    <!-- Filtros de Dropshipping -->
+                    <div class="row col-12 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ "Filtrar por Proveedor" | translate }}</label>
+                            <select class="form-select" [(ngModel)]="selectedProveedor" (change)="onProveedorChange()">
+                                <option value="">{{ "Todos los proveedores" | translate }}</option>
+                                <option *ngFor="let proveedor of proveedores" [value]="proveedor.id">
+                                    {{ proveedor.nombre }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ "Solo Dropshipping" | translate }}</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       [(ngModel)]="mostrarSoloDropshipping" 
+                                       (change)="onToggleDropshipping()"
+                                       id="checkDropshipping">
+                                <label class="form-check-label" for="checkDropshipping">
+                                    {{ "Mostrar solo productos dropshipping" | translate }}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button class="btn btn-outline-secondary" (click)="limpiarFiltros()" 
+                                        [disabled]="!selectedProveedor && !mostrarSoloDropshipping">
+                                    <i class="icofont icofont-refresh"></i>&nbsp;{{ "Limpiar Filtros" | translate }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- La tabla de PrimeNG -->
                     <p-table #dt [value]="rows" [paginator]="true" [resizableColumns]="true" [scrollable]="true"
                         [loading]="cargando" [rowsPerPageOptions]="[10, 20, 50]" [paginator]="true"

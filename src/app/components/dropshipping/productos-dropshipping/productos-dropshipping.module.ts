@@ -22,14 +22,9 @@ import { TabViewModule } from 'primeng/tabview';
 // Routing
 import { ProductosDropshippingRoutingModule } from './productos-dropshipping-routing.module';
 
-// Components
-import { CatalogoDropshippingComponent } from './catalogo-dropshipping/catalogo-dropshipping.component';
-import { ImportarProductosComponent } from './importar-productos/importar-productos.component';
-
 @NgModule({
   declarations: [
-    CatalogoDropshippingComponent,
-    ImportarProductosComponent
+    // Componentes eliminados: los productos dropshipping se manejan en el sistema de productos existente
   ],
   imports: [
     CommonModule,

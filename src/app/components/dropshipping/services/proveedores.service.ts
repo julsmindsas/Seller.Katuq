@@ -1,119 +1,82 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { BaseService } from '../../../shared/services/base.service';
 import { Proveedor, ProveedorSummary } from '../interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ProveedoresService {
+export class ProveedoresService extends BaseService {
 
-  private mockProveedores: Proveedor[] = [
-    {
-      id: '1',
-      nombre: 'Proveedor Ejemplo',
-      contacto: 'Juan Pérez',
-      email: 'contacto@proveedor.com',
-      telefono: '123456789',
-      comision_porcentaje: 15,
-      tiempo_procesamiento_dias: 3,
-      activo: true,
-      api_config: { tipo_integracion: 'manual' },
-      fecha_creacion: new Date().toISOString()
-    }
-  ];
-
-  constructor() {}
+  constructor(httpClient: HttpClient) {
+    super(httpClient);
+  }
 
   // CRUD básico
   getProveedores(): Observable<Proveedor[]> {
-    return of(this.mockProveedores);
+    return this.get<Proveedor[]>('/v1/dropshipping/proveedores');
   }
 
   getProveedor(id: string): Observable<Proveedor> {
-    const proveedor = this.mockProveedores.find(p => p.id === id);
-    return of(proveedor!);
+    return this.get<Proveedor>(`/v1/dropshipping/proveedores/${id}`);
   }
 
-  createProveedor(proveedor: Proveedor): Observable<string> {
-    const newId = (this.mockProveedores.length + 1).toString();
-    proveedor.id = newId;
-    proveedor.fecha_creacion = new Date().toISOString();
-    proveedor.fecha_actualizacion = new Date().toISOString();
-    this.mockProveedores.push(proveedor);
-    return of(newId);
+  createProveedor(proveedor: Proveedor): Observable<any> {
+    return this.post<any>('/v1/dropshipping/proveedores', proveedor);
   }
 
-  updateProveedor(id: string, proveedor: Partial<Proveedor>): Observable<void> {
-    const index = this.mockProveedores.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.mockProveedores[index] = { 
-        ...this.mockProveedores[index], 
-        ...proveedor, 
-        fecha_actualizacion: new Date().toISOString() 
-      };
-    }
-    return of(void 0);
+  updateProveedor(id: string, proveedor: Partial<Proveedor>): Observable<any> {
+    return this.put<any>(`/v1/dropshipping/proveedores/${id}`, proveedor);
   }
 
-  deleteProveedor(id: string): Observable<void> {
-    const index = this.mockProveedores.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.mockProveedores.splice(index, 1);
-    }
-    return of(void 0);
+  deleteProveedor(id: string): Observable<any> {
+    return this.delete<any>(`/v1/dropshipping/proveedores/${id}`);
   }
 
   // Métodos específicos
   getProveedoresActivos(): Observable<Proveedor[]> {
-    return of(this.mockProveedores.filter(p => p.activo));
+    return this.get<Proveedor[]>('/v1/dropshipping/proveedores/activos');
   }
 
-  activarProveedor(id: string): Observable<void> {
-    return this.updateProveedor(id, { activo: true });
+  activarProveedor(id: string): Observable<any> {
+    return this.put<any>(`/v1/dropshipping/proveedores/${id}/activar`, {});
   }
 
-  desactivarProveedor(id: string): Observable<void> {
-    return this.updateProveedor(id, { activo: false });
+  desactivarProveedor(id: string): Observable<any> {
+    return this.put<any>(`/v1/dropshipping/proveedores/${id}/desactivar`, {});
   }
 
   // Analytics
   getProveedorSummary(id: string): Observable<ProveedorSummary> {
-    // TODO: Implementar lógica real con queries a productos y órdenes
-    return of({
-      id,
-      nombre: '',
-      productos_activos: 0,
-      ordenes_pendientes: 0,
-      total_ventas_mes: 0
-    });
+    return this.get<ProveedorSummary>(`/v1/dropshipping/proveedores/${id}/summary`);
   }
 
   // Validaciones
-  validateProveedorEmail(email: string, excludeId?: string): Observable<boolean> {
-    // TODO: Implementar validación de email único
-    return of(true);
+  validateProveedorEmail(email: string, excludeId?: string): Observable<any> {
+    const params = excludeId ? `?exclude=${excludeId}` : '';
+    return this.post<any>(`/v1/dropshipping/proveedores/validate-email${params}`, { email });
   }
 
   // Configuración API
-  testApiConnection(proveedor: Proveedor): Observable<boolean> {
-    // TODO: Implementar test de conexión API
-    return of(true);
+  testApiConnection(proveedor: Proveedor): Observable<any> {
+    return this.post<any>('/v1/dropshipping/proveedores/test-api-connection', proveedor);
   }
 
-  updateApiConfig(id: string, apiConfig: any): Observable<void> {
-    return this.updateProveedor(id, {
-      api_config: apiConfig
-    });
+  updateApiConfig(id: string, apiConfig: any): Observable<any> {
+    return this.put<any>(`/v1/dropshipping/proveedores/${id}/api-config`, apiConfig);
+  }
+
+  // Búsqueda
+  searchProveedores(searchTerm: string): Observable<Proveedor[]> {
+    return this.get<Proveedor[]>(`/v1/dropshipping/proveedores/search?q=${encodeURIComponent(searchTerm)}`);
   }
 
   // Utilidades
-  calcularComisionTotal(proveedorId: string, montoVenta: number): Observable<number> {
-    return new Observable(observer => {
-      this.getProveedor(proveedorId).subscribe(proveedor => {
-        const comision = (montoVenta * proveedor.comision_porcentaje) / 100;
-        observer.next(comision);
-        observer.complete();
-      });
+  calcularComisionTotal(proveedorId: string, montoVenta: number): Observable<any> {
+    return this.post<any>('/v1/dropshipping/proveedores/calcular-comision', {
+      proveedorId,
+      montoVenta
     });
   }
 }
