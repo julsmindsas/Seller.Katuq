@@ -2632,36 +2632,37 @@ export class DespachosComponent implements OnInit {
     // Starting y position
     let yPos = 2;
 
-    // Add the "de" field
-    if (tarjeta.para) {
+    // Agregar el campo "Para:" solo si existe
+    if (tarjeta.para && tarjeta.para.trim() !== '') {
       const paraLabelWidth = doc.getTextWidth("Para:");
-      const deTextWidth = doc.getTextWidth(tarjeta.para);
       doc.text("Para:", (pageWidth - paraLabelWidth) / 2, yPos);
-      yPos += 0.5;
-      doc.text(`${tarjeta.para}`, (pageWidth - deTextWidth) / 2, yPos);
+      yPos += 0.6; // Espacio fijo entre label y texto
+      
+      const paraTextWidth = doc.getTextWidth(tarjeta.para);
+      doc.text(`${tarjeta.para}`, (pageWidth - paraTextWidth) / 2, yPos);
+      yPos += 1.5; // Espacio fijo después del texto "Para"
     }
 
-    // Calculate the height of the "de" field text
-    yPos += doc.getTextDimensions(tarjeta.de).h / 10 + 0.5; // 0.5 cm padding
+    // Agregar el campo "mensaje" en el centro
+    if (tarjeta.mensaje && tarjeta.mensaje.trim() !== '') {
+      const splitMensaje = doc.splitTextToSize(tarjeta.mensaje, 12); // Reducir ancho para mejor ajuste
+      
+      splitMensaje.forEach((line) => {
+        const lineWidth = doc.getTextWidth(line);
+        doc.text(line, (pageWidth - lineWidth) / 2, yPos);
+        yPos += 0.5; // Espacio fijo entre líneas del mensaje
+      });
+      yPos += 1.0; // Espacio fijo después del mensaje completo
+    }
 
-    // Add the "mensaje" field
-    const splitMensaje = doc.splitTextToSize(tarjeta.mensaje, 13); // Wrap text within 13 cm
-    const mensajeTextHeight =
-      doc.getTextDimensions(splitMensaje.join("\n")).h / 10;
-    splitMensaje.forEach((line) => {
-      const lineWidth = doc.getTextWidth(line);
-      doc.text(line, (pageWidth - lineWidth) / 2, yPos);
-      yPos += mensajeTextHeight / splitMensaje.length;
-    });
-    yPos += 0.5; // Add padding after mensaje
-
-    // Add the "para" field
-    if (tarjeta.de) {
-      const paraLabelWidth = doc.getTextWidth("De:");
-      const paraTextWidth = doc.getTextWidth(tarjeta.de);
-      doc.text("De:", (pageWidth - paraLabelWidth) / 2, yPos);
-      yPos += 0.5;
-      doc.text(`${tarjeta.de}`, (pageWidth - paraTextWidth) / 2, yPos);
+    // Agregar el campo "De:" solo si existe
+    if (tarjeta.de && tarjeta.de.trim() !== '') {
+      const deLabelWidth = doc.getTextWidth("De:");
+      doc.text("De:", (pageWidth - deLabelWidth) / 2, yPos);
+      yPos += 0.6; // Espacio fijo entre label y texto
+      
+      const deTextWidth = doc.getTextWidth(tarjeta.de);
+      doc.text(`${tarjeta.de}`, (pageWidth - deTextWidth) / 2, yPos);
     }
 
     // Generar el blob y abrir en una nueva ventana

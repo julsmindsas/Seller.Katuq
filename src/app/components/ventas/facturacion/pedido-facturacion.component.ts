@@ -92,8 +92,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.service.getClientByDocument(data).subscribe((res: any) => {
         if (res.datosFacturacionElectronica && Array.isArray(res.datosFacturacionElectronica)) {
           res.datosFacturacionElectronica.forEach((x: any) => {
-            this.datosFacturacionElectronica.push(x);
-          });
+          this.datosFacturacionElectronica.push(x);
+        });
         }
 
         // Agregar el consumidor final si no existe cuando se abre desde la lista

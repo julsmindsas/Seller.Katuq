@@ -2680,14 +2680,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           const asesorSeleccionado = asesoresDisponibles.find((a: any) => a.cd === result.value);
           
           if (asesorSeleccionado) {
-            const userLite: UserLite = {
+          const userLite: UserLite = {
               name: `${asesorSeleccionado.nombre} ${asesorSeleccionado.apellido}`,
               email: asesorSeleccionado.email,
               nit: asesorSeleccionado.nit,
             };
             
-            order.asesorAsignado = userLite;
-            this.editOrder(order);
+          order.asesorAsignado = userLite;
+          this.editOrder(order);
             
             Swal.fire({
               title: "Asesor Asignado",
@@ -2708,7 +2708,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         confirmButtonColor: "#3085d6",
         confirmButtonText: "Aceptar",
       });
-    });
+      });
   }
 
   buscarPorFechas(table?: Table): void {
