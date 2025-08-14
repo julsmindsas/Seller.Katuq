@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { Proveedor } from '../../interfaces';
 import { ProveedoresService } from '../../services/proveedores.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-lista-proveedores',
@@ -15,6 +16,7 @@ export class ListaProveedoresComponent implements OnInit {
   proveedores: Proveedor[] = [];
   loading = false;
   selectedProveedor: Proveedor | null = null;
+  isJulsmindUser = false;
 
   // Filtros
   globalFilter = '';
@@ -27,6 +29,11 @@ export class ListaProveedoresComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    if (!this.isJulsmindCompany()) {
+      this.showAccessDeniedMessage();
+      return;
+    }
+    this.isJulsmindUser = true;
     this.cargarProveedores();
   }
 
@@ -136,5 +143,36 @@ export class ListaProveedoresComponent implements OnInit {
 
   getTextEstado(activo: boolean): string {
     return activo ? 'Activo' : 'Inactivo';
+  }
+
+  private isJulsmindCompany(): boolean {
+    try {
+      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      return currentCompany.nomComercial?.toLowerCase().includes('julsmind') ||
+             currentCompany.id?.toLowerCase().includes('julsmind') ||
+             currentCompany.empresa?.toLowerCase().includes('julsmind');
+    } catch (error) {
+      console.error('Error verificando empresa:', error);
+      return false;
+    }
+  }
+
+  private showAccessDeniedMessage(): void {
+    Swal.fire({
+      title: '🔒 Acceso Restringido',
+      html: `
+        <div style="text-align: left; margin: 20px 0;">
+          <p><strong>El módulo de gestión de proveedores es exclusivo para la empresa Julsmind.</strong></p>
+          <p>Esta sección permite a Julsmind administrar centralizadamente todas las empresas que pueden actuar como proveedores en el ecosistema de dropshipping.</p>
+          <hr>
+          <p><small class="text-muted">Si necesitas configurar productos dropshipping para tu empresa, ve a la sección de Productos y selecciona "Dropshipping" como tipo de producto.</small></p>
+        </div>
+      `,
+      icon: 'warning',
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#dc3545'
+    }).then(() => {
+      this.router.navigate(['/dropshipping/dashboard']);
+    });
   }
 }

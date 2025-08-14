@@ -58,4 +58,12 @@ export interface DropshippingConfig {
     automatizacionActivada?: boolean;
     notificacionesActivadas?: boolean;
     tiempoLimiteOrden?: number; // en días
+    api_config?: ApiConfigDropshipping;
+}
+
+export interface ApiConfigDropshipping {
+    tipo_integracion?: 'manual' | 'api' | 'csv' | 'webhook';
+    endpoint?: string;
+    api_key?: string;
+    configuracion_adicional?: { [key: string]: any };
 }

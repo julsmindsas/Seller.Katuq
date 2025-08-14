@@ -14,6 +14,7 @@ export class DropshippingConfigComponent implements OnInit {
   loading = false;
   saving = false;
   currentCompany: any;
+  showApiKey = false;
 
   constructor(
     private fb: FormBuilder
@@ -34,7 +35,14 @@ export class DropshippingConfigComponent implements OnInit {
       margenMinimoPermitido: [0, [Validators.min(0), Validators.max(100)]],
       automatizacionActivada: [false],
       notificacionesActivadas: [true],
-      tiempoLimiteOrden: [7, [Validators.min(1), Validators.max(30)]]
+      tiempoLimiteOrden: [7, [Validators.min(1), Validators.max(30)]],
+      // Configuración de API
+      api_config: this.fb.group({
+        tipo_integracion: ['manual', Validators.required],
+        endpoint: [''],
+        api_key: [''],
+        configuracion_adicional: [{}]
+      })
     });
   }
 
@@ -60,8 +68,17 @@ export class DropshippingConfigComponent implements OnInit {
           margenMinimoPermitido: existingConfig.configuracion?.margenMinimoPermitido || 0,
           automatizacionActivada: existingConfig.configuracion?.automatizacionActivada || false,
           notificacionesActivadas: existingConfig.configuracion?.notificacionesActivadas || true,
-          tiempoLimiteOrden: existingConfig.configuracion?.tiempoLimiteOrden || 7
+          tiempoLimiteOrden: existingConfig.configuracion?.tiempoLimiteOrden || 7,
+          api_config: {
+            tipo_integracion: existingConfig.configuracion?.api_config?.tipo_integracion || 'manual',
+            endpoint: existingConfig.configuracion?.api_config?.endpoint || '',
+            api_key: existingConfig.configuracion?.api_config?.api_key || '',
+            configuracion_adicional: existingConfig.configuracion?.api_config?.configuracion_adicional || {}
+          }
         });
+        
+        // Actualizar validaciones según el tipo de integración cargado
+        this.onTipoIntegracionChange();
       }
       
       this.loading = false;
@@ -369,5 +386,134 @@ export class DropshippingConfigComponent implements OnInit {
     } catch (error) {
       return 0;
     }
+  }
+
+  /**
+   * Getter para determinar si mostrar la configuración de API
+   */
+  get showApiConfig(): boolean {
+    const tipoIntegracion = this.dropshippingConfigForm.get('api_config.tipo_integracion')?.value;
+    return tipoIntegracion && tipoIntegracion !== 'manual';
+  }
+
+  /**
+   * Maneja el cambio de tipo de integración
+   */
+  onTipoIntegracionChange(): void {
+    const tipoIntegracion = this.dropshippingConfigForm.get('api_config.tipo_integracion')?.value;
+    
+    // Limpiar campos API cuando se selecciona manual
+    if (tipoIntegracion === 'manual') {
+      this.dropshippingConfigForm.patchValue({
+        api_config: {
+          endpoint: '',
+          api_key: '',
+          configuracion_adicional: {}
+        }
+      });
+    }
+
+    // Actualizar validaciones según el tipo de integración
+    const endpointControl = this.dropshippingConfigForm.get('api_config.endpoint');
+    const apiKeyControl = this.dropshippingConfigForm.get('api_config.api_key');
+
+    if (this.showApiConfig) {
+      endpointControl?.setValidators([Validators.required]);
+      apiKeyControl?.setValidators([Validators.required]);
+    } else {
+      endpointControl?.clearValidators();
+      apiKeyControl?.clearValidators();
+    }
+
+    endpointControl?.updateValueAndValidity();
+    apiKeyControl?.updateValueAndValidity();
+  }
+
+  /**
+   * Alterna la visibilidad de la API Key
+   */
+  toggleApiKeyVisibility(): void {
+    this.showApiKey = !this.showApiKey;
+  }
+
+  /**
+   * Obtiene el label del tipo de integración
+   */
+  getTipoIntegracionLabel(tipo: string): string {
+    const tipos: { [key: string]: string } = {
+      'manual': 'Manual',
+      'api': 'API',
+      'csv': 'CSV',
+      'webhook': 'Webhook'
+    };
+    return tipos[tipo] || 'No seleccionado';
+  }
+
+  /**
+   * Genera la URL del webhook para la empresa actual
+   */
+  getWebhookUrl(): string {
+    const baseUrl = window.location.origin;
+    const companyId = this.currentCompany?.id || this.currentCompany?._id || 'company';
+    return `${baseUrl}/api/dropshipping/webhook/${companyId}`;
+  }
+
+  /**
+   * Copia la URL del webhook al portapapeles
+   */
+  copyWebhookUrl(): void {
+    const webhookUrl = this.getWebhookUrl();
+    
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(webhookUrl).then(() => {
+        Swal.fire({
+          title: 'URL Copiada',
+          text: 'La URL del webhook ha sido copiada al portapapeles',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }).catch(err => {
+        console.error('Error copying to clipboard:', err);
+        this.fallbackCopyToClipboard(webhookUrl);
+      });
+    } else {
+      this.fallbackCopyToClipboard(webhookUrl);
+    }
+  }
+
+  /**
+   * Método fallback para copiar al portapapeles en navegadores más antiguos
+   */
+  private fallbackCopyToClipboard(text: string): void {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      Swal.fire({
+        title: 'URL Copiada',
+        text: 'La URL del webhook ha sido copiada al portapapeles',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      console.error('Error copying to clipboard:', err);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo copiar la URL. Por favor, cópiela manualmente.',
+        icon: 'error',
+        confirmButtonText: 'Entendido'
+      });
+    }
+    
+    document.body.removeChild(textArea);
   }
 }

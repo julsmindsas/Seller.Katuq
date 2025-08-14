@@ -2315,9 +2315,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         return;
       }
       
-      // Activar validaciones para dropshipping
-      this.dropshippingConfig.get('supplierId')?.setValidators([Validators.required]);
-      this.dropshippingConfig.get('supplierName')?.setValidators([Validators.required]);
+      // Auto-asignar currentCompany como proveedor
+      this.autoAsignarCurrentCompanyComoProveedor();
+      
+      // Activar validaciones simplificadas para dropshipping
       this.dropshippingConfig.get('costoProveedor')?.setValidators([Validators.required, Validators.min(0.01)]);
       
       // Habilitar la configuración de dropshipping
@@ -2379,6 +2380,52 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       
     } catch (error) {
       console.error('❌ Error habilitando dropshipping para pruebas:', error);
+    }
+  }
+
+  /**
+   * Auto-asigna la empresa actual (currentCompany) como proveedor para dropshipping
+   * Esto simplifica el proceso eliminando la necesidad de seleccionar proveedores externos
+   */
+  private autoAsignarCurrentCompanyComoProveedor(): void {
+    try {
+      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      
+      if (currentCompany && currentCompany.nomComercial) {
+        // Auto-poblar campos del formulario con datos de la empresa actual
+        this.dropshippingConfig.patchValue({
+          supplierId: currentCompany.id || currentCompany._id || 'current-company',
+          supplierName: currentCompany.nomComercial,
+          proveedorContacto: currentCompany.contactoPrincipal || currentCompany.representanteLegal || 'Empresa',
+          proveedorTelefono: currentCompany.telefono || currentCompany.celular || '',
+          proveedorEmail: currentCompany.email || currentCompany.correoElectronico || '',
+          leadTimeDays: 7, // Tiempo de procesamiento por defecto
+          
+          // Configuración predeterminada para auto-proveedor
+          tipoMargen: 'porcentaje',
+          margenPorcentaje: 25, // Margen por defecto del 25%
+          monedaProveedor: 'COP',
+          activo: true
+        });
+
+        console.log('✅ CurrentCompany auto-asignada como proveedor:', currentCompany.nomComercial);
+      } else {
+        console.warn('⚠️ No se pudo obtener currentCompany para auto-asignar como proveedor');
+        
+        // Fallback: usar datos genéricos
+        this.dropshippingConfig.patchValue({
+          supplierId: 'self-provider',
+          supplierName: 'Mi Empresa (Dropshipping)',
+          proveedorContacto: 'Administrador',
+          leadTimeDays: 7,
+          tipoMargen: 'porcentaje',
+          margenPorcentaje: 25,
+          monedaProveedor: 'COP',
+          activo: true
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error auto-asignando currentCompany como proveedor:', error);
     }
   }
 
