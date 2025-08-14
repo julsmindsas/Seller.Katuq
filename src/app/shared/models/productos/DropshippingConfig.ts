@@ -17,6 +17,13 @@ export interface DropshippingProductConfig {
     fechaConfiguracion?: string;
     usuarioConfiguracion?: string;
     activo?: boolean;
+    
+    // Nuevos campos para mejor integración
+    proveedorComisionPorcentaje?: number; // Copia de la comisión del proveedor al momento de configuración
+    tipoIntegracion?: 'manual' | 'api' | 'csv' | 'webhook'; // Tipo de integración con el proveedor
+    configuracionApi?: any; // Configuración específica de API si aplica
+    stockSincronizado?: boolean; // Si el stock se sincroniza automáticamente
+    preciosSincronizados?: boolean; // Si los precios se sincronizan automáticamente
 }
 
 export interface DropshippingProvider {

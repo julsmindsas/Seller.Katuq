@@ -364,6 +364,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   onStopGeneration(): void {
     this.isGenerating = false;
     if (this.chatUser) {
+      try {
+        // Detener stream en servicio subyacente
+        // @ts-ignore
+        (this.chatService as any).stopStreaming?.(this.chatUser.id);
+      } catch {}
       this.chatUser.typing = false;
       this.cdRef.detectChanges();
     }

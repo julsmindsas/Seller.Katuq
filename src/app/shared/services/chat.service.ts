@@ -15,6 +15,7 @@ export class ChatService {
   public observer: Subscriber<{}>;
   public chat: any[] = []
   public users: any[] = []
+  private activeStreams: { [receiverId: number]: any } = {};
 
   constructor(private kai: KatuqintelligenceService) {
     this.chat = ChatDB.chat
@@ -84,20 +85,49 @@ export class ChatService {
           if (response) {
             this.chat.filter(chats => {
               if (chats.id == chat.receiver) {
-                setTimeout(() => {
-                  chats.message.push({ sender: chat.receiver, time: today.toLowerCase(), text: response.result });
-                  const user = this.users.find(u => u.id === chat.receiver);
-                  if (user) { user.typing = false; }
-                }, 1000);
-                setTimeout(() => {
-                  document.querySelector(".chat-history")?.scrollBy({ top: 250, behavior: 'smooth' });
-                }, 1310)
+                const user = this.users.find(u => u.id === chat.receiver);
+                if (user) { user.typing = true; }
+                // Insertar mensaje vacío y hacer streaming del resultado
+                const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+                chats.message.push(assistantMsg);
+                const full = (response.result || '').toString();
+                let idx = 0;
+                const step = Math.max(1, Math.floor(full.length / 120)); // ~120 pasos
+                // Detener cualquier stream previo
+                this.stopStreaming(chat.receiver);
+                const interval = setInterval(() => {
+                  // Si se detuvo externamente
+                  if (!this.activeStreams[chat.receiver]) {
+                    clearInterval(interval);
+                    return;
+                  }
+                  const next = full.slice(idx, idx + step);
+                  assistantMsg.text += next;
+                  idx += step;
+                  document.querySelector(".chat-history")?.scrollBy({ top: 150, behavior: 'smooth' });
+                  if (idx >= full.length) {
+                    clearInterval(interval);
+                    delete this.activeStreams[chat.receiver];
+                    if (user) { user.typing = false; }
+                  }
+                }, 25);
+                this.activeStreams[chat.receiver] = interval;
               }
             })
           }
         });
       }
     })
+  }
+
+  public stopStreaming(receiverId: number): void {
+    const interval = this.activeStreams[receiverId];
+    if (interval) {
+      clearInterval(interval);
+      delete this.activeStreams[receiverId];
+    }
+    const user = this.users.find(u => u.id === receiverId);
+    if (user) { user.typing = false; }
   }
 
   public responseMessage(chat) {

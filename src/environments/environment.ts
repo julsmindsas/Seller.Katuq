@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.08.13.4 - 13 de Agosto 2025 (Beta)",
+  version: "2025.08.13.5 - 13 de Agosto 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -11,10 +11,10 @@ export const environment = {
     measurementId: "G-LFYSZ78R7F"
   },
   urlPermitidas: 'https://sellercenter.katuq.com',
-  // urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
+  //urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app', // API Google Cloud Functions
-  // urlApi: 'https://api.katuq.com', // API AWS
-  urlApi: 'http://localhost:3300', // API AWS
+   urlApi: 'https://api.katuq.com', // API AWS
+  //urlApi: 'http://localhost:3300', // API AWS
   wsVoiceServiceUrl: 'wss://api.tuservidor.com/voice-websocket',
   voiceWsUrl: 'wss://api.katuq.com/voice-websocket',
   wompi: {

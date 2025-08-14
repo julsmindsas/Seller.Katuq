@@ -83,22 +83,10 @@
     </div>
   </section>
 
-  <!-- Skeleton de respuesta mientras genera -->
-  <section class="messages-area" *ngIf="isGenerating">
-    <div class="message-row assistant-message">
-      <div class="avatar-container small">
-        <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
-      </div>
-      <div class="message-bubble skeleton">
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line long"></div>
-      </div>
-    </div>
-  </section>
+  <!-- Skeleton de respuesta mientras genera (inline al final del historial) -->
 
-  <!-- Sugerencias rápidas -->
-  <section class="quick-prompts" *ngIf="quickPrompts?.length">
+  <!-- Sugerencias rápidas (compacto, solo cuando no hay historial) -->
+  <section class="quick-prompts" *ngIf="(chats?.message?.length || 0) === 0 && quickPrompts?.length">
     <button class="prompt-chip" *ngFor="let prompt of quickPrompts" (click)="applyPrompt(prompt)" type="button">
       <i class="fa fa-bolt"></i>
       <span>{{ prompt }}</span>

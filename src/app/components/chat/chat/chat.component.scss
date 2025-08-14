@@ -342,9 +342,10 @@ section.messages-area {
 .quick-prompts {
   flex-shrink: 0;
   display: flex;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px var(--spacing-lg) 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
   background: transparent;
 
   .prompt-chip {

@@ -1,5 +1,5 @@
-<app-breadcrumb [title]="edit ? 'Editar Producto':	'Crear Producto'" [items]="['Maestros/Productos']"
-	[active_item]="'Crear Producto'">
+<app-breadcrumb [title]="getPageTitle()" [items]="['Maestros/Productos']"
+	[active_item]="getBreadcrumbActiveItem()">
 </app-breadcrumb>
 <div class="container-fluid">
 	<div class="row">
@@ -7,8 +7,8 @@
 			<div class="card">
 				<!-- <form cForm [formGroup]="formGeneral"> -->
 
-				<div class="card-body">
-					<p-tabView [scrollable]="true">
+				<div class="card-body" [ngClass]="{'dropshipping-config-mode': isDropshippingConfigMode}">
+					<p-tabView [scrollable]="true" [(activeIndex)]="activeTabIndex">
 						<p-tabPanel header="K.A.I">
 							<form [formGroup]="kaiForm">
 								<div class="container mt-4">
@@ -594,18 +594,77 @@
 									</div>
 
 									<div class="row mb-3">
-										<div class="col-md-6">
-											<label class="form-label">ID del Proveedor <span class="text-danger">*</span></label>
-											<input formControlName="supplierId" class="form-control" type="text" placeholder="Ingrese ID del proveedor" />
+										<div class="col-md-8">
+											<label class="form-label">Seleccionar Proveedor <span class="text-danger">*</span></label>
+											<p-dropdown 
+												formControlName="supplierId" 
+												[options]="proveedoresActivos" 
+												optionLabel="nombre" 
+												optionValue="id"
+												placeholder="Seleccione un proveedor"
+												[loading]="loadingProveedores"
+												[filter]="true"
+												filterBy="nombre,contacto,email"
+												(onChange)="onProveedorSelected($event)"
+												class="w-100">
+												<ng-template pTemplate="selectedItem">
+													<div *ngIf="getSelectedProveedor()">
+														<i class="pi pi-building mr-2"></i>
+														<strong>{{getSelectedProveedor()?.nombre}}</strong>
+														<span class="text-muted ml-2">- {{getSelectedProveedor()?.contacto}}</span>
+													</div>
+												</ng-template>
+												<ng-template pTemplate="item" let-proveedor>
+													<div class="dropdown-item-content">
+														<div class="font-weight-bold">{{proveedor.nombre}}</div>
+														<div class="text-muted small">
+															<i class="pi pi-user mr-1"></i>{{proveedor.contacto}} | 
+															<i class="pi pi-envelope ml-2 mr-1"></i>{{proveedor.email}}
+														</div>
+														<div class="text-muted small">
+															<i class="pi pi-clock mr-1"></i>{{proveedor.tiempo_procesamiento_dias}} días | 
+															<i class="pi pi-percentage ml-2 mr-1"></i>{{proveedor.comision_porcentaje}}% comisión
+														</div>
+													</div>
+												</ng-template>
+											</p-dropdown>
 											<div class="invalid-feedback" *ngIf="dropshippingConfig.get('supplierId')?.invalid && dropshippingConfig.get('supplierId')?.touched">
-												Este campo es requerido para productos dropshipping
+												Debe seleccionar un proveedor para productos dropshipping
 											</div>
 										</div>
-										<div class="col-md-6">
-											<label class="form-label">Nombre del Proveedor <span class="text-danger">*</span></label>
-											<input formControlName="supplierName" class="form-control" type="text" placeholder="Ingrese nombre del proveedor" />
-											<div class="invalid-feedback" *ngIf="dropshippingConfig.get('supplierName')?.invalid && dropshippingConfig.get('supplierName')?.touched">
-												Este campo es requerido para productos dropshipping
+										<div class="col-md-4">
+											<label class="form-label">&nbsp;</label>
+											<div class="d-grid gap-2">
+												<button type="button" class="btn btn-outline-primary" (click)="crearNuevoProveedor()">
+													<i class="pi pi-plus mr-2"></i>Nuevo Proveedor
+												</button>
+												<button type="button" class="btn btn-outline-secondary btn-sm" (click)="refreshProveedoresList()">
+													<i class="pi pi-refresh mr-2"></i>Actualizar Lista
+												</button>
+											</div>
+										</div>
+									</div>
+									
+									<!-- Información del proveedor seleccionado (solo lectura) -->
+									<div class="row mb-3" *ngIf="getSelectedProveedor()">
+										<div class="col-md-12">
+											<div class="alert alert-info">
+												<h6><i class="pi pi-info-circle mr-2"></i>Información del Proveedor</h6>
+												<div class="row">
+													<div class="col-md-4">
+														<strong>Contacto:</strong> {{getSelectedProveedor()?.contacto}}<br>
+														<strong>Email:</strong> {{getSelectedProveedor()?.email}}<br>
+														<strong>Teléfono:</strong> {{getSelectedProveedor()?.telefono || 'No especificado'}}
+													</div>
+													<div class="col-md-4">
+														<strong>Comisión:</strong> {{getSelectedProveedor()?.comision_porcentaje}}%<br>
+														<strong>Tiempo procesamiento:</strong> {{getSelectedProveedor()?.tiempo_procesamiento_dias}} días<br>
+														<strong>Tipo integración:</strong> {{getSelectedProveedor()?.api_config?.tipo_integracion || 'Manual'}}
+													</div>
+													<div class="col-md-4">
+														<strong>Dirección:</strong> {{getSelectedProveedor()?.direccion || 'No especificada'}}
+													</div>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -690,16 +749,21 @@
 											<div class="alert alert-info">
 												<h6><i class="fa fa-calculator"></i> Resumen de Precios</h6>
 												<div class="row">
-													<div class="col-md-4">
+													<div class="col-md-3">
 														<strong>Costo Proveedor:</strong><br>
 														${{ dropshippingConfig.get('costoProveedor')?.value | number:'1.0-0' }}
 													</div>
-													<div class="col-md-4">
-														<strong>Precio de Venta Calculado:</strong><br>
+													<div class="col-md-3">
+														<strong>Comisión Proveedor:</strong><br>
+														${{ calcularComisionProveedor() | number:'1.0-0' }}
+														<span class="text-muted">({{getSelectedProveedor()?.comision_porcentaje}}%)</span>
+													</div>
+													<div class="col-md-3">
+														<strong>Precio de Venta:</strong><br>
 														${{ calcularPrecioVentaDropshipping() | number:'1.0-0' }}
 													</div>
-													<div class="col-md-4">
-														<strong>Ganancia Estimada:</strong><br>
+													<div class="col-md-3">
+														<strong>Ganancia Neta:</strong><br>
 														${{ calcularGananciaDropshipping() | number:'1.0-0' }}
 													</div>
 												</div>
