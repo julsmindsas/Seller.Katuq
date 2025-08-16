@@ -763,6 +763,10 @@ export class CrearVentasComponent
         this.pedidoGral.cliente = res;
         this.encontrado = true;
         this.clienteRecienCreado = true; // Esto activará la visualización de facturación y entrega
+        
+        // Cargar las notas del cliente recién creado
+        this.cargarNotasDelCliente();
+        
         this.identificarDepto();
         this.identificarCiu();
       });
@@ -1050,6 +1054,10 @@ export class CrearVentasComponent
               this.pedidoGral.notasPedido.notasFacturacionPagos = [];
             }
           }
+
+          // Cargar las notas del cliente desde la base de datos
+          this.cargarNotasDelCliente();
+
           this.datos = res;
           this.identificarDepto();
           this.identificarCiu();
@@ -2811,8 +2819,11 @@ export class CrearVentasComponent
       this.pedidoGral.notasPedido.notasCliente = [];
     }
 
-    // Agregar la nueva nota al inicio del array
+    // Agregar la nueva nota al inicio del array del pedido
     this.pedidoGral.notasPedido.notasCliente.unshift(nota);
+
+    // Guardar la nota en el cliente en la base de datos
+    this.guardarNotaEnCliente(nota);
 
     // Limpiar el formulario
     this.notasClienteForm.reset();
@@ -2832,6 +2843,105 @@ export class CrearVentasComponent
   }
 
   /**
+   * Método para guardar la nota en el cliente en la base de datos
+   */
+  private guardarNotaEnCliente(nota: any): void {
+    if (!this.documentoBuscar) {
+      console.warn('No hay documento de cliente para guardar la nota');
+      return;
+    }
+
+    // Obtener el cliente actual
+    this.service.getClientByDocument({ documento: this.documentoBuscar }).subscribe({
+      next: (res: any) => {
+        // Inicializar array de notas si no existe
+        if (!res.notas) {
+          res.notas = [];
+        }
+
+        // Agregar la nueva nota
+        const nuevaNota = {
+          fecha: nota.fecha.toISOString().split('T')[0], // Formato YYYY-MM-DD
+          nota: nota.nota
+        };
+        res.notas.push(nuevaNota);
+
+        // Actualizar el cliente con la nueva nota
+        this.service.editClient(res).subscribe({
+          next: (updateRes) => {
+            console.log('✅ Nota guardada en el cliente:', updateRes);
+            // Recargar las notas del cliente para mostrar las actualizadas
+            this.cargarNotasDelCliente();
+          },
+          error: (error) => {
+            console.error('❌ Error al actualizar cliente con nota:', error);
+            this.toastrService.error(
+              'Error al guardar la nota en el cliente',
+              'Error',
+              {
+                closeButton: true,
+                timeOut: 5000,
+              }
+            );
+          }
+        });
+      },
+      error: (error) => {
+        console.error('❌ Error al obtener cliente para guardar nota:', error);
+        this.toastrService.error(
+          'Error al obtener datos del cliente',
+          'Error',
+          {
+            closeButton: true,
+            timeOut: 5000,
+          }
+        );
+      }
+    });
+  }
+
+  /**
+   * Método para cargar las notas del cliente desde la base de datos
+   */
+  private cargarNotasDelCliente(): void {
+    if (!this.documentoBuscar) {
+      return;
+    }
+
+    this.service.getClientByDocument({ documento: this.documentoBuscar }).subscribe({
+      next: (res: any) => {
+        if (res && res.notas && Array.isArray(res.notas)) {
+          // Convertir las notas del cliente al formato del pedido
+          const notasCliente = res.notas.map((nota: any) => ({
+            fecha: new Date(nota.fecha),
+            nota: nota.nota
+          }));
+
+          // Inicializar notasPedido si no existe
+          if (!this.pedidoGral.notasPedido) {
+            this.pedidoGral.notasPedido = {
+              notasProduccion: [],
+              notasCliente: [],
+              notasDespachos: [],
+              notasEntregas: [],
+              notasFacturacionPagos: [],
+            };
+          }
+
+          // Actualizar las notas del cliente en el pedido
+          this.pedidoGral.notasPedido.notasCliente = notasCliente;
+
+          // Forzar detección de cambios
+          this.ref.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar notas del cliente:', error);
+      }
+    });
+  }
+
+  /**
    * Método para eliminar una nota de cliente
    * @param index Índice de la nota a eliminar
    */
@@ -2842,6 +2952,9 @@ export class CrearVentasComponent
     ) {
       return;
     }
+
+    // Obtener la nota a eliminar
+    const notaAEliminar = this.pedidoGral.notasPedido.notasCliente[index];
 
     // Confirmar eliminación
     Swal.fire({
@@ -2855,8 +2968,11 @@ export class CrearVentasComponent
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed && this.pedidoGral?.notasPedido?.notasCliente) {
-        // Eliminar la nota del array
+        // Eliminar la nota del array del pedido
         this.pedidoGral.notasPedido.notasCliente.splice(index, 1);
+
+        // Eliminar la nota del cliente en la base de datos
+        this.eliminarNotaDelCliente(notaAEliminar);
 
         // Forzar detección de cambios
         this.ref.detectChanges();
@@ -2870,6 +2986,54 @@ export class CrearVentasComponent
             timeOut: 3000,
           },
         );
+      }
+    });
+  }
+
+  /**
+   * Método para eliminar la nota del cliente en la base de datos
+   */
+  private eliminarNotaDelCliente(notaAEliminar: any): void {
+    if (!this.documentoBuscar) {
+      console.warn('No hay documento de cliente para eliminar la nota');
+      return;
+    }
+
+    // Obtener el cliente actual
+    this.service.getClientByDocument({ documento: this.documentoBuscar }).subscribe({
+      next: (res: any) => {
+        if (res && res.notas && Array.isArray(res.notas)) {
+          // Buscar y eliminar la nota del cliente
+          const notaClienteIndex = res.notas.findIndex((nota: any) => 
+            nota.nota === notaAEliminar.nota && 
+            nota.fecha === notaAEliminar.fecha.toISOString().split('T')[0]
+          );
+
+          if (notaClienteIndex !== -1) {
+            res.notas.splice(notaClienteIndex, 1);
+
+            // Actualizar el cliente sin la nota eliminada
+            this.service.editClient(res).subscribe({
+              next: (updateRes) => {
+                console.log('✅ Nota eliminada del cliente:', updateRes);
+              },
+              error: (error) => {
+                console.error('❌ Error al eliminar nota del cliente:', error);
+                this.toastrService.error(
+                  'Error al eliminar la nota del cliente',
+                  'Error',
+                  {
+                    closeButton: true,
+                    timeOut: 5000,
+                  }
+                );
+              }
+            });
+          }
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error al obtener cliente para eliminar nota:', error);
       }
     });
   }

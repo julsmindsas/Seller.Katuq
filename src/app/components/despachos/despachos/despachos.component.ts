@@ -2556,6 +2556,14 @@ export class DespachosComponent implements OnInit {
       });
     }
 
+    // Función helper para escapar HTML y caracteres especiales
+    const escapeHtml = (text) => {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    };
+
     if (this.todasLasTarjetas.length === 0) {
       Swal.fire({
         title: "Tarjetas de Productos",
@@ -2576,12 +2584,29 @@ export class DespachosComponent implements OnInit {
       const tarjetas = this.todasLasTarjetas
         .map(
           (tarjeta, index) =>
-            `<li>
-
-        <strong>Tarjeta ${index + 1}:</strong>.  <strong>Producto:</strong> ${tarjeta.pedido}
-        De:${tarjeta.tarjeta.de} - Mensaje:${tarjeta.tarjeta.mensaje} - Para:${tarjeta.tarjeta.para}
-        <button class="btn btn-primary imprimir-tarjeta" data-index="${index}">Imprimir</button>
-      </li>`,
+            `<li style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+              <div style="margin-bottom: 10px;">
+                <strong style="color: #333;">Tarjeta ${index + 1}:</strong> 
+                <span style="color: #666; font-size: 0.9em;">Producto: ${escapeHtml(tarjeta.pedido)}</span>
+              </div>
+              <div style="margin-bottom: 8px;">
+                <strong style="color: #2c3e50;">De:</strong> 
+                <span style="color: #34495e;">${escapeHtml(tarjeta.tarjeta.de) || 'No especificado'}</span>
+              </div>
+              <div style="margin-bottom: 8px;">
+                <strong style="color: #2c3e50;">Para:</strong> 
+                <span style="color: #34495e;">${escapeHtml(tarjeta.tarjeta.para) || 'No especificado'}</span>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <strong style="color: #2c3e50;">Mensaje:</strong>
+                <div style="color: #34495e; font-style: italic; margin-top: 5px; padding: 8px; background-color: #f8f9fa; border-radius: 3px;">
+                  ${escapeHtml(tarjeta.tarjeta.mensaje) || 'Sin mensaje'}
+                </div>
+              </div>
+              <button class="btn btn-primary imprimir-tarjeta" data-index="${index}" style="width: 100%;">
+                <i class="fa fa-print me-1"></i>Imprimir Tarjeta
+              </button>
+            </li>`,
         )
         .join("");
 
@@ -2623,7 +2648,8 @@ export class DespachosComponent implements OnInit {
       format: [10, 15],
     });
 
-    doc.setFont("times", "italic"); // Cambiar la fuente a Times Italic
+    // Configurar fuente que soporte caracteres especiales
+    doc.setFont("times", "italic"); // Restaurar Times New Roman en cursiva como estaba originalmente
     doc.setFontSize(12); // Tamaño de la letra
 
     // Width of the document
@@ -2632,20 +2658,49 @@ export class DespachosComponent implements OnInit {
     // Starting y position
     let yPos = 2;
 
+    // Función helper para limpiar y normalizar texto de manera más robusta
+    const limpiarTexto = (texto) => {
+      if (!texto) return '';
+      
+      // Convertir a string si no lo es
+      let textoStr = String(texto);
+      
+      // Normalizar caracteres especiales y tildes de manera más completa
+      return textoStr
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remover diacríticos
+        .replace(/[áàäâ]/g, 'a')
+        .replace(/[éèëê]/g, 'e')
+        .replace(/[íìïî]/g, 'i')
+        .replace(/[óòöô]/g, 'o')
+        .replace(/[úùüû]/g, 'u')
+        .replace(/[ÁÀÄÂ]/g, 'A')
+        .replace(/[ÉÈËÊ]/g, 'E')
+        .replace(/[ÍÌÏÎ]/g, 'I')
+        .replace(/[ÓÒÖÔ]/g, 'O')
+        .replace(/[ÚÙÜÛ]/g, 'U')
+        .replace(/[ñÑ]/g, 'n')
+        .replace(/[çÇ]/g, 'c')
+        .replace(/[¿¡]/g, '')
+        .replace(/[^\x00-\x7F]/g, ''); // Remover cualquier otro carácter no ASCII
+    };
+
     // Agregar el campo "Para:" solo si existe
     if (tarjeta.para && tarjeta.para.trim() !== '') {
       const paraLabelWidth = doc.getTextWidth("Para:");
       doc.text("Para:", (pageWidth - paraLabelWidth) / 2, yPos);
       yPos += 0.6; // Espacio fijo entre label y texto
       
-      const paraTextWidth = doc.getTextWidth(tarjeta.para);
-      doc.text(`${tarjeta.para}`, (pageWidth - paraTextWidth) / 2, yPos);
+      const paraTexto = limpiarTexto(tarjeta.para);
+      const paraTextWidth = doc.getTextWidth(paraTexto);
+      doc.text(paraTexto, (pageWidth - paraTextWidth) / 2, yPos);
       yPos += 1.5; // Espacio fijo después del texto "Para"
     }
 
     // Agregar el campo "mensaje" en el centro
     if (tarjeta.mensaje && tarjeta.mensaje.trim() !== '') {
-      const splitMensaje = doc.splitTextToSize(tarjeta.mensaje, 12); // Reducir ancho para mejor ajuste
+      const mensajeTexto = limpiarTexto(tarjeta.mensaje);
+      const splitMensaje = doc.splitTextToSize(mensajeTexto, 12); // Reducir ancho para mejor ajuste
       
       splitMensaje.forEach((line) => {
         const lineWidth = doc.getTextWidth(line);
@@ -2661,8 +2716,9 @@ export class DespachosComponent implements OnInit {
       doc.text("De:", (pageWidth - deLabelWidth) / 2, yPos);
       yPos += 0.6; // Espacio fijo entre label y texto
       
-      const deTextWidth = doc.getTextWidth(tarjeta.de);
-      doc.text(`${tarjeta.de}`, (pageWidth - deTextWidth) / 2, yPos);
+      const deTexto = limpiarTexto(tarjeta.de);
+      const deTextWidth = doc.getTextWidth(deTexto);
+      doc.text(deTexto, (pageWidth - deTextWidth) / 2, yPos);
     }
 
     // Generar el blob y abrir en una nueva ventana
