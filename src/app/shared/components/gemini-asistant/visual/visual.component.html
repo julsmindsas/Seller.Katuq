@@ -1,0 +1,54 @@
+<div class="visual-container">
+  <!-- Canvas para efectos visuales -->
+  <div class="canvas-section">
+    <canvas #canvas width="400" height="400"></canvas>
+    <div class="canvas-overlay">
+      <div class="status-indicator" [class.active]="isActive">
+        <span class="status-dot"></span>
+        <span class="status-text">{{ isActive ? 'ACTIVO' : 'INACTIVO' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de logs en tiempo real -->
+  <div class="logs-panel">
+    <div class="logs-header">
+      <h3>📊 Logs del Sistema</h3>
+      <div class="logs-controls">
+        <button class="btn-clear" (click)="clearLogs()">🗑️ Limpiar</button>
+        <button class="btn-pause" (click)="togglePause()">
+          {{ isPaused ? '▶️' : '⏸️' }}
+        </button>
+      </div>
+    </div>
+    
+    <div class="logs-content" #logsContainer>
+      <div class="log-entry" *ngFor="let log of logs" [ngClass]="log.type">
+        <span class="log-timestamp">{{ log.timestamp | date:'HH:mm:ss' }}</span>
+        <span class="log-icon">{{ log.icon }}</span>
+        <span class="log-message">{{ log.message }}</span>
+        <span class="log-details" *ngIf="log.details">{{ log.details }}</span>
+      </div>
+    </div>
+
+    <!-- Métricas del sistema -->
+    <div class="metrics-panel">
+      <div class="metric-item">
+        <span class="metric-label">🎤 Entrada:</span>
+        <span class="metric-value">{{ inputLevel }}%</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">🔊 Salida:</span>
+        <span class="metric-value">{{ outputLevel }}%</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">📝 Logs:</span>
+        <span class="metric-value">{{ logs.length }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">⚡ FPS:</span>
+        <span class="metric-value">{{ currentFPS }}</span>
+      </div>
+    </div>
+  </div>
+</div>

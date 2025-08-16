@@ -194,6 +194,7 @@ export interface Facturacion {
   correoElectronico: string;
   nombres: string;
   pais: string;
+  zonaCobro?: string;
 }
 
 export interface Entrega {

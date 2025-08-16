@@ -1,0 +1,340 @@
+<div class="voice-sales-demo">
+  <!-- Header del Demo -->
+  <div class="demo-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="demo-title">
+          <i class="fas fa-robot"></i>
+          Demostración: Agente de Voz para Ventas Katuq
+        </h1>
+        <p class="demo-subtitle">Experiencia completa de ventas usando comandos de voz</p>
+      </div>
+      
+      <div class="header-actions">
+        <button 
+          class="btn btn-success btn-lg"
+          (click)="startFullDemo()"
+          [disabled]="isDemoActive">
+          <i class="fas fa-play"></i>
+          Iniciar Demo Completo
+        </button>
+        
+        <button 
+          class="btn btn-outline-primary btn-lg"
+          (click)="openFullWizard()">
+          <i class="fas fa-external-link-alt"></i>
+          Abrir Wizard Completo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Progreso del Demo -->
+  <div class="demo-progress-section">
+    <div class="progress-info">
+      <span class="progress-text">Progreso del Demo: {{ getDemoProgressPercentage() }}%</span>
+      <span class="status-text">{{ getCurrentDemoStatus() }}</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="getDemoProgressPercentage()"></div>
+    </div>
+  </div>
+
+  <!-- Contenido Principal del Demo -->
+  <div class="demo-content">
+    <div class="content-grid">
+      
+      <!-- Panel Izquierdo - Pasos del Demo -->
+      <div class="demo-steps-panel">
+        <h3 class="panel-title">
+          <i class="fas fa-list-check"></i>
+          Pasos de la Demostración
+        </h3>
+        
+        <div class="demo-steps-list">
+          <div 
+            *ngFor="let step of demoSteps"
+            class="demo-step-item"
+            [class]="getDemoStepClass(step.id)">
+            
+            <div class="step-header">
+              <div class="step-icon">
+                <i [class]="getDemoStepIcon(step.id)"></i>
+              </div>
+              
+              <div class="step-info">
+                <div class="step-name">{{ step.name }}</div>
+                <div class="step-description">{{ step.description }}</div>
+              </div>
+              
+              <div class="step-actions">
+                <button 
+                  class="btn btn-sm"
+                  [class]="getDemoStepClass(step.id) === 'demo-step-active' ? 'btn-primary' : 'btn-outline-primary'"
+                  (click)="executeStepManually(step.id)"
+                  [disabled]="!isDemoActive || getDemoStepClass(step.id) === 'demo-step-completed'">
+                  <i class="fas fa-play"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="step-command">
+              <code>{{ step.command }}</code>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Controles del Demo -->
+        <div class="demo-controls">
+          <button 
+            class="btn btn-warning btn-block"
+            (click)="resetDemo()"
+            [disabled]="!isDemoActive">
+            <i class="fas fa-redo"></i>
+            Reiniciar Demo
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel Central - Estado del Demo -->
+      <div class="demo-status-panel">
+        <div class="status-header">
+          <h3 class="status-title">
+            <i class="fas fa-chart-line"></i>
+            Estado de la Demostración
+          </h3>
+          <div class="status-indicator" [class]="isDemoActive ? 'active' : 'inactive'">
+            <i [class]="isDemoActive ? 'fas fa-circle' : 'fas fa-circle'"></i>
+            {{ isDemoActive ? 'Activo' : 'Inactivo' }}
+          </div>
+        </div>
+
+        <div class="status-content">
+          <!-- Estado Actual -->
+          <div class="status-card current-status">
+            <div class="card-header">
+              <i class="fas fa-info-circle"></i>
+              <span>Estado Actual</span>
+            </div>
+            <div class="card-body">
+              <div class="status-item">
+                <span class="label">Demo Activo:</span>
+                <span class="value" [class]="isDemoActive ? 'text-success' : 'text-danger'">
+                  <i [class]="isDemoActive ? 'fas fa-check' : 'fas fa-times'"></i>
+                  {{ isDemoActive ? 'Sí' : 'No' }}
+                </span>
+              </div>
+              
+              <div class="status-item">
+                <span class="label">Paso Actual:</span>
+                <span class="value">
+                  {{ currentDemoStep || 'No iniciado' }}
+                </span>
+              </div>
+              
+              <div class="status-item">
+                <span class="label">Progreso:</span>
+                <span class="value">
+                  {{ getDemoProgressPercentage() }}% completado
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información del Sistema -->
+          <div class="status-card system-info">
+            <div class="card-header">
+              <i class="fas fa-cogs"></i>
+              <span>Información del Sistema</span>
+            </div>
+            <div class="card-body">
+              <div class="status-item">
+                <span class="label">Servicio de Voz:</span>
+                <span class="value text-success">
+                  <i class="fas fa-check"></i>
+                  Disponible
+                </span>
+              </div>
+              
+              <div class="status-item">
+                <span class="label">Integración:</span>
+                <span class="value text-success">
+                  <i class="fas fa-check"></i>
+                  Conectada
+                </span>
+              </div>
+              
+              <div class="status-item">
+                <span class="label">Herramientas:</span>
+                <span class="value text-success">
+                  <i class="fas fa-check"></i>
+                  Cargadas
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Instrucciones -->
+          <div class="status-card instructions">
+            <div class="card-header">
+              <i class="fas fa-lightbulb"></i>
+              <span>Instrucciones</span>
+            </div>
+            <div class="card-body">
+              <ol class="instructions-list">
+                <li>Haz clic en "Iniciar Demo Completo" para comenzar</li>
+                <li>El sistema ejecutará automáticamente cada paso</li>
+                <li>Puedes ejecutar pasos individuales haciendo clic en ellos</li>
+                <li>Observa cómo se integra con el sistema real de ventas</li>
+                <li>Al finalizar, abre el Wizard Completo para uso manual</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Derecho - Logs y Resultados -->
+      <div class="demo-logs-panel">
+        <h3 class="panel-title">
+          <i class="fas fa-terminal"></i>
+          Logs de la Demostración
+        </h3>
+        
+        <div class="logs-content">
+          <!-- Log en Tiempo Real -->
+          <div class="log-section">
+            <h4 class="log-title">
+              <i class="fas fa-stream"></i>
+              Log en Tiempo Real
+            </h4>
+            
+            <div class="log-container">
+              <div class="log-entry" *ngFor="let step of demoSteps.slice(0, 5)">
+                <div class="log-timestamp">
+                  <i class="fas fa-clock"></i>
+                  {{ getDemoStepStatus(step.id) === 'completed' ? 'Completado' : 'Pendiente' }}
+                </div>
+                <div class="log-message">
+                  {{ step.name }}
+                </div>
+                <div class="log-status">
+                  <i [class]="getDemoStepIcon(step.id)"></i>
+                </div>
+              </div>
+              
+              <div *ngIf="demoSteps.length === 0" class="no-logs">
+                <i class="fas fa-inbox"></i>
+                <span>No hay logs disponibles</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estadísticas del Demo -->
+          <div class="stats-section">
+            <h4 class="stats-title">
+              <i class="fas fa-chart-bar"></i>
+              Estadísticas
+            </h4>
+            
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-value">{{ demoSteps.length }}</div>
+                <div class="stat-label">Total de Pasos</div>
+              </div>
+              
+              <div class="stat-item">
+                <div class="stat-value">{{ demoSteps.filter(s => getDemoStepStatus(s.id) === 'completed').length }}</div>
+                <div class="stat-label">Completados</div>
+              </div>
+              
+              <div class="stat-item">
+                <div class="stat-value">{{ demoSteps.filter(s => getDemoStepStatus(s.id) === 'active').length }}</div>
+                <div class="stat-label">En Progreso</div>
+              </div>
+              
+              <div class="stat-item">
+                <div class="stat-value">{{ demoSteps.filter(s => getDemoStepStatus(s.id) === 'pending').length }}</div>
+                <div class="stat-label">Pendientes</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones Rápidas -->
+          <div class="quick-actions">
+            <h4 class="actions-title">
+              <i class="fas fa-bolt"></i>
+              Acciones Rápidas
+            </h4>
+            
+            <div class="actions-grid">
+              <button 
+                class="btn btn-outline-info btn-sm action-btn"
+                (click)="executeStepManually('warehouse')"
+                [disabled]="!isDemoActive">
+                <i class="fas fa-warehouse"></i>
+                Bodega
+              </button>
+              
+              <button 
+                class="btn btn-outline-info btn-sm action-btn"
+                (click)="executeStepManually('products')"
+                [disabled]="!isDemoActive">
+                <i class="fas fa-search"></i>
+                Productos
+              </button>
+              
+              <button 
+                class="btn btn-outline-info btn-sm action-btn"
+                (click)="executeStepManually('client')"
+                [disabled]="!isDemoActive">
+                <i class="fas fa-user"></i>
+                Cliente
+              </button>
+              
+              <button 
+                class="btn btn-outline-info btn-sm action-btn"
+                (click)="executeStepManually('process')"
+                [disabled]="!isDemoActive">
+                <i class="fas fa-check"></i>
+                Finalizar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer del Demo -->
+  <div class="demo-footer">
+    <div class="footer-content">
+      <div class="footer-info">
+        <span class="demo-version">
+          <i class="fas fa-code-branch"></i>
+          v1.0.0 - Agente de Voz para Ventas
+        </span>
+        <span class="demo-status">
+          <i class="fas fa-circle" [class]="isDemoActive ? 'text-success' : 'text-muted'"></i>
+          {{ isDemoActive ? 'Demo Activo' : 'Demo Inactivo' }}
+        </span>
+      </div>
+      
+      <div class="footer-actions">
+        <button 
+          class="btn btn-outline-secondary btn-sm"
+          (click)="resetDemo()"
+          [disabled]="!isDemoActive">
+          <i class="fas fa-redo"></i>
+          Reiniciar
+        </button>
+        
+        <button 
+          class="btn btn-outline-primary btn-sm"
+          (click)="openFullWizard()">
+          <i class="fas fa-external-link-alt"></i>
+          Wizard Completo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
