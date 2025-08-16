@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.08.15.8 - 15 de Agosto 2025 (Beta)",
+  version: "2025.08.16.2 - 16 de Agosto 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -35,5 +35,5 @@ export const environment = {
     }
   },
   // GEMINI_API_KEY is injected at runtime via window['GEMINI_API_KEY']
-  GEMINI_API_KEY: (typeof window !== 'undefined' && window['GEMINI_API_KEY']) ? window['GEMINI_API_KEY'] : '',
+  GEMINI_API_KEY: 'AIzaSyAHT5s0bFQBG5a_vJGQWjC5OUIw0ZQPy_U', //s(typeof window !== 'undefined' && window['GEMINI_API_KEY']) ? window['GEMINI_API_KEY'] : '',
 };

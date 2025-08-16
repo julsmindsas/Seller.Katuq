@@ -1856,55 +1856,32 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         if (productosReales && Array.isArray(productosReales) && productosReales.length > 0) {
           console.log(`📦 Encontrados ${productosReales.length} productos en la bodega`);
           
-          // Convertir productos reales al formato esperado
-          this.productosCatalogo = productosReales.map((producto, index) => {
-            console.log(`📦 Procesando producto ${index + 1}:`, producto);
+          // Convertir productos reales al formato esperado usando la misma lógica que order-tools-registrar
+          this.productosCatalogo = productosReales.map((item: any) => {
+            console.log(`📦 Procesando item de inventario:`, item);
             
-            // Extraer datos del producto real
-            const titulo = producto.crearProducto?.titulo || producto.nombre || producto.titulo || producto.descripcion || `Producto ${index + 1}`;
-            const descripcion = producto.crearProducto?.descripcion || producto.descripcion || 'Sin descripción';
-            const categoria = producto.crearProducto?.categoria || producto.categoria || 'Sin categoría';
-            const precio = producto.precio?.precioUnitarioConIva || producto.precioUnitario || producto.precio || producto.precioVenta || 10000;
-            const stock = producto.disponibilidad?.cantidadDisponible || producto.stock || producto.cantidad || producto.existencia || 10;
+            // Extraer el producto del item de inventario
+            const producto = item.producto || item;
             
+            // Mapear usando la misma lógica que order-tools-registrar
             const productoMapeado = {
-              cd: producto.cd || producto.id || producto.codigo || producto.productoId || `PROD-${index + 1}`,
-              crearProducto: {
-                titulo: titulo,
-                descripcion: descripcion,
-                categoria: categoria
-              } as any,
-              precio: {
-                precioUnitarioConIva: precio,
-                precioUnitarioSinIva: precio * 0.8 // Aproximación del precio sin IVA
-              } as any,
+              ...producto,
               disponibilidad: {
-                inventarioSeguridad: producto.disponibilidad?.inventarioSeguridad || producto.stockMinimo || producto.stockMin || 5,
-                tiempoEntrega: producto.disponibilidad?.tiempoEntrega || '24-48 horas',
-                tipoEntrega: producto.disponibilidad?.tipoEntrega || 'Estándar',
-                cantidadMinVenta: producto.disponibilidad?.cantidadMinVenta || 1,
-                cantidadDisponible: stock,
-                inventariable: producto.disponibilidad?.inventariable !== false,
-                cantidadReservada: producto.disponibilidad?.cantidadReservada || 0,
-                totalVentas: producto.disponibilidad?.totalVentas || 0
-              } as any,
-              bodegaId: this.bodegaSeleccionada.idBodega,
-              // Agregar campos adicionales para mejor compatibilidad
-              nombre: titulo,
-              descripcion: descripcion,
-              precioUnitario: precio,
-              stock: stock
+                ...producto?.disponibilidad,
+                cantidadDisponible: item.cantidad || producto?.disponibilidad?.cantidadDisponible || 0,
+              },
+              bodegaId: item.bodegaId || this.bodegaSeleccionada.idBodega,
             };
             
-            console.log(`📦 Producto mapeado ${index + 1}:`, {
+            console.log(`📦 Producto mapeado:`, {
               cd: productoMapeado.cd,
-              titulo: productoMapeado.crearProducto.titulo,
-              precio: productoMapeado.precio.precioUnitarioConIva,
-              stock: productoMapeado.disponibilidad.cantidadDisponible,
-              categoria: productoMapeado.crearProducto.categoria
+              titulo: productoMapeado.crearProducto?.titulo,
+              precio: productoMapeado.precio?.precioUnitarioConIva,
+              stock: productoMapeado.disponibilidad?.cantidadDisponible,
+              categoria: productoMapeado.crearProducto?.categoria
             });
             return productoMapeado;
-          }) as any;
+          });
           
           console.log(`✅ Se cargaron ${this.productosCatalogo.length} productos reales de la bodega`);
           console.log('📦 Primeros 3 productos del catálogo:', this.productosCatalogo.slice(0, 3));
@@ -2088,7 +2065,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       if (query && query.trim()) {
         console.log('🔍 🔎 Búsqueda con query:', query);
         
-        // Intentar búsqueda real en el inventario
+        // Intentar búsqueda real en el inventario usando la misma lógica que order-tools-registrar
         try {
           console.log('🔍 Intentando búsqueda real en inventario...');
           const inventarioReal = await this.inventarioService.obtenerInventarioPorBodega(this.bodegaSeleccionada.idBodega).toPromise();
@@ -2097,33 +2074,34 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           if (inventarioReal && Array.isArray(inventarioReal) && inventarioReal.length > 0) {
             console.log(`🔍 ✅ Encontrados ${inventarioReal.length} productos en inventario real`);
             
-            // Filtrar por query
-            productosFiltrados = inventarioReal.filter(producto => {
+            // Filtrar por query usando la misma lógica que order-tools-registrar
+            productosFiltrados = inventarioReal.filter((item: any) => {
+              const producto = item.producto || item;
               const titulo = (producto.crearProducto?.titulo || producto.nombre || producto.titulo || '').toLowerCase();
-              const descripcion = (producto.crearProducto?.descripcion || producto.descripcion || '').toLowerCase();
-              const categoria = ((producto.crearProducto as any)?.categoria || producto.categoria || '').toLowerCase();
+              const codigoBarras = (producto.identificacion?.codigoBarras || producto.codigoBarras || '').toLowerCase();
+              const referencia = (producto.identificacion?.referencia || producto.referencia || '').toLowerCase();
               const queryLower = query.toLowerCase();
               
               return titulo.includes(queryLower) || 
-                     descripcion.includes(queryLower) || 
-                     categoria.includes(queryLower);
+                     codigoBarras.includes(queryLower) || 
+                     referencia.includes(queryLower);
             });
             
             console.log(`🔍 🔍 Filtrados ${productosFiltrados.length} productos por query "${query}"`);
             
           } else {
             console.log('🔍 ⚠️ No se encontraron productos en inventario real, usando catálogo local');
-                         // Fallback a búsqueda local
-             productosFiltrados = this.productosCatalogo.filter(producto => {
-               const titulo = (producto.crearProducto?.titulo || '').toLowerCase();
-               const descripcion = (producto.crearProducto?.descripcion || '').toLowerCase();
-               const categoria = ((producto.crearProducto as any)?.categoria || '').toLowerCase();
-               const queryLower = query.toLowerCase();
-               
-               return titulo.includes(queryLower) || 
-                      descripcion.includes(queryLower) || 
-                      categoria.includes(queryLower);
-             });
+            // Fallback a búsqueda local
+            productosFiltrados = this.productosCatalogo.filter(producto => {
+              const titulo = (producto.crearProducto?.titulo || '').toLowerCase();
+              const codigoBarras = (producto.identificacion?.codigoBarras || '').toLowerCase();
+              const referencia = (producto.identificacion?.referencia || '').toLowerCase();
+              const queryLower = query.toLowerCase();
+              
+              return titulo.includes(queryLower) || 
+                     codigoBarras.includes(queryLower) || 
+                     referencia.includes(queryLower);
+            });
           }
           
         } catch (error) {
@@ -2131,13 +2109,13 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           // Fallback a búsqueda local
           productosFiltrados = this.productosCatalogo.filter(producto => {
             const titulo = (producto.crearProducto?.titulo || '').toLowerCase();
-            const descripcion = (producto.crearProducto?.descripcion || '').toLowerCase();
-            const categoria = ((producto.crearProducto as any)?.categoria || '').toLowerCase();
+            const codigoBarras = (producto.identificacion?.codigoBarras || '').toLowerCase();
+            const referencia = (producto.identificacion?.referencia || '').toLowerCase();
             const queryLower = query.toLowerCase();
             
             return titulo.includes(queryLower) || 
-                   descripcion.includes(queryLower) || 
-                   categoria.includes(queryLower);
+                   codigoBarras.includes(queryLower) || 
+                   referencia.includes(queryLower);
           });
         }
         
@@ -2398,10 +2376,10 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     try {
       console.log('🛒 🔍 Buscando producto con ID:', productId);
       
-             // Buscar el producto en el catálogo
-       const productoEncontrado = this.productosCatalogo.find(p => 
-         p.cd === productId || (p as any).id === productId || (p as any).codigo === productId
-       );
+             // Buscar el producto en el catálogo usando la misma lógica que order-tools-registrar
+      const productoEncontrado = this.productosCatalogo.find(p => 
+        p.cd === productId || (p as any).id === productId || (p as any).codigo === productId
+      );
 
       if (!productoEncontrado) {
         console.log('🛒 ❌ Producto no encontrado en el catálogo');
@@ -2439,11 +2417,17 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         };
       }
 
-      // Crear producto para el carrito
+      // Crear producto para el carrito usando la misma estructura que order-tools-registrar
       const productoParaCarrito: Carrito = {
         producto: productoEncontrado as any,
-        cantidad: quantity,
-        estadoProcesoProducto: EstadoProceso.SinProducir
+        configuracion: {
+          producto: productoEncontrado as any,
+          datosEntrega: null as any,
+          preferencias: [],
+          adiciones: [],
+          tarjetas: []
+        },
+        cantidad: quantity
       };
 
       console.log('🛒 📦 Producto preparado para carrito:', productoParaCarrito);
