@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.08.14.5 - 14 de Agosto 2025 (Beta)",
+  version: "2025.08.16.2 - 16 de Agosto 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -10,11 +10,9 @@ export const environment = {
     appId: "1:262274219539:web:bd63a33f16779c7d4689e6",
     measurementId: "G-LFYSZ78R7F"
   },
-  urlPermitidas: 'https://sellercenter.katuq.com',
-  //urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
-  // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app', // API Google Cloud Functions
-   urlApi: 'https://api.katuq.com', // API AWS
-  //urlApi: 'http://localhost:3300', // API AWS
+  urlPermitidas: "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
+  //urlApi: "http://localhost:3300", // API Local,
+  urlApi: "https://api.katuq.com", // API AWS
   wsVoiceServiceUrl: 'wss://api.tuservidor.com/voice-websocket',
   voiceWsUrl: 'wss://api.katuq.com/voice-websocket',
   wompi: {
@@ -36,4 +34,6 @@ export const environment = {
       endpoint: "gmaps-proxy"
     }
   },
+  // GEMINI_API_KEY is injected at runtime via window['GEMINI_API_KEY']
+  GEMINI_API_KEY: 'AIzaSyAHT5s0bFQBG5a_vJGQWjC5OUIw0ZQPy_U', //s(typeof window !== 'undefined' && window['GEMINI_API_KEY']) ? window['GEMINI_API_KEY'] : '',
 };

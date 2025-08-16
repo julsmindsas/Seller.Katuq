@@ -49,6 +49,17 @@
           </div>
         </div>
 
+        <div class="option-item" (click)="selectMode('live-audio', $event)"
+          [ngClass]="{'selected': selectedMode === 'live-audio'}">
+          <div class="option-icon">
+            <i class="fa fa-waveform"></i>
+          </div>
+          <div class="option-details">
+            <span class="option-title">Live Audio</span>
+            <span class="option-description">Conversación en tiempo real con IA</span>
+          </div>
+        </div>
+
         <!-- Nueva sección de Soporte -->
         <div class="option-separator">Soporte</div>
 
@@ -132,6 +143,14 @@
     (stepChanged)="currentStepIndex = $event.stepIndex"
     (errorOccurred)="onVoiceError($event)">
   </app-voice-agent>
+
+  <!-- Componente Live Audio -->
+  <div *ngIf="selectedMode === 'live-audio'" class="live-audio-container">
+    <app-live-audio></app-live-audio>
+    <button class="close-live-audio-btn" (click)="stopLiveAudioMode($event)" title="Cerrar Live Audio">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
 
   <!-- Burbuja de chat minimizada -->
   <div *ngIf="chatMinimized" class="minimized-chat-bubble" (click)="maximizeChat($event)">

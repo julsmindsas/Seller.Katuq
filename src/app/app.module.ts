@@ -44,6 +44,7 @@ import { AppTranslateModule } from './shared/modules/translate.module';
 // Importamos el nuevo módulo en lugar del componente individual
 import { VoiceInteractionModule } from './shared/components/voice-interaction/voice-interaction.module';
 import { VoiceAgentModule } from './shared/components/voice-agent/voice-agent.module';
+import { LiveAudioModule } from './shared/components/gemini-asistant/live-audio/live-audio.module';
 
 // Importar componentes
 import { TermsConditionsComponent } from './components/terms-conditions/terms-conditions.component';
@@ -116,7 +117,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     FacturaTirillaModule,
     AppTranslateModule,
     VoiceInteractionModule,
-    VoiceAgentModule // Agregamos el módulo aquí
+    VoiceAgentModule, // Agregamos el módulo aquí
+    LiveAudioModule
   ],
   providers: [
     NotificationService,
