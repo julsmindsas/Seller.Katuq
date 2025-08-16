@@ -1,0 +1,346 @@
+<div class="voice-sales-wizard" [class.active]="isActive">
+  <!-- Header del Wizard -->
+  <div class="wizard-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h2 class="wizard-title">
+          <i class="fas fa-microphone-alt"></i>
+          Agente de Voz para Ventas Katuq
+        </h2>
+        <p class="wizard-subtitle">Realiza ventas completas usando comandos de voz</p>
+      </div>
+      
+      <div class="header-actions">
+        <button 
+          class="btn btn-outline-primary btn-sm" 
+          (click)="resetVoiceSales()"
+          [disabled]="isProcessing">
+          <i class="fas fa-redo"></i> Reiniciar
+        </button>
+        <button 
+          class="btn btn-outline-secondary btn-sm" 
+          (click)="endVoiceSales()"
+          [disabled]="isProcessing">
+          <i class="fas fa-stop"></i> Finalizar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Progreso -->
+  <div class="progress-section">
+    <div class="progress-info">
+      <span class="progress-text">Progreso: {{ completionPercentage }}%</span>
+      <span class="step-text">Paso {{ currentStep }} de {{ totalSteps }}</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="completionPercentage"></div>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div class="wizard-content">
+    <div class="content-grid">
+      
+      <!-- Panel Izquierdo - Pasos del Wizard -->
+      <div class="steps-panel">
+        <h3 class="panel-title">
+          <i class="fas fa-list-ol"></i>
+          Pasos del Proceso
+        </h3>
+        
+        <div class="steps-list">
+          <div 
+            *ngFor="let step of voiceSalesService.getAllSteps()"
+            class="step-item"
+            [class]="getStepClass(step)"
+            [class.clickable]="canNavigateToStep(step.id)"
+            (click)="canNavigateToStep(step.id) ? goToStep(step.id) : null">
+            
+            <div class="step-icon">
+              <i [class]="getStepIcon(step)"></i>
+            </div>
+            
+            <div class="step-content">
+              <div class="step-number">{{ step.id }}</div>
+              <div class="step-name">{{ step.name }}</div>
+              <div class="step-description">{{ step.description }}</div>
+            </div>
+            
+            <div class="step-status">
+              <i *ngIf="step.isCompleted" class="fas fa-check text-success"></i>
+              <i *ngIf="step.isActive" class="fas fa-play text-primary"></i>
+              <i *ngIf="!step.isCompleted && !step.isActive" class="fas fa-clock text-muted"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Central - Paso Actual -->
+      <div class="current-step-panel">
+        <div class="step-header">
+          <h3 class="step-title">
+            <i [class]="currentStepInfo?.icon"></i>
+            {{ currentStepInfo?.name || 'Paso Actual' }}
+          </h3>
+          <div class="step-progress">
+            <span class="step-number">{{ currentStep }}</span>
+            <span class="step-separator">/</span>
+            <span class="total-steps">{{ totalSteps }}</span>
+          </div>
+        </div>
+
+        <div class="step-content">
+          <div class="step-description">
+            <p>{{ currentStepInfo?.description || 'Descripción del paso actual' }}</p>
+          </div>
+
+          <!-- Información del Paso Actual -->
+          <div class="step-info" *ngIf="salesProgress">
+            <div class="info-card">
+              <div class="info-header">
+                <i class="fas fa-info-circle"></i>
+                <span>Estado del Paso</span>
+              </div>
+              <div class="info-content">
+                <div class="info-item">
+                  <span class="label">Puede avanzar:</span>
+                  <span class="value" [class]="salesProgress.canProceed ? 'text-success' : 'text-danger'">
+                    <i [class]="salesProgress.canProceed ? 'fas fa-check' : 'fas fa-times'"></i>
+                    {{ salesProgress.canProceed ? 'Sí' : 'No' }}
+                  </span>
+                </div>
+                
+                <div class="info-item" *ngIf="salesProgress.missingRequirements.length > 0">
+                  <span class="label">Requisitos faltantes:</span>
+                  <div class="missing-requirements">
+                    <span 
+                      *ngFor="let req of salesProgress.missingRequirements" 
+                      class="requirement-badge">
+                      {{ req }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <span class="label">Siguiente acción:</span>
+                  <span class="value">{{ salesProgress.nextAction }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comandos de Voz -->
+          <div class="voice-commands-section">
+            <div class="commands-header">
+              <h4>
+                <i class="fas fa-microphone"></i>
+                Comandos de Voz
+              </h4>
+              <p class="help-text">{{ getCurrentStepHelp() }}</p>
+            </div>
+
+            <!-- Input de Comando -->
+            <div class="command-input-section">
+              <div class="input-group">
+                <input 
+                  #voiceInput
+                  type="text" 
+                  class="form-control command-input"
+                  placeholder="Escribe tu comando de voz aquí..."
+                  [(ngModel)]="voiceCommand"
+                  (keyup.enter)="executeVoiceCommand()"
+                  [disabled]="isProcessing">
+                
+                <button 
+                  class="btn btn-primary command-button"
+                  (click)="executeVoiceCommand()"
+                  [disabled]="!voiceCommand.trim() || isProcessing">
+                  <i class="fas fa-play" *ngIf="!isProcessing"></i>
+                  <i class="fas fa-spinner fa-spin" *ngIf="isProcessing"></i>
+                  Ejecutar
+                </button>
+              </div>
+            </div>
+
+            <!-- Comandos de Ejemplo -->
+            <div class="example-commands">
+              <h5>Comandos de ejemplo:</h5>
+              <div class="command-chips">
+                <button 
+                  *ngFor="let command of getExampleCommands()"
+                  class="btn btn-outline-secondary btn-sm command-chip"
+                  (click)="executeExampleCommand(command)"
+                  [disabled]="isProcessing">
+                  {{ command }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navegación Manual -->
+          <div class="manual-navigation">
+            <h5>Navegación Manual:</h5>
+            <div class="navigation-buttons">
+              <button 
+                class="btn btn-outline-primary"
+                [disabled]="getPreviousStepButtonState().disabled"
+                (click)="previousStep()">
+                <i [class]="getPreviousStepButtonState().icon"></i>
+                {{ getPreviousStepButtonState().text }}
+              </button>
+              
+              <button 
+                class="btn btn-primary"
+                [disabled]="getNextStepButtonState().disabled"
+                (click)="nextStep()">
+                <i [class]="getNextStepButtonState().icon"></i>
+                {{ getNextStepButtonState().text }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Derecho - Información y Historial -->
+      <div class="info-panel">
+        
+        <!-- Estado de la Sesión -->
+        <div class="session-status">
+          <h4 class="panel-title">
+            <i class="fas fa-chart-line"></i>
+            Estado de la Sesión
+          </h4>
+          
+          <div class="status-cards">
+            <div class="status-card">
+              <div class="status-icon">
+                <i class="fas fa-microphone"></i>
+              </div>
+              <div class="status-info">
+                <span class="status-label">Agente Activo</span>
+                <span class="status-value" [class]="isActive ? 'text-success' : 'text-danger'">
+                  {{ isActive ? 'Sí' : 'No' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="status-card">
+              <div class="status-icon">
+                <i class="fas fa-cog"></i>
+              </div>
+              <div class="status-info">
+                <span class="status-label">Procesando</span>
+                <span class="status-value" [class]="isProcessing ? 'text-warning' : 'text-success'">
+                  {{ isProcessing ? 'Sí' : 'No' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="status-card">
+              <div class="status-icon">
+                <i class="fas fa-shopping-cart"></i>
+              </div>
+              <div class="status-info">
+                <span class="status-label">Productos</span>
+                <span class="status-value">
+                  {{ salesProgress?.data?.cart?.count || 0 }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Último Resultado -->
+        <div class="last-result" *ngIf="lastResult">
+          <h4 class="panel-title">
+            <i class="fas fa-terminal"></i>
+            Último Comando
+          </h4>
+          
+          <div class="result-card" [class]="lastResult.success ? 'success' : 'error'">
+            <div class="result-header">
+              <i [class]="lastResult.success ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+              <span class="result-status">
+                {{ lastResult.success ? 'Exitoso' : 'Error' }}
+              </span>
+            </div>
+            
+            <div class="result-message">
+              {{ lastResult.message }}
+            </div>
+            
+            <div class="result-next-action" *ngIf="lastResult.nextAction">
+              <strong>Siguiente:</strong> {{ lastResult.nextAction }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Historial de Comandos -->
+        <div class="command-history">
+          <div class="history-header">
+            <h4 class="panel-title">
+              <i class="fas fa-history"></i>
+              Historial de Comandos
+            </h4>
+            <button 
+              class="btn btn-outline-danger btn-sm"
+              (click)="clearCommandHistory()"
+              [disabled]="commandHistory.length === 0">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          
+          <div class="history-list">
+            <div 
+              *ngFor="let command of commandHistory.slice(0, 10)"
+              class="history-item"
+              [class]="command.success ? 'success' : 'error'">
+              
+              <div class="command-info">
+                <div class="command-text">{{ command.command }}</div>
+                <div class="command-time">
+                  {{ command.timestamp | date:'HH:mm:ss' }}
+                </div>
+              </div>
+              
+              <div class="command-status">
+                <i [class]="command.success ? 'fas fa-check' : 'fas fa-times'"></i>
+              </div>
+            </div>
+            
+            <div *ngIf="commandHistory.length === 0" class="no-history">
+              <i class="fas fa-inbox"></i>
+              <span>No hay comandos ejecutados</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer del Wizard -->
+  <div class="wizard-footer">
+    <div class="footer-content">
+      <div class="footer-info">
+        <span class="session-time">
+          <i class="fas fa-clock"></i>
+          Sesión activa
+        </span>
+        <span class="completion-status">
+          <i class="fas fa-flag-checkered"></i>
+          {{ completionPercentage }}% completado
+        </span>
+      </div>
+      
+      <div class="footer-actions">
+        <button 
+          class="btn btn-outline-info btn-sm"
+          (click)="voiceSalesService.getCurrentProgress()">
+          <i class="fas fa-sync"></i>
+          Actualizar Estado
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

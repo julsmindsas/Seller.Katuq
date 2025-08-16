@@ -160,7 +160,7 @@ export class GeminiAudioService {
   orderStatus$: Observable<OrderStatus | null> = this.orderStatusSubject.asObservable();
   progress$: Observable<number> = this.progressSubject.asObservable();
 
-  constructor(private sphereVisualService: SphereVisualService) {
+  constructor(private sphereVisualService: SphereVisualService, private bodegaService: BodegaService, private inventarioService: InventarioService, private cartService: CartSingletonService, private ventasService: VentasService) {
     this.initClient();
     this.initSalesSystem();
   }
@@ -565,7 +565,7 @@ export class GeminiAudioService {
 
           // Procesar la herramienta directamente aquí (patrón oficial)
           try {
-            const response = this.handleKatuqToolResponse(toolCall);
+            const response = await this.handleKatuqToolResponse(toolCall);
             functionResponses.push({
               id: functionCall.id,
               name: functionCall.name,
@@ -1356,7 +1356,20 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
               },
               required: ['query']
             }
-          }
+          },
+
+          // === VALIDACIÓN DE CUPONES ===
+          {
+            name: 'validateCoupon',
+            description: 'Valida un cupón de descuento y lo aplica al pedido si es válido',
+            parameters: {
+              type: 'object',
+              properties: {
+                couponCode: { type: 'string', description: 'Código del cupón a validar' }
+              },
+              required: ['couponCode']
+            }
+          },
         ]
       }
     };
@@ -1375,12 +1388,12 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
 
     console.log('📡 Suscribiéndose a llamadas de herramientas...');
     // Suscribirse a llamadas de herramientas
-    this.toolCall$.subscribe(toolCall => {
+    this.toolCall$.subscribe(async (toolCall) => {
       if (toolCall) {
         console.log('🛠️ Llamada a herramienta Katuq recibida:', toolCall);
 
         // Procesar la llamada a la herramienta
-        const response = this.handleKatuqToolResponse(toolCall);
+        const response = await this.handleKatuqToolResponse(toolCall);
 
         // Enviar respuesta (comentado por ahora para evitar errores de tipos)
         console.log('📤 Respuesta de herramienta:', response);
@@ -1423,12 +1436,12 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     await this.initSessionWithKatuqTools();
 
     // Suscribirse a todo el flujo
-    this.toolCall$.subscribe(toolCall => {
+    this.toolCall$.subscribe(async (toolCall) => {
       if (toolCall) {
-        console.log('��️ [Test] Herramienta llamada:', toolCall);
+        console.log('🛠️ [Test] Herramienta llamada:', toolCall);
 
         // Procesar herramienta
-        const response = this.handleKatuqToolResponse(toolCall);
+        const response = await this.handleKatuqToolResponse(toolCall);
         console.log('📤 [Test] Respuesta generada:', response);
 
         // Enviar respuesta al modelo
@@ -1491,7 +1504,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
   /**
    * Maneja las respuestas de herramientas específicas del sistema Katuq
    */
-  handleKatuqToolResponse(toolCall: ToolCall): any {
+  async handleKatuqToolResponse(toolCall: ToolCall): Promise<any> {
     const { name, args } = toolCall;
     console.log(`🔧 Ejecutando herramienta Katuq: ${name}`, args);
 
@@ -1500,22 +1513,22 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
 
       switch (name) {
         case 'listWarehouses':
-          response = this.handleListWarehouses(args);
+          response = await this.handleListWarehouses(args);
           this.emitKatuqToolEvent('listWarehouses', response.data, response.success, response.message);
           break;
 
         case 'selectWarehouse':
-          response = this.handleSelectWarehouse(args);
+          response = await this.handleSelectWarehouse(args);
           this.emitKatuqToolEvent('selectWarehouse', response.data, response.success, response.message);
           break;
 
         case 'searchProductsAdvanced':
-          response = this.handleSearchProductsAdvanced(args);
+          response = await this.handleSearchProductsAdvanced(args);
           this.emitKatuqToolEvent('searchProductsAdvanced', response.data, response.success, response.message);
           break;
 
         case 'addToCart':
-          response = this.handleAddToCart(args);
+          response = await this.handleAddToCart(args);
           this.emitKatuqToolEvent('addToCart', response.data, response.success, response.message);
           break;
 
@@ -1550,7 +1563,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           break;
 
         case 'processSale':
-          response = this.handleProcessSale(args);
+          response = await this.handleProcessSale(args);
           this.emitKatuqToolEvent('processSale', response.data, response.success, response.message);
           break;
 
@@ -1609,6 +1622,11 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           this.emitKatuqToolEvent('showSphereNotification', response.data, response.success, response.message);
           break;
 
+        case 'validateCoupon':
+          response = await this.handleValidateCoupon(args);
+          this.emitKatuqToolEvent('validateCoupon', response.data, response.success, response.message);
+          break;
+
         default:
           console.warn(`❌ Herramienta no reconocida: ${name}`);
           response = {
@@ -1648,43 +1666,124 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
   /**
    * Maneja la lista de bodegas disponibles
    */
-  private handleListWarehouses(args: any): DemoResponse {
-    console.log('🏪 handleListWarehouses llamado con args:', args);
+  private async handleListWarehouses(args: any): Promise<DemoResponse> {
+    console.log('🏭 === INICIO: handleListWarehouses ===');
+    console.log('🏭 Argumentos recibidos:', args);
+    
+    try {
+      console.log('🏭 Intentando obtener bodegas del sistema real...');
+      const realWarehouses = await this.bodegaService.getBodegas().toPromise();
+      console.log('🏭 Respuesta de bodegaService.getBodegas():', realWarehouses);
+      
+      if (realWarehouses && Array.isArray(realWarehouses) && realWarehouses.length > 0) {
+        console.log(`🏭 ✅ Se encontraron ${realWarehouses.length} bodegas reales`);
+        
+        // Mapear bodegas reales al formato esperado
+        const mappedWarehouses = realWarehouses.map((bodega, index) => {
+          console.log(`🏭 Mapeando bodega ${index + 1}:`, bodega);
+          
+          const bodegaMapeada = {
+            id: bodega.idBodega || bodega.id || `BOD-${index + 1}`,
+            name: bodega.nombre || bodega.name || `Bodega ${index + 1}`,
+            location: bodega.direccion || bodega.direccionCompleta || bodega.location || 'Ubicación no especificada',
+            capacity: bodega.capacidad || bodega.capacity || 'Capacidad no especificada',
+            status: bodega.estado || bodega.status || 'Activa'
+          };
+          
+          console.log(`🏭 Bodega mapeada ${index + 1}:`, bodegaMapeada);
+          return bodegaMapeada;
+        });
+        
+        console.log('🏭 Bodegas mapeadas finales:', mappedWarehouses);
+        
+        this.pasoActual = 1;
+        this.updateVisualStep('bodega');
+        this.updateOrderStatus();
+        
+        console.log('🏭 === FIN: handleListWarehouses (ÉXITO) ===');
+        
+        // Preparar respuesta con información detallada de bodegas
+        const bodegasFormateadas = mappedWarehouses.map(b => ({
+          id: b.id,
+          nombre: b.name,
+          ubicacion: b.location,
+          capacidad: b.capacity || 'No especificada',
+          estado: b.status || 'Activa',
+          productos: 'Por cargar'
+        }));
 
-    // Datos de demostración de bodegas
-    const mockWarehouses = [
-      { id: 'BOD001', nombre: 'Bodega Principal Bogotá', direccion: 'Av. El Dorado 123', activa: true },
-      { id: 'BOD002', nombre: 'Bodega Norte', direccion: 'Calle 127 45-67', activa: true },
-      { id: 'BOD003', nombre: 'Bodega Sur', direccion: 'Av. Boyacá 234-56', activa: true },
-      { id: 'BOD004', nombre: 'Bodega Medellín', direccion: 'Carrera 70 890-12', activa: true },
-      { id: 'BOD005', nombre: 'Bodega Cali', direccion: 'Av. 6N 345-67', activa: false }
-    ];
-
-    const activeBodegas = mockWarehouses.filter(b => b.activa);
-
-    const response: DemoResponse = {
-      success: true,
-      data: {
-        warehouses: activeBodegas,
-        total: activeBodegas.length,
-        inactive: mockWarehouses.length - activeBodegas.length
-      },
-      message: `Se encontraron ${activeBodegas.length} bodegas activas disponibles para realizar ventas.`,
-      visualUpdate: {
-        stepName: 'bodega',
-        progress: 10,
-        nextActions: ['Selecciona una bodega usando selectWarehouse con el ID de la bodega deseada']
+        return {
+          success: true,
+          data: { 
+            warehouses: bodegasFormateadas,
+            total: bodegasFormateadas.length,
+            message: `Se encontraron ${bodegasFormateadas.length} bodegas disponibles`
+          },
+          message: `Se encontraron ${bodegasFormateadas.length} bodegas disponibles en el sistema. Selecciona una con selectWarehouse para ver sus productos.`,
+          visualUpdate: { 
+            stepName: 'bodega', 
+            progress: 20, 
+            nextActions: [`Selecciona una bodega con selectWarehouse`] 
+          }
+        };
+        
+      } else {
+        console.log('🏭 ⚠️ No se encontraron bodegas reales o respuesta inválida');
+        console.log('🏭 Usando bodegas demo como fallback...');
+        
+        // Fallback a bodegas demo
+        const demoWarehouses = this.generateMockWarehouses();
+        console.log('🏭 Bodegas demo generadas:', demoWarehouses);
+        
+        this.pasoActual = 1;
+        this.updateVisualStep('bodega');
+        this.updateOrderStatus();
+        
+        console.log('🏭 === FIN: handleListWarehouses (FALLBACK) ===');
+        
+        return {
+          success: true,
+          data: { warehouses: demoWarehouses },
+          message: `Se encontraron ${demoWarehouses.length} bodegas demo (modo fallback)`,
+          visualUpdate: { 
+            stepName: 'bodega', 
+            progress: 20, 
+            nextActions: [`Selecciona una bodega con selectWarehouse`] 
+          }
+        };
       }
-    };
-
-    console.log('📤 Lista de bodegas generada:', response);
-    return response;
+      
+    } catch (error: any) {
+      console.error('🏭 ❌ Error obteniendo bodegas reales:', error);
+      console.log('🏭 Usando bodegas demo como fallback por error...');
+      
+      // Fallback por error
+      const demoWarehouses = this.generateMockWarehouses();
+      console.log('🏭 Bodegas demo generadas por error:', demoWarehouses);
+      
+      this.pasoActual = 1;
+      this.updateVisualStep('bodega');
+      this.updateOrderStatus();
+      
+      console.log('🏭 === FIN: handleListWarehouses (ERROR + FALLBACK) ===');
+      
+      return {
+        success: true,
+        data: { warehouses: demoWarehouses },
+        message: `Se encontraron ${demoWarehouses.length} bodegas demo (modo fallback por error)`,
+        visualUpdate: { 
+          stepName: 'bodega', 
+          progress: 20, 
+          nextActions: [`Selecciona una bodega con selectWarehouse`] 
+        }
+      };
+    }
   }
 
   /**
    * Maneja la selección de una bodega
    */
-  private handleSelectWarehouse(args: any): DemoResponse {
+  private async handleSelectWarehouse(args: any): Promise<DemoResponse> {
     console.log('🏭 handleSelectWarehouse llamado con args:', args);
     const { warehouseId } = args;
 
@@ -1696,62 +1795,227 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       };
     }
 
-    // Simular selección de bodega
-    const mockWarehouses = [
-      { idBodega: 'BOD001', nombre: 'Bodega Principal Bogotá', direccion: 'Av. El Dorado 123' },
-      { idBodega: 'BOD002', nombre: 'Bodega Norte', direccion: 'Calle 127 45-67' },
-      { idBodega: 'BOD003', nombre: 'Bodega Sur', direccion: 'Av. Boyacá 234-56' }
-    ];
+    try {
+      // Usar el BodegaService real para obtener la bodega específica
+      const realWarehouses = await this.bodegaService.getBodegas().toPromise();
+      const selectedWarehouse = realWarehouses?.find(b => 
+        (b.idBodega === warehouseId) || (b.id === warehouseId)
+      );
 
-    this.bodegaSeleccionada = mockWarehouses.find(b => b.idBodega === warehouseId);
+      if (!selectedWarehouse) {
+        return {
+          success: false,
+          message: `No se encontró la bodega con ID: ${warehouseId}`,
+          error: 'Bodega no encontrada',
+          visualUpdate: {
+            stepName: 'bodega',
+            progress: 5,
+            nextActions: ['Usa listWarehouses para ver las bodegas disponibles']
+          }
+        };
+      }
 
-    if (!this.bodegaSeleccionada) {
+      // Guardar la bodega seleccionada
+      this.bodegaSeleccionada = {
+        idBodega: selectedWarehouse.idBodega || selectedWarehouse.id,
+        nombre: selectedWarehouse.nombre,
+        direccion: selectedWarehouse.direccion || selectedWarehouse.direccionCompleta || 'Dirección no especificada'
+      };
+
+      // Cargar productos reales de la bodega seleccionada usando InventarioService
+      try {
+        console.log('📦 Cargando productos reales de la bodega:', this.bodegaSeleccionada.idBodega);
+        
+        let productosReales: any[] = [];
+        
+        // Intentar primero con getProductosBodega
+        try {
+          console.log('📦 Intentando con getProductosBodega...');
+          productosReales = await this.inventarioService.getProductosBodega(this.bodegaSeleccionada.idBodega).toPromise() || [];
+          console.log('📦 Respuesta de getProductosBodega:', productosReales);
+        } catch (error) {
+          console.log('⚠️ getProductosBodega falló, intentando con obtenerInventarioPorBodega...');
+          try {
+            const inventario = await this.inventarioService.obtenerInventarioPorBodega(this.bodegaSeleccionada.idBodega).toPromise();
+            console.log('📦 Respuesta de obtenerInventarioPorBodega:', inventario);
+            
+            // Extraer productos del inventario
+            if (inventario && inventario.productos) {
+              productosReales = inventario.productos;
+            } else if (inventario && Array.isArray(inventario)) {
+              productosReales = inventario;
+            } else if (inventario && inventario.items) {
+              productosReales = inventario.items;
+            }
+          } catch (error2) {
+            console.log('⚠️ obtenerInventarioPorBodega también falló:', error2);
+            productosReales = [];
+          }
+        }
+        
+        if (productosReales && Array.isArray(productosReales) && productosReales.length > 0) {
+          console.log(`📦 Encontrados ${productosReales.length} productos en la bodega`);
+          
+          // Convertir productos reales al formato esperado
+          this.productosCatalogo = productosReales.map((producto, index) => {
+            console.log(`📦 Procesando producto ${index + 1}:`, producto);
+            
+            // Extraer datos del producto real
+            const titulo = producto.crearProducto?.titulo || producto.nombre || producto.titulo || producto.descripcion || `Producto ${index + 1}`;
+            const descripcion = producto.crearProducto?.descripcion || producto.descripcion || 'Sin descripción';
+            const categoria = producto.crearProducto?.categoria || producto.categoria || 'Sin categoría';
+            const precio = producto.precio?.precioUnitarioConIva || producto.precioUnitario || producto.precio || producto.precioVenta || 10000;
+            const stock = producto.disponibilidad?.cantidadDisponible || producto.stock || producto.cantidad || producto.existencia || 10;
+            
+            const productoMapeado = {
+              cd: producto.cd || producto.id || producto.codigo || producto.productoId || `PROD-${index + 1}`,
+              crearProducto: {
+                titulo: titulo,
+                descripcion: descripcion,
+                categoria: categoria
+              } as any,
+              precio: {
+                precioUnitarioConIva: precio,
+                precioUnitarioSinIva: precio * 0.8 // Aproximación del precio sin IVA
+              } as any,
+              disponibilidad: {
+                inventarioSeguridad: producto.disponibilidad?.inventarioSeguridad || producto.stockMinimo || producto.stockMin || 5,
+                tiempoEntrega: producto.disponibilidad?.tiempoEntrega || '24-48 horas',
+                tipoEntrega: producto.disponibilidad?.tipoEntrega || 'Estándar',
+                cantidadMinVenta: producto.disponibilidad?.cantidadMinVenta || 1,
+                cantidadDisponible: stock,
+                inventariable: producto.disponibilidad?.inventariable !== false,
+                cantidadReservada: producto.disponibilidad?.cantidadReservada || 0,
+                totalVentas: producto.disponibilidad?.totalVentas || 0
+              } as any,
+              bodegaId: this.bodegaSeleccionada.idBodega,
+              // Agregar campos adicionales para mejor compatibilidad
+              nombre: titulo,
+              descripcion: descripcion,
+              precioUnitario: precio,
+              stock: stock
+            };
+            
+            console.log(`📦 Producto mapeado ${index + 1}:`, {
+              cd: productoMapeado.cd,
+              titulo: productoMapeado.crearProducto.titulo,
+              precio: productoMapeado.precio.precioUnitarioConIva,
+              stock: productoMapeado.disponibilidad.cantidadDisponible,
+              categoria: productoMapeado.crearProducto.categoria
+            });
+            return productoMapeado;
+          }) as any;
+          
+          console.log(`✅ Se cargaron ${this.productosCatalogo.length} productos reales de la bodega`);
+          console.log('📦 Primeros 3 productos del catálogo:', this.productosCatalogo.slice(0, 3));
+          
+        } else {
+          console.log('⚠️ No se encontraron productos en la bodega o respuesta inválida:', productosReales);
+          console.log('🔄 Usando productos demo como fallback');
+          this.productosCatalogo = this.generateMockProducts(20); // Menos productos demo
+        }
+        
+      } catch (error: any) {
+        console.error('❌ Error cargando productos reales:', error);
+        console.log('🔄 Usando productos demo como fallback');
+        this.productosCatalogo = this.generateMockProducts(20);
+      }
+
+      this.pasoActual = 2;
+
+      // Actualizar estado visual
+      this.updateVisualStep('productos');
+      this.updateOrderStatus();
+
+      // Mostrar notificación
+      this.showToast(`Bodega "${this.bodegaSeleccionada.nombre}" seleccionada correctamente`, 'Bodega Configurada');
+
+      const response: DemoResponse = {
+        success: true,
+        data: {
+          selectedWarehouse: {
+            id: this.bodegaSeleccionada.idBodega,
+            name: this.bodegaSeleccionada.nombre,
+            address: this.bodegaSeleccionada.direccion
+          },
+          productsLoaded: this.productosCatalogo.length,
+          catalogPreview: this.productosCatalogo.slice(0, 3).map(p => ({
+            id: p.cd,
+            name: p.crearProducto?.titulo,
+            price: p.precio?.precioUnitarioConIva
+          }))
+        },
+        message: `¡Perfecto! Bodega "${this.bodegaSeleccionada.nombre}" seleccionada. Se cargaron ${this.productosCatalogo.length} productos disponibles.`,
+        visualUpdate: {
+          stepName: 'productos',
+          progress: 25,
+          nextActions: [
+            'Busca productos con searchProductsAdvanced',
+            'Agrega productos directamente con quickAddToCart'
+          ]
+        }
+      };
+
+      console.log('📤 Bodega real seleccionada:', response);
+      return response;
+
+    } catch (error: any) {
+      console.error('❌ Error seleccionando bodega real:', error);
+      
+      // Fallback a datos demo si hay error
+      const mockWarehouses = [
+        { idBodega: 'BOD001', nombre: 'Bodega Principal Bogotá', direccion: 'Av. El Dorado 123' },
+        { idBodega: 'BOD002', nombre: 'Bodega Norte', direccion: 'Calle 127 45-67' },
+        { idBodega: 'BOD003', nombre: 'Bodega Sur', direccion: 'Av. Boyacá 234-56' }
+      ];
+
+      this.bodegaSeleccionada = mockWarehouses.find(b => b.idBodega === warehouseId);
+
+      if (!this.bodegaSeleccionada) {
+        return {
+          success: false,
+          message: `No se encontró la bodega con ID: ${warehouseId} (modo demo)`,
+          error: 'Bodega no encontrada',
+          visualUpdate: {
+            stepName: 'bodega',
+            progress: 5,
+            nextActions: ['Usa listWarehouses para ver las bodegas disponibles']
+          }
+        };
+      }
+
+      // Continuar con datos demo
+      this.productosCatalogo = this.generateMockProducts(50);
+      this.pasoActual = 2;
+      this.updateVisualStep('productos');
+      this.updateOrderStatus();
+
       return {
-        success: false,
-        message: `No se encontró la bodega con ID: ${warehouseId}`,
-        error: 'Bodega no encontrada'
+        success: true,
+        data: {
+          selectedWarehouse: {
+            id: this.bodegaSeleccionada.idBodega,
+            name: this.bodegaSeleccionada.nombre,
+            address: this.bodegaSeleccionada.direccion
+          },
+          productsLoaded: this.productosCatalogo.length,
+          catalogPreview: this.productosCatalogo.slice(0, 3).map(p => ({
+            id: p.cd,
+            name: p.crearProducto?.titulo,
+            price: p.precio?.precioUnitarioConIva
+          }))
+        },
+        message: `¡Perfecto! Bodega "${this.bodegaSeleccionada.nombre}" seleccionada (modo demo). Se cargaron ${this.productosCatalogo.length} productos disponibles.`,
+        visualUpdate: {
+          stepName: 'productos',
+          progress: 25,
+          nextActions: [
+            'Busca productos con searchProductsAdvanced',
+            'Agrega productos directamente con quickAddToCart'
+          ]
+        }
       };
     }
-
-    // Simular carga de productos para la bodega seleccionada
-    this.productosCatalogo = this.generateMockProducts(50);
-    this.pasoActual = 2;
-
-    // Actualizar estado visual
-    this.updateVisualStep('productos');
-    this.updateOrderStatus();
-
-    // Mostrar notificación
-    this.showToast(`Bodega "${this.bodegaSeleccionada.nombre}" seleccionada correctamente`, 'Bodega Configurada');
-
-    const response: DemoResponse = {
-      success: true,
-      data: {
-        selectedWarehouse: {
-          id: this.bodegaSeleccionada.idBodega,
-          name: this.bodegaSeleccionada.nombre,
-          address: this.bodegaSeleccionada.direccion
-        },
-        productsLoaded: this.productosCatalogo.length,
-        catalogPreview: this.productosCatalogo.slice(0, 3).map(p => ({
-          id: p.cd,
-          name: p.crearProducto?.titulo,
-          price: p.precio?.precioUnitarioConIva
-        }))
-      },
-      message: `¡Perfecto! Bodega "${this.bodegaSeleccionada.nombre}" seleccionada. Se cargaron ${this.productosCatalogo.length} productos disponibles.`,
-      visualUpdate: {
-        stepName: 'productos',
-        progress: 25,
-        nextActions: [
-          'Busca productos con searchProductsAdvanced',
-          'Agrega productos directamente con quickAddToCart'
-        ]
-      }
-    };
-
-    console.log('📤 Bodega seleccionada:', response);
-    return response;
   }
 
   /**
@@ -1801,22 +2065,201 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
   /**
    * Maneja la búsqueda avanzada de productos
    */
-  private handleSearchProductsAdvanced(args: any): DemoResponse {
-    console.log('🔍 handleSearchProductsAdvanced llamado con args:', args);
+  private async handleSearchProductsAdvanced(args: any): Promise<DemoResponse> {
+    console.log('🔍 === INICIO: handleSearchProductsAdvanced ===');
+    console.log('🔍 Argumentos recibidos:', args);
+    console.log('🔍 Bodega seleccionada:', this.bodegaSeleccionada);
+    console.log('🔍 Productos en catálogo actual:', this.productosCatalogo?.length || 0);
+    
     const { query, category, minPrice, maxPrice, minStock, sortBy, limit = 10 } = args;
-
+    
     if (!this.bodegaSeleccionada) {
+      console.log('🔍 ❌ No hay bodega seleccionada');
       return {
         success: false,
-        message: 'Primero necesitas seleccionar una bodega',
-        error: 'No hay bodega seleccionada',
-        visualUpdate: {
-          stepName: 'bodega',
-          progress: 0,
-          nextActions: ['Usa listWarehouses para ver bodegas disponibles', 'Selecciona una bodega con selectWarehouse']
+        message: 'Debes seleccionar una bodega primero usando selectWarehouse',
+        error: 'Bodega no seleccionada'
+      };
+    }
+
+    try {
+      let productosFiltrados: any[] = [];
+      
+      if (query && query.trim()) {
+        console.log('🔍 🔎 Búsqueda con query:', query);
+        
+        // Intentar búsqueda real en el inventario
+        try {
+          console.log('🔍 Intentando búsqueda real en inventario...');
+          const inventarioReal = await this.inventarioService.obtenerInventarioPorBodega(this.bodegaSeleccionada.idBodega).toPromise();
+          console.log('🔍 Respuesta de obtenerInventarioPorBodega:', inventarioReal);
+          
+          if (inventarioReal && Array.isArray(inventarioReal) && inventarioReal.length > 0) {
+            console.log(`🔍 ✅ Encontrados ${inventarioReal.length} productos en inventario real`);
+            
+            // Filtrar por query
+            productosFiltrados = inventarioReal.filter(producto => {
+              const titulo = (producto.crearProducto?.titulo || producto.nombre || producto.titulo || '').toLowerCase();
+              const descripcion = (producto.crearProducto?.descripcion || producto.descripcion || '').toLowerCase();
+              const categoria = ((producto.crearProducto as any)?.categoria || producto.categoria || '').toLowerCase();
+              const queryLower = query.toLowerCase();
+              
+              return titulo.includes(queryLower) || 
+                     descripcion.includes(queryLower) || 
+                     categoria.includes(queryLower);
+            });
+            
+            console.log(`🔍 🔍 Filtrados ${productosFiltrados.length} productos por query "${query}"`);
+            
+          } else {
+            console.log('🔍 ⚠️ No se encontraron productos en inventario real, usando catálogo local');
+                         // Fallback a búsqueda local
+             productosFiltrados = this.productosCatalogo.filter(producto => {
+               const titulo = (producto.crearProducto?.titulo || '').toLowerCase();
+               const descripcion = (producto.crearProducto?.descripcion || '').toLowerCase();
+               const categoria = ((producto.crearProducto as any)?.categoria || '').toLowerCase();
+               const queryLower = query.toLowerCase();
+               
+               return titulo.includes(queryLower) || 
+                      descripcion.includes(queryLower) || 
+                      categoria.includes(queryLower);
+             });
+          }
+          
+        } catch (error) {
+          console.log('🔍 ⚠️ Error en búsqueda real, usando catálogo local:', error);
+          // Fallback a búsqueda local
+          productosFiltrados = this.productosCatalogo.filter(producto => {
+            const titulo = (producto.crearProducto?.titulo || '').toLowerCase();
+            const descripcion = (producto.crearProducto?.descripcion || '').toLowerCase();
+            const categoria = ((producto.crearProducto as any)?.categoria || '').toLowerCase();
+            const queryLower = query.toLowerCase();
+            
+            return titulo.includes(queryLower) || 
+                   descripcion.includes(queryLower) || 
+                   categoria.includes(queryLower);
+          });
+        }
+        
+      } else {
+        console.log('🔍 📋 Sin query, mostrando todos los productos del catálogo');
+        productosFiltrados = [...this.productosCatalogo];
+      }
+
+      // Aplicar filtros adicionales
+      console.log('🔍 Aplicando filtros adicionales...');
+      
+      if (category) {
+        console.log('🔍 Filtrando por categoría:', category);
+        productosFiltrados = productosFiltrados.filter(p => 
+          ((p.crearProducto as any)?.categoria || '').toLowerCase().includes(category.toLowerCase())
+        );
+      }
+      
+      if (minPrice !== undefined) {
+        console.log('🔍 Filtrando por precio mínimo:', minPrice);
+        productosFiltrados = productosFiltrados.filter(p => 
+          (p.precio?.precioUnitarioConIva || 0) >= minPrice
+        );
+      }
+      
+      if (maxPrice !== undefined) {
+        console.log('🔍 Filtrando por precio máximo:', maxPrice);
+        productosFiltrados = productosFiltrados.filter(p => 
+          (p.precio?.precioUnitarioConIva || 0) <= maxPrice
+        );
+      }
+      
+      if (minStock !== undefined) {
+        console.log('🔍 Filtrando por stock mínimo:', minStock);
+        productosFiltrados = productosFiltrados.filter(p => 
+          (p.disponibilidad?.cantidadDisponible || 0) >= minStock
+        );
+      }
+
+      // Aplicar ordenamiento
+      if (sortBy) {
+        console.log('🔍 Aplicando ordenamiento:', sortBy);
+        switch (sortBy) {
+          case 'price-asc':
+            productosFiltrados.sort((a, b) => (a.precio?.precioUnitarioConIva || 0) - (b.precio?.precioUnitarioConIva || 0));
+            break;
+          case 'price-desc':
+            productosFiltrados.sort((a, b) => (b.precio?.precioUnitarioConIva || 0) - (a.precio?.precioUnitarioConIva || 0));
+            break;
+          case 'name':
+            productosFiltrados.sort((a, b) => (a.crearProducto?.titulo || '').localeCompare(b.crearProducto?.titulo || ''));
+            break;
+        }
+      }
+
+      // Aplicar límite
+      if (limit && productosFiltrados.length > limit) {
+        console.log(`🔍 Aplicando límite de ${limit} resultados`);
+        productosFiltrados = productosFiltrados.slice(0, limit);
+      }
+
+      console.log(`🔍 ✅ Búsqueda completada: ${productosFiltrados.length} productos encontrados`);
+      console.log('🔍 Primeros 3 productos encontrados:', productosFiltrados.slice(0, 3));
+
+      this.pasoActual = 3;
+      this.updateVisualStep('productos');
+      this.updateOrderStatus();
+
+      console.log('🔍 === FIN: handleSearchProductsAdvanced ===');
+
+      // Preparar respuesta con información detallada de productos
+      const productosFormateados = productosFiltrados.map(p => ({
+        id: p.cd,
+        nombre: p.crearProducto?.titulo || p.nombre || 'Sin nombre',
+        descripcion: p.crearProducto?.descripcion || p.descripcion || 'Sin descripción',
+        categoria: p.crearProducto?.categoria || p.categoria || 'Sin categoría',
+        precio: p.precio?.precioUnitarioConIva || p.precioUnitario || 0,
+        stock: p.disponibilidad?.cantidadDisponible || p.stock || 0,
+        bodega: this.bodegaSeleccionada.nombre
+      }));
+
+      return {
+        success: true,
+        data: {
+          products: productosFormateados,
+          total: productosFiltrados.length,
+          query: query || 'Todos los productos',
+          filters: { category, minPrice, maxPrice, minStock, sortBy, limit },
+          warehouse: this.bodegaSeleccionada.nombre
+        },
+        message: `Se encontraron ${productosFiltrados.length} productos${query ? ` para "${query}"` : ''} en ${this.bodegaSeleccionada.nombre}`,
+        visualUpdate: { 
+          stepName: 'productos', 
+          progress: 40, 
+          nextActions: ['Agrega productos al carrito con addToCart'] 
+        }
+      };
+
+    } catch (error: any) {
+      console.error('🔍 ❌ Error en búsqueda avanzada:', error);
+      
+      console.log('🔍 === FIN: handleSearchProductsAdvanced (ERROR) ===');
+      
+      return {
+        success: false,
+        message: 'Error en la búsqueda de productos',
+        error: error.message,
+        visualUpdate: { 
+          stepName: 'productos', 
+          progress: 30, 
+          nextActions: ['Reintenta la búsqueda'] 
         }
       };
     }
+  }
+
+  /**
+   * Búsqueda local como fallback
+   */
+  private handleSearchProductsAdvancedLocal(args: any): DemoResponse {
+    console.log('🔍 Búsqueda local como fallback');
+    const { query, category, minPrice, maxPrice, minStock, sortBy, limit = 10 } = args;
 
     let results = [...this.productosCatalogo];
     const appliedFilters: string[] = [];
@@ -1830,7 +2273,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         const referencia = p.identificacion?.referencia?.toLowerCase() || '';
         return titulo.includes(q) || marca.includes(q) || referencia.includes(q);
       });
-      appliedFilters.push(`búsqueda: "${query}"`);
+      appliedFilters.push(`búsqueda local: "${query}"`);
     }
 
     // Filtro por categoría
@@ -1902,135 +2345,215 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       success: true,
       data: {
         products: productList,
-        totalFound: totalFound,
-        totalShowing: limitedResults.length,
-        appliedFilters: appliedFilters,
-        warehouse: this.bodegaSeleccionada.nombre
+        totalFound,
+        appliedFilters,
+        searchQuery: query,
+        bodega: this.bodegaSeleccionada.nombre
       },
-      message: `Encontré ${totalFound} producto${totalFound > 1 ? 's' : ''}${appliedFilters.length > 0 ? ` (${appliedFilters.join(', ')})` : ''}. ${limitedResults.length < totalFound ? `Mostrando ${limitedResults.length} de ${totalFound}.` : ''}`,
+      message: `Se encontraron ${totalFound} productos${appliedFilters.length > 0 ? ` con ${appliedFilters.join(', ')}` : ''}`,
       visualUpdate: {
         stepName: 'productos',
-        progress: 35,
+        progress: 40,
         nextActions: [
-          'Usa addToCart con el ID del producto para agregarlo',
-          'Usa quickAddToCart para búsqueda y adición rápida'
+          'Usa addToCart para agregar productos al carrito',
+          'Usa quickAddToCart para agregar productos rápidamente'
         ]
       }
     };
 
-    console.log('📤 Búsqueda de productos completada:', response);
+    console.log('📤 Resultados de búsqueda local:', response);
     return response;
   }
 
   /**
    * Maneja la adición de productos al carrito
    */
-  private handleAddToCart(args: any): DemoResponse {
-    console.log('🛒 handleAddToCart llamado con args:', args);
+  private async handleAddToCart(args: any): Promise<DemoResponse> {
+    console.log('🛒 === INICIO: handleAddToCart ===');
+    console.log('🛒 Argumentos recibidos:', args);
+    console.log('🛒 Bodega seleccionada:', this.bodegaSeleccionada);
+    console.log('🛒 Productos en catálogo:', this.productosCatalogo?.length || 0);
+    console.log('🛒 Carrito actual:', this.pedidoEnProgreso.carrito?.length || 0);
+    
     const { productId, quantity = 1 } = args;
 
     if (!this.bodegaSeleccionada) {
+      console.log('🛒 ❌ No hay bodega seleccionada');
       return {
         success: false,
-        message: 'Necesitas seleccionar una bodega antes de agregar productos',
-        error: 'No hay bodega seleccionada'
+        message: 'Debes seleccionar una bodega primero usando selectWarehouse',
+        error: 'Bodega no seleccionada'
       };
     }
 
-    const product = this.productosCatalogo.find(p => p.cd === productId);
-    if (!product) {
+    if (!productId) {
+      console.log('🛒 ❌ No se especificó el ID del producto');
       return {
         success: false,
-        message: `No se encontró el producto con ID "${productId}" en la bodega "${this.bodegaSeleccionada.nombre}"`,
-        error: 'Producto no encontrado'
+        message: 'Se requiere el ID del producto a agregar',
+        error: 'ID de producto faltante'
       };
     }
 
-    const cantidadDisponible = product.disponibilidad?.cantidadDisponible || 0;
-    if (quantity > cantidadDisponible) {
-      return {
-        success: false,
-        message: `Solo hay ${cantidadDisponible} unidades disponibles de "${product.crearProducto?.titulo}". Solicitas ${quantity} unidades.`,
-        error: 'Stock insuficiente',
-        data: { available: cantidadDisponible, requested: quantity }
-      };
-    }
+    try {
+      console.log('🛒 🔍 Buscando producto con ID:', productId);
+      
+             // Buscar el producto en el catálogo
+       const productoEncontrado = this.productosCatalogo.find(p => 
+         p.cd === productId || (p as any).id === productId || (p as any).codigo === productId
+       );
 
-    // Crear producto para el carrito
-    const productoCompra: Carrito = {
-      producto: product,
-      configuracion: {
-        producto: product,
-        datosEntrega: {
-          tipoEntrega: 'Domicilio',
-          formaEntrega: 'Estándar',
-          fechaEntrega: { day: new Date().getDate(), month: new Date().getMonth() + 1, year: new Date().getFullYear() },
-          horarioEntrega: 'Mañana',
-          genero: [],
-          ocasion: 'General',
-          colores: [],
-          observaciones: ''
-        },
-        preferencias: [],
-        adiciones: [],
-        tarjetas: []
-      },
-      cantidad: quantity
-    };
-
-    // Agregar al carrito
-    if (!this.pedidoEnProgreso.carrito) {
-      this.pedidoEnProgreso.carrito = [];
-    }
-    this.pedidoEnProgreso.carrito.push(productoCompra);
-
-    // Actualizar paso visual
-    this.pasoActual = 3;
-    this.updateVisualStep('carrito');
-    this.updateOrderStatus();
-
-    // Mostrar notificación
-    this.showToast(`${product.crearProducto?.titulo} añadido al carrito`, 'Producto Añadido');
-
-    // Calcular totales
-    const cartTotal = this.pedidoEnProgreso.carrito.reduce((total, item) => {
-      return total + ((item.producto?.precio?.precioUnitarioConIva || 0) * (item.cantidad || 0));
-    }, 0);
-
-    const response: DemoResponse = {
-      success: true,
-      data: {
-        productAdded: {
-          name: product.crearProducto?.titulo,
-          price: product.precio?.precioUnitarioConIva || 0,
-          quantity: quantity,
-          subtotal: (product.precio?.precioUnitarioConIva || 0) * quantity
-        },
-        cart: {
-          items: this.pedidoEnProgreso.carrito.length,
-          total: cartTotal,
-          totalFormatted: `$${cartTotal.toLocaleString()}`
-        }
-      },
-      message: `¡Perfecto! ${quantity} unidad${quantity > 1 ? 'es' : ''} de "${product.crearProducto?.titulo}" agregada${quantity > 1 ? 's' : ''} al carrito. Total: $${cartTotal.toLocaleString()}`,
-      visualUpdate: {
-        stepName: 'carrito',
-        progress: 50,
-        nextActions: [
-          'Continúa agregando productos o configura el cliente',
-          'Usa getCartContents para ver el resumen del carrito'
-        ]
+      if (!productoEncontrado) {
+        console.log('🛒 ❌ Producto no encontrado en el catálogo');
+        console.log('🛒 Productos disponibles:', this.productosCatalogo.map(p => ({ id: p.cd, nombre: p.crearProducto?.titulo })));
+        
+        return {
+          success: false,
+          message: `No se encontró el producto con ID: ${productId}`,
+          error: 'Producto no encontrado',
+          visualUpdate: {
+            stepName: 'productos',
+            progress: 35,
+            nextActions: ['Usa searchProductsAdvanced para ver productos disponibles']
+          }
+        };
       }
-    };
 
-    console.log('📤 Producto agregado al carrito:', response);
-    return response;
+      console.log('🛒 ✅ Producto encontrado:', productoEncontrado);
+      console.log('🛒 Cantidad solicitada:', quantity);
+      console.log('🛒 Stock disponible:', productoEncontrado.disponibilidad?.cantidadDisponible || 0);
+
+      // Verificar stock disponible
+      const stockDisponible = productoEncontrado.disponibilidad?.cantidadDisponible || 0;
+      if (stockDisponible < quantity) {
+        console.log('🛒 ❌ Stock insuficiente');
+        return {
+          success: false,
+          message: `Stock insuficiente. Disponible: ${stockDisponible}, Solicitado: ${quantity}`,
+          error: 'Stock insuficiente',
+          data: { 
+            requested: quantity, 
+            available: stockDisponible,
+            product: productoEncontrado.crearProducto?.titulo
+          }
+        };
+      }
+
+      // Crear producto para el carrito
+      const productoParaCarrito: Carrito = {
+        producto: productoEncontrado as any,
+        cantidad: quantity,
+        estadoProcesoProducto: EstadoProceso.SinProducir
+      };
+
+      console.log('🛒 📦 Producto preparado para carrito:', productoParaCarrito);
+
+      // Agregar al carrito real del sistema
+      try {
+        console.log('🛒 🚀 Intentando agregar al carrito real del sistema...');
+        await this.cartService.addToCart(productoParaCarrito);
+        console.log('🛒 ✅ Producto agregado al carrito real del sistema');
+      } catch (error) {
+        console.log('🛒 ⚠️ Error agregando al carrito real, usando carrito local:', error);
+      }
+
+      // Agregar al carrito local como respaldo
+      if (!this.pedidoEnProgreso.carrito) {
+        this.pedidoEnProgreso.carrito = [];
+      }
+      
+             // Verificar si el producto ya está en el carrito
+       const productoExistente = this.pedidoEnProgreso.carrito.find(item => 
+         item.producto?.cd === productId || (item.producto as any)?.id === productId
+       );
+
+      if (productoExistente) {
+        console.log('🛒 🔄 Producto ya existe en carrito, actualizando cantidad');
+        productoExistente.cantidad = (productoExistente.cantidad || 0) + quantity;
+        console.log('🛒 Nueva cantidad total:', productoExistente.cantidad);
+      } else {
+        console.log('🛒 ➕ Agregando nuevo producto al carrito local');
+        this.pedidoEnProgreso.carrito.push(productoParaCarrito);
+      }
+
+      console.log('🛒 📊 Estado del carrito después de agregar:');
+      console.log('🛒 Total de productos:', this.pedidoEnProgreso.carrito.length);
+      console.log('🛒 Productos en carrito:', this.pedidoEnProgreso.carrito.map(item => ({
+        nombre: item.producto?.crearProducto?.titulo,
+        cantidad: item.cantidad,
+        precio: item.producto?.precio?.precioUnitarioConIva
+      })));
+
+      // Calcular total del carrito
+      const totalCarrito = this.pedidoEnProgreso.carrito.reduce((sum, item) => 
+        sum + ((item.producto?.precio?.precioUnitarioConIva || 0) * (item.cantidad || 0)), 0
+      );
+
+      console.log('🛒 💰 Total del carrito:', totalCarrito);
+
+      // Actualizar estado visual
+      this.pasoActual = 4;
+      this.updateVisualStep('carrito');
+      this.updateOrderStatus();
+
+      console.log('🛒 === FIN: handleAddToCart ===');
+
+      // Preparar información detallada del producto agregado
+      const productoInfo = {
+        id: productId,
+        nombre: productoEncontrado.crearProducto?.titulo || (productoEncontrado as any).nombre || 'Sin nombre',
+        descripcion: productoEncontrado.crearProducto?.descripcion || (productoEncontrado as any).descripcion || 'Sin descripción',
+        categoria: (productoEncontrado.crearProducto as any)?.categoria || (productoEncontrado as any).categoria || 'Sin categoría',
+        cantidad: quantity,
+        precio: productoEncontrado.precio?.precioUnitarioConIva || (productoEncontrado as any).precioUnitario || 0,
+        precioFormateado: `$${(productoEncontrado.precio?.precioUnitarioConIva || (productoEncontrado as any).precioUnitario || 0).toLocaleString()}`,
+        stock: productoEncontrado.disponibilidad?.cantidadDisponible || (productoEncontrado as any).stock || 0,
+        bodega: this.bodegaSeleccionada.nombre
+      };
+
+      return {
+        success: true,
+        data: {
+          addedProduct: productoInfo,
+          cartTotal: totalCarrito,
+          cartTotalFormatted: `$${totalCarrito.toLocaleString()}`,
+          itemsInCart: this.pedidoEnProgreso.carrito.length,
+          cartSummary: this.pedidoEnProgreso.carrito.map(item => ({
+            nombre: item.producto?.crearProducto?.titulo || (item.producto as any)?.nombre || 'Sin nombre',
+            cantidad: item.cantidad,
+            precio: item.producto?.precio?.precioUnitarioConIva || (item.producto as any)?.precioUnitario || 0
+          }))
+        },
+        message: `✅ ${quantity}x ${productoInfo.nombre} agregado al carrito de ${this.bodegaSeleccionada.nombre}`,
+        visualUpdate: { 
+          stepName: 'carrito', 
+          progress: 50, 
+          nextActions: ['Continúa agregando productos o usa getCartContents para ver el carrito'] 
+        }
+      };
+
+    } catch (error: any) {
+      console.error('🛒 ❌ Error agregando producto al carrito:', error);
+      
+      console.log('🛒 === FIN: handleAddToCart (ERROR) ===');
+      
+      return {
+        success: false,
+        message: 'Error agregando producto al carrito',
+        error: error.message,
+        visualUpdate: { 
+          stepName: 'productos', 
+          progress: 35, 
+          nextActions: ['Reintenta agregar el producto'] 
+        }
+      };
+    }
   }
 
   /**
    * Maneja la adición rápida de productos al carrito
    */
-  private handleQuickAddToCart(args: any): DemoResponse {
+  private async handleQuickAddToCart(args: any): Promise<DemoResponse> {
     console.log('⚡ handleQuickAddToCart llamado con args:', args);
     const { productQuery, quantity = 1, useFirstMatch = false } = args;
 
@@ -2092,7 +2615,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     }
 
     // Usar el método addToCart para agregar el producto seleccionado
-    return this.handleAddToCart({ productId: selectedProduct.cd, quantity });
+    return await this.handleAddToCart({ productId: selectedProduct.cd, quantity });
   }
 
   /**
@@ -2429,13 +2952,100 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     };
   }
 
-  private handleProcessSale(args: any): DemoResponse {
-    console.log('💳 Procesando venta');
+  private async handleProcessSale(args: any): Promise<DemoResponse> {
+    console.log('💳 Procesando venta real con VentasService');
     const { paymentMethod = 'Efectivo' } = args;
 
     if (!this.isReadyForPayment()) {
       return { success: false, message: 'El pedido no está listo para procesar', error: 'Datos incompletos' };
     }
+
+    try {
+      // Preparar el pedido para el sistema real
+      const orderTemplate = this.prepareOrderForRealSystem();
+      
+      console.log('📋 Pedido preparado para sistema real:', orderTemplate);
+      
+      // Procesar la venta usando VentasService real
+      const ventaResult = await this.ventasService.createOrder(orderTemplate).toPromise();
+      
+      if (ventaResult && ventaResult.success !== false) {
+        console.log('✅ Venta procesada exitosamente en sistema real:', ventaResult);
+        
+        // Actualizar el pedido local con la respuesta del sistema
+        if (ventaResult.orderNumber) {
+          this.pedidoEnProgreso.nroPedido = ventaResult.orderNumber;
+        }
+        if (ventaResult._id) {
+          this.pedidoEnProgreso._id = ventaResult._id;
+        }
+        
+        // Actualizar estado
+        this.pedidoEnProgreso.formaDePago = paymentMethod;
+        this.pedidoEnProgreso.totalPedididoConDescuento = orderTemplate.totalPedididoConDescuento;
+        this.pedidoEnProgreso.estadoPago = EstadoPago.Aprobado;
+        this.pedidoEnProgreso.estadoProceso = EstadoProceso.SinProducir;
+
+        // Actualizar a confirmación
+        this.pasoActual = 8;
+        this.updateVisualStep('confirmacion');
+        this.updateOrderStatus();
+
+        // Crear celebración esférica especial
+        const celebrationData = {
+          celebrationType: 'success',
+          particleEffects: true,
+          soundEffects: true
+        };
+        
+        const celebrationResponse = this.handleCreateSphereCelebration(celebrationData);
+
+        // Mostrar notificación de éxito
+        this.showToast('¡Venta procesada exitosamente en el sistema!', 'Pedido Creado');
+
+        // Preparar nuevo pedido para la siguiente venta
+        setTimeout(() => {
+          this.inicializarNuevoPedido();
+        }, 5000);
+
+        return {
+          success: true,
+          data: {
+            orderNumber: this.pedidoEnProgreso.nroPedido,
+            total: orderTemplate.totalPedididoConDescuento,
+            totalFormatted: `$${orderTemplate.totalPedididoConDescuento.toLocaleString()}`,
+            paymentMethod: paymentMethod,
+            customer: this.pedidoEnProgreso.cliente?.nombres_completos,
+            celebration: celebrationResponse.data,
+            systemResponse: ventaResult
+          },
+          message: `🎉 ¡Venta procesada en sistema real! Pedido ${this.pedidoEnProgreso.nroPedido} por $${orderTemplate.totalPedididoConDescuento.toLocaleString()}`,
+          visualUpdate: { 
+            stepName: 'confirmacion', 
+            progress: 100, 
+            nextActions: ['¡Celebración esférica activada!', 'Sistema listo para nueva venta'] 
+          }
+        };
+        
+      } else {
+        throw new Error('Error en respuesta del sistema de ventas');
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error procesando venta real:', error);
+      
+      // Fallback a procesamiento local
+      console.log('🔄 Usando procesamiento local como fallback');
+      return this.handleProcessSaleLocal(args);
+    }
+  }
+
+  /**
+   * Procesamiento local como fallback
+   */
+  private handleProcessSaleLocal(args: any): DemoResponse {
+    console.log('💳 Procesando venta local como fallback');
+    const { paymentMethod = 'Efectivo' } = args;
 
     const total = this.pedidoEnProgreso.carrito!.reduce((sum, item) => 
       sum + ((item.producto?.precio?.precioUnitarioConIva || 0) * (item.cantidad || 0)), 0
@@ -2457,16 +3067,15 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       soundEffects: true
     };
     
-    // Llamar internamente a la celebración esférica
     const celebrationResponse = this.handleCreateSphereCelebration(celebrationData);
 
     // Mostrar notificación
-    this.showToast('¡Venta completada exitosamente!', 'Pedido Creado');
+    this.showToast('¡Venta completada localmente!', 'Pedido Creado');
 
     // Preparar nuevo pedido para la siguiente venta
     setTimeout(() => {
       this.inicializarNuevoPedido();
-    }, 5000); // Aumentado para dar tiempo a la celebración
+    }, 5000);
 
     return {
       success: true,
@@ -2478,7 +3087,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         customer: this.pedidoEnProgreso.cliente?.nombres_completos,
         celebration: celebrationResponse.data
       },
-      message: `🎉 ¡Venta completada! Pedido ${this.pedidoEnProgreso.nroPedido} por $${total.toLocaleString()}`,
+      message: `🎉 ¡Venta completada localmente! Pedido ${this.pedidoEnProgreso.nroPedido} por $${total.toLocaleString()}`,
       visualUpdate: { 
         stepName: 'confirmacion', 
         progress: 100, 
@@ -3174,5 +3783,180 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       error: '#FFFFFF'
     };
     return colors[type] || '#FFFFFF';
+  }
+
+  /**
+   * Prepara el pedido para el sistema real de ventas
+   */
+  private prepareOrderForRealSystem(): any {
+    console.log('📋 Preparando pedido para sistema real');
+    
+    // Calcular totales
+    const total = this.pedidoEnProgreso.carrito!.reduce((sum, item) => 
+      sum + ((item.producto?.precio?.precioUnitarioConIva || 0) * (item.cantidad || 0)), 0
+    );
+
+    // Preparar template del pedido para VentasService
+    const orderTemplate = {
+      // Datos básicos del pedido
+      referencia: this.pedidoEnProgreso.referencia || `VENTA-${Date.now()}`,
+      nroPedido: this.pedidoEnProgreso.nroPedido || `PED-${Date.now()}`,
+      company: this.pedidoEnProgreso.company || 'KATUQ',
+      
+      // Cliente
+      cliente: this.pedidoEnProgreso.cliente,
+      
+      // Bodega
+      bodegaId: this.bodegaSeleccionada?.idBodega,
+      
+      // Carrito
+      carrito: this.pedidoEnProgreso.carrito?.map(item => ({
+        producto: item.producto,
+        cantidad: item.cantidad || 1,
+        configuracion: item.configuracion
+      })),
+      
+      // Totales
+      totalPedidoSinDescuento: total,
+      totalPedididoConDescuento: total,
+      totalEnvio: this.pedidoEnProgreso.totalEnvio || 0,
+      totalDescuento: this.pedidoEnProgreso.totalDescuento || 0,
+      totalImpuesto: this.pedidoEnProgreso.totalImpuesto || 0,
+      subtotal: total,
+      
+      // Forma de pago
+      formaDePago: this.pedidoEnProgreso.formaDePago || 'Efectivo',
+      
+      // Estado inicial
+      estadoProceso: EstadoProceso.SinProducir,
+      estadoPago: EstadoPago.Pendiente,
+      
+      // Fechas
+      fechaCreacion: new Date().toISOString(),
+      
+      // Facturación y envío
+      facturacion: this.pedidoEnProgreso.facturacion,
+      envio: this.pedidoEnProgreso.envio,
+      
+      // Notas
+      notasPedido: this.pedidoEnProgreso.notasPedido
+    };
+
+    console.log('📋 Template del pedido preparado:', orderTemplate);
+    return orderTemplate;
+  }
+
+  /**
+   * Valida un cupón de descuento usando el sistema real
+   */
+  private async handleValidateCoupon(args: any): Promise<DemoResponse> {
+    console.log('🎫 Validando cupón:', args);
+    const { couponCode } = args;
+
+    if (!couponCode) {
+      return {
+        success: false,
+        message: 'Se requiere el código del cupón',
+        error: 'Código de cupón faltante'
+      };
+    }
+
+    try {
+      // Validar cupón usando VentasService real
+      const cuponResult = await this.ventasService.validateCupon({ code: couponCode }).toPromise();
+      
+      if (cuponResult && cuponResult.valid) {
+        console.log('✅ Cupón válido:', cuponResult);
+        
+        // Aplicar descuento al pedido
+        const descuento = cuponResult.discount || 0;
+        const totalOriginal = this.pedidoEnProgreso.carrito!.reduce((sum, item) => 
+          sum + ((item.producto?.precio?.precioUnitarioConIva || 0) * (item.cantidad || 0)), 0
+        );
+        
+        this.pedidoEnProgreso.cuponAplicado = couponCode;
+        this.pedidoEnProgreso.totalDescuento = descuento;
+        this.pedidoEnProgreso.totalPedididoConDescuento = totalOriginal - descuento;
+        
+        return {
+          success: true,
+          data: {
+            coupon: {
+              code: couponCode,
+              discount: descuento,
+              discountFormatted: `$${descuento.toLocaleString()}`,
+              totalAfterDiscount: this.pedidoEnProgreso.totalPedididoConDescuento,
+              totalAfterDiscountFormatted: `$${this.pedidoEnProgreso.totalPedididoConDescuento.toLocaleString()}`
+            }
+          },
+          message: `🎉 Cupón "${couponCode}" aplicado exitosamente. Descuento: $${descuento.toLocaleString()}`,
+          visualUpdate: {
+            stepName: 'pago',
+            progress: 90,
+            nextActions: ['Procesa la venta con processSale']
+          }
+        };
+        
+      } else {
+        return {
+          success: false,
+          message: `Cupón "${couponCode}" no válido o expirado`,
+          error: 'Cupón inválido',
+          data: { couponCode, validationResult: cuponResult }
+        };
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error validando cupón:', error);
+      
+      return {
+        success: false,
+        message: `Error validando cupón "${couponCode}"`,
+        error: 'Error de conexión',
+        data: { couponCode, error: error.message }
+      };
+    }
+  }
+
+  /**
+   * Genera bodegas demo para fallback
+   */
+  private generateMockWarehouses(): any[] {
+    console.log('🏭 Generando bodegas demo...');
+    
+    const demoWarehouses = [
+      { 
+        id: 'BOD001', 
+        name: 'Bodega Principal Bogotá', 
+        location: 'Av. El Dorado 123, Bogotá', 
+        capacity: '1000 m²',
+        status: 'Activa'
+      },
+      { 
+        id: 'BOD002', 
+        name: 'Bodega Norte', 
+        location: 'Calle 127 45-67, Bogotá', 
+        capacity: '800 m²',
+        status: 'Activa'
+      },
+      { 
+        id: 'BOD003', 
+        name: 'Bodega Sur', 
+        location: 'Av. Boyacá 234-56, Bogotá', 
+        capacity: '600 m²',
+        status: 'Activa'
+      }
+    ];
+    
+    console.log('🏭 Bodegas demo generadas:', demoWarehouses);
+    return demoWarehouses;
+  }
+
+  /**
+   * Notifica un log al sistema visual
+   */
+  public notifyVisualLog(message: string, type: 'info' | 'success' | 'warning' | 'error' | 'system' = 'info', details?: string): void {
+    console.log(`📊 [Visual] ${message}`);
+    // Este método se puede usar para notificar logs al componente visual
   }
 }

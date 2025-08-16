@@ -4,7 +4,7 @@ import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
-// Importar el nuevo servicio de agente de voz
+// Importar el servicio de agente de voz original
 import { VoiceAgentService, VoiceAgentConfig, VisualStep } from '../../services/voice-agent.service';
 import { ToolAdapter, TOOL_ADAPTER } from '../../services/tools/tool-adapter';
 
@@ -178,22 +178,17 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     this.saveState();
   }
 
-  openChat(event: MouseEvent) {
-    event.stopPropagation();
-    this.chatFormVisible = true;
-    this.chatMinimized = false;
-    this.hasUnreadMessages = false;
-    this.saveState();
-  }
-
   // Método simplificado para iniciar el modo de voz usando el servicio
   async startVoiceMode(event: MouseEvent) {
     event.stopPropagation();
-    console.log('🎤 Iniciando modo de voz con nuevo servicio');
+    console.log('🎤 Iniciando modo de voz con VoiceAgentService');
     
     try {
       // Iniciar sesión de voz
       await this.voiceAgentService.startVoiceSession(this.voiceAgentConfig);
+      
+      // Activar el modo de escucha
+      this.isListening = true;
       
     } catch (error: any) {
       console.error('Error al iniciar la sesión de voz:', error);
@@ -202,13 +197,217 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     this.saveState();
   }
 
+  openChat(event: MouseEvent) {
+    event.stopPropagation();
+    this.chatFormVisible = true;
+    this.chatMinimized = false;
+    this.hasUnreadMessages = false;
+    this.saveState();
+  }
+
+  /**
+   * Inicia el modo de ventas por voz
+   */
+  async startVoiceSalesMode(event: MouseEvent) {
+    event.stopPropagation();
+    console.log('🛒 Iniciando modo de ventas por voz');
+    
+    try {
+      // Iniciar sesión de ventas por voz
+      await this.voiceAgentService.startVoiceSession();
+      
+      // Mostrar notificación de inicio
+      // this.toastr.success('Sistema de ventas por voz iniciado. Usa los controles para gestionar tu venta.', 'Ventas por Voz');
+      
+      // Activar el modo de ventas por voz
+      // this.isVoiceSalesActive = true; // No longer needed
+      this.isListening = false; // No iniciar reconocimiento automáticamente
+      
+      // Mostrar el panel de opciones para mostrar los controles
+      this.optionsPanelVisible = true;
+      
+    } catch (error: any) {
+      console.error('Error al iniciar el sistema de ventas por voz:', error);
+      // this.toastr.error('Error al iniciar el sistema de ventas por voz', 'Error');
+    }
+
+    this.saveState();
+  }
+
+  /**
+   * Muestra el panel de comandos de voz disponibles
+   */
+  private showVoiceCommandsPanel(): void {
+    const commands = [
+      '🎯 "seleccionar bodega" - Elegir bodega para la venta',
+      '🛍️ "buscar productos" - Buscar productos disponibles',
+      '🛒 "agregar al carrito" - Agregar productos al carrito',
+      '👤 "crear cliente" - Crear nuevo cliente',
+      '🚚 "configurar entrega" - Configurar datos de envío',
+      '📄 "configurar facturación" - Completar facturación',
+      '💳 "procesar venta" - Finalizar la venta',
+      '❓ "ayuda" - Ver comandos disponibles',
+      '📊 "estado" - Ver progreso actual'
+    ];
+
+    // Crear un modal temporal con los comandos
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      font-family: 'Inter', sans-serif;
+      z-index: 10000;
+      max-width: 500px;
+      text-align: center;
+    `;
+
+    modal.innerHTML = `
+      <h3 style="margin: 0 0 20px 0; color: #4CAF50;">🎤 Comandos de Voz Disponibles</h3>
+      <div style="text-align: left; margin-bottom: 20px;">
+        ${commands.map(cmd => `<div style="margin: 10px 0; font-size: 14px;">${cmd}</div>`).join('')}
+      </div>
+      <button id="close-voice-commands" style="
+        background: #4CAF50;
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      ">Entendido</button>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Cerrar modal
+    modal.querySelector('#close-voice-commands')?.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+
+    // Auto-cerrar después de 10 segundos
+    setTimeout(() => {
+      if (document.body.contains(modal)) {
+        document.body.removeChild(modal);
+      }
+    }, 10000);
+  }
+
+  /**
+   * Procesa un comando de voz usando el servicio de agente de voz
+   */
+  async processVoiceCommand(command: string): Promise<void> {
+    try {
+      console.log('🎤 Procesando comando de voz:', command);
+      
+      // Por ahora, solo logueamos el comando ya que VoiceAgentService no tiene executeVoiceCommand
+      console.log('Comando recibido:', command);
+      
+      // Aquí se podría implementar la lógica de procesamiento de comandos
+      // cuando se integre con OrderToolsRegistrarService
+      
+    } catch (error: any) {
+      console.error('Error procesando comando de voz:', error);
+    }
+  }
+
+  /**
+   * Actualiza el progreso visual del sistema de voz
+   */
+  private updateVoiceProgress(): void {
+    // El VoiceAgentService ya maneja esto a través de los observables
+    // No necesitamos hacer nada adicional aquí
+  }
+
   // Método simplificado para detener el modo de voz
   stopVoiceMode(event: MouseEvent | null) {
     if (event) event.stopPropagation();
     console.log('🛑 Deteniendo modo de voz');
     
     this.voiceAgentService.stopVoiceSession();
+    this.isListening = false;
+    // this.isVoiceSalesActive = false; // No longer needed
     this.saveState();
+  }
+
+  /**
+   * Inicia el reconocimiento de voz para comandos
+   */
+  startVoiceRecognition(): void {
+    // if (!this.isVoiceSalesActive) { // No longer needed
+    //   this.toastr.warning('Primero inicia el sistema de ventas por voz', 'Advertencia');
+    //   return;
+    // }
+
+    // Verificar si el navegador soporta reconocimiento de voz
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      // this.toastr.error('Tu navegador no soporta reconocimiento de voz', 'Error'); // No longer needed
+      return;
+    }
+
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        console.log('🎤 Reconocimiento de voz iniciado');
+        this.isListening = true;
+        // this.toastr.info('Escuchando... Di tu comando', 'Reconocimiento de Voz'); // No longer needed
+      };
+
+      recognition.onresult = (event: any) => {
+        const command = event.results[0][0].transcript.toLowerCase();
+        console.log('🎤 Comando reconocido:', command);
+        
+        // Procesar el comando
+        this.processVoiceCommand(command);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+        // this.toastr.error(`Error de reconocimiento: ${event.error}`, 'Error'); // No longer needed
+        this.isListening = false;
+      };
+
+      recognition.onend = () => {
+        console.log('🎤 Reconocimiento de voz finalizado');
+        this.isListening = false;
+        
+        // Reiniciar automáticamente si el sistema está activo
+        if (this.voiceAgentService.isSessionActive()) {
+          setTimeout(() => {
+            this.startVoiceRecognition();
+          }, 1000);
+        }
+      };
+
+      recognition.start();
+      
+    } catch (error) {
+      console.error('Error iniciando reconocimiento de voz:', error);
+      // this.toastr.error('Error iniciando reconocimiento de voz', 'Error'); // No longer needed
+    }
+  }
+
+  /**
+   * Detiene el reconocimiento de voz
+   */
+  stopVoiceRecognition(): void {
+    this.isListening = false;
+    // this.toastr.info('Reconocimiento de voz detenido', 'Voz'); // No longer needed
   }
 
   // Método para iniciar el modo live-audio
