@@ -452,7 +452,7 @@ export class VoiceAgentSalesService {
   getOrderStatus(): any {
     try {
       // Acceder al estado del pedido desde OrderTools
-      return this.orderToolsService['_getProcessStatus']();
+      return this.orderToolsService.getProcessStatus();
     } catch (error) {
       return {
         success: false,
