@@ -9,6 +9,8 @@ import { ImagenService } from '../../shared/utils/image.service';
 import { LazyLoadEvent } from 'primeng/api';
 import * as XLSX from 'xlsx';
 import { UtilsService } from '../../shared/services/utils.service';
+import { ProveedoresService } from '../dropshipping/services/proveedores.service';
+import { Proveedor } from '../dropshipping/interfaces';
 
 @Component({
   selector: 'app-productos',
@@ -42,12 +44,19 @@ export class ProductosComponent implements OnInit {
   empresaActual: any;
   ultimasLetras: any;
 
+  // Filtros de dropshipping
+  proveedores: Proveedor[] = [];
+  selectedProveedor: string | null = null;
+  loadingProveedores = false;
+  mostrarSoloDropshipping = false;
+
   constructor(
     private service: MaestroService,
     private imageService: ImagenService,
     private router: Router,
     private modalService: NgbModal,
-    private utilsService: UtilsService
+    private utilsService: UtilsService,
+    private proveedoresService: ProveedoresService
   ) { }
 
   ngOnInit(): void {
@@ -58,6 +67,7 @@ export class ProductosComponent implements OnInit {
 
     // Cargar datos iniciales
     this.cargarDatos();
+    this.cargarProveedores();
   }
 
   cargarDatos() {
@@ -75,6 +85,79 @@ export class ProductosComponent implements OnInit {
     });
   }
 
+  // Cargar proveedores para filtro
+  cargarProveedores() {
+    this.loadingProveedores = true;
+    this.proveedoresService.getProveedoresActivos().subscribe({
+      next: (proveedores) => {
+        this.proveedores = proveedores || [];
+        this.loadingProveedores = false;
+      },
+      error: (error) => {
+        console.error('Error cargando proveedores:', error);
+        this.loadingProveedores = false;
+      }
+    });
+  }
+
+  // Filtrar por proveedor
+  onProveedorChange() {
+    this.currentPage = 1;
+    this.lastDocId = null;
+    this.cargarDatosFiltrados();
+  }
+
+  // Filtrar solo productos dropshipping
+  onToggleDropshipping() {
+    this.currentPage = 1;
+    this.lastDocId = null;
+    this.selectedProveedor = null; // Limpiar filtro de proveedor
+    this.cargarDatosFiltrados();
+  }
+
+  // Limpiar filtros
+  limpiarFiltros() {
+    this.selectedProveedor = null;
+    this.mostrarSoloDropshipping = false;
+    this.currentPage = 1;
+    this.lastDocId = null;
+    this.cargarDatos();
+  }
+
+  // Cargar datos con filtros aplicados
+  cargarDatosFiltrados() {
+    this.cargando = true;
+    
+    if (this.selectedProveedor) {
+      // Filtrar por proveedor específico
+      this.service.getProductosByProveedor(this.selectedProveedor, this.pageSize, this.currentPage).subscribe((response: any) => {
+        this.temp = [...response.products];
+        this.rows = response.products;
+        this.totalItems = response.pagination.totalItems;
+        this.totalPages = response.pagination.totalPages;
+        this.cargando = false;
+      }, error => {
+        console.error("Error al cargar productos por proveedor:", error);
+        this.cargando = false;
+      });
+    } else if (this.mostrarSoloDropshipping) {
+      // Filtrar solo productos dropshipping
+      this.service.getProductosDropshipping(this.pageSize, this.currentPage).subscribe((response: any) => {
+        this.temp = [...response.products];
+        this.rows = response.products;
+        this.totalItems = response.pagination.totalItems;
+        this.totalPages = response.pagination.totalPages;
+        this.cargando = false;
+      }, error => {
+        console.error("Error al cargar productos dropshipping:", error);
+        this.cargando = false;
+      });
+    } else {
+      // Sin filtros, cargar todos
+      this.cargarDatos();
+    }
+  }
+
   // Cambiar página
 
   onPageChange(event: any) {
@@ -86,9 +169,13 @@ export class ProductosComponent implements OnInit {
       this.pageSize = newPageSize;
       this.currentPage = newCurrentPage;
 
-      // Establecer cargando en true y llamar a cargarDatos solo si hay un cambio real
+      // Establecer cargando en true y llamar al método de carga apropiado
       this.cargando = true;
-      this.cargarDatos();
+      if (this.selectedProveedor || this.mostrarSoloDropshipping) {
+        this.cargarDatosFiltrados();
+      } else {
+        this.cargarDatos();
+      }
     }
   }
 
@@ -102,6 +189,13 @@ export class ProductosComponent implements OnInit {
   editarProducto(row) {
     console.log(row);
     sessionStorage.setItem('infoForms', JSON.stringify(row));
+    this.router.navigateByUrl('productos/crearProductos');
+  }
+
+  configurarDropshipping(row) {
+    console.log(row);
+    sessionStorage.setItem('infoForms', JSON.stringify(row));
+    sessionStorage.setItem('openDropshippingTab', 'true');
     this.router.navigateByUrl('productos/crearProductos');
   }
 

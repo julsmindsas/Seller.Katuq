@@ -1,5 +1,5 @@
-<app-breadcrumb [title]="edit ? 'Editar Producto':	'Crear Producto'" [items]="['Maestros/Productos']"
-	[active_item]="'Crear Producto'">
+<app-breadcrumb [title]="getPageTitle()" [items]="['Maestros/Productos']"
+	[active_item]="getBreadcrumbActiveItem()">
 </app-breadcrumb>
 <div class="container-fluid">
 	<div class="row">
@@ -7,8 +7,8 @@
 			<div class="card">
 				<!-- <form cForm [formGroup]="formGeneral"> -->
 
-				<div class="card-body">
-					<p-tabView [scrollable]="true">
+				<div class="card-body" [ngClass]="{'dropshipping-config-mode': isDropshippingConfigMode}">
+					<p-tabView [scrollable]="true" [(activeIndex)]="activeTabIndex">
 						<p-tabPanel header="K.A.I">
 							<form [formGroup]="kaiForm">
 								<div class="container mt-4">
@@ -513,9 +513,12 @@
 										<label class="form-label" for="validationCustom01">Tipo producto <span
 												class="redasteris">*</span></label>
 
-										<select formControlName="tipoProducto" class="form-control">
+										<select formControlName="tipoProducto" class="form-control" (change)="onTipoProductoChange()">
 											<option value="propio" selected>Propio</option>
 											<option value="externo">Externo</option>
+											<option value="dropshipping" [disabled]="!isDropshippingEnabled()">
+												Dropshipping {{ !isDropshippingEnabled() ? '(No habilitado)' : '' }}
+											</option>
 										</select>
 									</div>
 									<div class="col-md-3 mb-3">
@@ -548,6 +551,218 @@
 									</div>
 
 
+								</div>
+							</form>
+						</p-tabPanel>
+
+						<!-- Tab de Dropshipping -->
+						<p-tabPanel header="Dropshipping" *ngIf="isDropshippingTypeSelected() || identificacion?.get('tipoProducto')?.value === 'dropshipping'">
+							
+							<!-- Verificar si dropshipping está habilitado para la empresa -->
+							<div *ngIf="!isDropshippingEnabled()" class="container mt-4">
+								<div class="alert alert-warning">
+									<div class="row align-items-center">
+										<div class="col-md-2 text-center">
+											<i class="fa fa-exclamation-triangle fa-3x text-warning"></i>
+										</div>
+										<div class="col-md-10">
+											<h5>Dropshipping no está habilitado</h5>
+											<p class="mb-2">Para crear productos dropshipping, primero debe habilitar el módulo de dropshipping para su empresa.</p>
+											<a href="/empresas/modulovariable/dropshipping/configuracion" class="btn btn-warning btn-sm">
+												<i class="fa fa-cog"></i> Configurar Dropshipping
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Formulario de configuración dropshipping -->
+							<form [formGroup]="dropshippingConfig" *ngIf="isDropshippingEnabled()">
+								<div class="container mt-4">
+									<div class="row mb-3">
+										<div class="col-12">
+											<h4>Configuración de Dropshipping</h4>
+											<p class="text-muted">Configure los datos del proveedor y márgenes para este producto dropshipping.</p>
+										</div>
+									</div>
+
+									<!-- Información del Proveedor -->
+									<div class="row mb-3">
+										<div class="col-12">
+											<h5>Información del Proveedor</h5>
+										</div>
+									</div>
+
+									<div class="row mb-3">
+										<div class="col-md-8">
+											<label class="form-label">Proveedor Auto-asignado <i class="pi pi-check-circle text-success"></i></label>
+											<div class="alert alert-success mb-3">
+												<div class="d-flex align-items-center">
+													<i class="pi pi-building mr-3 text-primary"></i>
+													<div class="flex-grow-1">
+														<strong>{{dropshippingConfig.get('supplierName')?.value || 'Mi Empresa'}}</strong>
+														<small class="d-block text-muted">
+															Contacto: {{dropshippingConfig.get('proveedorContacto')?.value || 'Administrador'}}
+															| Email: {{dropshippingConfig.get('proveedorEmail')?.value || 'Sin email'}}
+														</small>
+													</div>
+													<small class="text-muted">
+														<i class="pi pi-info-circle mr-1"></i>Auto-configurado
+													</small>
+												</div>
+											</div>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label">&nbsp;</label>
+											<div class="text-center">
+												<small class="text-muted">
+													<i class="pi pi-lightbulb mr-1"></i>
+													Su empresa actúa como proveedor automáticamente
+												</small>
+											</div>
+										</div>
+									</div>
+									
+									<!-- Configuración simplificada de dropshipping -->
+
+									<div class="row mb-3">
+										<div class="col-md-6">
+											<label class="form-label">SKU del Proveedor</label>
+											<input formControlName="supplierSku" class="form-control" type="text" placeholder="SKU del producto en el proveedor" />
+										</div>
+										<div class="col-md-6">
+											<label class="form-label">URL del Producto en Proveedor</label>
+											<input formControlName="supplierProductUrl" class="form-control" type="url" placeholder="https://proveedor.com/producto" />
+										</div>
+									</div>
+
+									<!-- Contacto del Proveedor -->
+									<div class="row mb-3">
+										<div class="col-md-4">
+											<label class="form-label">Contacto</label>
+											<input formControlName="proveedorContacto" class="form-control" type="text" placeholder="Nombre del contacto" />
+										</div>
+										<div class="col-md-4">
+											<label class="form-label">Teléfono</label>
+											<input formControlName="proveedorTelefono" class="form-control" type="tel" placeholder="Teléfono del proveedor" />
+										</div>
+										<div class="col-md-4">
+											<label class="form-label">Email</label>
+											<input formControlName="proveedorEmail" class="form-control" type="email" placeholder="email@proveedor.com" />
+											<div class="invalid-feedback" *ngIf="dropshippingConfig.get('proveedorEmail')?.invalid && dropshippingConfig.get('proveedorEmail')?.touched">
+												Ingrese un email válido
+											</div>
+										</div>
+									</div>
+
+									<!-- Configuración de Precios y Márgenes -->
+									<div class="row mb-3">
+										<div class="col-12">
+											<h5>Configuración de Precios</h5>
+										</div>
+									</div>
+
+									<div class="row mb-3">
+										<div class="col-md-4">
+											<label class="form-label">Costo del Proveedor <span class="text-danger">*</span></label>
+											<div class="input-group">
+												<select formControlName="monedaProveedor" class="form-select" style="max-width: 100px;">
+													<option value="COP">COP</option>
+													<option value="USD">USD</option>
+													<option value="EUR">EUR</option>
+												</select>
+												<input formControlName="costoProveedor" class="form-control" type="number" min="0" placeholder="0" />
+											</div>
+											<div class="invalid-feedback" *ngIf="dropshippingConfig.get('costoProveedor')?.invalid && dropshippingConfig.get('costoProveedor')?.touched">
+												Este campo es requerido y debe ser mayor a 0
+											</div>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label">Tipo de Margen</label>
+											<select formControlName="tipoMargen" class="form-select">
+												<option *ngFor="let tipo of tiposMargenDropshipping" [value]="tipo.value">{{tipo.label}}</option>
+											</select>
+										</div>
+										<div class="col-md-4" *ngIf="dropshippingConfig.get('tipoMargen')?.value === 'porcentaje'">
+											<label class="form-label">Margen Porcentaje (%)</label>
+											<input formControlName="margenPorcentaje" class="form-control" type="number" min="0" max="100" placeholder="0" />
+											<div class="invalid-feedback" *ngIf="dropshippingConfig.get('margenPorcentaje')?.invalid && dropshippingConfig.get('margenPorcentaje')?.touched">
+												Debe estar entre 0 y 100
+											</div>
+										</div>
+										<div class="col-md-4" *ngIf="dropshippingConfig.get('tipoMargen')?.value === 'fijo'">
+											<label class="form-label">Margen Fijo ($)</label>
+											<input formControlName="margenFijo" class="form-control" type="number" min="0" placeholder="0" />
+											<div class="invalid-feedback" *ngIf="dropshippingConfig.get('margenFijo')?.invalid && dropshippingConfig.get('margenFijo')?.touched">
+												Debe ser mayor a 0
+											</div>
+										</div>
+									</div>
+
+									<!-- Resumen de Precios -->
+									<div class="row mb-3" *ngIf="dropshippingConfig.get('costoProveedor')?.value > 0">
+										<div class="col-12">
+											<div class="alert alert-info">
+												<h6><i class="fa fa-calculator"></i> Resumen de Precios</h6>
+												<div class="row">
+													<div class="col-md-3">
+														<strong>Costo Proveedor:</strong><br>
+														${{ dropshippingConfig.get('costoProveedor')?.value | number:'1.0-0' }}
+													</div>
+													<div class="col-md-3">
+														<strong>Comisión Proveedor:</strong><br>
+														${{ calcularComisionProveedor() | number:'1.0-0' }}
+														<span class="text-muted">({{getSelectedProveedor()?.comision_porcentaje}}%)</span>
+													</div>
+													<div class="col-md-3">
+														<strong>Precio de Venta:</strong><br>
+														${{ calcularPrecioVentaDropshipping() | number:'1.0-0' }}
+													</div>
+													<div class="col-md-3">
+														<strong>Ganancia Neta:</strong><br>
+														${{ calcularGananciaDropshipping() | number:'1.0-0' }}
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<!-- Configuraciones Adicionales -->
+									<div class="row mb-3">
+										<div class="col-12">
+											<h5>Configuraciones Adicionales</h5>
+										</div>
+									</div>
+
+									<div class="row mb-3">
+										<div class="col-md-6">
+											<label class="form-label">Tiempo de Entrega (días)</label>
+											<input formControlName="leadTimeDays" class="form-control" type="number" min="1" placeholder="7" />
+											<div class="invalid-feedback" *ngIf="dropshippingConfig.get('leadTimeDays')?.invalid && dropshippingConfig.get('leadTimeDays')?.touched">
+												Debe ser al menos 1 día
+											</div>
+										</div>
+									</div>
+
+									<div class="row mb-3">
+										<div class="col-12">
+											<label class="form-label">Condiciones Especiales</label>
+											<textarea formControlName="condicionesEspeciales" class="form-control" rows="3" placeholder="Condiciones especiales, políticas de devolución, etc."></textarea>
+										</div>
+									</div>
+
+									<!-- Estado -->
+									<div class="row mb-3">
+										<div class="col-md-6">
+											<div class="form-check form-switch">
+												<input class="form-check-input" type="checkbox" formControlName="activo" id="activoDropshipping">
+												<label class="form-check-label" for="activoDropshipping">
+													Configuración activa
+												</label>
+											</div>
+											<small class="text-muted">Si está desactivado, el producto se tratará como un producto normal</small>
+										</div>
+									</div>
 								</div>
 							</form>
 						</p-tabPanel>

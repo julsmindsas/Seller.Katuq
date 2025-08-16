@@ -137,12 +137,36 @@ export class NavService implements OnDestroy {
 		}).filter(item => item !== null) as Menu[];
 	}
 
+	isDropshippingEnabled(): boolean {
+		try {
+			// Verificar si el dropshipping está habilitado para la empresa actual desde localStorage
+			const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+			const companyId = currentCompany.id || currentCompany._id || 'default';
+			const configKey = `dropshippingConfig_${companyId}`;
+			
+			const savedConfig = localStorage.getItem(configKey);
+			if (savedConfig) {
+				const dropshippingConfig = JSON.parse(savedConfig);
+				return dropshippingConfig.habilitado === true;
+			}
+			
+			// Si no hay configuración guardada, devolver false
+			return false;
+		} catch (error) {
+			console.error('Error checking dropshipping status:', error);
+			return false;
+		}
+	}
+
 	filterMenuItemsByAuthorization() {
 		const authorizedPaths = JSON.parse(localStorage.getItem('authorizedMenuItems') || '[]').map((item: any) => item.path);
 		const user = JSON.parse(localStorage.getItem('user') || '{}');
 		const isSuperAdmin = user.rol === 'Super Administrador';
 		const isJulsmindAdmin = user.rol === 'Administrador' && user.company === 'Julsmind';
 
+
+		// Verificar si dropshipping está habilitado para filtros adicionales
+		const isDropshippingEnabled = this.isDropshippingEnabled();
 
 		// Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
 		const filteredMenu = this.ALLMENUITEMS.map(item => {
@@ -159,11 +183,17 @@ export class NavService implements OnDestroy {
 
 			// Si tiene hijos, filtrar los hijos
 			if (item.children) {
-				const filteredChildren = item.children.filter(child =>
-					((!child.isOnlySuperAdministrador || isSuperAdmin) &&
+				const filteredChildren = item.children.filter(child => {
+					// Filtrar rutas de dropshipping si no está habilitado
+					if (child.path && child.path.includes('dropshipping') && !isDropshippingEnabled) {
+						return false;
+					}
+					
+					// Filtros normales de autorización y roles
+					return ((!child.isOnlySuperAdministrador || isSuperAdmin) &&
 						(!child.isOnlyAdmin || isJulsmindAdmin)) &&
-					authorizedPaths.includes(child.path)
-				);
+					authorizedPaths.includes(child.path);
+				});
 
 				// Si el padre está restringido o no quedan hijos visibles, omitir el padre
 				if ((item.isOnlySuperAdministrador && !isSuperAdmin) ||
@@ -178,7 +208,8 @@ export class NavService implements OnDestroy {
 			// Si es un enlace directo, verificar roles y permisos
 			if ((item.isOnlySuperAdministrador && !isSuperAdmin) ||
 				(item.isOnlyAdmin && !isJulsmindAdmin) ||
-				!authorizedPaths.includes(item.path)) {
+				!authorizedPaths.includes(item.path) ||
+				(item.path && item.path.includes('dropshipping') && !isDropshippingEnabled)) {
 				return null;
 			}
 			// Devolver el enlace si pasa las verificaciones
@@ -253,6 +284,14 @@ export class NavService implements OnDestroy {
 				{ path: 'ventas/ventas-pos', title: 'Ventas POS', type: 'link' }
 			]
 		},
+		{
+			title: 'Dropshipping', icon: 'truck', type: 'sub', active: false, children: [
+				{ path: 'dropshipping/dashboard', title: 'Dashboard', type: 'link' },
+				{ path: 'dropshipping/proveedores', title: 'Proveedores', type: 'link' },
+				{ path: 'dropshipping/productos', title: 'Productos', type: 'link' },
+				{ path: 'dropshipping/ordenes', title: 'Órdenes', type: 'link' }
+			]
+		},
 
 		// OPERACIONES
 		{ headTitle1: 'Operaciones' },
@@ -324,6 +363,7 @@ export class NavService implements OnDestroy {
 		{
 			title: 'Módulos Variables', icon: 'grid', type: 'sub', active: false, children: [
 				{ path: 'empresas/modulovariable/produccion/opciones', title: 'Producción', type: 'link' },
+				{ path: 'empresas/modulovariable/dropshipping/configuracion', title: 'Dropshipping', type: 'link' },
 				{ path: 'app-entregas', title: 'App de entregas', type: 'link' }
 			]
 		},

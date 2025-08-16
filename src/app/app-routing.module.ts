@@ -64,18 +64,17 @@ const routes: Routes = [
     component: PrivacyPolicyComponent
   },
   // Nueva ruta para live-audio en pantalla completa
-  // TODO: Implementar módulo live-audio cuando esté disponible
-  // {
-  //   path: 'live-audio',
-  //   component: BlankComponent,
-  //   canActivate: [AdminGuard],
-  //   children: [
-  //     {
-  //       path: '',
-  //       loadChildren: () => import('./shared/components/gemini-asistant/live-audio/live-audio.module').then(m => m.LiveAudioModule)
-  //     }
-  //   ]
-  // },
+  {
+    path: 'live-audio',
+    component: BlankComponent,
+    canActivate: [AdminGuard],
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./shared/components/gemini-asistant/live-audio/live-audio.module').then(m => m.LiveAudioModule)
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,

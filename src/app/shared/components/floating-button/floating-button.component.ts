@@ -4,7 +4,7 @@ import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
-// Importar el nuevo servicio de agente de voz
+// Importar el servicio de agente de voz original
 import { VoiceAgentService, VoiceAgentConfig, VisualStep } from '../../services/voice-agent.service';
 import { ToolAdapter, TOOL_ADAPTER } from '../../services/tools/tool-adapter';
 
@@ -138,19 +138,18 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
   toggleOptionsPanel(event?: MouseEvent) {
     if (event) event.stopPropagation();
+    console.log('🔄 Toggle options panel clicked');
 
-    if (this.chatFormVisible) {
-      // Si el chat está abierto, lo minimizamos en lugar de mostrar opciones
-      this.minimizeChat(event);
-      return;
-    }
-
+    // Simplemente alternar el panel de opciones
     this.optionsPanelVisible = !this.optionsPanelVisible;
-
-    if (!this.optionsPanelVisible) {
-      // Si cerramos el panel de opciones, cerramos todo
-      this.closeEverything(event || null);
+    
+    // Si cerramos el panel, cerrar también el chat si está abierto
+    if (!this.optionsPanelVisible && this.chatFormVisible) {
+      this.chatFormVisible = false;
+      this.chatMinimized = false;
     }
+
+    this.saveState();
   }
 
   selectMode(mode: string, event: MouseEvent) {
@@ -165,12 +164,34 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       case 'voice':
         this.startVoiceMode(event);
         break;
+      case 'live-audio':
+        this.startLiveAudioMode(event);
+        break;
       case 'help':
         this.openHelpGuide(event);
         break;
       case 'feedback':
         this.openFeedbackForm(event);
         break;
+    }
+
+    this.saveState();
+  }
+
+  // Método simplificado para iniciar el modo de voz usando el servicio
+  async startVoiceMode(event: MouseEvent) {
+    event.stopPropagation();
+    console.log('🎤 Iniciando modo de voz con VoiceAgentService');
+    
+    try {
+      // Iniciar sesión de voz
+      await this.voiceAgentService.startVoiceSession(this.voiceAgentConfig);
+      
+      // Activar el modo de escucha
+      this.isListening = true;
+      
+    } catch (error: any) {
+      console.error('Error al iniciar la sesión de voz:', error);
     }
 
     this.saveState();
@@ -184,20 +205,126 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     this.saveState();
   }
 
-  // Método simplificado para iniciar el modo de voz usando el servicio
-  async startVoiceMode(event: MouseEvent) {
+  /**
+   * Inicia el modo de ventas por voz
+   */
+  async startVoiceSalesMode(event: MouseEvent) {
     event.stopPropagation();
-    console.log('🎤 Iniciando modo de voz con nuevo servicio');
+    console.log('🛒 Iniciando modo de ventas por voz');
     
     try {
-      // Iniciar sesión de voz
-      await this.voiceAgentService.startVoiceSession(this.voiceAgentConfig);
+      // Iniciar sesión de ventas por voz
+      await this.voiceAgentService.startVoiceSession();
+      
+      // Mostrar notificación de inicio
+      // this.toastr.success('Sistema de ventas por voz iniciado. Usa los controles para gestionar tu venta.', 'Ventas por Voz');
+      
+      // Activar el modo de ventas por voz
+      // this.isVoiceSalesActive = true; // No longer needed
+      this.isListening = false; // No iniciar reconocimiento automáticamente
+      
+      // Mostrar el panel de opciones para mostrar los controles
+      this.optionsPanelVisible = true;
       
     } catch (error: any) {
-      console.error('Error al iniciar la sesión de voz:', error);
+      console.error('Error al iniciar el sistema de ventas por voz:', error);
+      // this.toastr.error('Error al iniciar el sistema de ventas por voz', 'Error');
     }
 
     this.saveState();
+  }
+
+  /**
+   * Muestra el panel de comandos de voz disponibles
+   */
+  private showVoiceCommandsPanel(): void {
+    const commands = [
+      '🎯 "seleccionar bodega" - Elegir bodega para la venta',
+      '🛍️ "buscar productos" - Buscar productos disponibles',
+      '🛒 "agregar al carrito" - Agregar productos al carrito',
+      '👤 "crear cliente" - Crear nuevo cliente',
+      '🚚 "configurar entrega" - Configurar datos de envío',
+      '📄 "configurar facturación" - Completar facturación',
+      '💳 "procesar venta" - Finalizar la venta',
+      '❓ "ayuda" - Ver comandos disponibles',
+      '📊 "estado" - Ver progreso actual'
+    ];
+
+    // Crear un modal temporal con los comandos
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      font-family: 'Inter', sans-serif;
+      z-index: 10000;
+      max-width: 500px;
+      text-align: center;
+    `;
+
+    modal.innerHTML = `
+      <h3 style="margin: 0 0 20px 0; color: #4CAF50;">🎤 Comandos de Voz Disponibles</h3>
+      <div style="text-align: left; margin-bottom: 20px;">
+        ${commands.map(cmd => `<div style="margin: 10px 0; font-size: 14px;">${cmd}</div>`).join('')}
+      </div>
+      <button id="close-voice-commands" style="
+        background: #4CAF50;
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      ">Entendido</button>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Cerrar modal
+    modal.querySelector('#close-voice-commands')?.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+
+    // Auto-cerrar después de 10 segundos
+    setTimeout(() => {
+      if (document.body.contains(modal)) {
+        document.body.removeChild(modal);
+      }
+    }, 10000);
+  }
+
+  /**
+   * Procesa un comando de voz usando el servicio de agente de voz
+   */
+  async processVoiceCommand(command: string): Promise<void> {
+    try {
+      console.log('🎤 Procesando comando de voz:', command);
+      
+      // Por ahora, solo logueamos el comando ya que VoiceAgentService no tiene executeVoiceCommand
+      console.log('Comando recibido:', command);
+      
+      // Aquí se podría implementar la lógica de procesamiento de comandos
+      // cuando se integre con OrderToolsRegistrarService
+      
+    } catch (error: any) {
+      console.error('Error procesando comando de voz:', error);
+    }
+  }
+
+  /**
+   * Actualiza el progreso visual del sistema de voz
+   */
+  private updateVoiceProgress(): void {
+    // El VoiceAgentService ya maneja esto a través de los observables
+    // No necesitamos hacer nada adicional aquí
   }
 
   // Método simplificado para detener el modo de voz
@@ -206,6 +333,307 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     console.log('🛑 Deteniendo modo de voz');
     
     this.voiceAgentService.stopVoiceSession();
+    this.isListening = false;
+    // this.isVoiceSalesActive = false; // No longer needed
+    this.saveState();
+  }
+
+  /**
+   * Inicia el reconocimiento de voz para comandos
+   */
+  startVoiceRecognition(): void {
+    // if (!this.isVoiceSalesActive) { // No longer needed
+    //   this.toastr.warning('Primero inicia el sistema de ventas por voz', 'Advertencia');
+    //   return;
+    // }
+
+    // Verificar si el navegador soporta reconocimiento de voz
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      // this.toastr.error('Tu navegador no soporta reconocimiento de voz', 'Error'); // No longer needed
+      return;
+    }
+
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        console.log('🎤 Reconocimiento de voz iniciado');
+        this.isListening = true;
+        // this.toastr.info('Escuchando... Di tu comando', 'Reconocimiento de Voz'); // No longer needed
+      };
+
+      recognition.onresult = (event: any) => {
+        const command = event.results[0][0].transcript.toLowerCase();
+        console.log('🎤 Comando reconocido:', command);
+        
+        // Procesar el comando
+        this.processVoiceCommand(command);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+        // this.toastr.error(`Error de reconocimiento: ${event.error}`, 'Error'); // No longer needed
+        this.isListening = false;
+      };
+
+      recognition.onend = () => {
+        console.log('🎤 Reconocimiento de voz finalizado');
+        this.isListening = false;
+        
+        // Reiniciar automáticamente si el sistema está activo
+        if (this.voiceAgentService.isSessionActive()) {
+          setTimeout(() => {
+            this.startVoiceRecognition();
+          }, 1000);
+        }
+      };
+
+      recognition.start();
+      
+    } catch (error) {
+      console.error('Error iniciando reconocimiento de voz:', error);
+      // this.toastr.error('Error iniciando reconocimiento de voz', 'Error'); // No longer needed
+    }
+  }
+
+  /**
+   * Detiene el reconocimiento de voz
+   */
+  stopVoiceRecognition(): void {
+    this.isListening = false;
+    // this.toastr.info('Reconocimiento de voz detenido', 'Voz'); // No longer needed
+  }
+
+  // Método para iniciar el modo live-audio
+  startLiveAudioMode(event: MouseEvent) {
+    event.stopPropagation();
+    console.log('🎵 Iniciando modo Live Audio en pantalla completa');
+    
+    // Cerrar otros paneles
+    this.optionsPanelVisible = false;
+    this.chatFormVisible = false;
+    this.chatMinimized = false;
+    
+    // Navegar a la ruta de live-audio en pantalla completa
+    this.router.navigate(['/live-audio']);
+    
+    this.saveState();
+  }
+
+  private openLiveAudioFullscreen() {
+    // Crear un contenedor de pantalla completa
+    const fullscreenContainer = document.createElement('div');
+    fullscreenContainer.id = 'live-audio-fullscreen';
+    fullscreenContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: 'Arial', sans-serif;
+    `;
+
+    // Agregar contenido del live audio
+    fullscreenContainer.innerHTML = `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        position: relative;
+      ">
+        <!-- Header con título y botón de cerrar -->
+        <div style="
+          position: absolute;
+          top: 20px;
+          left: 20px;
+          right: 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          z-index: 10000;
+        ">
+          <h1 style="
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 300;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+          ">🎤 Live Audio - Katuq Assistant</h1>
+          <button id="close-live-audio" style="
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+          ">✕ Cerrar</button>
+        </div>
+
+        <!-- Contenedor principal para el live audio -->
+        <div id="live-audio-content" style="
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 80px 20px 20px 20px;
+        ">
+          <!-- Contenedor para el componente live-audio -->
+          <div id="live-audio-component-container" style="
+            width: 100%;
+            max-width: 800px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+          ">
+            <div style="
+              font-size: 1.5rem;
+              margin-bottom: 20px;
+              text-align: center;
+              color: #ffffff;
+            ">
+              🎵 Live Audio Iniciado
+            </div>
+            <div style="
+              width: 200px;
+              height: 200px;
+              border-radius: 50%;
+              background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              animation: pulse 2s infinite;
+              margin-bottom: 20px;
+            ">
+              <i class="fa fa-microphone" style="font-size: 3rem; color: white;"></i>
+            </div>
+            <div style="
+              font-size: 1rem;
+              text-align: center;
+              color: rgba(255,255,255,0.8);
+              max-width: 400px;
+            ">
+              Habla con Katuq Assistant usando tu micrófono para interactuar con las herramientas de ventas
+            </div>
+            <div style="
+              margin-top: 20px;
+              padding: 15px;
+              background: rgba(255,255,255,0.1);
+              border-radius: 10px;
+              border: 1px solid rgba(255,255,255,0.2);
+            ">
+              <div style="font-size: 0.9rem; margin-bottom: 10px; color: #ffffff;">
+                <strong>Comandos disponibles:</strong>
+              </div>
+              <div style="font-size: 0.8rem; color: rgba(255,255,255,0.8); line-height: 1.4;">
+                • "Buscar productos" - Buscar en el catálogo<br>
+                • "Agregar al carrito" - Añadir productos<br>
+                • "Ver carrito" - Mostrar contenido del carrito<br>
+                • "Buscar cliente" - Buscar o crear clientes<br>
+                • "Configurar facturación" - Configurar datos de facturación<br>
+                • "Configurar envío" - Configurar opciones de envío<br>
+                • "Procesar venta" - Finalizar la venta
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer con instrucciones -->
+        <div style="
+          position: absolute;
+          bottom: 20px;
+          left: 20px;
+          right: 20px;
+          text-align: center;
+          color: rgba(255,255,255,0.7);
+          font-size: 0.9rem;
+        ">
+          💡 Di "ayuda" para ver todas las herramientas disponibles
+        </div>
+      </div>
+
+      <style>
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+      </style>
+    `;
+
+    // Agregar al DOM
+    document.body.appendChild(fullscreenContainer);
+
+    // Agregar evento para cerrar
+    const closeButton = document.getElementById('close-live-audio');
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        this.closeLiveAudioFullscreen();
+      });
+    }
+
+    // Agregar evento para cerrar con Escape
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        this.closeLiveAudioFullscreen();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    // Guardar referencia para poder cerrar después
+    (fullscreenContainer as any).handleEscape = handleEscape;
+  }
+
+  private closeLiveAudioFullscreen() {
+    const fullscreenContainer = document.getElementById('live-audio-fullscreen');
+    if (fullscreenContainer) {
+      // Remover evento de Escape
+      const handleEscape = (fullscreenContainer as any).handleEscape;
+      if (handleEscape) {
+        document.removeEventListener('keydown', handleEscape);
+      }
+      
+      // Remover el contenedor
+      document.body.removeChild(fullscreenContainer);
+      
+      // Resetear modo
+      this.selectedMode = 'chat';
+      this.saveState();
+    }
+  }
+
+  // Método para detener el modo live-audio
+  stopLiveAudioMode(event: MouseEvent | null) {
+    if (event) event.stopPropagation();
+    console.log('🛑 Deteniendo modo Live Audio');
+    
+    this.selectedMode = 'chat'; // Volver al modo por defecto
     this.saveState();
   }
 
@@ -281,6 +709,11 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     // Detener sesión de voz si está activa
     if (this.voiceAgentService.isSessionActive()) {
       this.voiceAgentService.stopVoiceSession();
+    }
+
+    // Resetear modo si es live-audio
+    if (this.selectedMode === 'live-audio') {
+      this.selectedMode = 'chat';
     }
 
     this.saveState();

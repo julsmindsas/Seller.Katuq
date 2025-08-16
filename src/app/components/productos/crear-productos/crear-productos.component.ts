@@ -47,6 +47,10 @@ import { KatuqintelligenceService } from "../../../shared/services/katuqintellig
 import { ImagenService } from "../../../shared/utils/image.service";
 import { error } from "console";
 
+// Dropshipping imports
+import { ProveedoresService } from "../../dropshipping/services/proveedores.service";
+import { Proveedor } from "../../dropshipping/interfaces";
+
 @Component({
   selector: "app-crear-productos",
   templateUrl: "./crear-productos.component.html",
@@ -67,6 +71,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   identificacion: any;
   exposicion: any;
   procesoComercial: FormGroup;
+  dropshippingConfig: FormGroup;
   marketplace: any;
   ciudad: any;
   ciudades: any;
@@ -100,6 +105,15 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     { value: "5", label: "5%" },
     { value: "0", label: "0%" },
   ];
+  
+  tiposMargenDropshipping = [
+    { value: 'porcentaje', label: 'Porcentaje (%)' },
+    { value: 'fijo', label: 'Valor Fijo ($)' }
+  ];
+  
+  // Variables para integración con proveedores
+  proveedoresActivos: Proveedor[] = [];
+  loadingProveedores = false;
 
   mostrarCrear: boolean = true;
   valorBarCode: any;
@@ -131,6 +145,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   uploadingImages: boolean = false;
   saving: boolean = false;
   private subs = new Subscription();
+  
+  // Control de tabs y modo dropshipping
+  activeTabIndex = 0;
+  isDropshippingConfigMode = false;
 
   getNameControl(control) {
     return control.value.nameMP;
@@ -147,6 +165,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     private utilService: UtilsService,
     private kaiService: KatuqintelligenceService,
     private imageService: ImagenService,
+    private proveedoresService: ProveedoresService,
   ) {
     this.kaiService.getKatuqPrompt().subscribe((res) => {
       this.kaiProductPrompt = res.promptProduct;
@@ -209,6 +228,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       exposicion: [[]],
       categorias: [],
       procesoComercial: [[]],
+      dropshippingConfig: [[]],
       marketplace: [[]],
       ciudades: [[]],
       otrosProcesos: this.fb.group({
@@ -270,7 +290,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
     this.identificacion = this.fb.group({
       referencia: ["", [Validators.required]],
-      tipoProducto: ["propio", [Validators.required]],
+      tipoProducto: ["propio", [Validators.required]], // propio, externo, dropshipping
       tipoReferencia: ["propio"],
       codigoBarras: ["", [Validators.required]],
       marca: ["", [Validators.required]],
@@ -423,6 +443,45 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       ciudadesOrigen: [[], [Validators.required]],
       ciudadesEntrega: [[], Validators.required],
     });
+
+    // Inicializar FormGroup para configuración de dropshipping
+    this.dropshippingConfig = this.fb.group({
+      enabled: [false],
+      supplierId: [''],
+      supplierName: [''],
+      supplierSku: [''],
+      supplierProductUrl: [''],
+      leadTimeDays: [7, [Validators.min(1)]],
+      tipoMargen: ['porcentaje'],
+      margenPorcentaje: [0, [Validators.min(0)]],
+      margenFijo: [0, [Validators.min(0)]],
+      proveedorContacto: [''],
+      proveedorTelefono: [''],
+      proveedorEmail: ['', [Validators.email]],
+      costoProveedor: [0, [Validators.min(0)]],
+      monedaProveedor: ['COP'],
+      condicionesEspeciales: [''],
+      activo: [true]
+    });
+
+    // Validación condicional del margen dropshipping
+    this.subs.add(
+      this.dropshippingConfig.get('tipoMargen')?.valueChanges.subscribe(tipo => {
+        const margenPorcentajeControl = this.dropshippingConfig.get('margenPorcentaje');
+        const margenFijoControl = this.dropshippingConfig.get('margenFijo');
+        
+        if (tipo === 'porcentaje') {
+          margenPorcentajeControl?.setValidators([Validators.required, Validators.min(0), Validators.max(100)]);
+          margenFijoControl?.clearValidators();
+        } else {
+          margenFijoControl?.setValidators([Validators.required, Validators.min(0)]);
+          margenPorcentajeControl?.clearValidators();
+        }
+        
+        margenPorcentajeControl?.updateValueAndValidity();
+        margenFijoControl?.updateValueAndValidity();
+      })
+    );
   }
   getMaestrosIniciales() {
     const context = this;
@@ -703,7 +762,40 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.initializeVariables();
     this.loadMasterData();
     this.handleEditMode();
+    this.checkDropshippingMode();
   }
+
+  checkDropshippingMode(): void {
+    // Verificar si se debe abrir tab de dropshipping
+    const openDropshippingTab = sessionStorage.getItem('openDropshippingTab');
+    if (openDropshippingTab === 'true') {
+      sessionStorage.removeItem('openDropshippingTab');
+      this.isDropshippingConfigMode = true;
+      
+      // Configurar automáticamente como producto dropshipping
+      setTimeout(() => {
+        this.identificacion.get('tipoProducto')?.setValue('dropshipping');
+        this.onTipoProductoChange();
+        this.activateDropshippingTab();
+      }, 100);
+    }
+  }
+
+  activateDropshippingTab(): void {
+    // Activar el tab de Dropshipping (índice 6, después de: Información, Precios, Dimensiones, Disponibilidad, Exposición, Proceso Comercial)
+    this.activeTabIndex = 6;
+  }
+
+  getPageTitle(): string {
+    if (this.isDropshippingConfigMode) return 'Configurar Dropshipping';
+    return this.edit ? 'Editar Producto' : 'Crear Producto';
+  }
+
+  getBreadcrumbActiveItem(): string {
+    if (this.isDropshippingConfigMode) return 'Configurar Dropshipping';
+    return this.edit ? 'Editar Producto' : 'Crear Producto';
+  }
+
   eliminarProcesosDisponiblesRepetidos() {
     if (this.procesoSeleccionado) {
       // Eliminar de procesosProduccion los procesos que ya están en productosArticulos para no repetirlos
@@ -1005,6 +1097,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.formGeneral.controls["procesoComercial"].setValue(
       this.procesoComercial.value,
     );
+    this.formGeneral.controls["dropshippingConfig"].setValue(this.dropshippingConfig.value);
     this.formGeneral.controls["marketplace"].setValue(this.marketplace.value);
     this.formGeneral.controls["ciudades"].setValue(this.ciudades.value);
     this.formGeneral.controls["categorias"].setValue(
@@ -1106,6 +1199,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.formGeneral.controls["procesoComercial"].setValue(
       this.procesoComercial.value,
     );
+    this.formGeneral.controls["dropshippingConfig"].setValue(this.dropshippingConfig.value);
     this.formGeneral.controls["marketplace"].setValue(this.marketplace.value);
     this.formGeneral.controls["ciudades"].setValue(this.ciudades.value);
     if (this.categoriasForm.controls["categorias"].value != null) {
@@ -1466,6 +1560,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.formGeneral.controls["procesoComercial"].setValue(
       this.procesoComercial.value,
     );
+    this.formGeneral.controls["dropshippingConfig"].setValue(this.dropshippingConfig.value);
     this.formGeneral.controls["marketplace"].setValue(this.marketplace.value);
     this.formGeneral.controls["ciudades"].setValue(this.ciudades.value);
     this.formGeneral.controls["categorias"].setValue(
@@ -1664,6 +1759,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.formGeneral.controls["procesoComercial"].setValue(
       this.procesoComercial.value,
     );
+    this.formGeneral.controls["dropshippingConfig"].setValue(this.dropshippingConfig.value);
     this.formGeneral.controls["marketplace"].setValue(this.marketplace.value);
     this.formGeneral.controls["ciudades"].setValue(this.ciudades.value);
     this.formGeneral.controls["categorias"].setValue(
@@ -1840,6 +1936,23 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.service.consultarFormaPago().subscribe((r: any) => {
       this.formasPago = r as any[];
     });
+    
+    // Cargar proveedores activos para dropshipping
+    this.loadProveedoresActivos();
+  }
+
+  private loadProveedoresActivos(): void {
+    this.loadingProveedores = true;
+    this.proveedoresService.getProveedoresActivos().subscribe({
+      next: (proveedores) => {
+        this.proveedoresActivos = proveedores;
+        this.loadingProveedores = false;
+      },
+      error: (error) => {
+        console.error('Error cargando proveedores:', error);
+        this.loadingProveedores = false;
+      }
+    });
   }
 
   private processCategorias(r: any) {
@@ -1895,6 +2008,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.categoriasForm.patchValue({ categorias: this.edit.categorias });
     this.procesoComercial.patchValue(this.edit.procesoComercial);
     this.activar = this.edit.procesoComercial.configProcesoComercialActivo || false;
+    
+    // Cargar configuración de dropshipping si existe
+    if (this.edit.dropshippingConfig) {
+      this.dropshippingConfig.patchValue(this.edit.dropshippingConfig);
+    }
   }
 
   private loadPricingData() {
@@ -1964,6 +2082,350 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       this.preciosPorVolumen.controls[0]
         .get("valorUnitarioPorVolumenSinIVA")
         .setValue(precioUnitarioSinIva);
+    }
+  }
+
+  // Funciones para Dropshipping
+
+  /**
+   * Verifica si el tipo de producto seleccionado es dropshipping
+   */
+  isDropshippingTypeSelected(): boolean {
+    return this.identificacion?.get('tipoProducto')?.value === 'dropshipping';
+  }
+
+  /**
+   * Verifica si dropshipping está habilitado para la empresa actual
+   */
+  isDropshippingEnabled(): boolean {
+    try {
+      // Verificar si el dropshipping está habilitado para la empresa actual desde localStorage
+      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      const companyId = currentCompany.id || currentCompany._id || 'default';
+      const configKey = `dropshippingConfig_${companyId}`;
+      
+      const savedConfig = localStorage.getItem(configKey);
+      if (savedConfig) {
+        const dropshippingConfig = JSON.parse(savedConfig);
+        return dropshippingConfig.habilitado === true;
+      }
+      
+      // Si no hay configuración guardada, devolver false (no está habilitado)
+      return false;
+    } catch (error) {
+      console.error('Error checking dropshipping status:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Calcula el precio de venta basado en el costo del proveedor y el margen configurado
+   */
+  calcularPrecioVentaDropshipping(): number {
+    const costo = this.dropshippingConfig?.get('costoProveedor')?.value || 0;
+    const tipoMargen = this.dropshippingConfig?.get('tipoMargen')?.value;
+    const margenPorcentaje = this.dropshippingConfig?.get('margenPorcentaje')?.value || 0;
+    const margenFijo = this.dropshippingConfig?.get('margenFijo')?.value || 0;
+
+    if (tipoMargen === 'porcentaje') {
+      return costo * (1 + margenPorcentaje / 100);
+    } else {
+      return costo + margenFijo;
+    }
+  }
+
+  /**
+   * Calcula la ganancia estimada del producto dropshipping
+   */
+  calcularGananciaDropshipping(): number {
+    const costo = this.dropshippingConfig?.get('costoProveedor')?.value || 0;
+    return this.calcularPrecioVentaDropshipping() - costo;
+  }
+
+  // Métodos para manejo de proveedores
+  onProveedorSelected(event: any): void {
+    const proveedorId = event.value;
+    if (proveedorId) {
+      const proveedor = this.proveedoresActivos.find(p => p.id === proveedorId);
+      if (proveedor) {
+        // Auto-poblar campos del formulario con datos del proveedor
+        this.dropshippingConfig.patchValue({
+          supplierName: proveedor.nombre,
+          proveedorContacto: proveedor.contacto,
+          proveedorTelefono: proveedor.telefono || '',
+          proveedorEmail: proveedor.email,
+          leadTimeDays: proveedor.tiempo_procesamiento_dias,
+          
+          // Nuevos campos de integración
+          proveedorComisionPorcentaje: proveedor.comision_porcentaje,
+          tipoIntegracion: proveedor.api_config?.tipo_integracion || 'manual',
+          configuracionApi: proveedor.api_config || null,
+          stockSincronizado: proveedor.api_config?.tipo_integracion === 'api',
+          preciosSincronizados: proveedor.api_config?.tipo_integracion === 'api'
+        });
+        
+        // Si existe comisión, usar como margen por defecto
+        if (proveedor.comision_porcentaje > 0) {
+          this.dropshippingConfig.patchValue({
+            tipoMargen: 'porcentaje',
+            margenPorcentaje: proveedor.comision_porcentaje
+          });
+        }
+        
+        // Mostrar información sobre el tipo de integración
+        if (proveedor.api_config?.tipo_integracion === 'api') {
+          Swal.fire({
+            title: 'Integración API Detectada',
+            html: `
+              <p>Este proveedor tiene configuración de API.</p>
+              <p><strong>Beneficios:</strong></p>
+              <ul style="text-align: left; margin: 10px 20px;">
+                <li>Sincronización automática de stock</li>
+                <li>Actualización automática de precios</li>
+                <li>Procesamiento automático de pedidos</li>
+              </ul>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Entendido'
+          });
+        }
+      }
+    }
+  }
+
+  getSelectedProveedor(): Proveedor | null {
+    const proveedorId = this.dropshippingConfig?.get('supplierId')?.value;
+    if (proveedorId) {
+      return this.proveedoresActivos.find(p => p.id === proveedorId) || null;
+    }
+    return null;
+  }
+
+  crearNuevoProveedor(): void {
+    // Abrir modal o navegar a la creación de proveedor
+    Swal.fire({
+      title: 'Crear Nuevo Proveedor',
+      html: `
+        <p>¿Desea crear un nuevo proveedor de dropshipping?</p>
+        <p class="text-muted">Será redirigido al módulo de gestión de proveedores.</p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, crear proveedor',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Abrir en nueva pestaña para no perder el progreso del producto
+        window.open('/dropshipping/proveedores/crear', '_blank');
+        
+        // Mostrar información sobre cómo refrescar la lista
+        Swal.fire({
+          title: 'Información',
+          html: `
+            <p>Se ha abierto la creación de proveedor en una nueva pestaña.</p>
+            <p>Una vez creado el proveedor, <strong>refresque esta página</strong> para que aparezca en la lista.</p>
+          `,
+          icon: 'info',
+          confirmButtonText: 'Entendido'
+        });
+      }
+    });
+  }
+
+  // Validaciones y lógica de negocio para proveedores
+  validateProveedorConfiguration(): boolean {
+    if (!this.isDropshippingTypeSelected()) {
+      return true; // No es dropshipping, no necesita validación de proveedor
+    }
+
+    const supplierId = this.dropshippingConfig?.get('supplierId')?.value;
+    const costoProveedor = this.dropshippingConfig?.get('costoProveedor')?.value;
+    
+    if (!supplierId) {
+      Swal.fire({
+        title: 'Proveedor Requerido',
+        text: 'Debe seleccionar un proveedor para productos dropshipping.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return false;
+    }
+
+    if (!costoProveedor || costoProveedor <= 0) {
+      Swal.fire({
+        title: 'Costo del Proveedor Requerido',
+        text: 'Debe especificar el costo del proveedor para calcular precios correctamente.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  refreshProveedoresList(): void {
+    this.loadProveedoresActivos();
+    Swal.fire({
+      title: 'Lista Actualizada',
+      text: 'La lista de proveedores ha sido actualizada.',
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  calcularComisionProveedor(): number {
+    const proveedor = this.getSelectedProveedor();
+    const costoProveedor = this.dropshippingConfig?.get('costoProveedor')?.value || 0;
+    
+    if (proveedor && costoProveedor > 0) {
+      return (costoProveedor * proveedor.comision_porcentaje) / 100;
+    }
+    return 0;
+  }
+
+  /**
+   * Maneja el cambio de tipo de producto para configurar validaciones condicionales
+   */
+  onTipoProductoChange(): void {
+    const tipoProducto = this.identificacion?.get('tipoProducto')?.value;
+    
+    if (tipoProducto === 'dropshipping') {
+      // Verificar si dropshipping está habilitado para la empresa
+      if (!this.isDropshippingEnabled()) {
+        // Si no está habilitado, revertir la selección y mostrar advertencia
+        this.identificacion.get('tipoProducto')?.setValue('propio');
+        
+        Swal.fire({
+          title: 'Dropshipping no disponible',
+          html: `
+            <p>Para crear productos dropshipping, primero debe habilitar el módulo para su empresa.</p>
+            <p>¿Desea ir a la configuración ahora?</p>
+          `,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Ir a Configuración',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.open('/empresas/modulovariable/dropshipping/configuracion', '_blank');
+          }
+        });
+        return;
+      }
+      
+      // Auto-asignar currentCompany como proveedor
+      this.autoAsignarCurrentCompanyComoProveedor();
+      
+      // Activar validaciones simplificadas para dropshipping
+      this.dropshippingConfig.get('costoProveedor')?.setValidators([Validators.required, Validators.min(0.01)]);
+      
+      // Habilitar la configuración de dropshipping
+      this.dropshippingConfig.get('enabled')?.setValue(true);
+    } else {
+      // Limpiar validaciones cuando no es dropshipping
+      this.dropshippingConfig.get('supplierId')?.clearValidators();
+      this.dropshippingConfig.get('supplierName')?.clearValidators();
+      this.dropshippingConfig.get('costoProveedor')?.clearValidators();
+      
+      // Deshabilitar la configuración de dropshipping
+      this.dropshippingConfig.get('enabled')?.setValue(false);
+    }
+    
+    // Actualizar validaciones
+    this.dropshippingConfig.get('supplierId')?.updateValueAndValidity();
+    this.dropshippingConfig.get('supplierName')?.updateValueAndValidity();
+    this.dropshippingConfig.get('costoProveedor')?.updateValueAndValidity();
+  }
+
+  /**
+   * Método para habilitar dropshipping de manera temporal para pruebas
+   * (solo para debugging y desarrollo)
+   */
+  enableDropshippingForTesting(): void {
+    try {
+      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      const companyId = currentCompany.id || currentCompany._id || 'default';
+      const configKey = `dropshippingConfig_${companyId}`;
+      
+      const testConfig = {
+        habilitado: true,
+        fechaActivacion: new Date().toISOString(),
+        configuracion: {
+          margenMinimoPermitido: 10,
+          automatizacionActivada: false,
+          notificacionesActivadas: true,
+          tiempoLimiteOrden: 7,
+          proveedoresPermitidos: []
+        },
+        lastUpdated: new Date().toISOString(),
+        companyId: companyId,
+        companyName: currentCompany.nomComercial || 'Empresa de Prueba'
+      };
+      
+      localStorage.setItem(configKey, JSON.stringify(testConfig));
+      
+      // También guardar en la lista general
+      const allConfigs = JSON.parse(localStorage.getItem('allDropshippingConfigs') || '{}');
+      allConfigs[companyId] = testConfig;
+      localStorage.setItem('allDropshippingConfigs', JSON.stringify(allConfigs));
+      
+      console.log('✅ Dropshipping habilitado temporalmente para pruebas');
+      console.log('📍 Configuración guardada en:', configKey);
+      console.log('🔄 Recarga la página para ver los cambios');
+      
+      // Forzar detección de cambios
+      this.cdr.detectChanges();
+      
+    } catch (error) {
+      console.error('❌ Error habilitando dropshipping para pruebas:', error);
+    }
+  }
+
+  /**
+   * Auto-asigna la empresa actual (currentCompany) como proveedor para dropshipping
+   * Esto simplifica el proceso eliminando la necesidad de seleccionar proveedores externos
+   */
+  private autoAsignarCurrentCompanyComoProveedor(): void {
+    try {
+      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      
+      if (currentCompany && currentCompany.nomComercial) {
+        // Auto-poblar campos del formulario con datos de la empresa actual
+        this.dropshippingConfig.patchValue({
+          supplierId: currentCompany.id || currentCompany._id || 'current-company',
+          supplierName: currentCompany.nomComercial,
+          proveedorContacto: currentCompany.contactoPrincipal || currentCompany.representanteLegal || 'Empresa',
+          proveedorTelefono: currentCompany.telefono || currentCompany.celular || '',
+          proveedorEmail: currentCompany.email || currentCompany.correoElectronico || '',
+          leadTimeDays: 7, // Tiempo de procesamiento por defecto
+          
+          // Configuración predeterminada para auto-proveedor
+          tipoMargen: 'porcentaje',
+          margenPorcentaje: 25, // Margen por defecto del 25%
+          monedaProveedor: 'COP',
+          activo: true
+        });
+
+        console.log('✅ CurrentCompany auto-asignada como proveedor:', currentCompany.nomComercial);
+      } else {
+        console.warn('⚠️ No se pudo obtener currentCompany para auto-asignar como proveedor');
+        
+        // Fallback: usar datos genéricos
+        this.dropshippingConfig.patchValue({
+          supplierId: 'self-provider',
+          supplierName: 'Mi Empresa (Dropshipping)',
+          proveedorContacto: 'Administrador',
+          leadTimeDays: 7,
+          tipoMargen: 'porcentaje',
+          margenPorcentaje: 25,
+          monedaProveedor: 'COP',
+          activo: true
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error auto-asignando currentCompany como proveedor:', error);
     }
   }
 

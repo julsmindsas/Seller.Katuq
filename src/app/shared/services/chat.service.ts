@@ -15,6 +15,8 @@ export class ChatService {
   public observer: Subscriber<{}>;
   public chat: any[] = []
   public users: any[] = []
+  private activeStreams: { [receiverId: number]: any } = {};
+  private activeStreamSubscriptions: { [receiverId: number]: { unsubscribe: () => void } | null } = {};
 
   constructor(private kai: KatuqintelligenceService) {
     this.chat = ChatDB.chat
@@ -79,25 +81,72 @@ export class ChatService {
         }, 310)
         // this.responseMessage(chat)
 
-        this.kai.invokeKatuqAdvandceIntelligenceForProductRetriver(chat.message).subscribe(response => {
-          console.log(response)
-          if (response) {
-            this.chat.filter(chats => {
-              if (chats.id == chat.receiver) {
-                setTimeout(() => {
-                  chats.message.push({ sender: chat.receiver, time: today.toLowerCase(), text: response.result });
-                  const user = this.users.find(u => u.id === chat.receiver);
-                  if (user) { user.typing = false; }
-                }, 1000);
-                setTimeout(() => {
-                  document.querySelector(".chat-history")?.scrollBy({ top: 250, behavior: 'smooth' });
-                }, 1310)
-              }
-            })
-          }
-        });
+        // Intentar streaming SSE primero
+        try {
+          this.stopStreaming(chat.receiver);
+          const user = this.users.find(u => u.id === chat.receiver);
+          if (user) { user.typing = true; }
+          const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+          this.chat.filter(chats => {
+            if (chats.id == chat.receiver) {
+              chats.message.push(assistantMsg);
+            }
+          });
+
+          const sub = this.kai.streamProductRetriver(chat.message).subscribe({
+            next: (chunk: string) => {
+              assistantMsg.text += chunk;
+              document.querySelector(".chat-history")?.scrollBy({ top: 150, behavior: 'smooth' });
+            },
+            error: (_err) => {
+              // Fallback a llamada normal si el stream falla
+              this.invokeOnceFallback(chat, assistantMsg, user);
+            },
+            complete: () => {
+              if (user) { user.typing = false; }
+              this.activeStreamSubscriptions[chat.receiver] = null;
+            }
+          });
+          this.activeStreamSubscriptions[chat.receiver] = sub as any;
+        } catch (_e) {
+          // Fallback si falla
+          const user = this.users.find(u => u.id === chat.receiver);
+          const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+          this.invokeOnceFallback(chat, assistantMsg, user);
+        }
       }
     })
+  }
+
+  public stopStreaming(receiverId: number): void {
+    const interval = this.activeStreams[receiverId];
+    if (interval) {
+      clearInterval(interval);
+      delete this.activeStreams[receiverId];
+    }
+    const sub = this.activeStreamSubscriptions[receiverId];
+    if (sub) {
+      try { sub.unsubscribe(); } catch {}
+      this.activeStreamSubscriptions[receiverId] = null;
+    }
+    const user = this.users.find(u => u.id === receiverId);
+    if (user) { user.typing = false; }
+  }
+
+  private invokeOnceFallback(chat, assistantMsg, user?: any) {
+    this.kai.invokeKatuqAdvandceIntelligenceForProductRetriver(chat.message).subscribe(response => {
+      if (response) {
+        this.chat.filter(chats => {
+          if (chats.id == chat.receiver) {
+            setTimeout(() => {
+              assistantMsg.text = (response.result || '').toString();
+              if (user) { user.typing = false; }
+              document.querySelector(".chat-history")?.scrollBy({ top: 250, behavior: 'smooth' });
+            }, 300);
+          }
+        })
+      }
+    });
   }
 
   public responseMessage(chat) {

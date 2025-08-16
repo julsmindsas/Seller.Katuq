@@ -1,0 +1,198 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>{{ isEditMode ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</h5>
+      </div>
+
+      <div class="card-body" *ngIf="!loading">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="row">
+            <!-- Información Básica -->
+            <div class="col-md-6">
+              <h6 class="mb-3">Información Básica</h6>
+              
+              <div class="field">
+                <label for="nombre">Nombre del Proveedor *</label>
+                <input 
+                  pInputText 
+                  id="nombre" 
+                  type="text" 
+                  formControlName="nombre"
+                  [class.ng-invalid]="isFieldInvalid('nombre')"
+                  class="w-100">
+                <small class="p-error" *ngIf="isFieldInvalid('nombre')">
+                  {{ getFieldError('nombre') }}
+                </small>
+              </div>
+
+              <div class="field">
+                <label for="contacto">Persona de Contacto *</label>
+                <input 
+                  pInputText 
+                  id="contacto" 
+                  type="text" 
+                  formControlName="contacto"
+                  [class.ng-invalid]="isFieldInvalid('contacto')"
+                  class="w-100">
+                <small class="p-error" *ngIf="isFieldInvalid('contacto')">
+                  {{ getFieldError('contacto') }}
+                </small>
+              </div>
+
+              <div class="field">
+                <label for="email">Email *</label>
+                <input 
+                  pInputText 
+                  id="email" 
+                  type="email" 
+                  formControlName="email"
+                  [class.ng-invalid]="isFieldInvalid('email')"
+                  class="w-100">
+                <small class="p-error" *ngIf="isFieldInvalid('email')">
+                  {{ getFieldError('email') }}
+                </small>
+              </div>
+
+              <div class="field">
+                <label for="telefono">Teléfono</label>
+                <input 
+                  pInputText 
+                  id="telefono" 
+                  type="tel" 
+                  formControlName="telefono"
+                  class="w-100">
+              </div>
+
+              <div class="field">
+                <label for="direccion">Dirección</label>
+                <textarea 
+                  pInputTextarea 
+                  id="direccion" 
+                  formControlName="direccion"
+                  rows="3"
+                  class="w-100">
+                </textarea>
+              </div>
+            </div>
+
+            <!-- Configuración Comercial -->
+            <div class="col-md-6">
+              <h6 class="mb-3">Configuración Comercial</h6>
+              
+              <div class="field">
+                <label for="comision">Comisión (%) *</label>
+                <p-inputNumber 
+                  id="comision"
+                  formControlName="comision_porcentaje"
+                  [min]="0" 
+                  [max]="100"
+                  suffix="%"
+                  [class.ng-invalid]="isFieldInvalid('comision_porcentaje')"
+                  styleClass="w-100">
+                </p-inputNumber>
+                <small class="p-error" *ngIf="isFieldInvalid('comision_porcentaje')">
+                  {{ getFieldError('comision_porcentaje') }}
+                </small>
+              </div>
+
+              <div class="field">
+                <label for="tiempo_procesamiento">Tiempo de Procesamiento (días) *</label>
+                <p-inputNumber 
+                  id="tiempo_procesamiento"
+                  formControlName="tiempo_procesamiento_dias"
+                  [min]="1"
+                  [max]="365"
+                  suffix=" días"
+                  [class.ng-invalid]="isFieldInvalid('tiempo_procesamiento_dias')"
+                  styleClass="w-100">
+                </p-inputNumber>
+                <small class="p-error" *ngIf="isFieldInvalid('tiempo_procesamiento_dias')">
+                  {{ getFieldError('tiempo_procesamiento_dias') }}
+                </small>
+              </div>
+
+              <div class="field">
+                <div class="d-flex align-items-center">
+                  <p-inputSwitch formControlName="activo"></p-inputSwitch>
+                  <label class="ms-2 mb-0">Proveedor Activo</label>
+                </div>
+              </div>
+
+              <!-- Configuración de Integración -->
+              <div formGroupName="api_config">
+                <h6 class="mb-3 mt-4">Configuración de Integración</h6>
+                
+                <div class="field">
+                  <label for="tipo_integracion">Tipo de Integración *</label>
+                  <p-dropdown 
+                    id="tipo_integracion"
+                    formControlName="tipo_integracion"
+                    [options]="tiposIntegracion"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Seleccionar tipo"
+                    styleClass="w-100">
+                  </p-dropdown>
+                </div>
+
+                <div *ngIf="showApiConfig">
+                  <div class="field">
+                    <label for="endpoint">Endpoint API</label>
+                    <input 
+                      pInputText 
+                      id="endpoint" 
+                      type="url" 
+                      formControlName="endpoint"
+                      placeholder="https://api.proveedor.com/v1"
+                      class="w-100">
+                  </div>
+
+                  <div class="field">
+                    <label for="api_key">API Key</label>
+                    <input 
+                      pInputText 
+                      id="api_key" 
+                      type="password" 
+                      formControlName="api_key"
+                      placeholder="Clave de API del proveedor"
+                      class="w-100">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button 
+              pButton 
+              type="button" 
+              label="Cancelar" 
+              class="p-button-secondary"
+              (click)="cancelar()"
+              [disabled]="saving">
+            </button>
+            <button 
+              pButton 
+              type="submit" 
+              [label]="isEditMode ? 'Actualizar' : 'Crear'" 
+              class="p-button-primary"
+              [loading]="saving"
+              [disabled]="form.invalid">
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Loading State -->
+      <div class="card-body text-center" *ngIf="loading">
+        <i class="pi pi-spinner pi-spin text-primary fs-2"></i>
+        <p class="mt-2">Cargando datos del proveedor...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Messages -->
+<p-toast></p-toast>

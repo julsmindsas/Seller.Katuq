@@ -1,0 +1,514 @@
+<app-breadcrumb 
+  [title]="'Configuración Dropshipping'" 
+  [items]="['Empresa', 'Módulos Variables', 'Dropshipping']"
+  [active_item]="'Configuración'">
+</app-breadcrumb>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      
+      <!-- Loader -->
+      <div class="loader-box" *ngIf="loading">
+        <div class="loader-8"></div>
+      </div>
+
+      <!-- Card Principal -->
+      <div class="card" *ngIf="!loading">
+        <div class="card-header bg-primary text-white">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h4 class="mb-1 text-white">
+                <i class="fa fa-truck mr-2"></i>Configuración de Dropshipping
+              </h4>
+              <p class="mb-0" *ngIf="currentCompany">
+                <strong>Empresa:</strong> {{ currentCompany.nomComercial }}
+              </p>
+            </div>
+            <div class="col-md-4 text-right">
+              <button type="button" class="btn btn-outline-light btn-sm" (click)="resetToDefaults()">
+                <i class="fa fa-refresh"></i> Restablecer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <form [formGroup]="dropshippingConfigForm" (ngSubmit)="onSubmit()">
+            
+            <!-- Configuración Principal -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                      <i class="fa fa-info-circle fa-2x text-info"></i>
+                    </div>
+                    <div class="col-md-10">
+                      <h6 class="mb-1">¿Qué es el Dropshipping?</h6>
+                      <p class="mb-0 text-muted">
+                        El dropshipping permite que tu empresa venda productos sin mantener inventario. 
+                        Cuando un cliente hace un pedido, el producto se envía directamente desde el proveedor.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Habilitar Dropshipping -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <div class="card border-left-primary">
+                  <div class="card-body">
+                    <div class="form-group mb-0">
+                      <div class="form-check form-switch">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          id="enableDropshipping"
+                          formControlName="habilitado"
+                          (change)="onHabilitadoChange()"
+                          style="transform: scale(1.5);">
+                        <label class="form-check-label ml-2" for="enableDropshipping">
+                          <strong style="font-size: 1.1em;">Habilitar módulo de Dropshipping para esta empresa</strong>
+                        </label>
+                      </div>
+                      <small class="text-muted ml-4 mt-2 d-block">
+                        Al habilitar este módulo, los usuarios podrán configurar productos como dropshipping y gestionar órdenes con proveedores externos.
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Configuración Avanzada - Solo visible cuando está habilitado -->
+            <div *ngIf="dropshippingConfigForm.get('habilitado')?.value" class="animate-fade-in">
+              
+              <!-- Configuraciones de Negocio -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h5 class="mb-3">
+                    <i class="fa fa-cogs text-primary"></i> Configuraciones de Negocio
+                  </h5>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="margenMinimoPermitido">
+                      Margen Mínimo Permitido (%) <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <input 
+                        type="number" 
+                        class="form-control"
+                        [class.is-invalid]="isFieldInvalid('margenMinimoPermitido')"
+                        id="margenMinimoPermitido"
+                        formControlName="margenMinimoPermitido"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder="0">
+                      <div class="input-group-append">
+                        <span class="input-group-text">%</span>
+                      </div>
+                    </div>
+                    <small class="form-text text-muted">
+                      Margen mínimo que deben tener los productos de dropshipping
+                    </small>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('margenMinimoPermitido')">
+                      {{ getFieldError('margenMinimoPermitido') }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="tiempoLimiteOrden">
+                      Tiempo Límite para Órdenes (días) <span class="text-danger">*</span>
+                    </label>
+                    <input 
+                      type="number" 
+                      class="form-control"
+                      [class.is-invalid]="isFieldInvalid('tiempoLimiteOrden')"
+                      id="tiempoLimiteOrden"
+                      formControlName="tiempoLimiteOrden"
+                      min="1"
+                      max="30"
+                      placeholder="7">
+                    <small class="form-text text-muted">
+                      Tiempo máximo para procesar órdenes de dropshipping
+                    </small>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('tiempoLimiteOrden')">
+                      {{ getFieldError('tiempoLimiteOrden') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuraciones de Sistema -->
+              <div class="row mt-4">
+                <div class="col-12">
+                  <h6 class="mb-3">
+                    <i class="fa fa-sliders text-info"></i> Configuraciones de Sistema
+                  </h6>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <div class="form-check">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        id="automatizacionActivada"
+                        formControlName="automatizacionActivada">
+                      <label class="form-check-label" for="automatizacionActivada">
+                        <strong>Automatización Activada</strong>
+                      </label>
+                    </div>
+                    <small class="text-muted ml-4 d-block">
+                      Enviar órdenes automáticamente a proveedores cuando se confirme el pago
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <div class="form-check">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        id="notificacionesActivadas"
+                        formControlName="notificacionesActivadas">
+                      <label class="form-check-label" for="notificacionesActivadas">
+                        <strong>Notificaciones Activadas</strong>
+                      </label>
+                    </div>
+                    <small class="text-muted ml-4 d-block">
+                      Recibir notificaciones sobre estados de órdenes dropshipping
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuración de Integración -->
+              <div class="row mt-4">
+                <div class="col-12">
+                  <h6 class="mb-3">
+                    <i class="fa fa-plug text-success"></i> Configuración de Integración
+                  </h6>
+                </div>
+              </div>
+
+              <div class="row" formGroupName="api_config">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="tipo_integracion">
+                      Tipo de Integración <span class="text-danger">*</span>
+                    </label>
+                    <select 
+                      class="form-control"
+                      [class.is-invalid]="isFieldInvalid('api_config.tipo_integracion')"
+                      id="tipo_integracion"
+                      formControlName="tipo_integracion"
+                      (change)="onTipoIntegracionChange()">
+                      <option value="">Seleccionar tipo</option>
+                      <option value="manual">Manual</option>
+                      <option value="api">API</option>
+                      <option value="csv">CSV</option>
+                      <option value="webhook">Webhook</option>
+                    </select>
+                    <small class="form-text text-muted">
+                      Seleccione cómo se integrarán los datos de productos y órdenes
+                    </small>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('api_config.tipo_integracion')">
+                      {{ getFieldError('api_config.tipo_integracion') }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="text-muted">Descripción del Tipo</label>
+                    <div class="alert alert-light p-2 border">
+                      <small class="mb-0 d-block" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'manual'">
+                        <i class="fa fa-hand-paper-o text-primary"></i>
+                        <strong>Manual:</strong> Gestión manual de productos y órdenes
+                      </small>
+                      <small class="mb-0 d-block" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'api'">
+                        <i class="fa fa-code text-success"></i>
+                        <strong>API:</strong> Integración automática mediante API REST
+                      </small>
+                      <small class="mb-0 d-block" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'csv'">
+                        <i class="fa fa-file-excel-o text-warning"></i>
+                        <strong>CSV:</strong> Importación/exportación mediante archivos CSV
+                      </small>
+                      <small class="mb-0 d-block" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'webhook'">
+                        <i class="fa fa-bolt text-danger"></i>
+                        <strong>Webhook:</strong> Notificaciones automáticas en tiempo real
+                      </small>
+                      <small class="text-muted" *ngIf="!dropshippingConfigForm.get('api_config.tipo_integracion')?.value">
+                        Seleccione un tipo de integración para ver la descripción
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuración API - Solo visible cuando se selecciona API o Webhook -->
+              <div *ngIf="showApiConfig" class="row animate-fade-in">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="endpoint">
+                      Endpoint API <span class="text-danger">*</span>
+                    </label>
+                    <input 
+                      type="url" 
+                      class="form-control"
+                      [class.is-invalid]="isFieldInvalid('api_config.endpoint')"
+                      id="endpoint"
+                      formControlName="endpoint"
+                      placeholder="https://api.miempresa.com/v1/dropshipping"
+                      [required]="showApiConfig">
+                    <small class="form-text text-muted">
+                      URL del endpoint para sincronización de datos
+                    </small>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('api_config.endpoint')">
+                      {{ getFieldError('api_config.endpoint') }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="api_key">
+                      API Key <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <input 
+                        [type]="showApiKey ? 'text' : 'password'"
+                        class="form-control"
+                        [class.is-invalid]="isFieldInvalid('api_config.api_key')"
+                        id="api_key"
+                        formControlName="api_key"
+                        placeholder="Clave de API para autenticación"
+                        [required]="showApiConfig">
+                      <div class="input-group-append">
+                        <button 
+                          class="btn btn-outline-secondary" 
+                          type="button"
+                          (click)="toggleApiKeyVisibility()">
+                          <i class="fa" [class.fa-eye]="!showApiKey" [class.fa-eye-slash]="showApiKey"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <small class="form-text text-muted">
+                      Clave de autenticación para acceso a la API
+                    </small>
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('api_config.api_key')">
+                      {{ getFieldError('api_config.api_key') }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Configuración adicional para CSV y Webhook -->
+                <div class="col-12" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'csv'">
+                  <div class="alert alert-info">
+                    <h6><i class="fa fa-info-circle"></i> Configuración CSV</h6>
+                    <ul class="mb-0">
+                      <li>Los archivos CSV deben seguir el formato estándar de la plataforma</li>
+                      <li>Programar importaciones automáticas desde el endpoint configurado</li>
+                      <li>Los archivos se procesarán cada 6 horas automáticamente</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="col-12" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'webhook'">
+                  <div class="alert alert-success">
+                    <h6><i class="fa fa-bolt"></i> Configuración Webhook</h6>
+                    <p class="mb-2"><strong>URL de callback para webhooks:</strong></p>
+                    <div class="input-group">
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        readonly 
+                        [value]="getWebhookUrl()"
+                        style="background-color: #f8f9fa;">
+                      <div class="input-group-append">
+                        <button 
+                          class="btn btn-outline-primary" 
+                          type="button"
+                          (click)="copyWebhookUrl()">
+                          <i class="fa fa-copy"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <small class="form-text text-muted">
+                      Use esta URL para recibir notificaciones automáticas de cambios
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resumen de Configuración -->
+              <div class="row mt-4">
+                <div class="col-12">
+                  <div class="alert alert-secondary">
+                    <h6 class="mb-2">
+                      <i class="fa fa-check-circle text-success"></i> Resumen de Configuración
+                    </h6>
+                    <ul class="mb-0">
+                      <li>
+                        <strong>Estado:</strong> 
+                        <span class="badge badge-success">Dropshipping Habilitado</span>
+                      </li>
+                      <li>
+                        <strong>Margen mínimo:</strong> 
+                        {{ dropshippingConfigForm.get('margenMinimoPermitido')?.value || 0 }}%
+                      </li>
+                      <li>
+                        <strong>Tiempo límite de orden:</strong> 
+                        {{ dropshippingConfigForm.get('tiempoLimiteOrden')?.value || 7 }} días
+                      </li>
+                      <li>
+                        <strong>Automatización:</strong> 
+                        {{ dropshippingConfigForm.get('automatizacionActivada')?.value ? 'Activada' : 'Desactivada' }}
+                      </li>
+                      <li>
+                        <strong>Notificaciones:</strong> 
+                        {{ dropshippingConfigForm.get('notificacionesActivadas')?.value ? 'Activadas' : 'Desactivadas' }}
+                      </li>
+                      <li>
+                        <strong>Tipo de Integración:</strong> 
+                        <span class="badge" 
+                              [class.badge-primary]="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'manual'"
+                              [class.badge-success]="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'api'"
+                              [class.badge-warning]="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'csv'"
+                              [class.badge-info]="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'webhook'"
+                              [class.badge-secondary]="!dropshippingConfigForm.get('api_config.tipo_integracion')?.value">
+                          {{ getTipoIntegracionLabel(dropshippingConfigForm.get('api_config.tipo_integracion')?.value) }}
+                        </span>
+                      </li>
+                      <li *ngIf="showApiConfig">
+                        <strong>Endpoint API:</strong> 
+                        <code>{{ dropshippingConfigForm.get('api_config.endpoint')?.value || 'No configurado' }}</code>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Estado Deshabilitado -->
+            <div *ngIf="!dropshippingConfigForm.get('habilitado')?.value" class="row mt-4">
+              <div class="col-12">
+                <div class="alert alert-warning">
+                  <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                      <i class="fa fa-exclamation-triangle fa-2x text-warning"></i>
+                    </div>
+                    <div class="col-md-10">
+                      <h6 class="mb-1">Módulo Dropshipping Deshabilitado</h6>
+                      <p class="mb-0">
+                        Para utilizar las funcionalidades de dropshipping, debe habilitar el módulo usando el interruptor superior.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <div class="form-group text-right">
+                  <a 
+                    routerLink="/empresas/modulovariable" 
+                    class="btn btn-secondary mr-2">
+                    <i class="fa fa-arrow-left"></i> Volver
+                  </a>
+                  <button 
+                    type="submit" 
+                    class="btn btn-primary"
+                    [disabled]="!dropshippingConfigForm.valid || saving">
+                    <i class="fa fa-save" *ngIf="!saving"></i>
+                    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+                    {{ saving ? 'Guardando...' : 'Guardar Configuración' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Herramientas de Desarrollo (solo para pruebas) -->
+      <div class="card mt-3">
+        <div class="card-header bg-dark text-white">
+          <h6 class="mb-0">
+            <i class="fa fa-wrench mr-2"></i>Herramientas de Desarrollo
+            <small class="ml-2 badge badge-warning">Solo para pruebas</small>
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <p class="mb-2">
+              <strong>Nota:</strong> La configuración se está guardando en <strong>localStorage</strong> para efectos de prueba.
+            </p>
+            <p class="mb-0">
+              En producción, esta configuración se guardaría en la base de datos Firebase.
+            </p>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-4">
+              <button 
+                type="button" 
+                class="btn btn-info btn-block" 
+                (click)="viewAllConfigs()">
+                <i class="fa fa-eye"></i> Ver Configuraciones
+              </button>
+            </div>
+            <div class="col-md-4">
+              <button 
+                type="button" 
+                class="btn btn-warning btn-block" 
+                (click)="clearAllDropshippingConfigs()">
+                <i class="fa fa-trash"></i> Limpiar Todo
+              </button>
+            </div>
+            <div class="col-md-4">
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-block" 
+                onclick="console.log('localStorage keys:', Object.keys(localStorage).filter(k => k.includes('dropshipping')))">
+                <i class="fa fa-code"></i> Debug Console
+              </button>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="row">
+            <div class="col-12">
+              <h6>Estado del LocalStorage:</h6>
+              <div class="bg-light p-2 rounded">
+                <code>
+                  Keys de dropshipping: {{ getDropshippingKeysCount() }} encontradas
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

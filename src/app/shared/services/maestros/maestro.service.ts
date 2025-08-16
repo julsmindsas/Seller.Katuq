@@ -217,6 +217,25 @@ export class MaestroService {
       params
     });
   }
+
+  // Métodos para productos dropshipping y proveedores
+  getProductosByProveedor(proveedorId: string, pageSize: number = 10, currentPage: number = 1): Observable<any> {
+    let params = new HttpParams()
+      .set('proveedorId', proveedorId)
+      .set('page', currentPage.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<any>(this.urlBase + '/v1/productos/por-proveedor', { params });
+  }
+
+  getProductosDropshipping(pageSize: number = 10, currentPage: number = 1): Observable<any> {
+    let params = new HttpParams()
+      .set('page', currentPage.toString())
+      .set('pageSize', pageSize.toString())
+      .set('tipoProducto', 'dropshipping');
+
+    return this.http.get<any>(this.urlBase + '/v1/productos/all', { params });
+  }
   public editProductByReference(product: any) {
     return this.http.post(this.urlBase + '/v1/productos/edit', product, this.httpOptions);
   }

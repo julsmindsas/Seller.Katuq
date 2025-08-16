@@ -207,6 +207,18 @@ header.chat-header {
     gap: var(--spacing-xs);
   }
 
+  .assistant-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    background: var(--chat-primary-light);
+    color: var(--chat-primary-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
   .assistant-status {
     font-size: var(--font-size-small); // Usar variable
     color: var(--text-secondary-light);
@@ -299,6 +311,62 @@ section.messages-area {
       &:hover {
         background: rgba(255, 255, 255, 0.2);
       }
+    }
+  }
+}
+
+/* Skeleton loading */
+.message-bubble.skeleton {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.09) 37%, rgba(0,0,0,0.06) 63%);
+  border-radius: 6px;
+  margin: 6px 0;
+  animation: shimmer 1.4s infinite;
+}
+
+.skeleton-line.short { width: 40%; }
+.skeleton-line.long { width: 90%; }
+.skeleton-line:not(.short):not(.long) { width: 70%; }
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+/* Sugerencias rápidas */
+.quick-prompts {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 8px var(--spacing-lg) 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  background: transparent;
+
+  .prompt-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-light);
+    background: var(--assistant-bubble-light);
+    color: var(--text-light);
+    cursor: pointer;
+    font-size: var(--font-size-small);
+    transition: all 0.2s ease;
+
+    i { color: var(--chat-primary); }
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-color: var(--chat-primary);
     }
   }
 }
@@ -428,18 +496,28 @@ section.messages-area {
   }
 
   .message-time {
-    display: block;
+    display: inline-block;
     font-size: var(--font-size-tiny);
-    margin-top: var(--spacing-xs);
-    opacity: 0;
-    text-align: right;
+    opacity: 0.6;
     font-weight: 500;
     transition: opacity 0.2s ease;
   }
 
-  &:hover .message-time {
-    opacity: 0.7;
+  .message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--spacing-xs);
   }
+
+  .message-actions {
+    display: inline-flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover .message-actions { opacity: 1; }
 
   /* Imagen en el mensaje */
   .message-image {
@@ -551,6 +629,45 @@ section.messages-area {
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 }
 
+.attachment-preview {
+  position: relative;
+  margin: 0 var(--spacing-lg) var(--spacing-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  background: var(--assistant-bubble-light);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  max-width: calc(100% - 2 * var(--spacing-lg));
+
+  img {
+    max-height: 120px;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  .remove-attachment {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-medium-light);
+    color: var(--text-light);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--chat-primary);
+      color: #fff;
+      transform: scale(1.05);
+    }
+  }
+}
+
 .input-wrapper {
   display: flex;
   align-items: center;
@@ -567,6 +684,26 @@ section.messages-area {
     border-color: var(--chat-primary);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
     transform: translateY(-1px);
+  }
+}
+
+.attach-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 6px;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--chat-primary);
   }
 }
 
@@ -652,6 +789,11 @@ section.messages-area {
       color: var(--text-secondary-dark);
     }
   }
+  position: relative;
+  &.drag-over {
+    border-color: var(--chat-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
 }
 
 /* Contenedor de emoji picker */
@@ -676,6 +818,48 @@ section.messages-area {
   emoji-mart {
       --background-color: transparent; // Hacer fondo transparente si es posible
       --border-color: transparent;
+  }
+}
+
+.drop-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--chat-primary-dark);
+  background: rgba(99, 102, 241, 0.06);
+  border: 2px dashed var(--chat-primary);
+  border-radius: var(--radius-md);
+  pointer-events: none;
+}
+
+.input-hint {
+  display: flex;
+  gap: 12px;
+  margin-top: var(--spacing-sm);
+  color: var(--text-secondary-light);
+  font-size: var(--font-size-tiny);
+}
+
+/* Acciones por mensaje */
+.msg-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(0,0,0,0.06);
+    color: var(--chat-primary);
   }
 }
 

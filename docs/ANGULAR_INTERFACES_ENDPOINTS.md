@@ -9,6 +9,13 @@
 
 ---
 
+## 📦 Dropshipping
+
+- Guía completa: `docs/DROPSHIPPING_GUIDE.md`
+- Diagrama de procesos: `docs/dropshipping-map.svg` (fuente: `docs/dropshipping-map.mmd`)
+
+---
+
 ## <a name="endpoints"></a>🌐 **Endpoints Disponibles**
 
 ### **Base URL**

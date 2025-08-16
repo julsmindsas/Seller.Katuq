@@ -4,13 +4,14 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { PickerModule } from '@ctrl/ngx-emoji-mart';
 import { EmojiModule } from '@ctrl/ngx-emoji-mart/ngx-emoji';
 import { SharedModule } from '../../shared/shared.module';
+import { MarkdownPipe } from '../../shared/pipes/markdown.pipe';
 import { ChatRoutingModule } from './chat-routing.module';
 import { ChatComponent } from './chat/chat.component';
 
 // import { ChatComponent } from './chat/chat.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [MarkdownPipe],
   imports: [
     CommonModule,
     FormsModule,
@@ -19,6 +20,7 @@ import { ChatComponent } from './chat/chat.component';
     PickerModule,
     EmojiModule,
     SharedModule
-  ]
+  ],
+  exports: [MarkdownPipe]
 })
 export class ChatModule { }

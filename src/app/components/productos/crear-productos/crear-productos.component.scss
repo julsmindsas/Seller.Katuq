@@ -5,6 +5,17 @@
   color: black;
 }
 
+// Dropshipping configuration mode styles
+.dropshipping-config-mode {
+  .p-tabview-nav li:nth-child(7) { // Tab de Dropshipping (índice 6, pero nth-child es 1-indexed)
+    .p-tabview-nav-link {
+      background-color: #e3f2fd !important;
+      border-color: #2196f3 !important;
+      font-weight: bold !important;
+    }
+  }
+}
+
 .currencyDivInfo {
   text-align: right;
   font-size: 22px;

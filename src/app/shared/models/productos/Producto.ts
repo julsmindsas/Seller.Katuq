@@ -9,6 +9,7 @@ import { Marketplace } from "./Marketplace";
 import { Precio } from "./Precio";
 import { ProcesoComercial } from "./ProcesoComercial";
 import { OtrosProcesos } from "./otrosprocesos";
+import { DropshippingProductConfig } from "./DropshippingConfig";
 
 export interface Producto {
   dimensiones?: Dimensiones;
@@ -27,6 +28,7 @@ export interface Producto {
   rating?: number;
   otrosProcesos?: OtrosProcesos;
   bodegaId?: string; // Agregado para relacionar el producto con una bodega
+  dropshippingConfig?: DropshippingProductConfig; // Configuración dropshipping opcional
 }
 
 export interface ProductoCarrito {
@@ -43,6 +45,7 @@ export interface ProductoCarrito {
   variableForm: string;
   rating: number;
   bodegaId?: string; // Agregado para relacionar el producto con una bodega
+  dropshippingConfig?: DropshippingProductConfig; // Configuración dropshipping opcional
 }
 
 

@@ -1,0 +1,38 @@
+.card-header {
+  background-color: var(--surface-50);
+  border-bottom: 1px solid var(--surface-200);
+  padding: 1rem 1.5rem;
+  
+  h5 {
+    margin: 0;
+    color: var(--text-color);
+  }
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+::ng-deep {
+  .p-datatable {
+    .p-datatable-header {
+      background: var(--surface-50);
+      border: 1px solid var(--surface-200);
+    }
+    
+    .p-datatable-thead > tr > th {
+      background: var(--surface-100);
+      font-weight: 600;
+    }
+  }
+  
+  .p-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .p-button.p-button-rounded {
+    width: 2rem;
+    height: 2rem;
+  }
+}

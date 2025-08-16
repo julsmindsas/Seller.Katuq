@@ -6,7 +6,7 @@
         <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
       </div>
       <div class="header-info">
-        <h4 class="assistant-name">KAI 
+        <h4 class="assistant-name">KAI <span class="assistant-badge">LLM</span>
           <span class="status-indicator" [ngClass]="{'online': chatUser?.online, 'typing': chatUser?.typing}"></span>
         </h4>
         <p class="assistant-status">{{ chatUser?.typing ? 'Escribiendo...' : 'En línea' }}</p>
@@ -16,6 +16,9 @@
     <div class="header-actions">
       <button class="action-button toggle-theme" (click)="toggleDarkMode()" aria-label="Cambiar tema">
         <i class="fa" [ngClass]="isDarkMode ? 'fa-sun-o' : 'fa-moon-o'"></i>
+      </button>
+      <button class="action-button stop" *ngIf="isGenerating" (click)="onStopGeneration()" aria-label="Detener generación">
+        <i class="fa fa-stop"></i>
       </button>
       <button *ngIf="isFloating" class="action-button close" aria-label="Cerrar chat">
         <i class="fa fa-times"></i>
@@ -46,14 +49,20 @@
         <div class="avatar-container small" *ngIf="i === 0 || chats?.message[i-1]?.sender !== chat.sender">
           <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
         </div>
-        <div class="message-bubble">
-          <!-- Mostrar siempre el texto directamente -->
-          <p class="message-text">{{ chat.text }}</p>
+      <div class="message-bubble">
+          <!-- Mostrar siempre el texto directamente o render MD seguro -->
+          <div class="message-text" [innerHTML]="chat.text | markdown"></div>
           
           <!-- Imagen si existe -->
           <img *ngIf="chat.image" [src]="chat.image" class="message-image" alt="Imagen de respuesta" onerror="this.src='assets/images/default-avatar.png'">
           
-          <span class="message-time">{{ chat.time }}</span>
+          <div class="message-meta">
+            <span class="message-time">{{ chat.time }}</span>
+            <div class="message-actions">
+              <button class="msg-action" (click)="copyMessage(chat.text)" title="Copiar"><i class="fa fa-copy"></i></button>
+              <button class="msg-action" (click)="regenerate(chat)" title="Regenerar"><i class="fa fa-refresh"></i></button>
+            </div>
+          </div>
         </div>
       </div>
     </ng-container>
@@ -74,15 +83,47 @@
     </div>
   </section>
 
+  <!-- Skeleton de respuesta mientras genera (inline al final del historial) -->
+
+  <!-- Sugerencias rápidas (compacto, solo cuando no hay historial) -->
+  <section class="quick-prompts" *ngIf="(chats?.message?.length || 0) === 0 && quickPrompts?.length">
+    <button class="prompt-chip" *ngFor="let prompt of quickPrompts" (click)="applyPrompt(prompt)" type="button">
+      <i class="fa fa-bolt"></i>
+      <span>{{ prompt }}</span>
+    </button>
+  </section>
+
   <!-- Botón para ir al final del chat -->
   <button class="scroll-to-bottom-btn" *ngIf="userHasScrolled" (click)="onScrollToBottom()" aria-label="Ir al final del chat">
     <i class="fa fa-chevron-down"></i>
   </button>
 
   <!-- Pie de Página - Área de Entrada (fija) -->
-  <footer class="input-area">
+  <footer class="input-area" 
+    (dragover)="onDragOver($event)" 
+    (dragleave)="onDragLeave($event)" 
+    (drop)="onDrop($event)"
+    [ngClass]="{'drag-over': isDragOver}">
+    <div class="drop-hint" *ngIf="isDragOver">
+      <i class="fa fa-upload"></i>
+      <span>Suelta tu imagen para adjuntarla</span>
+    </div>
+    <!-- Previsualización de adjuntos -->
+    <div class="attachment-preview" *ngIf="attachedImage">
+      <img [src]="attachedImage" alt="Adjunto" />
+      <button type="button" class="remove-attachment" (click)="removeAttachment()" aria-label="Quitar adjunto">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
     <form #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)" class="input-form">
       <div class="input-wrapper">
+        <!-- Adjuntar archivo -->
+        <button type="button" class="attach-button" (click)="triggerFilePicker()" aria-label="Adjuntar imagen">
+          <i class="fa fa-paperclip"></i>
+        </button>
+        <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+
         <textarea 
           class="message-input" 
           [class.error]="error" 
@@ -91,7 +132,8 @@
           name="message" 
           rows="1" 
           (input)="autoResize($event)"
-          (keydown.enter)="handleEnter($event, chatForm)" 
+          (keydown.enter)="handleEnter($event, chatForm)"
+          (paste)="onPaste($event)" 
           aria-label="Mensaje">
         </textarea>
 
@@ -103,8 +145,8 @@
       <button 
         type="submit" 
         class="send-button" 
-        [disabled]="!chatText?.trim()" 
-        [ngClass]="{'disabled': !chatText?.trim()}"
+        [disabled]="!canSend()" 
+        [ngClass]="{'disabled': !canSend()}"
         aria-label="Enviar mensaje">
         <i class="fa fa-paper-plane"></i>
       </button>
@@ -113,6 +155,11 @@
     <!-- Emoji picker -->
     <div class="emoji-picker-container" *ngIf="showEmojiPicker">
       <emoji-mart (emojiClick)="addEmoji($event)" set="apple" useButton="true"></emoji-mart>
+    </div>
+
+    <div class="input-hint">
+      <span>Enter para enviar</span>
+      <span>Shift + Enter para salto de línea</span>
     </div>
   </footer>
 </div>
