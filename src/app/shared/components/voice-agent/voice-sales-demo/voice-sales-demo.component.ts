@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { VoiceSalesWizardComponent } from '../voice-sales-wizard/voice-sales-wizard.component';
 import { VoiceAgentSalesService } from '../../../services/voice-agent/voice-agent-sales.service';
 import { VoiceSalesIntegrationService } from '../../../services/voice-agent/voice-sales-integration.service';
-import { OrderToolsRegistrarService } from '../../../services/tools/order-tools-registrar';
+import { OrderToolsRegistrarService } from '../../../services/tools/order-tools-registrar.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
