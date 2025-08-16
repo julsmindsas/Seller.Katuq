@@ -192,7 +192,7 @@ export class VoiceSalesIntegrationService {
       }
 
       // Ejecutar la herramienta real del OrderTools
-      const result = await this.orderToolsService['selectWarehouse']({ warehouseId: args.warehouseId });
+      const result = await this.orderToolsService.selectWarehouse({ warehouseId: args.warehouseId });
       
       if (result.success) {
         // Actualizar el paso en el servicio de voz
