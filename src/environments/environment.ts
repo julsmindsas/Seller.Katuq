@@ -57,7 +57,8 @@ export const environment = {
       endpoint: "gmaps-proxy"
     }
   },
-  GEMINI_API_KEY: 'AIzaSyAHT5s0bFQBG5a_vJGQWjC5OUIw0ZQPy_U',
+  // GEMINI_API_KEY is injected at runtime via window['GEMINI_API_KEY']
+  GEMINI_API_KEY: (typeof window !== 'undefined' && window['GEMINI_API_KEY']) ? window['GEMINI_API_KEY'] : '',
 };
 /*
  * For easier debugging in development mode, you can import the following file
