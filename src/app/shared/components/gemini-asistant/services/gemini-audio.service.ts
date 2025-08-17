@@ -1713,15 +1713,15 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         }));
 
         return {
-          success: true,
-          data: { 
+      success: true,
+      data: {
             warehouses: bodegasFormateadas,
             total: bodegasFormateadas.length,
             message: `Se encontraron ${bodegasFormateadas.length} bodegas disponibles`
           },
           message: `Se encontraron ${bodegasFormateadas.length} bodegas disponibles en el sistema. Selecciona una con selectWarehouse para ver sus productos.`,
-          visualUpdate: { 
-            stepName: 'bodega', 
+      visualUpdate: {
+        stepName: 'bodega',
             progress: 20, 
             nextActions: [`Selecciona una bodega con selectWarehouse`] 
           }
@@ -1803,9 +1803,9 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       );
 
       if (!selectedWarehouse) {
-        return {
-          success: false,
-          message: `No se encontró la bodega con ID: ${warehouseId}`,
+      return {
+        success: false,
+        message: `No se encontró la bodega con ID: ${warehouseId}`,
           error: 'Bodega no encontrada',
           visualUpdate: {
             stepName: 'bodega',
@@ -1898,43 +1898,43 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         this.productosCatalogo = this.generateMockProducts(20);
       }
 
-      this.pasoActual = 2;
+    this.pasoActual = 2;
 
-      // Actualizar estado visual
-      this.updateVisualStep('productos');
-      this.updateOrderStatus();
+    // Actualizar estado visual
+    this.updateVisualStep('productos');
+    this.updateOrderStatus();
 
-      // Mostrar notificación
-      this.showToast(`Bodega "${this.bodegaSeleccionada.nombre}" seleccionada correctamente`, 'Bodega Configurada');
+    // Mostrar notificación
+    this.showToast(`Bodega "${this.bodegaSeleccionada.nombre}" seleccionada correctamente`, 'Bodega Configurada');
 
-      const response: DemoResponse = {
-        success: true,
-        data: {
-          selectedWarehouse: {
-            id: this.bodegaSeleccionada.idBodega,
-            name: this.bodegaSeleccionada.nombre,
-            address: this.bodegaSeleccionada.direccion
-          },
-          productsLoaded: this.productosCatalogo.length,
-          catalogPreview: this.productosCatalogo.slice(0, 3).map(p => ({
-            id: p.cd,
-            name: p.crearProducto?.titulo,
-            price: p.precio?.precioUnitarioConIva
-          }))
+    const response: DemoResponse = {
+      success: true,
+      data: {
+        selectedWarehouse: {
+          id: this.bodegaSeleccionada.idBodega,
+          name: this.bodegaSeleccionada.nombre,
+          address: this.bodegaSeleccionada.direccion
         },
-        message: `¡Perfecto! Bodega "${this.bodegaSeleccionada.nombre}" seleccionada. Se cargaron ${this.productosCatalogo.length} productos disponibles.`,
-        visualUpdate: {
-          stepName: 'productos',
-          progress: 25,
-          nextActions: [
-            'Busca productos con searchProductsAdvanced',
-            'Agrega productos directamente con quickAddToCart'
-          ]
-        }
-      };
+        productsLoaded: this.productosCatalogo.length,
+        catalogPreview: this.productosCatalogo.slice(0, 3).map(p => ({
+          id: p.cd,
+          name: p.crearProducto?.titulo,
+          price: p.precio?.precioUnitarioConIva
+        }))
+      },
+      message: `¡Perfecto! Bodega "${this.bodegaSeleccionada.nombre}" seleccionada. Se cargaron ${this.productosCatalogo.length} productos disponibles.`,
+      visualUpdate: {
+        stepName: 'productos',
+        progress: 25,
+        nextActions: [
+          'Busca productos con searchProductsAdvanced',
+          'Agrega productos directamente con quickAddToCart'
+        ]
+      }
+    };
 
       console.log('📤 Bodega real seleccionada:', response);
-      return response;
+    return response;
 
     } catch (error: any) {
       console.error('❌ Error seleccionando bodega real:', error);
@@ -2049,7 +2049,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     console.log('🔍 Productos en catálogo actual:', this.productosCatalogo?.length || 0);
     
     const { query, category, minPrice, maxPrice, minStock, sortBy, limit = 10 } = args;
-    
+
     if (!this.bodegaSeleccionada) {
       console.log('🔍 ❌ No hay bodega seleccionada');
       return {
@@ -2207,7 +2207,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           warehouse: this.bodegaSeleccionada.nombre
         },
         message: `Se encontraron ${productosFiltrados.length} productos${query ? ` para "${query}"` : ''} en ${this.bodegaSeleccionada.nombre}`,
-        visualUpdate: { 
+        visualUpdate: {
           stepName: 'productos', 
           progress: 40, 
           nextActions: ['Agrega productos al carrito con addToCart'] 
@@ -2385,8 +2385,8 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         console.log('🛒 ❌ Producto no encontrado en el catálogo');
         console.log('🛒 Productos disponibles:', this.productosCatalogo.map(p => ({ id: p.cd, nombre: p.crearProducto?.titulo })));
         
-        return {
-          success: false,
+      return {
+        success: false,
           message: `No se encontró el producto con ID: ${productId}`,
           error: 'Producto no encontrado',
           visualUpdate: {
@@ -2408,7 +2408,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         return {
           success: false,
           message: `Stock insuficiente. Disponible: ${stockDisponible}, Solicitado: ${quantity}`,
-          error: 'Stock insuficiente',
+        error: 'Stock insuficiente',
           data: { 
             requested: quantity, 
             available: stockDisponible,
@@ -2420,15 +2420,15 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       // Crear producto para el carrito usando la misma estructura que order-tools-registrar
       const productoParaCarrito: Carrito = {
         producto: productoEncontrado as any,
-        configuracion: {
+      configuracion: {
           producto: productoEncontrado as any,
           datosEntrega: null as any,
-          preferencias: [],
-          adiciones: [],
-          tarjetas: []
-        },
-        cantidad: quantity
-      };
+        preferencias: [],
+        adiciones: [],
+        tarjetas: []
+      },
+      cantidad: quantity
+    };
 
       console.log('🛒 📦 Producto preparado para carrito:', productoParaCarrito);
 
@@ -2442,9 +2442,9 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       }
 
       // Agregar al carrito local como respaldo
-      if (!this.pedidoEnProgreso.carrito) {
-        this.pedidoEnProgreso.carrito = [];
-      }
+    if (!this.pedidoEnProgreso.carrito) {
+      this.pedidoEnProgreso.carrito = [];
+    }
       
              // Verificar si el producto ya está en el carrito
        const productoExistente = this.pedidoEnProgreso.carrito.find(item => 
@@ -2477,8 +2477,8 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
 
       // Actualizar estado visual
       this.pasoActual = 4;
-      this.updateVisualStep('carrito');
-      this.updateOrderStatus();
+    this.updateVisualStep('carrito');
+    this.updateOrderStatus();
 
       console.log('🛒 === FIN: handleAddToCart ===');
 
@@ -2496,8 +2496,8 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       };
 
       return {
-        success: true,
-        data: {
+      success: true,
+      data: {
           addedProduct: productoInfo,
           cartTotal: totalCarrito,
           cartTotalFormatted: `$${totalCarrito.toLocaleString()}`,
@@ -2509,9 +2509,9 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           }))
         },
         message: `✅ ${quantity}x ${productoInfo.nombre} agregado al carrito de ${this.bodegaSeleccionada.nombre}`,
-        visualUpdate: { 
-          stepName: 'carrito', 
-          progress: 50, 
+      visualUpdate: {
+        stepName: 'carrito',
+        progress: 50,
           nextActions: ['Continúa agregando productos o usa getCartContents para ver el carrito'] 
         }
       };
