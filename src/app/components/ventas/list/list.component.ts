@@ -1551,9 +1551,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   getFilteredCalculateSubtotal(): number {
     return this.getFilteredOrders().reduce(
-      (acc, pedido: any) => acc + (pedido.subtotal || 0),
+      (acc, pedido: any) => {
+        // El subtotal debe incluir el valor del domicilio
+        const subtotalConDomicilio = (pedido.subtotal || 0) + (pedido.totalEnvio || 0);
+        return acc + subtotalConDomicilio;
+      },
       0,
     );
+  }
+
+  /**
+   * Calcula el subtotal de un pedido individual incluyendo el domicilio
+   */
+  getSubtotalConDomicilio(pedido: any): number {
+    return (pedido.subtotal || 0) + (pedido.totalEnvio || 0);
   }
 
   /**
