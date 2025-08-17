@@ -1092,7 +1092,7 @@
                                             <!-- Columna Subtotal -->
                                             <td *ngIf="isColumnVisible('subtotal') && !isFromProduction"
                                                 class="td-money text-nowrap">
-                                                {{ pedido?.subtotal | currency }}
+                                                {{ getSubtotalConDomicilio(pedido) | currency }}
                                             </td>
 
                                             <!-- Columna IVA -->
