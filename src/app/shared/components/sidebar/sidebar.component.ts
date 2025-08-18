@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, HostListener, OnInit, OnDestroy, ElementRef, Renderer2 } from '@angular/core';
+import { Component, ViewEncapsulation, HostListener, OnInit, OnDestroy, ElementRef, Renderer2, AfterViewInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Menu, NavService } from '../../services/nav.service';
 import { LayoutService } from '../../services/layout.service';
@@ -22,7 +22,7 @@ export interface SidebarSection {
   styleUrls: ['./sidebar.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class SidebarComponent implements OnInit, OnDestroy {
+export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public showPlanModal: boolean = false;
   public currentPlan: any = {
     type: 'Completo',
@@ -112,6 +112,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Propiedades para efectos cinematográficos
+  private spotlightElement: HTMLElement | null = null;
+  private isMouseInSidebar: boolean = false;
+  private animationFrameId: number | null = null;
+
   ngOnInit(): void {
     this.loadPlanFromLocalStorage();
     this.securityService.getCompanyInformationLogged$().subscribe((companyInformation: CompanyInformation) => {
@@ -145,6 +150,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.setupMobileGestures();
     }, 100);
+  }
+
+  ngAfterViewInit(): void {
+    // Inicializar efectos cinematográficos después de que la vista esté lista
+    this.initializeCinematographicEffects();
   }
   
   // Configurar eventos táctiles para móviles
@@ -1740,6 +1750,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.cleanupEventListeners();
     this.closeCollapsedSubmenu();
     this.restoreBodyScroll();
+    
+    // Limpiar efectos cinematográficos
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
   }
 
   // ===================================================
@@ -2097,4 +2112,159 @@ export class SidebarComponent implements OnInit, OnDestroy {
       keys: Array.from(this.iconCache.keys())
     };
   }
+
+  // ===================================================
+  // EFECTOS CINEMATOGRÁFICOS
+  // ===================================================
+
+  /**
+   * Inicializar efectos cinematográficos después de que la vista esté lista
+   */
+  private initializeCinematographicEffects(): void {
+    this.createSpotlightElement();
+    this.setupMouseTrackingEvents();
+    this.setupMagneticEffects();
+    this.animateInitialLoad();
+  }
+
+  /**
+   * Crear elemento spotlight para seguir el cursor
+   */
+  private createSpotlightElement(): void {
+    const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
+    if (sidebar) {
+      this.spotlightElement = this.renderer.createElement('div');
+      this.renderer.addClass(this.spotlightElement, 'sidebar-spotlight');
+      this.renderer.appendChild(sidebar, this.spotlightElement);
+    }
+  }
+
+  /**
+   * Configurar eventos de seguimiento del mouse
+   */
+  private setupMouseTrackingEvents(): void {
+    const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
+    if (!sidebar) return;
+
+    // Mouse enter - activar spotlight
+    this.renderer.listen(sidebar, 'mouseenter', () => {
+      this.isMouseInSidebar = true;
+      if (this.spotlightElement) {
+        this.renderer.setStyle(this.spotlightElement, 'opacity', '1');
+      }
+    });
+
+    // Mouse leave - desactivar spotlight
+    this.renderer.listen(sidebar, 'mouseleave', () => {
+      this.isMouseInSidebar = false;
+      if (this.spotlightElement) {
+        this.renderer.setStyle(this.spotlightElement, 'opacity', '0');
+      }
+    });
+
+    // Mouse move - seguir cursor con spotlight
+    this.renderer.listen(sidebar, 'mousemove', (event: MouseEvent) => {
+      if (this.isMouseInSidebar && this.spotlightElement) {
+        const rect = sidebar.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        if (this.animationFrameId) {
+          cancelAnimationFrame(this.animationFrameId);
+        }
+        
+        this.animationFrameId = requestAnimationFrame(() => {
+          if (this.spotlightElement) {
+            this.renderer.setStyle(this.spotlightElement, 'left', `${x}px`);
+            this.renderer.setStyle(this.spotlightElement, 'top', `${y}px`);
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Configurar efectos magnéticos en elementos del menú
+   */
+  private setupMagneticEffects(): void {
+    // Aplicar efecto magnético a todos los enlaces del menú
+    const menuLinks = this.elementRef.nativeElement.querySelectorAll('.menu-link');
+    
+    menuLinks.forEach((link: HTMLElement) => {
+      this.renderer.listen(link, 'mouseenter', () => {
+        this.renderer.addClass(link, 'magnetic-hover');
+      });
+      
+      this.renderer.listen(link, 'mouseleave', () => {
+        this.renderer.removeClass(link, 'magnetic-hover');
+      });
+    });
+  }
+
+  /**
+   * Inicializar elementos con efectos suaves (sin animaciones problemáticas)
+   */
+  private animateInitialLoad(): void {
+    const menuItems = this.elementRef.nativeElement.querySelectorAll('.menu-item');
+    
+    menuItems.forEach((item: HTMLElement) => {
+      // Asegurar que todos los elementos sean visibles
+      this.renderer.setStyle(item, 'opacity', '1');
+      this.renderer.setStyle(item, 'transform', 'translateY(0) scale(1)');
+      
+      // Agregar clases para animaciones breathing sutiles (solo algunas)
+      if (Math.random() > 0.7) {
+        this.renderer.addClass(item, 'breathing-element');
+      }
+    });
+  }
+
+  /**
+   * Activar estado de demo highlight para video
+   */
+  activateDemoHighlight(element: HTMLElement): void {
+    this.renderer.addClass(element, 'demo-highlight');
+    this.renderer.addClass(element, 'active');
+    
+    // Quitar después de 3 segundos
+    setTimeout(() => {
+      this.renderer.removeClass(element, 'demo-highlight');
+      this.renderer.removeClass(element, 'active');
+    }, 3000);
+  }
+
+  /**
+   * Activar estado de demo focus para video
+   */
+  activateDemoFocus(element: HTMLElement): void {
+    this.renderer.addClass(element, 'demo-focus');
+    
+    // Quitar después de 2 segundos
+    setTimeout(() => {
+      this.renderer.removeClass(element, 'demo-focus');
+    }, 2000);
+  }
+
+  /**
+   * Simular loading state con shimmer effect
+   */
+  simulateLoadingState(element: HTMLElement): void {
+    this.renderer.addClass(element, 'shimmer-loading');
+    
+    setTimeout(() => {
+      this.renderer.removeClass(element, 'shimmer-loading');
+    }, 1500);
+  }
+
+  /**
+   * Aplicar efecto de resplandor cinematográfico
+   */
+  applyCinematicGlow(element: HTMLElement): void {
+    this.renderer.addClass(element, 'cinematic-glow');
+    
+    setTimeout(() => {
+      this.renderer.removeClass(element, 'cinematic-glow');
+    }, 2000);
+  }
+
 }
