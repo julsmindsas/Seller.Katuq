@@ -106,6 +106,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
           // En móviles, cerrar el menú después de navegar
           if (window.innerWidth < 992) {
             this.collapseMenu = true;
+            this.restoreBodyScroll(); // Restaurar scroll del body
           }
         }
       });
