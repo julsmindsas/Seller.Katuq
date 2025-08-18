@@ -1192,17 +1192,26 @@
                                             <td>{{ item.producto?.crearProducto?.titulo }}</td>
                                             <td>{{ item.cantidad }}</td>
                                             <td *ngIf="!isFromProduction">
-                                                <button type="button" pButton pRipple
-                                                    [disabled]="!canModifyProducts(pedido)"
-                                                    [title]="canModifyProducts(pedido) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
-                                                    (click)="confProductToCart(confProductToCartModal,item,pedido)"
-                                                    class="p-button-text p-button-rounded p-button-plain"
-                                                    [ngClass]="{'disabled-btn': !canModifyProducts(pedido)}"
-                                                    style="font-size: 0.8em;">
-                                                    <i class="fa fa-cogs"></i>
-                                                    <i *ngIf="!canModifyProducts(pedido)" class="fa fa-lock"
-                                                        style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
-                                                </button>
+                                                <div class="product-actions">
+                                                    <button type="button" pButton pRipple
+                                                        [disabled]="!canModifyProducts(pedido)"
+                                                        [title]="canModifyProducts(pedido) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
+                                                        (click)="confProductToCart(confProductToCartModal,item,pedido)"
+                                                        class="p-button-text p-button-rounded p-button-plain"
+                                                        [ngClass]="{'disabled-btn': !canModifyProducts(pedido)}">
+                                                        <i class="fa fa-cogs"></i>
+                                                        <i *ngIf="!canModifyProducts(pedido)" class="fa fa-lock"
+                                                            style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
+                                                    </button>
+                                                    <button type="button" pButton pRipple
+                                                        [disabled]="!canDeleteProducts(pedido)"
+                                                        [title]="canDeleteProducts(pedido) ? 'Eliminar producto' : 'No se puede eliminar - Solo permitido en estados Pendiente o SinProducir. Estado actual: ' + pedido.estadoProceso"
+                                                        (click)="eliminarProductoDelPedido(item, pedido)"
+                                                        class="p-button-text p-button-rounded p-button-danger"
+                                                        [ngClass]="{'disabled-btn': !canDeleteProducts(pedido)}">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </ng-template>

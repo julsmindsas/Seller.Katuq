@@ -100,6 +100,44 @@ $border-radius: 8px;
     }
   }
 
+  // Estilos para los botones de acción en productos
+  .product-actions {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    justify-content: center;
+
+    .p-button {
+      min-width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+
+      &.p-button-text {
+        color: #6c757d;
+        
+        &:hover {
+          background-color: #f8f9fa;
+          color: #495057;
+        }
+      }
+
+      &.p-button-danger {
+        color: #dc3545;
+        
+        &:hover {
+          background-color: #f8d7da;
+          color: #721c24;
+        }
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
   .p-rowexpansion-content {
     background-color: #f9f9f9;
     box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.05);
