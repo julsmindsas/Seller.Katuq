@@ -1,0 +1,248 @@
+/* =========================================
+   ARCHIVO PRINCIPAL MÓVIL - KATUQ SELLER
+   =========================================
+   
+   Este archivo importa todos los estilos móviles de manera segura
+   Se puede activar/desactivar fácilmente sin afectar la funcionalidad existente
+   
+   ========================================= */
+
+// Importar configuración móvil
+@import "mobile-config";
+
+// Importar estilos móviles específicos por componente
+@import "dashboard-mobile";
+@import "ventas-mobile";
+@import "pos-mobile";
+
+// Estilos móviles adicionales que se pueden agregar aquí
+// @import "inventarios-mobile";
+// @import "produccion-mobile";
+// @import "despachos-mobile";
+// @import "integraciones-mobile";
+// @import "usuarios-mobile";
+// @import "funcionalidades-mobile";
+
+/* =========================================
+   CLASES DE UTILIDAD MÓVIL GLOBALES
+   ========================================= */
+
+// Contenedor principal para móviles
+.mobile-wrapper {
+  @media (max-width: 768px) {
+    padding: 0;
+    margin: 0;
+    background: #f8f9fa;
+    min-height: 100vh;
+  }
+}
+
+// Navegación móvil global
+.mobile-nav {
+  @media (max-width: 768px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e9ecef;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    padding: 0.5rem;
+    
+    .nav-items {
+      display: flex;
+      justify-content: space-around;
+      
+      .nav-item {
+        text-align: center;
+        flex: 1;
+        
+        .nav-link {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 0.5rem;
+          color: #6c757d;
+          text-decoration: none;
+          font-size: 0.8rem;
+          
+          &.active {
+            color: #007bff;
+          }
+          
+          .nav-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+          }
+          
+          .nav-text {
+            font-size: 0.75rem;
+            line-height: 1.2;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Header móvil global
+.mobile-header {
+  @media (max-width: 768px) {
+    background: white;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      
+      .header-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+      }
+      
+      .header-actions {
+        display: flex;
+        gap: 0.5rem;
+        
+        .btn {
+          padding: 0.5rem;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.1rem;
+        }
+      }
+    }
+  }
+}
+
+// Footer móvil global
+.mobile-footer {
+  @media (max-width: 768px) {
+    background: white;
+    padding: 1rem;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+    
+    .footer-content {
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+  }
+}
+
+// Espaciado para navegación móvil
+.content-with-mobile-nav {
+  @media (max-width: 768px) {
+    padding-bottom: 80px;
+  }
+}
+
+// Espaciado para header móvil
+.content-with-mobile-header {
+  @media (max-width: 768px) {
+    padding-top: 80px;
+  }
+}
+
+/* =========================================
+   MEJORAS DE ACCESIBILIDAD MÓVIL
+   ========================================= */
+
+// Mejoras para lectores de pantalla
+.sr-only-mobile {
+  @media (max-width: 768px) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+// Mejoras para navegación por teclado
+.keyboard-nav-mobile {
+  @media (max-width: 768px) {
+    .btn:focus,
+    .form-control:focus,
+    .form-select:focus {
+      outline: 2px solid #007bff;
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Mejoras para contraste
+.high-contrast-mobile {
+  @media (max-width: 768px) {
+    .btn {
+      border-width: 2px;
+    }
+    
+    .form-control {
+      border-width: 2px;
+    }
+    
+    .card {
+      border-width: 2px;
+    }
+  }
+}
+
+/* =========================================
+   UTILIDADES DE DESARROLLO MÓVIL
+   ========================================= */
+
+// Indicador de breakpoint (solo para desarrollo)
+.mobile-debug {
+  @media (max-width: 768px) {
+    .mobile-breakpoint-indicator {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #007bff;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      z-index: 9999;
+      font-family: monospace;
+    }
+  }
+}
+
+// Clases de debug para desarrollo
+.dev-mobile {
+  @media (max-width: 768px) {
+    .debug-border {
+      border: 2px solid red !important;
+    }
+    
+    .debug-bg {
+      background: rgba(255, 0, 0, 0.1) !important;
+    }
+    
+    .debug-text {
+      color: red !important;
+    }
+  }
+}
+
+/* =========================================
+   FIN DEL ARCHIVO PRINCIPAL MÓVIL
+   ========================================= */

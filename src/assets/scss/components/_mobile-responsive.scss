@@ -1,0 +1,549 @@
+/* =========================================
+   MOBILE RESPONSIVE STYLES - KATUQ SELLER
+   =========================================
+   
+   Este archivo contiene mejoras responsive específicas para móviles
+   que se pueden activar/desactivar de manera segura.
+   
+   Autor: Katuq Team
+   Fecha: 2024
+   ========================================= */
+
+// Variables específicas para móvil
+:root {
+  --mobile-padding: 1rem;
+  --mobile-margin: 0.5rem;
+  --mobile-border-radius: 8px;
+  --mobile-font-size-small: 0.875rem;
+  --mobile-font-size-base: 1rem;
+  --mobile-font-size-large: 1.125rem;
+  --mobile-touch-target: 44px;
+}
+
+/* =========================================
+   BREAKPOINTS MÓVILES
+   ========================================= */
+
+// Móvil pequeño (hasta 480px)
+@media (max-width: 480px) {
+  .mobile-xs {
+    &-hidden { display: none !important; }
+    &-block { display: block !important; }
+    &-flex { display: flex !important; }
+  }
+}
+
+// Móvil (hasta 768px)
+@media (max-width: 768px) {
+  .mobile {
+    &-hidden { display: none !important; }
+    &-block { display: block !important; }
+    &-flex { display: flex !important; }
+  }
+}
+
+// Tablet (hasta 991px)
+@media (max-width: 991px) {
+  .tablet {
+    &-hidden { display: none !important; }
+    &-block { display: block !important; }
+    &-flex { display: flex !important; }
+  }
+}
+
+/* =========================================
+   UTILIDADES MÓVILES GLOBALES
+   ========================================= */
+
+// Contenedor principal responsive
+.mobile-container {
+  @media (max-width: 768px) {
+    padding: var(--mobile-padding);
+    margin: 0;
+    
+    .row {
+      margin: 0;
+      
+      .col, .col-sm, .col-md, .col-lg, .col-xl {
+        padding: var(--mobile-margin);
+      }
+    }
+  }
+}
+
+// Botones optimizados para móvil
+.btn-mobile {
+  @media (max-width: 768px) {
+    min-height: var(--mobile-touch-target);
+    padding: 0.75rem 1rem;
+    font-size: var(--mobile-font-size-base);
+    border-radius: var(--mobile-border-radius);
+    
+    &.btn-sm {
+      padding: 0.5rem 0.75rem;
+      font-size: var(--mobile-font-size-small);
+    }
+    
+    &.btn-lg {
+      padding: 1rem 1.5rem;
+      font-size: var(--mobile-font-size-large);
+    }
+  }
+}
+
+// Formularios optimizados para móvil
+.form-mobile {
+  @media (max-width: 768px) {
+    .form-group {
+      margin-bottom: 1rem;
+      
+      .form-label {
+        font-size: var(--mobile-font-size-base);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+      
+      .form-control {
+        font-size: 16px; // Previene zoom en iOS
+        padding: 0.75rem;
+        border-radius: var(--mobile-border-radius);
+        min-height: var(--mobile-touch-target);
+      }
+      
+      .form-select {
+        font-size: 16px;
+        padding: 0.75rem;
+        border-radius: var(--mobile-border-radius);
+        min-height: var(--mobile-touch-target);
+      }
+    }
+  }
+}
+
+// Cards optimizadas para móvil
+.card-mobile {
+  @media (max-width: 768px) {
+    border-radius: var(--mobile-border-radius);
+    margin-bottom: 1rem;
+    
+    .card-header {
+      padding: 1rem;
+      border-bottom: 1px solid #e9ecef;
+      
+      .card-title {
+        font-size: var(--mobile-font-size-large);
+        margin-bottom: 0.5rem;
+      }
+    }
+    
+    .card-body {
+      padding: 1rem;
+    }
+    
+    .card-footer {
+      padding: 1rem;
+      border-top: 1px solid #e9ecef;
+    }
+  }
+}
+
+// Navegación móvil
+.nav-mobile {
+  @media (max-width: 768px) {
+    .nav-item {
+      .nav-link {
+        padding: 0.75rem 1rem;
+        min-height: var(--mobile-touch-target);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        i, svg {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+// Tablas responsive para móvil
+.table-mobile {
+  @media (max-width: 768px) {
+    .table-responsive {
+      border: none;
+      
+      .table {
+        font-size: var(--mobile-font-size-small);
+        
+        th, td {
+          padding: 0.5rem;
+          vertical-align: middle;
+        }
+        
+        .btn {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
+}
+
+// Modales optimizados para móvil
+.modal-mobile {
+  @media (max-width: 768px) {
+    .modal-dialog {
+      margin: 0.5rem;
+      max-width: calc(100% - 1rem);
+      
+      .modal-content {
+        border-radius: var(--mobile-border-radius);
+        
+        .modal-header {
+          padding: 1rem;
+          
+          .modal-title {
+            font-size: var(--mobile-font-size-large);
+          }
+        }
+        
+        .modal-body {
+          padding: 1rem;
+        }
+        
+        .modal-footer {
+          padding: 1rem;
+          flex-direction: column;
+          gap: 0.5rem;
+          
+          .btn {
+            width: 100%;
+            margin: 0;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Sidebar móvil
+.sidebar-mobile {
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100vh;
+    z-index: 1050;
+    transition: left 0.3s ease;
+    background: white;
+    
+    &.show {
+      left: 0;
+    }
+    
+    .sidebar-header {
+      padding: 1rem;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        cursor: pointer;
+      }
+    }
+    
+    .sidebar-body {
+      padding: 1rem;
+      height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+  }
+}
+
+// Footer fijo para móvil
+.footer-mobile {
+  @media (max-width: 768px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 1rem;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    
+    .btn {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// Espaciado para contenido con footer fijo
+.content-with-footer-mobile {
+  @media (max-width: 768px) {
+    padding-bottom: 120px; // Espacio para footer fijo
+  }
+}
+
+/* =========================================
+   COMPONENTES ESPECÍFICOS MÓVILES
+   ========================================= */
+
+// Dashboard móvil
+.dashboard-mobile {
+  @media (max-width: 768px) {
+    .dashboard-header {
+      .row {
+        .col-md-4, .col-md-8 {
+          margin-bottom: 1rem;
+        }
+      }
+      
+      .date-control-group {
+        flex-direction: column;
+        gap: 1rem;
+        
+        .date-control {
+          width: 100%;
+          
+          input {
+            width: 100%;
+            font-size: 16px;
+          }
+        }
+      }
+      
+      .button-group {
+        flex-direction: column;
+        gap: 0.5rem;
+        
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+    
+    .kpi-card {
+      margin-bottom: 1rem;
+      
+      .card-body {
+        padding: 1rem;
+        text-align: center;
+        
+        h3 {
+          font-size: 1.5rem;
+        }
+        
+        h6 {
+          font-size: var(--mobile-font-size-base);
+        }
+      }
+    }
+  }
+}
+
+// Ventas móvil
+.ventas-mobile {
+  @media (max-width: 768px) {
+    .wizard-container {
+      .aw-wizard {
+        .aw-wizard-step {
+          padding: 1rem;
+        }
+        
+        .wizard-footer-container {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: white;
+          padding: 1rem;
+          box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+          z-index: 1000;
+          
+          .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
+        }
+      }
+    }
+    
+    .customer-form {
+      .form-group {
+        margin-bottom: 1rem;
+      }
+    }
+  }
+}
+
+// POS móvil
+.pos-mobile {
+  @media (max-width: 768px) {
+    .pos-header {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+      
+      .pos-title {
+        font-size: 1.5rem;
+      }
+    }
+    
+    .product-catalog {
+      .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        
+        .product-card {
+          .product-image {
+            height: 120px;
+          }
+          
+          .product-info {
+            padding: 0.5rem;
+            
+            .product-name {
+              font-size: 0.9rem;
+            }
+            
+            .product-price {
+              font-size: 1.1rem;
+            }
+          }
+        }
+      }
+    }
+    
+    .payment-section {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 1rem;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      
+      .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        
+        .payment-method {
+          padding: 0.75rem;
+          text-align: center;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          min-height: var(--mobile-touch-target);
+          
+          &:active {
+            background-color: #f8f9fa;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* =========================================
+   UTILIDADES DE ESPACIADO MÓVIL
+   ========================================= */
+
+// Márgenes móviles
+.m-0-mobile { @media (max-width: 768px) { margin: 0 !important; } }
+.m-1-mobile { @media (max-width: 768px) { margin: 0.25rem !important; } }
+.m-2-mobile { @media (max-width: 768px) { margin: 0.5rem !important; } }
+.m-3-mobile { @media (max-width: 768px) { margin: 1rem !important; } }
+.m-4-mobile { @media (max-width: 768px) { margin: 1.5rem !important; } }
+.m-5-mobile { @media (max-width: 768px) { margin: 3rem !important; } }
+
+// Padding móvil
+.p-0-mobile { @media (max-width: 768px) { padding: 0 !important; } }
+.p-1-mobile { @media (max-width: 768px) { padding: 0.25rem !important; } }
+.p-2-mobile { @media (max-width: 768px) { padding: 0.5rem !important; } }
+.p-3-mobile { @media (max-width: 768px) { padding: 1rem !important; } }
+.p-4-mobile { @media (max-width: 768px) { padding: 1.5rem !important; } }
+.p-5-mobile { @media (max-width: 768px) { padding: 3rem !important; } }
+
+// Texto móvil
+.text-center-mobile { @media (max-width: 768px) { text-align: center !important; } }
+.text-left-mobile { @media (max-width: 768px) { text-align: left !important; } }
+.text-right-mobile { @media (max-width: 768px) { text-align: right !important; } }
+
+// Flexbox móvil
+.d-flex-mobile { @media (max-width: 768px) { display: flex !important; } }
+.d-block-mobile { @media (max-width: 768px) { display: block !important; } }
+.d-none-mobile { @media (max-width: 768px) { display: none !important; } }
+
+.flex-column-mobile { @media (max-width: 768px) { flex-direction: column !important; } }
+.flex-row-mobile { @media (max-width: 768px) { flex-direction: row !important; } }
+
+.justify-center-mobile { @media (max-width: 768px) { justify-content: center !important; } }
+.justify-start-mobile { @media (max-width: 768px) { justify-content: flex-start !important; } }
+.justify-end-mobile { @media (max-width: 768px) { justify-content: flex-end !important; } }
+
+.align-center-mobile { @media (max-width: 768px) { align-items: center !important; } }
+.align-start-mobile { @media (max-width: 768px) { align-items: flex-start !important; } }
+.align-end-mobile { @media (max-width: 768px) { align-items: flex-end !important; } }
+
+/* =========================================
+   HERRAMIENTAS DE DESARROLLO MÓVIL
+   ========================================= */
+
+// Indicador de breakpoint (solo para desarrollo)
+.mobile-breakpoint-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #007bff;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  z-index: 9999;
+  
+  @media (max-width: 480px) {
+    background: #dc3545;
+    content: "XS";
+  }
+  
+  @media (min-width: 481px) and (max-width: 768px) {
+    background: #fd7e14;
+    content: "SM";
+  }
+  
+  @media (min-width: 769px) and (max-width: 991px) {
+    background: #ffc107;
+    content: "MD";
+  }
+  
+  @media (min-width: 992px) {
+    background: #28a745;
+    content: "LG+";
+  }
+}
+
+// Clase para ocultar en desarrollo
+.dev-only {
+  display: none;
+}
+
+/* =========================================
+   FIN DEL ARCHIVO
+   ========================================= */

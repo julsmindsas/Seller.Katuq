@@ -1,0 +1,45 @@
+/* =========================================
+   CONFIGURACIÓN MÓVIL - KATUQ SELLER
+   =========================================
+   
+   Este archivo permite activar/desactivar las mejoras móviles
+   de manera segura sin afectar la funcionalidad existente.
+   
+   Para activar: cambiar @import "mobile-responsive" a @import "mobile-responsive";
+   Para desactivar: comentar la línea @import "mobile-responsive";
+   
+   ========================================= */
+
+// CONFIGURACIÓN MÓVIL - ACTIVAR/DESACTIVAR
+// Cambiar a true para activar las mejoras móviles
+$enable-mobile-improvements: true;
+
+// Importar estilos móviles solo si están habilitados
+@if $enable-mobile-improvements {
+  @import "mobile-responsive";
+}
+
+// Variables de configuración móvil
+:root {
+  --mobile-enabled: #{$enable-mobile-improvements};
+  --mobile-debug: false; // Cambiar a true para mostrar indicadores de debug
+}
+
+// Clases de control para activar/desactivar funcionalidades
+.mobile-features {
+  &-enabled {
+    @if $enable-mobile-improvements {
+      display: block;
+    } @else {
+      display: none;
+    }
+  }
+  
+  &-disabled {
+    @if $enable-mobile-improvements {
+      display: none;
+    } @else {
+      display: block;
+    }
+  }
+}

@@ -14,6 +14,7 @@ import { finalize } from "rxjs/operators";
 import { EstadoPago, Pago, Pedido } from "../modelo/pedido";
 import { User } from "src/app/shared/services/firebase/auth.service";
 import { UserLite } from "src/app/shared/models/User/UserLite";
+import { VentasService } from "src/app/shared/services/ventas/ventas.service";
 
 @Component({
   selector: "app-asentarpagomanual",
@@ -34,6 +35,7 @@ export class AsentarpagomanualComponent implements OnInit {
     private formasPagoService: MaestroService,
     private storage: AngularFireStorage,
     private modalService: NgbModal,
+    private ventasService: VentasService,
   ) {}
 
   ngOnInit(): void {
@@ -220,9 +222,22 @@ export class AsentarpagomanualComponent implements OnInit {
         console.log("Nuevo estado de pago:", order.estadoPago);
         console.log("✅ Pedido marcado como calculado en frontend");
 
-        this.modalService.dismissAll(order);
-        Swal.close();
-        this.cancelar();
+        // Actualizar el pedido en el backend para preservar el estado de pago
+        this.ventasService.editOrder(order).subscribe({
+          next: (response) => {
+            console.log("✅ Pedido actualizado en backend:", response);
+            this.modalService.dismissAll(order);
+            Swal.close();
+            this.cancelar();
+          },
+          error: (error) => {
+            console.error("❌ Error al actualizar pedido en backend:", error);
+            // Aún así cerrar el modal ya que el pago se registró localmente
+            this.modalService.dismissAll(order);
+            Swal.close();
+            this.cancelar();
+          }
+        });
       };
 
       if (this.selectedFile) {
@@ -304,7 +319,59 @@ export class AsentarpagomanualComponent implements OnInit {
     transacionPago.estadoVerificacion = "Pendiente";
     transacionPago.fechaHoraAprobacionRechazo = "";
 
-    // this.modalService.dismissAll(transacionPago);
+    // Recalcular el estado de pago después de editar
+    this.recalcularEstadoPago();
+  }
+
+  /**
+   * Método helper para recalcular el estado de pago de manera consistente
+   * Se usa tanto al registrar como al editar pagos
+   */
+  private recalcularEstadoPago(): void {
+    // Calcular total de pagos asentados (excluyendo Wompi pendientes)
+    const totalPagosAsentados = (this.pedido.PagosAsentados || []).reduce((acc, pago) => {
+      if (
+        pago.formaPago?.toLowerCase().includes("wompi") &&
+        pago.estadoVerificacion === "Pendiente"
+      ) {
+        return acc;
+      }
+      const valorPago = Number(pago.valor || pago.valorRegistrado || 0) || 0;
+      return acc + valorPago;
+    }, 0);
+
+    // Actualizar anticipo y falta por pagar
+    this.pedido.anticipo = Math.round((totalPagosAsentados + Number.EPSILON) * 100) / 100;
+    this.pedido.faltaPorPagar = Math.max(
+      0,
+      Math.round(((this.pedido.totalPedididoConDescuento || 0) - totalPagosAsentados + Number.EPSILON) * 100) / 100,
+    );
+
+    // Determinar el nuevo estado de pago
+    if (this.pedido.faltaPorPagar <= 0) {
+      // Si no falta por pagar, el pedido está completamente pagado
+      this.pedido.estadoPago = EstadoPago.Aprobado;
+    } else if (
+      this.pedido.faltaPorPagar > 0 &&
+      this.pedido.faltaPorPagar < (this.pedido.totalPedididoConDescuento || 0)
+    ) {
+      // Si falta por pagar pero es menos que el total, hay pagos parciales
+      this.pedido.estadoPago = EstadoPago.PreAprobado;
+    } else {
+      // Si no hay pagos o falta por pagar es igual al total
+      this.pedido.estadoPago = EstadoPago.Pendiente;
+    }
+
+    // Marcar como calculado en frontend
+    (this.pedido as any)._estadoCalculadoEnFrontend = true;
+    (this.pedido as any)._timestamp = new Date().getTime();
+
+    console.log("🔄 ESTADO DE PAGO RECALCULADO:");
+    console.log("Total pagos asentados:", totalPagosAsentados);
+    console.log("Nuevo anticipo:", this.pedido.anticipo);
+    console.log("Nueva falta por pagar:", this.pedido.faltaPorPagar);
+    console.log("Nuevo estado de pago:", this.pedido.estadoPago);
+    console.log("✅ Pedido marcado como calculado en frontend");
   }
 
   eliminarPago(pago: Pago) {
@@ -373,7 +440,18 @@ export class AsentarpagomanualComponent implements OnInit {
           console.log("Nuevo estado:", this.pedido.estadoPago);
           console.log("✅ Pedido marcado como calculado en frontend");
 
-          this.modalService.dismissAll(this.pedido);
+          // Actualizar el pedido en el backend para preservar el estado de pago
+          this.ventasService.editOrder(this.pedido).subscribe({
+            next: (response) => {
+              console.log("✅ Pedido actualizado en backend después de eliminar pago:", response);
+              this.modalService.dismissAll(this.pedido);
+            },
+            error: (error) => {
+              console.error("❌ Error al actualizar pedido en backend después de eliminar pago:", error);
+              // Aún así cerrar el modal ya que el pago se eliminó localmente
+              this.modalService.dismissAll(this.pedido);
+            }
+          });
         };
 
         // Elimina el archivo de Firebase Storage si existe, pero no bloquee el flujo si falla

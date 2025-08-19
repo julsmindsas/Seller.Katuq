@@ -1,0 +1,359 @@
+/* =========================================
+   DASHBOARD MÓVIL - KATUQ SELLER
+   =========================================
+   
+   Estilos específicos para optimizar el dashboard en dispositivos móviles
+   Se aplican solo cuando se incluye la clase .dashboard-mobile
+   
+   ========================================= */
+
+.dashboard-mobile {
+  // Header del dashboard
+  .dashboard-header {
+    @media (max-width: 768px) {
+      padding: 1rem;
+      
+      .row {
+        .col-md-4, .col-md-8 {
+          margin-bottom: 1rem;
+        }
+      }
+      
+      .dashboard-title {
+        font-size: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+      }
+      
+      .text-muted {
+        text-align: center;
+        margin-bottom: 1rem;
+      }
+      
+      // Controles de fecha
+      .date-control-group {
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        
+        .date-control {
+          width: 100%;
+          
+          label {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+          }
+          
+          input {
+            width: 100%;
+            font-size: 16px; // Previene zoom en iOS
+            padding: 0.75rem;
+            text-align: center;
+            border-radius: 8px;
+          }
+        }
+      }
+      
+      // Grupo de botones
+      .button-group {
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        
+        .btn {
+          width: 100%;
+          padding: 0.75rem;
+          font-size: 0.9rem;
+          border-radius: 8px;
+          min-height: 44px; // Touch target mínimo
+        }
+      }
+      
+      // Controles de acordeón
+      .accordion-controls {
+        .btn-group {
+          flex-direction: column;
+          gap: 0.5rem;
+          
+          .btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            min-height: 44px;
+          }
+        }
+      }
+    }
+  }
+  
+  // Contenido del dashboard
+  .dashboard-content {
+    @media (max-width: 768px) {
+      padding: 1rem;
+      
+      .row {
+        margin: 0;
+        
+        .col-lg-3, .col-md-6 {
+          padding: 0.5rem;
+        }
+      }
+    }
+  }
+  
+  // Tarjetas KPI
+  .kpi-card {
+    @media (max-width: 768px) {
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      
+      .card-body {
+        padding: 1rem;
+        text-align: center;
+        
+        h3 {
+          font-size: 1.5rem;
+          margin-bottom: 0.5rem;
+        }
+        
+        h6 {
+          font-size: 0.9rem;
+          margin-bottom: 0.5rem;
+        }
+        
+        small {
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+  
+  // Gráficos
+  .apex-chart {
+    @media (max-width: 768px) {
+      min-height: 250px;
+      margin: 1rem 0;
+      
+      .apexcharts-canvas {
+        max-width: 100%;
+      }
+    }
+  }
+  
+  // Módulos acordeón
+  .accordion {
+    @media (max-width: 768px) {
+      .accordion-item {
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        overflow: hidden;
+        
+        .accordion-header {
+          .accordion-button {
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            min-height: 44px;
+            
+            &:not(.collapsed) {
+              background-color: #f8f9fa;
+              color: #495057;
+            }
+            
+            &::after {
+              width: 1rem;
+              height: 1rem;
+            }
+          }
+        }
+        
+        .accordion-body {
+          padding: 1rem;
+        }
+      }
+    }
+  }
+  
+  // Tablas responsive
+  .table-responsive {
+    @media (max-width: 768px) {
+      border: none;
+      border-radius: 8px;
+      overflow: hidden;
+      
+      .table {
+        font-size: 0.875rem;
+        margin-bottom: 0;
+        
+        th, td {
+          padding: 0.75rem 0.5rem;
+          vertical-align: middle;
+          white-space: nowrap;
+        }
+        
+        th {
+          background-color: #f8f9fa;
+          font-weight: 600;
+          font-size: 0.8rem;
+        }
+        
+        .btn {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+          min-height: 32px;
+        }
+      }
+    }
+  }
+  
+  // Alertas
+  .alert {
+    @media (max-width: 768px) {
+      margin: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      
+      .alert-heading {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      p {
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+    }
+  }
+  
+  // Controles de navegación
+  .wizard-footer-container {
+    @media (max-width: 768px) {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 1rem;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      border-top: 1px solid #e9ecef;
+      
+      .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        min-height: 44px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+  
+  // Espaciado para footer fijo
+  .content-with-footer {
+    @media (max-width: 768px) {
+      padding-bottom: 120px;
+    }
+  }
+  
+  // Mejoras para gráficos específicos
+  .chart-container {
+    @media (max-width: 768px) {
+      .chart-title {
+        font-size: 1rem;
+        text-align: center;
+        margin-bottom: 1rem;
+      }
+      
+      .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        
+        .legend-item {
+          display: flex;
+          align-items: center;
+          font-size: 0.8rem;
+          
+          .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 0.5rem;
+          }
+        }
+      }
+    }
+  }
+  
+  // Mejoras para métricas
+  .metrics-grid {
+    @media (max-width: 768px) {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      
+      .metric-item {
+        text-align: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        
+        .metric-value {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #495057;
+          margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+          font-size: 0.8rem;
+          color: #6c757d;
+        }
+      }
+    }
+  }
+  
+  // Mejoras para filtros
+  .filters-section {
+    @media (max-width: 768px) {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      
+      .filter-row {
+        flex-direction: column;
+        gap: 1rem;
+        
+        .filter-item {
+          width: 100%;
+          
+          label {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+          }
+          
+          select, input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+}

@@ -267,6 +267,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Verifica si se pueden ELIMINAR productos del pedido
+   * SOLO se pueden eliminar productos si el pedido está en estado "Pendiente" o "SinProducir"
+   * @param order Pedido a verificar
+   * @returns true si se pueden eliminar productos, false si no
+   */
+  canDeleteProducts(order: Pedido): boolean {
+    if (!order || !order.estadoProceso) {
+      return false;
+    }
+
+    // Solo permitir eliminación en estados muy tempranos del proceso
+    const estadosPermitidos = [
+      'Pendiente',           // Pedido recién creado
+      'SinProducir'          // Pedido confirmado pero sin iniciar producción
+    ];
+
+    return estadosPermitidos.includes(order.estadoProceso);
+  }
+
+  /**
    * Verifica si se pueden editar notas de producción
    * Solo se pueden editar si NO está en GRUPO 1
    * @param order Pedido a verificar
@@ -1213,6 +1233,38 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               order.estadoPago = "PreAprobado";
             } else {
               order.estadoPago = "Pendiente";
+            }
+          }
+        } else {
+          // Si el estado ya fue calculado en el frontend, verificar que sea consistente
+          // con los pagos actuales para evitar inconsistencias
+          if (order._estadoCalculadoEnFrontend && 
+              order.estadoPago !== "Precancelado" && 
+              order.estadoPago !== "Cancelado") {
+            
+            // Verificar si hay inconsistencias entre el estado y los pagos
+            const totalPedido = Number(order.totalPedididoConDescuento || 0);
+            const anticipoReal = Number(order.anticipo || 0);
+            const faltaPorPagarReal = Math.max(0, totalPedido - anticipoReal);
+            
+            // Solo corregir si hay una inconsistencia clara
+            if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
+              // Si está marcado como Aprobado pero aún falta por pagar, corregir
+              if (faltaPorPagarReal < totalPedido) {
+                order.estadoPago = "PreAprobado";
+              } else {
+                order.estadoPago = "Pendiente";
+              }
+            } else if (order.estadoPago === "PreAprobado" && faltaPorPagarReal <= 0) {
+              // Si está marcado como PreAprobado pero ya no falta por pagar, aprobar
+              order.estadoPago = "Aprobado";
+            } else if (order.estadoPago === "Pendiente" && anticipoReal > 0) {
+              // Si está marcado como Pendiente pero hay pagos, verificar estado real
+              if (faltaPorPagarReal <= 0) {
+                order.estadoPago = "Aprobado";
+              } else if (faltaPorPagarReal < totalPedido) {
+                order.estadoPago = "PreAprobado";
+              }
             }
           }
         }
@@ -2541,6 +2593,276 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.editOrder(order);
         },
       );
+  }
+
+  /**
+   * Elimina directamente un pedido sin mostrar alert (usado cuando ya se confirmó)
+   * @param pedido Pedido a eliminar
+   */
+  private eliminarPedidoCompleto(pedido: Pedido) {
+    try {
+      console.log(`🗑️ Eliminando pedido completo: ${pedido.nroPedido}`);
+      
+      // Eliminar el pedido del backend
+      this.ventasService.deleteOrder(pedido).subscribe({
+        next: (response) => {
+          console.log("✅ Pedido eliminado exitosamente:", response);
+          
+          // Mostrar mensaje de éxito
+          this.toastrService.success(
+            `Pedido ${pedido.nroPedido} eliminado exitosamente`,
+            "Pedido Eliminado"
+          );
+          
+          // Remover el pedido de la lista local
+          const index = this.orders.findIndex(order => order._id === pedido._id);
+          if (index !== -1) {
+            this.orders.splice(index, 1);
+          }
+          
+          // Refrescar los datos para actualizar la UI
+          this.refrescarDatos();
+        },
+        error: (error) => {
+          console.error("❌ Error al eliminar pedido:", error);
+          this.toastrService.error(
+            `Error al eliminar el pedido ${pedido.nroPedido}. Inténtalo nuevamente.`,
+            "Error al Eliminar"
+          );
+        }
+      });
+    } catch (error) {
+      console.error("❌ Error inesperado al eliminar pedido:", error);
+      this.toastrService.error(
+        "Ocurrió un error inesperado al eliminar el pedido",
+        "Error"
+      );
+    }
+  }
+
+  /**
+   * Elimina automáticamente un pedido que se quedó sin productos
+   * @param pedido Pedido sin productos a eliminar
+   */
+  private eliminarPedidoSinProductos(pedido: Pedido) {
+    Swal.fire({
+      title: "⚠️ Pedido Sin Productos",
+      text: `El pedido ${pedido.nroPedido} se quedó sin productos. Los pedidos sin productos no están permitidos en el sistema. ¿Deseas eliminar automáticamente este pedido?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar pedido",
+      cancelButtonText: "Cancelar",
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        try {
+          console.log(`🗑️ Eliminando pedido sin productos: ${pedido.nroPedido}`);
+          
+          // Eliminar el pedido del backend
+          this.ventasService.deleteOrder(pedido).subscribe({
+            next: (response) => {
+              console.log("✅ Pedido sin productos eliminado exitosamente:", response);
+              
+              // Mostrar mensaje de éxito
+              this.toastrService.success(
+                `Pedido ${pedido.nroPedido} eliminado automáticamente por no tener productos`,
+                "Pedido Eliminado"
+              );
+              
+              // Remover el pedido de la lista local
+              const index = this.orders.findIndex(order => order._id === pedido._id);
+              if (index !== -1) {
+                this.orders.splice(index, 1);
+              }
+              
+              // Refrescar los datos para actualizar la UI
+              this.refrescarDatos();
+            },
+            error: (error) => {
+              console.error("❌ Error al eliminar pedido sin productos:", error);
+              this.toastrService.error(
+                `Error al eliminar el pedido ${pedido.nroPedido}. Inténtalo nuevamente.`,
+                "Error al Eliminar"
+              );
+            }
+          });
+        } catch (error) {
+          console.error("❌ Error inesperado al eliminar pedido sin productos:", error);
+          this.toastrService.error(
+            "Ocurrió un error inesperado al eliminar el pedido",
+            "Error"
+          );
+        }
+      } else {
+        // Si el usuario cancela, mostrar mensaje informativo
+        this.toastrService.info(
+          `El pedido ${pedido.nroPedido} se mantendrá en el sistema pero no tendrá productos. Considera agregar productos o eliminarlo manualmente.`,
+          "Pedido Mantenido"
+        );
+      }
+    });
+  }
+
+  /**
+   * Elimina un producto específico del pedido
+   * @param item Producto del carrito a eliminar
+   * @param pedido Pedido al que pertenece el producto
+   */
+  eliminarProductoDelPedido(item: Carrito, pedido: Pedido) {
+    // Verificar si se pueden ELIMINAR productos (más restrictivo que modificar)
+    if (!this.canDeleteProducts(pedido)) {
+      this.toastrService.warning(
+        `No se pueden eliminar productos. Solo se permiten eliminaciones en pedidos con estado "Pendiente" o "SinProducir". Estado actual: ${pedido.estadoProceso}`,
+        "Eliminación No Permitida",
+      );
+      return;
+    }
+
+    // Verificar si será el último producto del pedido
+    const seraUltimoProducto = (pedido.carrito?.length || 0) === 1;
+
+    // Si será el último producto, mostrar alert especial primero
+    if (seraUltimoProducto) {
+      this.confirmarEliminacionUltimoProducto(item, pedido);
+      return;
+    }
+
+    // Si no será el último producto, proceder con eliminación normal
+    this.confirmarEliminacionProducto(item, pedido);
+  }
+
+  /**
+   * Confirma la eliminación del último producto (que dejará el pedido vacío)
+   * @param item Producto a eliminar
+   * @param pedido Pedido al que pertenece
+   */
+  private confirmarEliminacionUltimoProducto(item: Carrito, pedido: Pedido) {
+    Swal.fire({
+      title: "⚠️ Último Producto del Pedido",
+      text: `Al eliminar "${item.producto?.crearProducto?.titulo || 'este producto'}" el pedido ${pedido.nroPedido} se quedará sin productos. Los pedidos sin productos no están permitidos en el sistema. ¿Deseas eliminar el producto y el pedido completo?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar producto y pedido",
+      cancelButtonText: "Cancelar",
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        try {
+          // Eliminar el producto del carrito
+          const index = pedido.carrito?.findIndex(
+            (carritoItem) =>
+              carritoItem.producto?.identificacion?.referencia ===
+              item.producto?.identificacion?.referencia
+          );
+
+          if (index !== -1 && index !== undefined) {
+            // Eliminar el producto del carrito
+            pedido.carrito?.splice(index, 1);
+            
+            console.log(`🗑️ Último producto eliminado del pedido ${pedido.nroPedido}:`, {
+              producto: item.producto?.crearProducto?.titulo,
+              referencia: item.producto?.identificacion?.referencia,
+              cantidad: item.cantidad
+            });
+
+            // Recalcular todos los valores del pedido
+            pedido = this.actualizarValoresPedido(pedido);
+
+            // Actualizar el pedido en el backend
+            this.editOrder(pedido);
+
+            // Mostrar mensaje de éxito
+            this.toastrService.success(
+              `Producto "${item.producto?.crearProducto?.titulo || 'eliminado'}" removido del pedido exitosamente`,
+              "Producto Eliminado"
+            );
+
+            // Ahora eliminar el pedido completo directamente ya que está vacío
+            this.eliminarPedidoCompleto(pedido);
+          } else {
+            this.toastrService.error(
+              "No se pudo encontrar el producto en el pedido",
+              "Error al Eliminar"
+            );
+          }
+        } catch (error) {
+          console.error("Error al eliminar último producto del pedido:", error);
+          this.toastrService.error(
+            "Ocurrió un error al eliminar el producto",
+            "Error"
+          );
+        }
+      }
+    });
+  }
+
+  /**
+   * Confirma la eliminación de un producto (cuando no es el último)
+   * @param item Producto a eliminar
+   * @param pedido Pedido al que pertenece
+   */
+  private confirmarEliminacionProducto(item: Carrito, pedido: Pedido) {
+    Swal.fire({
+      title: "¿Eliminar producto?",
+      text: `¿Estás seguro de que quieres eliminar "${item.producto?.crearProducto?.titulo || 'este producto'}" del pedido?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        try {
+          // Buscar el índice del producto en el carrito
+          const index = pedido.carrito?.findIndex(
+            (carritoItem) =>
+              carritoItem.producto?.identificacion?.referencia ===
+              item.producto?.identificacion?.referencia
+          );
+
+          if (index !== -1 && index !== undefined) {
+            // Eliminar el producto del carrito
+            pedido.carrito?.splice(index, 1);
+            
+            console.log(`🗑️ Producto eliminado del pedido ${pedido.nroPedido}:`, {
+              producto: item.producto?.crearProducto?.titulo,
+              referencia: item.producto?.identificacion?.referencia,
+              cantidad: item.cantidad
+            });
+
+            // Recalcular todos los valores del pedido
+            pedido = this.actualizarValoresPedido(pedido);
+
+            // Actualizar el pedido en el backend
+            this.editOrder(pedido);
+
+            // Mostrar mensaje de éxito
+            this.toastrService.success(
+              `Producto "${item.producto?.crearProducto?.titulo || 'eliminado'}" removido del pedido exitosamente`,
+              "Producto Eliminado"
+            );
+          } else {
+            this.toastrService.error(
+              "No se pudo encontrar el producto en el pedido",
+              "Error al Eliminar"
+            );
+          }
+        } catch (error) {
+          console.error("Error al eliminar producto del pedido:", error);
+          this.toastrService.error(
+            "Ocurrió un error al eliminar el producto",
+            "Error"
+          );
+        }
+      }
+    });
   }
   actualizarValoresPedido(order: Pedido) {
     this.pedidoUtilService.pedido = order;
