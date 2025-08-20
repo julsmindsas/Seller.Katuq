@@ -2658,14 +2658,14 @@ export class DespachosComponent implements OnInit {
     // Starting y position
     let yPos = 2;
 
-    // Función helper para limpiar y normalizar texto de manera más robusta
+    // Función helper para limpiar y normalizar texto preservando la ñ
     const limpiarTexto = (texto) => {
       if (!texto) return '';
       
       // Convertir a string si no lo es
       let textoStr = String(texto);
       
-      // Normalizar caracteres especiales y tildes de manera más completa
+      // Normalizar caracteres especiales pero preservar la ñ
       return textoStr
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '') // Remover diacríticos
@@ -2679,7 +2679,7 @@ export class DespachosComponent implements OnInit {
         .replace(/[ÍÌÏÎ]/g, 'I')
         .replace(/[ÓÒÖÔ]/g, 'O')
         .replace(/[ÚÙÜÛ]/g, 'U')
-        .replace(/[ñÑ]/g, 'n')
+        // NO reemplazar ñ con n - preservar la ñ original
         .replace(/[çÇ]/g, 'c')
         .replace(/[¿¡]/g, '')
         .replace(/[^\x00-\x7F]/g, ''); // Remover cualquier otro carácter no ASCII
