@@ -2346,6 +2346,15 @@
   transition: all var(--transition-bounce);
   overflow: hidden;
   
+  // Optimizaciones específicas para táctil móvil
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  
   // Efecto de resplandor interno
   &::before {
     content: '';
@@ -2405,12 +2414,23 @@
   }
   
   &:active {
-    transform: scale(0.95) rotate(0deg);
-    transition: all var(--transition-micro);
+    transform: scale(0.9) rotate(0deg) !important;
+    transition: all 0.1s ease !important;
+    background: var(--gradient-accent) !important;
+    box-shadow: 0 4px 16px var(--primary-glow) !important;
     
     &::after {
       transform: translate(-50%, -50%) scale(1.5);
-      opacity: 0.8;
+      opacity: 1;
+    }
+  }
+  
+  // Feedback visual mejorado para móvil
+  @media (max-width: 991.98px) {
+    &:active {
+      transform: scale(0.85) !important;
+      background: var(--gradient-accent) !important;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 16px var(--primary-glow) !important;
     }
   }
   

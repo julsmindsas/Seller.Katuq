@@ -411,7 +411,7 @@
 <!-- Botón flotante para expandir cuando está colapsado (solo móviles) -->
 <button class="sidebar-toggle-btn" 
         *ngIf="collapseMenu && isMobile()"
-        (click)="sidebarToggle()"
+        (click)="toggleSidebarMobile($event)"
         [attr.aria-label]="'Expandir menú'"
         title="Expandir menú">
   <i class="fa fa-bars" aria-hidden="true"></i>

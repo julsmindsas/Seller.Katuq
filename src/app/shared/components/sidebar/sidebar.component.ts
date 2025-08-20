@@ -120,11 +120,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.loadPlanFromLocalStorage();
-    this.securityService.getCompanyInformationLogged$().subscribe((companyInformation: CompanyInformation) => {
+    this.securityService.getCompanyInformationLogged$().subscribe((companyInformation: CompanyInformation | null) => {
       if (!companyInformation) {
         companyInformation = this.securityService.getCompanyInformationLogged();
       }
-      this.companyInformation = companyInformation;
+      this.companyInformation = companyInformation || {} as CompanyInformation;
     });
 
     const savedState = localStorage.getItem('planCardCollapsed');
@@ -279,11 +279,23 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // Manejar inicio de toque
   private handleTouchStart(event: TouchEvent): void {
+    // Ignorar toques en el botón hamburguesa para evitar conflictos
+    const target = event.target as HTMLElement;
+    if (target.closest('.sidebar-toggle-btn')) {
+      return;
+    }
+    
     this.touchStartX = event.touches[0].clientX;
   }
   
   // Manejar fin de toque y detectar deslizamiento
   private handleTouchEnd(event: TouchEvent): void {
+    // Ignorar toques en el botón hamburguesa para evitar conflictos
+    const target = event.target as HTMLElement;
+    if (target.closest('.sidebar-toggle-btn')) {
+      return;
+    }
+    
     this.touchEndX = event.changedTouches[0].clientX;
     this.handleSwipe();
   }
@@ -549,14 +561,26 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       localStorage.setItem('sidebarCollapsed', this.collapseMenu.toString());
     }
     
-    // Liberar lock de toggle después de animación
+    // Liberar lock de toggle después de animación - optimizado para responsividad inmediata
     setTimeout(() => {
       this.isToggling = false;
-    }, 300);
+    }, 100);
   }
 
   // Variable para prevenir toggle múltiple
   private isToggling = false;
+  
+  // Método simplificado para toggle móvil
+  toggleSidebarMobile(event: Event): void {
+    // Prevenir que el evento se propague a otros listeners
+    event.stopPropagation();
+    event.preventDefault();
+    
+    // Ejecutar toggle directamente sin complicaciones
+    if (!this.isToggling) {
+      this.sidebarToggle();
+    }
+  }
 
   // Métodos auxiliares para manejo de scroll
   private preventBodyScroll(): void {
