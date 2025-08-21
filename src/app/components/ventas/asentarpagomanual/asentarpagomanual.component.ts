@@ -187,15 +187,33 @@ export class AsentarpagomanualComponent implements OnInit {
         order.PagosAsentados.push(transacionPago);
 
         const totalPagosAsentados = order.PagosAsentados.reduce((acc, pago) => {
-          // Para Wompi, no sumar si está pendiente
-          if (
-            pago.formaPago?.toLowerCase().includes("wompi") &&
-            pago.estadoVerificacion === "Pendiente"
-          ) {
+          // ✅ CORREGIDO: Incluir TODOS los pagos, incluso los pendientes
+          // Los pagos pendientes también representan dinero que el cliente ya pagó
+          // Solo excluir pagos rechazados o cancelados
+          
+          // Verificar si el pago está en un estado válido para sumar
+          const estadoValido = pago.estadoVerificacion !== "Rechazado" && 
+                              pago.estadoVerificacion !== "Cancelado";
+          
+          if (estadoValido) {
+            const valorPago = Number(pago.valor || pago.valorRegistrado || 0) || 0;
+            console.log(`💰 PAGO INCLUIDO EN CÁLCULO - Pedido ${order.nroPedido}:`, {
+              formaPago: pago.formaPago,
+              estadoVerificacion: pago.estadoVerificacion,
+              valor: valorPago,
+              numeroComprobante: pago.numeroComprobante
+            });
+            return acc + valorPago;
+          } else {
+            console.log(`❌ PAGO EXCLUIDO DEL CÁLCULO - Pedido ${order.nroPedido}:`, {
+              formaPago: pago.formaPago,
+              estadoVerificacion: pago.estadoVerificacion,
+              valor: pago.valor || pago.valorRegistrado,
+              numeroComprobante: pago.numeroComprobante,
+              razon: "Estado inválido"
+            });
             return acc;
           }
-          const valorPago = Number(pago.valor || pago.valorRegistrado || 0) || 0;
-          return acc + valorPago;
         }, 0);
 
         order.anticipo = Math.round((totalPagosAsentados + Number.EPSILON) * 100) / 100;
@@ -328,16 +346,17 @@ export class AsentarpagomanualComponent implements OnInit {
    * Se usa tanto al registrar como al editar pagos
    */
   private recalcularEstadoPago(): void {
-    // Calcular total de pagos asentados (excluyendo Wompi pendientes)
+    // ✅ CORREGIDO: Calcular total de pagos asentados (incluyendo pendientes)
     const totalPagosAsentados = (this.pedido.PagosAsentados || []).reduce((acc, pago) => {
-      if (
-        pago.formaPago?.toLowerCase().includes("wompi") &&
-        pago.estadoVerificacion === "Pendiente"
-      ) {
-        return acc;
+      // Solo excluir pagos rechazados o cancelados
+      const estadoValido = pago.estadoVerificacion !== "Rechazado" && 
+                          pago.estadoVerificacion !== "Cancelado";
+      
+      if (estadoValido) {
+        const valorPago = Number(pago.valor || pago.valorRegistrado || 0) || 0;
+        return acc + valorPago;
       }
-      const valorPago = Number(pago.valor || pago.valorRegistrado || 0) || 0;
-      return acc + valorPago;
+      return acc;
     }, 0);
 
     // Actualizar anticipo y falta por pagar
@@ -401,14 +420,16 @@ export class AsentarpagomanualComponent implements OnInit {
           // Recalcular valores después de eliminar
           const totalPagosAsentados = (this.pedido.PagosAsentados || []).reduce(
             (acc, p) => {
-              if (
-                p.formaPago?.toLowerCase().includes("wompi") &&
-                p.estadoVerificacion === "Pendiente"
-              ) {
-                return acc;
+              // ✅ CORREGIDO: Incluir TODOS los pagos, incluso los pendientes
+              // Solo excluir pagos rechazados o cancelados
+              const estadoValido = p.estadoVerificacion !== "Rechazado" && 
+                                  p.estadoVerificacion !== "Cancelado";
+              
+              if (estadoValido) {
+                const valorPago = Number(p.valor || p.valorRegistrado || 0) || 0;
+                return acc + valorPago;
               }
-              const valorPago = Number(p.valor || p.valorRegistrado || 0) || 0;
-              return acc + valorPago;
+              return acc;
             },
             0,
           );
