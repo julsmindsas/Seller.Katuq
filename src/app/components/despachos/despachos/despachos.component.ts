@@ -2658,31 +2658,18 @@ export class DespachosComponent implements OnInit {
     // Starting y position
     let yPos = 2;
 
-    // Función helper para limpiar y normalizar texto preservando la ñ
+    // Función helper para limpiar y normalizar texto preservando ñ y tildes
     const limpiarTexto = (texto) => {
       if (!texto) return '';
       
       // Convertir a string si no lo es
       let textoStr = String(texto);
       
-      // Normalizar caracteres especiales pero preservar la ñ
+      // Preservar ñ y tildes, solo limpiar caracteres problemáticos
       return textoStr
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Remover diacríticos
-        .replace(/[áàäâ]/g, 'a')
-        .replace(/[éèëê]/g, 'e')
-        .replace(/[íìïî]/g, 'i')
-        .replace(/[óòöô]/g, 'o')
-        .replace(/[úùüû]/g, 'u')
-        .replace(/[ÁÀÄÂ]/g, 'A')
-        .replace(/[ÉÈËÊ]/g, 'E')
-        .replace(/[ÍÌÏÎ]/g, 'I')
-        .replace(/[ÓÒÖÔ]/g, 'O')
-        .replace(/[ÚÙÜÛ]/g, 'U')
-        // NO reemplazar ñ con n - preservar la ñ original
-        .replace(/[çÇ]/g, 'c')
-        .replace(/[¿¡]/g, '')
-        .replace(/[^\x00-\x7F]/g, ''); // Remover cualquier otro carácter no ASCII
+        .replace(/[çÇ]/g, 'c') // Convertir ç en c
+        .replace(/[¿¡]/g, '') // Remover signos de interrogación y exclamación invertidos
+        .replace(/[^\x00-\x7F]/g, ''); // Remover cualquier otro carácter no ASCII problemático
     };
 
     // Agregar el campo "Para:" solo si existe

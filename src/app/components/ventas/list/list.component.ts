@@ -1180,18 +1180,52 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Calcular anticipo basado en PagosAsentados si existen
         if (order.PagosAsentados && order.PagosAsentados.length > 0) {
+          console.log(`🔍 PROCESANDO PAGOS - Pedido ${order.nroPedido}:`, {
+            totalPagos: order.PagosAsentados.length,
+            pagos: order.PagosAsentados.map(p => ({
+              formaPago: p.formaPago,
+              estadoVerificacion: p.estadoVerificacion,
+              valor: p.valor || p.valorRegistrado,
+              numeroComprobante: p.numeroComprobante
+            }))
+          });
+          
           order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
-            // Para Wompi, verificar que no esté pendiente
-            if (
-              pago.formaPago?.toLowerCase().includes("wompi") &&
-              pago.estadoVerificacion === "Pendiente"
-            ) {
-              return acc; // No sumar pagos de Wompi pendientes
+            // ✅ CORREGIDO: Incluir TODOS los pagos, incluso los pendientes
+            // Los pagos pendientes también representan dinero que el cliente ya pagó
+            // Solo excluir pagos rechazados o cancelados
+            
+            // Verificar si el pago está en un estado válido para sumar
+            const estadoValido = pago.estadoVerificacion !== "Rechazado" && 
+                                pago.estadoVerificacion !== "Cancelado";
+            
+            if (estadoValido) {
+              // Considerar tanto valor como valorRegistrado
+              const valorPago = Number(pago.valor || pago.valorRegistrado || 0);
+              console.log(`💰 PAGO INCLUIDO - Pedido ${order.nroPedido}:`, {
+                formaPago: pago.formaPago,
+                estadoVerificacion: pago.estadoVerificacion,
+                valor: valorPago,
+                numeroComprobante: pago.numeroComprobante
+              });
+              return acc + valorPago;
+            } else {
+              console.log(`❌ PAGO EXCLUIDO - Pedido ${order.nroPedido}:`, {
+                formaPago: pago.formaPago,
+                estadoVerificacion: pago.estadoVerificacion,
+                valor: pago.valor || pago.valorRegistrado,
+                numeroComprobante: pago.numeroComprobante,
+                razon: "Estado inválido"
+              });
+              return acc;
             }
-            // Considerar tanto valor como valorRegistrado
-            const valorPago = pago.valor || pago.valorRegistrado || 0;
-            return acc + valorPago;
           }, 0);
+          
+          console.log(`📊 RESUMEN CÁLCULO - Pedido ${order.nroPedido}:`, {
+            anticipoCalculado: order.anticipo,
+            faltaPorPagar: order.faltaPorPagar,
+            totalPedido: order.totalPedididoConDescuento
+          });
         } else if (order.anticipo == null || order.anticipo == undefined) {
           order.anticipo = 0;
         }
@@ -1199,10 +1233,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         // Calcular falta por pagar basado en el total y anticipo real
         order.faltaPorPagar = Math.max(0, Number(order.totalPedididoConDescuento || 0) - Number(order.anticipo || 0));
 
+        // 🔍 DEBUG: Log del estado de pago antes de procesar
+        console.log(`💰 ESTADO DE PAGO - Pedido ${order.nroPedido}:`, {
+          estadoActual: order.estadoPago,
+          _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
+          _timestamp: order._timestamp,
+          anticipo: order.anticipo,
+          faltaPorPagar: order.faltaPorPagar,
+          totalPedido: order.totalPedididoConDescuento,
+          pagosAsentados: order.PagosAsentados?.length || 0
+        });
+
+        // 🔍 VERIFICACIÓN MEJORADA: Solo recalcular si realmente no fue calculado en frontend
+        const tiempoDesdeCalculo = order._timestamp ? Date.now() - order._timestamp : Infinity;
+        const esCalculoReciente = tiempoDesdeCalculo < (10 * 60 * 1000); // 10 minutos
+        const debeRecalcular = !order._estadoCalculadoEnFrontend || 
+                              !esCalculoReciente || 
+                              (order.estadoPago === "Precancelado" || order.estadoPago === "Cancelado");
+        
+        console.log(`🔍 VERIFICACIÓN ESTADO - Pedido ${order.nroPedido}:`, {
+          _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
+          _timestamp: order._timestamp,
+          tiempoDesdeCalculo: tiempoDesdeCalculo,
+          esCalculoReciente: esCalculoReciente,
+          debeRecalcular: debeRecalcular,
+          estadoActual: order.estadoPago
+        });
+
         // Actualizar estado de pago basado en los cálculos reales
         // SOLO recalcular estado si no viene ya calculado del frontend
         if (
-          !order._estadoCalculadoEnFrontend &&
+          debeRecalcular &&
           order.estadoPago !== "Precancelado" &&
           order.estadoPago !== "Cancelado"
         ) {
@@ -1229,44 +1290,63 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               order.faltaPorPagar < totalPedido
             ) {
               order.estadoPago = "PreAprobado";
-            } else if (order.preAprobadoManual) {
+                      } else if (order.preAprobadoManual) {
+            order.estadoPago = "PreAprobado";
+          } else {
+            order.estadoPago = "Pendiente";
+          }
+          
+          console.log(`🔄 ESTADO RECALCULADO - Pedido ${order.nroPedido}:`, {
+            estadoAnterior: order.estadoPago,
+            estadoNuevo: order.estadoPago,
+            razon: "Recalculado en refrescarDatos",
+            anticipo: order.anticipo,
+            faltaPorPagar: order.faltaPorPagar,
+            totalPedido: order.totalPedididoConDescuento
+          });
+        }
+        } else if (order._estadoCalculadoEnFrontend && 
+                   esCalculoReciente &&
+                   order.estadoPago !== "Precancelado" && 
+                   order.estadoPago !== "Cancelado") {
+          
+          // 🔒 PROTECCIÓN MEJORADA: Si el estado ya fue calculado en el frontend, 
+          // verificar que sea consistente con los pagos actuales para evitar inconsistencias
+          
+          // Verificar si hay inconsistencias entre el estado y los pagos
+          const totalPedido = Number(order.totalPedididoConDescuento || 0);
+          const anticipoReal = Number(order.anticipo || 0);
+          const faltaPorPagarReal = Math.max(0, totalPedido - anticipoReal);
+          
+          // Solo corregir si hay una inconsistencia clara y crítica
+          if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
+            // Si está marcado como Aprobado pero aún falta por pagar, corregir
+            if (faltaPorPagarReal < totalPedido) {
               order.estadoPago = "PreAprobado";
             } else {
               order.estadoPago = "Pendiente";
             }
-          }
-        } else {
-          // Si el estado ya fue calculado en el frontend, verificar que sea consistente
-          // con los pagos actuales para evitar inconsistencias
-          if (order._estadoCalculadoEnFrontend && 
-              order.estadoPago !== "Precancelado" && 
-              order.estadoPago !== "Cancelado") {
-            
-            // Verificar si hay inconsistencias entre el estado y los pagos
-            const totalPedido = Number(order.totalPedididoConDescuento || 0);
-            const anticipoReal = Number(order.anticipo || 0);
-            const faltaPorPagarReal = Math.max(0, totalPedido - anticipoReal);
-            
-            // Solo corregir si hay una inconsistencia clara
-            if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
-              // Si está marcado como Aprobado pero aún falta por pagar, corregir
-              if (faltaPorPagarReal < totalPedido) {
-                order.estadoPago = "PreAprobado";
-              } else {
-                order.estadoPago = "Pendiente";
-              }
-            } else if (order.estadoPago === "PreAprobado" && faltaPorPagarReal <= 0) {
-              // Si está marcado como PreAprobado pero ya no falta por pagar, aprobar
+          } else if (order.estadoPago === "PreAprobado" && faltaPorPagarReal <= 0) {
+            // Si está marcado como PreAprobado pero ya no falta por pagar, aprobar
+            order.estadoPago = "Aprobado";
+          } else if (order.estadoPago === "Pendiente" && anticipoReal > 0) {
+            // Si está marcado como Pendiente pero hay pagos, verificar estado real
+            if (faltaPorPagarReal <= 0) {
               order.estadoPago = "Aprobado";
-            } else if (order.estadoPago === "Pendiente" && anticipoReal > 0) {
-              // Si está marcado como Pendiente pero hay pagos, verificar estado real
-              if (faltaPorPagarReal <= 0) {
-                order.estadoPago = "Aprobado";
-              } else if (faltaPorPagarReal < totalPedido) {
-                order.estadoPago = "PreAprobado";
-              }
+            } else if (faltaPorPagarReal < totalPedido) {
+              order.estadoPago = "PreAprobado";
             }
           }
+          
+          // ✅ NO SOBRESCRIBIR el estado si ya fue calculado en frontend
+          // Solo corregir inconsistencias críticas
+          
+          console.log(`🔒 ESTADO PRESERVADO - Pedido ${order.nroPedido}:`, {
+            estadoPreservado: order.estadoPago,
+            razon: "Ya calculado en frontend",
+            _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
+            _timestamp: order._timestamp
+          });
         }
         // if (order.estadoPago != 'Precancelado' && order.estadoPago != 'Cancelado') {
         //   if (order.faltaPorPagar <= 0) {
