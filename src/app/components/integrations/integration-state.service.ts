@@ -138,15 +138,15 @@ export class IntegrationStateService {
       this.clearErrors();
     });
 
-    // Auto-refresh de datos cada 5 minutos si hay integraciones activas
-    timer(0, 5 * 60 * 1000).pipe(
-      switchMap(() => this.activeIntegrationsCount$),
-      filter(count => count > 0),
-      switchMap(() => this.isCacheValid$),
-      filter(isValid => !isValid)
-    ).subscribe(() => {
-      this.markCacheInvalid();
-    });
+    // DESHABILITADO: Auto-refresh de datos cada 5 minutos si hay integraciones activas
+    // timer(0, 5 * 60 * 1000).pipe(
+    //   switchMap(() => this.activeIntegrationsCount$),
+    //   filter(count => count > 0),
+    //   switchMap(() => this.isCacheValid$),
+    //   filter(isValid => !isValid)
+    // ).subscribe(() => {
+    //   this.markCacheInvalid();
+    // });
   }
 
   private select<T>(selector: (state: IntegrationState) => T): Observable<T> {
@@ -344,6 +344,14 @@ export class IntegrationStateService {
         lastUpdated: 0
       }
     }));
+  }
+
+  /**
+   * Método público para refrescar el estado manualmente
+   * (reemplaza el refresh automático deshabilitado)
+   */
+  manualRefreshState(): void {
+    this.markCacheInvalid();
   }
 
   // Utility methods

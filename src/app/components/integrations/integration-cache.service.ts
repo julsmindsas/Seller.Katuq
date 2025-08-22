@@ -41,15 +41,15 @@ export class IntegrationCacheService {
   public readonly stats$ = this.statsSubject.asObservable();
 
   constructor() {
-    // Limpieza automática cada 10 minutos
-    timer(0, 10 * 60 * 1000).subscribe(() => {
-      this.cleanup();
-    });
+    // DESHABILITADO: Limpieza automática cada 10 minutos
+    // timer(0, 10 * 60 * 1000).subscribe(() => {
+    //   this.cleanup();
+    // });
 
-    // Reportar estadísticas cada minuto
-    timer(0, 60 * 1000).subscribe(() => {
-      this.updateStats();
-    });
+    // DESHABILITADO: Reportar estadísticas cada minuto
+    // timer(0, 60 * 1000).subscribe(() => {
+    //   this.updateStats();
+    // });
   }
 
   /**
@@ -273,6 +273,25 @@ export class IntegrationCacheService {
     };
   }
 
+  /**
+   * Método público para limpieza manual del cache
+   * (reemplaza la limpieza automática deshabilitada)
+   */
+  manualCleanup(): void {
+    this.cleanup();
+  }
+
+  /**
+   * Método público para actualizar estadísticas manualmente
+   * (reemplaza la actualización automática deshabilitada)
+   */
+  manualUpdateStats(): void {
+    this.updateStats();
+  }
+
+  /**
+   * Método para limpiar todo el cache
+   */
   private getCacheEntry<T>(key: string): CacheEntry<T> | undefined {
     return this.cache.get(key) as CacheEntry<T> | undefined;
   }

@@ -13,6 +13,7 @@ import { IntegrationNotificationsComponent } from './integration-notifications.c
 import { CredentialStrengthIndicatorComponent } from './credential-strength-indicator.component';
 import { IntegrationStateService } from './integration-state.service';
 import { IntegrationCacheService } from './integration-cache.service';
+import { IntegrationManualControlService } from './integration-manual-control.service';
 
 const routes: Routes = [
   // Vista principal de listado
@@ -45,7 +46,8 @@ const routes: Routes = [
   ],
   providers: [
     IntegrationStateService,
-    IntegrationCacheService
+    IntegrationCacheService,
+    IntegrationManualControlService
   ],
   exports: [
     IntegrationsComponent,

@@ -151,10 +151,10 @@ export class IntegrationNotificationsComponent implements OnInit, OnDestroy {
   constructor(private uiHelper: IntegrationUIHelperService) {}
 
   ngOnInit() {
-    // Poll for feedback messages every 100ms for smooth updates
+    // Poll for feedback messages every 2 seconds instead of every 100ms
     this.intervalId = setInterval(() => {
       this.feedbackMessages = this.uiHelper.getFeedbackMessages();
-    }, 100);
+    }, 2000);
   }
 
   ngOnDestroy() {

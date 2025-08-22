@@ -126,17 +126,18 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.integrationForm.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(formValue => {
-      if (this.shouldAnalyzeCredentials(formValue)) {
-        this.analyzeCredentialStrength(formValue);
-      }
+      // DESHABILITADO: Análisis automático de credenciales
+      // if (this.shouldAnalyzeCredentials(formValue)) {
+      //   this.analyzeCredentialStrength(formValue);
+      // }
       
-      // Disparar validación V2 en tiempo real
-      if (this.shouldTriggerValidation(formValue)) {
-        this.validationSubject.next({
-          provider: this.selectedIntegrationType,
-          config: this.buildCredentials(formValue)
-        });
-      }
+      // DESHABILITADO: Validación V2 en tiempo real automática
+      // if (this.shouldTriggerValidation(formValue)) {
+      //   this.validationSubject.next({
+      //     provider: this.selectedIntegrationType,
+      //     config: this.buildCredentials(formValue)
+      //   });
+      // }
       
       // Actualizar sugerencias dinámicamente
       if (this.isDynamicForm && this.currentSchema) {
@@ -146,24 +147,25 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   private setupRealTimeValidation(): void {
-    this.validationSubject.pipe(
-      debounceTime(800), // Esperar 800ms después del último cambio
-      distinctUntilChanged((a, b) => JSON.stringify(a.config) === JSON.stringify(b.config)),
-      switchMap(({ provider, config }) => {
-        this.validationInProgress = true;
-        return this.integrationsService.validateConfig(provider, config).pipe(
-          catchError(error => {
-            console.warn('Error en validación tiempo real:', error);
-            return of({ success: false, errors: ['Error de validación: ' + error.message] });
-          })
-        );
-      }),
-      takeUntil(this.destroy$)
-    ).subscribe(result => {
-      this.validationResult = result;
-      this.validationInProgress = false;
-      this.updateFormValidationState();
-    });
+    // DESHABILITADO: Validación en tiempo real automática
+    // this.validationSubject.pipe(
+    //   debounceTime(800), // Esperar 800ms después del último cambio
+    //   distinctUntilChanged((a, b) => JSON.stringify(a.config) === JSON.stringify(b.config)),
+    //   switchMap(({ provider, config }) => {
+    //     this.validationInProgress = true;
+    //     return this.integrationsService.validateConfig(provider, config).pipe(
+    //       catchError(error => {
+    //         console.warn('Error en validación tiempo real:', error);
+    //         return of({ success: false, errors: ['Error de validación: ' + error.message] });
+    //       })
+    //     );
+    //   }),
+    //   takeUntil(this.destroy$)
+    // ).subscribe(result => {
+    //   this.validationResult = result;
+    //   this.validationInProgress = false;
+    //   this.updateFormValidationState();
+    // });
   }
 
   private shouldTriggerValidation(formValue: any): boolean {
@@ -211,13 +213,13 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   private startHealthChecks(): void {
-    // Health check inicial
-    this.performHealthCheck();
+    // DESHABILITADO: Health check inicial automático
+    // this.performHealthCheck();
     
-    // Health checks periódicos cada 5 minutos
-    this.healthCheckInterval = setInterval(() => {
-      this.performHealthCheck();
-    }, 5 * 60 * 1000);
+    // DESHABILITADO: Health checks periódicos automáticos
+    // this.healthCheckInterval = setInterval(() => {
+    //   this.performHealthCheck();
+    // }, 5 * 60 * 1000);
   }
 
   private performHealthCheck(): void {
@@ -467,8 +469,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.selectedIntegrationType = type;
     this.resetForm();
     
-    // Cargar esquema para el nuevo tipo
-    this.loadConfigSchema();
+    // DESHABILITADO: Carga automática del esquema
+    // this.loadConfigSchema();
     
     // Limpiar validaciones anteriores
     this.validationResult = null;
@@ -814,7 +816,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         // Compatibilidad retro con estructura anterior (Integration)
         const message = this.editingIntegrationId ? 'Integración actualizada correctamente' : 'Integración creada correctamente';
         this.handleSaveSuccess(result as any, message);
-        this.performHealthCheck();
+        // DESHABILITADO: Health check automático después de guardar
+        // this.performHealthCheck();
         if (this.isModalMode && this.activeModal) {
           this.activeModal.close('success');
         }
@@ -849,8 +852,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         if (result.success) {
           this.showStatus('success', '✅ Conexión exitosa: ' + result.message);
           
-          // Realizar health check después de test exitoso
-          this.performHealthCheck();
+          // DESHABILITADO: Health check automático después de test exitoso
+          // this.performHealthCheck();
         } else {
           this.showStatus('error', '❌ Error de conexión: ' + result.message);
         }
@@ -1144,11 +1147,56 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Método para refrescar health check manual
+  /**
+   * Método para refrescar health check manual
+   */
   refreshHealthCheck(): void {
     this.performHealthCheck();
   }
 
+  /**
+   * Método para validar credenciales manualmente desde el modal
+   */
+  manualValidateCredentials(): void {
+    if (this.integrationForm.valid) {
+      const formValue = this.integrationForm.value;
+      const credentials = this.buildCredentials(formValue);
+      
+      this.validationSubject.next({
+        provider: this.selectedIntegrationType,
+        config: credentials
+      });
+    }
+  }
+
+  /**
+   * Método para analizar fortaleza de credenciales manualmente desde el modal
+   */
+  manualAnalyzeCredentialStrength(): void {
+    const formValue = this.integrationForm.value;
+    if (this.shouldAnalyzeCredentials(formValue)) {
+      this.analyzeCredentialStrength(formValue);
+    }
+  }
+
+  /**
+   * Método para cargar esquema manualmente desde el modal
+   */
+  manualLoadConfigSchema(): void {
+    this.loadConfigSchema();
+  }
+
+  /**
+   * Método público para realizar health check manual
+   * (reemplaza los health checks automáticos deshabilitados)
+   */
+  manualHealthCheck(): void {
+    this.performHealthCheck();
+  }
+
+  /**
+   * Método para limpiar todo el cache
+   */
   // Métodos para formularios dinámicos
   getDynamicFormFields(): any[] {
     if (!this.currentSchema) return [];

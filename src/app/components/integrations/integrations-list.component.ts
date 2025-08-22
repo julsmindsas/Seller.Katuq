@@ -7,6 +7,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { IntegrationsComponent } from './integrations.component';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { IntegrationManualControlService } from './integration-manual-control.service';
 
 interface Toast {
   type: 'success' | 'error' | 'warning' | 'info';
@@ -55,7 +56,8 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     private stateService: IntegrationStateService,
     private cacheService: IntegrationCacheService,
     public uiHelper: IntegrationUIHelperService,
-    private modal: NgbModal
+    private modal: NgbModal,
+    private manualControlService: IntegrationManualControlService
   ) {}
 
   ngOnInit(): void {
@@ -344,12 +346,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   }
 
   // Métodos para depuración y monitoreo
-  showCacheStats(): void {
-    this.cacheStats$.subscribe(stats => {
-      console.log('Cache Stats:', stats);
-      this.uiHelper.showInfo(`Cache: ${stats.entries} entradas, ${stats.hitRate.toFixed(1)}% hit rate`);
-    });
-  }
+  // showCacheStats() eliminado - duplicado con la nueva implementación
 
   clearCache(): void {
     if (confirm('¿Estás seguro de limpiar todo el cache?')) {
@@ -760,4 +757,45 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     
     console.log('='.repeat(50));
   }
+
+  // Métodos de control manual
+  manualCleanupCache(): void {
+    this.manualControlService.cleanupCache();
+    this.showToast('success', 'Cache limpiado manualmente');
+  }
+
+  manualUpdateCacheStats(): void {
+    this.manualControlService.updateCacheStats();
+    this.showToast('success', 'Estadísticas del cache actualizadas');
+  }
+
+  manualRefreshState(): void {
+    this.manualControlService.refreshIntegrationsState();
+    this.showToast('success', 'Estado de integraciones refrescado');
+  }
+
+  manualHealthCheck(): void {
+    this.manualControlService.performHealthCheck();
+    this.showToast('info', 'Health check iniciado manualmente');
+  }
+
+  clearAllCache(): void {
+    this.manualControlService.clearAllCache();
+    this.showToast('success', 'Todo el cache limpiado');
+  }
+
+  showCacheStats(): void {
+    const stats = this.manualControlService.getCacheStats();
+    const info = this.manualControlService.getCacheInfo();
+    console.log('📊 Cache Stats:', stats);
+    console.log('📋 Cache Info:', info);
+    this.showToast('info', 'Estadísticas del cache mostradas en consola');
+  }
+
+  private showToast(type: 'success' | 'error' | 'warning' | 'info', message: string): void {
+    this.toast = { type, message };
+    setTimeout(() => this.clearToast(), 3000);
+  }
+
+  // Métodos para formularios dinámicos
 }
