@@ -174,10 +174,10 @@ export class AsentarpagomanualComponent implements OnInit {
           valorRegistrado: valorNuevoPago,
           archivoEvidencia: "",
           usuarioRegistro: (JSON.parse(localStorage.getItem("user")) as UserLite).name,
-          estadoVerificacion: "Pendiente",
+          estadoVerificacion: "Aprobado",
           fechaHoraSistema: new Date().toISOString(),
           fechaHoraCarga: new Date().toISOString(),
-          fechaHoraAprobacionRechazo: "",
+          fechaHoraAprobacionRechazo: new Date().toISOString(),
         };
 
         const order = this.pedido;

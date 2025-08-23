@@ -1116,7 +1116,33 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  refrescarDatos() {
+  // ✅ NUEVO: Flag para controlar refrescos automáticos
+  private ultimoRefresco = 0;
+  private refrescoEnProgreso = false;
+
+  refrescarDatos(forceRefresh: boolean = false) {
+    // ✅ PROTECCIÓN: Evitar refrescos automáticos muy frecuentes
+    // Esta función se ejecuta automáticamente en varios eventos del navegador
+    // Por eso agregamos protección para evitar cambios automáticos de estados de pago
+    const ahora = Date.now();
+    const tiempoDesdeUltimoRefresco = ahora - this.ultimoRefresco;
+    const tiempoMinimoEntreRefrescos = 30 * 1000; // 30 segundos mínimo entre refrescos
+    
+    if (!forceRefresh && tiempoDesdeUltimoRefresco < tiempoMinimoEntreRefrescos) {
+      console.log(`⏰ REFRESCO OMITIDO - Último refresco hace ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s (mínimo ${tiempoMinimoEntreRefrescos / 1000}s)`);
+      return;
+    }
+    
+    if (this.refrescoEnProgreso) {
+      console.log(`🔄 REFRESCO EN PROGRESO - Omitiendo solicitud duplicada`);
+      return;
+    }
+    
+    this.refrescoEnProgreso = true;
+    this.ultimoRefresco = ahora;
+    
+    console.log(`🔄 INICIANDO REFRESCO - Forzado: ${forceRefresh}, Tiempo desde último: ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s`);
+    
     // Ensure dates are set with fallback to today
     if (!this.fechaInicial || !this.fechaFinal) {
       const today = new Date().toISOString().split('T')[0];
@@ -1163,7 +1189,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
+    this.ventasService.getOrdersByFilter(filter).subscribe({
+      next: (data: Pedido[]) => {
       console.log(data);
       this.orders = data;
 
@@ -1246,7 +1273,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // 🔍 VERIFICACIÓN MEJORADA: Solo recalcular si realmente no fue calculado en frontend
         const tiempoDesdeCalculo = order._timestamp ? Date.now() - order._timestamp : Infinity;
-        const esCalculoReciente = tiempoDesdeCalculo < (10 * 60 * 1000); // 10 minutos
+        // ✅ CORREGIDO: Aumentar el tiempo de validez del estado calculado en frontend de 10 minutos a 2 horas
+        const esCalculoReciente = tiempoDesdeCalculo < (2 * 60 * 60 * 1000); // 2 horas en lugar de 10 minutos
         const debeRecalcular = !order._estadoCalculadoEnFrontend || 
                               !esCalculoReciente || 
                               (order.estadoPago === "Precancelado" || order.estadoPago === "Cancelado");
@@ -1255,6 +1283,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
           _timestamp: order._timestamp,
           tiempoDesdeCalculo: tiempoDesdeCalculo,
+          tiempoDesdeCalculoHoras: (tiempoDesdeCalculo / (60 * 60 * 1000)).toFixed(2) + ' horas',
           esCalculoReciente: esCalculoReciente,
           debeRecalcular: debeRecalcular,
           estadoActual: order.estadoPago
@@ -1318,35 +1347,53 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           const anticipoReal = Number(order.anticipo || 0);
           const faltaPorPagarReal = Math.max(0, totalPedido - anticipoReal);
           
-          // Solo corregir si hay una inconsistencia clara y crítica
+          // ✅ CORREGIDO: Solo corregir inconsistencias CRÍTICAS y OBVIAS
+          // Evitar cambios automáticos que puedan causar confusión
+          let estadoCorregido = false;
+          
           if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
-            // Si está marcado como Aprobado pero aún falta por pagar, corregir
+            // Solo corregir si la inconsistencia es muy clara (falta más del 10% del total)
+            const porcentajeFaltante = (faltaPorPagarReal / totalPedido) * 100;
+            if (porcentajeFaltante > 10) {
             if (faltaPorPagarReal < totalPedido) {
               order.estadoPago = "PreAprobado";
             } else {
               order.estadoPago = "Pendiente";
+              }
+              estadoCorregido = true;
+              console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Aprobado → ${order.estadoPago} (falta ${porcentajeFaltante.toFixed(1)}%)`);
             }
           } else if (order.estadoPago === "PreAprobado" && faltaPorPagarReal <= 0) {
-            // Si está marcado como PreAprobado pero ya no falta por pagar, aprobar
+            // Solo corregir si realmente no falta nada por pagar
+            if (faltaPorPagarReal <= 0) {
             order.estadoPago = "Aprobado";
+              estadoCorregido = true;
+              console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado PreAprobado → Aprobado (pago completo)`);
+            }
           } else if (order.estadoPago === "Pendiente" && anticipoReal > 0) {
-            // Si está marcado como Pendiente pero hay pagos, verificar estado real
+            // Solo corregir si hay pagos significativos (más del 50% del total)
+            const porcentajePagado = (anticipoReal / totalPedido) * 100;
+            if (porcentajePagado > 50) {
             if (faltaPorPagarReal <= 0) {
               order.estadoPago = "Aprobado";
             } else if (faltaPorPagarReal < totalPedido) {
               order.estadoPago = "PreAprobado";
+              }
+              estadoCorregido = true;
+              console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Pendiente → ${order.estadoPago} (pagado ${porcentajePagado.toFixed(1)}%)`);
             }
           }
           
-          // ✅ NO SOBRESCRIBIR el estado si ya fue calculado en frontend
-          // Solo corregir inconsistencias críticas
-          
+          if (!estadoCorregido) {
+            // ✅ NO SOBRESCRIBIR el estado si ya fue calculado en frontend y no hay inconsistencias críticas
           console.log(`🔒 ESTADO PRESERVADO - Pedido ${order.nroPedido}:`, {
             estadoPreservado: order.estadoPago,
-            razon: "Ya calculado en frontend",
+              razon: "Ya calculado en frontend - Sin inconsistencias críticas",
             _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
-            _timestamp: order._timestamp
+              _timestamp: order._timestamp,
+              tiempoDesdeCalculo: (tiempoDesdeCalculo / (60 * 60 * 1000)).toFixed(2) + ' horas'
           });
+          }
         }
         // if (order.estadoPago != 'Precancelado' && order.estadoPago != 'Cancelado') {
         //   if (order.faltaPorPagar <= 0) {
@@ -1415,7 +1462,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       //     order.totalPedididoConDescuento=precioTotalProductosSinIva+order.totalEnvio-order.totalDescuento
 
       // })
+      
+      // ✅ FINALIZAR REFRESCO
+      this.refrescoEnProgreso = false;
       this.loading = false;
+      
+      console.log(`✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados`);
+      },
+      error: (error) => {
+        console.error("❌ ERROR EN REFRESCO:", error);
+        // ✅ RESETEAR FLAGS EN CASO DE ERROR
+        this.refrescoEnProgreso = false;
+        this.loading = false;
+        
+        Swal.fire({
+          icon: "error",
+          title: "Error al cargar pedidos",
+          text: "No se pudieron cargar los pedidos. Por favor, intente nuevamente.",
+          confirmButtonText: "Reintentar",
+        });
+      }
     });
   }
 
@@ -1436,8 +1502,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   refrescar(table: Table) {
-    this.refrescarDatos();
+    this.refrescarDatos(true); // Forzar refresco
     // table.clear();
+  }
+
+  // ✅ NUEVO: Función para refrescar solo después de cambios importantes
+  refrescarDespuesDeCambio() {
+    console.log("🔄 REFRESCANDO DESPUÉS DE CAMBIO IMPORTANTE");
+    this.refrescarDatos(true); // Forzar refresco
   }
 
   initForms(cliente: Cliente) {
@@ -2184,6 +2256,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           showConfirmButton: false,
           timer: 1500,
         });
+        
+        // ✅ NUEVO: Refrescar solo después de cambios importantes
+        setTimeout(() => {
+          this.refrescarDespuesDeCambio();
+        }, 1000);
       },
       error: (error) => {
         console.error("❌ Error actualizando pagos:", error);
