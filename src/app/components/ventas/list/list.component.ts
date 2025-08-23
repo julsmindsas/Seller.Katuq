@@ -1271,20 +1271,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           pagosAsentados: order.PagosAsentados?.length || 0
         });
 
-        // 🔍 VERIFICACIÓN MEJORADA: Solo recalcular si realmente no fue calculado en frontend
-        const tiempoDesdeCalculo = order._timestamp ? Date.now() - order._timestamp : Infinity;
-        // ✅ CORREGIDO: Aumentar el tiempo de validez del estado calculado en frontend de 10 minutos a 2 horas
-        const esCalculoReciente = tiempoDesdeCalculo < (2 * 60 * 60 * 1000); // 2 horas en lugar de 10 minutos
+        // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
+        // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
         const debeRecalcular = !order._estadoCalculadoEnFrontend || 
-                              !esCalculoReciente || 
                               (order.estadoPago === "Precancelado" || order.estadoPago === "Cancelado");
         
         console.log(`🔍 VERIFICACIÓN ESTADO - Pedido ${order.nroPedido}:`, {
           _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
           _timestamp: order._timestamp,
-          tiempoDesdeCalculo: tiempoDesdeCalculo,
-          tiempoDesdeCalculoHoras: (tiempoDesdeCalculo / (60 * 60 * 1000)).toFixed(2) + ' horas',
-          esCalculoReciente: esCalculoReciente,
           debeRecalcular: debeRecalcular,
           estadoActual: order.estadoPago
         });
@@ -1335,7 +1329,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           });
         }
         } else if (order._estadoCalculadoEnFrontend && 
-                   esCalculoReciente &&
                    order.estadoPago !== "Precancelado" && 
                    order.estadoPago !== "Cancelado") {
           
@@ -1390,8 +1383,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             estadoPreservado: order.estadoPago,
               razon: "Ya calculado en frontend - Sin inconsistencias críticas",
             _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
-              _timestamp: order._timestamp,
-              tiempoDesdeCalculo: (tiempoDesdeCalculo / (60 * 60 * 1000)).toFixed(2) + ' horas'
+              _timestamp: order._timestamp
           });
           }
         }

@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.08.21.3 - 21 de Agosto 2025 (Beta)",
+  version: "2025.08.23.1 - 23 de Agosto 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -35,5 +35,5 @@ export const environment = {
       endpoint: "gmaps-proxy"
     }
   },
-  GEMINI_API_KEY: 'AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I',
+  GEMINI_API_KEY: 'AIzaSyAHT5s0bFQBG5a_vJGQWjC5OUIw0ZQPy_U',
 };
