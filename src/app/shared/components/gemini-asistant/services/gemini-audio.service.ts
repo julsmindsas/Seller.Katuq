@@ -3,21 +3,19 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
 import { environment } from '../../../../../environments/environment';
 
-// Importaciones necesarias para el sistema de ventas
+// Importaciones para herramientas especializadas
+import { KatuqInventoryToolsService, InventoryToolResponse } from './katuq-inventory-tools.service';
+import { SphereVisualService } from './sphere-visual.service';
+
+// Importaciones para sistema de ventas (solo las necesarias para coordinación)
 import { VentasService } from '../../../services/ventas/ventas.service';
-import { PaymentService } from '../../../services/ventas/payment.service';
-import { ToastrService } from 'ngx-toastr';
-import { Carrito, Pedido, Cliente, Facturacion, Envio, EstadoProceso, EstadoPago, Notas, Fecha } from '../../../../components/ventas/modelo/pedido';
 import { CartSingletonService } from "../../../services/ventas/cart.singleton.service";
-import { MaestroService } from "../../../services/maestros/maestro.service";
 import { BodegaService } from "../../../services/bodegas/bodega.service";
 import { InventarioService } from "../../../services/inventarios/inventario.service";
-import { PedidosUtilService } from '../../../../components/ventas/service/pedidos.util.service';
+import { Carrito, Pedido, Cliente, Facturacion, Envio, EstadoProceso, EstadoPago } from '../../../../components/ventas/modelo/pedido';
 import { Producto } from '../../../models/productos/Producto';
-import { UserLogged } from '../../../models/User/UserLogged';
 import { UserLite } from '../../../models/User/UserLite';
-import { VoiceAgentService } from '../../../services/voice-agent.service';
-import { SphereVisualService } from './sphere-visual.service';
+import { UserLogged } from '../../../models/User/UserLogged';
 
 export interface ConnectionStatus {
   status: 'connecting' | 'connected' | 'disconnected' | 'error';
@@ -160,7 +158,14 @@ export class GeminiAudioService {
   orderStatus$: Observable<OrderStatus | null> = this.orderStatusSubject.asObservable();
   progress$: Observable<number> = this.progressSubject.asObservable();
 
-  constructor(private sphereVisualService: SphereVisualService, private bodegaService: BodegaService, private inventarioService: InventarioService, private cartService: CartSingletonService, private ventasService: VentasService) {
+  constructor(
+    private sphereVisualService: SphereVisualService, 
+    private bodegaService: BodegaService,
+    private inventarioService: InventarioService,
+    private cartService: CartSingletonService, 
+    private ventasService: VentasService,
+    private inventoryToolsService: KatuqInventoryToolsService
+  ) {
     this.initClient();
     this.initSalesSystem();
   }
@@ -1036,7 +1041,7 @@ export class GeminiAudioService {
   async initSessionWithKatuqTools(): Promise<void> {
     const config: GeminiLiveConfig = {
       model: 'gemini-live-2.5-flash-preview',
-      systemInstruction: `Eres un asistente de voz inteligente del sistema Katuq Seller, especializado en ventas y gestión comercial. 
+      systemInstruction: `Eres un asistente de voz inteligente del sistema Katuq Seller, especializado en la gestión de inventario y ventas e inventarios de productos. 
 
 CAPACIDADES PRINCIPALES:
 - Gestión completa de ventas paso a paso con feedback visual esférico
@@ -1056,6 +1061,14 @@ PERSONALIDAD:
 
 FLUJO DE VENTAS COMPLETO:
 1. Seleccionar bodega → 2. Buscar productos → 3. Agregar al carrito → 4. Configurar cliente → 5. Configurar envío → 6. Configurar facturación → 7. Procesar venta → 8. Confirmación
+
+POSIBILIDADES DE INVENTARIO:
+- Buscar productos por nombre, referencia, descripción o código
+- Buscar productos por categoría
+- Buscar productos por precio
+- Buscar productos por stock
+- Buscar productos por bodega
+- Buscar productos por proveedor
 
 Siempre proporciona retroalimentación clara sobre el progreso y sugieres las mejores acciones a seguir. Crea experiencias visuales únicas en cada paso.`,
       responseModalities: [Modality.AUDIO],
@@ -1370,6 +1383,149 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
               required: ['couponCode']
             }
           },
+
+          // === NUEVAS HERRAMIENTAS DE INVENTARIO ===
+          {
+            name: 'getInventoryStatus',
+            description: 'Obtiene el estado general del inventario con estadísticas y métricas',
+            parameters: {
+              type: 'object',
+              properties: {
+                includeLowStock: { type: 'boolean', description: 'Incluir alertas de stock bajo', default: true },
+                includeCategories: { type: 'boolean', description: 'Incluir resumen por categorías', default: true },
+                includeWarehouse: { type: 'string', description: 'Filtrar por bodega específica (opcional)' }
+              }
+            }
+          },
+          {
+            name: 'searchInventoryByCategory',
+            description: 'Busca productos en el inventario por categoría específica',
+            parameters: {
+              type: 'object',
+              properties: {
+                category: { type: 'string', description: 'Categoría de productos a buscar' },
+                minStock: { type: 'integer', description: 'Stock mínimo requerido (opcional)' },
+                maxPrice: { type: 'number', description: 'Precio máximo (opcional)' },
+                sortBy: { type: 'string', enum: ['name', 'stock', 'price', 'date'], description: 'Ordenar resultados', default: 'name' },
+                limit: { type: 'integer', description: 'Máximo de resultados', default: 20 }
+              },
+              required: ['category']
+            }
+          },
+          {
+            name: 'getLowStockAlerts',
+            description: 'Obtiene alertas de productos con stock bajo o agotado',
+            parameters: {
+              type: 'object',
+              properties: {
+                threshold: { type: 'integer', description: 'Umbral de stock bajo (por defecto 10)', default: 10 },
+                includeOutOfStock: { type: 'boolean', description: 'Incluir productos agotados', default: true },
+                warehouse: { type: 'string', description: 'Filtrar por bodega específica (opcional)' }
+              }
+            }
+          },
+          {
+            name: 'getInventoryReport',
+            description: 'Genera un reporte completo del inventario con análisis detallado',
+            parameters: {
+              type: 'object',
+              properties: {
+                reportType: { type: 'string', enum: ['summary', 'detailed', 'analytics'], description: 'Tipo de reporte', default: 'summary' },
+                dateRange: { type: 'string', description: 'Rango de fechas (ej: "last7days", "last30days", "thisMonth")', default: 'last30days' },
+                includeMovements: { type: 'boolean', description: 'Incluir movimientos de inventario', default: false },
+                exportFormat: { type: 'string', enum: ['json', 'csv', 'pdf'], description: 'Formato de exportación', default: 'json' }
+              }
+            }
+          },
+          {
+            name: 'checkProductAvailability',
+            description: 'Verifica la disponibilidad de un producto específico en tiempo real',
+            parameters: {
+              type: 'object',
+              properties: {
+                productId: { type: 'string', description: 'ID del producto a verificar' },
+                productName: { type: 'string', description: 'Nombre del producto a verificar' },
+                checkAllWarehouses: { type: 'boolean', description: 'Verificar en todas las bodegas', default: true },
+                includeAlternatives: { type: 'boolean', description: 'Incluir productos alternativos similares', default: false }
+              },
+              required: ['productId', 'productName']
+            }
+          },
+          {
+            name: 'getInventoryMovements',
+            description: 'Obtiene el historial de movimientos de inventario para análisis',
+            parameters: {
+              type: 'object',
+              properties: {
+                movementType: { type: 'string', enum: ['all', 'in', 'out', 'adjustment'], description: 'Tipo de movimiento', default: 'all' },
+                startDate: { type: 'string', description: 'Fecha de inicio (YYYY-MM-DD)', default: 'last7days' },
+                endDate: { type: 'string', description: 'Fecha de fin (YYYY-MM-DD)' },
+                productId: { type: 'string', description: 'Filtrar por producto específico (opcional)' },
+                warehouse: { type: 'string', description: 'Filtrar por bodega (opcional)' },
+                limit: { type: 'integer', description: 'Máximo de resultados', default: 50 }
+              }
+            }
+          },
+          {
+            name: 'getCategoryInventorySummary',
+            description: 'Obtiene un resumen del inventario organizado por categorías',
+            parameters: {
+              type: 'object',
+              properties: {
+                includeEmptyCategories: { type: 'boolean', description: 'Incluir categorías sin productos', default: false },
+                sortBy: { type: 'string', enum: ['name', 'count', 'value', 'stock'], description: 'Ordenar por', default: 'name' },
+                includePricing: { type: 'boolean', description: 'Incluir información de precios', default: true },
+                includeStockLevels: { type: 'boolean', description: 'Incluir niveles de stock', default: true }
+              }
+            }
+          },
+          {
+            name: 'getWarehouseInventoryComparison',
+            description: 'Compara el inventario entre diferentes bodegas',
+            parameters: {
+              type: 'object',
+              properties: {
+                warehouses: { type: 'array', items: { type: 'string' }, description: 'Lista de IDs de bodegas a comparar' },
+                includeMetrics: { type: 'boolean', description: 'Incluir métricas comparativas', default: true },
+                includeProducts: { type: 'boolean', description: 'Incluir lista de productos por bodega', default: false },
+                highlightDifferences: { type: 'boolean', description: 'Resaltar diferencias entre bodegas', default: true }
+              },
+              required: ['warehouses']
+            }
+          },
+          {
+            name: 'getInventoryTrends',
+            description: 'Analiza tendencias del inventario en el tiempo',
+            parameters: {
+              type: 'object',
+              properties: {
+                trendType: { type: 'string', enum: ['stock', 'sales', 'purchases', 'movements'], description: 'Tipo de tendencia a analizar', default: 'stock' },
+                period: { type: 'string', description: 'Período de análisis (ej: "weekly", "monthly", "quarterly")', default: 'monthly' },
+                months: { type: 'integer', description: 'Número de meses a analizar', default: 6 },
+                includeForecast: { type: 'boolean', description: 'Incluir pronóstico futuro', default: false },
+                category: { type: 'string', description: 'Filtrar por categoría específica (opcional)' }
+              }
+            }
+          },
+          {
+            name: 'quickSearchProducts',
+            description: 'Búsqueda rápida de productos por nombre, referencia o descripción. Ideal para consultas como "busca productos de mouse" o "encuentra artículos similares a teclado"',
+            parameters: {
+              type: 'object',
+              properties: {
+                termino: {
+                  type: 'string',
+                  description: 'Término de búsqueda (mínimo 2 caracteres). Puede ser nombre, referencia, descripción o código del producto'
+                },
+                limit: {
+                  type: 'number',
+                  description: 'Número máximo de resultados a retornar (default: 5, máximo: 10)',
+                  default: 5
+                }
+              },
+              required: ['termino']
+            }
+          }
         ]
       }
     };
@@ -1627,6 +1783,57 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           this.emitKatuqToolEvent('validateCoupon', response.data, response.success, response.message);
           break;
 
+        // === HERRAMIENTAS DE INVENTARIO - Delegadas al servicio especializado ===
+        case 'getInventoryStatus':
+          response = await this.delegateToInventoryTools('getInventoryStatus', args);
+          this.emitKatuqToolEvent('getInventoryStatus', response.data, response.success, response.message);
+          break;
+
+        case 'searchInventoryByCategory':
+          response = await this.delegateToInventoryTools('searchInventoryByCategory', args);
+          this.emitKatuqToolEvent('searchInventoryByCategory', response.data, response.success, response.message);
+          break;
+
+        case 'getLowStockAlerts':
+          response = await this.delegateToInventoryTools('getLowStockAlerts', args);
+          this.emitKatuqToolEvent('getLowStockAlerts', response.data, response.success, response.message);
+          break;
+
+        case 'getInventoryReport':
+          response = await this.delegateToInventoryTools('getInventoryReport', args);
+          this.emitKatuqToolEvent('getInventoryReport', response.data, response.success, response.message);
+          break;
+
+        case 'checkProductAvailability':
+          response = await this.delegateToInventoryTools('checkProductAvailability', args);
+          this.emitKatuqToolEvent('checkProductAvailability', response.data, response.success, response.message);
+          break;
+
+        case 'getInventoryMovements':
+          response = await this.delegateToInventoryTools('getInventoryMovements', args);
+          this.emitKatuqToolEvent('getInventoryMovements', response.data, response.success, response.message);
+          break;
+
+        case 'getCategoryInventorySummary':
+          response = await this.delegateToInventoryTools('getCategoryInventorySummary', args);
+          this.emitKatuqToolEvent('getCategoryInventorySummary', response.data, response.success, response.message);
+          break;
+
+        case 'getWarehouseInventoryComparison':
+          response = await this.delegateToInventoryTools('getWarehouseInventoryComparison', args);
+          this.emitKatuqToolEvent('getWarehouseInventoryComparison', response.data, response.success, response.message);
+          break;
+
+        case 'getInventoryTrends':
+          response = await this.delegateToInventoryTools('getInventoryTrends', args);
+          this.emitKatuqToolEvent('getInventoryTrends', response.data, response.success, response.message);
+          break;
+
+        case 'quickSearchProducts':
+          response = await this.delegateToInventoryTools('quickSearchProducts', args);
+          this.emitKatuqToolEvent('quickSearchProducts', response.data, response.success, response.message);
+          break;
+
         default:
           console.warn(`❌ Herramienta no reconocida: ${name}`);
           response = {
@@ -1659,6 +1866,71 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       message
     };
     this.katuqToolEventSubject.next(event);
+  }
+
+  /**
+   * Delega las herramientas de inventario al servicio especializado
+   */
+  private async delegateToInventoryTools(toolName: string, args: any): Promise<DemoResponse> {
+    try {
+      // Sincronizar estado con el servicio de inventario
+      this.inventoryToolsService.setBodegaSeleccionada(this.bodegaSeleccionada);
+      this.inventoryToolsService.setProductosCatalogo(this.productosCatalogo);
+      this.inventoryToolsService.setEmpresaActual(this.empresaActual);
+
+      // Llamar al método correspondiente en el servicio de inventario
+      let inventoryResponse: InventoryToolResponse;
+      
+      switch (toolName) {
+        case 'getInventoryStatus':
+          inventoryResponse = await this.inventoryToolsService.getInventoryStatus(args);
+          break;
+        case 'searchInventoryByCategory':
+          inventoryResponse = await this.inventoryToolsService.searchInventoryByCategory(args);
+          break;
+        case 'getLowStockAlerts':
+          inventoryResponse = await this.inventoryToolsService.getLowStockAlerts(args);
+          break;
+        case 'getInventoryReport':
+          inventoryResponse = await this.inventoryToolsService.getInventoryReport(args);
+          break;
+        case 'checkProductAvailability':
+          inventoryResponse = await this.inventoryToolsService.checkProductAvailability(args);
+          break;
+        case 'getInventoryMovements':
+          inventoryResponse = await this.inventoryToolsService.getInventoryMovements(args);
+          break;
+        case 'getCategoryInventorySummary':
+          inventoryResponse = await this.inventoryToolsService.getCategoryInventorySummary(args);
+          break;
+        case 'getWarehouseInventoryComparison':
+          inventoryResponse = await this.inventoryToolsService.getWarehouseInventoryComparison(args);
+          break;
+        case 'getInventoryTrends':
+          inventoryResponse = await this.inventoryToolsService.getInventoryTrends(args);
+          break;
+        case 'quickSearchProducts':
+          inventoryResponse = await this.inventoryToolsService.quickSearchProducts(args);
+          break;
+        default:
+          throw new Error(`Herramienta de inventario no reconocida: ${toolName}`);
+      }
+
+      // Convertir respuesta del servicio de inventario al formato DemoResponse
+      return {
+        success: inventoryResponse.success,
+        data: inventoryResponse.data,
+        message: inventoryResponse.message,
+        error: inventoryResponse.error
+      };
+    } catch (error) {
+      console.error(`Error delegando herramienta ${toolName}:`, error);
+      return {
+        success: false,
+        message: `Error ejecutando herramienta de inventario: ${toolName}`,
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   }
 
   // === HERRAMIENTAS DE GESTIÓN DE BODEGAS ===
@@ -1878,7 +2150,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
               titulo: productoMapeado.crearProducto?.titulo,
               precio: productoMapeado.precio?.precioUnitarioConIva,
               stock: productoMapeado.disponibilidad?.cantidadDisponible,
-              categoria: productoMapeado.crearProducto?.categoria
+              categoria: productoMapeado.crearProducto?.categorias?.label || 'Sin categoría'
             });
             return productoMapeado;
           });
@@ -2130,7 +2402,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       if (category) {
         console.log('🔍 Filtrando por categoría:', category);
         productosFiltrados = productosFiltrados.filter(p => 
-          ((p.crearProducto as any)?.categoria || '').toLowerCase().includes(category.toLowerCase())
+          ((p.crearProducto as any)?.categorias?.label || '').toLowerCase().includes(category.toLowerCase())
         );
       }
       
@@ -2191,7 +2463,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         id: p.cd,
         nombre: p.crearProducto?.titulo || p.nombre || 'Sin nombre',
         descripcion: p.crearProducto?.descripcion || p.descripcion || 'Sin descripción',
-        categoria: p.crearProducto?.categoria || p.categoria || 'Sin categoría',
+        categoria: p.crearProducto?.categorias?.label || p.categorias?.label || 'Sin categoría',
         precio: p.precio?.precioUnitarioConIva || p.precioUnitario || 0,
         stock: p.disponibilidad?.cantidadDisponible || p.stock || 0,
         bodega: this.bodegaSeleccionada.nombre
@@ -2487,7 +2759,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         id: productId,
         nombre: productoEncontrado.crearProducto?.titulo || (productoEncontrado as any).nombre || 'Sin nombre',
         descripcion: productoEncontrado.crearProducto?.descripcion || (productoEncontrado as any).descripcion || 'Sin descripción',
-        categoria: (productoEncontrado.crearProducto as any)?.categoria || (productoEncontrado as any).categoria || 'Sin categoría',
+        categoria: (productoEncontrado.crearProducto as any)?.categorias?.label || (productoEncontrado as any).categorias?.label || 'Sin categoría',
         cantidad: quantity,
         precio: productoEncontrado.precio?.precioUnitarioConIva || (productoEncontrado as any).precioUnitario || 0,
         precioFormateado: `$${(productoEncontrado.precio?.precioUnitarioConIva || (productoEncontrado as any).precioUnitario || 0).toLocaleString()}`,
@@ -3935,6 +4207,10 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     console.log('🏭 Bodegas demo generadas:', demoWarehouses);
     return demoWarehouses;
   }
+
+  // === MÉTODOS DE INVENTARIO ELIMINADOS ===
+  // Los métodos de inventario han sido delegados al KatuqInventoryToolsService
+  // para una mejor separación de responsabilidades
 
   /**
    * Notifica un log al sistema visual
