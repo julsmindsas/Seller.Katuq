@@ -2665,11 +2665,57 @@ export class DespachosComponent implements OnInit {
       // Convertir a string si no lo es
       let textoStr = String(texto);
       
-      // Preservar ñ y tildes, solo limpiar caracteres problemáticos
-      return textoStr
+      console.log('🔍 limpiarTexto - Texto original:', textoStr);
+      console.log('🔍 limpiarTexto - Longitud original:', textoStr.length);
+      
+      // Preservar ñ y tildes, solo limpiar emojis y caracteres problemáticos
+      let textoLimpio = textoStr
         .replace(/[çÇ]/g, 'c') // Convertir ç en c
         .replace(/[¿¡]/g, '') // Remover signos de interrogación y exclamación invertidos
-        .replace(/[^\x00-\x7F]/g, ''); // Remover cualquier otro carácter no ASCII problemático
+        // Remover TODOS los emojis y caracteres problemáticos, preservando ñ y tildes
+        .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emojis faciales
+        .replace(/[\u{1F300}-\u{1F5FF}]/gu, '') // Símbolos y pictogramas
+        .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transporte y símbolos
+        .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '') // Banderas
+        .replace(/[\u{2600}-\u{26FF}]/gu, '') // Símbolos misceláneos
+        .replace(/[\u{2700}-\u{27BF}]/gu, '') // Símbolos decorativos
+        .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Emojis suplementarios
+        .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '') // Símbolos y pictogramas extendidos
+        .replace(/[\u{1FAB0}-\u{1FABF}]/gu, '') // Símbolos de animales y naturaleza
+        .replace(/[\u{1FAC0}-\u{1FAFF}]/gu, '') // Símbolos de objetos
+        .replace(/[\u{1FAD0}-\u{1FAFF}]/gu, '') // Símbolos de comida y bebida
+        .replace(/[\u{1FAE0}-\u{1FAFF}]/gu, '') // Símbolos de objetos
+        .replace(/[\u{1FAF0}-\u{1FAFF}]/gu, '') // Símbolos de manos
+        .replace(/[\u{1F000}-\u{1F02F}]/gu, '') // Símbolos de Mahjong
+        .replace(/[\u{1F030}-\u{1F09F}]/gu, '') // Símbolos de dominó
+        .replace(/[\u{1F0A0}-\u{1F0FF}]/gu, '') // Símbolos de cartas
+        .replace(/[\u{1F100}-\u{1F64F}]/gu, '') // Emojis varios
+        .replace(/[\u{1F650}-\u{1F67F}]/gu, '') // Símbolos ornamentales
+        .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transporte y símbolos
+        .replace(/[\u{1F700}-\u{1F77F}]/gu, '') // Símbolos alquímicos
+        .replace(/[\u{1F780}-\u{1F7FF}]/gu, '') // Símbolos geométricos
+        .replace(/[\u{1F800}-\u{1F8FF}]/gu, '') // Símbolos de flechas
+        .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Emojis suplementarios
+        .replace(/[\u{1FA00}-\u{1FA6F}]/gu, '') // Símbolos de ajedrez
+        .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '') // Símbolos y pictogramas extendidos
+        .replace(/[\u{1FB00}-\u{1FBFF}]/gu, '') // Símbolos de legado
+        .replace(/[\u{1FC00}-\u{1FCFF}]/gu, '') // Símbolos de ornamentos
+        .replace(/[\u{1FD00}-\u{1FDFF}]/gu, '') // Símbolos de transporte
+        .replace(/[\u{1FE00}-\u{1FEFF}]/gu, '') // Símbolos de Unicode
+        .replace(/[\u{1FF00}-\u{1FFFF}]/gu, '') // Símbolos de Unicode
+        // Verificación adicional para emojis específicos que podrían escapar
+        .replace(/🩷/g, '') // Emoji corazón rosa específico
+        .replace(/[🩷🩵🩶🩸🩹🩺🩻🩼]/g, '') // Otros emojis de corazón
+        .replace(/[💕💖💗💘💙💚💛💜💝💞💟]/g, '') // Emojis de corazón varios
+        .replace(/[😀😃😄😁😆😅🤣😂🙂🙃😉😊😇]/g, '') // Emojis faciales básicos
+        .replace(/[😈👿👹👺💀👻👽🤖💩😺😸😹😻]/g, '') // Otros emojis
+        // Verificación final: eliminar cualquier carácter que no sea ASCII básico + letras españolas
+        .replace(/[^\x00-\x7FáéíóúñÁÉÍÓÚÑ]/g, '');
+      
+      console.log('🔍 limpiarTexto - Texto después de limpieza:', textoLimpio);
+      console.log('🔍 limpiarTexto - Longitud después de limpieza:', textoLimpio.length);
+      
+      return textoLimpio;
     };
 
     // Agregar el campo "Para:" solo si existe
