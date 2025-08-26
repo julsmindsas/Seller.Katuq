@@ -394,6 +394,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // Method to close sidebar after navigation on mobile/tablet
+  onMobileLinkClick(): void {
+    if (window.innerWidth < 992) {
+      // Close sidebar on mobile/tablet after navigation
+      setTimeout(() => {
+        this.navServices.hideMobileSidebar();
+      }, 100); // Small delay to ensure navigation starts
+    }
+  }
+
   // Nueva función para colapsar/expandir secciones
   toggleSection(section: SidebarSection): void {
     if (section.isHeaderSection) {

@@ -4,15 +4,19 @@
     <app-header></app-header>
     <!-- Page Body Start-->
     <div class="page-body-wrapper">
-      <div class="sidebar-wrapper" [attr.sidebar-layout]="layout.config.settings.sidebar_type"
-        [class.close_icon]="navServices.collapseSidebar">
+      <!-- Desktop Sidebar (hidden on mobile/tablet) -->
+      <div class="sidebar-wrapper desktop-sidebar" 
+           [attr.sidebar-layout]="layout.config.settings.sidebar_type"
+           [class.close_icon]="navServices.collapseSidebar">
         <app-sidebar></app-sidebar>
       </div>
+      
       <div class="page-body">
         <main [@fadeInAnimation]="getRouterOutletState(o)">
           <router-outlet #o="outlet"></router-outlet>
         </main>
       </div>
+      
       <!-- footer start-->
       <footer class="footer">
         <br/>
@@ -23,5 +27,8 @@
     </div>
     <!-- Page Body End-->
   </div>
+
+  <!-- Adaptive Navigation System (Bottom Nav + Mobile Sidebar) -->
+  <app-adaptive-navigation></app-adaptive-navigation>
 </div>
 <!-- page-wrapper End-->

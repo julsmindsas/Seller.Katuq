@@ -1,0 +1,694 @@
+<div class="container-fluid">
+  <!-- Header con estadísticas -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center">
+            <i class="pi pi-users me-2 text-primary"></i>
+            <h4 class="mb-0">Katuq Flow - Gestión de Leads</h4>
+          </div>
+          <div class="d-flex gap-2">
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              (click)="syncData()"
+              [disabled]="syncLoading">
+              <i class="pi" [ngClass]="syncLoading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+              <span class="ms-2">{{ syncLoading ? 'Sincronizando...' : 'Sincronizar' }}</span>
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="exportToExcel()"
+              [disabled]="exportingToExcel">
+              <i class="pi" [ngClass]="exportingToExcel ? 'pi-spin pi-spinner' : 'pi-file-excel'" me-2></i>
+              <span class="ms-2">{{ exportingToExcel ? 'Exportando...' : 'Exportar' }}</span>
+            </button>
+            <!-- Botón para probar conexión -->
+            <button
+              type="button"
+              class="btn btn-outline-info"
+              (click)="testConnection()"
+              [disabled]="testingConnection"
+              title="Probar conexión con la API">
+              <i class="pi" [ngClass]="testingConnection ? 'pi-spin pi-spinner' : 'pi-wifi'"></i>
+              <span class="ms-2">{{ testingConnection ? 'Probando...' : 'Test API' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div class="card-body">
+          <!-- Loading skeleton -->
+          <div class="row text-center" *ngIf="loading && !leadStats">
+            <div class="col-md-2" *ngFor="let item of [1,2,3,4,5,6]">
+              <div class="stat-card-skeleton p-3 rounded">
+                <div class="skeleton-line h4-skeleton mb-2"></div>
+                <div class="skeleton-line small-skeleton"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Estadísticas reales -->
+          <div class="row text-center" *ngIf="leadStats">
+            <div class="col-md-2">
+              <div class="stat-card bg-primary text-white p-3 rounded" 
+                   [class.pulse-animation]="loading">
+                <div class="h4 mb-1">{{ leadStats.total }}</div>
+                <div class="small">Total Leads</div>
+                <div class="stat-indicator" *ngIf="filters.searchTerm || filters.status || filters.source || filters.company">
+                  <i class="pi pi-filter text-xs"></i> Filtrado
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="stat-card bg-info text-white p-3 rounded"
+                   [class.pulse-animation]="loading">
+                <div class="h4 mb-1">{{ leadStats.byStatus['Nuevo'] || 0 }}</div>
+                <div class="small">Nuevos</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="stat-card bg-warning text-white p-3 rounded"
+                   [class.pulse-animation]="loading">
+                <div class="h4 mb-1">{{ leadStats.byStatus['En Proceso'] || 0 }}</div>
+                <div class="small">En Proceso</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="stat-card bg-success text-white p-3 rounded"
+                   [class.pulse-animation]="loading">
+                <div class="h4 mb-1">{{ leadStats.byStatus['Calificado'] || 0 }}</div>
+                <div class="small">Calificados</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="stat-card bg-success text-white p-3 rounded"
+                   [class.pulse-animation]="loading">
+                <div class="h4 mb-1">{{ leadStats.byStatus['Convertido'] || 0 }}</div>
+                <div class="small">Convertidos</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="stat-card bg-secondary text-white p-3 rounded"
+                   [class.pulse-animation]="loading">
+                <div class="h4 mb-1">{{ leadStats.recentActivity }}</div>
+                <div class="small">Actividad (7d)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estado sin filtros aplicados -->
+          <div class="row text-center" *ngIf="!leadStats && !loading">
+            <div class="col-12">
+              <div class="empty-stats p-4 text-center">
+                <i class="pi pi-chart-bar display-4 text-muted mb-3"></i>
+                <h5 class="text-muted">No hay estadísticas disponibles</h5>
+                <p class="text-muted">Ajusta los filtros o verifica la conexión con la API</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros de búsqueda -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="pi pi-filter me-2"></i>
+              Filtros de búsqueda
+            </h5>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="clearFilters()">
+              <i class="pi pi-times me-1"></i>
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- Búsqueda de texto -->
+            <div class="col-md-4">
+              <label class="form-label">
+                Búsqueda general
+                <span class="badge bg-info ms-2" *ngIf="searchTerm">
+                  <i class="pi pi-search me-1"></i>Activo
+                </span>
+              </label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon">
+                  <i class="pi pi-search"></i>
+                </span>
+                <input
+                  type="text"
+                  pInputText
+                  placeholder="Buscar por nombre, email, teléfono..."
+                  [(ngModel)]="searchTerm"
+                  (input)="onSearchChange($event.target.value)"
+                  class="form-control"
+                  [class.has-value]="searchTerm">
+              </div>
+            </div>
+
+            <!-- Filtro por empresa -->
+            <div class="col-md-3">
+              <label class="form-label">
+                Empresa
+                <span class="badge bg-info ms-2" *ngIf="filters.company">
+                  <i class="pi pi-building me-1"></i>{{ filters.company }}
+                </span>
+              </label>
+              <p-dropdown
+                [options]="companies"
+                [(ngModel)]="filters.company"
+                placeholder="Todas las empresas"
+                [showClear]="true"
+                (onChange)="applyFilters()"
+                class="w-100">
+              </p-dropdown>
+            </div>
+
+            <!-- Filtro por estado -->
+            <div class="col-md-2">
+              <label class="form-label">
+                Estado
+                <span class="badge bg-info ms-2" *ngIf="filters.status">
+                  <i class="pi pi-tag me-1"></i>{{ filters.status }}
+                </span>
+              </label>
+              <p-dropdown
+                [options]="statusOptions"
+                [(ngModel)]="filters.status"
+                placeholder="Todos"
+                optionLabel="label"
+                optionValue="value"
+                (onChange)="applyFilters()"
+                [showClear]="true"
+                class="w-100">
+              </p-dropdown>
+            </div>
+
+            <!-- Filtro por fuente -->
+            <div class="col-md-3">
+              <label class="form-label">
+                Fuente
+                <span class="badge bg-info ms-2" *ngIf="filters.source">
+                  <i class="pi pi-share-alt me-1"></i>Filtrada
+                </span>
+              </label>
+              <p-dropdown
+                [options]="sources"
+                [(ngModel)]="filters.source"
+                placeholder="Todas las fuentes"
+                [showClear]="true"
+                (onChange)="applyFilters()"
+                class="w-100">
+              </p-dropdown>
+            </div>
+
+            <!-- Rango de fechas -->
+            <div class="col-md-6">
+              <label class="form-label">
+                Rango de fechas
+                <span class="badge bg-info ms-2" *ngIf="filters.dateFrom || filters.dateTo">
+                  <i class="pi pi-calendar me-1"></i>Aplicado
+                </span>
+              </label>
+              <div class="row">
+                <div class="col-6">
+                  <p-calendar
+                    [(ngModel)]="filters.dateFrom"
+                    placeholder="Fecha desde"
+                    [showIcon]="true"
+                    dateFormat="dd/mm/yy"
+                    (onSelect)="applyFilters()"
+                    class="w-100">
+                  </p-calendar>
+                </div>
+                <div class="col-6">
+                  <p-calendar
+                    [(ngModel)]="filters.dateTo"
+                    placeholder="Fecha hasta"
+                    [showIcon]="true"
+                    dateFormat="dd/mm/yy"
+                    (onSelect)="applyFilters()"
+                    class="w-100">
+                  </p-calendar>
+                </div>
+              </div>
+            </div>
+
+            <!-- Indicadores de filtros activos -->
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="filter-status-container">
+                <div class="active-filters mb-2" *ngIf="hasActiveFilters()">
+                  <small class="text-muted">
+                    <i class="pi pi-filter me-1"></i>
+                    {{ getActiveFiltersCount() }} filtro(s) activo(s)
+                  </small>
+                </div>
+                <div class="button-group">
+                  <button
+                    type="button"
+                    class="btn btn-primary me-2"
+                    (click)="applyFilters()"
+                    [disabled]="loading">
+                    <i class="pi" [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-check'" me-2></i>
+                    {{ loading ? 'Aplicando...' : 'Aplicar filtros' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    (click)="clearFilters()"
+                    [disabled]="loading || !hasActiveFilters()">
+                    <i class="pi pi-times me-1"></i>
+                    Limpiar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de leads -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-0">
+                <i class="pi pi-users me-2"></i>
+                Leads ({{ totalRecords }} total)
+              </h5>
+              <small class="text-muted">
+                Página {{ currentPage + 1 }} de {{ Math.ceil(totalRecords / pageSize) || 1 }} • {{ leads.length }} resultados
+              </small>
+            </div>
+            <div class="view-toggle">
+              <button 
+                type="button" 
+                class="btn btn-sm"
+                [class.btn-primary]="viewMode === 'cards'"
+                [class.btn-outline-primary]="viewMode !== 'cards'"
+                (click)="setViewMode('cards')"
+                title="Vista de cards">
+                <i class="pi pi-th-large"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-sm ms-1"
+                [class.btn-primary]="viewMode === 'table'"
+                [class.btn-outline-primary]="viewMode !== 'table'"
+                (click)="setViewMode('table')"
+                title="Vista de tabla">
+                <i class="pi pi-list"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <!-- Vista de tabla tradicional -->
+          <div *ngIf="viewMode === 'table'">
+            <p-table
+            [value]="leads"
+            [loading]="loading"
+            [paginator]="true"
+            [rows]="pageSize"
+            [totalRecords]="totalRecords"
+            [rowsPerPageOptions]="[10, 20, 50, 100]"
+            [lazy]="true"
+            (onLazyLoad)="onLazyLoad($event)"
+            [first]="first"
+            responsiveLayout="stack"
+            [breakpoint]="'960px'"
+            styleClass="p-datatable-sm"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Página {currentPage} de {totalPages} ({totalRecords} registros)"
+            [alwaysShowPaginator]="true"
+            [showPageLinks]="true"
+            [showFirstLastIcon]="true">
+
+            <!-- Header de la tabla rediseñada -->
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 60px" class="text-center">ID</th>
+                <th style="width: 35%">Lead</th>
+                <th style="width: 120px" class="text-center">Estado</th>
+                <th style="width: 25%">Fuente</th>
+                <th style="width: 150px" class="text-center">Última Actividad</th>
+                <th style="width: 100px" class="text-center">Acciones</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-lead let-rowIndex="rowIndex">
+              <tr class="lead-row">
+                <!-- ID Compacto -->
+                <td class="text-center">
+                  <span class="p-column-title">ID:</span>
+                  <div class="lead-id">#{{ lead.mobile_id }}</div>
+                </td>
+
+                <!-- Información del Lead - Rediseñada -->
+                <td class="lead-main-info">
+                  <span class="p-column-title">Lead:</span>
+                  <div class="lead-card">
+                    <!-- Nombre principal -->
+                    <div class="lead-name">{{ lead.name }}</div>
+                    
+                    <!-- Información de contacto -->
+                    <div class="lead-contact">
+                      <div class="contact-item">
+                        <i class="pi pi-envelope"></i>
+                        <span>{{ lead.email }}</span>
+                      </div>
+                      <div class="contact-item">
+                        <i class="pi pi-phone"></i>
+                        <span>{{ lead.phone }}</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Company badge -->
+                    <div class="lead-company">
+                      <span class="company-badge">{{ lead.company }}</span>
+                    </div>
+                    
+                    <!-- Resumen colapsible mejorado -->
+                    <div class="lead-summary" *ngIf="lead.summary">
+                      <button 
+                        class="summary-toggle"
+                        type="button"
+                        (click)="toggleSummary(lead.mobile_id)"
+                        [attr.aria-expanded]="expandedSummaries.has(lead.mobile_id)">
+                        <i class="pi" [ngClass]="expandedSummaries.has(lead.mobile_id) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                        <span>{{ expandedSummaries.has(lead.mobile_id) ? 'Ocultar' : 'Ver' }} resumen</span>
+                      </button>
+                      <div class="summary-content" *ngIf="expandedSummaries.has(lead.mobile_id)">
+                        {{ lead.summary }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Estado Mejorado -->
+                <td class="text-center">
+                  <span class="p-column-title">Estado:</span>
+                  <div class="status-container">
+                    <p-tag
+                      [value]="lead.status"
+                      [severity]="getStatusSeverity(lead.status)"
+                      styleClass="status-tag">
+                    </p-tag>
+                  </div>
+                </td>
+
+                <!-- Fuente Simplificada -->
+                <td>
+                  <span class="p-column-title">Fuente:</span>
+                  <div class="source-info">
+                    <div class="source-text">{{ getSourceDisplayName(lead.source) }}</div>
+                    <div class="source-type" *ngIf="getSourceType(lead.source)">
+                      {{ getSourceType(lead.source) }}
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Actividad Compacta -->
+                <td class="text-center">
+                  <span class="p-column-title">Actividad:</span>
+                  <div class="activity-info">
+                    <div class="activity-time">{{ getTimeAgo(lead.updated_at) }}</div>
+                    <div class="activity-type" *ngIf="lead.last_called">
+                      <i class="pi pi-phone activity-icon"></i>
+                      {{ getTimeAgo(lead.last_called) }}
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Acciones Mejoradas -->
+                <td class="text-center">
+                  <span class="p-column-title">Acciones:</span>
+                  <div class="actions-container">
+                    <!-- Botón ver detalles -->
+                    <button
+                      type="button"
+                      class="action-btn view-btn"
+                      (click)="viewLeadDetails(lead)"
+                      title="Ver detalles">
+                      <i class="pi pi-eye"></i>
+                    </button>
+
+                    <!-- Dropdown estado -->
+                    <div class="dropdown">
+                      <button
+                        class="action-btn dropdown-btn"
+                        type="button"
+                        [id]="'statusDropdown' + lead.mobile_id"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        title="Cambiar estado">
+                        <i class="pi pi-cog"></i>
+                      </button>
+                      <ul class="dropdown-menu modern-dropdown" [attr.aria-labelledby]="'statusDropdown' + lead.mobile_id">
+                        <li>
+                          <a class="dropdown-item" href="javascript:void(0)" (click)="updateLeadStatus(lead, LeadStatus.NUEVO)">
+                            <i class="pi pi-circle status-icon nuevo"></i>
+                            <span>Nuevo</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="javascript:void(0)" (click)="updateLeadStatus(lead, LeadStatus.EN_PROCESO)">
+                            <i class="pi pi-clock status-icon en-proceso"></i>
+                            <span>En Proceso</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="javascript:void(0)" (click)="updateLeadStatus(lead, LeadStatus.CONTACTADO)">
+                            <i class="pi pi-phone status-icon contactado"></i>
+                            <span>Contactado</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="javascript:void(0)" (click)="updateLeadStatus(lead, LeadStatus.CALIFICADO)">
+                            <i class="pi pi-check-circle status-icon calificado"></i>
+                            <span>Calificado</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="javascript:void(0)" (click)="updateLeadStatus(lead, LeadStatus.CONVERTIDO)">
+                            <i class="pi pi-thumbs-up status-icon convertido"></i>
+                            <span>Convertido</span>
+                          </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                          <a class="dropdown-item danger" href="javascript:void(0)" (click)="updateLeadStatus(lead, LeadStatus.PERDIDO)">
+                            <i class="pi pi-times-circle status-icon perdido"></i>
+                            <span>Perdido</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <!-- Template para estado vacío -->
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center p-4">
+                  <div class="empty-state">
+                    <i class="pi pi-inbox display-4 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No se encontraron leads</h5>
+                    <p class="text-muted">
+                      No hay leads que coincidan con los filtros aplicados.
+                      <br>
+                      Intenta ajustar los criterios de búsqueda.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          </div>
+
+          <!-- Vista de cards moderna -->
+          <div *ngIf="viewMode === 'cards'" class="cards-container">
+            <!-- Loading skeleton para cards -->
+            <div class="cards-grid" *ngIf="loading">
+              <div class="lead-card-skeleton" *ngFor="let item of [1,2,3,4,5,6]">
+                <div class="skeleton-header">
+                  <div class="skeleton-circle"></div>
+                  <div class="skeleton-lines">
+                    <div class="skeleton-line w-75"></div>
+                    <div class="skeleton-line w-50"></div>
+                  </div>
+                </div>
+                <div class="skeleton-body">
+                  <div class="skeleton-line w-100"></div>
+                  <div class="skeleton-line w-80"></div>
+                  <div class="skeleton-line w-60"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cards de leads -->
+            <div class="cards-grid" *ngIf="!loading && leads.length > 0">
+              <div class="lead-card" *ngFor="let lead of leads; trackBy: trackByLeadId">
+                <!-- Header del card -->
+                <div class="card-header-modern">
+                  <div class="lead-avatar">
+                    <span>{{ getInitials(lead.name) }}</span>
+                  </div>
+                  <div class="lead-title">
+                    <h6 class="lead-name">{{ lead.name }}</h6>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="lead-id">#{{ lead.mobile_id }}</span>
+                      <!-- Info compacta solo visible en móvil -->
+                      <span class="lead-contact-mobile d-md-none">{{ lead.phone }}</span>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <div class="dropdown">
+                      <button class="action-btn-card" data-bs-toggle="dropdown">
+                        <i class="pi pi-ellipsis-v"></i>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" (click)="viewLeadDetails(lead)">
+                          <i class="pi pi-eye me-2"></i>Ver detalles
+                        </a></li>
+                        <li><a class="dropdown-item" (click)="updateLeadStatus(lead, LeadStatus.CONTACTADO)">
+                          <i class="pi pi-phone me-2"></i>Marcar contactado
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="mailto:{{ lead.email }}">
+                          <i class="pi pi-envelope me-2"></i>Enviar email
+                        </a></li>
+                        <li><a class="dropdown-item" href="tel:{{ lead.phone }}">
+                          <i class="pi pi-phone me-2"></i>Llamar
+                        </a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Status badge -->
+                <div class="status-badge-container">
+                  <span class="status-badge" [ngClass]="'status-' + getStatusClass(lead.status)">
+                    <i class="pi" [ngClass]="getStatusIcon(lead.status)"></i>
+                    {{ lead.status }}
+                  </span>
+                </div>
+
+                <!-- Información de contacto -->
+                <div class="contact-info">
+                  <div class="contact-item">
+                    <i class="pi pi-envelope"></i>
+                    <span>{{ lead.email }}</span>
+                  </div>
+                  <div class="contact-item">
+                    <i class="pi pi-phone"></i>
+                    <span>{{ lead.phone }}</span>
+                  </div>
+                  <!-- Company visible solo en desktop -->
+                  <div class="contact-item d-none d-md-flex">
+                    <i class="pi pi-building"></i>
+                    <span>{{ lead.company }}</span>
+                  </div>
+                  <!-- En móvil: mostrar fuente compacta -->
+                  <div class="contact-item d-md-none">
+                    <i class="pi pi-share-alt"></i>
+                    <span>{{ getSourceDisplayName(lead.source) }}</span>
+                  </div>
+                </div>
+
+                <!-- Fuente y actividad -->
+                <div class="meta-info">
+                  <div class="source-info-card">
+                    <span class="source-label">Fuente:</span>
+                    <span class="source-value">{{ getSourceDisplayName(lead.source) }}</span>
+                  </div>
+                  <div class="activity-info-card">
+                    <span class="activity-label">Actualizado:</span>
+                    <span class="activity-value">{{ getTimeAgo(lead.updated_at) }}</span>
+                  </div>
+                </div>
+
+                <!-- Resumen expandible -->
+                <div class="summary-section" *ngIf="lead.summary">
+                  <button 
+                    class="summary-toggle-card"
+                    (click)="toggleSummary(lead.mobile_id)"
+                    [class.expanded]="expandedSummaries.has(lead.mobile_id)">
+                    <span>Resumen del lead</span>
+                    <i class="pi" [ngClass]="expandedSummaries.has(lead.mobile_id) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                  </button>
+                  <div class="summary-content-card" *ngIf="expandedSummaries.has(lead.mobile_id)">
+                    {{ lead.summary }}
+                  </div>
+                </div>
+
+                <!-- Footer con acciones rápidas -->
+                <div class="card-footer-modern">
+                  <button class="quick-action-btn primary" (click)="updateLeadStatus(lead, LeadStatus.CONTACTADO)">
+                    <i class="pi pi-phone"></i>
+                    <span>Contactar</span>
+                  </button>
+                  <button class="quick-action-btn secondary" (click)="updateLeadStatus(lead, LeadStatus.CALIFICADO)">
+                    <i class="pi pi-check"></i>
+                    <span>Calificar</span>
+                  </button>
+                  <button class="quick-action-btn danger" (click)="updateLeadStatus(lead, LeadStatus.PERDIDO)">
+                    <i class="pi pi-times"></i>
+                    <span>Descartar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estado vacío para cards -->
+            <div class="empty-cards" *ngIf="!loading && leads.length === 0">
+              <div class="empty-illustration">
+                <i class="pi pi-users"></i>
+              </div>
+              <h5>No se encontraron leads</h5>
+              <p>No hay leads que coincidan con los filtros aplicados.<br>Intenta ajustar los criterios de búsqueda.</p>
+            </div>
+
+            <!-- Paginación para cards -->
+            <div class="cards-pagination" *ngIf="!loading && leads.length > 0">
+              <p-paginator
+                [rows]="pageSize"
+                [totalRecords]="totalRecords"
+                [rowsPerPageOptions]="[20, 35, 50, 100]"
+                (onPage)="onCardPageChange($event)"
+                [first]="first"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Página {currentPage} de {totalPages} ({totalRecords} leads)"
+                [alwaysShowPaginator]="true">
+              </p-paginator>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast para notificaciones -->
+<p-toast></p-toast>
+
+<!-- Dialog de confirmación -->
+<p-confirmDialog></p-confirmDialog>

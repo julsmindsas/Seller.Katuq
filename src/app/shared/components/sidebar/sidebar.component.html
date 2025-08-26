@@ -101,7 +101,7 @@
            *ngFor="let result of searchResults"
            role="option">
         <a [routerLink]="result.path" 
-           (click)="clearSearch()"
+           (click)="clearSearch(); onMobileLinkClick()"
            class="search-result-link">
           <i class="fa" [ngClass]="getMenuIcon(result.icon, result.title)" aria-hidden="true"></i>
           <span>{{result.title | translate}}</span>
@@ -131,6 +131,7 @@
           *ngFor="let favorite of favoriteItems" 
           role="listitem">
         <a [routerLink]="favorite.path" 
+           (click)="onMobileLinkClick()"
            class="favorite-link"
            [attr.aria-label]="'Ir a ' + (favorite.title | translate)">
           <i class="fa" [ngClass]="getMenuIcon(favorite.icon, favorite.title)" aria-hidden="true"></i>
@@ -188,6 +189,7 @@
             <!-- Item sin hijos (Link directo) -->
             <a *ngIf="!item.children && item.type === 'link'" 
                [routerLink]="item.path"
+               (click)="onMobileLinkClick()"
                routerLinkActive="active"
                class="menu-link"
                [class.collapsed-link]="collapseMenu"
@@ -276,6 +278,7 @@
                 <!-- Subitem sin hijos -->
                 <a *ngIf="!child.children && child.type === 'link'" 
                    [routerLink]="child.path"
+                   (click)="onMobileLinkClick()"
                    routerLinkActive="active"
                    class="submenu-link"
                    role="menuitem">
@@ -312,6 +315,7 @@
                       [class.active]="grandchild.active"
                       role="none">
                     <a [routerLink]="grandchild.path"
+                       (click)="onMobileLinkClick()"
                        routerLinkActive="active"
                        class="sub-submenu-link"
                        role="menuitem">

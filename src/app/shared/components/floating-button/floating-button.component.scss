@@ -29,7 +29,7 @@ a {
     position: fixed; // Asegura que el contenedor esté fijo en la pantalla
     bottom: 20px;    // Posición desde abajo
     right: 20px;     // Posición desde la derecha
-    z-index: 1000;   // Asegura que esté sobre la mayoría del contenido
+    z-index: 990;    // Reducido para estar debajo del bottom navigation (z-index: 1000)
     width: 72px;     // Ancho inicial (tamaño del botón)
     height: 72px;    // Alto inicial (tamaño del botón)
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); // Transición suave para cambios de tamaño/posición
@@ -87,7 +87,7 @@ a {
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     position: relative;
-    z-index: 1001;
+    z-index: 991;
     font-size: 26px;
     border: 2px solid rgba(255, 255, 255, 0.8); /* Borde blanco para mejor definición */
     overflow: hidden; /* Asegura que el contenido no desborde */
@@ -1019,6 +1019,8 @@ a {
 // Media queries para responsividad
 @media (max-width: 768px) {
     .floating-button-container {
+        // Ajustar posición para evitar solaparse con bottom navigation
+        bottom: 80px; // Elevado para dar espacio al bottom navigation
         &.open {
             width: 100%;
             height: 100%;

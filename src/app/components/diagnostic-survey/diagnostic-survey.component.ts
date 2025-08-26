@@ -3,6 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms'; // Se agreg
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { KatuqQuickStartService, DiagnosticResponse } from '../../shared/services/quickstart/katuq-quickstart.service';
+import { ContextualQuestionsService, ContextualQuestion } from '../../shared/services/quickstart/contextual-questions.service';
 
 @Component({
     selector: 'app-diagnostic-survey',
@@ -12,11 +14,11 @@ import { environment } from '../../../environments/environment';
 export class DiagnosticSurveyComponent implements OnInit {
 
     surveyData = {
-        "formTitle": "Diagnóstico para la Transformación Digital de tu Negocio",
-        "formDescription": "Con los siguientes datos, prepararemos la mejor interfaz que se acomoda a tus necesidades.",
+        "formTitle": "Diagnóstico Rápido para tu Negocio Digital",
+        "formDescription": "Solo 8 preguntas esenciales para crear la configuración perfecta para tu negocio.",
         "sections": [
             {
-                "sectionTitle": "Información General del Negocio",
+                "sectionTitle": "Diagnóstico Esencial",
                 "questions": [
                     {
                         "id": "q1",
@@ -25,20 +27,9 @@ export class DiagnosticSurveyComponent implements OnInit {
                         "options": [
                             "Retail - Comercial",
                             "Manufactura",
+                            "Restaurante",
+                            "Servicios",
                             "Otros"
-                        ],
-                        "allowOther": true
-                    },
-                    {
-                        "id": "q2",
-                        "question": "¿Cómo encontraste Katuq?",
-                        "type": "single_choice",
-                        "options": [
-                            "Redes Sociales",
-                            "Anuncio en Google",
-                            "Recomendación",
-                            "Evento o conferencia",
-                            "Otro"
                         ],
                         "allowOther": true
                     },
@@ -47,41 +38,12 @@ export class DiagnosticSurveyComponent implements OnInit {
                         "question": "¿En qué etapa de digitalización está tu empresa?",
                         "type": "single_choice",
                         "options": [
-                            "Opero 100% offline (Sin herramientas digitales), papel, Excel",
-                            "Uso algunas herramientas digitales, pero no todo está conectado",
-                            "Tengo un software, pero quiero mejorar mis procesos",
-                            "Ya opero con sistemas digitales avanzados, pero quiero ver alternativas"
+                            "Opero 100% offline (papel, Excel)",
+                            "Uso algunas herramientas digitales básicas",
+                            "Tengo un software, pero quiero mejorar",
+                            "Ya opero digitalmente, busco alternativas"
                         ]
                     },
-                    {
-                        "id": "q4",
-                        "question": "¿Cómo manejas actualmente la administración de tu negocio?",
-                        "type": "single_choice",
-                        "options": [
-                            "Todo manualmente en papel o Excel",
-                            "Uso herramientas digitales básicas, pero no están conectadas",
-                            "Tengo varios sistemas, pero no están bien integrados",
-                            "Uso un ERP / Plataforma centralizada"
-                        ]
-                    },
-                    {
-                        "id": "q5",
-                        "question": "¿Qué es más importante para tu negocio en este momento? (Selecciona una opción)",
-                        "type": "single_choice",
-                        "options": [
-                            "Optimizar la gestión de productos e inventario",
-                            "Mejorar la logística y despachos",
-                            "Automatizar pagos y facturación",
-                            "Vender más con marketing digital",
-                            "Mejorar la experiencia del cliente",
-                            "Expandirme a nuevos mercados"
-                        ]
-                    }
-                ]
-            },
-            {
-                "sectionTitle": "Gestión de Productos y Ventas",
-                "questions": [
                     {
                         "id": "q6",
                         "question": "¿Cuántos productos tienes en tu catálogo?",
@@ -90,263 +52,65 @@ export class DiagnosticSurveyComponent implements OnInit {
                             "Menos de 50",
                             "Entre 50 y 200",
                             "Entre 200 y 500",
-                            "Entre 500 y 1.000",
-                            "Más de 1.000"
+                            "Más de 500"
                         ]
                     },
                     {
                         "id": "q7",
-                        "question": "¿Tienes diferentes tipos de clientes?",
+                        "question": "¿Qué tipo de clientes tienes?",
                         "type": "single_choice",
                         "options": [
-                            "Solo vendo a clientes finales (B2C)",
-                            "Solo vendo a empresas (B2B)",
-                            "Vendo tanto a clientes finales como a empresas (B2B y B2C)"
+                            "Solo clientes finales (B2C)",
+                            "Solo empresas (B2B)",
+                            "Ambos: clientes finales y empresas"
                         ]
                     },
                     {
                         "id": "q8",
-                        "question": "¿Dónde vendes más actualmente? (Selecciona una opción)",
+                        "question": "¿Dónde vendes más actualmente?",
                         "type": "single_choice",
                         "options": [
-                            "Punto de venta",
-                            "Ecommerce propio",
-                            "Marketplaces (Amazon, Mercado Libre, etc.)",
-                            "Redes Sociales",
-                            "Dropshipping",
-                            "Tienda a Tienda",
+                            "Punto de venta físico",
+                            "Tienda online propia",
+                            "Marketplaces (Amazon, MercadoLibre)",
+                            "Redes sociales",
+                            "Venta directa/domicilio",
                             "Otro"
                         ],
                         "allowOther": true
-                    },
-                    {
-                        "id": "q9",
-                        "question": "¿Cuál es el proveedor de tu página web?",
-                        "type": "single_choice",
-                        "options": [
-                            "Shopify",
-                            "Tienda Nube",
-                            "Wordpress + WooCommerce",
-                            "Magento",
-                            "Wix",
-                            "Otro"
-                        ],
-                        "allowOther": true
-                    }
-                ]
-            },
-            {
-                "sectionTitle": "Pedidos y Logística",
-                "questions": [
-                    {
-                        "id": "q10",
-                        "question": "¿Cómo gestionas los pedidos y envíos?",
-                        "type": "single_choice",
-                        "options": [
-                            "Excel",
-                            "Automatizado con software propio",
-                            "Delegado a terceros como un Fulfillment y/o Pasarelas de envío"
-                        ]
-                    },
-                    {
-                        "id": "q11",
-                        "question": "¿Cómo organizas la entrega de tus pedidos?",
-                        "type": "single_choice",
-                        "options": [
-                            "Lo que vendo, lo pongo en cola de despacho",
-                            "Permito que el cliente programe la fecha y hora de entrega",
-                            "Tengo ambas opciones disponibles a mis clientes"
-                        ]
                     },
                     {
                         "id": "q12",
-                        "question": "¿Cómo gestionas tu inventario?",
+                        "question": "¿Cómo manejas tu inventario?",
                         "type": "single_choice",
                         "options": [
-                            "Ventas sobre pedido",
-                            "Inventario disponible en stock",
-                            "Ofrezco ambas opciones"
-                        ]
-                    },
-                    {
-                        "id": "q13",
-                        "question": "¿Cuál es la cobertura principal de tus pedidos? (Selecciona una opción)",
-                        "type": "single_choice",
-                        "options": [
-                            "Local",
-                            "Departamental",
-                            "Nacional",
-                            "Internacional"
-                        ]
-                    },
-                    {
-                        "id": "q14",
-                        "question": "¿Cuánto tiempo tardas en procesar y despachar un pedido?",
-                        "type": "single_choice",
-                        "options": [
-                            "Mismo día",
-                            "24-48 horas",
-                            "Más de 48 horas"
-                        ]
-                    },
-                    {
-                        "id": "q15",
-                        "question": "¿Tus clientes pueden hacer seguimiento de sus pedidos en línea?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí, ya tienen acceso a un portal de seguimiento",
-                            "No, pero me interesa",
-                            "No lo considero necesario"
-                        ]
-                    }
-                ]
-            },
-            {
-                "sectionTitle": "Pagos y Facturación",
-                "questions": [
-                    {
-                        "id": "q16",
-                        "question": "¿Cuentas con integración para pagos en línea?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí, está integrada en mi web",
-                            "Sí, pero no está integrada, valido y asiento el pago manualmente",
-                            "No"
-                        ]
-                    },
-                    {
-                        "id": "q17",
-                        "question": "¿Tienes facturación electrónica?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí, integrada y automática",
-                            "Sí, pero la hago manualmente paso por paso",
-                            "No",
-                            "En proceso"
-                        ]
-                    },
-                    {
-                        "id": "q18",
-                        "question": "¿Cuál es el método de pago que más usan tus clientes? (Selecciona una opción)",
-                        "type": "single_choice",
-                        "options": [
-                            "Tarjeta de crédito / débito",
-                            "PSE",
-                            "Transferencias bancarias",
-                            "Pagos contra entrega",
-                            "Nequi / Daviplata",
-                            "PayPal / Stripe",
-                            "Criptomonedas",
-                            "Otro"
-                        ],
-                        "allowOther": true
-                    }
-                ]
-            },
-            {
-                "sectionTitle": "Publicidad y Marketing",
-                "questions": [
-                    {
-                        "id": "q19",
-                        "question": "¿Tienes una base de datos de clientes?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí, la gestiono en Excel",
-                            "Sí, uso un CRM",
-                            "No, pero quiero empezar a construir una"
-                        ]
-                    },
-                    {
-                        "id": "q20",
-                        "question": "¿Inviertes regularmente en publicidad digital?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí, mensualmente",
-                            "Sí, ocasionalmente",
-                            "No, pero quiero empezar",
-                            "No, no lo considero necesario"
-                        ]
-                    },
-                    {
-                        "id": "q21",
-                        "question": "¿Para la pauta publicitaria de tu comercio cuál de los siguientes canales usas más frecuentemente? (Selecciona una opción)",
-                        "type": "single_choice",
-                        "options": [
-                            "SMS marketing",
-                            "Email marketing",
-                            "WhatsApp Marketing"
-                        ]
-                    }
-                ]
-            },
-            {
-                "sectionTitle": "Análisis de Innovación y Digitalización",
-                "questions": [
-                    {
-                        "id": "q22",
-                        "question": "¿Utilizas IA en tu negocio para mejorar operaciones o ventas?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí",
-                            "No"
-                        ]
-                    },
-                    {
-                        "id": "q23",
-                        "question": "¿Usas un CRM para gestionar la data de tus clientes?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí",
-                            "No"
-                        ]
-                    },
-                    {
-                        "id": "q24",
-                        "question": "¿Tienes integración con transportadoras para envíos?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí",
-                            "No"
-                        ]
-                    }
-                ]
-            },
-            {
-                "sectionTitle": "Estrategia y Crecimiento",
-                "questions": [
-                    {
-                        "id": "q25",
-                        "question": "¿Estás interesado en usar herramientas de IA para mejorar tu negocio?",
-                        "type": "single_choice",
-                        "options": [
-                            "Sí, quiero explorar opciones para automatización",
-                            "Sí, pero no sé cómo aplicarlas",
-                            "No, prefiero seguir con mi sistema actual"
+                            "Vendo sobre pedido (no mantengo stock)",
+                            "Mantengo inventario disponible",
+                            "Combinación de ambos"
                         ]
                     },
                     {
                         "id": "q26",
-                        "question": "¿Cuál es tu principal objetivo de crecimiento para los próximos 12 meses? (Selecciona la opción que mejor represente tu plan actual)",
+                        "question": "¿Cuál es tu principal objetivo para los próximos 12 meses?",
                         "type": "single_choice",
                         "options": [
-                            "Aumentar mis ventas en el mismo mercado (Optimizar estrategias y mejorar presencia en mi mercado actual)",
-                            "Mantener mis ventas estables (Consolidar mi negocio sin grandes cambios en ventas)",
-                            "Mejorar la productividad y rentabilidad (Reducir costos, automatizar procesos y hacer más eficiente la operación)",
-                            "Expandirme a nuevos mercados nacionales (Abrir operaciones en otras ciudades o regiones dentro del país)",
-                            "Internacionalizar mi negocio (Llevar mis productos/servicios a mercados fuera del país)",
-                            "No tengo un plan de expansión en este momento"
+                            "Aumentar ventas en mi mercado actual",
+                            "Mejorar eficiencia y reducir costos",
+                            "Expandirme a nuevos mercados",
+                            "Mantener operación estable",
+                            "No tengo un plan definido"
                         ]
                     },
                     {
                         "id": "q27",
-                        "question": "¿Cuál es el mayor obstáculo para escalar tu negocio?",
+                        "question": "¿Cuál es tu mayor obstáculo para crecer?",
                         "type": "single_choice",
                         "options": [
-                            "Falta de automatización para optimizar costos",
+                            "Falta de automatización",
                             "Falta de herramientas tecnológicas",
-                            "Dificultades con la logística y envíos",
-                            "Problemas para conseguir más clientes",
-                            "Resistencia al cambio y la digitalización",
+                            "Problemas de logística",
+                            "Dificultad para conseguir clientes",
+                            "Resistencia al cambio",
                             "Otro"
                         ],
                         "allowOther": true
@@ -363,30 +127,44 @@ export class DiagnosticSurveyComponent implements OnInit {
     summaryHTML: string = "";
     submissionSuccess: boolean = false;
     welcomeMessage: string = "";
-    currentStep: 'questionnaire' | 'introduction' | 'registration' | 'summary' = 'questionnaire';
+    currentStep: 'questionnaire' | 'contextual' | 'introduction' | 'registration' | 'summary' | 'quickstart-success' = 'questionnaire';
+    
+    // Variables para Quick Start
+    quickStartInProgress: boolean = false;
+    quickStartCompleted: boolean = false;
+    quickStartError: string = "";
+    quickStartMessage: string = "";
+    nextSteps: string[] = [];
+
+    // Variables para preguntas contextuales
+    contextualQuestions: ContextualQuestion[] = [];
+    currentContextualIndex: number = 0;
+    contextualResponses: { [id: string]: string } = {};
 
     mainForm: FormGroup; // Formulario principal
     isProcessing: boolean = false; // nueva bandera para animación de procesamiento
 
-    // Definición única de registrationQuestions
+    // Registro simplificado: solo 4 campos esenciales
     registrationQuestions = [
-        { formControl: 'nombre', question: '¿Cuál es el Nombre Completo o Razón Social de la empresa?', placeholder: 'Nombre o Razón Social' },
-        { formControl: 'nomComercial', question: '¿Cuál es el Nombre Comercial de la empresa?', placeholder: 'Nombre Comercial' },
-        { formControl: 'nit', question: '¿Cuál es el CC o NIT de la empresa?', placeholder: 'CC o NIT' },
-        { formControl: 'digitoVerificacion', question: '¿Cuál es el DV de la empresa?', placeholder: 'DV' },
-        { formControl: 'correo', question: '¿Cuál es el correo de contacto de la empresa?', placeholder: 'Correo' },
-        { formControl: 'celular', question: '¿Cuál es el número de celular de la empresa?', placeholder: 'Celular' }
+        { formControl: 'nombre', question: '¿Cuál es el nombre de tu empresa?', placeholder: 'Nombre de la empresa' },
+        { formControl: 'nit', question: '¿Cuál es tu NIT o documento de identidad?', placeholder: 'NIT o cédula' },
+        { formControl: 'correo', question: '¿Cuál es tu correo electrónico?', placeholder: 'correo@ejemplo.com' },
+        { formControl: 'celular', question: '¿Cuál es tu número de celular?', placeholder: 'Número de celular' }
     ];
     registrationIndex = 0;
 
-    constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
+    constructor(
+        private fb: FormBuilder, 
+        private http: HttpClient, 
+        private router: Router,
+        private quickStartService: KatuqQuickStartService,
+        private contextualQuestionsService: ContextualQuestionsService
+    ) {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
             registration: this.fb.group({
                 nombre: ['', Validators.required],
-                nomComercial: ['', Validators.required],
-                nit: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
-                digitoVerificacion: ['', [Validators.required, Validators.pattern('^[0-9]$')]],
+                nit: ['', Validators.required],
                 correo: ['', [Validators.required, Validators.email]],
                 celular: ['', [Validators.required, Validators.pattern('^[0-9]+$')]]
             })
@@ -434,7 +212,22 @@ export class DiagnosticSurveyComponent implements OnInit {
             this.currentSectionIndex++;
             this.currentQuestionIndex = 0;
         } else {
-            this.confirmFinish();
+            // Terminó el cuestionario principal, evaluar preguntas contextuales
+            this.evaluateContextualQuestions();
+        }
+    }
+
+    evaluateContextualQuestions() {
+        // Obtener preguntas contextuales basadas en respuestas
+        this.contextualQuestions = this.contextualQuestionsService.getContextualQuestions(this.responses, 2);
+        
+        if (this.contextualQuestions.length > 0) {
+            // Mostrar preguntas contextuales
+            this.currentStep = 'contextual';
+            this.currentContextualIndex = 0;
+        } else {
+            // No hay preguntas contextuales, ir directo al registro
+            this.currentStep = 'introduction';
         }
     }
 
@@ -448,7 +241,7 @@ export class DiagnosticSurveyComponent implements OnInit {
                 summary += `<p style="margin: 0 0 10px;"><strong>${q.question}</strong><br><em>${this.responses[q.id] || 'Sin respuesta'}</em></p>`;
             });
         });
-        summary += `<h3 style="margin: 20px 0 10px; color: #9020FF; font-size: 1.5em;">Registro de Empresa</h3>`;
+        summary += `<h3 style="margin: 20px 0 10px; color: #9020FF; font-size: 1.5em;">Información de Empresa</h3>`;
         this.registrationQuestions.forEach(item => {
             const value = this.mainForm.get('registration.' + item.formControl)?.value;
             summary += `<p style="margin: 0 0 10px;"><strong>${item.question}</strong><br><em>${value ? value : 'Sin respuesta'}</em></p>`;
@@ -476,7 +269,7 @@ export class DiagnosticSurveyComponent implements OnInit {
         }
     }
 
-    submitResponses() {
+    async submitResponses() {
         // Realiza trim de los inputs antes de enviarlos
         this.trimRegistrationValues();
         const responsesArray: { questionId: string; question: string; answer: string }[] = [];
@@ -494,19 +287,90 @@ export class DiagnosticSurveyComponent implements OnInit {
             registration: registrationData
         };
         const apiUrl = environment.urlApi + '/v1/diagnostics/saveSurveyResponse';
-        this.http.post(apiUrl, payload).subscribe({
-            next: (res) => {
-                console.log("Respuestas enviadas:", res);
-                this.submissionSuccess = true;
-                const empresa = this.mainForm.get('registration.nombre')?.value || 'tu empresa';
-                this.welcomeMessage = `${empresa}`;
-                // Inicia el proceso: primero se muestra "Procesando"
-                this.processAndRedirect();
-            },
-            error: (err) => {
-                console.error("Error al enviar respuestas", err);
-            }
+        
+        try {
+            const response: any = await this.http.post(apiUrl, payload).toPromise();
+            console.log("Respuestas enviadas:", response);
+            
+            // Iniciar Quick Start automáticamente
+            await this.startQuickStart(response, registrationData, responsesArray);
+            
+        } catch (error) {
+            console.error("Error al enviar respuestas", error);
+            // En caso de error, mostrar proceso tradicional
+            this.submissionSuccess = true;
+            const empresa = this.mainForm.get('registration.nombre')?.value || 'tu empresa';
+            this.welcomeMessage = `${empresa}`;
+            this.processAndRedirect();
+        }
+    }
+
+    async startQuickStart(apiResponse: any, registrationData: any, responsesArray: any[]) {
+        this.quickStartInProgress = true;
+        this.currentStep = 'quickstart-success';
+        
+        // Suscribirse al status del Quick Start
+        this.quickStartService.quickStartStatus$.subscribe(status => {
+            this.quickStartMessage = status.message;
         });
+
+        // Preparar datos para Quick Start (incluir respuestas contextuales)
+        const allResponses = { ...this.responses, ...this.contextualResponses };
+        const diagnosticData: DiagnosticResponse = {
+            responses: allResponses,
+            registration: registrationData,
+            aiRecommendation: apiResponse.aiRecommendation || {
+                modulosRecomendados: ['POS', 'Inventarios'],
+                permisos: [
+                    'ver_dashboard',
+                    'gestionar_productos',
+                    'gestionar_inventario', 
+                    'gestionar_pedidos',
+                    'usar_pos'
+                ],
+                sector: this.responses.q1 || 'Retail - Comercial',
+                complejidad: 'basica',
+                canales: ['POS']
+            }
+        };
+
+        try {
+            // Ejecutar Quick Start
+            const quickStartResult = await this.quickStartService.setupQuickStart(diagnosticData);
+            
+            if (quickStartResult.success) {
+                this.quickStartCompleted = true;
+                this.quickStartInProgress = false;
+                this.welcomeMessage = registrationData.nombre;
+                this.nextSteps = quickStartResult.nextSteps || [];
+                this.quickStartMessage = quickStartResult.message || "¡Tu comercio está configurado y listo!";
+                
+                // Redirigir después de mostrar éxito
+                setTimeout(() => {
+                    this.redirectToMainSystem();
+                }, 8000);
+                
+            } else {
+                throw new Error(quickStartResult.error || 'Error en configuración automática');
+            }
+            
+        } catch (error) {
+            console.error('Error en Quick Start:', error);
+            this.quickStartInProgress = false;
+            this.quickStartError = error.message || 'Error en la configuración automática';
+            
+            // Fallback al proceso tradicional
+            setTimeout(() => {
+                this.submissionSuccess = true;
+                this.welcomeMessage = registrationData.nombre;
+                this.processAndRedirect();
+            }, 3000);
+        }
+    }
+
+    redirectToMainSystem() {
+        // Redirigir al dashboard principal en lugar del login
+        this.router.navigate(['/dashboard']);
     }
 
     processAndRedirect(): void {
@@ -575,5 +439,59 @@ export class DiagnosticSurveyComponent implements OnInit {
     isLastQuestion() {
         return this.currentSectionIndex === this.surveyData.sections.length - 1 &&
             this.currentQuestionIndex === this.currentSection.questions.length - 1;
+    }
+
+    // Métodos para preguntas contextuales
+    get currentContextualQuestion() {
+        return this.contextualQuestions[this.currentContextualIndex];
+    }
+
+    selectContextualOption(option: string) {
+        this.contextualResponses[this.currentContextualQuestion.id] = option;
+        
+        // Avanzar automáticamente a la siguiente pregunta contextual
+        setTimeout(() => {
+            this.nextContextualQuestion();
+        }, 300);
+    }
+
+    nextContextualQuestion() {
+        if (this.currentContextualIndex < this.contextualQuestions.length - 1) {
+            this.currentContextualIndex++;
+        } else {
+            // Terminaron las preguntas contextuales, ir al registro
+            this.currentStep = 'introduction';
+        }
+    }
+
+    backContextualQuestion() {
+        if (this.currentContextualIndex > 0) {
+            this.currentContextualIndex--;
+        } else {
+            // Si está en la primera pregunta contextual, volver al cuestionario principal
+            this.currentStep = 'questionnaire';
+            // Posicionarse en la última pregunta del cuestionario principal
+            this.currentSectionIndex = this.surveyData.sections.length - 1;
+            this.currentQuestionIndex = this.currentSection.questions.length - 1;
+        }
+    }
+
+    canGoBackContextual() {
+        return this.currentContextualIndex > 0 || this.canGoBack();
+    }
+
+    isLastContextualQuestion() {
+        return this.currentContextualIndex === this.contextualQuestions.length - 1;
+    }
+
+    getStepNumber(): number {
+        switch(this.currentStep) {
+            case 'questionnaire': return 1;
+            case 'contextual': return 2;
+            case 'introduction': return this.contextualQuestions.length > 0 ? 3 : 2;
+            case 'registration': return this.contextualQuestions.length > 0 ? 3 : 2;
+            case 'summary': return this.contextualQuestions.length > 0 ? 4 : 3;
+            default: return 1;
+        }
     }
 }

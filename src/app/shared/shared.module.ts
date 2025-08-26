@@ -55,6 +55,10 @@ import { POSPedidosUtilService } from '../components/pos/pos-service/pos-pedidos
 import { BaseService } from './services/base.service';
 import { CacheService } from './services/cache/cache.service';
 import { ProduccionService } from './services/produccion/produccion.service';
+// Mobile Navigation Components
+import { BottomNavigationComponent } from './components/bottom-navigation/bottom-navigation.component';
+import { AdaptiveNavigationComponent } from './components/adaptive-navigation/adaptive-navigation.component';
+import { HapticFeedbackService } from './services/haptic-feedback.service';
 
 @NgModule({
   declarations: [
@@ -88,7 +92,10 @@ import { ProduccionService } from './services/produccion/produccion.service';
     BlankComponent,
     PageNotFoundComponent,
     SharedChangePasswordComponent,
-    PlanSelectorComponent
+    PlanSelectorComponent,
+    // Mobile Navigation Components
+    BottomNavigationComponent,
+    AdaptiveNavigationComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],
@@ -115,7 +122,8 @@ import { ProduccionService } from './services/produccion/produccion.service';
     POSPedidosUtilService,
     BaseService,
     CacheService,
-    ProduccionService
+    ProduccionService,
+    HapticFeedbackService
     // SE ELIMINAN LOS PROVEEDORES DE HERRAMIENTAS DE AQUÍ
     // { provide: TOOL_ADAPTER, useClass: DefaultToolAdapterService },
     // { provide: TOOL_REGISTRARS, useExisting: SalesToolsRegistrarService, multi: true },
@@ -140,7 +148,10 @@ import { ProduccionService } from './services/produccion/produccion.service';
     ImagesManagerComponent,
     KatuqIntelligenceComponent,
     SharedChangePasswordComponent,
-    CarouselModule
+    CarouselModule,
+    // Mobile Navigation Components
+    BottomNavigationComponent,
+    AdaptiveNavigationComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],

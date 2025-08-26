@@ -2,8 +2,62 @@
   <!-- Logo posicionado en la esquina superior izquierda -->
   <img class="survey-logo" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo">
   <div class="survey-form animate-fancy">
-    <!-- Mostrar mensaje de éxito -->
-    <div *ngIf="submissionSuccess">
+    <!-- Mostrar mensaje de éxito del Quick Start -->
+    <div *ngIf="currentStep === 'quickstart-success'">
+      <!-- Proceso de configuración automática -->
+      <div *ngIf="quickStartInProgress" class="quickstart-processing">
+        <div class="welcome-text" style="margin-top:20px;">
+          {{ 'Configurando tu comercio automáticamente...' | translate }}
+        </div>
+        <div class="quickstart-message" style="font-size: 1.2rem; margin: 20px 0;">
+          {{ quickStartMessage }}
+        </div>
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Quick Start completado exitosamente -->
+      <div *ngIf="quickStartCompleted && !quickStartInProgress" class="quickstart-success">
+        <div class="welcome-text">
+          {{ '¡PERFECTO!' | translate }} <span class="highlight">{{ welcomeMessage | uppercase }}</span>
+        </div>
+        <div class="welcome-text-sm" style="margin: 20px 0;">
+          {{ quickStartMessage }}
+        </div>
+        
+        <div class="next-steps-container" style="margin: 30px 0; text-align: left;">
+          <h3 style="color: #9020FF; font-size: 1.5rem; margin-bottom: 15px;">
+            {{ '¿Qué puedes hacer ahora?' | translate }}
+          </h3>
+          <ul class="next-steps-list">
+            <li *ngFor="let step of nextSteps" style="margin: 8px 0; font-size: 1.1rem;">
+              ✅ {{ step }}
+            </li>
+          </ul>
+        </div>
+
+        <div class="quick-actions" style="margin: 30px 0;">
+          <button class="cta-button primary" (click)="redirectToMainSystem()">
+            {{ 'Ir al Panel Principal' | translate }} 🚀
+          </button>
+        </div>
+      </div>
+
+      <!-- Error en Quick Start - Fallback -->
+      <div *ngIf="quickStartError && !quickStartInProgress" class="quickstart-error">
+        <div style="color: #ff6b6b; font-size: 1.3rem; margin: 20px 0;">
+          {{ quickStartError }}
+        </div>
+        <div style="font-size: 1.1rem; margin: 15px 0;">
+          {{ 'No te preocupes, puedes configurar tu comercio manualmente desde el panel de administración.' | translate }}
+        </div>
+        <button class="cta-button secondary" (click)="redirectToMainSystem()">
+          {{ 'Continuar al Panel' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Mostrar mensaje de éxito tradicional (fallback) -->
+    <div *ngIf="submissionSuccess && currentStep !== 'quickstart-success'">
       <!-- Si isProcessing es true se muestra el mensaje "Procesando" -->
       <div *ngIf="isProcessing" class="processing-message">
         <div class="welcome-text" style="margin-top:20px;">
@@ -24,6 +78,28 @@
 
       </div>
     </div>
+    <!-- Barra de progreso general -->
+    <div *ngIf="!submissionSuccess && currentStep !== 'quickstart-success'" class="main-progress-container">
+      <div class="progress-steps">
+        <div class="step" [ngClass]="{'active': currentStep === 'questionnaire', 'completed': getStepNumber() > 1}">
+          <span class="step-number">1</span>
+          <span class="step-label">Diagnóstico</span>
+        </div>
+        <div class="step" [ngClass]="{'active': currentStep === 'contextual', 'completed': getStepNumber() > 2}" *ngIf="contextualQuestions.length > 0">
+          <span class="step-number">2</span>
+          <span class="step-label">Detalles</span>
+        </div>
+        <div class="step" [ngClass]="{'active': currentStep === 'registration', 'completed': getStepNumber() > 3}">
+          <span class="step-number">{{ contextualQuestions.length > 0 ? '3' : '2' }}</span>
+          <span class="step-label">Registro</span>
+        </div>
+        <div class="step" [ngClass]="{'active': currentStep === 'summary'}">
+          <span class="step-number">{{ contextualQuestions.length > 0 ? '4' : '3' }}</span>
+          <span class="step-label">Listo</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Secciones según currentStep -->
     <div *ngIf="!submissionSuccess">
       <!-- Paso 1: Cuestionario -->
@@ -48,6 +124,46 @@
         </div>
       </div>
 
+      <!-- Preguntas Contextuales (opcional) -->
+      <div *ngIf="currentStep === 'contextual'">
+        <h1>{{ 'Algunas preguntas adicionales...' | translate }}</h1>
+        <h3 class="subtitle">{{ 'Solo ' + contextualQuestions.length + ' preguntas más para personalizar mejor tu configuración.' | translate }}</h3>
+        
+        <div class="contextual-progress" style="margin: 20px 0;">
+          <div class="progress-text" style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
+            {{ 'Pregunta ' + (currentContextualIndex + 1) + ' de ' + contextualQuestions.length | translate }}
+          </div>
+          <div class="progress-bar" style="width: 100%; height: 4px; background: #eee; border-radius: 2px;">
+            <div class="progress-fill" 
+                 style="height: 100%; background: #9020FF; border-radius: 2px; transition: width 0.3s ease;"
+                 [style.width.%]="((currentContextualIndex + 1) / contextualQuestions.length) * 100">
+            </div>
+          </div>
+        </div>
+
+        <div class="contextual-question">
+          <h3>{{ currentContextualQuestion.question }}</h3>
+          <div class="options">
+            <button *ngFor="let option of currentContextualQuestion.options" 
+                    (click)="selectContextualOption(option)" 
+                    class="option-button"
+                    [ngClass]="{'selected': contextualResponses[currentContextualQuestion.id] === option}">
+              {{ option }}
+            </button>
+          </div>
+        </div>
+        
+        <div class="navigation-buttons">
+          <button *ngIf="canGoBackContextual()" class="back-button" (click)="backContextualQuestion()">
+            {{ 'Volver' | translate }}
+          </button>
+          <button class="next-button" (click)="nextContextualQuestion()"
+                  *ngIf="contextualResponses[currentContextualQuestion.id]">
+            {{ isLastContextualQuestion() ? ('Continuar' | translate) : '→' }}
+          </button>
+        </div>
+      </div>
+
       <!-- Paso Introductorio para Registro -->
       <div *ngIf="currentStep === 'introduction'" class="introduction-step">
         <h2>{{ '¡Excelente trabajo!' | translate }}</h2>
@@ -61,8 +177,8 @@
 
       <!-- Paso de Registro: mostrar un input por cada pregunta de forma step by step -->
       <div *ngIf="currentStep === 'registration'" [formGroup]="mainForm.get('registration')">
-        <h2>{{ 'Registro de Personas y Configuración de Empresa' | translate }}</h2>
-        <!-- Nombre Completo -->
+        <h2>{{ 'Información Básica de tu Empresa' | translate }}</h2>
+        <!-- Nombre empresa -->
         <ng-container *ngIf="registrationIndex === 0">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
@@ -72,53 +188,33 @@
               formControlName="nombre" (keyup.enter)="moveNextStep()">
           </div>
         </ng-container>
-        <!-- Nombre Comercial -->
+        <!-- NIT -->
         <ng-container *ngIf="registrationIndex === 1">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
               {{ registrationQuestions[1].question }}
             </p>
             <input type="text" class="material-input" [placeholder]="registrationQuestions[1].placeholder"
-              formControlName="nomComercial" (keyup.enter)="moveNextStep()">
+              formControlName="nit" (keyup.enter)="moveNextStep()">
           </div>
         </ng-container>
-        <!-- CC o NIT -->
+        <!-- Correo -->
         <ng-container *ngIf="registrationIndex === 2">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
               {{ registrationQuestions[2].question }}
             </p>
-            <input type="text" class="material-input" [placeholder]="registrationQuestions[2].placeholder"
-              formControlName="nit" (keyup.enter)="moveNextStep()">
+            <input type="email" class="material-input" [placeholder]="registrationQuestions[2].placeholder"
+              formControlName="correo" (keyup.enter)="moveNextStep()">
           </div>
         </ng-container>
-        <!-- DV -->
+        <!-- Celular -->
         <ng-container *ngIf="registrationIndex === 3">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
               {{ registrationQuestions[3].question }}
             </p>
             <input type="text" class="material-input" [placeholder]="registrationQuestions[3].placeholder"
-              formControlName="digitoVerificacion" (keyup.enter)="moveNextStep()">
-          </div>
-        </ng-container>
-        <!-- Correo -->
-        <ng-container *ngIf="registrationIndex === 4">
-          <div class="survey-question">
-            <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[4].question }}
-            </p>
-            <input type="email" class="material-input" [placeholder]="registrationQuestions[4].placeholder"
-              formControlName="correo" (keyup.enter)="moveNextStep()">
-          </div>
-        </ng-container>
-        <!-- Celular -->
-        <ng-container *ngIf="registrationIndex === 5">
-          <div class="survey-question">
-            <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[5].question }}
-            </p>
-            <input type="text" class="material-input" [placeholder]="registrationQuestions[5].placeholder"
               formControlName="celular" (keyup.enter)="moveNextStep()">
           </div>
         </ng-container>
@@ -126,7 +222,7 @@
           <button type="button" class="back-button" (click)="backRegistration()"
             *ngIf="registrationIndex > 0">{{ 'Volver' | translate }}</button>
           <button type="button" class="next-button" (click)="moveNextStep()">
-            {{ registrationIndex === registrationQuestions.length - 1 ? ('Siguiente paso' | translate) : '→' }}
+            {{ registrationIndex === registrationQuestions.length - 1 ? ('Finalizar' | translate) : '→' }}
           </button>
         </div>
       </div>

@@ -470,3 +470,269 @@
         right: 5px;
     }
 }
+
+/* ===== ESTILOS PARA QUICK START ===== */
+
+/* Contenedor de procesamiento del Quick Start */
+.quickstart-processing {
+    animation: fadeInSlide 1s ease-out;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.quickstart-message {
+    font-family: 'Geometr415L', sans-serif;
+    color: #9020FF;
+    font-weight: 500;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Contenedor de éxito del Quick Start */
+.quickstart-success {
+    animation: fadeInSlide 1.5s ease-out;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.next-steps-container {
+    background: rgba(144, 32, 255, 0.05);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 4px solid #9020FF;
+}
+
+.next-steps-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.next-steps-list li {
+    padding: 8px 0;
+    font-family: 'Geometr415L', sans-serif;
+    color: #0C0042;
+    border-bottom: 1px solid rgba(144, 32, 255, 0.1);
+}
+
+.next-steps-list li:last-child {
+    border-bottom: none;
+}
+
+/* Botones de acción rápida */
+.quick-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 30px 0;
+}
+
+.cta-button {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 180px;
+}
+
+.cta-button.primary {
+    background: linear-gradient(135deg, #9020FF 0%, #7B1FA2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(144, 32, 255, 0.3);
+}
+
+.cta-button.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(144, 32, 255, 0.4);
+    background: linear-gradient(135deg, #A435FF 0%, #8E24AA 100%);
+}
+
+.cta-button.secondary {
+    background: #f8f9fa;
+    color: #9020FF;
+    border: 2px solid #9020FF;
+}
+
+.cta-button.secondary:hover {
+    background: #9020FF;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Error del Quick Start */
+.quickstart-error {
+    animation: fadeInSlide 1s ease-out;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 107, 107, 0.05);
+    border-radius: 10px;
+    border-left: 4px solid #ff6b6b;
+    margin: 20px 0;
+}
+
+/* Responsive para Quick Start */
+@media screen and (max-width: 768px) {
+    .quick-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .cta-button {
+        width: 100%;
+        max-width: 300px;
+        margin-bottom: 10px;
+    }
+
+    .next-steps-container {
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .next-steps-list li {
+        font-size: 1rem;
+        padding: 6px 0;
+    }
+
+    .quickstart-message {
+        font-size: 1rem !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .next-steps-container h3 {
+        font-size: 1.2rem !important;
+    }
+
+    .next-steps-list li {
+        font-size: 0.9rem;
+    }
+
+    .cta-button {
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
+}
+
+/* ===== BARRA DE PROGRESO PRINCIPAL ===== */
+
+.main-progress-container {
+    margin: 30px 0;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(144, 32, 255, 0.1);
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 25px;
+    right: 25px;
+    height: 2px;
+    background: #eee;
+    z-index: 1;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #eee;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.step-label {
+    font-size: 0.8rem;
+    color: #666;
+    font-family: 'Geometr415L', sans-serif;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+    background: #9020FF;
+    color: white;
+    transform: scale(1.1);
+}
+
+.step.active .step-label {
+    color: #9020FF;
+    font-weight: bold;
+}
+
+.step.completed .step-number {
+    background: #00FFCC;
+    color: #0C0042;
+}
+
+.step.completed .step-label {
+    color: #00FFCC;
+}
+
+/* Responsive para barra de progreso */
+@media screen and (max-width: 768px) {
+    .progress-steps {
+        max-width: 100%;
+        padding: 0 20px;
+    }
+    
+    .step-number {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8rem;
+    }
+    
+    .step-label {
+        font-size: 0.7rem;
+    }
+    
+    .progress-steps::before {
+        left: 37.5px;
+        right: 37.5px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .step-label {
+        display: none; /* Ocultar labels en pantallas muy pequeñas */
+    }
+}

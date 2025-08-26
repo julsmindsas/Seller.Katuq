@@ -1,0 +1,136 @@
+<!-- Adaptive Navigation Wrapper -->
+<div class="adaptive-navigation-container" 
+     [class.mobile-mode]="isMobile"
+     [class.tablet-mode]="isTablet"
+     [class.age-young]="userAge === 'young'"
+     [class.age-middle]="userAge === 'middle'"
+     [class.age-senior]="userAge === 'senior'"
+     [class.high-contrast]="isHighContrast"
+     [class.reduced-motion]="reducedMotion">
+
+
+  <!-- Mini Tab (Independent of overlay) -->
+  <div class="menu-mini-tab" 
+       *ngIf="(isMobile || isTablet) && panelState === 'mini'"
+       (click)="expandPanel(); $event.stopPropagation()"
+       (touchstart)="onTouchStart($event)"
+       (touchmove)="onTouchMove($event)"
+       (touchend)="onTouchEnd($event)">
+    
+    <div class="mini-tab-handle">
+      <div class="handle-bar"></div>
+    </div>
+    
+    <div class="mini-tab-content">
+      <span class="mini-tab-text">Menú</span>
+      <i class="fa fa-chevron-up mini-tab-icon" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <!-- Menu Cards Panel with Overlay - Apple CarPlay Style -->
+  <div class="menu-cards-overlay" 
+       *ngIf="(isMobile || isTablet) && panelState === 'expanded'"
+       (click)="returnToMiniTab()"
+       [@slideUp]>
+    
+    <!-- Full Panel State -->
+    <div class="menu-cards-panel" 
+         *ngIf="panelState === 'expanded'"
+         (click)="$event.stopPropagation()"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd($event)">
+      
+      <!-- Pull Handle -->
+      <div class="pull-handle">
+        <div class="handle-bar"></div>
+      </div>
+      
+      <!-- Header -->
+      <div class="cards-header">
+        <button class="back-btn" 
+                *ngIf="expandedSection"
+                (click)="collapseSection()"
+                [attr.aria-label]="'Volver a menú principal'">
+          <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        
+        <h2>{{expandedSection ? expandedSection.title : 'Menú Principal'}}</h2>
+        
+        <button class="close-cards-btn" 
+                (click)="returnToMiniTab()"
+                [attr.aria-label]="'Cerrar menú'">
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+      
+      <!-- Cards Grid or Sub-items -->
+      <div class="panel-content">
+        
+        <!-- Main Cards Grid -->
+        <div class="cards-grid" 
+             *ngIf="!expandedSection"
+             [class.age-senior]="userAge === 'senior'"
+             [class.age-young]="userAge === 'young'">
+          
+          <div class="menu-card" 
+               *ngFor="let section of menuSections; trackBy: trackBySection"
+               [style.--card-color]="section.color"
+               (click)="openSection(section)"
+               (touchend)="$event.preventDefault(); openSection(section)"
+               [attr.aria-label]="section.title"
+               role="button"
+               tabindex="0">
+            
+            <div class="card-content">
+              <div class="card-icon">
+                <i [class]="section.icon" aria-hidden="true"></i>
+              </div>
+              <div class="card-title">{{section.title}}</div>
+              <div class="card-subtitle">{{section.subtitle}}</div>
+            </div>
+            
+            <div class="card-badge" *ngIf="section.badge">
+              {{section.badge}}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Expanded Section Sub-items -->
+        <div class="sub-items-list" *ngIf="expandedSection">
+          <div class="sub-item" 
+               *ngFor="let item of expandedSection.items"
+               (click)="navigateToItem(item)"
+               (touchend)="$event.preventDefault(); navigateToItem(item)"
+               [attr.aria-label]="item.title"
+               role="button"
+               tabindex="0">
+            
+            <div class="sub-item-icon">
+              <i class="fa fa-circle" aria-hidden="true"></i>
+            </div>
+            
+            <div class="sub-item-content">
+              <div class="sub-item-title">{{item.title}}</div>
+            </div>
+            
+            <i class="fa fa-chevron-right sub-item-arrow" aria-hidden="true"></i>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<!-- Age Group Selector (for development/testing - remove in production) -->
+<div class="age-selector" *ngIf="false">
+  <label>Grupo de edad:</label>
+  <select [value]="userAge" (change)="setUserAgeGroup($any($event.target).value)">
+    <option value="young">Joven (14-25)</option>
+    <option value="middle">Adulto (26-50)</option>
+    <option value="senior">Senior (51-70)</option>
+  </select>
+</div>

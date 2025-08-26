@@ -1,0 +1,52 @@
+<nav class="bottom-navigation" 
+     role="navigation" 
+     aria-label="Navegación principal inferior">
+  
+  <div class="nav-container">
+    <div class="nav-item" 
+         *ngFor="let item of navigationItems; trackBy: trackByItemId"
+         [class.active]="item.isActive"
+         [attr.aria-label]="getAriaLabel(item)"
+         [attr.data-item-id]="item.id"
+         (click)="navigateTo(item)"
+         (keydown)="onKeyDown($event, item)"
+         tabindex="0"
+         role="button">
+      
+      <!-- Icon Container with Badge -->
+      <div class="icon-container" 
+           [style.--item-color]="item.color">
+        
+        <!-- Main Icon -->
+        <i [class]="item.icon" 
+           class="nav-icon"
+           [attr.aria-hidden]="true"></i>
+        
+        <!-- Notification Badge -->
+        <span class="badge" 
+              *ngIf="item.badge && item.badge > 0"
+              [attr.aria-label]="item.badge + ' notificaciones'">
+          {{ item.badge > 99 ? '99+' : item.badge }}
+        </span>
+        
+        <!-- Active Indicator -->
+        <div class="active-indicator" 
+             *ngIf="item.isActive"
+             aria-hidden="true"></div>
+      </div>
+      
+      <!-- Label -->
+      <span class="nav-label" 
+            [class.active-label]="item.isActive">
+        {{ item.label }}
+      </span>
+      
+      <!-- Ripple Effect Container -->
+      <div class="ripple-container" aria-hidden="true"></div>
+    </div>
+  </div>
+  
+  <!-- Safe Area Bottom Padding for devices with home indicators -->
+  <div class="safe-area-bottom"></div>
+</nav>
+
