@@ -186,8 +186,24 @@
     justify-content: center;
 }
 
-.next-button:hover {
+.next-button:hover:not(.disabled) {
     background-color: lighten(#9020FF, 10%);
+    transform: translateY(-1px);
+}
+
+.next-button.disabled,
+.next-button:disabled {
+    background-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+}
+
+.next-button.disabled:hover,
+.next-button:disabled:hover {
+    background-color: #ccc;
+    transform: none;
 }
 
 .back-button {
@@ -321,24 +337,118 @@
     color: #000;
 }
 
-/* Estilos para inputs de Material Design sin borde, ahora con mayor ancho */
+/* ===== ESTILOS PARA VALIDACIÓN DE CAMPOS ===== */
+
+/* Contenedor de input con validación */
+.input-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+/* Estilos para inputs de Material Design con validación visual */
 .material-input {
     width: 100%;
-    /* Asegura que el input ocupe el ancho completo */
     border: none;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 2px solid #ccc;
     background: transparent;
-    padding: 8px 4px;
+    padding: 8px 40px 8px 4px; /* Espacio a la derecha para iconos */
     font-size: 1.5rem;
-    margin-bottom: 1rem;
-    /* Espaciado entre pasos */
-    transition: border-color 0.3s;
+    transition: all 0.3s ease;
     font-family: 'Geometr415L', sans-serif;
 }
 
 .material-input:focus {
     border-bottom: 2px solid #9020FF;
     outline: none;
+}
+
+/* Estados de validación */
+.material-input.valid {
+    border-bottom-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.material-input.invalid {
+    border-bottom-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+    animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Iconos de validación */
+.validation-icons {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+}
+
+.valid-icon {
+    color: #28a745;
+    font-size: 1.2rem;
+    font-weight: bold;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.invalid-icon {
+    color: #dc3545;
+    font-size: 1.2rem;
+    font-weight: bold;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Mensajes de error */
+.error-message {
+    color: #dc3545;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    margin-bottom: 1rem;
+    font-family: 'Geometr415L', sans-serif;
+    animation: slideDown 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.error-message::before {
+    content: "⚠";
+    font-size: 1rem;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Indicador de campo requerido */
+.required-indicator {
+    color: #dc3545;
+    font-size: 1.2rem;
+    margin-left: 5px;
+}
+
+/* Estilos para container de pregunta */
+.survey-question {
+    margin-bottom: 2rem;
 }
 
 .welcome-text {
@@ -734,5 +844,27 @@
 @media screen and (max-width: 480px) {
     .step-label {
         display: none; /* Ocultar labels en pantallas muy pequeñas */
+    }
+    
+    /* Ajustes para validación en móviles */
+    .material-input {
+        font-size: 1.2rem;
+        padding: 6px 35px 6px 4px;
+    }
+    
+    .validation-icons {
+        right: 8px;
+    }
+    
+    .valid-icon, .invalid-icon {
+        font-size: 1rem;
+    }
+    
+    .error-message {
+        font-size: 0.8rem;
+    }
+    
+    .required-indicator {
+        font-size: 1rem;
     }
 }

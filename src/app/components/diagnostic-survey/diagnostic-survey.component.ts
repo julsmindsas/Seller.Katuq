@@ -163,15 +163,75 @@ export class DiagnosticSurveyComponent implements OnInit {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
             registration: this.fb.group({
-                nombre: ['', Validators.required],
-                nit: ['', Validators.required],
-                correo: ['', [Validators.required, Validators.email]],
-                celular: ['', [Validators.required, Validators.pattern('^[0-9]+$')]]
+                nombre: ['', [Validators.required, Validators.minLength(2), Validators.pattern('^[a-zA-ZÀ-ÿ\\s]+$')]],
+                nit: ['', [Validators.required, Validators.pattern('^[0-9]{8,11}$')]],
+                correo: ['', [Validators.required, Validators.email, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')]],
+                celular: ['', [Validators.required, Validators.pattern('^3[0-9]{9}$')]]
             })
         });
     }
 
     ngOnInit() { }
+
+    // Métodos helper para validación de campos
+    getFieldError(fieldName: string): string | null {
+        const field = this.mainForm.get(`registration.${fieldName}`);
+        if (field && field.invalid && (field.dirty || field.touched)) {
+            if (field.errors?.['required']) {
+                return this.getRequiredMessage(fieldName);
+            }
+            if (field.errors?.['email'] || field.errors?.['pattern']) {
+                return this.getPatternMessage(fieldName);
+            }
+            if (field.errors?.['minlength']) {
+                return this.getMinLengthMessage(fieldName);
+            }
+        }
+        return null;
+    }
+
+    private getRequiredMessage(fieldName: string): string {
+        const messages: { [key: string]: string } = {
+            'nombre': 'El nombre de la empresa es requerido',
+            'nit': 'El NIT o documento de identidad es requerido',
+            'correo': 'El correo electrónico es requerido',
+            'celular': 'El número de celular es requerido'
+        };
+        return messages[fieldName] || 'Este campo es requerido';
+    }
+
+    private getPatternMessage(fieldName: string): string {
+        const messages: { [key: string]: string } = {
+            'nombre': 'Solo se permiten letras y espacios',
+            'nit': 'Debe contener entre 8 y 11 dígitos',
+            'correo': 'Ingresa un correo válido (ejemplo@dominio.com)',
+            'celular': 'Debe ser un celular colombiano válido (3XXXXXXXXX)'
+        };
+        return messages[fieldName] || 'Formato inválido';
+    }
+
+    private getMinLengthMessage(fieldName: string): string {
+        const messages: { [key: string]: string } = {
+            'nombre': 'Mínimo 2 caracteres'
+        };
+        return messages[fieldName] || 'Muy corto';
+    }
+
+    isFieldValid(fieldName: string): boolean {
+        const field = this.mainForm.get(`registration.${fieldName}`);
+        return field ? field.valid && (field.dirty || field.touched) : false;
+    }
+
+    isFieldInvalid(fieldName: string): boolean {
+        const field = this.mainForm.get(`registration.${fieldName}`);
+        return field ? field.invalid && (field.dirty || field.touched) : false;
+    }
+
+    isCurrentRegistrationFieldValid(): boolean {
+        const currentField = this.registrationQuestions[this.registrationIndex].formControl;
+        const field = this.mainForm.get(`registration.${currentField}`);
+        return field ? field.valid : false;
+    }
 
     get currentSection() {
         return this.surveyData.sections[this.currentSectionIndex];
@@ -408,7 +468,14 @@ export class DiagnosticSurveyComponent implements OnInit {
             // Pero cuidado: hacerlo luego borra el valor ingresado.
             // this.mainForm.get('registration.' + this.registrationQuestions[0].formControl)?.reset();
         } else if (this.currentStep === 'registration') {
-            // Se elimina la llamada a reset() para preservar los datos ingresados.
+            // Validar el campo actual antes de avanzar
+            if (!this.isCurrentRegistrationFieldValid()) {
+                // Marcar el campo como touched para mostrar errores
+                const currentField = this.registrationQuestions[this.registrationIndex].formControl;
+                this.mainForm.get(`registration.${currentField}`)?.markAsTouched();
+                return;
+            }
+            
             if (this.registrationIndex < this.registrationQuestions.length - 1) {
                 this.registrationIndex++;
             } else {

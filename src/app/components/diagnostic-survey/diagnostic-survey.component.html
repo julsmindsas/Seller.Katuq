@@ -182,46 +182,107 @@
         <ng-container *ngIf="registrationIndex === 0">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[0].question }}
+              {{ registrationQuestions[0].question }} <span class="required-indicator">*</span>
             </p>
-            <input type="text" class="material-input" [placeholder]="registrationQuestions[0].placeholder"
-              formControlName="nombre" (keyup.enter)="moveNextStep()">
+            <div class="input-container">
+              <input type="text" 
+                     class="material-input" 
+                     [placeholder]="registrationQuestions[0].placeholder"
+                     formControlName="nombre" 
+                     (keyup.enter)="moveNextStep()"
+                     [class.invalid]="isFieldInvalid('nombre')"
+                     [class.valid]="isFieldValid('nombre')">
+              <div class="validation-icons">
+                <span *ngIf="isFieldValid('nombre')" class="valid-icon">✓</span>
+                <span *ngIf="isFieldInvalid('nombre')" class="invalid-icon">✗</span>
+              </div>
+            </div>
+            <div *ngIf="getFieldError('nombre')" class="error-message">
+              {{ getFieldError('nombre') }}
+            </div>
           </div>
         </ng-container>
         <!-- NIT -->
         <ng-container *ngIf="registrationIndex === 1">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[1].question }}
+              {{ registrationQuestions[1].question }} <span class="required-indicator">*</span>
             </p>
-            <input type="text" class="material-input" [placeholder]="registrationQuestions[1].placeholder"
-              formControlName="nit" (keyup.enter)="moveNextStep()">
+            <div class="input-container">
+              <input type="text" 
+                     class="material-input" 
+                     [placeholder]="registrationQuestions[1].placeholder"
+                     formControlName="nit" 
+                     (keyup.enter)="moveNextStep()"
+                     [class.invalid]="isFieldInvalid('nit')"
+                     [class.valid]="isFieldValid('nit')">
+              <div class="validation-icons">
+                <span *ngIf="isFieldValid('nit')" class="valid-icon">✓</span>
+                <span *ngIf="isFieldInvalid('nit')" class="invalid-icon">✗</span>
+              </div>
+            </div>
+            <div *ngIf="getFieldError('nit')" class="error-message">
+              {{ getFieldError('nit') }}
+            </div>
           </div>
         </ng-container>
         <!-- Correo -->
         <ng-container *ngIf="registrationIndex === 2">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[2].question }}
+              {{ registrationQuestions[2].question }} <span class="required-indicator">*</span>
             </p>
-            <input type="email" class="material-input" [placeholder]="registrationQuestions[2].placeholder"
-              formControlName="correo" (keyup.enter)="moveNextStep()">
+            <div class="input-container">
+              <input type="email" 
+                     class="material-input" 
+                     placeholder="ejemplo@dominio.com"
+                     formControlName="correo" 
+                     (keyup.enter)="moveNextStep()"
+                     [class.invalid]="isFieldInvalid('correo')"
+                     [class.valid]="isFieldValid('correo')">
+              <div class="validation-icons">
+                <span *ngIf="isFieldValid('correo')" class="valid-icon">✓</span>
+                <span *ngIf="isFieldInvalid('correo')" class="invalid-icon">✗</span>
+              </div>
+            </div>
+            <div *ngIf="getFieldError('correo')" class="error-message">
+              {{ getFieldError('correo') }}
+            </div>
           </div>
         </ng-container>
         <!-- Celular -->
         <ng-container *ngIf="registrationIndex === 3">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[3].question }}
+              {{ registrationQuestions[3].question }} <span class="required-indicator">*</span>
             </p>
-            <input type="text" class="material-input" [placeholder]="registrationQuestions[3].placeholder"
-              formControlName="celular" (keyup.enter)="moveNextStep()">
+            <div class="input-container">
+              <input type="tel" 
+                     class="material-input" 
+                     placeholder="3001234567"
+                     formControlName="celular" 
+                     (keyup.enter)="moveNextStep()"
+                     [class.invalid]="isFieldInvalid('celular')"
+                     [class.valid]="isFieldValid('celular')"
+                     maxlength="10">
+              <div class="validation-icons">
+                <span *ngIf="isFieldValid('celular')" class="valid-icon">✓</span>
+                <span *ngIf="isFieldInvalid('celular')" class="invalid-icon">✗</span>
+              </div>
+            </div>
+            <div *ngIf="getFieldError('celular')" class="error-message">
+              {{ getFieldError('celular') }}
+            </div>
           </div>
         </ng-container>
         <div class="navigation-buttons">
           <button type="button" class="back-button" (click)="backRegistration()"
             *ngIf="registrationIndex > 0">{{ 'Volver' | translate }}</button>
-          <button type="button" class="next-button" (click)="moveNextStep()">
+          <button type="button" 
+                  class="next-button" 
+                  (click)="moveNextStep()"
+                  [class.disabled]="!isCurrentRegistrationFieldValid()"
+                  [disabled]="!isCurrentRegistrationFieldValid()">
             {{ registrationIndex === registrationQuestions.length - 1 ? ('Finalizar' | translate) : '→' }}
           </button>
         </div>
