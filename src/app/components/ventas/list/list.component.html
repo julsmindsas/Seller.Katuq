@@ -671,7 +671,8 @@
                                                         <ng-template pTemplate="filter" let-value
                                                             let-filter="filterCallback">
                                                             <p-calendar (onSelect)="filter($event)"
-                                                                dateFormat="yy-mm-dd">
+                                                                dateFormat="yy-mm-dd"
+                                                                (onSelect)="onDateFilterSelect($event, filter)">
                                                             </p-calendar>
                                                         </ng-template>
                                                     </p-columnFilter>
@@ -862,9 +863,20 @@
                                                         [showOperator]="false" [showAddButton]="false">
                                                         <ng-template pTemplate="filter" let-value
                                                             let-filter="filterCallback">
-                                                            <p-calendar (onSelect)="filter($event)"
-                                                                dateFormat="yy-mm-dd">
-                                                            </p-calendar>
+                                                            <div>
+                                                                <p-calendar (onSelect)="onDateFilterSelect($event, filter)"
+                                                                    (onInput)="testDateFilter($event)"
+                                                                    (onBlur)="testDateFilter($event)"
+                                                                    dateFormat="yy-mm-dd"
+                                                                    [showIcon]="true"
+                                                                    [showButtonBar]="true">
+                                                                </p-calendar>
+                                                                <button type="button" 
+                                                                    class="btn btn-sm btn-primary mt-1"
+                                                                    (click)="testFilter(filter)">
+                                                                    🧪 Probar Filtro
+                                                                </button>
+                                                            </div>
                                                         </ng-template>
                                                     </p-columnFilter>
                                                 </div>

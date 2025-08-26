@@ -711,7 +711,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private toastrService: ToastrService,
     private loaderService: LoaderService,
   ) {
+    console.log('🔧 Constructor - Iniciando...');
+    console.log('🔧 FilterService disponible:', !!this.filterService);
+    console.log('🔧 FilterService tipo:', typeof this.filterService);
+    console.log('🔧 FilterService métodos:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.filterService)));
+    console.log('🔧 Constructor - Registrando filtros personalizados...');
     this.registerCustomFilters();
+    console.log('✅ Constructor - Filtros personalizados registrados');
     this.setupSearchDebounce();
 
     const unaSemana = 7 * 24 * 60 * 60 * 1000;
@@ -912,6 +918,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    console.log('🚀 ngOnInit - Componente inicializado');
     // Initialize default date range if not set
     if (!this.fechaInicial || !this.fechaFinal) {
       const today = new Date();
@@ -1119,6 +1126,53 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // ✅ NUEVO: Flag para controlar refrescos automáticos
   private ultimoRefresco = 0;
   private refrescoEnProgreso = false;
+
+  // Método para debug del filtro de fecha
+  onDateFilterSelect(event: any, filterCallback: Function) {
+    console.log('🗓️ EVENTO onSelect del calendario:', event);
+    console.log('🗓️ Tipo de evento:', typeof event);
+    console.log('🗓️ Valor del evento:', event);
+    console.log('🗓️ Filter callback:', filterCallback);
+    console.log('🗓️ Filter callback tipo:', typeof filterCallback);
+    
+    try {
+      // Llamar al callback original
+      console.log('🗓️ Ejecutando filterCallback...');
+      filterCallback(event);
+      console.log('🗓️ filterCallback ejecutado exitosamente');
+    } catch (error) {
+      console.error('❌ Error al ejecutar filterCallback:', error);
+    }
+  }
+
+  // Método alternativo para probar el filtro
+  testDateFilter(event: any) {
+    console.log('🧪 TEST - Evento del calendario:', event);
+    console.log('🧪 TEST - Tipo de evento:', typeof event);
+    
+    if (event && event.target) {
+      console.log('🧪 TEST - Valor del input:', event.target.value);
+    }
+  }
+
+  // Método para probar el filtro manualmente
+  testFilter(filterCallback: Function) {
+    console.log('🧪 TEST FILTER - Iniciando prueba manual del filtro');
+    console.log('🧪 TEST FILTER - Filter callback:', filterCallback);
+    console.log('🧪 TEST FILTER - Tipo de callback:', typeof filterCallback);
+    
+    try {
+      // Crear una fecha de prueba
+      const testDate = new Date();
+      console.log('🧪 TEST FILTER - Fecha de prueba:', testDate);
+      
+      // Ejecutar el filtro con la fecha de prueba
+      filterCallback(testDate);
+      console.log('🧪 TEST FILTER - Filtro ejecutado exitosamente');
+    } catch (error) {
+      console.error('❌ TEST FILTER - Error al ejecutar filtro:', error);
+    }
+  }
 
   refrescarDatos(forceRefresh: boolean = false) {
     // ✅ PROTECCIÓN: Evitar refrescos automáticos muy frecuentes
