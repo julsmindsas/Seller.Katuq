@@ -210,14 +210,7 @@ export const content: Routes = [
       ),
     canActivate: [AuthGuard], // Agregar el guard
   },
-  {
-    path: "diagnostic-survey",
-    loadChildren: () =>
-      import(
-        "../../components/diagnostic-survey/diagnostic-survey.module"
-      ).then((m) => m.DiagnosticSurveyModule),
-    canActivate: [], // Proteger la ruta
-  },
+
   {
     path: "welcome",
     loadChildren: () =>

@@ -69,9 +69,12 @@
                               <i class="pi pi-minus"></i>
                             </button>
                             <input class="form-control text-center" 
-                                   type="text" 
-                                   [value]="itemCarrito.cantidad"
-                                   readonly>
+                                   type="number" 
+                                   [(ngModel)]="itemCarrito.cantidad"
+                                   (blur)="onCantidadChange(itemCarrito)"
+                                   (keyup.enter)="onCantidadChange(itemCarrito)"
+                                   [min]="itemCarrito?.producto?.disponibilidad?.cantidadMinVenta || 1"
+                                   step="1">
                             <button class="btn btn-outline-secondary" 
                                     type="button" 
                                     (click)="masCantidad(itemCarrito)">

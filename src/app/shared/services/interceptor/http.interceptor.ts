@@ -31,14 +31,21 @@ export class HttpInterceptor2 implements HttpInterceptor {
     const isApiRequest = request.url.includes(environment.urlApi) || 
                          request.url.startsWith('/v1/');
     
+    // Verificar si es una ruta pública (diagnóstico/encuesta)
+    const isPublicRoute = request.url.includes('/diagnostics/saveSurveyResponse') ||
+                         request.url.includes('/diagnostico') ||
+                         window.location.pathname.includes('/nuevo-registro');
+    
     console.log('🔍 ¿Es petición a API?', isApiRequest);
+    console.log('🔍 ¿Es ruta pública?', isPublicRoute);
     
     // Siempre interceptamos, sin importar la URL
     return this.handleAccess(request, next)
       .pipe(
         catchError((err: Response) => {
           console.error('🔴 Error en petición interceptada:', err);
-          if ([401, 403].indexOf(err.status) !== -1) {
+          // No redirigir al login si es una ruta pública
+          if ([401, 403].indexOf(err.status) !== -1 && !isPublicRoute) {
             // auto logout if 401 Unauthorized or 403 Forbidden response returned from api
             this.service.signOut();
             this.router.navigate(['/login']);

@@ -229,6 +229,37 @@ export class CarritoComponent implements OnInit {
     this.updateCartAndCheckPriceScale(itemCarrito);
   }
 
+  onCantidadChange(itemCarrito: any): void {
+    if (!itemCarrito) return;
+
+    // Convertir a número entero
+    const nuevaCantidad = parseInt(itemCarrito.cantidad);
+    
+    // Validar que sea un número válido
+    if (isNaN(nuevaCantidad) || nuevaCantidad <= 0) {
+      // Restaurar cantidad anterior o cantidad mínima
+      const cantidadMinima = itemCarrito.producto?.disponibilidad?.cantidadMinVenta || 1;
+      itemCarrito.cantidad = cantidadMinima;
+      this.toastrService.error('Por favor ingrese una cantidad válida', 'Error');
+      return;
+    }
+
+    // Validar cantidad mínima
+    const cantidadMinima = itemCarrito.producto?.disponibilidad?.cantidadMinVenta || 1;
+    if (nuevaCantidad < cantidadMinima) {
+      itemCarrito.cantidad = cantidadMinima;
+      this.toastrService.warning(
+        `La cantidad mínima para este producto es ${cantidadMinima}`, 
+        'Cantidad mínima'
+      );
+      return;
+    }
+
+    // Actualizar cantidad y aplicar lógica de precio por volumen
+    itemCarrito.cantidad = nuevaCantidad;
+    this.updateCartAndCheckPriceScale(itemCarrito);
+  }
+
   private updateCartAndCheckPriceScale(itemCarrito: any): void {
     // Solo actualizar el carrito singleton, no localStorage
     this.carsingleton.updateProductQuantity(itemCarrito);

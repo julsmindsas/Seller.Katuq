@@ -20,11 +20,12 @@ const routes: Routes = [
     path: 'maestros',
     redirectTo: 'maestros'
   },
-  // {
-  //   path: '',
-  //   redirectTo: 'login',
-  //   pathMatch: 'full'
-  // },
+  // Ruta por defecto - redirigir a encuesta de registro
+  {
+    path: '',
+    redirectTo: 'nuevo-registro',
+    pathMatch: 'full'
+  },
   {
     path: 'login',
     component: LoginComponent,
@@ -84,8 +85,7 @@ const routes: Routes = [
   {
     path: '**',
     component: PageNotFoundComponent,
-    canActivate: [AdminGuard],
-    //redirectTo: 'login'
+    //redirectTo: 'nuevo-registro'
   }
 ];
 

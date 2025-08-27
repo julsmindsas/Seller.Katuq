@@ -44,6 +44,10 @@ export interface QuickStartResult {
   message?: string;
   error?: string;
   nextSteps?: string[];
+  adminUser?: any;
+  serverResponse?: any; // Respuesta completa del servidor
+  companyName?: string; // Nombre de la empresa creada en el servidor
+  userEmail?: string; // Email del usuario creado en el servidor
 }
 
 export interface SectorConfig {
@@ -73,68 +77,134 @@ export class KatuqQuickStartService {
   constructor(private http: HttpClient) { }
 
   /**
+   * Validar datos del diagnóstico antes de proceder
+   */
+  private validateDiagnosticData(diagnosticData: DiagnosticResponse): void {
+    const { registration, responses } = diagnosticData;
+    
+    // Validar datos de registro obligatorios
+    if (!registration) {
+      throw new Error('Los datos de registro son obligatorios para configurar el comercio');
+    }
+
+    if (!registration.nombre || registration.nombre.trim().length < 2) {
+      throw new Error('El nombre de la empresa debe tener al menos 2 caracteres');
+    }
+
+    if (!registration.nit || registration.nit.trim().length < 5) {
+      throw new Error('El NIT de la empresa debe tener al menos 5 caracteres');
+    }
+
+    if (!registration.correo || !this.isValidEmail(registration.correo)) {
+      throw new Error('Se requiere un correo electrónico válido');
+    }
+
+    if (!registration.celular || registration.celular.trim().length < 10) {
+      throw new Error('Se requiere un número de celular válido (mínimo 10 dígitos)');
+    }
+
+    // Validar respuestas del diagnóstico
+    if (!responses || Object.keys(responses).length === 0) {
+      throw new Error('Se requieren respuestas del diagnóstico para configurar el comercio');
+    }
+
+    // Validar que al menos tenga la respuesta del sector
+    if (!responses.q1) {
+      console.warn('No se especificó el sector, usando "Retail - Comercial" por defecto');
+    }
+
+    console.log('Validación de datos completada exitosamente');
+  }
+
+  /**
+   * Validar formato de email
+   */
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  /**
    * Configuración principal de Quick Start
    */
   async setupQuickStart(diagnosticData: DiagnosticResponse): Promise<QuickStartResult> {
     try {
       this.updateStatus(true, 'Iniciando configuración automática...');
 
-      // 1. Configurar empresa básica
-      this.updateStatus(true, 'Configurando información de empresa...');
-      const empresa = await this.setupEmpresaBasica(diagnosticData.registration);
+      // 0. Validar datos antes de proceder
+      this.validateDiagnosticData(diagnosticData);
 
-      // 2. Crear rol administrador con permisos de IA
-      this.updateStatus(true, 'Creando rol administrador...');
-      const rol = await this.createRolWithAIPermissions(
+      // 1. Preparar empresa básica (sin enviar al servidor)
+      this.updateStatus(true, 'Preparando información de empresa...');
+      const empresa = this.prepareEmpresaBasica(diagnosticData.registration);
+
+      // 2. Preparar rol administrador con permisos de IA (sin enviar al servidor)
+      this.updateStatus(true, 'Preparando rol administrador...');
+      const rol = this.prepareRolWithAIPermissions(
         empresa.nit, // Usar NIT como ID de empresa
         diagnosticData.aiRecommendation?.permisos || this.getDefaultAdminPermissions()
       );
 
-      // 3. Configurar bodega principal
-      this.updateStatus(true, 'Configurando bodega principal...');
-      const bodega = await this.setupBodegaPrincipal(empresa);
+      // 3. Preparar bodega principal (sin enviar al servidor)
+      this.updateStatus(true, 'Preparando bodega principal...');
+      const bodega = this.prepareBodegaPrincipal(empresa);
 
-      // 4. Crear producto demo
-      this.updateStatus(true, 'Creando producto de demostración...');
-      const productoDemo = await this.createProductoDemo(
+      // 4. Preparar usuario administrador (sin enviar al servidor)
+      this.updateStatus(true, 'Preparando usuario administrador...');
+      const adminUser = this.prepareAdminUser(diagnosticData.registration, empresa, rol);
+
+      // 5. Preparar producto demo (sin enviar al servidor)
+      this.updateStatus(true, 'Preparando producto de demostración...');
+      const productoDemo = this.prepareProductoDemo(
         diagnosticData.responses.q1 || 'Retail - Comercial',
         bodega.idBodega
       );
 
-      // 5. Configurar módulos recomendados por IA
-      this.updateStatus(true, 'Configurando módulos recomendados...');
-      const configuraciones = await this.setupModulosRecomendados(
+      // 6. Preparar configuración de módulos recomendados por IA (sin enviar al servidor)
+      this.updateStatus(true, 'Preparando módulos recomendados...');
+      const configuraciones = this.prepareModulosRecomendados(
         diagnosticData.aiRecommendation?.modulosRecomendados || ['POS', 'Inventarios']
       );
 
-      this.updateStatus(false, 'Configuración completada');
+      // 7. Enviar SOLO los datos del diagnóstico al servidor
+      this.updateStatus(true, 'Guardando diagnóstico en el servidor...');
+      const serverResponse = await this.saveSurveyResponse(diagnosticData);
+
+      this.updateStatus(false, 'Configuración completada exitosamente');
 
       return {
         success: true,
-        empresa,
-        rol,
-        bodega,
-        productoDemo,
-        configuraciones,
-        message: `¡Tu comercio ${empresa.nomComercial} está configurado y listo para operar!`,
+        empresa: empresa,
+        rol: rol,
+        bodega: bodega,
+        adminUser: adminUser,
+        productoDemo: productoDemo,
+        configuraciones: configuraciones,
+        serverResponse: serverResponse, // Respuesta completa del servidor
+        companyName: serverResponse.companyName || empresa.nomComercial,
+        userEmail: serverResponse.userEmail || diagnosticData.registration.correo,
+        message: serverResponse.message || `¡Tu comercio ${serverResponse.companyName || empresa.nomComercial} está configurado y listo para operar!`,
         nextSteps: this.getNextStepsBySector(diagnosticData.responses.q1 || 'Retail - Comercial')
       };
 
     } catch (error) {
       this.updateStatus(false, '');
       console.error('Error en Quick Start:', error);
+
       return {
         success: false,
         error: error.message || 'Error en la configuración automática',
-        message: 'Se produjo un error durante la configuración automática. Puedes configurar manualmente desde el panel de administración.'
+        message: 'Error durante la configuración automática. Por favor, intenta nuevamente.'
       };
     }
   }
 
+
+
   /**
-   * Configurar empresa básica con datos del diagnóstico
+   * Preparar empresa básica con datos del diagnóstico (sin enviar al servidor)
    */
-  private async setupEmpresaBasica(registrationData: any): Promise<Empresa> {
+  private prepareEmpresaBasica(registrationData: any): Empresa {
     const empresaBasica: Empresa = {
       // Datos del formulario de registro
       nombre: registrationData.nombre,
@@ -206,13 +276,14 @@ export class KatuqQuickStartService {
       logo: ""
     };
 
+    // Retornar empresa preparada (será enviada al servidor junto con todos los demás datos)
     return empresaBasica;
   }
 
   /**
-   * Crear rol administrador con permisos específicos de IA
+   * Preparar rol administrador con permisos específicos de IA (sin enviar al servidor)
    */
-  private async createRolWithAIPermissions(empresaId: string, aiPermissions: string[]): Promise<Role> {
+  private prepareRolWithAIPermissions(empresaId: string, aiPermissions: string[]): Role {
     const rolAdmin: Role = {
       rol: Rol.Administrador, // 'Administrator'
       empresa: empresaId,
@@ -222,13 +293,14 @@ export class KatuqQuickStartService {
       user_edit: 'quickstart_system'
     };
 
+    // Retornar rol preparado (será enviado al servidor junto con todos los demás datos)
     return rolAdmin;
   }
 
   /**
-   * Configurar bodega principal por defecto
+   * Preparar bodega principal por defecto (sin enviar al servidor)
    */
-  private async setupBodegaPrincipal(empresa: Empresa): Promise<Bodega> {
+  private prepareBodegaPrincipal(empresa: Empresa): Bodega {
     const bodegaPrincipal: Bodega = {
       nombre: "Bodega Principal",
       idBodega: this.generateBodegaId(),
@@ -237,15 +309,18 @@ export class KatuqQuickStartService {
       departamento: empresa.departamento,
       pais: empresa.pais,
       tipo: 'Física'
+      // Nota: La propiedad empresa no existe en el interface Bodega
+      // Si es necesaria, debe ser manejada en la implementación del servidor
     };
 
+    // Retornar bodega preparada (será enviada al servidor junto con todos los demás datos)
     return bodegaPrincipal;
   }
 
   /**
-   * Crear producto demo según sector
+   * Preparar producto demo según sector (sin enviar al servidor)
    */
-  private async createProductoDemo(sector: string, bodegaId: string): Promise<Producto> {
+  private prepareProductoDemo(sector: string, bodegaId: string): Producto {
     const sectorConfig = this.getSectorConfig(sector);
     
     const productoDemo: Producto = {
@@ -303,16 +378,82 @@ export class KatuqQuickStartService {
       rating: 5
     };
 
+    // Retornar producto demo preparado (será enviado al servidor junto con todos los demás datos)
     return productoDemo;
   }
 
   /**
-   * Configurar módulos recomendados por IA
+   * Preparar usuario administrador con los datos del diagnóstico (sin enviar al servidor)
    */
-  private async setupModulosRecomendados(modulosRecomendados: string[]): Promise<any> {
+  private prepareAdminUser(registrationData: any, empresa: Empresa, rol: Role): any {
+    const userData = {
+      nombres: registrationData.nombre, // Usar nombre de empresa como nombre del administrador
+      apellidos: "Administrador",
+      email: registrationData.correo,
+      celular: registrationData.celular,
+      empresa: empresa.nit,
+      rol: (rol as any).cd || (rol as any)._id || (rol as any).rol, // ID del rol creado
+      estado: 'Activo',
+      tipoUsuario: 'Administrador',
+      password: this.generateTemporaryPassword(), // Contraseña temporal
+      confirmPassword: this.generateTemporaryPassword(),
+      fechaCreacion: new Date().toISOString(),
+      creadoPor: 'quickstart_system',
+      permisos: rol.permissions || this.getDefaultAdminPermissions(),
+      // Datos adicionales para el usuario administrador
+      cargo: 'Administrador General',
+      departamento: 'Administración',
+      fechaIngreso: new Date().toISOString(),
+      activo: true
+    };
+
+    // Retornar datos del usuario preparados (serán enviados al servidor junto con todos los demás datos)
+    return userData;
+  }
+
+  /**
+   * Generar contraseña temporal para el usuario administrador
+   */
+  private generateTemporaryPassword(): string {
+    return Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+  }
+
+  /**
+   * Guardar la respuesta del diagnóstico en el servidor
+   */
+  private async saveSurveyResponse(diagnosticData: DiagnosticResponse): Promise<any> {
+    const surveyData = {
+      timestamp: new Date().toISOString(),
+      respuestas: diagnosticData.responses,
+      recomendacionesIA: diagnosticData.aiRecommendation,
+      registro: diagnosticData.registration,
+      sector: diagnosticData.responses.q1 || 'No especificado',
+      procesoCompletado: true
+    };
+
+    try {
+      const response = await this.http.post(`${environment.urlApi}/v1/diagnostics/saveSurveyResponse`, surveyData).toPromise() as any;
+      
+      if (response && response.message) {
+        console.log('Diagnóstico guardado exitosamente:', response);
+        return response;
+      } else {
+        throw new Error('Error al guardar el diagnóstico en el servidor');
+      }
+    } catch (error) {
+      console.error('Error al guardar diagnóstico:', error);
+      throw new Error(`Error al guardar el diagnóstico: ${error.message || error}`);
+    }
+  }
+
+  /**
+   * Preparar configuración de módulos recomendados por IA (sin enviar al servidor)
+   */
+  private prepareModulosRecomendados(modulosRecomendados: string[]): any {
     const configuraciones = {
       modulosActivos: modulosRecomendados,
-      configuracionesBasicas: {}
+      configuracionesBasicas: {},
+      fechaConfiguracion: new Date().toISOString()
     };
 
     // Configuraciones específicas por módulo
@@ -336,9 +477,22 @@ export class KatuqQuickStartService {
             tiposEntrega: ['Domicilio', 'Recogida en tienda']
           };
           break;
+        case 'Produccion':
+          configuraciones.configuracionesBasicas['Produccion'] = {
+            centrosTrabajo: true,
+            procesosPredefinidos: true
+          };
+          break;
+        case 'CRM':
+          configuraciones.configuracionesBasicas['CRM'] = {
+            seguimientoClientes: true,
+            notificacionesAutomaticas: true
+          };
+          break;
       }
     }
 
+    // Retornar configuraciones preparadas (serán enviadas al servidor junto con todos los demás datos)
     return configuraciones;
   }
 

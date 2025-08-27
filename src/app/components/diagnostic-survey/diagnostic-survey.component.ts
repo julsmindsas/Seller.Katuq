@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms'; // Se agregó Validators
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { KatuqQuickStartService, DiagnosticResponse } from '../../shared/services/quickstart/katuq-quickstart.service';
@@ -155,7 +154,6 @@ export class DiagnosticSurveyComponent implements OnInit {
 
     constructor(
         private fb: FormBuilder, 
-        private http: HttpClient, 
         private router: Router,
         private quickStartService: KatuqQuickStartService,
         private contextualQuestionsService: ContextualQuestionsService
@@ -341,22 +339,13 @@ export class DiagnosticSurveyComponent implements OnInit {
             }));
         });
         const registrationData = this.mainForm.get('registration')?.value;
-        const payload = {
-            formTitle: this.surveyData.formTitle,
-            responses: responsesArray,
-            registration: registrationData
-        };
-        const apiUrl = environment.urlApi + '/v1/diagnostics/saveSurveyResponse';
         
         try {
-            const response: any = await this.http.post(apiUrl, payload).toPromise();
-            console.log("Respuestas enviadas:", response);
-            
-            // Iniciar Quick Start automáticamente
-            await this.startQuickStart(response, registrationData, responsesArray);
+            // Iniciar Quick Start directamente (el service se encarga de guardar el diagnóstico)
+            await this.startQuickStart(null, registrationData, responsesArray);
             
         } catch (error) {
-            console.error("Error al enviar respuestas", error);
+            console.error("Error en el proceso de configuración automática", error);
             // En caso de error, mostrar proceso tradicional
             this.submissionSuccess = true;
             const empresa = this.mainForm.get('registration.nombre')?.value || 'tu empresa';
@@ -379,7 +368,7 @@ export class DiagnosticSurveyComponent implements OnInit {
         const diagnosticData: DiagnosticResponse = {
             responses: allResponses,
             registration: registrationData,
-            aiRecommendation: apiResponse.aiRecommendation || {
+            aiRecommendation: {
                 modulosRecomendados: ['POS', 'Inventarios'],
                 permisos: [
                     'ver_dashboard',
@@ -429,8 +418,13 @@ export class DiagnosticSurveyComponent implements OnInit {
     }
 
     redirectToMainSystem() {
-        // Redirigir al dashboard principal en lugar del login
-        this.router.navigate(['/dashboard']);
+        // Para QuickStart exitoso, mostrar instrucciones para ingresar
+        // o redirigir al login con las credenciales creadas
+        this.router.navigate(['/login'], { 
+            queryParams: { 
+                message: 'Tu comercio ha sido configurado exitosamente. Usa las credenciales proporcionadas para ingresar.' 
+            } 
+        });
     }
 
     processAndRedirect(): void {
@@ -440,10 +434,13 @@ export class DiagnosticSurveyComponent implements OnInit {
         setTimeout(() => {
             this.isProcessing = false;
         }, 5000);
-        // Finalmente, redirige al login después de 10000 ms (10 segundos en total)
-        setTimeout(() => {
-            this.router.navigate(['/login']);
-        }, 10000);
+        // Para el proceso tradicional, no redirigir automáticamente
+        // Mostrar botón para que el usuario decida si quiere ir al login
+    }
+
+    // Método para ir al login manualmente 
+    goToLogin(): void {
+        this.router.navigate(['/login']);
     }
 
     // Métodos para cambiar de paso
