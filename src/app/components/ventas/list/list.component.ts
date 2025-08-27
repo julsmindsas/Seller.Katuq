@@ -711,10 +711,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private toastrService: ToastrService,
     private loaderService: LoaderService,
   ) {
-    console.log('🔧 Constructor - Iniciando...');
-    console.log('🔧 FilterService disponible:', !!this.filterService);
-    console.log('🔧 FilterService tipo:', typeof this.filterService);
-    console.log('🔧 FilterService métodos:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.filterService)));
     console.log('🔧 Constructor - Registrando filtros personalizados...');
     this.registerCustomFilters();
     console.log('✅ Constructor - Filtros personalizados registrados');
@@ -918,7 +914,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('🚀 ngOnInit - Componente inicializado');
     // Initialize default date range if not set
     if (!this.fechaInicial || !this.fechaFinal) {
       const today = new Date();
@@ -1078,6 +1073,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private registerCustomFilters() {
+    console.log('🔧 registerCustomFilters - Iniciando registro...');
+    
     this.filterService.register(
       "horarioEntregaCustom",
       (value, filter): boolean => {
@@ -1096,31 +1093,62 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         return result;
       },
     );
+    console.log('✅ Filtro horarioEntregaCustom registrado');
 
     this.filterService.register("customDate", (value, filter): boolean => {
+      console.log('🔍 FILTRO customDate - Valor:', value, 'Filtro:', filter);
+      
       if (filter === undefined || filter === null) {
+        console.log('✅ Filtro vacío, retornando true');
         return true;
       }
 
       if (value === undefined || value === null) {
+        console.log('❌ Valor vacío, retornando false');
         return false;
       }
 
-      // const valueTransformed = value.toString().split(' - ')
+      // Convertir el valor de la tabla (que puede ser string o Date) a Date
+      let valueDate: Date;
+      if (typeof value === 'string') {
+        // Si es string, convertir desde formato dd/MM/yyyy
+        const parts = value.split('/');
+        if (parts.length === 3) {
+          valueDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+          console.log('📅 Valor string convertido:', value, '->', valueDate);
+        } else {
+          valueDate = new Date(value);
+          console.log('📅 Valor string genérico convertido:', value, '->', valueDate);
+        }
+      } else {
+        valueDate = new Date(value);
+        console.log('📅 Valor Date convertido:', value, '->', valueDate);
+      }
 
-      // const result = valueTransformed.some((element) => {
-      //   if (!/(\d{2})\/(\d{2})\/(\d{4})/.test(element)) {
-      //     return false;
-      //   }
+      // Convertir el filtro (que viene del calendario) a Date
+      const filterDate = new Date(filter);
+      console.log('📅 Filtro convertido:', filter, '->', filterDate);
 
-      //   // Convertir valores a Date para comparación
-      //   // const filterDate = new Date(filter.split('/').reverse().join('-'));
-      //   const valueDate = new Date(element.split('/').reverse().join('-') + 'T00:00:00');
-      //   return valueDate.getTime() === filter.getTime();
+      // Verificar si las fechas son válidas
+      if (isNaN(valueDate.getTime()) || isNaN(filterDate.getTime())) {
+        console.log('❌ Fecha inválida detectada - Valor:', valueDate, 'Filtro:', filterDate);
+        return false;
+      }
 
-      // });
-      return new Date(value).getTime() === filter.getTime();
+      // Comparar solo la fecha (sin hora)
+      const valueDateOnly = new Date(valueDate.getFullYear(), valueDate.getMonth(), valueDate.getDate());
+      const filterDateOnly = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
+      
+      console.log('📅 Comparando fechas:', valueDateOnly, 'vs', filterDateOnly);
+      
+      const result = valueDateOnly.getTime() === filterDateOnly.getTime();
+      console.log('✅ Resultado del filtro:', result);
+      
+      return result;
     });
+    console.log('✅ Filtro customDate registrado');
+    
+    console.log('🎯 registerCustomFilters - Todos los filtros registrados exitosamente');
   }
 
   // ✅ NUEVO: Flag para controlar refrescos automáticos
