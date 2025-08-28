@@ -89,6 +89,11 @@ export class CartSingletonService {
     if (index !== -1) {
       // Mantener el mismo objeto si es posible para evitar perder referencias internas
       const updated = { ...products[index], ...producto };
+      // Forzar cantidad numérica
+      if (updated && typeof updated.cantidad !== 'number') {
+        const parsed = parseInt(updated.cantidad);
+        updated.cantidad = isNaN(parsed) ? (products[index]?.cantidad || 1) : parsed;
+      }
       // preservar id único si existía
       updated.cartItemId = products[index]?.cartItemId || producto?.cartItemId || products[index]?._cartUid || producto?._cartUid;
       products[index] = updated;

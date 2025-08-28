@@ -9,6 +9,7 @@ import { CashClosingComponent } from './widgets/cash-closing/cash-closing.compon
 import { CashClosingHistoryComponent } from './widgets/cash-closing-history/cash-closing-history.component';
 import { CartService } from '../../../shared/services/cart.service';
 import { PosCheckoutService } from '../../../shared/services/ventas/pos-checkout.service';
+import { TourService } from '../../../shared/services/tour.service';
 
 @Component({
   selector: 'app-pos',
@@ -23,7 +24,8 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
   constructor(
     private modal: NgbModal,
     private cartService: CartService,
-    private checkoutService: PosCheckoutService
+    private checkoutService: PosCheckoutService,
+    private tourService: TourService
   ) {}
 
   ngOnInit(): void {
@@ -38,6 +40,14 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
     const initialBodegaId = initialBodega ? initialBodega.idBodega : undefined;
     if (this.productComponent) {
        this.productComponent.obtenerProductos(initialBodegaId);
+    }
+    
+    // Initialize POS tour after view is loaded only if not completed
+    const completedTours = JSON.parse(localStorage.getItem('katuq_completed_tours') || '[]');
+    if (!completedTours.includes('pos')) {
+      setTimeout(() => {
+        this.tourService.startTour('pos', this.tourService.getPosTour());
+      }, 2000);
     }
   }
 
@@ -93,5 +103,9 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
       backdrop: 'static',
       keyboard: false
     });
+  }
+
+  startPosTour(): void {
+    this.tourService.startTour('pos', this.tourService.getPosTour());
   }
 }

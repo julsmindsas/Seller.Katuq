@@ -9,6 +9,7 @@ import { MovimientoInventario } from '../model/movimientoinventario'
 import * as XLSX from 'xlsx';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
+import { TourService } from '../../../shared/services/tour.service';
 import { Table } from 'primeng/table';
 
 // Tipo extendido para productos con información de inventario
@@ -101,12 +102,21 @@ export class InventarioCatalogoComponent implements OnInit {
     private inventarioService: InventarioService,
     private router: Router,
     private modalService: NgbModal,
-    private bodegaService: BodegaService // Inyectamos el servicio de bodegas
+    private bodegaService: BodegaService, // Inyectamos el servicio de bodegas
+    private tourService: TourService
   ) { }
 
   ngOnInit(): void {
     this.empresaActual = JSON.parse(localStorage.getItem("currentCompany") ?? '{}');
     const texto = this.empresaActual.nomComercial.toString();
+    
+    // Initialize tour after component loads only if not completed
+    const completedTours = JSON.parse(localStorage.getItem('katuq_completed_tours') || '[]');
+    if (!completedTours.includes('inventario')) {
+      setTimeout(() => {
+        this.tourService.startTour('inventario', this.tourService.getInventarioTour());
+      }, 2000);
+    }
     this.ultimasLetras = texto.substring(texto.length - 3);
 
     // Inicializar el historial de páginas
@@ -529,5 +539,9 @@ export class InventarioCatalogoComponent implements OnInit {
         return total;
       }
     }, 0);
+  }
+
+  startInventarioTour(): void {
+    this.tourService.startTour('inventario', this.tourService.getInventarioTour());
   }
 }

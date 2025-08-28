@@ -23,7 +23,7 @@ const routes: Routes = [
   // Ruta por defecto - redirigir a encuesta de registro
   {
     path: '',
-    redirectTo: 'nuevo-registro',
+    redirectTo: 'login',
     pathMatch: 'full'
   },
   {

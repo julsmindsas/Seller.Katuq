@@ -1,0 +1,19 @@
+/* Tour Navigation Button Styles */
+.tour-nav {
+  margin-right: 8px;
+  display: flex !important;
+  align-items: center;
+  
+  .tour-btn {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    border-radius: 15px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}

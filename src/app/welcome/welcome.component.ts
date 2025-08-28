@@ -3,6 +3,7 @@ import { ServiciosService } from '../shared/services/servicios.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { TourNavigationService } from '../shared/services/tour-navigation.service';
 
 @Component({
   selector: 'app-welcome',
@@ -47,7 +48,8 @@ export class WelcomeComponent implements OnInit {
 
   constructor(
     private service: ServiciosService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private tourNavigationService: TourNavigationService
   ) {
     // Setup debounce for search input
     this.searchDebounce.pipe(
@@ -306,5 +308,26 @@ export class WelcomeComponent implements OnInit {
   // Helper for pagination display
   get Math() {
     return Math;
+  }
+
+  // Tour methods
+  startMainNavigationTour() {
+    this.tourNavigationService.startMainNavigationTour();
+  }
+
+  startDashboardTour() {
+    this.tourNavigationService.startDashboardTour();
+  }
+
+  startVentasTour() {
+    this.tourNavigationService.startVentasTour();
+  }
+
+  startInventarioTour() {
+    this.tourNavigationService.startInventarioTour();
+  }
+
+  startPosTour() {
+    this.tourNavigationService.startPosTour();
   }
 }

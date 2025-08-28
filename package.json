@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "deploytest":"firebase hosting:channel:deploy preview-name",
+    "deploytest": "firebase hosting:channel:deploy preview-name",
     "build": "ng build",
     "build:prod": "ng build --configuration=production",
     "test": "ng test",
@@ -57,6 +57,7 @@
     "apexcharts": "^3.35.4",
     "bootstrap": "^5.2.0",
     "crypto-js": "^4.1.1",
+    "driver.js": "^1.3.6",
     "feather-icons": "^4.29.0",
     "firebase": "^9.17.1",
     "flatted": "^3.2.7",

@@ -15,20 +15,29 @@
                 <div class="card-header bg-light">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h4 class="mb-0">
-                                <i class="icofont icofont-box text-primary me-2"></i>
-                                {{ 'Inventario por Bodegas' | translate }}
-                            </h4>
-                            <p class="text-muted mb-0 mt-1">
-                                <small>
-                                    <i class="fa fa-info-circle me-1"></i>
-                                    {{ 'Gestiona el inventario de todas tus bodegas' | translate }}
-                                </small>
-                            </p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">
+                                        <i class="icofont icofont-box text-primary me-2"></i>
+                                        {{ 'Inventario por Bodegas' | translate }}
+                                    </h4>
+                                    <p class="text-muted mb-0 mt-1">
+                                        <small>
+                                            <i class="fa fa-info-circle me-1"></i>
+                                            {{ 'Gestiona el inventario de todas tus bodegas' | translate }}
+                                        </small>
+                                    </p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-info btn-sm me-2" (click)="startInventarioTour()" title="Iniciar tour guiado de inventarios">
+                                        <i class="fas fa-route me-1"></i>{{ 'Tour Guiado' | translate }}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <div class="d-flex justify-content-md-end mt-3 mt-md-0">
-                                <div class="form-group flex-grow-1 me-3" style="max-width: 300px;">
+                                <div class="form-group flex-grow-1 me-3" style="max-width: 300px;" data-tour="nuevo-producto">
                                     <select class="form-select" [(ngModel)]="bodegaSeleccionada"
                                         (change)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)"
                                         [ngbTooltip]="'Selecciona una bodega para ver su inventario' | translate"
@@ -59,7 +68,7 @@
                             </div>
 
                             <!-- Barra de búsqueda global -->
-                            <div class="col-md-12 mb-4">
+                            <div class="col-md-12 mb-4" data-tour="search-productos">
                                 <div class="input-group">
                                     <span class="input-group-text bg-primary text-white">
                                         <i class="fa fa-search"></i>
@@ -178,7 +187,7 @@
                     </div>
 
                     <!-- Tabla de productos con configuración de scroll mejorada -->
-                    <div class="table-container">
+                    <div class="table-container" data-tour="productos-grid">
                         <p-table #dt [value]="rowsFiltradas" [paginator]="true" [rows]="pageSize"
                             [totalRecords]="rowsFiltradas.length"
                             styleClass="p-datatable-customers p-datatable-striped p-datatable-gridlines"

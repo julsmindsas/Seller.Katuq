@@ -5,6 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { KatuqintelligenceService } from '../../shared/services/katuqintelligence/katuqintelligence.service';
 import { AnalyticsService } from '../../shared/services/dashboard/analytics.service';
+import { TourService } from '../../shared/services/tour.service';
 import { 
   DashboardCoreResponse, 
   DashboardDetailsResponse,
@@ -149,7 +150,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private ventasService: VentasService,
     private katuqintelligenceService: KatuqintelligenceService,
-    private analyticsService: AnalyticsService
+    private analyticsService: AnalyticsService,
+    private tourService: TourService
   ) {
     this.initializeDates();
   }
@@ -164,6 +166,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     // Los gráficos se renderizan cuando lleguen los datos
+    // Inicializar tour después de que la vista esté completamente cargada
+    setTimeout(() => {
+      this.initializeDashboardTour();
+    }, 2000);
   }
 
   ngOnDestroy(): void {
@@ -1532,5 +1538,53 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('📈 Stats canales:', this.getChannelStats());
       console.log('========================');
     }
+  }
+
+  // === TOUR METHODS ===
+
+  private initializeDashboardTour(): void {
+    // Solo inicializar el tour si no se ha completado antes y hay datos cargados
+    if (!this.estadoCarga.core && !this.estadoCarga.error) {
+      // Hide the welcome banner if user has already seen the tour
+      this.hideWelcomeBannerIfTourCompleted();
+    }
+  }
+
+  startDashboardTour(): void {
+    this.tourService.startTour('dashboard', this.tourService.getDashboardTour());
+    // Hide banner after starting tour
+    this.hideWelcomeBanner();
+  }
+
+  resetTours(): void {
+    this.tourService.resetTours();
+    // Show the welcome banner again
+    this.showWelcomeBanner();
+    console.log('Tours reiniciados. Recarga la página para ver los tours nuevamente.');
+  }
+
+  private hideWelcomeBannerIfTourCompleted(): void {
+    const completedTours = JSON.parse(localStorage.getItem('katuq_completed_tours') || '[]');
+    if (completedTours.includes('dashboard')) {
+      this.hideWelcomeBanner();
+    }
+  }
+
+  private hideWelcomeBanner(): void {
+    setTimeout(() => {
+      const banner = document.getElementById('tour-welcome-banner');
+      if (banner) {
+        banner.style.display = 'none';
+      }
+    }, 100);
+  }
+
+  private showWelcomeBanner(): void {
+    setTimeout(() => {
+      const banner = document.getElementById('tour-welcome-banner');
+      if (banner) {
+        banner.style.display = 'block';
+      }
+    }, 100);
   }
 }

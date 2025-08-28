@@ -71,6 +71,7 @@
                             <input class="form-control text-center" 
                                    type="number" 
                                    [(ngModel)]="itemCarrito.cantidad"
+                                   (ngModelChange)="onCantidadInputChange(itemCarrito, $event)"
                                    (blur)="onCantidadChange(itemCarrito)"
                                    (keyup.enter)="onCantidadChange(itemCarrito)"
                                    [min]="itemCarrito?.producto?.disponibilidad?.cantidadMinVenta || 1"

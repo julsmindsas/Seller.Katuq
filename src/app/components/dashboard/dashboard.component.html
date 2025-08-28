@@ -4,7 +4,7 @@
         <div class="col-sm-12">
             <div class="card dashboard-card">
                 <!-- Header Section -->
-                <div class="dashboard-header p-4">
+                <div class="dashboard-header p-4" data-tour="welcome">
                     <div class="row align-items-center">
                         <div class="col-md-4">
                             <h2 class="dashboard-title mb-2">
@@ -65,6 +65,18 @@
                                             <i class="fas fa-compress-alt me-1"></i>
                                             {{ 'Colapsar Todo' | translate }}
                                         </button>
+                                        <button class="btn btn-sm btn-info me-2" 
+                                                (click)="startDashboardTour()" 
+                                                title="Iniciar tour guiado del dashboard">
+                                            <i class="fas fa-route me-1"></i>
+                                            {{ 'Tour Guiado' | translate }}
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" 
+                                                (click)="resetTours()" 
+                                                title="Reiniciar todos los tours">
+                                            <i class="fas fa-redo me-1"></i>
+                                            {{ 'Reiniciar Tours' | translate }}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -78,9 +90,29 @@
                     {{ estadoCarga.error }}
                 </div>
 
+                <!-- Tour Welcome Banner for New Users -->
+                <div class="alert alert-info alert-dismissible fade show m-4" role="alert" id="tour-welcome-banner">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-route fa-2x text-info"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading mb-1">
+                                <i class="fas fa-sparkles me-2"></i>{{ '¡Descubre Katuq Seller!' | translate }}
+                            </h5>
+                            <p class="mb-2">{{ 'Inicia el tour guiado para conocer todas las funcionalidades de tu panel de control.' | translate }}</p>
+                            <button class="btn btn-info btn-sm me-2" (click)="startDashboardTour()">
+                                <i class="fas fa-play me-1"></i>{{ 'Comenzar Tour' | translate }}
+                            </button>
+                            <small class="text-muted">{{ 'Solo toma 2 minutos' | translate }}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
                 <!-- KPI Cards Section - Carga inmediata -->
                 <div class="dashboard-content p-4">
-                    <div class="row g-4 mb-4">
+                    <div class="row g-4 mb-4" data-tour="stats-cards">
                         <!-- KPI Cards -->
                         <div class="col-lg-3 col-md-6">
                             <div class="card kpi-card gradient-primary text-white h-100">
@@ -210,7 +242,7 @@
                             <div class="row g-4">
                                 <!-- Tendencia de Ventas -->
                                 <div class="col-md-8">
-                                    <div class="card chart-card h-100">
+                                    <div class="card chart-card h-100" data-tour="chart-ventas">
                                         <div class="card-header bg-gradient-primary text-white">
                                             <h5 class="card-title mb-0">
                                                 <i class="fas fa-chart-area me-2"></i>
@@ -423,7 +455,7 @@
 
                                 <!-- Productos Más Vendidos -->
                                 <div class="col-md-6">
-                                    <div class="card chart-card h-100">
+                                    <div class="card chart-card h-100" data-tour="top-productos">
                                         <div class="card-header bg-gradient-success text-white">
                                             <h5 class="card-title mb-0">
                                                 <img src="assets/icons/dashboard/trophy-star.svg" class="chart-icon me-2" alt="Top Productos">
@@ -706,7 +738,7 @@
 
                                 <!-- Resumen de Flujo de Estados -->
                                 <div class="col-md-4" *ngIf="!estadoCarga.pedidos && pedidosData.flujoEstados">
-                                    <div class="card metric-card-enhanced h-100">
+                                    <div class="card metric-card-enhanced h-100" data-tour="pedidos-recientes">
                                         <div class="card-header bg-gradient-info text-white">
                                             <h5 class="card-title mb-0">
                                                 <i class="fas fa-stream me-2"></i>

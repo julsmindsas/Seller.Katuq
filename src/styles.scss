@@ -10,6 +10,7 @@
 @import "./assets/scss/pages/custom.scss";
 @import "~@angular/cdk/overlay-prebuilt.css";
 @import "~@ng-select/ng-select/themes/default.theme.css";
+@import "driver.js/dist/driver.css";
 
 
 body {
@@ -197,4 +198,117 @@ body.modal-open {
   position: fixed;
   width: 100%;
   height: 100%;
+}
+
+/* Driver.js Custom Styling for Katuq Theme */
+.driver-popover {
+  background: var(--white-color);
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(69, 155, 209, 0.2);
+  max-width: 340px;
+  transform-origin: center;
+  transition: transform 0.2s ease;
+  
+  .driver-popover-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 8px;
+    font-family: 'Roboto', sans-serif;
+  }
+  
+  .driver-popover-description {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: 'Roboto', sans-serif;
+  }
+  
+  .driver-popover-footer {
+    margin-top: 16px;
+    
+    button {
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      border-radius: 6px;
+      padding: 8px 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &.driver-popover-next-btn, 
+      &.driver-popover-done-btn {
+        background: var(--primary-color);
+        color: white;
+        
+        &:hover {
+          background: var(--primary-dark-color);
+        }
+      }
+      
+      &.driver-popover-prev-btn {
+        background: #f1f3f4;
+        color: #5f6368;
+        
+        &:hover {
+          background: #e8eaed;
+        }
+      }
+    }
+  }
+  
+  .driver-popover-progress-text {
+    color: var(--primary-color);
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-family: 'Roboto', sans-serif;
+  }
+}
+
+.driver-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.driver-highlighted-element {
+  border: 3px solid var(--primary-color) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 20px rgba(69, 155, 209, 0.4) !important;
+  animation: pulse-border 2s infinite;
+}
+
+/* Tour Animations and Effects */
+.tour-click-feedback {
+  transform: scale(1.02) !important;
+}
+
+.katuq-tour.driver-popover {
+  animation: slideInScale 0.3s ease-out;
+}
+
+@keyframes slideInScale {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(69, 155, 209, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(69, 155, 209, 0.7);
+  }
+}
+
+/* Tour welcome banner specific styles */
+#tour-welcome-banner {
+  border-left: 4px solid var(--primary-color);
+  background: linear-gradient(135deg, rgba(69, 155, 209, 0.05) 0%, rgba(69, 155, 209, 0.1) 100%);
 }

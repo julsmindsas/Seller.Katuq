@@ -162,30 +162,35 @@ export class CarritoComponent implements OnInit {
 
   private getProductPriceWithScale(producto: any): number {
     if (!producto?.producto?.precio) return 0;
-    
-    const preciosVolumen = producto.producto.precio.preciosVolumen;
-    if (!preciosVolumen || preciosVolumen.length === 0) {
-      return producto.producto.precio.precioUnitarioConIva || 0;
+
+    const preciosVolumen = producto?.producto?.precio?.preciosVolumen ?? [];
+    const precioUnitarioConIvaBase = Number(producto?.producto?.precio?.precioUnitarioConIva) || 0;
+    if (!Array.isArray(preciosVolumen) || preciosVolumen.length === 0) {
+      return precioUnitarioConIvaBase;
     }
 
-    const cantidad = parseInt(producto.cantidad);
-    const rangoActual = preciosVolumen.find(x =>
-      cantidad >= x.numeroUnidadesInicial && cantidad <= x.numeroUnidadesLimite
-    );
+    const cantidad = Number(producto?.cantidad) || 0;
+    const rangoActual = preciosVolumen.find((x: any) => {
+      const min = Number(x?.numeroUnidadesInicial) || 0;
+      const max = Number(x?.numeroUnidadesLimite) || Infinity;
+      return cantidad >= min && cantidad <= max;
+    });
 
-    return rangoActual?.valorUnitarioPorVolumenConIVA || producto.producto.precio.precioUnitarioConIva || 0;
+    const precioVolumenConIva = Number(rangoActual?.valorUnitarioPorVolumenConIVA) || 0;
+    return precioVolumenConIva > 0 ? precioVolumenConIva : precioUnitarioConIvaBase;
   }
 
   getTotalProductPriceInCart(): number {
     if (!this.productos || this.productos.length === 0) return 0;
 
     return this.productos.reduce((total, producto) => {
-      const precioBase = this.getProductPriceWithScale(producto);
-      const precioAdiciones = this.calculateAdicionesPrice(producto.configuracion?.adiciones);
-      const precioPreferencias = this.calculatePreferenciasPrice(producto.configuracion?.preferencias);
-      const cantidad = parseInt(producto.cantidad) || 0;
+      const precioBase = Number(this.getProductPriceWithScale(producto)) || 0;
+      const precioAdiciones = Number(this.calculateAdicionesPrice(producto?.configuracion?.adiciones)) || 0;
+      const precioPreferencias = Number(this.calculatePreferenciasPrice(producto?.configuracion?.preferencias)) || 0;
+      const cantidad = Number(producto?.cantidad) || 0;
 
-      return total + ((precioBase + precioAdiciones + precioPreferencias) * cantidad);
+      const totalItem = (precioBase + precioAdiciones + precioPreferencias) * cantidad;
+      return total + (isNaN(totalItem) ? 0 : totalItem);
     }, 0);
   }
 
@@ -227,6 +232,33 @@ export class CarritoComponent implements OnInit {
     if (!itemCarrito) return;
     itemCarrito.cantidad++;
     this.updateCartAndCheckPriceScale(itemCarrito);
+  }
+
+  // Recalcular en tiempo real mientras el usuario escribe
+  onCantidadInputChange(itemCarrito: any, value: any): void {
+    if (!itemCarrito) return;
+
+    // Permitir campo vacío temporalmente sin recalcular
+    if (value === '' || value === null || value === undefined) {
+      itemCarrito.cantidad = value;
+      return;
+    }
+
+    // Normalizar a entero positivo
+    const cantidadNormalizada = Math.floor(Number(value));
+    if (isNaN(cantidadNormalizada) || cantidadNormalizada <= 0) {
+      // No recalcular aún; se validará en blur/enter
+      itemCarrito.cantidad = value;
+      return;
+    }
+
+    // Respetar cantidad mínima si existe
+    const cantidadMinima = itemCarrito.producto?.disponibilidad?.cantidadMinVenta || 1;
+    const nuevaCantidad = Math.max(cantidadMinima, cantidadNormalizada);
+    if (itemCarrito.cantidad !== nuevaCantidad) {
+      itemCarrito.cantidad = nuevaCantidad;
+      this.updateCartAndCheckPriceScale(itemCarrito);
+    }
   }
 
   onCantidadChange(itemCarrito: any): void {
@@ -277,11 +309,14 @@ export class CarritoComponent implements OnInit {
   }
 
   private getCurrentPriceRange(itemCarrito: any): any {
-    if (!itemCarrito?.producto?.precio?.preciosVolumen) return null;
-    return itemCarrito.producto.precio.preciosVolumen.find(x =>
-      parseInt(itemCarrito.cantidad) >= x.numeroUnidadesInicial && 
-      parseInt(itemCarrito.cantidad) <= x.numeroUnidadesLimite
-    );
+    const preciosVolumen = itemCarrito?.producto?.precio?.preciosVolumen;
+    if (!Array.isArray(preciosVolumen)) return null;
+    const cantidad = Number(itemCarrito?.cantidad) || 0;
+    return preciosVolumen.find((x: any) => {
+      const min = Number(x?.numeroUnidadesInicial) || 0;
+      const max = Number(x?.numeroUnidadesLimite) || Infinity;
+      return cantidad >= min && cantidad <= max;
+    });
   }
 
   async validarCuponYAplica(): Promise<void> {
@@ -405,9 +440,11 @@ export class CarritoComponent implements OnInit {
 
     // Encontrar el índice real en el array completo de notas
     const notaAEliminar = notasDelProducto[index];
-    const indiceRealEnPedido = this.pedido.notasPedido.notasProduccion.findIndex(nota => nota === notaAEliminar);
+    const indiceRealEnPedido = this.pedido?.notasPedido?.notasProduccion
+      ? this.pedido.notasPedido.notasProduccion.findIndex(nota => nota === notaAEliminar)
+      : -1;
     
-    if (indiceRealEnPedido !== -1) {
+    if (indiceRealEnPedido !== -1 && this.pedido?.notasPedido?.notasProduccion) {
       this.pedido.notasPedido.notasProduccion.splice(indiceRealEnPedido, 1);
     }
     

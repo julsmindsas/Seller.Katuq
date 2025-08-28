@@ -5,6 +5,7 @@ import { LayoutService } from '../../services/layout.service';
 import { NotificationrlService } from '../../services/notificationrl.service';
 import { NgpThemeService } from '../../services/ngtheme.service';
 import { MaestroService } from '../../services/maestros/maestro.service';
+import { TourNavigationService } from '../../services/tour-navigation.service';
 
 @Component({
   selector: 'app-header',
@@ -26,7 +27,8 @@ export class HeaderComponent implements OnInit {
     public ngpService: NgpThemeService,
     private service: MaestroService,
     @Inject(DOCUMENT) private document: any,
-    private notificationService: NotificationrlService) {
+    private notificationService: NotificationrlService,
+    private tourNavigationService: TourNavigationService) {
     // const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     // if (darkModeMediaQuery.matches) {
     //   this.layoutToggle();
@@ -138,5 +140,9 @@ export class HeaderComponent implements OnInit {
     }
   }
 
+  openTourMenu() {
+    console.log('Opening tour menu...');
+    this.tourNavigationService.showTourMenu();
+  }
 
 }

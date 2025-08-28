@@ -3,6 +3,45 @@
   padding: 20px;
 }
 
+// Tour Section Styles
+.tour-section {
+  border-radius: 15px;
+  overflow: hidden;
+  
+  .card-header {
+    background: linear-gradient(135deg, var(--primary-color, #459BD1) 0%, #5BA8DD 100%);
+  }
+}
+
+.tour-card {
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background: white;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    border-color: var(--primary-color, #459BD1) !important;
+  }
+  
+  .tour-icon i {
+    transition: transform 0.3s ease;
+  }
+  
+  &:hover .tour-icon i {
+    transform: scale(1.1);
+  }
+  
+  button {
+    transition: all 0.2s ease;
+    font-weight: 600;
+    
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+}
+
 .image0 {
   z-index: 0;
 }
