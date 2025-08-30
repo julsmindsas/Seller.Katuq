@@ -861,14 +861,14 @@
                                                     <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion"
                                                         type="date" display="menu" [showMatchModes]="false"
                                                         [showOperator]="false" [showAddButton]="false">
-                                                                                                                 <ng-template pTemplate="filter" let-value
-                                                             let-filter="filterCallback">
+                                                        <ng-template pTemplate="filter" let-value
+                                                            let-filter="filterCallback">
                                                              <p-calendar (onSelect)="onDateFilterSelect($event, filter)"
                                                                  dateFormat="yy-mm-dd"
                                                                  [showIcon]="true"
                                                                  [showButtonBar]="true">
-                                                             </p-calendar>
-                                                         </ng-template>
+                                                            </p-calendar>
+                                                        </ng-template>
                                                     </p-columnFilter>
                                                 </div>
                                             </th>

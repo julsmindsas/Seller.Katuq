@@ -537,6 +537,55 @@ export class PedidosUtilService {
         let totalPrecioSinIVADef = 0;
         if (this.pedido && this.pedido.carrito) {
 
+            this.pedido.carrito.forEach((itemCarrito: any) => {
+                if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
+                    itemCarrito.producto.precio.preciosVolumen.map((x: any) => {
+                        if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
+                            totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * itemCarrito.cantidad;
+                        } else {
+                            totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
+                        }
+
+                    });
+                } else {
+                    totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
+                }
+                // Sumar precios de adiciones
+                if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
+                    itemCarrito.configuracion.adiciones.forEach(adicion => {
+                        totalPrecioSinIVA += (adicion['cantidad'] * adicion['referencia']['precioUnitario']) * itemCarrito.cantidad;
+                    });
+                }
+
+                // Sumar precios de preferencias
+                if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
+                    itemCarrito.configuracion.preferencias.forEach(preferencia => {
+                        totalPrecioSinIVA += (preferencia['valorUnitarioSinIva']) * itemCarrito.cantidad;
+                    });
+                }
+                totalPrecioSinIVADef += totalPrecioSinIVA
+            });
+
+        }
+        
+        // ✅ SOLUCIÓN: NO incluir el envío aquí para evitar duplicación
+        // El envío se sumará manualmente en actualizarValoresPedido()
+        console.log('💰 SUBTOTAL - Solo productos (sin envío):', {
+            subtotalProductos: totalPrecioSinIVADef,
+            totalEnvio: this.pedido?.totalEnvio || 0
+        });
+        
+        return totalPrecioSinIVADef;
+    }
+    
+    /**
+     * 🔄 NUEVO: Obtener subtotal solo de productos (sin envío)
+     * Útil para casos donde se necesita el subtotal base
+     */
+    getSubtotalSinEnvio(): number {
+        let totalPrecioSinIVA = 0;
+        let totalPrecioSinIVADef = 0;
+        if (this.pedido && this.pedido.carrito) {
 
             this.pedido.carrito.forEach((itemCarrito: any) => {
                 if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
@@ -567,8 +616,8 @@ export class PedidosUtilService {
                 totalPrecioSinIVADef += totalPrecioSinIVA
             });
 
-
         }
+        
         return totalPrecioSinIVADef;
     }
     checkIVAPrice() {
@@ -603,7 +652,19 @@ export class PedidosUtilService {
     }
 
     getTotalToPay(shipinCost: number): number {
-        return (this.getSubtotal() + shipinCost) - this.getDiscount();
+        // ✅ SOLUCIÓN: El subtotal ya incluye el envío desde actualizarValoresPedido()
+        // shipinCost se mantiene por compatibilidad pero ya no se suma
+        const subtotalConEnvio = this.pedido?.totalPedidoSinDescuento || this.getSubtotal();
+        const totalConDescuento = subtotalConEnvio - this.getDiscount();
+        
+        console.log('💰 TOTAL TO PAY - Cálculo final:', {
+            subtotalConEnvio,
+            descuento: this.getDiscount(),
+            totalConDescuento,
+            shipinCost // Solo para debug, ya no se suma
+        });
+        
+        return totalConDescuento;
     }
 
     getShippingCost(allBillingZone): number {
@@ -680,7 +741,17 @@ export class PedidosUtilService {
 
     getDiscount(): number {
         if (this.pedido && this.pedido.porceDescuento) {
-            return this.getSubtotal() * ((this.pedido.porceDescuento) / 100);
+            // 🔄 NUEVO: Los descuentos se aplican solo a productos, no al envío
+            const subtotalProductos = this.getSubtotalSinEnvio();
+            const descuento = subtotalProductos * ((this.pedido.porceDescuento) / 100);
+            
+            console.log('💰 DESCUENTO - Cálculo:', {
+                subtotalProductos,
+                porcentajeDescuento: this.pedido.porceDescuento,
+                descuentoCalculado: descuento
+            });
+            
+            return descuento;
         }
         return 0;
     }
