@@ -3101,28 +3101,59 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Recalcular descuentos
     order.totalDescuento = this.pedidoUtilService.getDiscount();
     
-    // Recalcular subtotal sin descuentos
-    order.totalPedidoSinDescuento = this.pedidoUtilService.getSubtotal();
+    // 🔍 DETECTAR CAMBIOS EN FORMA DE ENTREGA
+    const tieneDomicilio = (order.carrito ?? []).some((car) => {
+      const forma = car?.configuracion?.datosEntrega?.formaEntrega || "";
+      return forma.toLowerCase().includes("domicilio");
+    });
     
-    // Recalcular costo de envío (domicilio) si hay información de envío
-    if (order.envio && order.envio.zonaCobro) {
+    // 🔄 SINCRONIZAR ENVÍO CON FORMA DE ENTREGA ACTUAL
+    let costoEnvioAnterior = order.totalEnvio || 0;
+    let costoEnvioNuevo = 0;
+    
+    if (tieneDomicilio && order.envio?.zonaCobro) {
       try {
-        // Usar el servicio utilitario para calcular el costo de envío
-        order.totalEnvio = Number(this.pedidoUtilService.getShippingCost(this.allBillingZone));
+        costoEnvioNuevo = Number(this.pedidoUtilService.getShippingCost(this.allBillingZone));
+        order.totalEnvio = costoEnvioNuevo;
+        
+        console.log('🚚 ACTUALIZAR VALORES - Envío domicilio detectado:', {
+          costoAnterior: costoEnvioAnterior,
+          costoNuevo: costoEnvioNuevo,
+          formaEntrega: 'Domicilio',
+          zonaCobro: order.envio.zonaCobro
+        });
       } catch (e) {
-        // Fallback si las zonas no están disponibles
         console.warn('No se pudo calcular el costo de envío:', e);
         order.totalEnvio = 0;
+        costoEnvioNuevo = 0;
       }
     } else {
-      // Si no hay zona de cobro, no hay costo de envío
+      // Recoge en tienda o sin zona de cobro
+      if (order.totalEnvio !== 0) {
+        console.log('🚚 ACTUALIZAR VALORES - Envío removido (recoge en tienda)');
+      }
       order.totalEnvio = 0;
+      costoEnvioNuevo = 0;
     }
     
-    // Recalcular total con descuentos incluyendo el envío
-    order.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(
-      Number(order.totalEnvio || 0),
-    );
+    // 🔄 CALCULAR SUBTOTAL CORRECTAMENTE
+    // 1. Obtener subtotal SOLO de productos
+    const subtotalProductos = this.pedidoUtilService.getSubtotal();
+    
+    // 2. Sumar envío al subtotal
+    order.totalPedidoSinDescuento = subtotalProductos + (order.totalEnvio || 0);
+    
+    console.log('💰 ACTUALIZAR VALORES - Cálculo del subtotal:', {
+      subtotalProductos,
+      totalEnvio: order.totalEnvio,
+      subtotalFinal: order.totalPedidoSinDescuento,
+      cambioEnvio: costoEnvioAnterior !== costoEnvioNuevo,
+      formaEntrega: order.carrito?.map(c => c.configuracion?.datosEntrega?.formaEntrega)
+    });
+    
+    // Recalcular total con descuentos (el envío ya está incluido en el subtotal)
+    const totalConDescuento = this.pedidoUtilService.getTotalToPay(0); // 0 porque el subtotal ya incluye envío
+    order.totalPedididoConDescuento = totalConDescuento;
     
     // Recalcular falta por pagar si hay anticipos
     if (order.PagosAsentados && order.PagosAsentados.length > 0) {
