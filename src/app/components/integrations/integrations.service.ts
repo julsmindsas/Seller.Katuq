@@ -712,6 +712,12 @@ export class IntegrationsService {
           name: 'Coordinadora',
           description: 'Servicio de entrega puerta a puerta de Colombia',
           logo: 'assets/images/logos/coordinadora.svg' 
+        },
+        { 
+          id: 'partners_logistics', 
+          name: 'Partners Logística',
+          description: 'Integración personalizada con partners de logística y envíos',
+          logo: 'assets/images/logos/partners-logistics.svg' 
         }
       ],
       [IntegrationCategory.MARKETING]: [

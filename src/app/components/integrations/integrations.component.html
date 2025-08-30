@@ -43,12 +43,15 @@
             <i class="fa" [ngClass]="{
             'fa-shopping-bag': type.id === 'shopify',
             'fa-credit-card': type.id === 'wompi' || type.id === 'epayco',
-            'fa-paypal': type.id === 'paypal'
+            'fa-paypal': type.id === 'paypal',
+            'fa-handshake': type.id === 'partners_logistics'
           }"></i>
           </div>
           <div class="integration-name">{{type.name}}</div>
           <div class="integration-type">
-            {{type.id === 'shopify' ? 'Tienda online' : 'Pasarela de pago'}}
+            {{type.id === 'shopify' ? 'Tienda online' : 
+              type.id === 'partners_logistics' ? 'Logística y envíos' : 
+              'Pasarela de pago'}}
           </div>
         </div>
       </div>
@@ -1043,6 +1046,119 @@
                 <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
               </div>
               <small class="form-text text-muted">Contraseña del usuario (opcional)</small>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Partners Logística Fields -->
+        <ng-container *ngIf="selectedIntegrationType === 'partners_logistics'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>Configure la integración con su partner de logística proporcionando la API Key, URL del servicio y webhook para recibir actualizaciones.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="apiKey">
+              <i class="fa fa-key"></i> API Key:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-lock prefix-icon"></i>
+              <input type="password" id="apiKey" formControlName="apiKey" placeholder="Ingrese la API Key proporcionada por el partner">
+            </div>
+            <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> La API Key es obligatoria y debe tener al menos 10 caracteres
+            </div>
+            <small class="form-text text-muted">Clave de autenticación proporcionada por su partner de logística</small>
+          </div>
+
+          <div class="form-group">
+            <label for="apiUrl">
+              <i class="fa fa-globe"></i> URL de API:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-link prefix-icon"></i>
+              <input type="url" id="apiUrl" formControlName="apiUrl" placeholder="https://api.partner-logistica.com/v1">
+            </div>
+            <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para la API
+            </div>
+            <small class="form-text text-muted">URL base del servicio API del partner</small>
+          </div>
+
+          <div class="form-group">
+            <label for="webhookUrl">
+              <i class="fa fa-link"></i> URL del Webhook:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-bell prefix-icon"></i>
+              <input type="url" id="webhookUrl" formControlName="webhookUrl" placeholder="https://tutienda.com/webhooks/partners-logistics">
+            </div>
+            <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para el webhook
+            </div>
+            <small class="form-text text-muted">URL donde recibirás notificaciones de estado de envíos</small>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="environment">
+                <i class="fa fa-server"></i> Ambiente:
+              </label>
+              <select id="environment" formControlName="environment" class="form-control">
+                <option value="production">Producción</option>
+                <option value="staging">Staging</option>
+                <option value="development">Desarrollo</option>
+              </select>
+              <small class="form-text text-muted">Ambiente del servicio a utilizar</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="timeout">
+                <i class="fa fa-clock"></i> Timeout (segundos):
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-hourglass-half prefix-icon"></i>
+                <input type="number" id="timeout" formControlName="timeout" min="5" max="300" placeholder="30">
+              </div>
+              <div *ngIf="integrationForm.get('timeout')?.invalid && integrationForm.get('timeout')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> El timeout debe estar entre 5 y 300 segundos
+              </div>
+              <small class="form-text text-muted">Tiempo máximo de espera para respuestas</small>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="retryAttempts">
+                <i class="fa fa-redo"></i> Reintentos:
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-repeat prefix-icon"></i>
+                <input type="number" id="retryAttempts" formControlName="retryAttempts" min="0" max="10" placeholder="3">
+              </div>
+              <div *ngIf="integrationForm.get('retryAttempts')?.invalid && integrationForm.get('retryAttempts')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Los reintentos deben estar entre 0 y 10
+              </div>
+              <small class="form-text text-muted">Número de reintentos en caso de fallo</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="notifyErrors">
+                <i class="fa fa-bell"></i> Notificar errores:
+              </label>
+              <div class="toggle-container">
+                <label class="switch">
+                  <input type="checkbox" formControlName="notifyErrors" id="notifyErrors">
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('notifyErrors')?.value, 'inactive': !integrationForm.get('notifyErrors')?.value}">
+                  {{ integrationForm.get('notifyErrors')?.value ? 'Activado' : 'Desactivado' }}
+                </span>
+              </div>
+              <small class="form-text text-muted">Recibir notificaciones por email en caso de errores</small>
             </div>
           </div>
         </ng-container>

@@ -31,7 +31,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     { id: 'shopify', name: 'Shopify', logo: 'assets/images/logos/shopify.svg' },
     { id: 'wompi', name: 'Wompi', logo: 'assets/images/logos/wompi.svg' },
     { id: 'epayco', name: 'ePayco', logo: 'assets/images/logos/epayco.svg' },
-    { id: 'paypal', name: 'PayPal', logo: 'assets/images/logos/paypal.svg' }
+    { id: 'paypal', name: 'PayPal', logo: 'assets/images/logos/paypal.svg' },
+    { id: 'partners_logistics', name: 'Partners Logística', logo: 'assets/images/logos/partners-logistics.svg' }
   ];
   
   selectedIntegrationType = 'shopify';
@@ -510,6 +511,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'prestashop':
         this.integrationForm = this.createPrestaShopForm();
         break;
+      case 'partners_logistics':
+        this.integrationForm = this.createPartnersLogisticsForm();
+        break;
       default:
         this.integrationForm = this.createShopifyForm();
         break;
@@ -566,6 +570,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'prestashop':
         this.integrationForm = this.createPrestaShopForm();
+        break;
+      case 'partners_logistics':
+        this.integrationForm = this.createPartnersLogisticsForm();
         break;
       default:
         this.integrationForm = this.createShopifyForm();
@@ -755,6 +762,20 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       webserviceKey: ['', Validators.required],
       language: ['es'],
       outputFormat: ['JSON']
+    });
+  }
+
+  createPartnersLogisticsForm(): FormGroup {
+    return this.fb.group({
+      name: ['Partners Logística', Validators.required],
+      enabled: [true],
+      apiKey: ['', [Validators.required, Validators.minLength(10)]],
+      apiUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      webhookUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      environment: ['production', Validators.required],
+      timeout: [30],
+      retryAttempts: [3],
+      notifyErrors: [true]
     });
   }
 
@@ -959,6 +980,17 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           webserviceKey: formData.webserviceKey,
           language: formData.language,
           outputFormat: formData.outputFormat
+        };
+        break;
+      case 'partners_logistics':
+        credentials = {
+          apiKey: formData.apiKey,
+          apiUrl: formData.apiUrl,
+          webhookUrl: formData.webhookUrl,
+          environment: formData.environment,
+          timeout: formData.timeout,
+          retryAttempts: formData.retryAttempts,
+          notifyErrors: formData.notifyErrors
         };
         break;
     }

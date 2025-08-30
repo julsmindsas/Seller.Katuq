@@ -264,6 +264,9 @@ export class IntegrationFormValidatorService {
       case 'paypal':
         this.validatePayPalForm(formValue, result);
         break;
+      case 'partners_logistics':
+        this.validatePartnersLogisticsForm(formValue, result);
+        break;
       default:
         this.validateGenericForm(formValue, result);
     }
@@ -362,6 +365,59 @@ export class IntegrationFormValidatorService {
     }
   }
 
+  private validatePartnersLogisticsForm(formValue: any, result: ValidationResult): void {
+    // Validar API Key
+    if (!formValue.apiKey || formValue.apiKey.length < 10) {
+      result.errors!['apiKey'] = 'La API Key debe tener al menos 10 caracteres';
+    }
+
+    // Validar URL de API
+    if (formValue.apiUrl) {
+      const urlValidator = this.createUrlValidator();
+      const urlError = urlValidator({ value: formValue.apiUrl } as AbstractControl);
+      if (urlError) {
+        result.errors!['apiUrl'] = 'La URL de API debe ser una URL válida (https://...)';
+      }
+    } else {
+      result.errors!['apiUrl'] = 'La URL de API es obligatoria';
+    }
+
+    // Validar URL de Webhook
+    if (formValue.webhookUrl) {
+      const webhookValidator = this.createUrlValidator();
+      const webhookError = webhookValidator({ value: formValue.webhookUrl } as AbstractControl);
+      if (webhookError) {
+        result.errors!['webhookUrl'] = 'La URL del webhook debe ser una URL válida (https://...)';
+      }
+      
+      // Verificar que sea HTTPS para seguridad
+      if (!formValue.webhookUrl.startsWith('https://')) {
+        result.warnings!.push('Se recomienda usar HTTPS para la URL del webhook por seguridad');
+      }
+    } else {
+      result.errors!['webhookUrl'] = 'La URL del webhook es obligatoria';
+    }
+
+    // Validar timeout
+    if (formValue.timeout && (formValue.timeout < 5 || formValue.timeout > 300)) {
+      result.errors!['timeout'] = 'El timeout debe estar entre 5 y 300 segundos';
+    }
+
+    // Validar reintentos
+    if (formValue.retryAttempts && (formValue.retryAttempts < 0 || formValue.retryAttempts > 10)) {
+      result.errors!['retryAttempts'] = 'Los reintentos deben estar entre 0 y 10';
+    }
+
+    // Sugerencias de configuración
+    if (formValue.environment === 'production' && formValue.timeout && formValue.timeout < 30) {
+      result.suggestions!.push('En producción se recomienda un timeout de al menos 30 segundos');
+    }
+
+    if (formValue.retryAttempts && formValue.retryAttempts < 3) {
+      result.suggestions!.push('Se recomienda configurar al menos 3 reintentos para mejor confiabilidad');
+    }
+  }
+
   private validateGenericForm(formValue: any, result: ValidationResult): void {
     // Validaciones genéricas para integraciones no específicas
     if (!formValue.name || formValue.name.trim().length < 3) {
@@ -411,6 +467,13 @@ export class IntegrationFormValidatorService {
         return {
           clientId: formValue?.clientId,
           clientSecret: formValue?.clientSecret,
+          environment: formValue?.environment
+        };
+      case 'partners_logistics':
+        return {
+          apiKey: formValue?.apiKey,
+          apiUrl: formValue?.apiUrl,
+          webhookUrl: formValue?.webhookUrl,
           environment: formValue?.environment
         };
       default:
