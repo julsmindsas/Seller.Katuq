@@ -193,6 +193,91 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para seleccionar transportador -->
+<div class="modal fade" [class.show]="showTransporterModal" [style.display]="showTransporterModal ? 'block' : 'none'" *ngIf="showTransporterModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="pi pi-truck me-2"></i>
+          {{ 'Seleccionar Transportador' | translate }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeTransporterModal()"></button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="pi pi-info-circle me-2"></i>
+          {{ 'Seleccione el transportador para despachar la orden' | translate }}
+          <strong>{{ selectedOrderForDispatch?.nroShippingOrder }}</strong>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label fw-semibold">{{ 'Transportadores Disponibles' | translate }}</label>
+          
+          <!-- Opción de Mensajero Propio -->
+          <div class="form-check mb-2 p-3 border rounded">
+            <input class="form-check-input" type="radio" 
+                   [(ngModel)]="selectedTransporter" 
+                   value="mensajero_propio" 
+                   id="mensajero_propio">
+            <label class="form-check-label w-100" for="mensajero_propio">
+              <div class="d-flex align-items-center">
+                <i class="pi pi-user me-3 text-primary"></i>
+                <div>
+                  <div class="fw-semibold">{{ 'Mensajero Propio' | translate }}</div>
+                  <small class="text-muted">{{ 'Despacho interno con personal propio' | translate }}</small>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Transportadores Integrados -->
+          <div *ngFor="let transporter of availableTransporters" 
+               class="form-check mb-2 p-3 border rounded">
+            <input class="form-check-input" type="radio" 
+                   [(ngModel)]="selectedTransporter" 
+                   [value]="transporter.provider || transporter.type" 
+                   [id]="'transporter_' + (transporter.provider || transporter.type)">
+            <label class="form-check-label w-100" [for]="'transporter_' + (transporter.provider || transporter.type)">
+              <div class="d-flex align-items-center">
+                <i class="pi pi-send me-3 text-success"></i>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">{{ getTransporterDisplayName(transporter) }}</div>
+                  <small class="text-muted">{{ 'Integración configurada' | translate }}</small>
+                  <span *ngIf="transporter.enabled" class="badge bg-success ms-2">{{ 'Activo' | translate }}</span>
+                  <span *ngIf="!transporter.enabled" class="badge bg-warning">{{ 'Inactivo' | translate }}</span>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Mensaje si no hay transportadores configurados -->
+          <div *ngIf="availableTransporters.length === 0" class="alert alert-warning mt-3">
+            <i class="pi pi-exclamation-triangle me-2"></i>
+            {{ 'No hay transportadores integrados configurados. Solo está disponible mensajero propio.' | translate }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeTransporterModal()">
+          <i class="pi pi-times me-2"></i>{{ 'Cancelar' | translate }}
+        </button>
+        <button type="button" class="btn btn-primary" 
+                (click)="confirmDispatchWithTransporter()"
+                [disabled]="!selectedTransporter">
+          <i class="pi pi-check me-2"></i>{{ 'Confirmar Despacho' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop del modal -->
+<div class="modal-backdrop fade" [class.show]="showTransporterModal" *ngIf="showTransporterModal"></div>
+
 <div class="modal-footer">
   <button type="button" class="btn btn-secondary" (click)="closeModal()">
     {{ 'Cerrar' | translate }}

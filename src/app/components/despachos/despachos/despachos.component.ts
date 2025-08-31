@@ -46,6 +46,7 @@ import { Router } from "@angular/router";
 import { PdfTemplateComponent } from "../components/pdf-template/pdf-template.component";
 import { GeocodingService, GeocodingResponse } from "../../../shared/services/geocoding.service";
 import { MapaUbicacionesComponent } from "../components/mapa-ubicaciones/mapa-ubicaciones.component";
+import { SeguimientoModalComponent } from "../components/seguimiento-modal/seguimiento-modal.component";
 
 interface MapaMetricas {
   despachados: number;
@@ -292,6 +293,7 @@ export class DespachosComponent implements OnInit {
     private router: Router,
     private geocodingService: GeocodingService,
     private cdr: ChangeDetectorRef,
+
   ) {
     const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
     this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
@@ -3678,11 +3680,28 @@ export class DespachosComponent implements OnInit {
 
     this.logisticaService.getShippingOrder(orderIdNumber).subscribe({
       next: (response) => {
-        // Asignar datos a las propiedades
-        this.nuevaOrdenEnvio = response;
+        // Debug: Analizar respuesta del backend
+        console.log('📡 BACKEND RESPONSE - handleOrderView:');
+        console.log('Response completa:', response);
+        console.log('Campos de método de envío en response:', {
+          metodoEnvio: response?.metodoEnvio,
+          metodo_envio: response?.metodo_envio,
+          tipoEnvio: response?.tipoEnvio,
+          transportador: response?.transportador
+        });
+
+        // ✅ PROCESAR y asegurar que la orden tenga metodoEnvio
+        this.nuevaOrdenEnvio = this.ensureMetodoEnvioProperty(response);
         this.pedidosSeleccionados = response.pedidos || [];
         this.transportadorSeleccionado = response.transportador;
         this.nroShippingOrder = response.nroShippingOrder;
+
+        console.log('📋 Variables asignadas:', {
+          nuevaOrdenEnvio: this.nuevaOrdenEnvio,
+          pedidosSeleccionados: this.pedidosSeleccionados?.length || 0,
+          transportadorSeleccionado: this.transportadorSeleccionado,
+          nroShippingOrder: this.nroShippingOrder
+        });
 
         // Cerrar el modal de listado de órdenes
         this.modalService.dismissAll();
@@ -3831,18 +3850,38 @@ export class DespachosComponent implements OnInit {
       this.nuevaOrdenEnvio = {
         id: "",
         nroShippingOrder: this.nroShippingOrder || "",
-        fecha: new Date().toISOString(),
+        fecha: event.fechaEnvio || new Date().toISOString(),
+        metodoEnvio: event.metodoEnvio,
         transportador: this.transportadorSeleccionado || "",
         company: companyName,
         pedidos: this.pedidosSeleccionados || [],
       };
     } else {
-      // Actualizar la orden existente
+      // Actualizar la orden existente con datos del formulario
+      this.nuevaOrdenEnvio.fechaEnvio = event.fechaEnvio;
+      
+      // ✅ ASEGURAR que metodoEnvio siempre exista y se actualice
+      if (!this.nuevaOrdenEnvio.hasOwnProperty('metodoEnvio')) {
+        console.log('⚠️ CREANDO propiedad metodoEnvio que no existía');
+      }
+      this.nuevaOrdenEnvio.metodoEnvio = event.metodoEnvio;
+      
+      // ✅ MARCAR para forzar actualización en backend
+      this.nuevaOrdenEnvio._forceUpdate = true;
+      this.nuevaOrdenEnvio._metodoEnvioChanged = true;
+      
       if (this.transportadorSeleccionado) {
         this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
       }
-      this.nuevaOrdenEnvio.fecha = new Date().toISOString();
+      this.nuevaOrdenEnvio.fecha = event.fechaEnvio || new Date().toISOString();
       this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados || [];
+      
+      console.log('✅ ORDEN ACTUALIZADA con metodoEnvio:', {
+        metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
+        fechaEnvio: this.nuevaOrdenEnvio.fechaEnvio,
+        nroShippingOrder: this.nuevaOrdenEnvio.nroShippingOrder,
+        _forceUpdate: this.nuevaOrdenEnvio._forceUpdate
+      });
     }
 
     // Validar que haya pedidos seleccionados
@@ -3858,32 +3897,39 @@ export class DespachosComponent implements OnInit {
       return;
     }
 
-    // Si es una nueva orden, crear directamente sin solicitar transportador
+    // Guardar siempre con createShippingOrder (sirve para crear y editar). No despachar automáticamente.
     if (esNuevaOrden) {
       this.crearOrdenEnvio();
-    }
-    // Si es despacho de una orden existente y no hay transportador, solicitarlo
-    else if (
-      !this.nuevaOrdenEnvio.transportador ||
-      this.nuevaOrdenEnvio.transportador === ""
-    ) {
-      this.seleccionarTransportador().then((transportador) => {
-        if (transportador) {
-          this.transportadorSeleccionado = transportador;
-          this.nuevaOrdenEnvio.transportador = transportador;
-          this.despacharOrdenEnvio();
-        } else {
-          console.error("No se seleccionó un transportador");
+    } else {
+      this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
+        next: (response) => {
+          // Si backend retorna nroShippingOrder, actualizar referencia local
+          if (response && response.nroShippingOrder) {
+            this.nroShippingOrder = response.nroShippingOrder;
+            this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
+          }
+
+          Swal.fire({
+            title: "Éxito",
+            text: `La orden de envío ${this.nroShippingOrder || ""} ha sido actualizada exitosamente`,
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+
+          this.refrescarDatos();
+          this.modalService.dismissAll();
+        },
+        error: (error) => {
+          console.error("Error al actualizar la orden de envío:", error);
           Swal.fire(
             "Error",
-            "Debe seleccionar un transportador para despachar la orden",
+            "Hubo un problema al actualizar la orden de envío: " +
+              (error.message || "Error desconocido"),
             "error",
           );
-        }
+        },
       });
-    } else {
-      // Si ya tiene transportador, despachar directamente
-      this.despacharOrdenEnvio();
     }
   }
 
@@ -4964,6 +5010,273 @@ export class DespachosComponent implements OnInit {
       this.geocodingInProgress = false;
       this.geocodingProgress = 0;
     }
+  }
+
+  /**
+   * Asegura que la orden tenga la propiedad metodoEnvio
+   * Si no existe, la crea detectando el método basado en los datos existentes
+   */
+  private ensureMetodoEnvioProperty(order: any): any {
+    console.log('🔧 VERIFICANDO propiedad metodoEnvio en orden...');
+    
+    if (!order) {
+      console.log('❌ No hay orden para procesar');
+      return order;
+    }
+
+    // Si ya tiene metodoEnvio, verificar que tenga un valor válido
+    if (order.hasOwnProperty('metodoEnvio') && order.metodoEnvio) {
+      console.log('✅ metodoEnvio YA existe:', order.metodoEnvio);
+      return order;
+    }
+
+    // Si no tiene o está vacío, detectar y crear
+    console.log('⚠️ metodoEnvio NO existe o está vacío, detectando...');
+    
+    // Intentar detectar basado en transportador
+    let detectedMethod = 'mensajeroPropio'; // default
+    
+    if (order.transportador && 
+        order.transportador !== '' && 
+        order.transportador !== 'mensajero_propio' && 
+        order.transportador !== 'Mensajero Propio') {
+      detectedMethod = 'transportadora';
+      console.log('🚛 Detectado TRANSPORTADORA por field transportador:', order.transportador);
+    }
+
+    // Intentar detectar por otros campos
+    const possibleFields = [
+      order.metodo_envio, order.tipoEnvio, order.tipo_envio, order.shippingMethod
+    ];
+    
+    for (const field of possibleFields) {
+      if (field && typeof field === 'string') {
+        const value = field.toLowerCase().trim();
+        if (value.includes('transport') || value === 'transportadora') {
+          detectedMethod = 'transportadora';
+          console.log('📋 Detectado TRANSPORTADORA por field:', field);
+          break;
+        }
+      }
+    }
+
+    // Crear/actualizar la propiedad
+    order.metodoEnvio = detectedMethod;
+    order._metodoEnvioCreated = true; // marcar que fue creado automáticamente
+    
+    console.log('✨ CREADA propiedad metodoEnvio:', {
+      metodoEnvio: order.metodoEnvio,
+      autoCreated: order._metodoEnvioCreated,
+      basedOn: order.transportador ? 'transportador' : 'default'
+    });
+
+    return order;
+  }
+
+
+
+  // Método para hacer seguimiento de pedidos despachados
+  trackShipment(pedido: Pedido): void {
+    if (!pedido.shippingOrder) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin orden de envío',
+        text: 'Este pedido no tiene una orden de envío asociada para hacer seguimiento.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Obtener información de la empresa y proveedor logístico
+    const companyId = this.getCompanyId(); // Método que debes implementar según tu lógica
+    const provider = pedido.transportador || 'default';
+    const order = pedido.shippingOrder;
+
+    this.loading = true;
+    
+    this.logisticaService.trackDespachado(companyId, provider, order).subscribe({
+      next: (response) => {
+        this.loading = false;
+        console.log('📦 Seguimiento del envío:', response);
+        
+        // Mostrar modal de seguimiento con la información obtenida
+        this.mostrarModalSeguimiento(pedido, response);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('❌ Error al hacer seguimiento:', error);
+        
+        // Mostrar modal de seguimiento con error
+        this.mostrarModalSeguimiento(pedido, null, error);
+      }
+    });
+  }
+
+  // Método para mostrar el modal de seguimiento
+  private mostrarModalSeguimiento(pedido: Pedido, trackingInfo: any, error?: any): void {
+    const modalRef = this.modalService.open(SeguimientoModalComponent, {
+      size: 'lg',
+      centered: true,
+      backdrop: 'static',
+      keyboard: false
+    });
+
+    // Configurar el componente del modal
+    modalRef.componentInstance.pedido = pedido;
+    modalRef.componentInstance.trackingInfo = trackingInfo;
+    
+    if (error) {
+      modalRef.componentInstance.error = 'Error al obtener información de seguimiento';
+    }
+
+    // Manejar el evento de refrescar
+    modalRef.componentInstance.onRefresh.subscribe(() => {
+      this.refrescarTracking(pedido, modalRef);
+    });
+  }
+
+  // Método para refrescar el tracking
+  private refrescarTracking(pedido: Pedido, modalRef: any): void {
+    const companyId = this.getCompanyId();
+    const provider = pedido.transportador || 'default';
+    const order = pedido.shippingOrder;
+
+    modalRef.componentInstance.loading = true;
+    modalRef.componentInstance.error = '';
+
+    this.logisticaService.trackDespachado(companyId, provider, order).subscribe({
+      next: (response) => {
+        modalRef.componentInstance.loading = false;
+        modalRef.componentInstance.trackingInfo = response;
+        console.log('📦 Seguimiento actualizado:', response);
+      },
+      error: (error) => {
+        modalRef.componentInstance.loading = false;
+        modalRef.componentInstance.error = 'Error al actualizar la información de seguimiento';
+        console.error('❌ Error al actualizar seguimiento:', error);
+      }
+    });
+  }
+
+  // Método auxiliar para obtener el ID de la empresa (implementar según tu lógica)
+  private getCompanyId(): string {
+    // Implementar según tu lógica de obtención de companyId
+    // Por ejemplo, desde un servicio de autenticación o configuración
+    return 'default'; // Valor por defecto
+  }
+
+  // Método para buscar shipment en logística
+  findShipment(pedido: Pedido): void {
+    if (!pedido.shippingOrder) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin orden de envío',
+        text: 'Este pedido no tiene una orden de envío asociada para buscar shipment.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Construir payload para buscar shipment según la estructura esperada
+    const shipmentPayload = {
+      provider: pedido.providerShipment || 'mensajeroPropio',
+      order: pedido
+    };
+
+    this.loading = true;
+    
+    // Debug: mostrar el payload que se envía
+    console.log('🔍 Enviando payload para findShipment:', shipmentPayload);
+    
+    this.logisticaService.findShipment(shipmentPayload).subscribe({
+      next: (response) => {
+        this.loading = false;
+        console.log('🔍 Shipment encontrado:', response);
+        
+        // Mostrar información del shipment encontrado
+        this.mostrarInformacionShipment(pedido, response);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('❌ Error al buscar shipment:', error);
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Error en búsqueda',
+          text: 'No se pudo encontrar información del shipment en logística.',
+          confirmButtonText: 'Entendido'
+        });
+      }
+    });
+  }
+
+  // Método para mostrar información del shipment encontrado
+  private mostrarInformacionShipment(pedido: Pedido, shipmentInfo: any): void {
+    let htmlContent = `
+      <div class="text-start">
+        <h6 class="mb-3">🔍 Información del Shipment</h6>
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Pedido:</strong> ${pedido.nroPedido}</p>
+            <p><strong>Orden de Envío:</strong> ${pedido.shippingOrder}</p>
+            <p><strong>Transportador:</strong> ${pedido.transportador || 'No especificado'}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Estado:</strong> ${pedido.estadoProceso}</p>
+            <p><strong>Cliente:</strong> ${pedido.cliente?.nombres_completos} ${pedido.cliente?.apellidos_completos}</p>
+            <p><strong>Ciudad:</strong> ${pedido.envio?.ciudad || 'No especificada'}</p>
+          </div>
+        </div>
+    `;
+
+    // Agregar información del shipment si está disponible
+    if (shipmentInfo && (shipmentInfo.shipment || shipmentInfo.data)) {
+      const shipment = shipmentInfo.shipment || shipmentInfo.data;
+      htmlContent += `
+        <hr class="my-3">
+        <h6 class="mb-2">📦 Datos del Shipment</h6>
+        <div class="alert alert-success">
+          <p><strong>ID del Shipment:</strong> ${shipment.id || shipment._id || 'No disponible'}</p>
+          <p><strong>Estado del Shipment:</strong> ${shipment.estado || shipment.status || 'No disponible'}</p>
+          <p><strong>Proveedor:</strong> ${shipment.provider || shipment.transportador || 'No disponible'}</p>
+          <p><strong>Orden:</strong> ${shipment.order || shipment.nroShippingOrder || 'No disponible'}</p>
+          <p><strong>Fecha de Creación:</strong> ${shipment.fechaCreacion || shipment.createdAt || 'No disponible'}</p>
+          <p><strong>Última Actualización:</strong> ${shipment.ultimaActualizacion || shipment.updatedAt || 'No disponible'}</p>
+        </div>
+      `;
+      
+      // Mostrar información adicional si está disponible
+      if (shipment.detalles || shipment.details) {
+        const detalles = shipment.detalles || shipment.details;
+        htmlContent += `
+          <div class="mt-3">
+            <h6 class="mb-2">📋 Detalles Adicionales</h6>
+            <div class="alert alert-info">
+              <p><strong>Información:</strong> ${detalles.informacion || detalles.info || 'No disponible'}</p>
+              <p><strong>Notas:</strong> ${detalles.notas || detalles.notes || 'No disponible'}</p>
+            </div>
+          </div>
+        `;
+      }
+    } else {
+      htmlContent += `
+        <hr class="my-3">
+        <div class="alert alert-warning">
+          <i class="pi pi-exclamation-triangle me-2"></i>
+          No se encontró información del shipment en el sistema de logística.
+        </div>
+      `;
+    }
+
+    htmlContent += '</div>';
+
+    Swal.fire({
+      title: 'Información del Shipment',
+      html: htmlContent,
+      icon: 'info',
+      confirmButtonText: 'Cerrar',
+      width: '600px'
+    });
   }
 }
 

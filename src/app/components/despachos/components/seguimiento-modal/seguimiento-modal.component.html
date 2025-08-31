@@ -1,0 +1,113 @@
+<div class="seguimiento-modal">
+  <!-- Header del modal -->
+  <div class="modal-header bg-primary text-white">
+    <h5 class="modal-title">
+      <i class="pi pi-search me-2"></i>
+      Seguimiento del Envío
+    </h5>
+    <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+  </div>
+
+  <!-- Cuerpo del modal -->
+  <div class="modal-body">
+    <!-- Información del pedido -->
+    <div class="card mb-3">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">
+          <i class="pi pi-box me-2"></i>
+          Información del Pedido
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Número de Pedido:</strong> {{ pedido?.nroPedido }}</p>
+            <p><strong>Orden de Envío:</strong> {{ pedido?.shippingOrder || 'No disponible' }}</p>
+            <p><strong>Estado del Proceso:</strong> {{ pedido?.estadoProceso }}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Cliente:</strong> {{ pedido?.cliente?.nombres_completos }} {{ pedido?.cliente?.apellidos_completos }}</p>
+            <p><strong>Ciudad:</strong> {{ pedido?.envio?.ciudad || 'No especificada' }}</p>
+            <p><strong>Fecha de Entrega:</strong> {{ pedido?.fechaEntrega || 'No especificada' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información de tracking -->
+    <div class="card" *ngIf="trackingInfo && trackingInfo.tracking">
+      <div class="card-header bg-info text-white">
+        <h6 class="mb-0">
+          <i class="pi pi-truck me-2"></i>
+          Información de Seguimiento
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Guía:</strong> {{ trackingInfo.tracking.guia || 'No disponible' }}</p>
+            <p><strong>Proveedor Logístico:</strong> {{ pedido?.transportador || 'No especificado' }}</p>
+            <p><strong>Última Actualización:</strong> {{ formatDate(trackingInfo.tracking.ultimaActualizacion) }}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Estado del Envío:</strong></p>
+            <span class="estado-badge" [ngClass]="getEstadoClass(trackingInfo.tracking.estado)">
+              <i [class]="getEstadoIcon(trackingInfo.tracking.estado)"></i>
+              {{ trackingInfo.tracking.estado || 'No disponible' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Historial de eventos si está disponible -->
+        <div *ngIf="trackingInfo.tracking.historial && trackingInfo.tracking.historial.length > 0" class="mt-3">
+          <h6 class="mb-2">Historial de Eventos</h6>
+          <div class="timeline">
+            <div *ngFor="let evento of trackingInfo.tracking.historial" class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <div class="evento-fecha">{{ formatDate(evento.fecha) }}</div>
+                <div class="evento-descripcion">{{ evento.descripcion }}</div>
+                <div class="evento-ubicacion" *ngIf="evento.ubicacion">
+                  <i class="pi pi-map-marker me-1"></i>
+                  {{ evento.ubicacion }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando no hay información de tracking -->
+    <div class="alert alert-warning" *ngIf="!trackingInfo || !trackingInfo.tracking">
+      <i class="pi pi-exclamation-triangle me-2"></i>
+      No hay información de seguimiento disponible para este envío.
+    </div>
+
+    <!-- Loading state -->
+    <div class="text-center" *ngIf="loading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2">Obteniendo información de seguimiento...</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="alert alert-danger" *ngIf="error">
+      <i class="pi pi-times-circle me-2"></i>
+      {{ error }}
+    </div>
+  </div>
+
+  <!-- Footer del modal -->
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+      <i class="pi pi-times me-1"></i>
+      Cerrar
+    </button>
+    <button type="button" class="btn btn-primary" (click)="refreshTracking()" *ngIf="!loading">
+      <i class="pi pi-refresh me-1"></i>
+      Actualizar
+    </button>
+  </div>
+</div>

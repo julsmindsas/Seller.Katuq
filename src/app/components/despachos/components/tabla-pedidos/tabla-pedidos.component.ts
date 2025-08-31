@@ -27,6 +27,8 @@ export class TablaPedidosComponent implements OnInit {
   @Output() onClearFilters = new EventEmitter<Table>();
   @Output() onViewNotes = new EventEmitter<Pedido>();
   @Output() onViewFullObservaciones = new EventEmitter<any>();
+  @Output() onTrackShipment = new EventEmitter<Pedido>();
+  @Output() onFindShipment = new EventEmitter<Pedido>();
   
   displayedColumns: ColumnDefinition[] = [
     { field: 'detalles', header: 'Detalles', visible: true },
@@ -52,6 +54,7 @@ export class TablaPedidosComponent implements OnInit {
     { field: 'empacador', header: 'Empacador', visible: false },
     { field: 'despachador', header: 'Despachador', visible: false },
     { field: 'transportador', header: 'Transportador', visible: false },
+    { field: 'seguimiento', header: 'Seguimiento', visible: true },
     { field: 'entregado', header: 'Entregado', visible: false }
   ];
   
@@ -215,6 +218,14 @@ export class TablaPedidosComponent implements OnInit {
   
   viewFullObservaciones(envioData: any): void {
     this.onViewFullObservaciones.emit(envioData);
+  }
+  
+  trackShipment(pedido: Pedido): void {
+    this.onTrackShipment.emit(pedido);
+  }
+  
+  findShipment(pedido: Pedido): void {
+    this.onFindShipment.emit(pedido);
   }
   
   // Método para verificar si un pedido puede ser manipulado

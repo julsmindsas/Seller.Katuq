@@ -38,7 +38,6 @@ export class GenerarOrdenComponent implements OnInit {
   ordenEnvioForm: FormGroup;
   metodoEnvio: string;
   pedidosDisponibles: Pedido[] = [];
-  transportadores: any[] = [];
   actionColumnVisible = true;
 
   // Definición de columnas para la tabla de pedidos disponibles
@@ -75,14 +74,40 @@ export class GenerarOrdenComponent implements OnInit {
 
     // Inicializar datos según el modo (creación o edición)
     if (this.isEditMode && this.nuevaOrdenEnvio) {
+      // Debug: Analizar datos de edición
+      console.log('=== DEBUG: EDIT MODE ACTIVATION ===');
+      console.log('isEditMode:', this.isEditMode);
+      console.log('nuevaOrdenEnvio completa:', this.nuevaOrdenEnvio);
+      console.log('Estructura de campos relevantes:', {
+        metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
+        metodo_envio: this.nuevaOrdenEnvio.metodo_envio,
+        tipoEnvio: this.nuevaOrdenEnvio.tipoEnvio,
+        transportador: this.nuevaOrdenEnvio.transportador,
+        fecha: this.nuevaOrdenEnvio.fecha
+      });
+
       // En modo edición, cargar los datos de la orden existente
-      this.metodoEnvio = "mensajeroPropio"; // O el valor correspondiente según los datos
+      this.metodoEnvio = this.getShippingMethodFromOrder(this.nuevaOrdenEnvio);
+      
+      console.log('Método de envío detectado:', this.metodoEnvio);
+      console.log('Fecha formateada:', this.formatDateForInput(this.nuevaOrdenEnvio.fecha));
 
       // Inicializar el formulario con los valores de la orden existente
       this.ordenEnvioForm.patchValue({
         fechaEnvio: this.formatDateForInput(this.nuevaOrdenEnvio.fecha),
-        metodoEnvio: "mensajeroPropio", // O el valor que corresponda
+        metodoEnvio: this.metodoEnvio,
       });
+
+      // Forzar actualización del formulario
+      this.ordenEnvioForm.updateValueAndValidity();
+      this.ordenEnvioForm.markAllAsTouched();
+
+      console.log('Estado del formulario después del patchValue:', {
+        fechaEnvio: this.ordenEnvioForm.get('fechaEnvio')?.value,
+        metodoEnvio: this.ordenEnvioForm.get('metodoEnvio')?.value,
+        formValid: this.ordenEnvioForm.valid
+      });
+      console.log('=====================================');
 
       // Refrescar la lista de pedidos disponibles
       this.actualizarPedidosDisponibles();
@@ -99,40 +124,17 @@ export class GenerarOrdenComponent implements OnInit {
     this.ordenEnvioForm = this.formBuilder.group({
       fechaEnvio: ["", Validators.required],
       metodoEnvio: ["", Validators.required],
-      transportadora: [""], // Se agrega el campo transportadora
     });
 
     // Suscribirse a cambios en metodoEnvio
     this.ordenEnvioForm.get("metodoEnvio")?.valueChanges.subscribe((value) => {
       this.metodoEnvio = value;
-      // Si el método es transportadora, hacer el campo requerido, si no, quitar el validador y limpiar
-      const transportadoraCtrl = this.ordenEnvioForm.get('transportadora');
-      if (value === 'transportadora') {
-        transportadoraCtrl?.setValidators([Validators.required]);
-      } else {
-        transportadoraCtrl?.clearValidators();
-        transportadoraCtrl?.setValue('');
-      }
-      transportadoraCtrl?.updateValueAndValidity();
       if (value && this.ordenEnvioForm.get("fechaEnvio")?.valid) {
         this.actualizarPedidosDisponibles();
       }
     });
-
-    // Cargar transportadores
-    this.cargarTransportadores();
   }
 
-  private cargarTransportadores(): void {
-    this.logisticaService.getTransportadores().subscribe(
-      (data) => {
-        this.transportadores = data;
-      },
-      (error) => {
-        console.error("Error al cargar transportadores:", error);
-      },
-    );
-  }
 
   private cargarOrdenesExistentes(): void {
     // Cargar todas las órdenes existentes para verificar duplicados
@@ -728,6 +730,64 @@ export class GenerarOrdenComponent implements OnInit {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toISOString().split("T")[0];
+  }
+
+  /**
+   * Función helper para detectar el método de envío desde la orden existente
+   * Usa lógica robusta similar a isTransportadoraOrder pero retorna el valor específico
+   */
+  private getShippingMethodFromOrder(order: any): string {
+    console.log('🔍 ANALIZANDO MÉTODO DE ENVÍO');
+    console.log('Orden recibida:', order);
+    
+    if (!order) {
+      console.log('❌ No hay orden - retornando mensajeroPropio');
+      return "mensajeroPropio";
+    }
+
+    // Verificar diferentes posibles nombres de campo
+    const possibleFields = {
+      metodoEnvio: order.metodoEnvio,
+      metodo_envio: order.metodo_envio,
+      tipoEnvio: order.tipoEnvio,
+      tipo_envio: order.tipo_envio,
+      shippingMethod: order.shippingMethod,
+      metodoenVio: order.metodoenVio, // typo común
+    };
+
+    console.log('Campos analizados:', possibleFields);
+
+    // Buscar valor específico en los campos
+    for (const [fieldName, fieldValue] of Object.entries(possibleFields)) {
+      if (fieldValue && typeof fieldValue === 'string') {
+        const value = fieldValue.toLowerCase().trim();
+        console.log(`🔎 Analizando ${fieldName}: "${fieldValue}" → "${value}"`);
+        
+        if (value === 'transportadora' || value === 'transportador' || value === 'carrier') {
+          console.log('✅ ENCONTRADO: transportadora');
+          return 'transportadora';
+        }
+        if (value === 'mensajeropropio' || value === 'mensajero_propio' || value === 'mensajero propio' || value === 'propio') {
+          console.log('✅ ENCONTRADO: mensajeroPropio');
+          return 'mensajeroPropio';
+        }
+      }
+    }
+
+    // Verificar si hay un transportador específico asignado (diferente de mensajero propio)
+    console.log('🚛 Analizando transportador:', order.transportador);
+    if (order.transportador && 
+        order.transportador !== 'mensajero_propio' && 
+        order.transportador !== 'Mensajero Propio' &&
+        order.transportador !== 'mensajeropropio' &&
+        order.transportador !== '') {
+      console.log('✅ ENCONTRADO por transportador: transportadora');
+      return 'transportadora';
+    }
+
+    // Por defecto retornar mensajero propio
+    console.log('🔄 FALLBACK: retornando mensajeroPropio');
+    return "mensajeroPropio";
   }
 
   // Método para resetear el formulario y limpiar estado

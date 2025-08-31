@@ -81,27 +81,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Selector de transportadora -->
-                <div class="row g-3" *ngIf="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="transportadora" class="form-label">{{
-                                "Transportadora" | translate
-                                }}</label>
-                            <select id="transportadora" formControlName="transportadora" class="form-select form-select-sm">
-                                <option value="">{{ "Seleccione una transportadora" | translate }}</option>
-                                <option value="coordinadora">Coordinadora</option>
-                                <option value="parther">Parther</option>
-                            </select>
-                            <div *ngIf="
-                                    ordenEnvioForm.get('transportadora')?.invalid &&
-                                    ordenEnvioForm.get('transportadora')?.touched
-                                " class="text-danger small">
-                                {{ "La transportadora es requerida" | translate }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -1284,7 +1263,7 @@
         </div>
     </div>
 
-    <button type="button" class="btn btn-warning" *ngIf="nroShippingOrder && metodoEnvio === 'mensajeroPropio'"
+    <button type="button" class="btn btn-warning" *ngIf="nroShippingOrder && ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
         (click)="despacharOrden()">
         <i class="pi pi-send me-1"></i>{{ "Despachar" | translate }}
     </button>

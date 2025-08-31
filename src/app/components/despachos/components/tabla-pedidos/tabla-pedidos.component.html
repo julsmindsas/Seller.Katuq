@@ -293,6 +293,35 @@
                                                 {{ 'Ver detalles' | translate }}
                                             </button>
                                         </td>
+
+                                        <!-- Seguimiento - Nueva columna -->
+                                        <td *ngIf="col.field === 'seguimiento'" class="seguimiento-cell">
+                                            <div class="d-flex flex-column gap-1">
+                                                <!-- Botón de Seguimiento -->
+                                                <button *ngIf="pedido.estadoProceso === 'Despachado' && pedido.shippingOrder"
+                                                    pButton pRipple type="button" icon="pi pi-search"
+                                                    class="p-button-outlined p-button-sm p-button-info mb-1"
+                                                    (click)="trackShipment(pedido)"
+                                                    pTooltip="{{ 'Hacer seguimiento del envío' | translate }}"
+                                                    tooltipPosition="top">
+                                                    {{ 'Seguir' | translate }}
+                                                </button>
+                                                
+                                                <!-- Botón de Búsqueda de Shipment -->
+                                                <button *ngIf="pedido.estadoProceso === 'Despachado'"
+                                                    pButton pRipple type="button" icon="pi pi-map-marker"
+                                                    class="p-button-outlined p-button-sm p-button-success"
+                                                    (click)="findShipment(pedido)"
+                                                    pTooltip="{{ 'Buscar shipment en logística' | translate }}"
+                                                    tooltipPosition="top">
+                                                    {{ 'Buscar' | translate }}
+                                                </button>
+                                                
+                                                <!-- Mensaje cuando no hay pedidos despachados -->
+                                                <span *ngIf="pedido.estadoProceso !== 'Despachado'"
+                                                      class="text-muted fst-italic small">-</span>
+                                            </div>
+                                        </td>
                                     </ng-container>
                                 </ng-container>
                             </tr>

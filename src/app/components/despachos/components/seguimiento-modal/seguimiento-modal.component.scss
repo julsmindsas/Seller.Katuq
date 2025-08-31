@@ -1,0 +1,194 @@
+.seguimiento-modal {
+  .modal-header {
+    border-bottom: none;
+    
+    .modal-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    
+    .card {
+      border: 1px solid #e9ecef;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      
+      .card-header {
+        border-bottom: 1px solid #e9ecef;
+        font-weight: 600;
+        
+        h6 {
+          margin: 0;
+          font-size: 0.95rem;
+        }
+      }
+      
+      .card-body {
+        padding: 1.25rem;
+        
+        p {
+          margin-bottom: 0.5rem;
+          font-size: 0.9rem;
+          
+          strong {
+            color: #495057;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+
+  // Estilos para los badges de estado
+  .estado-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    i {
+      margin-right: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    &.estado-transito {
+      background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+      color: white;
+    }
+    
+    &.estado-entregado {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+    }
+    
+    &.estado-ruta {
+      background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+      color: white;
+    }
+    
+    &.estado-retenido {
+      background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+      color: #212529;
+    }
+    
+    &.estado-devuelto {
+      background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+      color: white;
+    }
+    
+    &.estado-default {
+      background: linear-gradient(135deg, #6c757d 0%, #95a5a6 100%);
+      color: white;
+    }
+  }
+
+  // Timeline para historial de eventos
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0.75rem;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, #007bff, #e9ecef);
+    }
+    
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1.5rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .timeline-marker {
+        position: absolute;
+        left: -1.5rem;
+        top: 0.25rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: #007bff;
+        border: 3px solid white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      
+      .timeline-content {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 3px solid #007bff;
+        
+        .evento-fecha {
+          font-size: 0.8rem;
+          color: #6c757d;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+        }
+        
+        .evento-descripcion {
+          font-size: 0.9rem;
+          color: #212529;
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+        }
+        
+        .evento-ubicacion {
+          font-size: 0.8rem;
+          color: #6c757d;
+          
+          i {
+            color: #007bff;
+          }
+        }
+      }
+    }
+  }
+
+  // Estilos para los botones
+  .modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+    
+    .btn {
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      
+      i {
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  // Responsive
+  @media (max-width: 768px) {
+    .modal-body {
+      padding: 1rem;
+      
+      .card-body {
+        padding: 1rem;
+      }
+    }
+    
+    .timeline {
+      padding-left: 1.5rem;
+      
+      .timeline-item .timeline-marker {
+        left: -1.25rem;
+      }
+    }
+  }
+}

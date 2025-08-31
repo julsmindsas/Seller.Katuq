@@ -563,6 +563,7 @@ export class IntegrationsService {
       case 'dhl':
       case 'servientrega':
       case 'coordinadora':
+      case 'partners_logistics':
         return IntegrationCategory.LOGISTICS;
       case 'mailchimp':
       case 'hubspot':

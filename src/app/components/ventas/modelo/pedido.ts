@@ -6,6 +6,7 @@ import { UserLite } from "../../../shared/models/User/UserLite";
 import { PagoInformation } from "../../pos/pos-modelo/pedido";
 
 export interface Pedido {
+  providerShipment?: string;
   generarFacturaElectronica?: any;
   pdfUrlInvoice?: string;
   pagoRecibido?: any;

@@ -342,6 +342,36 @@ $border-radius: 8px;
   }
 }
 
+// Estilos para la columna de seguimiento
+.seguimiento-cell {
+  text-align: center !important;
+  vertical-align: middle !important;
+  
+  .p-button-outlined.p-button-info {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: #17a2b8;
+      border-color: #17a2b8;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(23, 162, 184, 0.3);
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+    }
+  }
+  
+  .text-muted.fst-italic {
+    font-size: 0.75rem;
+    color: #6c757d;
+  }
+}
+
 // Estilos para el menú desplegable (tres puntos)
 .hover-container {
   position: relative;
