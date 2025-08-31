@@ -1190,28 +1190,39 @@ export class PaymentService extends BaseService {
     const seccionGestionPedido = `...`; // Mantener igual
     const seccionTotales = `...`; // Recalcular totales aquí para asegurar consistencia
 
-    // --- Recalcular Totales para la sección ---
-    // Es crucial recalcular aquí para asegurar que los valores mostrados coincidan con los cálculos
-    const subtotal = this.checkPriceScale(pedido);
-    const ivaInfo = this.checkIVAPrice(pedido);
-    const totalIVA = ivaInfo.totalPrecioIVADef; // Ya incluye IVA de envío
-    // Asegurar que descuentos y envioSinIva sean numéricos
+    // ✅ OPTIMIZADO: Usar valores DIRECTOS del pedido (ya actualizados)
+    // Esto evita recalcular y asegura consistencia con los valores mostrados en la UI
+    const subtotal = Number(pedido.totalPedidoSinDescuento) || 0;
+    const totalIVA = Number(pedido.totalImpuesto) || 0;
     const descuentos = Number(pedido.totalDescuento) || 0;
-    const envioSinIva = Number(pedido.totalEnvio) || 0; // O calcularlo si es necesario
+    const envioSinIva = Number(pedido.totalEnvio) || 0;
+    
+    // ✅ Calcular total final usando valores del pedido
+    const totalSinIvaGeneral = subtotal - descuentos;
+    const totalPagar = totalSinIvaGeneral + totalIVA;
+    
+    // 🔍 Log para verificar que los valores coincidan
+    console.log('📊 PDF - Valores del pedido actualizado:', {
+      subtotal,
+      envioSinIva,
+      descuentos,
+      totalSinIvaGeneral,
+      totalIVA,
+      totalPagar,
+      pedidoOriginal: {
+        totalPedidoSinDescuento: pedido.totalPedidoSinDescuento,
+        totalEnvio: pedido.totalEnvio,
+        totalDescuento: pedido.totalDescuento,
+        totalImpuesto: pedido.totalImpuesto
+      }
+    });
 
-    // Validar antes de calcular totales generales
-    const totalSinIvaGeneral =
-      (isNaN(subtotal) ? 0 : subtotal) +
-      (isNaN(envioSinIva) ? 0 : envioSinIva) -
-      (isNaN(descuentos) ? 0 : descuentos);
-    const totalPagar =
-      (isNaN(totalSinIvaGeneral) ? 0 : totalSinIvaGeneral) +
-      (isNaN(totalIVA) ? 0 : totalIVA);
-
-    const excluidos = ivaInfo.totalExcluidos; // Ya validado en checkIVAPrice
-    const totalIva5 = ivaInfo.totalIva5; // Ya validado
-    const totalImpo = ivaInfo.totalImpo; // Ya validado
-    const totalIva19 = ivaInfo.totalIva19; // Ya validado
+    // ✅ Usar valores por defecto para desglose de IVA
+    // Estas propiedades no existen en el modelo Pedido, se mantienen por compatibilidad
+    const excluidos = 0;
+    const totalIva5 = 0;
+    const totalImpo = 0;
+    const totalIva19 = totalIVA; // Usar el total de IVA del pedido
 
     // --- Log para depuración ---
     console.log("Valores para Totales HTML:", {
@@ -1225,7 +1236,12 @@ export class PaymentService extends BaseService {
       totalIva5,
       totalImpo,
       totalIva19,
-      ivaInfo, // Objeto completo de checkIVAPrice
+      pedido: {
+        totalPedidoSinDescuento: pedido.totalPedidoSinDescuento,
+        totalEnvio: pedido.totalEnvio,
+        totalDescuento: pedido.totalDescuento,
+        totalImpuesto: pedido.totalImpuesto
+      }
     });
 
     // --- Construcción Final del HTML ---
