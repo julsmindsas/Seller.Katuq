@@ -101,6 +101,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   searchMinLength: number = 2;
   searchDebounceTime: number = 300;
 
+  // Propiedades para búsqueda local adicional
+  localSearchQuery: string = '';
+  filteredOrders: Pedido[] = [];
+  isLocalSearchActive: boolean = false;
+  originalOrders: Pedido[] = [];
+  hasLoadedOrdersOnce: boolean = false;
+
   ngAfterViewInit() {
     // Limpiar funciones del menú anterior
   }
@@ -913,6 +920,145 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.isSearching || !!this.searchError || (this.filteredOrderNumbers && this.filteredOrderNumbers.length > 0);
   }
 
+  // ===== MÉTODOS PARA BÚSQUEDA LOCAL ADICIONAL =====
+
+  /**
+   * Inicializa la búsqueda local
+   */
+  initializeLocalSearch(): void {
+    this.localSearchQuery = '';
+    this.filteredOrders = [];
+    this.isLocalSearchActive = false;
+    this.originalOrders = [];
+    // No resetear hasLoadedOrdersOnce aquí para mantener la barra visible
+  }
+
+  /**
+   * Maneja el input de búsqueda local
+   */
+  onLocalSearchInput(event: any): void {
+    const query = event.target.value;
+    this.localSearchQuery = query;
+    
+    if (query.trim().length === 0) {
+      this.clearLocalSearch();
+    } else {
+      this.performLocalSearch(query);
+    }
+  }
+
+  /**
+   * Realiza la búsqueda local en los pedidos filtrados por fecha
+   */
+  performLocalSearch(query: string): void {
+    if (!this.orders || this.orders.length === 0) {
+      this.filteredOrders = [];
+      this.isLocalSearchActive = false;
+      return;
+    }
+
+    const searchTerm = query.toLowerCase().trim();
+    
+    // Guardar los pedidos originales si es la primera búsqueda
+    if (!this.isLocalSearchActive) {
+      this.originalOrders = [...this.orders];
+    }
+
+    // Si no hay pedidos originales, no hay nada que buscar
+    if (!this.originalOrders || this.originalOrders.length === 0) {
+      this.filteredOrders = [];
+      this.isLocalSearchActive = true;
+      this.updateTableWithLocalResults();
+      return;
+    }
+
+    this.filteredOrders = this.originalOrders.filter(order => {
+      // Buscar por número de pedido
+      if (order.nroPedido && order.nroPedido.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      // Buscar por nombre del cliente
+      if (order.cliente?.nombres_completos && 
+          order.cliente.nombres_completos.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      // Buscar por documento del cliente
+      if (order.cliente?.documento && 
+          order.cliente.documento.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      // Buscar por referencia
+      if (order.referencia && 
+          order.referencia.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      return false;
+    });
+
+    this.isLocalSearchActive = true;
+    this.updateTableWithLocalResults();
+  }
+
+  /**
+   * Actualiza la tabla con los resultados de la búsqueda local
+   */
+  updateTableWithLocalResults(): void {
+    // Si hay búsqueda local activa, usar los pedidos filtrados
+    if (this.isLocalSearchActive && this.localSearchQuery.trim().length > 0) {
+      this.orders = [...this.filteredOrders];
+    } else {
+      // Si no hay búsqueda local, restaurar los pedidos originales
+      this.orders = [...this.originalOrders];
+    }
+  }
+
+  /**
+   * Limpia la búsqueda local
+   */
+  clearLocalSearch(): void {
+    this.localSearchQuery = '';
+    this.isLocalSearchActive = false;
+    
+    // Restaurar los pedidos originales
+    if (this.originalOrders.length > 0) {
+      this.orders = [...this.originalOrders];
+    }
+    
+    this.filteredOrders = [];
+    // No resetear hasLoadedOrdersOnce para mantener la barra visible
+  }
+
+  /**
+   * Verifica si hay una búsqueda local activa
+   */
+  hasActiveLocalSearch(): boolean {
+    return this.isLocalSearchActive && this.localSearchQuery.trim().length > 0;
+  }
+
+  /**
+   * Obtiene el número de resultados de la búsqueda local
+   */
+  getLocalSearchResultsCount(): number {
+    return this.filteredOrders.length;
+  }
+
+  /**
+   * Determina si debe mostrar la barra de búsqueda local
+   * La barra debe mostrarse si hay pedidos originales o si hay una búsqueda activa
+   */
+  shouldShowLocalSearch(): boolean {
+    // Mostrar si hay pedidos originales (sin filtrar) o si hay una búsqueda activa
+    // También mostrar si se ha cargado al menos una vez (para mantener la barra visible)
+    return this.originalOrders.length > 0 || 
+           this.isLocalSearchActive || 
+           this.localSearchQuery.trim().length > 0 ||
+           this.hasLoadedOrdersOnce;
+  }
+
   ngOnInit(): void {
     // Initialize default date range if not set
     if (!this.fechaInicial || !this.fechaFinal) {
@@ -952,6 +1098,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Cargar estado de filtros guardado
     this.loadFiltersState();
+
+    // Inicializar búsqueda local
+    this.initializeLocalSearch();
 
     if (!this.numberProduct) {
       this.refrescarDatos();
@@ -1540,6 +1689,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // ✅ FINALIZAR REFRESCO
       this.refrescoEnProgreso = false;
       this.loading = false;
+      
+      // Actualizar pedidos originales para búsqueda local
+      this.originalOrders = [...this.orders];
+      
+      // Marcar que se han cargado pedidos al menos una vez
+      if (this.orders.length > 0) {
+        this.hasLoadedOrdersOnce = true;
+      }
+      
+      // Si hay búsqueda local activa, aplicar el filtro nuevamente
+      if (this.hasActiveLocalSearch()) {
+        this.performLocalSearch(this.localSearchQuery);
+      }
       
       console.log(`✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados`);
       },

@@ -631,6 +631,67 @@
 
                                             </div> <!-- Cierre de filters-expanded-content -->
                                         </div> <!-- Cierre de modern-filters-container -->
+
+                                        <!-- BÚSQUEDA LOCAL ADICIONAL -->
+                                        <div class="local-search-container mt-3 mb-2" *ngIf="shouldShowLocalSearch()">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-6">
+                                                    <div class="local-search-wrapper">
+                                                        <label class="form-label fw-medium text-muted mb-1">
+                                                            <i class="pi pi-search me-2 text-primary"></i>
+                                                            {{ 'Búsqueda Local' | translate }}
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <input 
+                                                                type="text" 
+                                                                class="form-control" 
+                                                                [(ngModel)]="localSearchQuery"
+                                                                (input)="onLocalSearchInput($event)"
+                                                                placeholder="{{ 'Buscar por número, cliente, documento o referencia...' | translate }}"
+                                                                [class.is-searching]="hasActiveLocalSearch()">
+                                                            <button 
+                                                                *ngIf="localSearchQuery && localSearchQuery.trim().length > 0"
+                                                                class="btn btn-outline-secondary" 
+                                                                type="button"
+                                                                (click)="clearLocalSearch()"
+                                                                pTooltip="{{ 'Limpiar búsqueda local' | translate }}">
+                                                                <i class="pi pi-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        <small class="text-muted mt-1 d-block">
+                                                            <i class="pi pi-info-circle me-1"></i>
+                                                            {{ 'Búsqueda en pedidos filtrados por fecha' | translate }}
+                                                        </small>
+                                                        <small *ngIf="hasActiveLocalSearch() && getLocalSearchResultsCount() === 0" class="text-warning mt-1 d-block">
+                                                            <i class="pi pi-exclamation-triangle me-1"></i>
+                                                            {{ 'No se encontraron pedidos con los criterios de búsqueda' | translate }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="local-search-results" *ngIf="hasActiveLocalSearch()">
+                                                        <div class="d-flex align-items-center justify-content-end">
+                                                            <span class="badge" [ngClass]="getLocalSearchResultsCount() > 0 ? 'bg-primary' : 'bg-warning'">
+                                                                <i class="pi" [ngClass]="getLocalSearchResultsCount() > 0 ? 'pi-filter' : 'pi-exclamation-triangle'"></i>
+                                                                <span *ngIf="getLocalSearchResultsCount() > 0">
+                                                                    {{ getLocalSearchResultsCount() }} {{ 'resultados' | translate }}
+                                                                </span>
+                                                                <span *ngIf="getLocalSearchResultsCount() === 0">
+                                                                    {{ 'Sin resultados' | translate }}
+                                                                </span>
+                                                            </span>
+                                                            <button 
+                                                                class="btn btn-sm btn-outline-secondary"
+                                                                (click)="clearLocalSearch()"
+                                                                pTooltip="{{ 'Limpiar búsqueda local' | translate }}">
+                                                                <i class="pi pi-times me-1"></i>
+                                                                {{ 'Limpiar' | translate }}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </ng-template>
 
                                     <!-- HEADER: Dos filas (títulos y filtros) -->
