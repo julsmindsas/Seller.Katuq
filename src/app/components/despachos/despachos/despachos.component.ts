@@ -48,6 +48,7 @@ import { GeocodingService, GeocodingResponse } from "../../../shared/services/ge
 import { MapaUbicacionesComponent } from "../components/mapa-ubicaciones/mapa-ubicaciones.component";
 import { AnalisisDespachosComponent } from '../components/analisis-despachos/analisis-despachos.component';
 import { SeguimientoModalComponent } from "../components/seguimiento-modal/seguimiento-modal.component";
+import { Integration, IntegrationCategory, IntegrationsService } from "../../integrations/integrations.service";
 
 interface MapaMetricas {
   despachados: number;
@@ -230,7 +231,7 @@ export class DespachosComponent implements OnInit {
   geocodingProgress: number = 0;
   filtroEstadoMapa: string | null = null;
   private intervaloBetweenAlertas: number = 5 * 60 * 1000; // 5 minutos en milisegundos
-  
+
   // Métricas unificadas del mapa
   mapaMetricas: MapaMetricas = {
     despachados: 0,
@@ -284,6 +285,7 @@ export class DespachosComponent implements OnInit {
   ];
 
   selectedColumns: ColumnDefinition[] = [];
+  availableTransporters: Integration[] = [];
 
   constructor(
     private ventasService: VentasService,
@@ -298,7 +300,7 @@ export class DespachosComponent implements OnInit {
     private router: Router,
     private geocodingService: GeocodingService,
     private cdr: ChangeDetectorRef,
-
+    private integrationsService: IntegrationsService
   ) {
     const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
     this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
@@ -319,6 +321,7 @@ export class DespachosComponent implements OnInit {
         console.error("Error parsing saved columns configuration", e);
       }
     }
+
   }
 
   ngOnInit(): void {
@@ -350,34 +353,34 @@ export class DespachosComponent implements OnInit {
 
     // Definir items para el menú de acciones unificado
     this.accionesMenu = [
-        {
-            label: 'Recomendaciones KAI',
-            icon: 'pi pi-brain',
-            command: () => this.mostrarRecomendacionesOptimizacion()
-        },
-        {
-            label: 'Geocodificar Todo',
-            icon: 'pi pi-map-marker',
-            command: () => this.forzarGeocodificacion()
-        },
-        {
-            label: 'Administrar Transportadores',
-            icon: 'pi pi-truck',
-            command: () => this.openModal(this.transportadoresModal)
-        },
-        {
-            label: 'Ver Órdenes de Despacho',
-            icon: 'pi pi-list',
-            command: () => this.viewAllDispatchOrders()
-        },
-        {
-            separator: true
-        },
-        {
-            label: 'Reiniciar Alertas',
-            icon: 'pi pi-refresh',
-            command: () => this.reiniciarControlAlertas()
-        }
+      {
+        label: 'Recomendaciones KAI',
+        icon: 'pi pi-brain',
+        command: () => this.mostrarRecomendacionesOptimizacion()
+      },
+      {
+        label: 'Geocodificar Todo',
+        icon: 'pi pi-map-marker',
+        command: () => this.forzarGeocodificacion()
+      },
+      {
+        label: 'Administrar Transportadores',
+        icon: 'pi pi-truck',
+        command: () => this.openModal(this.transportadoresModal)
+      },
+      {
+        label: 'Ver Órdenes de Despacho',
+        icon: 'pi pi-list',
+        command: () => this.viewAllDispatchOrders()
+      },
+      {
+        separator: true
+      },
+      {
+        label: 'Reiniciar Alertas',
+        icon: 'pi pi-refresh',
+        command: () => this.reiniciarControlAlertas()
+      }
     ];
   }
 
@@ -392,6 +395,8 @@ export class DespachosComponent implements OnInit {
     }
     // El índice de la pestaña de Órdenes es 2
     if (event.index === 2) {
+
+      this.loadLogisticsIntegrations();
       this.loadDispatchOrders();
     }
   }
@@ -429,21 +434,21 @@ export class DespachosComponent implements OnInit {
 
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
       this.orders = data as PedidoPriorizado[];
-   /*   this.orders.forEach((order) => {
-        if (order.fechaCreacion) {
-          order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
-        }
-        order.anticipo = order.anticipo ?? 0;
-        order.subtotal =
-          (order.totalPedididoConDescuento ?? 0) +
-          (order.totalEnvio ?? 0) -
-          (order.totalDescuento ?? 0);
-        order.totalPedididoConDescuento =
-          order.subtotal ?? 0 + (order.totalImpuesto ?? 0);
-        order.faltaPorPagar =
-          (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
-      });
-*/
+      /*   this.orders.forEach((order) => {
+           if (order.fechaCreacion) {
+             order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
+           }
+           order.anticipo = order.anticipo ?? 0;
+           order.subtotal =
+             (order.totalPedididoConDescuento ?? 0) +
+             (order.totalEnvio ?? 0) -
+             (order.totalDescuento ?? 0);
+           order.totalPedididoConDescuento =
+             order.subtotal ?? 0 + (order.totalImpuesto ?? 0);
+           order.faltaPorPagar =
+             (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
+         });
+   */
       // Aplicar algoritmo de priorización
       this.aplicarAlgoritmoPriorizacion(mostrarAlertas);
 
@@ -1035,7 +1040,7 @@ export class DespachosComponent implements OnInit {
     if (!this.configuracionMapa.ubicaciones || this.configuracionMapa.ubicaciones.length === 0) {
       this.actualizarConfiguracionMapa();
     }
-    
+
     return {
       ubicaciones: this.configuracionMapa.ubicaciones || [],
       centroMapa: this.configuracionMapa.centroMapa || { lat: 4.6097, lng: -74.0817 },
@@ -1413,7 +1418,7 @@ export class DespachosComponent implements OnInit {
         const cachedData = this.getCachedOrderData();
         const totalPendiente =
           cachedData?.data?.totalPendiente ?? this.calculateTotalPendiente();
-        
+
         this.pdfTemplate.totalPendiente = totalPendiente;
 
 
@@ -1508,11 +1513,11 @@ export class DespachosComponent implements OnInit {
             })
             .catch((err) => {
               console.error("Error generando PDF con template:", err);
-              
+
               // Restaurar la visibilidad original en caso de error
               element.style.visibility = originalVisibility;
               element.style.position = originalPosition;
-              
+
               console.warn("Fallback to legacy PDF generation");
               this.imprimirOrdenConHtml2PdfLegacy().then(resolve).catch(reject);
             });
@@ -1622,13 +1627,13 @@ export class DespachosComponent implements OnInit {
           <strong>WhatsApp:</strong> ${p.envio?.celular || "N/A"}<br>
           <strong>Otro Número:</strong> ${p.envio?.otroNumero || "N/A"}<br>
           <strong>Dirección:</strong> ${[
-            p.envio?.direccionEntrega,
-            p.envio?.nombreUnidad,
-            p.envio?.especificacionesInternas,
-            p.envio?.observaciones,
-          ]
-            .filter(Boolean)
-            .join(", ")}
+          p.envio?.direccionEntrega,
+          p.envio?.nombreUnidad,
+          p.envio?.especificacionesInternas,
+          p.envio?.observaciones,
+        ]
+          .filter(Boolean)
+          .join(", ")}
         </td>
         <td>${p.horarioEntrega || "N/A"}</td>
         <td>${p.envio?.ciudad || "N/A"}</td>
@@ -1878,7 +1883,7 @@ export class DespachosComponent implements OnInit {
   // Iterar sobre cada grupo de pedidos y generar una página en el PDF
   async imprimirOrden() {
     console.log("=== INICIO: Impresión de orden ===");
-    
+
     // Ejecutar debugging inicial
     this.debugComponentState();
 
@@ -1917,21 +1922,21 @@ export class DespachosComponent implements OnInit {
         try {
           // Forzar detección de cambios antes de procesar
           this.cdr.detectChanges();
-          
+
           // Debugging después del timeout
           console.log("=== DESPUÉS DEL TIMEOUT ===");
           this.debugComponentState();
-          
-      await this.imprimirOrdenConHtml2Pdf();
-      // Mostrar mensaje de éxito
-      this.showSuccessMessage("PDF generado exitosamente");
-    } catch (error) {
-      console.error("Error generando PDF:", error);
-      await this.handlePDFGenerationError(error);
-    } finally {
-      this.isGeneratingPDF = false;
-      this.pdfProgress = 0;
-      this.hideProgressToast();
+
+          await this.imprimirOrdenConHtml2Pdf();
+          // Mostrar mensaje de éxito
+          this.showSuccessMessage("PDF generado exitosamente");
+        } catch (error) {
+          console.error("Error generando PDF:", error);
+          await this.handlePDFGenerationError(error);
+        } finally {
+          this.isGeneratingPDF = false;
+          this.pdfProgress = 0;
+          this.hideProgressToast();
         }
       }, 100);
 
@@ -2076,14 +2081,14 @@ export class DespachosComponent implements OnInit {
 
     this.ventasService.editOrder(order).subscribe((data) => {
       this.refrescarDatos(false); // No mostrar alertas al cambiar estado
-      
+
       // Si el pedido se cambió a "Despachado", intentar geocodificarlo automáticamente
       if (order.estadoProceso === EstadoProceso.Despachado) {
         console.log(`🚚 Pedido ${order.nroPedido} cambió a Despachado - Verificando geocodificación...`);
-        
+
         // Geocodificar específicamente este pedido si no tiene coordenadas
-        if (order.envio?.direccionEntrega && order.envio?.ciudad && 
-            (!order.envio?.latitud || !order.envio?.longitud)) {
+        if (order.envio?.direccionEntrega && order.envio?.ciudad &&
+          (!order.envio?.latitud || !order.envio?.longitud)) {
           console.log(`📍 Geocodificando pedido despachado: ${order.nroPedido}`);
           this.geocodificarPedido(order).then(() => {
             console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
@@ -2096,7 +2101,7 @@ export class DespachosComponent implements OnInit {
           this.actualizarConfiguracionMapa();
         }
       }
-      
+
       Swal.fire({
         icon: "success",
         title: "Pedido actualizado correctamente",
@@ -2258,14 +2263,14 @@ export class DespachosComponent implements OnInit {
     this.loading = true;
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
       this.orders = data as PedidoPriorizado[];
-    /* this.orders.forEach((order) => {
-        if (order.fechaCreacion) {
-          order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
-        }
-        order.anticipo = order.anticipo ?? 0;
-        order.faltaPorPagar =
-          (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
-      });*/
+      /* this.orders.forEach((order) => {
+          if (order.fechaCreacion) {
+            order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
+          }
+          order.anticipo = order.anticipo ?? 0;
+          order.faltaPorPagar =
+            (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
+        });*/
 
       // Aplicar algoritmo de priorización sin mostrar alertas en buscarPorFechas
       this.aplicarAlgoritmoPriorizacion(false);
@@ -2706,13 +2711,13 @@ export class DespachosComponent implements OnInit {
     // Función helper para limpiar y normalizar texto preservando ñ y tildes
     const limpiarTexto = (texto) => {
       if (!texto) return '';
-      
+
       // Convertir a string si no lo es
       let textoStr = String(texto);
-      
+
       console.log('🔍 limpiarTexto - Texto original:', textoStr);
       console.log('🔍 limpiarTexto - Longitud original:', textoStr.length);
-      
+
       // Preservar ñ y tildes, solo limpiar emojis y caracteres problemáticos
       let textoLimpio = textoStr
         .replace(/[çÇ]/g, 'c') // Convertir ç en c
@@ -2756,10 +2761,10 @@ export class DespachosComponent implements OnInit {
         .replace(/[😈👿👹👺💀👻👽🤖💩😺😸😹😻]/g, '') // Otros emojis
         // Verificación final: eliminar cualquier carácter que no sea ASCII básico + letras españolas
         .replace(/[^\x00-\x7FáéíóúñÁÉÍÓÚÑ]/g, '');
-      
+
       console.log('🔍 limpiarTexto - Texto después de limpieza:', textoLimpio);
       console.log('🔍 limpiarTexto - Longitud después de limpieza:', textoLimpio.length);
-      
+
       return textoLimpio;
     };
 
@@ -2768,7 +2773,7 @@ export class DespachosComponent implements OnInit {
       const paraLabelWidth = doc.getTextWidth("Para:");
       doc.text("Para:", (pageWidth - paraLabelWidth) / 2, yPos);
       yPos += 0.6; // Espacio fijo entre label y texto
-      
+
       const paraTexto = limpiarTexto(tarjeta.para);
       const paraTextWidth = doc.getTextWidth(paraTexto);
       doc.text(paraTexto, (pageWidth - paraTextWidth) / 2, yPos);
@@ -2779,7 +2784,7 @@ export class DespachosComponent implements OnInit {
     if (tarjeta.mensaje && tarjeta.mensaje.trim() !== '') {
       const mensajeTexto = limpiarTexto(tarjeta.mensaje);
       const splitMensaje = doc.splitTextToSize(mensajeTexto, 12); // Reducir ancho para mejor ajuste
-      
+
       splitMensaje.forEach((line) => {
         const lineWidth = doc.getTextWidth(line);
         doc.text(line, (pageWidth - lineWidth) / 2, yPos);
@@ -2793,7 +2798,7 @@ export class DespachosComponent implements OnInit {
       const deLabelWidth = doc.getTextWidth("De:");
       doc.text("De:", (pageWidth - deLabelWidth) / 2, yPos);
       yPos += 0.6; // Espacio fijo entre label y texto
-      
+
       const deTexto = limpiarTexto(tarjeta.de);
       const deTextWidth = doc.getTextWidth(deTexto);
       doc.text(deTexto, (pageWidth - deTextWidth) / 2, yPos);
@@ -2815,7 +2820,7 @@ export class DespachosComponent implements OnInit {
       this.refrescarDatos();
     }
   }
-  cargarOrders() {}
+  cargarOrders() { }
   //
   agregarPedido() {
     Swal.fire({
@@ -3076,10 +3081,10 @@ export class DespachosComponent implements OnInit {
         this.ventasService.editOrder(pedido).subscribe(
           (response) => {
             console.log(`🚚 Pedido ${pedido.nroPedido} despachado exitosamente - Verificando geocodificación...`);
-            
+
             // Geocodificar automáticamente el pedido despachado si no tiene coordenadas
-            if (pedido.envio?.direccionEntrega && pedido.envio?.ciudad && 
-                (!pedido.envio?.latitud || !pedido.envio?.longitud)) {
+            if (pedido.envio?.direccionEntrega && pedido.envio?.ciudad &&
+              (!pedido.envio?.latitud || !pedido.envio?.longitud)) {
               console.log(`📍 Geocodificando pedido recién despachado: ${pedido.nroPedido}`);
               this.geocodificarPedido(pedido).then(() => {
                 console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${pedido.nroPedido}`);
@@ -3091,7 +3096,7 @@ export class DespachosComponent implements OnInit {
               // Si ya tiene coordenadas, solo actualizar el mapa
               this.actualizarConfiguracionMapa();
             }
-            
+
             Swal.fire("Éxito", "Pedido despachado exitosamente", "success");
             // Simplemente refrescar los datos de todas las órdenes
             this.refrescarDatos();
@@ -3202,7 +3207,7 @@ export class DespachosComponent implements OnInit {
           .subscribe(
             (response) => {
               Swal.fire("Éxito", "Orden despachada exitosamente", "success");
-              
+
               // Agregar delay para asegurar sincronización de datos antes de imprimir
               setTimeout(() => {
                 console.log("=== IMPRESIÓN AUTOMÁTICA TRAS DESPACHO ===");
@@ -3212,10 +3217,10 @@ export class DespachosComponent implements OnInit {
                   transportadorSeleccionado: !!this.transportadorSeleccionado,
                   transportadorNombre: this.transportadorSeleccionado?.nombre || this.transportadorSeleccionado
                 });
-                
+
                 // Ejecutar impresión sin await para respetar timeouts internos
                 this.imprimirOrden();
-                
+
                 // Limpiar datos después de tiempo suficiente para que termine todo el proceso
                 setTimeout(() => {
                   console.log("Limpiando datos después de impresión completa...");
@@ -3224,9 +3229,9 @@ export class DespachosComponent implements OnInit {
                   this.nroShippingOrder = null;
                   this.nuevaOrdenEnvio = null;
                 }, 3000); // 3 segundos para asegurar que todos los timeouts internos terminen
-                
+
               }, 500); // Delay de 500ms para sincronización
-              
+
               this.modalService.dismissAll();
             },
             (error) => {
@@ -3253,6 +3258,20 @@ export class DespachosComponent implements OnInit {
     }
   }
 
+  // Métodos para manejo de transportadores integrados
+  loadLogisticsIntegrations(): void {
+    this.integrationsService.getIntegrationsByCategory(IntegrationCategory.LOGISTICS)
+      .subscribe({
+        next: (integrations) => {
+          this.availableTransporters = integrations;
+        },
+        error: (error) => {
+          console.error('Error al cargar integraciones logísticas:', error);
+          this.availableTransporters = [];
+        }
+      });
+  }
+
   loadDispatchOrders(openModal: boolean = false) {
     this.logisticaService.getShippingOrders().subscribe(
       (data: Pedido[]) => {
@@ -3268,19 +3287,21 @@ export class DespachosComponent implements OnInit {
             const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
             return bNum - aNum;
           });
-        
+
+        this.cdr.detectChanges();
+
         if (openModal) {
-            this.modalService.open(this.dispatchOrdersModal, {
-                size: "xl",
-                fullscreen: false,
-            });
+          this.modalService.open(this.dispatchOrdersModal, {
+            size: "xl",
+            fullscreen: false,
+          });
         }
       },
       (error) => {
         console.error("Error al consultar las órdenes de despacho:", error);
         this.dispatchOrders = [];
         if (openModal) {
-            this.modalService.open(this.dispatchOrdersModal, { size: "xl" });
+          this.modalService.open(this.dispatchOrdersModal, { size: "xl" });
         }
       },
     );
@@ -3417,8 +3438,8 @@ export class DespachosComponent implements OnInit {
     });
 
     // Validación más flexible
-    const isValid = validation.hasPedidos && validation.hasNroShipping && 
-                   (validation.hasTransportador || validation.hasUser);
+    const isValid = validation.hasPedidos && validation.hasNroShipping &&
+      (validation.hasTransportador || validation.hasUser);
 
     console.log("Resultado validación:", isValid);
     return isValid;
@@ -3676,21 +3697,21 @@ export class DespachosComponent implements OnInit {
   testPrintOrder(): void {
     console.log("=== TEST: Botón de impresión presionado ===");
     this.debugComponentState();
-    
+
     // Mostrar mensaje de prueba
     this.showSuccessMessage("¡Botón de impresión funciona correctamente!");
-    
+
     // Verificar que los datos básicos estén presentes
     if (!this.pedidosSeleccionados || this.pedidosSeleccionados.length === 0) {
       this.showErrorMessage("No hay pedidos seleccionados");
       return;
     }
-    
+
     if (!this.nroShippingOrder) {
       this.showErrorMessage("No hay número de orden de envío");
       return;
     }
-    
+
     this.showSuccessMessage("Datos básicos presentes - listo para imprimir");
   }
 
@@ -3886,23 +3907,23 @@ export class DespachosComponent implements OnInit {
     } else {
       // Actualizar la orden existente con datos del formulario
       this.nuevaOrdenEnvio.fechaEnvio = event.fechaEnvio;
-      
+
       // ✅ ASEGURAR que metodoEnvio siempre exista y se actualice
       if (!this.nuevaOrdenEnvio.hasOwnProperty('metodoEnvio')) {
         console.log('⚠️ CREANDO propiedad metodoEnvio que no existía');
       }
       this.nuevaOrdenEnvio.metodoEnvio = event.metodoEnvio;
-      
+
       // ✅ MARCAR para forzar actualización en backend
       this.nuevaOrdenEnvio._forceUpdate = true;
       this.nuevaOrdenEnvio._metodoEnvioChanged = true;
-      
+
       if (this.transportadorSeleccionado) {
         this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
       }
       this.nuevaOrdenEnvio.fecha = event.fechaEnvio || new Date().toISOString();
       this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados || [];
-      
+
       console.log('✅ ORDEN ACTUALIZADA con metodoEnvio:', {
         metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
         fechaEnvio: this.nuevaOrdenEnvio.fechaEnvio,
@@ -3952,7 +3973,7 @@ export class DespachosComponent implements OnInit {
           Swal.fire(
             "Error",
             "Hubo un problema al actualizar la orden de envío: " +
-              (error.message || "Error desconocido"),
+            (error.message || "Error desconocido"),
             "error",
           );
         },
@@ -3991,7 +4012,7 @@ export class DespachosComponent implements OnInit {
         Swal.fire(
           "Error",
           "Hubo un problema al crear la orden de envío: " +
-            (error.message || "Error desconocido"),
+          (error.message || "Error desconocido"),
           "error",
         );
       },
@@ -4071,13 +4092,13 @@ export class DespachosComponent implements OnInit {
           Promise.all(actualizarPromises)
             .then(() => {
               console.log(`🚚 Orden ${this.nuevaOrdenEnvio.nroShippingOrder} despachada exitosamente - Verificando geocodificación...`);
-              
+
               // Geocodificar automáticamente los pedidos despachados que no tienen coordenadas
               const pedidosSinCoordenadas = this.nuevaOrdenEnvio.pedidos.filter(pedido =>
-                pedido.envio?.direccionEntrega && pedido.envio?.ciudad && 
+                pedido.envio?.direccionEntrega && pedido.envio?.ciudad &&
                 (!pedido.envio?.latitud || !pedido.envio?.longitud)
               );
-              
+
               if (pedidosSinCoordenadas.length > 0) {
                 console.log(`📍 Geocodificando ${pedidosSinCoordenadas.length} pedidos de la orden despachada...`);
                 this.geocodificarPedidosDespachados().then(() => {
@@ -4090,7 +4111,7 @@ export class DespachosComponent implements OnInit {
                 // Si todos ya tienen coordenadas, solo actualizar el mapa
                 this.actualizarConfiguracionMapa();
               }
-              
+
               Swal.fire(
                 "Éxito",
                 "Orden despachada exitosamente y todos los pedidos actualizados",
@@ -4123,7 +4144,7 @@ export class DespachosComponent implements OnInit {
           Swal.fire(
             "Error",
             "Hubo un problema al despachar la orden de envío: " +
-              (error.message || "Error desconocido"),
+            (error.message || "Error desconocido"),
             "error",
           );
         },
@@ -4361,10 +4382,10 @@ export class DespachosComponent implements OnInit {
     const porcentajeSinProducir =
       totalCargaSinProducir > 0
         ? Math.round(
-            (totalCargaSinProducir /
-              (totalCargaConfirmada + totalCargaSinProducir)) *
-              100,
-          )
+          (totalCargaSinProducir /
+            (totalCargaConfirmada + totalCargaSinProducir)) *
+          100,
+        )
         : 0;
 
     // Formatea las fechas para mostrarlas
@@ -4374,10 +4395,9 @@ export class DespachosComponent implements OnInit {
         <td>${this.formatearFecha(fecha)}</td>
         <td class="text-center">${data.confirmados}</td>
         <td class="text-center">
-          ${
-            data.pendientesProduccion > 0
-              ? `${data.pendientesProduccion} <span class="badge rounded-pill bg-info">SP</span>`
-              : "0"
+          ${data.pendientesProduccion > 0
+            ? `${data.pendientesProduccion} <span class="badge rounded-pill bg-info">SP</span>`
+            : "0"
           }
         </td>
         <td class="text-center">${recomendacion.recomendacionesPorDia[fecha]}</td>
@@ -4422,10 +4442,9 @@ export class DespachosComponent implements OnInit {
       mensajeSinProducir = `<div class="alert alert-info">
         <i class="pi pi-info-circle me-2"></i>
         <strong>Nota sobre pedidos sin producir:</strong> Un ${porcentajeSinProducir}% de la carga total corresponde a pedidos sin iniciar producción.
-        ${
-          this.obtenerConteoPedidosSinProducirUrgentes() > 0
-            ? `<br><strong class="text-danger">¡Atención!</strong> ${this.obtenerConteoPedidosSinProducirUrgentes()} de estos pedidos son urgentes.`
-            : ""
+        ${this.obtenerConteoPedidosSinProducirUrgentes() > 0
+          ? `<br><strong class="text-danger">¡Atención!</strong> ${this.obtenerConteoPedidosSinProducirUrgentes()} de estos pedidos son urgentes.`
+          : ""
         }
       </div>`;
     }
@@ -4638,7 +4657,7 @@ export class DespachosComponent implements OnInit {
   }
 
   // Métodos para geocodificación y mapa
-  
+
   /**
    * Geocodifica las direcciones de pedidos que no tienen coordenadas
    */
@@ -4650,7 +4669,7 @@ export class DespachosComponent implements OnInit {
 
     this.geocodingInProgress = true;
     this.geocodingProgress = 0;
-    
+
     // Mostrar animación inicial en el mapa
     if (this.mapaComponent) {
       this.mapaComponent.mostrarAnimacionGeocodificacion();
@@ -4659,20 +4678,20 @@ export class DespachosComponent implements OnInit {
 
     try {
       // Filtrar pedidos que necesitan geocodificación
-      const pedidosSinCoordenadas = this.orders.filter(pedido => 
-        pedido.envio && 
-        pedido.envio.direccionEntrega && 
-        pedido.envio.ciudad && 
+      const pedidosSinCoordenadas = this.orders.filter(pedido =>
+        pedido.envio &&
+        pedido.envio.direccionEntrega &&
+        pedido.envio.ciudad &&
         (!pedido.envio.latitud || !pedido.envio.longitud)
       );
 
       // DIAGNÓSTICO: Mostrar pedidos que necesitan geocodificación
       const pedidosDespachadosSinCoordenadas = pedidosSinCoordenadas.filter(p => p.estadoProceso === 'Despachado');
-      
+
       console.log('🌍 DIAGNÓSTICO GEOCODIFICACIÓN:');
       console.log(`📍 Total pedidos sin coordenadas: ${pedidosSinCoordenadas.length}`);
       console.log(`🚚 Pedidos despachados sin coordenadas: ${pedidosDespachadosSinCoordenadas.length}`);
-      
+
       if (pedidosDespachadosSinCoordenadas.length > 0) {
         console.log('🚚 Pedidos despachados que se van a geocodificar:');
         pedidosDespachadosSinCoordenadas.forEach(p => {
@@ -4691,10 +4710,10 @@ export class DespachosComponent implements OnInit {
       // PRIORIZAR PEDIDOS DESPACHADOS: Reorganizar array para procesar primero los despachados
       const pedidosDespachados = pedidosSinCoordenadas.filter(p => p.estadoProceso === 'Despachado');
       const pedidosOtros = pedidosSinCoordenadas.filter(p => p.estadoProceso !== 'Despachado');
-      
+
       // Crear array priorizado: despachados primero, luego otros
       const pedidosPriorizados = [...pedidosDespachados, ...pedidosOtros];
-      
+
       console.log(`📋 Orden de geocodificación: ${pedidosDespachados.length} despachados primero, luego ${pedidosOtros.length} otros`);
 
       // Procesar pedidos en lotes para evitar sobrecargar la API
@@ -4704,21 +4723,21 @@ export class DespachosComponent implements OnInit {
       for (let i = 0; i < totalBatches; i++) {
         const batch = pedidosPriorizados.slice(i * batchSize, (i + 1) * batchSize);
         await this.procesarBatchGeocodificacion(batch);
-        
+
         this.geocodingProgress = ((i + 1) / totalBatches) * 100;
-        
+
         // Actualizar mapa después de cada lote si contiene pedidos despachados
         const batchTieneDespachados = batch.some(p => p.estadoProceso === 'Despachado');
         if (batchTieneDespachados) {
           console.log(`🗺️ Actualizando mapa después de geocodificar lote con ${batch.filter(p => p.estadoProceso === 'Despachado').length} despachados`);
           this.actualizarConfiguracionMapa();
-          
+
           // Actualizar progreso en el mapa
           if (this.mapaComponent) {
             this.mapaComponent.actualizarProgresoGeocodificacion(this.geocodingProgress);
           }
         }
-        
+
         // Pequeña pausa entre lotes para no sobrecargar la API
         if (i < totalBatches - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -4726,17 +4745,17 @@ export class DespachosComponent implements OnInit {
       }
 
       console.log('Geocodificación completada');
-      
+
       // Actualizar configuración del mapa
       this.actualizarConfiguracionMapa();
-      
+
       // Mostrar notificación de éxito en el mapa
       if (this.mapaComponent) {
         setTimeout(() => {
           console.log('🎉 Geocodificación completada - animaciones finalizadas');
         }, 1000);
       }
-      
+
     } catch (error) {
       console.error('Error durante la geocodificación:', error);
     } finally {
@@ -4781,10 +4800,10 @@ export class DespachosComponent implements OnInit {
       if (response && response.latitud && response.longitud) {
         // Guardar en caché
         this.geocodingCache.set(cacheKey, response);
-        
+
         // Aplicar coordenadas al pedido
         this.aplicarCoordenadasAPedido(pedido, response);
-        
+
         console.log(`Geocodificado: ${pedido.nroPedido} - ${direccionCompleta}`);
       } else {
         console.warn(`No se pudieron obtener coordenadas para: ${direccionCompleta}`);
@@ -4813,7 +4832,7 @@ export class DespachosComponent implements OnInit {
     const totalPedidos = this.orders.length;
     const pedidosDespachados = this.orders.filter(p => p.estadoProceso === 'Despachado');
     const pedidosDespachadosConDireccion = pedidosDespachados.filter(p => p.envio?.direccionEntrega);
-    const pedidosDespachadosConCoordenadas = pedidosDespachados.filter(p => 
+    const pedidosDespachadosConCoordenadas = pedidosDespachados.filter(p =>
       p.envio?.latitud && p.envio?.longitud
     );
 
@@ -4822,7 +4841,7 @@ export class DespachosComponent implements OnInit {
     console.log(`🚚 Pedidos con estado "Despachado": ${pedidosDespachados.length}`);
     console.log(`📍 Pedidos despachados con dirección: ${pedidosDespachadosConDireccion.length}`);
     console.log(`🗺️ Pedidos despachados con coordenadas: ${pedidosDespachadosConCoordenadas.length}`);
-    
+
     if (pedidosDespachados.length > 0) {
       console.log('📋 Detalle de pedidos despachados:');
       pedidosDespachados.forEach(p => {
@@ -4831,9 +4850,9 @@ export class DespachosComponent implements OnInit {
     }
 
     let pedidosFiltrados = this.orders
-      .filter(pedido => 
-        pedido.envio?.latitud && 
-        pedido.envio?.longitud && 
+      .filter(pedido =>
+        pedido.envio?.latitud &&
+        pedido.envio?.longitud &&
         pedido.envio?.direccionEntrega
       );
 
@@ -4842,7 +4861,7 @@ export class DespachosComponent implements OnInit {
     // Aplicar filtro de estado si está activo
     if (this.filtroEstadoMapa) {
       const antesDelFiltro = pedidosFiltrados.length;
-      pedidosFiltrados = pedidosFiltrados.filter(pedido => 
+      pedidosFiltrados = pedidosFiltrados.filter(pedido =>
         pedido.estadoProceso === this.filtroEstadoMapa
       );
       console.log(`🎯 Filtro activo: "${this.filtroEstadoMapa}" - Antes: ${antesDelFiltro}, Después: ${pedidosFiltrados.length}`);
@@ -4863,7 +4882,7 @@ export class DespachosComponent implements OnInit {
     }));
 
     console.log(`✅ Total ubicaciones finales para el mapa: ${ubicacionesFinales.length}`);
-    
+
     return ubicacionesFinales;
   }
 
@@ -4872,7 +4891,7 @@ export class DespachosComponent implements OnInit {
    */
   actualizarConfiguracionMapa(): void {
     const ubicaciones = this.transformarPedidosAUbicaciones();
-    
+
     this.configuracionMapa = {
       ...this.configuracionMapa,
       ubicaciones: ubicaciones
@@ -4894,7 +4913,7 @@ export class DespachosComponent implements OnInit {
    */
   private calcularMetricasMapa(): void {
     const ubicaciones = this.configuracionMapa.ubicaciones || [];
-    
+
     this.mapaMetricas = {
       despachados: ubicaciones.filter(u => u.estado === 'Despachado').length,
       paraDespachar: ubicaciones.filter(u => u.estado === 'ParaDespachar').length,
@@ -4913,13 +4932,13 @@ export class DespachosComponent implements OnInit {
     const tiempos = ubicaciones
       .filter(u => u.tiempoEstimado && u.tiempoEstimado > 0)
       .map(u => u.tiempoEstimado);
-    
+
     if (tiempos.length === 0) return 0;
-    
+
     return Math.round(tiempos.reduce((sum: number, tiempo: number) => sum + tiempo, 0) / tiempos.length);
   }
 
-  
+
 
   /**
    * Fuerza la geocodificación de todos los pedidos
@@ -4927,7 +4946,7 @@ export class DespachosComponent implements OnInit {
   forzarGeocodificacion(): void {
     // Limpiar caché para forzar nueva geocodificación
     this.geocodingCache.clear();
-    
+
     // Limpiar coordenadas existentes
     this.orders.forEach(pedido => {
       if (pedido.envio) {
@@ -4935,7 +4954,7 @@ export class DespachosComponent implements OnInit {
         pedido.envio.longitud = undefined;
       }
     });
-    
+
     // Ejecutar geocodificación
     this.geocodificarDireccionesPedidos();
   }
@@ -4959,10 +4978,10 @@ export class DespachosComponent implements OnInit {
    * Cuenta pedidos despachados que no tienen coordenadas para geocodificar
    */
   contarPedidosDespachadosSinCoordenadas(): number {
-    return this.orders.filter(pedido => 
+    return this.orders.filter(pedido =>
       pedido.estadoProceso === 'Despachado' &&
-      pedido.envio?.direccionEntrega && 
-      pedido.envio?.ciudad && 
+      pedido.envio?.direccionEntrega &&
+      pedido.envio?.ciudad &&
       (!pedido.envio?.latitud || !pedido.envio?.longitud)
     ).length;
   }
@@ -4979,11 +4998,11 @@ export class DespachosComponent implements OnInit {
     }
 
     // Filtrar solo pedidos despachados sin coordenadas
-    const pedidosDespachadosSinCoordenadas = this.orders.filter(pedido => 
+    const pedidosDespachadosSinCoordenadas = this.orders.filter(pedido =>
       pedido.estadoProceso === 'Despachado' &&
-      pedido.envio && 
-      pedido.envio.direccionEntrega && 
-      pedido.envio.ciudad && 
+      pedido.envio &&
+      pedido.envio.direccionEntrega &&
+      pedido.envio.ciudad &&
       (!pedido.envio.latitud || !pedido.envio.longitud)
     );
 
@@ -5001,25 +5020,25 @@ export class DespachosComponent implements OnInit {
       for (let i = 0; i < pedidosDespachadosSinCoordenadas.length; i++) {
         const pedido = pedidosDespachadosSinCoordenadas[i];
         console.log(`🌍 Geocodificando pedido despachado ${i + 1}/${pedidosDespachadosSinCoordenadas.length}: ${pedido.nroPedido}`);
-        
+
         await this.geocodificarPedido(pedido);
-        
+
         this.geocodingProgress = ((i + 1) / pedidosDespachadosSinCoordenadas.length) * 100;
-        
+
         // Actualizar mapa cada 2 pedidos
         if ((i + 1) % 2 === 0) {
           this.actualizarConfiguracionMapa();
         }
-        
+
         // Pausa corta entre pedidos
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       console.log('✅ Geocodificación de pedidos despachados completada');
-      
+
       // Actualización final del mapa
       this.actualizarConfiguracionMapa();
-      
+
     } catch (error) {
       console.error('❌ Error durante geocodificación de pedidos despachados:', error);
     } finally {
@@ -5034,7 +5053,7 @@ export class DespachosComponent implements OnInit {
    */
   private ensureMetodoEnvioProperty(order: any): any {
     console.log('🔧 VERIFICANDO propiedad metodoEnvio en orden...');
-    
+
     if (!order) {
       console.log('❌ No hay orden para procesar');
       return order;
@@ -5048,14 +5067,14 @@ export class DespachosComponent implements OnInit {
 
     // Si no tiene o está vacío, detectar y crear
     console.log('⚠️ metodoEnvio NO existe o está vacío, detectando...');
-    
+
     // Intentar detectar basado en transportador
     let detectedMethod = 'mensajeroPropio'; // default
-    
-    if (order.transportador && 
-        order.transportador !== '' && 
-        order.transportador !== 'mensajero_propio' && 
-        order.transportador !== 'Mensajero Propio') {
+
+    if (order.transportador &&
+      order.transportador !== '' &&
+      order.transportador !== 'mensajero_propio' &&
+      order.transportador !== 'Mensajero Propio') {
       detectedMethod = 'transportadora';
       console.log('🚛 Detectado TRANSPORTADORA por field transportador:', order.transportador);
     }
@@ -5064,7 +5083,7 @@ export class DespachosComponent implements OnInit {
     const possibleFields = [
       order.metodo_envio, order.tipoEnvio, order.tipo_envio, order.shippingMethod
     ];
-    
+
     for (const field of possibleFields) {
       if (field && typeof field === 'string') {
         const value = field.toLowerCase().trim();
@@ -5079,7 +5098,7 @@ export class DespachosComponent implements OnInit {
     // Crear/actualizar la propiedad
     order.metodoEnvio = detectedMethod;
     order._metodoEnvioCreated = true; // marcar que fue creado automáticamente
-    
+
     console.log('✨ CREADA propiedad metodoEnvio:', {
       metodoEnvio: order.metodoEnvio,
       autoCreated: order._metodoEnvioCreated,
@@ -5109,19 +5128,19 @@ export class DespachosComponent implements OnInit {
     const order = pedido.shippingOrder;
 
     this.loading = true;
-    
+
     this.logisticaService.trackDespachado(companyId, provider, order).subscribe({
       next: (response) => {
         this.loading = false;
         console.log('📦 Seguimiento del envío:', response);
-        
+
         // Mostrar modal de seguimiento con la información obtenida
         this.mostrarModalSeguimiento(pedido, response);
       },
       error: (error) => {
         this.loading = false;
         console.error('❌ Error al hacer seguimiento:', error);
-        
+
         // Mostrar modal de seguimiento con error
         this.mostrarModalSeguimiento(pedido, null, error);
       }
@@ -5140,7 +5159,7 @@ export class DespachosComponent implements OnInit {
     // Configurar el componente del modal
     modalRef.componentInstance.pedido = pedido;
     modalRef.componentInstance.trackingInfo = trackingInfo;
-    
+
     if (error) {
       modalRef.componentInstance.error = 'Error al obtener información de seguimiento';
     }
@@ -5200,22 +5219,22 @@ export class DespachosComponent implements OnInit {
     };
 
     this.loading = true;
-    
+
     // Debug: mostrar el payload que se envía
     console.log('🔍 Enviando payload para findShipment:', shipmentPayload);
-    
+
     this.logisticaService.findShipment(shipmentPayload).subscribe({
       next: (response) => {
         this.loading = false;
         console.log('🔍 Shipment encontrado:', response);
-        
+
         // Mostrar información del shipment encontrado
         this.mostrarInformacionShipment(pedido, response);
       },
       error: (error) => {
         this.loading = false;
         console.error('❌ Error al buscar shipment:', error);
-        
+
         Swal.fire({
           icon: 'error',
           title: 'Error en búsqueda',
@@ -5260,7 +5279,7 @@ export class DespachosComponent implements OnInit {
           <p><strong>Última Actualización:</strong> ${shipment.ultimaActualizacion || shipment.updatedAt || 'No disponible'}</p>
         </div>
       `;
-      
+
       // Mostrar información adicional si está disponible
       if (shipment.detalles || shipment.details) {
         const detalles = shipment.detalles || shipment.details;

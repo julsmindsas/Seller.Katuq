@@ -207,6 +207,7 @@
                         <div class="p-3">
                             <app-ordenes-despacho
                                 [dispatchOrders]="dispatchOrders"
+                                [availableTransporters]="availableTransporters"
                                 (onPrintOrder)="imprimirOrderToAction($event)"
                                 (onViewOrder)="handleOrderView($event)"
                                 (onDispatchOrder)="handleOrderDispatch($event)"

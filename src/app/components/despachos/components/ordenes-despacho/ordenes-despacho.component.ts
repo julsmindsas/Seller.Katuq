@@ -37,7 +37,7 @@ export class OrdenesDespachoComponent implements OnInit {
   // Para modal de transportadores
   showTransporterModal: boolean = false;
   selectedOrderForDispatch: any = null;
-  availableTransporters: Integration[] = [];
+  @Input() availableTransporters: Integration[] = [];
   selectedTransporter: string = '';
   isDispatchingShipment: boolean = false;
 
