@@ -55,3 +55,5 @@ Este documento registra las mejoras de experiencia de usuario (UX) e interfaz de
     3.  **Corrección de Bugs:** Se solucionó un error que mostraba "Invalid Date" en la tabla de predicción de carga y varios errores de compilación relacionados con la lógica de los componentes.
     4.  **Mejoras Visuales:** Se añadieron `badges` de colores y se mejoró el diseño de las tarjetas de resumen para una lectura más clara.
     5.  **Integración Final:** Se conectó el botón "Ver Análisis" para que abra este nuevo modal, pasándole todos los datos necesarios para la visualización.
+
+*   **Corrección Final de Flujo de Datos:** Se detectó que la carga automática de datos en la pestaña "Órdenes Generadas" no funcionaba debido a que la refactorización de la lógica no se había aplicado correctamente en el archivo del componente. Se realizó una operación final para reescribir los métodos implicados (`onTabChange`, `loadDispatchOrders`), solucionando de forma definitiva el error de compilación y asegurando que los datos se carguen tanto al seleccionar la pestaña como al usar el botón "Actualizar".

@@ -382,14 +382,17 @@ export class DespachosComponent implements OnInit {
   }
 
   public onTabChange(event: any): void {
-    // El índice de la pestaña del mapa es 1 (0: Pedidos, 1: Mapa)
+    // El índice de la pestaña del mapa es 1
     if (event.index === 1) {
-      // Usar un setTimeout para asegurar que el DOM esté visible antes de refrescar
       setTimeout(() => {
         if (this.mapaComponent) {
           this.mapaComponent.refrescarMapa();
         }
       }, 1);
+    }
+    // El índice de la pestaña de Órdenes es 2
+    if (event.index === 2) {
+      this.loadDispatchOrders();
     }
   }
 
@@ -3250,8 +3253,7 @@ export class DespachosComponent implements OnInit {
     }
   }
 
-  viewAllDispatchOrders() {
-    // Aquí se añade la lógica para la consulta masiva de órdenes de despacho
+  loadDispatchOrders(openModal: boolean = false) {
     this.logisticaService.getShippingOrders().subscribe(
       (data: Pedido[]) => {
         const currentCompanyStr = localStorage.getItem("currentCompany");
@@ -3266,17 +3268,26 @@ export class DespachosComponent implements OnInit {
             const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
             return bNum - aNum;
           });
-        this.modalService.open(this.dispatchOrdersModal, {
-          size: "xl",
-          fullscreen: false,
-        });
+        
+        if (openModal) {
+            this.modalService.open(this.dispatchOrdersModal, {
+                size: "xl",
+                fullscreen: false,
+            });
+        }
       },
       (error) => {
         console.error("Error al consultar las órdenes de despacho:", error);
         this.dispatchOrders = [];
-        this.modalService.open(this.dispatchOrdersModal, { size: "xl" });
+        if (openModal) {
+            this.modalService.open(this.dispatchOrdersModal, { size: "xl" });
+        }
       },
     );
+  }
+
+  viewAllDispatchOrders() {
+    this.loadDispatchOrders(true);
   }
 
   pdfOrder(content, order: Pedido) {
