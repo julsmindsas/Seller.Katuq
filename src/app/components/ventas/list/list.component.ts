@@ -2152,11 +2152,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Clonar el pedido para no modificar el original
     const pedidoActualizado = { ...order };
     
+    // Sincronizar forma de entrega entre pedido y carrito
+    this.sincronizarFormaEntrega(pedidoActualizado);
+    
     // Actualizar valores usando el servicio
     this.actualizarValoresPedido(pedidoActualizado);
     
     console.log('📊 PDF - Pedido actualizado antes de generar:', {
       nroPedido: pedidoActualizado.nroPedido,
+      formaEntrega: pedidoActualizado.formaEntrega,
       totalPedidoSinDescuento: pedidoActualizado.totalPedidoSinDescuento,
       totalEnvio: pedidoActualizado.totalEnvio,
       totalDescuento: pedidoActualizado.totalDescuento,
@@ -2164,6 +2168,40 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     
     return pedidoActualizado;
+  }
+
+  /**
+   * 🔄 SINCRONIZA la forma de entrega entre el pedido y el carrito
+   * Asegura que ambos tengan la misma información para el PDF
+   */
+  private sincronizarFormaEntrega(pedido: Pedido): void {
+    if (!pedido.carrito || pedido.carrito.length === 0) {
+      return;
+    }
+
+    // Si el pedido tiene forma de entrega, sincronizar con el carrito
+    if (pedido.formaEntrega) {
+      pedido.carrito.forEach(item => {
+        if (item.configuracion?.datosEntrega && pedido.formaEntrega) {
+          item.configuracion.datosEntrega.formaEntrega = pedido.formaEntrega;
+        }
+      });
+      
+      console.log('🔄 SINCRONIZACIÓN - Forma de entrega actualizada en carrito:', {
+        nroPedido: pedido.nroPedido,
+        formaEntrega: pedido.formaEntrega,
+        itemsActualizados: pedido.carrito.length
+      });
+    }
+    // Si el carrito tiene forma de entrega, sincronizar con el pedido
+    else if (pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega) {
+      pedido.formaEntrega = pedido.carrito[0].configuracion.datosEntrega.formaEntrega;
+      
+      console.log('🔄 SINCRONIZACIÓN - Forma de entrega actualizada en pedido:', {
+        nroPedido: pedido.nroPedido,
+        formaEntrega: pedido.formaEntrega
+      });
+    }
   }
 
   async convertirImagenesAbase64YGenerarPDF(DATA: HTMLElement) {
@@ -2411,6 +2449,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (order.carrito && order.carrito.length > 0) {
       const fechaEntrega = order.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega;
       const horarioEntrega = order.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega;
+      const formaEntrega = order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega;
 
       if (
         fechaEntrega &&
@@ -2427,6 +2466,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (horarioEntrega) {
         order.horarioEntrega = horarioEntrega as any;
+      }
+
+      // Sincronizar forma de entrega entre pedido y carrito
+      if (formaEntrega) {
+        order.formaEntrega = formaEntrega;
+      } else if (order.formaEntrega) {
+        // Si el pedido tiene forma de entrega pero el carrito no, sincronizar hacia el carrito
+        order.carrito.forEach(item => {
+          if (item.configuracion?.datosEntrega && order.formaEntrega) {
+            item.configuracion.datosEntrega.formaEntrega = order.formaEntrega;
+          }
+        });
       }
     }
 
@@ -3287,6 +3338,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   actualizarValoresPedido(order: Pedido) {
     this.pedidoUtilService.pedido = order;
+    
+    // Sincronizar forma de entrega antes de actualizar valores
+    this.sincronizarFormaEntrega(order);
     
     // Recalcular descuentos
     order.totalDescuento = this.pedidoUtilService.getDiscount();
