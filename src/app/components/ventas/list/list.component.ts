@@ -1919,9 +1919,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   pdfOrder(content, order: Pedido) {
     this.scrollStack.push(window.scrollY);
-    this.pedidoSeleccionado = order;
+    
+    // 🔄 CRÍTICO: Actualizar valores del pedido ANTES de generar PDF
+    // Esto asegura que el PDF muestre los valores más recientes
+    const pedidoActualizado = this.actualizarPedidoParaPDF(order);
+    this.pedidoSeleccionado = pedidoActualizado;
+    
+    // ✅ Ahora generar PDF con pedido ACTUALIZADO
     this.htmlModal = this.paymentService.getHtmlContent(
-      order,
+      pedidoActualizado,  // ← Pedido con valores actualizados
       this.isFromProduction,
     );
 
@@ -1974,6 +1980,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.refrescarDatos();
     }, 1000);
+  }
+  
+  /**
+   * 🔄 MÉTODO AUXILIAR: Actualizar pedido antes de generar PDF
+   * Asegura que todos los valores estén sincronizados
+   */
+  private actualizarPedidoParaPDF(order: Pedido): Pedido {
+    // Clonar el pedido para no modificar el original
+    const pedidoActualizado = { ...order };
+    
+    // Actualizar valores usando el servicio
+    this.actualizarValoresPedido(pedidoActualizado);
+    
+    console.log('📊 PDF - Pedido actualizado antes de generar:', {
+      nroPedido: pedidoActualizado.nroPedido,
+      totalPedidoSinDescuento: pedidoActualizado.totalPedidoSinDescuento,
+      totalEnvio: pedidoActualizado.totalEnvio,
+      totalDescuento: pedidoActualizado.totalDescuento,
+      totalPedididoConDescuento: pedidoActualizado.totalPedididoConDescuento
+    });
+    
+    return pedidoActualizado;
   }
 
   async convertirImagenesAbase64YGenerarPDF(DATA: HTMLElement) {
