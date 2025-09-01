@@ -40,6 +40,7 @@ import { ObservacionesDetalleComponent } from "./components/observaciones-detall
 import { MapaUbicacionesComponent } from "./components/mapa-ubicaciones/mapa-ubicaciones.component";
 import { PdfTemplateComponent } from "./components/pdf-template/pdf-template.component";
 import { SeguimientoModalComponent } from "./components/seguimiento-modal/seguimiento-modal.component";
+import { AnalisisDespachosComponent } from "./components/analisis-despachos/analisis-despachos.component";
 
 // Pipes
 import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
@@ -88,6 +89,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     PdfTemplateComponent,
     TotalValorACobrarPipe,
     SeguimientoModalComponent,
+    AnalisisDespachosComponent,
   ],
   exports: [DetalleEntregaComponent],
 })

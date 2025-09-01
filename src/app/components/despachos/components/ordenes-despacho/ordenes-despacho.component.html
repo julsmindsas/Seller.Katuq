@@ -44,7 +44,7 @@
           <tbody>
             <ng-container *ngFor="let order of pagedOrders; let i = index">
               <tr>
-                <td class="text-center">
+                <td class="text-center col-toggler" data-label="Detalles">
                   <button class="btn btn-sm btn-link p-0" 
                     (click)="toggleRowDetails(order)" 
                     [attr.aria-expanded]="isRowExpanded(order)" 
@@ -52,13 +52,13 @@
                     <i class="pi" [ngClass]="{'pi-chevron-down': !isRowExpanded(order), 'pi-chevron-up': isRowExpanded(order)}"></i>
                   </button>
                 </td>
-                <td><strong>{{ order.nroShippingOrder || 'N/A' }}</strong></td>
-                <td>{{ formatDate(order.fecha) }}</td>
-                <td>{{ order.transportador || 'N/A' }}</td>
-                <td>
+                <td class="col-nro-orden" data-label="Nro. Orden"><strong>{{ order.nroShippingOrder || 'N/A' }}</strong></td>
+                <td class="col-fecha" data-label="Fecha">{{ formatDate(order.fecha) }}</td>
+                <td class="col-transportador" data-label="Transportador">{{ order.transportador || 'N/A' }}</td>
+                <td class="col-pedidos" data-label="Pedidos">
                   <span class="badge bg-secondary">{{ getPedidosCount(order) }}</span>
                 </td>
-                <td>
+                <td class="col-estado" data-label="Estado">
                   <span class="badge" 
                     [ngClass]="{
                       'bg-success': getEstadoProceso(order) === 'Despachado',
@@ -67,8 +67,8 @@
                     {{ getEstadoProceso(order) | translate }}
                   </span>
                 </td>
-                <td class="text-end">{{ getFaltaPorPagarSum(order) | currency }}</td>
-                <td>
+                <td class="text-end col-total" data-label="Total a Cobrar">{{ getFaltaPorPagarSum(order) | currency }}</td>
+                <td class="col-acciones" data-label="Acciones">
                   <div class="d-flex justify-content-center">
                     <button type="button" class="btn btn-sm btn-outline-primary me-2" 
                       (click)="printOrder(order.nroShippingOrder)">

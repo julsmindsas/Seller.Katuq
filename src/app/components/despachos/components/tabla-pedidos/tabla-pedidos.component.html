@@ -13,32 +13,29 @@
                         [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }"
                         style="font-size: 0.8em; table-layout: auto;">
 
-                        <!-- CAPTION: Botones y filtros generales -->
                         <ng-template pTemplate="caption">
-                            <div class="d-flex flex-wrap justify-content-between align-items-center p-2">
-                                <div class="d-flex align-items-center mb-md-0 mb-2">
-                                    <span class="me-2 text-muted">{{ 'Columnas:' | translate }}</span>
+                            <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center p-2 table-header-actions">
+                                <h5 class="m-0 fw-bold mb-3 mb-md-0">{{ 'Pedidos para Despachar' | translate }}</h5>
+                                <div class="d-flex align-items-center gap-2">
+                                    <!-- Column Selector -->
                                     <p-multiSelect [options]="displayedColumns" 
                                         [(ngModel)]="selectedColumns" 
                                         optionLabel="header" 
-                                        defaultLabel="{{ 'Seleccionar' | translate }}"
+                                        placeholder="{{ 'Ver Columnas' | translate }}"
                                         selectedItemsLabel="{0} columnas"
-                                        styleClass="me-2 p-multiselect-sm"
-                                        [style]="{'min-width': '200px'}"
+                                        styleClass="p-multiselect-sm"
+                                        [style]="{'min-width': '180px'}"
                                         (onChange)="onColumnSelectionChange()">
                                     </p-multiSelect>
+                        
+                                    <!-- Action Buttons -->
                                     <button pButton pRipple type="button" icon="pi pi-refresh" 
-                                        pTooltip="{{ 'Restaurar columnas' | translate }}"
-                                        class="p-button-outlined p-button-sm p-button-secondary" 
-                                        (click)="resetColumnConfig()">
-                                    </button>
-                                </div>
-                                <div class="btn-group">
-                                    <button pButton type="button" label="{{ 'Actualizar' | translate }}" icon="pi pi-refresh"
-                                        class="p-button-sm p-button-outlined"
+                                        pTooltip="{{ 'Actualizar Datos' | translate }}"
+                                        class="p-button-text p-button-secondary" 
                                         (click)="onRefresh()"></button>
-                                    <button pButton type="button" label="{{ 'Limpiar filtros' | translate }}" icon="pi pi-filter-slash"
-                                        class="p-button-sm p-button-outlined p-button-secondary"
+                                    <button pButton pRipple type="button" icon="pi pi-filter-slash" 
+                                        pTooltip="{{ 'Limpiar Filtros' | translate }}"
+                                        class="p-button-text p-button-secondary" 
                                         (click)="onClear()"></button>
                                 </div>
                             </div>
@@ -109,66 +106,16 @@
                                 </td>
                                 
                                 <!-- Opciones: Implementar menú desplegable estilo list.component.html -->
-                                <td *ngIf="isColumnVisible('opciones')" class="options-cell" style="width: 3rem; text-align: center;">
-                                    <div class="btn-actions hover-container">
-                                        <button class="btn-options" type="button">
-                                            <i class="pi pi-cog"></i>
-                                        </button>
-
-                                        <ul class="list-actions popup">
-                                            <li (click)="printPdf(pedido)">
-                                                <i class="pi pi-file-pdf"></i>
-                                                <span>{{ 'Imprimir Pdf' | translate }}</span>
-                                            </li>
-
-                                            <li *ngIf="hasTags(pedido)" (click)="viewTags(pedido)">
-                                                <i class="pi pi-tag"></i>
-                                                <span>{{ 'Tarjeta' | translate }}</span>
-                                            </li>
-
-                                            <li (click)="printLabel(pedido)">
-                                                <i class="pi pi-file"></i>
-                                                <span>{{ 'Rótulo' | translate }}</span>
-                                            </li>
-
-                                            <li *ngIf="pedido.estadoProceso != 'Empacado' && pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'" 
-                                                (click)="pedido.estadoProceso !== 'SinProducir' ? changeStatus(pedido,1) : null"
-                                                [ngClass]="{'disabled': pedido.estadoProceso === 'SinProducir'}"
-                                                [pTooltip]="pedido.estadoProceso === 'SinProducir' ? 'Los pedidos sin producir no pueden ser empacados' : null"
-                                                tooltipPosition="top">
-                                                <i class="pi pi-inbox"></i>
-                                                <span>{{ 'Empacar' | translate }}</span>
-                                            </li>
-
-                                            <li *ngIf="pedido.estadoProceso == 'Empacado' && pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'" 
-                                                (click)="changeStatus(pedido,2)">
-                                                <i class="pi pi-box"></i>
-                                                <span>{{ 'Desempacar' | translate }}</span>
-                                            </li>
-
-                                            <li *ngIf="pedido.estadoProceso != 'Despachado' && pedido.estadoProceso != 'Entregado'" 
-                                                (click)="pedido.estadoProceso !== 'SinProducir' ? changeStatus(pedido,4) : null"
-                                                [ngClass]="{'disabled': pedido.estadoProceso === 'SinProducir'}"
-                                                [pTooltip]="pedido.estadoProceso === 'SinProducir' ? 'Los pedidos sin producir no pueden ser despachados' : null"
-                                                tooltipPosition="top">
-                                                <i class="pi pi-send"></i>
-                                                <span>{{ 'Despachar' | translate }}</span>
-                                            </li>
-
-                                            <li *ngIf="pedido.estadoProceso == 'Despachado'" 
-                                                (click)="changeStatus(pedido,5)">
-                                                <i class="pi pi-check-circle"></i>
-                                                <span>{{ 'Entregar' | translate }}</span>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                <td *ngIf="isColumnVisible('opciones')" class="options-cell col-opciones" style="width: 3rem; text-align: center;">
+                                    <p-menu #rowMenu [model]="rowMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
+                                    <button pButton pRipple type="button" icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" (click)="onRowMenuClick($event, rowMenu, pedido)"></button>
                                 </td>
                                 
                                 <!-- Columnas dinámicas -->
                                 <ng-container *ngFor="let col of selectedColumns">
                                     <ng-container *ngIf="col.field !== 'detalles' && col.field !== 'opciones' && isColumnVisible(col.field)">
                                         <!-- Estado de Pago -->
-                                        <td *ngIf="col.field === 'estadoPago'" class="estado-cell text-center">
+                                        <td *ngIf="col.field === 'estadoPago'" class="estado-cell text-center col-estadoPago" [attr.data-label]="col.header | translate">
                                             <span class="modern-badge" [ngClass]="{
                                                 'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
                                                 'badge-success': pedido?.estadoPago === 'Aprobado',
@@ -186,7 +133,7 @@
                                         </td>
                                         
                                         <!-- Estado de Proceso -->
-                                        <td *ngIf="col.field === 'estadoProceso'" class="estado-cell text-center">
+                                        <td *ngIf="col.field === 'estadoProceso'" class="estado-cell text-center col-estadoProceso" [attr.data-label]="col.header | translate">
                                             <span class="modern-badge" [ngClass]="{
                                                 'badge-secondary': pedido?.estadoProceso === 'SinProducir',
                                                 'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
@@ -210,7 +157,7 @@
                                         </td>
                                         
                                         <!-- Prioridad - Nueva columna -->
-                                        <td *ngIf="col.field === 'prioridad'" class="text-center">
+                                        <td *ngIf="col.field === 'prioridad'" class="text-center col-prioridad" [attr.data-label]="col.header | translate">
                                             <ng-container [ngSwitch]="pedido?.prioridad">
                                                 <span *ngSwitchCase="'alta'" class="prioridad-pill prioridad-alta">
                                                     <i class="pi pi-exclamation-circle me-1"></i>{{ 'Alta' | translate }}
@@ -235,7 +182,7 @@
                                         </td>
                                         
                                         <!-- Cliente con notas -->
-                                        <td *ngIf="col.field === 'cliente'" class="text-nowrap">
+                                        <td *ngIf="col.field === 'cliente'" class="text-nowrap col-cliente" [attr.data-label]="col.header | translate">
                                             <div class="d-flex align-items-center">
                                                 <span>{{ pedido.cliente?.nombres_completos }} {{ pedido.cliente?.apellidos_completos }}</span>
                                                 <button pButton pRipple type="button" icon="pi pi-info-circle" 
@@ -246,34 +193,34 @@
                                         </td>
                                         
                                         <!-- Valores monetarios -->
-                                        <td *ngIf="col.field === 'totalEnvio'" class="text-end text-nowrap">{{ pedido.totalEnvio | currency }}</td>
-                                        <td *ngIf="col.field === 'faltaPorPagar'" class="text-end text-nowrap">{{ pedido?.faltaPorPagar | currency }}</td>
+                                        <td *ngIf="col.field === 'totalEnvio'" class="text-end text-nowrap col-totalEnvio" [attr.data-label]="col.header | translate">{{ pedido.totalEnvio | currency }}</td>
+                                        <td *ngIf="col.field === 'faltaPorPagar'" class="text-end text-nowrap col-faltaPorPagar" [attr.data-label]="col.header | translate">{{ pedido?.faltaPorPagar | currency }}</td>
                                         
                                         <!-- Fechas -->
-                                        <td *ngIf="col.field === 'fechaCreacion'" class="text-nowrap">{{ pedido.fechaCreacion | date: 'dd/MM/yyyy' }}</td>
-                                        <td *ngIf="col.field === 'fechaHoraEmpacado'" class="text-nowrap">{{ pedido.fechaHoraEmpacado | date: 'dd-MM-yyyy HH:mm' }}</td>
-                                        <td *ngIf="col.field === 'fechaYHorarioDespachado'" class="text-nowrap">{{ pedido.fechaYHorarioDespachado | date: 'dd-MM-yyyy HH:mm' }}</td>
+                                        <td *ngIf="col.field === 'fechaCreacion'" class="text-nowrap col-fechaCreacion" [attr.data-label]="col.header | translate">{{ pedido.fechaCreacion | date: 'dd/MM/yyyy' }}</td>
+                                        <td *ngIf="col.field === 'fechaHoraEmpacado'" class="text-nowrap col-fechaHoraEmpacado" [attr.data-label]="col.header | translate">{{ pedido.fechaHoraEmpacado | date: 'dd-MM-yyyy HH:mm' }}</td>
+                                        <td *ngIf="col.field === 'fechaYHorarioDespachado'" class="text-nowrap col-fechaYHorarioDespachado" [attr.data-label]="col.header | translate">{{ pedido.fechaYHorarioDespachado | date: 'dd-MM-yyyy HH:mm' }}</td>
                                         
                                         <!-- Fechas de configuración -->
-                                        <td *ngIf="col.field === 'fechaEntrega'" class="text-nowrap">
+                                        <td *ngIf="col.field === 'fechaEntrega'" class="text-nowrap col-fechaEntrega" [attr.data-label]="col.header | translate">
                                             {{ convertFechaEntregaString(pedido.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega) }}
                                         </td>
-                                        <td *ngIf="col.field === 'formaEntrega'" class="text-nowrap">{{ pedido.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
-                                        <td *ngIf="col.field === 'horarioEntrega'" class="text-nowrap">{{ pedido.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
+                                        <td *ngIf="col.field === 'formaEntrega'" class="text-nowrap col-formaEntrega" [attr.data-label]="col.header | translate">{{ pedido.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
+                                        <td *ngIf="col.field === 'horarioEntrega'" class="text-nowrap col-horarioEntrega" [attr.data-label]="col.header | translate">{{ pedido.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
                                         
                                         <!-- Datos básicos -->
-                                        <td *ngIf="col.field === 'nroPedido'" class="text-nowrap">{{ pedido.nroPedido }}</td>
-                                        <td *ngIf="col.field === 'nroFactura'" class="text-nowrap">{{ pedido?.nroFactura }}</td>
-                                        <td *ngIf="col.field === 'shippingOrder'" class="text-nowrap">{{ pedido?.shippingOrder }}</td>
-                                        <td *ngIf="col.field === 'ciudad'" class="text-nowrap">{{ pedido.envio?.ciudad }}</td>
-                                        <td *ngIf="col.field === 'zonaCobro'" class="text-nowrap">{{ pedido.envio?.zonaCobro }}</td>
-                                        <td *ngIf="col.field === 'asesorAsignado'" class="text-nowrap">{{ pedido.asesorAsignado?.name }}</td>
-                                        <td *ngIf="col.field === 'empacador'" class="text-nowrap">{{ pedido.empacador }}</td>
-                                        <td *ngIf="col.field === 'despachador'" class="text-nowrap">{{ pedido.despachador?.name }}</td>
-                                        <td *ngIf="col.field === 'transportador'" class="text-nowrap">{{ pedido.transportador }}</td>
+                                        <td *ngIf="col.field === 'nroPedido'" class="text-nowrap col-nroPedido" [attr.data-label]="col.header | translate">{{ pedido.nroPedido }}</td>
+                                        <td *ngIf="col.field === 'nroFactura'" class="text-nowrap col-nroFactura" [attr.data-label]="col.header | translate">{{ pedido?.nroFactura }}</td>
+                                        <td *ngIf="col.field === 'shippingOrder'" class="text-nowrap col-shippingOrder" [attr.data-label]="col.header | translate">{{ pedido?.shippingOrder }}</td>
+                                        <td *ngIf="col.field === 'ciudad'" class="text-nowrap col-ciudad" [attr.data-label]="col.header | translate">{{ pedido.envio?.ciudad }}</td>
+                                        <td *ngIf="col.field === 'zonaCobro'" class="text-nowrap col-zonaCobro" [attr.data-label]="col.header | translate">{{ pedido.envio?.zonaCobro }}</td>
+                                        <td *ngIf="col.field === 'asesorAsignado'" class="text-nowrap col-asesorAsignado" [attr.data-label]="col.header | translate">{{ pedido.asesorAsignado?.name }}</td>
+                                        <td *ngIf="col.field === 'empacador'" class="text-nowrap col-empacador" [attr.data-label]="col.header | translate">{{ pedido.empacador }}</td>
+                                        <td *ngIf="col.field === 'despachador'" class="text-nowrap col-despachador" [attr.data-label]="col.header | translate">{{ pedido.despachador?.name }}</td>
+                                        <td *ngIf="col.field === 'transportador'" class="text-nowrap col-transportador" [attr.data-label]="col.header | translate">{{ pedido.transportador }}</td>
                                         
                                         <!-- Observaciones detalladas - DISEÑO COMPACTO CON MODAL TRIGGER -->
-                                        <td *ngIf="col.field === 'observaciones'" class="observaciones-cell text-center">
+                                        <td *ngIf="col.field === 'observaciones'" class="observaciones-cell text-center col-observaciones" [attr.data-label]="col.header | translate">
                                             <button *ngIf="pedido.envio && (pedido.envio.nombres || pedido.envio.celular || pedido.envio.direccionEntrega || pedido.envio.observaciones)"
                                                 pButton pRipple type="button" icon="pi pi-info-circle"
                                                 class="p-button-rounded p-button-text p-button-sm"
@@ -286,7 +233,7 @@
                                         </td>
                                         
                                         <!-- Entregado (botón de detalles) - Restaurado -->
-                                        <td *ngIf="col.field === 'entregado'" class="text-center">
+                                        <td *ngIf="col.field === 'entregado'" class="text-center col-entregado" [attr.data-label]="col.header | translate">
                                             <button pButton type="button" icon="pi pi-info-circle" 
                                                 class="p-button-outlined p-button-sm"
                                                 (click)="viewDetails(pedido)">
@@ -295,7 +242,7 @@
                                         </td>
 
                                         <!-- Seguimiento - Nueva columna -->
-                                        <td *ngIf="col.field === 'seguimiento'" class="seguimiento-cell">
+                                        <td *ngIf="col.field === 'seguimiento'" class="seguimiento-cell col-seguimiento" [attr.data-label]="col.header | translate">
                                             <div class="d-flex flex-column gap-1">
                                                 <!-- Botón de Seguimiento -->
                                                 <button *ngIf="pedido.estadoProceso === 'Despachado' && pedido.shippingOrder"

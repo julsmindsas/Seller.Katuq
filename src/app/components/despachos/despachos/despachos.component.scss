@@ -963,3 +963,82 @@ $border-radius: 8px;
     z-index: 1050; /* Asegura que esté sobre el contenido pero debajo de los modales */
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
+
+// NUEVOS ESTILOS PARA FASE 1
+
+// Panel de Métricas
+.metrics-panel {
+  background-color: #f8f9fa; // Un fondo suave para el panel
+  border-bottom: 1px solid #e9ecef;
+}
+
+// Estilos para las pestañas modernas
+:host ::ng-deep .modern-tabs {
+  .p-tabview-nav {
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0 1rem;
+
+    .p-tabview-nav-link {
+      border: none !important;
+      background: transparent !important;
+      color: #6c757d;
+      font-weight: 500;
+      padding: 1rem 0.5rem;
+      margin: 0 0.5rem;
+      position: relative;
+      transition: color 0.2s;
+
+      &:not(.p-disabled):focus {
+        box-shadow: none;
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #0d6efd;
+        transform: scaleX(0);
+        transition: transform 0.3s ease-out;
+      }
+    }
+
+    li.p-highlight .p-tabview-nav-link {
+      color: #0d6efd;
+
+      &::after {
+        transform: scaleX(1);
+      }
+    }
+  }
+
+  .p-tabview-panels {
+    padding: 0; // El padding se manejará en los componentes hijos o wrappers
+    background-color: #ffffff;
+  }
+}
+
+@media (max-width: 576px) { // Estilos para pantallas extra pequeñas
+  :host ::ng-deep .modern-tabs .p-tabview-nav {
+    flex-wrap: wrap;
+    justify-content: center; // Centrar las pestañas
+  }
+
+  :host ::ng-deep .modern-tabs .p-tabview-nav li {
+    flex-basis: 50%; // Cada pestaña ocupa el 50% del ancho
+    text-align: center;
+
+    .p-tabview-nav-link {
+        justify-content: center;
+    }
+  }
+
+  .table-header-actions {
+      .p-multiselect {
+          width: 100%;
+      }
+  }
+}

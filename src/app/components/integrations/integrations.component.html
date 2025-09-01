@@ -1050,6 +1050,222 @@
           </div>
         </ng-container>
 
+        <!-- Enviame Fields -->
+        <ng-container *ngIf="selectedIntegrationType === 'enviame'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>Configura la integración con Enviame.io para gestionar tus envíos y logística en Latinoamérica.</span>
+            <a href="https://docs.enviame.io/docs/v2#tag/Envios/operation/Crear-Envios-Seller" target="_blank" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver documentación
+            </a>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="apiKey">
+                <i class="fa fa-key"></i> API Key:
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-lock prefix-icon"></i>
+                <input [type]="showApiKey ? 'text' : 'password'" id="apiKey" formControlName="apiKey">
+                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
+              </div>
+              <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> La API Key es obligatoria (mínimo 10 caracteres)
+              </div>
+              <small class="form-text text-muted">API Key proporcionada por Enviame</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="id_seller">
+                <i class="fa fa-user-tag"></i> ID Seller:
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-id-badge prefix-icon"></i>
+                <input type="text" id="id_seller" formControlName="id_seller" placeholder="Ej: 12345">
+              </div>
+              <div *ngIf="integrationForm.get('id_seller')?.invalid && integrationForm.get('id_seller')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> El ID Seller es obligatorio
+              </div>
+              <small class="form-text text-muted">ID numérico de la empresa/seller generado por Enviame</small>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="warehouse_code">
+                <i class="fa fa-warehouse"></i> Código de Bodega:
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-warehouse prefix-icon"></i>
+                <input type="text" id="warehouse_code" formControlName="warehouse_code" placeholder="Ej: bod_sell">
+              </div>
+              <div *ngIf="integrationForm.get('warehouse_code')?.invalid && integrationForm.get('warehouse_code')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> El código de bodega es obligatorio
+              </div>
+              <small class="form-text text-muted">Código de la bodega donde se originarán los envíos</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="country">
+                <i class="fa fa-flag"></i> País:
+                <span class="field-required">*</span>
+              </label>
+              <select id="country" formControlName="country" class="form-control">
+                <option value="CL">Chile (CL)</option>
+                <option value="CO">Colombia (CO)</option>
+                <option value="PE">Perú (PE)</option>
+                <option value="MX">México (MX)</option>
+              </select>
+              <div *ngIf="integrationForm.get('country')?.invalid && integrationForm.get('country')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> El país es obligatorio
+              </div>
+              <small class="form-text text-muted">País donde operará el servicio</small>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="default_carrier">
+                <i class="fa fa-truck"></i> Carrier por Defecto:
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-truck prefix-icon"></i>
+                <input type="text" id="default_carrier" formControlName="default_carrier" placeholder="Ej: STARKEN">
+              </div>
+              <div *ngIf="integrationForm.get('default_carrier')?.invalid && integrationForm.get('default_carrier')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> El carrier por defecto es obligatorio
+              </div>
+              <small class="form-text text-muted">Nombre del carrier predeterminado para envíos</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="carrier_code">
+                <i class="fa fa-barcode"></i> Código de Carrier:
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-barcode prefix-icon"></i>
+                <input type="text" id="carrier_code" formControlName="carrier_code" placeholder="Ej: SKN, BLX">
+              </div>
+              <div *ngIf="integrationForm.get('carrier_code')?.invalid && integrationForm.get('carrier_code')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> El código de carrier es obligatorio
+              </div>
+              <small class="form-text text-muted">Código específico del carrier (SKN=Starken, BLX=Bluexpress, etc)</small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="apiUrl">
+              <i class="fa fa-globe"></i> URL de API:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-link prefix-icon"></i>
+              <input type="url" id="apiUrl" formControlName="apiUrl" placeholder="https://api.enviame.io/api/s2/v2/companies/">
+            </div>
+            <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para la API
+            </div>
+            <small class="form-text text-muted">URL base del servicio API de Enviame</small>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="environment">
+                <i class="fa fa-server"></i> Ambiente:
+              </label>
+              <select id="environment" formControlName="environment" class="form-control">
+                <option value="production">Producción</option>
+                <option value="stage">Stage (Pruebas)</option>
+              </select>
+              <small class="form-text text-muted">Ambiente del servicio a utilizar</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="default_service">
+                <i class="fa fa-shipping-fast"></i> Servicio por Defecto:
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-shipping-fast prefix-icon"></i>
+                <input type="text" id="default_service" formControlName="default_service" placeholder="Ej: priority, standard">
+              </div>
+              <div *ngIf="integrationForm.get('default_service')?.invalid && integrationForm.get('default_service')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> El servicio por defecto es obligatorio
+              </div>
+              <small class="form-text text-muted">Tipo de servicio predeterminado para envíos</small>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="timeout">
+                <i class="fa fa-clock"></i> Timeout (segundos):
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-hourglass-half prefix-icon"></i>
+                <input type="number" id="timeout" formControlName="timeout" min="5" max="300" placeholder="30">
+              </div>
+              <div *ngIf="integrationForm.get('timeout')?.invalid && integrationForm.get('timeout')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> El timeout debe estar entre 5 y 300 segundos
+              </div>
+              <small class="form-text text-muted">Tiempo máximo de espera para respuestas</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="notifyErrors">
+                <i class="fa fa-bell"></i> Notificar errores:
+              </label>
+              <div class="toggle-container">
+                <label class="switch">
+                  <input type="checkbox" formControlName="notifyErrors" id="notifyErrors">
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('notifyErrors')?.value, 'inactive': !integrationForm.get('notifyErrors')?.value}">
+                  {{ integrationForm.get('notifyErrors')?.value ? 'Activado' : 'Desactivado' }}
+                </span>
+              </div>
+              <small class="form-text text-muted">Recibir notificaciones por email en caso de errores</small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="webhookUrl">
+              <i class="fa fa-link"></i> URL del Webhook:
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-bell prefix-icon"></i>
+              <input type="url" id="webhookUrl" formControlName="webhookUrl" placeholder="https://tutienda.com/webhooks/enviame">
+            </div>
+            <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para el webhook
+            </div>
+            <small class="form-text text-muted">URL donde recibirás notificaciones de estado de envíos</small>
+          </div>
+
+          <div class="form-group">
+            <label for="webhook_secret">
+              <i class="fa fa-shield-alt"></i> Secret del Webhook:
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input [type]="showApiSecret ? 'text' : 'password'" id="webhook_secret" formControlName="webhook_secret" placeholder="Secret para validar webhooks">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiSecretVisibility()"></i>
+            </div>
+            <small class="form-text text-muted">Clave secreta para validar las notificaciones de webhook (recomendado)</small>
+          </div>
+          
+          <div class="integration-info-box">
+            <i class="fa fa-lightbulb"></i>
+            <span><strong>Tip:</strong> Para probar la integración, puedes usar el ambiente de Stage con credenciales de prueba proporcionadas por Enviame.</span>
+          </div>
+        </ng-container>
+
         <!-- Partners Logística Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'partners_logistics'">
           <div class="integration-info-box">

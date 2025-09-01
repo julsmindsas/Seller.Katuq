@@ -563,6 +563,7 @@ export class IntegrationsService {
       case 'dhl':
       case 'servientrega':
       case 'coordinadora':
+      case 'enviame':
       case 'partners_logistics':
         return IntegrationCategory.LOGISTICS;
       case 'mailchimp':
@@ -713,6 +714,12 @@ export class IntegrationsService {
           name: 'Coordinadora',
           description: 'Servicio de entrega puerta a puerta de Colombia',
           logo: 'assets/images/logos/coordinadora.svg' 
+        },
+        { 
+          id: 'enviame', 
+          name: 'Enviame.io',
+          description: 'Plataforma de envíos y logística para e-commerce en Latinoamérica. Requiere API Key, ID Seller y configuración de bodegas.',
+          logo: 'assets/images/logos/enviame.svg' 
         },
         { 
           id: 'partners_logistics', 

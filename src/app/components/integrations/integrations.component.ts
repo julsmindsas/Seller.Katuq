@@ -511,6 +511,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'prestashop':
         this.integrationForm = this.createPrestaShopForm();
         break;
+      case 'enviame':
+        this.integrationForm = this.createEnviameForm();
+        break;
       case 'partners_logistics':
         this.integrationForm = this.createPartnersLogisticsForm();
         break;
@@ -570,6 +573,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'prestashop':
         this.integrationForm = this.createPrestaShopForm();
+        break;
+      case 'enviame':
+        this.integrationForm = this.createEnviameForm();
         break;
       case 'partners_logistics':
         this.integrationForm = this.createPartnersLogisticsForm();
@@ -762,6 +768,35 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       webserviceKey: ['', Validators.required],
       language: ['es'],
       outputFormat: ['JSON']
+    });
+  }
+
+  createEnviameForm(): FormGroup {
+    return this.fb.group({
+      name: ['Enviame.io', Validators.required],
+      enabled: [true],
+      apiKey: ['', [Validators.required, Validators.minLength(10)]],
+      id_seller: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+      apiUrl: ['https://api.enviame.io/api/s2/v2/companies/', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      webhookUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+      environment: ['production', Validators.required],
+      country: ['CL', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
+      carrier_code: ['', [Validators.required]],
+      timeout: [30],
+      notifyErrors: [true],
+      // Campos adicionales específicos de Enviame
+      warehouse_code: ['', [Validators.required]],
+      default_carrier: ['', [Validators.required]],
+      default_service: ['', [Validators.required]],
+      // Configuración de webhooks
+      webhook_secret: ['', [Validators.minLength(10)]],
+      webhook_events: [['delivery_created', 'delivery_updated', 'delivery_completed'], Validators.required],
+      // Configuración de ambiente
+      stage_url: ['https://stage.api.enviame.io', [Validators.pattern(/^https?:\/\/.+/)]],
+      production_url: ['https://api.enviame.io', [Validators.pattern(/^https?:\/\/.+/)]],
+      // Configuración de reintentos
+      retry_attempts: [3, [Validators.min(1), Validators.max(10)]],
+      retry_delay: [1000, [Validators.min(500), Validators.max(10000)]]
     });
   }
 
@@ -980,6 +1015,29 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           webserviceKey: formData.webserviceKey,
           language: formData.language,
           outputFormat: formData.outputFormat
+        };
+        break;
+      case 'enviame':
+        credentials = {
+          apiKey: formData.apiKey,
+          id_seller: formData.id_seller,
+          apiUrl: formData.apiUrl,
+          webhookUrl: formData.webhookUrl,
+          environment: formData.environment,
+          country: formData.country,
+          carrier_code: formData.carrier_code,
+          timeout: formData.timeout,
+          notifyErrors: formData.notifyErrors,
+          // Campos adicionales específicos de Enviame
+          warehouse_code: formData.warehouse_code,
+          default_carrier: formData.default_carrier,
+          default_service: formData.default_service,
+          webhook_secret: formData.webhook_secret,
+          webhook_events: formData.webhook_events,
+          stage_url: formData.stage_url,
+          production_url: formData.production_url,
+          retry_attempts: formData.retry_attempts,
+          retry_delay: formData.retry_delay
         };
         break;
       case 'partners_logistics':
@@ -1288,5 +1346,139 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     };
     
     return iconMap[fieldName] || 'fa-edit';
+  }
+
+  /**
+   * Método para obtener campos adicionales específicos según el tipo de integración
+   */
+  getAdditionalFields(): Array<{id: string, label: string, type: string, placeholder: string, icon: string, tooltip?: string}> {
+    switch (this.selectedIntegrationType) {
+      case 'enviame':
+        return [
+          {
+            id: 'id_seller',
+            label: 'ID Seller',
+            type: 'text',
+            placeholder: 'Ej: 12345',
+            icon: 'fa-user-tag',
+            tooltip: 'ID de la empresa/seller generado por Enviame'
+          },
+          {
+            id: 'warehouse_code',
+            label: 'Código de Bodega',
+            type: 'text',
+            placeholder: 'Ej: bod_sell',
+            icon: 'fa-warehouse',
+            tooltip: 'Código de la bodega donde se originarán los envíos'
+          },
+          {
+            id: 'default_carrier',
+            label: 'Carrier por Defecto',
+            type: 'text',
+            placeholder: 'Ej: STARKEN, BLUEXPRESS',
+            icon: 'fa-truck',
+            tooltip: 'Carrier predeterminado para los envíos'
+          },
+          {
+            id: 'default_service',
+            label: 'Servicio por Defecto',
+            type: 'text',
+            placeholder: 'Ej: priority, standard',
+            icon: 'fa-shipping-fast',
+            tooltip: 'Servicio de envío predeterminado'
+          },
+          {
+            id: 'country',
+            label: 'País',
+            type: 'text',
+            placeholder: 'CL, CO, PE, MX',
+            icon: 'fa-flag',
+            tooltip: 'Código de país (2 caracteres)'
+          },
+          {
+            id: 'carrier_code',
+            label: 'Código de Carrier',
+            type: 'text',
+            placeholder: 'Ej: SKN, BLX',
+            icon: 'fa-barcode',
+            tooltip: 'Código específico del carrier'
+          },
+          {
+            id: 'webhook_secret',
+            label: 'Secret del Webhook',
+            type: 'password',
+            placeholder: 'Secret para validar webhooks',
+            icon: 'fa-shield-alt',
+            tooltip: 'Clave secreta para validar las notificaciones de webhook'
+          }
+        ];
+      case 'partners_logistics':
+        return [
+          {
+            id: 'retryAttempts',
+            label: 'Reintentos',
+            type: 'number',
+            placeholder: '3',
+            icon: 'fa-redo',
+            tooltip: 'Número de reintentos en caso de fallo'
+          }
+        ];
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * Método para verificar si la integración necesita campo URL
+   */
+  needsUrl(): boolean {
+    return ['partners_logistics', 'enviame'].includes(this.selectedIntegrationType);
+  }
+
+  /**
+   * Método para obtener la URL de documentación de Enviame
+   */
+  getDocumentationUrl(integrationType: string): string | null {
+    const urls: { [key: string]: string } = {
+      'enviame': 'https://docs.enviame.io/docs/v2#tag/Envios/operation/Crear-Envios-Seller',
+      'shopify': 'https://shopify.dev/docs/admin-api/getting-started',
+      'wompi': 'https://docs.wompi.co/docs',
+      'epayco': 'https://docs.epayco.co/',
+      'paypal': 'https://developer.paypal.com/docs/api/overview/',
+      'stripe': 'https://stripe.com/docs/api',
+      'mercadopago': 'https://www.mercadopago.com.co/developers'
+    };
+    return urls[integrationType] || null;
+  }
+
+  /**
+   * Método para obtener el nombre de la integración seleccionada
+   */
+  getSelectedIntegrationName(): string {
+    const names: { [key: string]: string } = {
+      'enviame': 'Enviame.io',
+      'shopify': 'Shopify',
+      'wompi': 'Wompi',
+      'epayco': 'ePayco',
+      'paypal': 'PayPal',
+      'stripe': 'Stripe',
+      'mercadopago': 'Mercado Pago',
+      'partners_logistics': 'Partners Logística'
+    };
+    return names[this.selectedIntegrationType] || this.selectedIntegrationType;
+  }
+
+  /**
+   * Método para mostrar/ocultar visibilidad de campos de contraseña
+   */
+  showApiKey = false;
+  showApiSecret = false;
+
+  toggleApiKeyVisibility(): void {
+    this.showApiKey = !this.showApiKey;
+  }
+
+  toggleApiSecretVisibility(): void {
+    this.showApiSecret = !this.showApiSecret;
   }
 }

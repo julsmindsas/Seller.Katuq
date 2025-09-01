@@ -1,0 +1,113 @@
+<div class="analisis-header p-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <h5 class="m-0"><i class="pi pi-chart-line me-2"></i>Análisis y Métricas de Despacho</h5>
+        <button pButton pRipple type="button" icon="pi pi-times" class="p-button-text p-button-rounded" (click)="cerrar()"></button>
+    </div>
+</div>
+
+<div class="analisis-body p-3">
+    <p-tabView>
+        <!-- Pestaña de Estado de Pedidos -->
+        <p-tabPanel header="Estado de Pedidos">
+            <ng-template pTemplate="header">
+                <i class="pi pi-exclamation-triangle me-2"></i>
+                <span>Estado de Pedidos</span>
+            </ng-template>
+
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="card metric-card h-100">
+                        <div class="card-header bg-danger text-white"><i class="pi pi-exclamation-triangle me-2"></i>Pedidos Urgentes ({{ pedidosUrgentes.length }})</div>
+                        <ul class="list-group list-group-flush">
+                            <li *ngFor="let pedido of pedidosUrgentes" class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="d-block">#{{ pedido.nroPedido }}</strong>
+                                    <small class="text-muted">{{ pedido.cliente?.nombres_completos }}</small>
+                                </div>
+                                <span class="badge bg-danger rounded-pill">{{ pedido.diasRestantes }} días</span>
+                            </li>
+                            <li *ngIf="pedidosUrgentes.length === 0" class="list-group-item text-muted fst-italic">No hay pedidos urgentes.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="card metric-card h-100">
+                        <div class="card-header bg-warning text-dark"><i class="pi pi-clock me-2"></i>Pedidos en Riesgo ({{ pedidosEnRiesgo.length }})</div>
+                        <ul class="list-group list-group-flush">
+                            <li *ngFor="let pedido of pedidosEnRiesgo" class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="d-block">#{{ pedido.nroPedido }}</strong>
+                                    <small class="text-muted">{{ pedido.cliente?.nombres_completos }}</small>
+                                </div>
+                                <span class="badge bg-warning rounded-pill">{{ pedido.diasRestantes }} días</span>
+                            </li>
+                            <li *ngIf="pedidosEnRiesgo.length === 0" class="list-group-item text-muted fst-italic">No hay pedidos en riesgo.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="card metric-card h-100">
+                        <div class="card-header bg-info text-white"><i class="pi pi-exclamation-circle me-2"></i>Urgentes Sin Producir ({{ pedidosSinProducir.length }})</div>
+                        <ul class="list-group list-group-flush">
+                            <li *ngFor="let pedido of pedidosSinProducir" class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="d-block">#{{ pedido.nroPedido }}</strong>
+                                    <small class="text-muted">{{ pedido.cliente?.nombres_completos }}</small>
+                                </div>
+                                <span class="badge bg-info rounded-pill">{{ pedido.diasRestantes }} días</span>
+                            </li>
+                            <li *ngIf="pedidosSinProducir.length === 0" class="list-group-item text-muted fst-italic">No hay pedidos urgentes sin producir.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </p-tabPanel>
+
+        <!-- Pestaña de Análisis de Carga -->
+        <p-tabPanel header="Análisis de Carga">
+            <ng-template pTemplate="header">
+                <i class="pi pi-truck me-2"></i>
+                <span>Análisis de Carga</span>
+            </ng-template>
+            <div class="row">
+                <div class="col-md-7">
+                    <h6 class="mb-3">Predicción de Carga (Próximos 7 días)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th class="text-center">Confirmados</th>
+                                    <th class="text-center">Sin Producir</th>
+                                    <th class="text-center">Carga Total Est.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let dia of getPrediccionArray()">
+                                    <td><strong>{{ formatearFecha(dia.fecha) }}</strong></td>
+                                    <td class="text-center">{{ dia.confirmados }}</td>
+                                    <td class="text-center">
+                                        <span *ngIf="dia.pendientesProduccion > 0" class="badge bg-info-light text-info-dark">{{ dia.pendientesProduccion }}</span>
+                                        <span *ngIf="dia.pendientesProduccion === 0" class="text-muted">0</span>
+                                    </td>
+                                    <td class="text-center fw-bold text-primary">{{ dia.total }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <h6 class="mb-3">Zonas Críticas (con mayor % de retrasos)</h6>
+                    <ul class="list-group">
+                        <li *ngFor="let zona of zonasCriticas" class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="pi pi-map-marker me-2"></i>{{ zona.zona }}</span>
+                            <span class="badge rounded-pill" [ngClass]="{'bg-danger': zona.porcentaje > 50, 'bg-warning': zona.porcentaje <= 50}">{{ zona.porcentaje | number:'1.0-0' }}%</span>
+                        </li>
+                        <li *ngIf="zonasCriticas.length === 0" class="list-group-item text-muted">No se han detectado zonas críticas.</li>
+                    </ul>
+                </div>
+            </div>
+        </p-tabPanel>
+
+    </p-tabView>
+</div>

@@ -3,7 +3,7 @@ import { Table } from 'primeng/table';
 import { Pedido, EstadoProceso, EstadoPago, EstadoProcesoFiltros } from '../../../ventas/modelo/pedido';
 import { ColumnDefinition } from '../../interfaces/column-definition.interface';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { FilterService } from 'primeng/api';
+import { FilterService, MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-tabla-pedidos',
@@ -59,6 +59,7 @@ export class TablaPedidosComponent implements OnInit {
   ];
   
   selectedColumns: ColumnDefinition[] = [];
+  public rowMenuItems: MenuItem[];
   
   constructor(
     private filterService: FilterService,
@@ -236,6 +237,54 @@ export class TablaPedidosComponent implements OnInit {
     }
     return true;
   }
+
+  public onRowMenuClick(event: Event, menu: any, pedido: Pedido): void {
+    this.rowMenuItems = this.buildRowMenuItems(pedido);
+    menu.toggle(event);
+  }
+
+  private buildRowMenuItems(pedido: Pedido): MenuItem[] {
+    const puedeManipular = this.puedeManipularPedido(pedido);
+
+    const items: MenuItem[] = [
+      { label: 'Imprimir Pdf', icon: 'pi pi-file-pdf', command: () => this.printPdf(pedido) },
+      { label: 'Rótulo', icon: 'pi pi-file', command: () => this.printLabel(pedido) }
+    ];
+
+    if (this.hasTags(pedido)) {
+      items.push({ label: 'Tarjeta', icon: 'pi pi-tag', command: () => this.viewTags(pedido) });
+    }
+
+    items.push({ separator: true });
+
+    if (pedido.estadoProceso !== 'Empacado' && pedido.estadoProceso !== 'Despachado' && pedido.estadoProceso !== 'Entregado') {
+      items.push({
+        label: 'Empacar',
+        icon: 'pi pi-inbox',
+        disabled: !puedeManipular,
+        command: () => { if (puedeManipular) this.changeStatus(pedido, 1); }
+      });
+    }
+
+    if (pedido.estadoProceso === 'Empacado') {
+      items.push({ label: 'Desempacar', icon: 'pi pi-box', command: () => this.changeStatus(pedido, 2) });
+    }
+
+    if (pedido.estadoProceso !== 'Despachado' && pedido.estadoProceso !== 'Entregado') {
+      items.push({
+        label: 'Despachar',
+        icon: 'pi pi-send',
+        disabled: !puedeManipular,
+        command: () => { if (puedeManipular) this.changeStatus(pedido, 4); }
+      });
+    }
+
+    if (pedido.estadoProceso === 'Despachado') {
+      items.push({ label: 'Entregar', icon: 'pi pi-check-circle', command: () => this.changeStatus(pedido, 5) });
+    }
+
+    return items;
+  }
   
   // Métodos para hacer cálculos
   calculateTotalEnvio(orders: Pedido[]): number {
@@ -251,4 +300,4 @@ export class TablaPedidosComponent implements OnInit {
     if (!fechaEntrega) return '';
     return `${fechaEntrega.day}/${fechaEntrega.month}/${fechaEntrega.year}`;
   }
-} 
+}

@@ -267,6 +267,9 @@ export class IntegrationFormValidatorService {
       case 'partners_logistics':
         this.validatePartnersLogisticsForm(formValue, result);
         break;
+      case 'enviame':
+        this.validateEnviameForm(formValue, result);
+        break;
       default:
         this.validateGenericForm(formValue, result);
     }
@@ -418,6 +421,105 @@ export class IntegrationFormValidatorService {
     }
   }
 
+  private validateEnviameForm(formValue: any, result: ValidationResult): void {
+    // Validar API Key
+    if (!formValue.apiKey || formValue.apiKey.length < 10) {
+      result.errors!['apiKey'] = 'La API Key debe tener al menos 10 caracteres';
+    }
+
+    // Validar ID Seller
+    if (!formValue.id_seller || !/^\d+$/.test(formValue.id_seller)) {
+      result.errors!['id_seller'] = 'El ID Seller debe ser un número válido';
+    }
+
+    // Validar URL de API
+    if (formValue.apiUrl) {
+      const urlValidator = this.createUrlValidator();
+      const urlError = urlValidator({ value: formValue.apiUrl } as AbstractControl);
+      if (urlError) {
+        result.errors!['apiUrl'] = 'La URL de API debe ser una URL válida (https://...)';
+      }
+    } else {
+      result.errors!['apiUrl'] = 'La URL de API es obligatoria';
+    }
+
+    // Validar código de bodega
+    if (!formValue.warehouse_code || formValue.warehouse_code.trim().length === 0) {
+      result.errors!['warehouse_code'] = 'El código de bodega es obligatorio';
+    }
+
+    // Validar carrier por defecto
+    if (!formValue.default_carrier || formValue.default_carrier.trim().length === 0) {
+      result.errors!['default_carrier'] = 'El carrier por defecto es obligatorio';
+    }
+
+    // Validar servicio por defecto
+    if (!formValue.default_service || formValue.default_service.trim().length === 0) {
+      result.errors!['default_service'] = 'El servicio por defecto es obligatorio';
+    }
+
+    // Validar país
+    if (!formValue.country || formValue.country.length !== 2) {
+      result.errors!['country'] = 'El código de país debe tener exactamente 2 caracteres';
+    }
+
+    // Validar URL de Webhook
+    if (formValue.webhookUrl) {
+      const webhookValidator = this.createUrlValidator();
+      const webhookError = webhookValidator({ value: formValue.webhookUrl } as AbstractControl);
+      if (webhookError) {
+        result.errors!['webhookUrl'] = 'La URL del webhook debe ser una URL válida (https://...)';
+      }
+      
+      // Verificar que sea HTTPS para seguridad
+      if (!formValue.webhookUrl.startsWith('https://')) {
+        result.warnings!.push('Se recomienda usar HTTPS para la URL del webhook por seguridad');
+      }
+    }
+
+    // Validar secret del webhook
+    if (formValue.webhook_secret && formValue.webhook_secret.length < 10) {
+      result.warnings!.push('El secret del webhook debe tener al menos 10 caracteres para mayor seguridad');
+    }
+
+    // Validar eventos del webhook
+    if (formValue.webhook_events && (!Array.isArray(formValue.webhook_events) || formValue.webhook_events.length === 0)) {
+      result.warnings!.push('Se recomienda configurar eventos de webhook para recibir notificaciones');
+    }
+
+    // Validar timeout
+    if (formValue.timeout && (formValue.timeout < 5 || formValue.timeout > 300)) {
+      result.errors!['timeout'] = 'El timeout debe estar entre 5 y 300 segundos';
+    }
+
+    // Validar reintentos
+    if (formValue.retry_attempts && (formValue.retry_attempts < 1 || formValue.retry_attempts > 10)) {
+      result.errors!['retry_attempts'] = 'Los reintentos deben estar entre 1 y 10';
+    }
+
+    // Validar delay de reintentos
+    if (formValue.retry_delay && (formValue.retry_delay < 500 || formValue.retry_delay > 10000)) {
+      result.errors!['retry_delay'] = 'El delay de reintentos debe estar entre 500 y 10000 ms';
+    }
+
+    // Sugerencias específicas para Enviame
+    if (formValue.environment === 'production' && formValue.timeout && formValue.timeout < 30) {
+      result.suggestions!.push('En producción se recomienda un timeout de al menos 30 segundos');
+    }
+
+    if (formValue.retry_attempts && formValue.retry_attempts < 3) {
+      result.suggestions!.push('Se recomienda configurar al menos 3 reintentos para mejor confiabilidad');
+    }
+
+    if (!formValue.webhook_secret) {
+      result.suggestions!.push('Configura un secret para el webhook para mayor seguridad');
+    }
+
+    if (formValue.country === 'CL' && !formValue.carrier_code) {
+      result.suggestions!.push('Para Chile, considera configurar un carrier específico como STARKEN o BLUEXPRESS');
+    }
+  }
+
   private validateGenericForm(formValue: any, result: ValidationResult): void {
     // Validaciones genéricas para integraciones no específicas
     if (!formValue.name || formValue.name.trim().length < 3) {
@@ -475,6 +577,21 @@ export class IntegrationFormValidatorService {
           apiUrl: formValue?.apiUrl,
           webhookUrl: formValue?.webhookUrl,
           environment: formValue?.environment
+        };
+      case 'enviame':
+        return {
+          apiKey: formValue?.apiKey,
+          id_seller: formValue?.id_seller,
+          apiUrl: formValue?.apiUrl,
+          webhookUrl: formValue?.webhookUrl,
+          environment: formValue?.environment,
+          country: formValue?.country,
+          carrier_code: formValue?.carrier_code,
+          warehouse_code: formValue?.warehouse_code,
+          default_carrier: formValue?.default_carrier,
+          default_service: formValue?.default_service,
+          webhook_secret: formValue?.webhook_secret,
+          webhook_events: formValue?.webhook_events
         };
       default:
         return formValue;

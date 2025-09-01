@@ -1,0 +1,65 @@
+.analisis-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+
+    h5 {
+        font-weight: 600;
+        color: #343a40;
+    }
+}
+
+.analisis-body {
+    background-color: #fff;
+}
+
+.metric-card {
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+
+    .card-header {
+        font-weight: 600;
+        font-size: 0.9rem;
+        i {
+            font-size: 0.8rem;
+        }
+    }
+
+    .list-group-flush .list-group-item {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+        transition: background-color 0.2s ease-in-out;
+
+        &:hover {
+            background-color: #f8f9fa;
+        }
+    }
+
+    .badge {
+        font-size: 0.8rem;
+    }
+}
+
+.bg-info-light {
+    background-color: rgba(13, 202, 240, 0.15);
+}
+
+.text-info-dark {
+    color: #087990;
+    font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.025);
+}
+
+
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link {
+    border: none !important;
+    background: transparent !important;
+}
+
+:host ::ng-deep .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color) !important;
+}

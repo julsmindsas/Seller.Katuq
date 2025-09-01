@@ -166,4 +166,84 @@ $light-color: #f8f9fa;
       background-color: $light-color;
     }
   }
-} 
+}
+
+// --- INICIO FASE 2: ESTILOS RESPONSIVOS PARA TABLA DE ÓRDENES ---
+@media (max-width: 768px) {
+  .table-responsive > .table {
+    thead {
+      display: none;
+    }
+
+    tbody, tr, td {
+      display: block;
+      width: 100%;
+    }
+
+    tr {
+      background: #ffffff !important;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      position: relative;
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0.25rem;
+      border: none;
+      border-bottom: 1px dashed #f1f3f5;
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #495057;
+        text-align: left;
+        padding-right: 1rem;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .col-toggler {
+        display: none !important; // Ocultar el botón de expandir en móvil
+    }
+
+    .col-nro-orden {
+        display: block !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        padding: 0 0 0.75rem 0 !important;
+        border-bottom: 1px solid #e9ecef !important;
+        margin-bottom: 0.75rem;
+        &::before {
+            display: none;
+        }
+    }
+
+    .col-acciones {
+        justify-content: flex-end !important;
+        border: none !important;
+        padding-top: 0.75rem !important;
+        &::before {
+            display: none;
+        }
+    }
+
+    .col-total {
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+        color: $success-color;
+    }
+
+    .details-row {
+        display: none !important; // Ocultar la fila de detalles anidada
+    }
+  }
+}

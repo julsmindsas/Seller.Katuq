@@ -46,6 +46,7 @@ import { Router } from "@angular/router";
 import { PdfTemplateComponent } from "../components/pdf-template/pdf-template.component";
 import { GeocodingService, GeocodingResponse } from "../../../shared/services/geocoding.service";
 import { MapaUbicacionesComponent } from "../components/mapa-ubicaciones/mapa-ubicaciones.component";
+import { AnalisisDespachosComponent } from '../components/analisis-despachos/analisis-despachos.component';
 import { SeguimientoModalComponent } from "../components/seguimiento-modal/seguimiento-modal.component";
 
 interface MapaMetricas {
@@ -212,7 +213,6 @@ export class DespachosComponent implements OnInit {
   diasUmbralRiesgo: number = 3; // Pedidos con 3 días o menos para entrega
   mostrarAlertasAvanzadas: boolean = true;
   kaiPredicciones: any = null;
-  mostrarMapa: boolean = false; // Control para mostrar/ocultar mapa
 
   // Control de frecuencia para modales de advertencia
   private ultimaAlertaPedidosUrgentes: Date | null = null;
@@ -348,71 +348,49 @@ export class DespachosComponent implements OnInit {
     this.refrescarDatos(true);
     this.initForms();
 
-    // Definir items para el SplitButton de Geocodificación
-    this.itemsGeocodificacion = [
-      {
-        label: 'Solo Despachados',
-        icon: 'pi pi-send',
-        command: () => {
-          this.geocodificarPedidosDespachados();
-        }
-      },
-      {
-        label: 'Reiniciar Alertas',
-        icon: 'pi pi-refresh',
-        command: () => {
-          this.reiniciarControlAlertas();
-        }
-      }
-    ];
-
-    // Definir items para el menú de acciones principal en móvil
+    // Definir items para el menú de acciones unificado
     this.accionesMenu = [
-      {
-        label: 'Recomendaciones KAI',
-        icon: 'pi pi-brain',
-        command: () => this.mostrarRecomendacionesOptimizacion()
-      },
-      {
-        label: 'Mostrar/Ocultar Mapa',
-        icon: 'pi pi-map',
-        command: () => this.toggleMapa()
-      },
-      {
-        label: 'Forzar Geocodificación',
-        icon: 'pi pi-map-marker',
-        command: () => this.forzarGeocodificacion()
-      },
-      {
-        label: 'Geocodificar Despachados',
-        icon: 'pi pi-send',
-        command: () => this.geocodificarPedidosDespachados()
-      },
-      {
-        label: 'Reiniciar Alertas',
-        icon: 'pi pi-refresh',
-        command: () => this.reiniciarControlAlertas()
-      }
-    ];
-
-    // Definir items para el menú de administración de filtros
-    this.adminMenu = [
         {
-            label: 'Transportadores',
+            label: 'Recomendaciones KAI',
+            icon: 'pi pi-brain',
+            command: () => this.mostrarRecomendacionesOptimizacion()
+        },
+        {
+            label: 'Geocodificar Todo',
+            icon: 'pi pi-map-marker',
+            command: () => this.forzarGeocodificacion()
+        },
+        {
+            label: 'Administrar Transportadores',
             icon: 'pi pi-truck',
             command: () => this.openModal(this.transportadoresModal)
         },
         {
-            label: 'Órdenes de Despacho',
+            label: 'Ver Órdenes de Despacho',
             icon: 'pi pi-list',
             command: () => this.viewAllDispatchOrders()
         },
         {
-            label: 'Análisis de Transportadores',
-            icon: 'pi pi-calculator',
-            command: () => this.mostrarRecomendacionTransportadores()
+            separator: true
+        },
+        {
+            label: 'Reiniciar Alertas',
+            icon: 'pi pi-refresh',
+            command: () => this.reiniciarControlAlertas()
         }
     ];
+  }
+
+  public onTabChange(event: any): void {
+    // El índice de la pestaña del mapa es 1 (0: Pedidos, 1: Mapa)
+    if (event.index === 1) {
+      // Usar un setTimeout para asegurar que el DOM esté visible antes de refrescar
+      setTimeout(() => {
+        if (this.mapaComponent) {
+          this.mapaComponent.refrescarMapa();
+        }
+      }, 1);
+    }
   }
 
   refrescarDatos(mostrarAlertas: boolean = false) {
@@ -468,11 +446,6 @@ export class DespachosComponent implements OnInit {
 
       // Calcular métricas para análisis KAI
       this.calcularMetricas();
-
-      // Actualizar mapa si está visible
-      if (this.mostrarMapa) {
-        this.actualizarConfiguracionMapa();
-      }
 
       this.loading = false;
     });
@@ -2110,14 +2083,12 @@ export class DespachosComponent implements OnInit {
             (!order.envio?.latitud || !order.envio?.longitud)) {
           console.log(`📍 Geocodificando pedido despachado: ${order.nroPedido}`);
           this.geocodificarPedido(order).then(() => {
-            if (this.mostrarMapa) {
-              console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
-              this.actualizarConfiguracionMapa();
-            }
+            console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
+            this.actualizarConfiguracionMapa();
           }).catch(error => {
             console.error(`❌ Error geocodificando pedido ${order.nroPedido}:`, error);
           });
-        } else if (this.mostrarMapa) {
+        } else {
           // Si ya tiene coordenadas, solo actualizar el mapa
           this.actualizarConfiguracionMapa();
         }
@@ -2299,10 +2270,8 @@ export class DespachosComponent implements OnInit {
       // Calcular métricas para análisis KAI
       this.calcularMetricas();
 
-      // Actualizar mapa si está visible
-      if (this.mostrarMapa) {
-        this.actualizarConfiguracionMapa();
-      }
+      // Actualizar mapa
+      this.actualizarConfiguracionMapa();
 
       this.loading = false;
     });
@@ -3110,14 +3079,12 @@ export class DespachosComponent implements OnInit {
                 (!pedido.envio?.latitud || !pedido.envio?.longitud)) {
               console.log(`📍 Geocodificando pedido recién despachado: ${pedido.nroPedido}`);
               this.geocodificarPedido(pedido).then(() => {
-                if (this.mostrarMapa) {
-                  console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${pedido.nroPedido}`);
-                  this.actualizarConfiguracionMapa();
-                }
+                console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${pedido.nroPedido}`);
+                this.actualizarConfiguracionMapa();
               }).catch(error => {
                 console.error(`❌ Error geocodificando pedido ${pedido.nroPedido}:`, error);
               });
-            } else if (this.mostrarMapa) {
+            } else {
               // Si ya tiene coordenadas, solo actualizar el mapa
               this.actualizarConfiguracionMapa();
             }
@@ -3818,28 +3785,6 @@ export class DespachosComponent implements OnInit {
     ).length;
   }
 
-  // Método para obtener el conteo de pedidos en riesgo no despachados ni entregados
-  obtenerConteoPedidosEnRiesgoNoDespachados(): number {
-    return this.pedidosEnRiesgo.filter(
-      (pedido) =>
-        pedido.estadoProceso !== EstadoProceso.Despachado &&
-        pedido.estadoProceso !== EstadoProceso.Entregado,
-    ).length;
-  }
-
-  // Método para obtener el primer pedido urgente no despachado ni entregado
-  obtenerPrimerPedidoUrgenteNoDespachado(): PedidoPriorizado | null {
-    const pedidosUrgentesPendientes = this.pedidosUrgentes.filter(
-      (pedido) =>
-        pedido.estadoProceso !== EstadoProceso.Despachado &&
-        pedido.estadoProceso !== EstadoProceso.Entregado,
-    );
-
-    return pedidosUrgentesPendientes.length > 0
-      ? pedidosUrgentesPendientes[0]
-      : null;
-  }
-
   // Método para formatear fechas en español con formato 'Nombre Día semana, Día Mes'
   formatearFecha(fecha: any): string {
     let fechaObj: Date;
@@ -4125,14 +4070,12 @@ export class DespachosComponent implements OnInit {
               if (pedidosSinCoordenadas.length > 0) {
                 console.log(`📍 Geocodificando ${pedidosSinCoordenadas.length} pedidos de la orden despachada...`);
                 this.geocodificarPedidosDespachados().then(() => {
-                  if (this.mostrarMapa) {
-                    console.log(`🗺️ Actualizando mapa después de geocodificar orden despachada`);
-                    this.actualizarConfiguracionMapa();
-                  }
+                  console.log(`🗺️ Actualizando mapa después de geocodificar orden despachada`);
+                  this.actualizarConfiguracionMapa();
                 }).catch(error => {
                   console.error(`❌ Error geocodificando pedidos de la orden:`, error);
                 });
-              } else if (this.mostrarMapa) {
+              } else {
                 // Si todos ya tienen coordenadas, solo actualizar el mapa
                 this.actualizarConfiguracionMapa();
               }
@@ -4595,47 +4538,59 @@ export class DespachosComponent implements OnInit {
     );
   }
 
+  // Método para obtener el conteo de pedidos en riesgo no despachados ni entregados
+  obtenerConteoPedidosEnRiesgoNoDespachados(): number {
+    return this.pedidosEnRiesgo.filter(
+      (pedido) =>
+        pedido.estadoProceso !== EstadoProceso.Despachado &&
+        pedido.estadoProceso !== EstadoProceso.Entregado,
+    ).length;
+  }
+
+  // Método para obtener los pedidos urgentes no despachados ni entregados
+  obtenerPedidosUrgentesNoDespachados(): PedidoPriorizado[] {
+    return this.pedidosUrgentes.filter(
+      (pedido) =>
+        pedido.estadoProceso !== EstadoProceso.Despachado &&
+        pedido.estadoProceso !== EstadoProceso.Entregado,
+    );
+  }
+
+  // Método para obtener los pedidos en riesgo no despachados ni entregados
+  obtenerPedidosEnRiesgoNoDespachados(): PedidoPriorizado[] {
+    return this.pedidosEnRiesgo.filter(
+      (pedido) =>
+        pedido.estadoProceso !== EstadoProceso.Despachado &&
+        pedido.estadoProceso !== EstadoProceso.Entregado,
+    );
+  }
+
+  // Método para obtener el primer pedido urgente no despachado ni entregado
+  obtenerPrimerPedidoUrgenteNoDespachado(): PedidoPriorizado | null {
+    const pedidosUrgentesPendientes = this.pedidosUrgentes.filter(
+      (pedido) =>
+        pedido.estadoProceso !== EstadoProceso.Despachado &&
+        pedido.estadoProceso !== EstadoProceso.Entregado,
+    );
+
+    return pedidosUrgentesPendientes.length > 0
+      ? pedidosUrgentesPendientes[0]
+      : null;
+  }
+
   // Método para mostrar resumen de alertas sin modales intrusivos
   public mostrarResumenAlertas(): void {
-    if (!this.hayAlertasPendientes()) {
-      Swal.fire({
-        title: "Estado de Alertas",
-        text: "No hay alertas de prioridad pendientes en este momento.",
-        icon: "info",
-        timer: 2000,
-        showConfirmButton: false,
-      });
-      return;
-    }
-
-    const pedidosUrgentesPendientes =
-      this.obtenerConteoPedidosUrgentesNoDespachados();
-    const pedidosSinProducirUrgentes =
-      this.obtenerConteoPedidosSinProducirUrgentes();
-
-    let mensaje = "Resumen de alertas de prioridad:\n\n";
-
-    if (pedidosUrgentesPendientes > 0) {
-      mensaje += `• ${pedidosUrgentesPendientes} pedidos urgentes pendientes de despacho\n`;
-    }
-
-    if (pedidosSinProducirUrgentes > 0) {
-      mensaje += `• ${pedidosSinProducirUrgentes} pedidos urgentes sin iniciar producción\n`;
-    }
-
-    Swal.fire({
-      title: "Alertas de Prioridad",
-      text: mensaje,
-      icon: "warning",
-      confirmButtonText: "Ver detalles",
-      showCancelButton: true,
-      cancelButtonText: "Cerrar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Reiniciar alertas y mostrarlas
-        this.reiniciarControlAlertas();
-        this.mostrarAlertasPedidosUrgentes();
-        this.mostrarAlertasPedidosSinProducir();
+    this.dialogService.open(AnalisisDespachosComponent, {
+      header: 'Análisis y Métricas de Despacho',
+      width: '80%',
+      contentStyle: { "max-height": "90vh", "overflow": "auto" },
+      baseZIndex: 10000,
+      data: {
+        pedidosUrgentes: this.obtenerPedidosUrgentesNoDespachados(),
+        pedidosEnRiesgo: this.obtenerPedidosEnRiesgoNoDespachados(),
+        pedidosSinProducir: this.obtenerPedidosSinProducirUrgentes(),
+        zonasCriticas: this.obtenerZonasCriticas(),
+        prediccionCarga: this.metricasLogistica.prediccionCargaProximosDias
       }
     });
   }
@@ -4686,7 +4641,7 @@ export class DespachosComponent implements OnInit {
     this.geocodingProgress = 0;
     
     // Mostrar animación inicial en el mapa
-    if (this.mapaComponent && this.mostrarMapa) {
+    if (this.mapaComponent) {
       this.mapaComponent.mostrarAnimacionGeocodificacion();
       this.mapaComponent.mostrarEfectoBusqueda();
     }
@@ -4743,7 +4698,7 @@ export class DespachosComponent implements OnInit {
         
         // Actualizar mapa después de cada lote si contiene pedidos despachados
         const batchTieneDespachados = batch.some(p => p.estadoProceso === 'Despachado');
-        if (batchTieneDespachados && this.mostrarMapa) {
+        if (batchTieneDespachados) {
           console.log(`🗺️ Actualizando mapa después de geocodificar lote con ${batch.filter(p => p.estadoProceso === 'Despachado').length} despachados`);
           this.actualizarConfiguracionMapa();
           
@@ -4765,7 +4720,7 @@ export class DespachosComponent implements OnInit {
       this.actualizarConfiguracionMapa();
       
       // Mostrar notificación de éxito en el mapa
-      if (this.mapaComponent && this.mostrarMapa) {
+      if (this.mapaComponent) {
         setTimeout(() => {
           console.log('🎉 Geocodificación completada - animaciones finalizadas');
         }, 1000);
@@ -4953,26 +4908,7 @@ export class DespachosComponent implements OnInit {
     return Math.round(tiempos.reduce((sum: number, tiempo: number) => sum + tiempo, 0) / tiempos.length);
   }
 
-  /**
-   * Alterna la visibilidad del mapa
-   */
-  toggleMapa(): void {
-    this.mostrarMapa = !this.mostrarMapa;
-    
-    if (this.mostrarMapa) {
-      this.actualizarConfiguracionMapa();
-      
-      const tieneCoordenadas = this.orders.some(p => p.envio?.latitud && p.envio?.longitud);
-      if (!tieneCoordenadas) {
-        this.geocodificarDireccionesPedidos();
-      }
-
-      // Añadido: Refrescar el mapa después de que la vista se actualice
-      setTimeout(() => {
-        this.mapaComponent?.refrescarMapa();
-      }, 0);
-    }
-  }
+  
 
   /**
    * Fuerza la geocodificación de todos los pedidos
@@ -5060,7 +4996,7 @@ export class DespachosComponent implements OnInit {
         this.geocodingProgress = ((i + 1) / pedidosDespachadosSinCoordenadas.length) * 100;
         
         // Actualizar mapa cada 2 pedidos
-        if ((i + 1) % 2 === 0 && this.mostrarMapa) {
+        if ((i + 1) % 2 === 0) {
           this.actualizarConfiguracionMapa();
         }
         
@@ -5071,9 +5007,7 @@ export class DespachosComponent implements OnInit {
       console.log('✅ Geocodificación de pedidos despachados completada');
       
       // Actualización final del mapa
-      if (this.mostrarMapa) {
-        this.actualizarConfiguracionMapa();
-      }
+      this.actualizarConfiguracionMapa();
       
     } catch (error) {
       console.error('❌ Error durante geocodificación de pedidos despachados:', error);

@@ -470,3 +470,111 @@ $border-radius: 8px;
   z-index: 10;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 } 
+
+// --- INICIO FASE 2 (REFINADO): ESTILOS RESPONSIVOS PARA TARJETAS MÓVILES ---
+@media (max-width: 768px) {
+  :host ::ng-deep .p-datatable {
+    .p-datatable-thead {
+      display: none;
+    }
+
+    .p-datatable-tbody, .p-datatable-tbody > tr {
+      display: block;
+      width: 100%;
+    }
+
+    .p-datatable-tbody > tr {
+      background: #ffffff !important;
+      border: 1px solid #e9ecef;
+      border-radius: $border-radius;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      position: relative;
+
+      > td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.6rem 0.25rem;
+        border-bottom: 1px solid #f1f3f5;
+        text-align: right;
+        font-size: 0.9rem;
+
+        &::before {
+          content: attr(data-label);
+          font-weight: 500;
+          color: #6c757d;
+          text-align: left;
+          padding-right: 1rem;
+        }
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+
+    // Ocultar celdas de control que no necesitamos en la tarjeta
+    .col-detalles {
+      display: none !important;
+    }
+
+    // Celda del Nro. Pedido (Cabecera de la tarjeta)
+    .col-nroPedido {
+      display: block !important;
+      font-size: 1.1rem !important;
+      font-weight: 700 !important;
+      padding: 0 0 0.75rem 0 !important;
+      border-bottom: 1px solid #e9ecef !important;
+      margin-bottom: 0.75rem;
+      &::before {
+        display: none; // Ocultar "Número de Pedido:"
+      }
+    }
+
+    // Celda de Opciones (Menú ...)
+    .col-opciones {
+      position: absolute !important;
+      top: 0.5rem;
+      right: 0.25rem;
+      border: none !important;
+      padding: 0 !important;
+      background: transparent;
+      &::before {
+        display: none;
+      }
+    }
+
+    // Celdas de Estado y Prioridad
+    .col-estadoProceso,
+    .col-prioridad {
+      padding-top: 0.25rem !important;
+      padding-bottom: 0.25rem !important;
+      &::before {
+        font-weight: 600 !important;
+      }
+    }
+    
+    // Celda de Cliente
+    .col-cliente {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      &::before {
+        margin-bottom: 0.25rem;
+      }
+    }
+
+    // Celda de Valor a Pagar
+    .col-faltaPorPagar {
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+        color: $danger-color;
+    }
+    
+    .p-rowexpansion-content {
+      display: none;
+    }
+  }
+}

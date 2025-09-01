@@ -16,32 +16,22 @@
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- Header del módulo -->
-                <div
-                    class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center"
-                >
+                <!-- NUEVO: Encabezado del módulo simplificado -->
+                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="mb-1 fw-bold text-primary">
-                            <i class="pi pi-truck me-2"></i
-                            >{{ "Gestión de Despachos" | translate }}
+                            <i class="pi pi-truck me-2"></i>{{ "Gestión de Despachos" | translate }}
                         </h5>
                         <p class="text-muted small mb-0">
-                            {{
-                                "Administra pedidos y órdenes de envío"
-                                    | translate
-                            }}
+                            {{ "Administra pedidos y órdenes de envío" | translate }}
                         </p>
                     </div>
-
-                    <!-- Botones de Acción Responsivos -->
-                    <div class="d-flex align-items-center">
-                        <!-- Vista Escritorio -->
-                        <div class="btn-group d-none d-lg-flex">
-                            <button pButton type="button" icon="pi pi-brain" label="{{ 'Recomendaciones KAI' | translate }}" class="p-button-info p-button-sm" (click)="mostrarRecomendacionesOptimizacion()"></button>
-                            <button pButton type="button" icon="pi pi-map" label="{{ 'Mapa' | translate }}" class="p-button-success p-button-sm" [class.p-button-outlined]="!mostrarMapa" (click)="toggleMapa()"></button>
-                            <p-splitButton label="{{ 'Geocodificar' | translate }}" icon="pi pi-map-marker" (onClick)="forzarGeocodificacion()" styleClass="p-button-warning p-button-sm" [model]="itemsGeocodificacion"></p-splitButton>
-                        </div>
-                        <!-- Vista Móvil -->
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Botón de acción principal -->
+                        <button pButton type="button" icon="pi pi-send" label="{{ 'Generar Orden' | translate }}" class="p-button-primary p-button-sm d-none d-lg-flex" (click)="openModal(generarOrdenEnvioModal)"></button>
+                        <!-- Menú de acciones secundarias -->
+                        <p-splitButton label="{{ 'Acciones' | translate }}" icon="pi pi-cog" (onClick)="mostrarRecomendacionesOptimizacion()" [model]="accionesMenu" styleClass="p-button-secondary p-button-sm p-button-outlined d-none d-lg-flex"></p-splitButton>
+                        <!-- Botón para menú en móvil -->
                         <div class="d-lg-none">
                             <button pButton type="button" icon="pi pi-ellipsis-v" class="p-button-secondary p-button-sm" (click)="menuAcciones.toggle($event)"></button>
                             <p-menu #menuAcciones [model]="accionesMenu" [popup]="true"></p-menu>
@@ -49,156 +39,60 @@
                     </div>
                 </div>
 
-                <!-- Alertas de priorización -->
-                <div
-                    class="px-4 py-3 bg-light border-bottom"
-                    *ngIf="
-                        !loading &&
-                        (obtenerConteoPedidosUrgentesNoDespachados() > 0 ||
-                            obtenerConteoPedidosEnRiesgoNoDespachados() > 0 ||
-                            obtenerConteoPedidosSinProducirUrgentes() > 0)
-                    "
-                >
-                    <div
-                        class="d-flex justify-content-between align-items-start"
-                    >
-                        <div class="flex-grow-1">
-                            <div
-                                class="alert alert-warning mb-2"
-                                *ngIf="
-                                    obtenerConteoPedidosUrgentesNoDespachados() >
-                                    0
-                                "
-                            >
-                                <div class="d-flex align-items-center">
-                                    <i
-                                        class="pi pi-exclamation-triangle fs-4 me-3"
-                                    ></i>
-                                    <div>
-                                        <h6 class="mb-1 fw-bold">
-                                            {{ "Pedidos Urgentes" | translate }}
-                                        </h6>
-                                        <p class="mb-0">
-                                            {{ "Hay" | translate }}
-                                            <strong>{{
-                                                obtenerConteoPedidosUrgentesNoDespachados()
-                                            }}</strong>
-                                            {{
-                                                "pedidos que requieren atención inmediata"
-                                                    | translate
-                                            }}
-                                            <span
-                                                *ngIf="
-                                                    obtenerPrimerPedidoUrgenteNoDespachado()
-                                                "
-                                            >
-                                                ({{
-                                                    "Más urgente" | translate
-                                                }}: #{{
-                                                    obtenerPrimerPedidoUrgenteNoDespachado()
-                                                        .nroPedido
-                                                }}
-                                                -
-                                                {{
-                                                    obtenerPrimerPedidoUrgenteNoDespachado()
-                                                        .diasRestantes
-                                                }}
-                                                {{
-                                                    "día(s)
-                                                restante(s)" | translate
-                                                }})
-                                            </span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                class="alert alert-info mb-2"
-                                *ngIf="
-                                    obtenerConteoPedidosSinProducirUrgentes() >
-                                    0
-                                "
-                            >
-                                <div class="d-flex align-items-center">
-                                    <i
-                                        class="pi pi-exclamation-circle fs-4 me-3"
-                                    ></i>
-                                    <div>
-                                        <h6 class="mb-1 fw-bold">
-                                            {{
-                                                "Pedidos Urgentes Sin Producir"
-                                                    | translate
-                                            }}
-                                        </h6>
-                                        <p class="mb-0">
-                                            {{ "Hay" | translate }}
-                                            <strong>{{
-                                                obtenerConteoPedidosSinProducirUrgentes()
-                                            }}</strong>
-                                            {{
-                                                "pedidos sin iniciar producción con fecha de entrega cercana"
-                                                    | translate
-                                            }}
-                                            <span class="text-danger ms-2">
-                                                <i
-                                                    class="pi pi-arrow-right"
-                                                ></i>
-                                                {{
-                                                    "Requieren prioridad de producción"
-                                                        | translate
-                                                }}
-                                            </span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                class="alert alert-info mb-0"
-                                *ngIf="
-                                    obtenerConteoPedidosEnRiesgoNoDespachados() >
-                                    0
-                                "
-                            >
-                                <div class="d-flex align-items-center">
-                                    <i class="pi pi-clock fs-4 me-3"></i>
-                                    <div>
-                                        <h6 class="mb-1 fw-bold">
-                                            {{
-                                                "Pedidos en Riesgo" | translate
-                                            }}
-                                        </h6>
-                                        <p class="mb-0">
-                                            {{ "Hay" | translate }}
-                                            <strong>{{
-                                                obtenerConteoPedidosEnRiesgoNoDespachados()
-                                            }}</strong>
-                                            {{
-                                                "pedidos que podrían retrasarse"
-                                                    | translate
-                                            }}
-                                        </p>
-                                    </div>
-                                </div>
+                <!-- NUEVO: Panel de Control de Métricas Clave -->
+                <div class="metrics-panel row g-3 p-3">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="stat-card stat-primary">
+                            <div class="stat-icon"><i class="pi pi-shopping-cart"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">{{ "Total Pedidos" | translate }}</div>
+                                <div class="stat-value">{{ orders.length }}</div>
                             </div>
                         </div>
-
-                        <!-- Botón para ver detalles de alertas -->
-                        <div class="ms-3">
-                            <button
-                                pButton
-                                type="button"
-                                icon="pi pi-info-circle"
-                                label="{{ 'Ver Detalles' | translate }}"
-                                class="p-button-outlined p-button-sm p-button-warning"
-                                pTooltip="{{
-                                    'Ver resumen detallado de todas las alertas'
-                                        | translate
-                                }}"
-                                (click)="mostrarResumenAlertas()"
-                            ></button>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="stat-card stat-danger">
+                            <div class="stat-icon"><i class="pi pi-wallet"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">{{ "Por Cobrar" | translate }}</div>
+                                <div class="stat-value">{{ calculateFaltaPorPagar() | currency }}</div>
+                            </div>
                         </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="stat-card stat-info">
+                            <div class="stat-icon"><i class="pi pi-send"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">{{ "En Ruta" | translate }}</div>
+                                <div class="stat-value">{{ metricasLogistica?.pedidosEnRuta || 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="stat-card stat-warning">
+                            <div class="stat-icon"><i class="pi pi-box"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">{{ "Para Despacho" | translate }}</div>
+                                <div class="stat-value">{{ metricasLogistica?.pedidosDespacho || 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas importantes (si existen) -->
+                <div class="px-4 py-3 bg-light border-top border-bottom" *ngIf="!loading && (obtenerConteoPedidosUrgentesNoDespachados() > 0 || obtenerConteoPedidosSinProducirUrgentes() > 0)">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div *ngIf="obtenerConteoPedidosUrgentesNoDespachados() > 0" class="d-flex align-items-center text-danger">
+                                <i class="pi pi-exclamation-triangle fs-5 me-2"></i>
+                                <span class="fw-bold">{{ obtenerConteoPedidosUrgentesNoDespachados() }} {{ 'Urgentes' | translate }}</span>
+                            </div>
+                            <div *ngIf="obtenerConteoPedidosSinProducirUrgentes() > 0" class="d-flex align-items-center text-info">
+                                <i class="pi pi-exclamation-circle fs-5 me-2"></i>
+                                <span class="fw-bold">{{ obtenerConteoPedidosSinProducirUrgentes() }} {{ 'Sin Producir' | translate }}</span>
+                            </div>
+                        </div>
+                        <button pButton type="button" label="{{ 'Ver Análisis' | translate }}" icon="pi pi-info-circle" class="p-button-text p-button-sm p-button-warning" (click)="mostrarResumenAlertas()"></button>
                     </div>
                 </div>
 
@@ -219,1080 +113,109 @@
                     </div>
                 </div>
 
-                <!-- Mapa de ubicaciones -->
-                <div class="px-4 py-3 border-bottom" *ngIf="mostrarMapa">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <small class="text-muted">
-                                {{ configuracionMapa.ubicaciones?.length || 0 }} 
-                                {{ 'ubicaciones mostradas' | translate }}
-                            </small>
-                            <button 
-                                pButton 
-                                type="button"
-                                icon="pi pi-refresh"
-                                class="p-button-text p-button-sm"
-                                pTooltip="{{ 'Actualizar mapa' | translate }}"
-                                (click)="actualizarConfiguracionMapa()">
-                            </button>
-                            <button 
-                                pButton 
-                                type="button"
-                                icon="pi pi-times"
-                                class="p-button-text p-button-sm"
-                                pTooltip="{{ 'Cerrar mapa' | translate }}"
-                                (click)="toggleMapa()">
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Filtros rápidos del mapa -->
-                    <div class="d-flex flex-wrap gap-2 mb-3" *ngIf="configuracionMapa.ubicaciones?.length > 0">
-                        <small class="text-muted align-self-center me-2">{{ 'Filtrar por estado:' | translate }}</small>
-                        <button 
-                            pButton 
-                            type="button"
-                            label="{{ 'Todos' | translate }}"
-                            class="p-button-outlined p-button-sm"
-                            [class.p-button-outlined]="false"
-                            (click)="filtrarMapaPorEstado(null)">
-                        </button>
-                        <button 
-                            pButton 
-                            type="button"
-                            label="{{ 'En Ruta' | translate }}"
-                            class="p-button-success p-button-outlined p-button-sm"
-                            (click)="filtrarMapaPorEstado('Despachado')">
-                        </button>
-                        <button 
-                            pButton 
-                            type="button"
-                            label="{{ 'Para Despachar' | translate }}"
-                            class="p-button-warning p-button-outlined p-button-sm"
-                            (click)="filtrarMapaPorEstado('ParaDespachar')">
-                        </button>
-                        <button 
-                            pButton 
-                            type="button"
-                            label="{{ 'Empacado' | translate }}"
-                            class="p-button-info p-button-outlined p-button-sm"
-                            (click)="filtrarMapaPorEstado('Empacado')">
-                        </button>
-                        <button 
-                            pButton 
-                            type="button"
-                            label="{{ 'Producido' | translate }}"
-                            class="p-button-primary p-button-outlined p-button-sm"
-                            (click)="filtrarMapaPorEstado('ProducidoTotalmente')">
-                        </button>
-                    </div>
-
-                    <!-- Componente de mapa interactivo -->
-                    <div class="mapa-contenedor">
-                        <app-mapa-ubicaciones
-                            #mapaUbicaciones
-                            [configuracion]="obtenerDatosMapa()"
-                            [altura]="'400px'"
-                            [mostrarControles]="true"
-                            [tiempoReal]="true"
-                            [geocodingInProgress]="geocodingInProgress"
-                            [geocodingProgress]="geocodingProgress"
-                            [metricas]="mapaMetricas"
-                        >
-                        </app-mapa-ubicaciones>
-                    </div>
-
-                    <!-- Información adicional del mapa -->
-                    <div class="mt-3" *ngIf="configuracionMapa.ubicaciones?.length === 0">
-                        <div class="alert alert-info mb-0">
-                            <div class="d-flex align-items-center">
-                                <i class="pi pi-info-circle me-2"></i>
-                                <div>
-                                    <strong>{{ 'Sin ubicaciones para mostrar' | translate }}</strong>
-                                    <p class="mb-0 small">
-                                        {{ 'Los pedidos aparecerán en el mapa una vez que se geocodifiquen sus direcciones.' | translate }}
-                                        <a href="javascript:void(0)" 
-                                           class="text-decoration-underline me-3"
-                                           (click)="forzarGeocodificacion()">
-                                            {{ 'Geocodificar todos' | translate }}
-                                        </a>
-                                        <a href="javascript:void(0)" 
-                                           class="text-decoration-underline"
-                                           (click)="geocodificarPedidosDespachados()">
-                                            {{ 'Solo despachados' | translate }}
-                                        </a>
-                                    </p>
+                <!-- NUEVO: Contenido principal con Pestañas -->
+                <p-tabView styleClass="modern-tabs" (onChange)="onTabChange($event)">
+                    <p-tabPanel>
+                        <ng-template pTemplate="header">
+                            <i class="pi pi-list me-2"></i>
+                            <span>{{ 'Pedidos' | translate }}</span>
+                            <span *ngIf="orders.length > 0" class="p-badge ms-2" [value]="orders.length"></span>
+                        </ng-template>
+                        
+                        <div class="filtros-container bg-light p-3 border-bottom">
+                            <div class="d-flex flex-column">
+                                <!-- Encabezado de filtros -->
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0 text-muted">
+                                        <i class="pi pi-filter text-primary me-2"></i>
+                                        <span>{{ "Filtros de búsqueda" | translate }}</span>
+                                    </h6>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
 
-                </div>
-
-                <!-- Filtros de búsqueda -->
-                <div class="card-body p-0">
-                    <div class="filtros-container bg-light p-3 border-bottom">
-                        <div class="d-flex flex-column">
-                            <!-- Encabezado de filtros -->
-                            <div
-                                class="d-flex justify-content-between align-items-center mb-3"
-                            >
-                                <h6 class="mb-0 text-muted">
-                                    <i
-                                        class="pi pi-filter text-primary me-2"
-                                    ></i>
-                                    <span>{{
-                                        "Filtros de búsqueda" | translate
-                                    }}</span>
-                                </h6>
-                                <div class="d-flex align-items-center">
-                                    <!-- Vista Escritorio -->
-                                    <div class="btn-group d-none d-lg-flex">
-                                        <button pButton type="button" icon="pi pi-send" label="{{ 'Generar Orden' | translate }}" class="p-button-primary p-button-sm" (click)="openModal(generarOrdenEnvioModal)"></button>
-                                        <p-splitButton label="{{ 'Administrar' | translate }}" icon="pi pi-cog" (onClick)="openModal(transportadoresModal)" [model]="adminMenu" styleClass="p-button-secondary p-button-sm p-button-outlined"></p-splitButton>
+                                <!-- Filtros de fecha -->
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-3 col-sm-6">
+                                        <label class="form-label small text-muted mb-1">{{ "Desde" | translate }}</label>
+                                        <p-calendar [(ngModel)]="fechaInicial" [showIcon]="true" dateFormat="dd/mm/yy" [readonlyInput]="true" styleClass="w-100" [inputStyleClass]="'form-control form-control-sm rounded'"></p-calendar>
                                     </div>
-                                    <!-- Vista Móvil -->
-                                    <div class="d-lg-none">
-                                        <button pButton type="button" icon="pi pi-cog" label="{{ 'Administrar' | translate }}" class="p-button-secondary p-button-sm p-button-outlined" (click)="menuAdmin.toggle($event)"></button>
-                                        <p-menu #menuAdmin [model]="adminMenu" [popup]="true"></p-menu>
+                                    <div class="col-md-3 col-sm-6">
+                                        <label class="form-label small text-muted mb-1">{{ "Hasta" | translate }}</label>
+                                        <p-calendar [(ngModel)]="fechaFinal" [showIcon]="true" dateFormat="dd/mm/yy" [readonlyInput]="true" styleClass="w-100" [inputStyleClass]="'form-control form-control-sm rounded'"></p-calendar>
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- Filtros de fecha -->
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-3 col-sm-6">
-                                    <label
-                                        class="form-label small text-muted mb-1"
-                                        >{{ "Desde" | translate }}</label
-                                    >
-                                    <p-calendar
-                                        [(ngModel)]="fechaInicial"
-                                        [showIcon]="true"
-                                        dateFormat="dd/mm/yy"
-                                        [readonlyInput]="true"
-                                        styleClass="w-100"
-                                        [inputStyleClass]="
-                                            'form-control form-control-sm rounded'
-                                        "
-                                    ></p-calendar>
-                                </div>
-                                <div class="col-md-3 col-sm-6">
-                                    <label
-                                        class="form-label small text-muted mb-1"
-                                        >{{ "Hasta" | translate }}</label
-                                    >
-                                    <p-calendar
-                                        [(ngModel)]="fechaFinal"
-                                        [showIcon]="true"
-                                        dateFormat="dd/mm/yy"
-                                        [readonlyInput]="true"
-                                        styleClass="w-100"
-                                        [inputStyleClass]="
-                                            'form-control form-control-sm rounded'
-                                        "
-                                    ></p-calendar>
-                                </div>
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="btn-group w-100">
-                                        <button
-                                            class="btn btn-sm btn-outline-primary"
-                                            (click)="filtrarParaHoy()"
-                                        >
-                                            <i
-                                                class="pi pi-calendar-today me-1"
-                                            ></i
-                                            >{{ "Hoy" | translate }}
-                                        </button>
-                                        <button
-                                            class="btn btn-sm btn-outline-primary"
-                                            (click)="filtrarParaManana()"
-                                        >
-                                            <i class="pi pi-calendar me-1"></i
-                                            >{{ "Mañana" | translate }}
-                                        </button>
-                                        <button
-                                            class="btn btn-sm btn-outline-primary"
-                                            (click)="filtrarParaPasadoManana()"
-                                        >
-                                            <i
-                                                class="pi pi-calendar-plus me-1"
-                                            ></i
-                                            >{{ "Pasado" | translate }}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-sm-6 text-end">
-                                    <div class="btn-group w-100">
-                                        <button
-                                            class="btn btn-sm btn-primary"
-                                            (click)="buscarPorFechas()"
-                                        >
-                                            <i class="pi pi-search me-1"></i
-                                            >{{ "Buscar" | translate }}
-                                        </button>
-                                        <button
-                                            class="btn btn-sm btn-outline-secondary"
-                                            (click)="clear()"
-                                        >
-                                            <i class="pi pi-refresh me-1"></i
-                                            >{{ "Limpiar" | translate }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Panel de KPI avanzados -->
-                    <div
-                        class="metrics-container p-3 mb-3 border-bottom bg-white"
-                        *ngIf="!loading"
-                    >
-                        <div class="row">
-                            <div class="col-12 mb-2">
-                                <h6 class="fw-bold text-primary mb-2">
-                                    <i class="pi pi-chart-line me-2"></i>
-                                    {{
-                                        "Métricas Avanzadas de Despacho"
-                                            | translate
-                                    }}
-                                </h6>
-                            </div>
-
-                            <!-- Sección 1: KPIs generales -->
-                            <div class="col-md-4">
-                                <div class="card shadow-sm h-100">
-                                    <div class="card-body p-3">
-                                        <h6 class="card-title text-muted mb-3">
-                                            {{
-                                                "Estado de Pedidos" | translate
-                                            }}
-                                        </h6>
-                                        <div class="d-flex flex-column gap-2">
-                                            <div
-                                                class="d-flex justify-content-between align-items-center"
-                                            >
-                                                <span
-                                                    class="text-danger fw-bold"
-                                                    >{{
-                                                        "Urgentes" | translate
-                                                    }}</span
-                                                >
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="progress flex-grow-1 me-2"
-                                                        style="
-                                                            width: 100px;
-                                                            height: 6px;
-                                                        "
-                                                    >
-                                                        <div
-                                                            class="progress-bar bg-danger"
-                                                            [style.width.%]="
-                                                                (pedidosUrgentes.length /
-                                                                    orders.length) *
-                                                                100
-                                                            "
-                                                        ></div>
-                                                    </div>
-                                                    <span class="text-danger">
-                                                        {{
-                                                            obtenerConteoPedidosUrgentesNoDespachados()
-                                                        }}<span
-                                                            class="text-muted small"
-                                                            >/{{
-                                                                pedidosUrgentes.length
-                                                            }}</span
-                                                        >
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="d-flex justify-content-between align-items-center"
-                                            >
-                                                <span
-                                                    class="text-warning fw-bold"
-                                                    >{{
-                                                        "En Riesgo" | translate
-                                                    }}</span
-                                                >
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="progress flex-grow-1 me-2"
-                                                        style="
-                                                            width: 100px;
-                                                            height: 6px;
-                                                        "
-                                                    >
-                                                        <div
-                                                            class="progress-bar bg-warning"
-                                                            [style.width.%]="
-                                                                (pedidosEnRiesgo.length /
-                                                                    orders.length) *
-                                                                100
-                                                            "
-                                                        ></div>
-                                                    </div>
-                                                    <span class="text-warning">
-                                                        {{
-                                                            obtenerConteoPedidosEnRiesgoNoDespachados()
-                                                        }}<span
-                                                            class="text-muted small"
-                                                            >/{{
-                                                                pedidosEnRiesgo.length
-                                                            }}</span
-                                                        >
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="d-flex justify-content-between align-items-center"
-                                            >
-                                                <span
-                                                    class="text-info fw-bold"
-                                                    >{{
-                                                        "Sin Producir"
-                                                            | translate
-                                                    }}</span
-                                                >
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="progress flex-grow-1 me-2"
-                                                        style="
-                                                            width: 100px;
-                                                            height: 6px;
-                                                        "
-                                                    >
-                                                        <div
-                                                            class="progress-bar bg-info"
-                                                            [style.width.%]="
-                                                                (pedidosSinProducir.length /
-                                                                    orders.length) *
-                                                                100
-                                                            "
-                                                        ></div>
-                                                    </div>
-                                                    <span class="text-info">
-                                                        {{
-                                                            pedidosSinProducir.length
-                                                        }}<span
-                                                            class="text-muted small"
-                                                            *ngIf="
-                                                                obtenerConteoPedidosSinProducirUrgentes() >
-                                                                0
-                                                            "
-                                                        >
-                                                            <i
-                                                                class="pi pi-exclamation-triangle text-danger ms-1"
-                                                                pTooltip="{{
-                                                                    'Urgentes'
-                                                                        | translate
-                                                                }}: {{
-                                                                    obtenerConteoPedidosSinProducirUrgentes()
-                                                                }}"
-                                                            ></i>
-                                                        </span>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="d-flex justify-content-between align-items-center"
-                                            >
-                                                <span
-                                                    class="text-success fw-bold"
-                                                    >{{
-                                                        "Normales" | translate
-                                                    }}</span
-                                                >
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="progress flex-grow-1 me-2"
-                                                        style="
-                                                            width: 100px;
-                                                            height: 6px;
-                                                        "
-                                                    >
-                                                        <div
-                                                            class="progress-bar bg-success"
-                                                            [style.width.%]="
-                                                                (pedidosNormales.length /
-                                                                    orders.length) *
-                                                                100
-                                                            "
-                                                        ></div>
-                                                    </div>
-                                                    <span
-                                                        class="text-success"
-                                                        >{{
-                                                            pedidosNormales.length
-                                                        }}</span
-                                                    >
-                                                </div>
-                                            </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <div class="btn-group w-100">
+                                            <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaHoy()"><i class="pi pi-calendar-today me-1"></i>{{ "Hoy" | translate }}</button>
+                                            <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaManana()"><i class="pi pi-calendar me-1"></i>{{ "Mañana" | translate }}</button>
+                                            <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaPasadoManana()"><i class="pi pi-calendar-plus me-1"></i>{{ "Pasado" | translate }}</button>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- Sección 2: Zonas críticas -->
-                            <div class="col-md-4">
-                                <div class="card shadow-sm h-100">
-                                    <div class="card-body p-3">
-                                        <h6 class="card-title text-muted mb-3">
-                                            {{ "Zonas Críticas" | translate }}
-                                        </h6>
-                                        <div class="d-flex flex-column gap-2">
-                                            <ng-container
-                                                *ngIf="
-                                                    obtenerZonasCriticas()
-                                                        .length > 0;
-                                                    else noZonasCriticas
-                                                "
-                                            >
-                                                <div
-                                                    class="d-flex justify-content-between align-items-center"
-                                                    *ngFor="
-                                                        let zona of obtenerZonasCriticas()
-                                                    "
-                                                >
-                                                    <span class="fw-bold">{{
-                                                        zona.zona
-                                                    }}</span>
-                                                    <div
-                                                        class="d-flex align-items-center"
-                                                    >
-                                                        <div
-                                                            class="progress flex-grow-1 me-2"
-                                                            style="
-                                                                width: 100px;
-                                                                height: 6px;
-                                                            "
-                                                        >
-                                                            <div
-                                                                class="progress-bar"
-                                                                [class.bg-danger]="
-                                                                    zona.porcentaje >
-                                                                    50
-                                                                "
-                                                                [class.bg-warning]="
-                                                                    zona.porcentaje <=
-                                                                        50 &&
-                                                                    zona.porcentaje >
-                                                                        20
-                                                                "
-                                                                [class.bg-success]="
-                                                                    zona.porcentaje <=
-                                                                    20
-                                                                "
-                                                                [style.width.%]="
-                                                                    zona.porcentaje
-                                                                "
-                                                            ></div>
-                                                        </div>
-                                                        <span
-                                                            [class.text-danger]="
-                                                                zona.porcentaje >
-                                                                50
-                                                            "
-                                                            [class.text-warning]="
-                                                                zona.porcentaje <=
-                                                                    50 &&
-                                                                zona.porcentaje >
-                                                                    20
-                                                            "
-                                                            [class.text-success]="
-                                                                zona.porcentaje <=
-                                                                20
-                                                            "
-                                                            >{{
-                                                                zona.porcentaje
-                                                                    | number
-                                                                        : "1.0-0"
-                                                            }}%</span
-                                                        >
-                                                    </div>
-                                                </div>
-                                            </ng-container>
-                                            <ng-template #noZonasCriticas>
-                                                <div
-                                                    class="text-center text-muted py-2"
-                                                >
-                                                    <i
-                                                        class="pi pi-check-circle fs-3 mb-2"
-                                                    ></i>
-                                                    <p class="mb-0">
-                                                        {{
-                                                            "No hay zonas críticas actualmente"
-                                                                | translate
-                                                        }}
-                                                    </p>
-                                                </div>
-                                            </ng-template>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Sección 3: Predicción de carga -->
-                            <div class="col-md-4">
-                                <div class="card shadow-sm h-100">
-                                    <div class="card-body p-3">
-                                        <h6 class="card-title text-muted mb-3">
-                                            {{
-                                                "Predicción de Carga (7 días)"
-                                                    | translate
-                                            }}
-                                        </h6>
-                                        <div class="d-flex flex-column gap-2">
-                                            <ng-container
-                                                *ngIf="
-                                                    metricasLogistica?.prediccionCargaProximosDias as prediccion
-                                                "
-                                            >
-                                                <div
-                                                    class="d-flex justify-content-between align-items-center"
-                                                    *ngFor="
-                                                        let item of (
-                                                            prediccion
-                                                            | keyvalue
-                                                                : orderByDate
-                                                        )?.slice(0, 7)
-                                                    "
-                                                >
-                                                    <span
-                                                        class="fw-bold small"
-                                                        >{{
-                                                            formatearFecha(
-                                                                item.key
-                                                            )
-                                                        }}</span
-                                                    >
-                                                    <div
-                                                        class="d-flex align-items-center"
-                                                    >
-                                                        <div
-                                                            class="progress flex-grow-1 me-2 position-relative"
-                                                            style="
-                                                                width: 100px;
-                                                                height: 8px;
-                                                            "
-                                                        >
-                                                            <!-- Pedidos confirmados -->
-                                                            <div
-                                                                class="progress-bar bg-primary"
-                                                                [style.width.%]="
-                                                                    (item.value
-                                                                        .confirmados /
-                                                                        15) *
-                                                                    100
-                                                                "
-                                                            ></div>
-
-                                                            <!-- Pedidos pendientes de producción (patrón rayado) -->
-                                                            <div
-                                                                *ngIf="
-                                                                    item.value
-                                                                        .pendientesProduccion >
-                                                                    0
-                                                                "
-                                                                class="progress-bar bg-info"
-                                                                [style.width.%]="
-                                                                    (item.value
-                                                                        .pendientesProduccion /
-                                                                        15) *
-                                                                    100
-                                                                "
-                                                                style="
-                                                                    opacity: 0.7;
-                                                                    background-image: linear-gradient(
-                                                                        45deg,
-                                                                        rgba(
-                                                                                255,
-                                                                                255,
-                                                                                255,
-                                                                                0.15
-                                                                            )
-                                                                            25%,
-                                                                        transparent
-                                                                            25%,
-                                                                        transparent
-                                                                            50%,
-                                                                        rgba(
-                                                                                255,
-                                                                                255,
-                                                                                255,
-                                                                                0.15
-                                                                            )
-                                                                            50%,
-                                                                        rgba(
-                                                                                255,
-                                                                                255,
-                                                                                255,
-                                                                                0.15
-                                                                            )
-                                                                            75%,
-                                                                        transparent
-                                                                            75%,
-                                                                        transparent
-                                                                    );
-                                                                    background-size: 1rem
-                                                                        1rem;
-                                                                "
-                                                            ></div>
-                                                        </div>
-                                                        <div
-                                                            class="text-nowrap"
-                                                        >
-                                                            <span
-                                                                class="text-primary"
-                                                                >{{
-                                                                    item.value
-                                                                        .confirmados
-                                                                }}</span
-                                                            >
-                                                            <span
-                                                                class="text-info"
-                                                                *ngIf="
-                                                                    item.value
-                                                                        .pendientesProduccion >
-                                                                    0
-                                                                "
-                                                            >
-                                                                +<span
-                                                                    class="badge bg-info rounded-pill"
-                                                                    >{{
-                                                                        item
-                                                                            .value
-                                                                            .pendientesProduccion
-                                                                    }}</span
-                                                                >
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    *ngIf="
-                                                        (prediccion | keyvalue)
-                                                            ?.length === 0
-                                                    "
-                                                    class="text-center text-muted py-2"
-                                                >
-                                                    <i
-                                                        class="pi pi-calendar fs-3 mb-2"
-                                                    ></i>
-                                                    <p class="mb-0">
-                                                        {{
-                                                            "No hay datos disponibles"
-                                                                | translate
-                                                        }}
-                                                    </p>
-                                                </div>
-                                                <!-- Leyenda para explicar código de colores -->
-                                                <div
-                                                    class="d-flex justify-content-between mt-3 pt-2 border-top"
-                                                >
-                                                    <div
-                                                        class="d-flex align-items-center small text-muted"
-                                                    >
-                                                        <div
-                                                            class="d-inline-block me-2"
-                                                            style="
-                                                                width: 12px;
-                                                                height: 12px;
-                                                                background-color: var(
-                                                                    --bs-primary
-                                                                );
-                                                            "
-                                                        ></div>
-                                                        {{
-                                                            "Confirmados"
-                                                                | translate
-                                                        }}
-                                                    </div>
-                                                    <div
-                                                        class="d-flex align-items-center small text-muted"
-                                                    >
-                                                        <div
-                                                            class="d-inline-block me-2"
-                                                            style="
-                                                                width: 12px;
-                                                                height: 12px;
-                                                                background-color: var(
-                                                                    --bs-info
-                                                                );
-                                                                background-image: linear-gradient(
-                                                                    45deg,
-                                                                    rgba(
-                                                                            255,
-                                                                            255,
-                                                                            255,
-                                                                            0.15
-                                                                        )
-                                                                        25%,
-                                                                    transparent
-                                                                        25%,
-                                                                    transparent
-                                                                        50%,
-                                                                    rgba(
-                                                                            255,
-                                                                            255,
-                                                                            255,
-                                                                            0.15
-                                                                        )
-                                                                        50%,
-                                                                    rgba(
-                                                                            255,
-                                                                            255,
-                                                                            255,
-                                                                            0.15
-                                                                        )
-                                                                        75%,
-                                                                    transparent
-                                                                        75%,
-                                                                    transparent
-                                                                );
-                                                                background-size: 10px
-                                                                    10px;
-                                                            "
-                                                        ></div>
-                                                        {{
-                                                            "Sin Producir"
-                                                                | translate
-                                                        }}
-                                                    </div>
-                                                </div>
-                                            </ng-container>
+                                    <div class="col-md-3 col-sm-6 text-end">
+                                        <div class="btn-group w-100">
+                                            <button class="btn btn-sm btn-primary" (click)="buscarPorFechas()"><i class="pi pi-search me-1"></i>{{ "Buscar" | translate }}</button>
+                                            <button class="btn btn-sm btn-outline-secondary" (click)="clear()"><i class="pi pi-refresh me-1"></i>{{ "Limpiar" | translate }}</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Resumen estadístico -->
-                    <div class="row g-3 p-3 mb-2">
-                        <div class="col-md-2">
-                            <div class="stat-card stat-primary">
-                                <div class="stat-icon">
-                                    <i class="pi pi-shopping-cart"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">
-                                        {{ "Total Pedidos" | translate }}
-                                    </div>
-                                    <div class="stat-value">
-                                        {{ orders.length }}
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="tabla-pedidos-wrapper">
+                            <app-tabla-pedidos
+                                [orders]="orders"
+                                [loading]="loading"
+                                [estadosProcesos]="estadosProcesos"
+                                [estadosPago]="estadosPago"
+                                (onViewDetails)="openDetalleEntrega($event)"
+                                (onPrintPdf)="pdfOrder(modalContent, $event)"
+                                (onViewTags)="verTarjetasPedido($event)"
+                                (onPrintLabel)="descargarRotulo($event)"
+                                (onChangeStatus)="cambiarEstado($event.pedido, $event.status)"
+                                (onRefreshData)="refrescar($event)"
+                                (onClearFilters)="clear($event)"
+                                (onViewNotes)="verNotasCliente($event)"
+                                (onViewFullObservaciones)="mostrarDetallesEnvio($event)"
+                                (onTrackShipment)="trackShipment($event)"
+                                (onFindShipment)="findShipment($event)"
+                            ></app-tabla-pedidos>
                         </div>
-                        <div class="col-md-2">
-                            <div class="stat-card stat-success">
-                                <div class="stat-icon">
-                                    <i class="pi pi-dollar"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">
-                                        {{ "Subtotal" | translate }}
-                                    </div>
-                                    <div class="stat-value">
-                                        {{ calculateSubtotal() | currency }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="stat-card stat-info">
-                                <div class="stat-icon">
-                                    <i class="pi pi-send"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">
-                                        {{ "En Ruta" | translate }}
-                                    </div>
-                                    <div class="stat-value">
-                                        {{
-                                            metricasLogistica?.pedidosEnRuta ||
-                                                0
-                                        }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="stat-card stat-warning">
-                                <div class="stat-icon">
-                                    <i class="pi pi-box"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">
-                                        {{ "Para Despacho" | translate }}
-                                    </div>
-                                    <div class="stat-value">
-                                        {{
-                                            metricasLogistica?.pedidosDespacho ||
-                                                0
-                                        }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="stat-card stat-secondary">
-                                <div class="stat-icon">
-                                    <i class="pi pi-credit-card"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">
-                                        {{ "Anticipos" | translate }}
-                                    </div>
-                                    <div class="stat-value">
-                                        {{ calculateAnticipo() | currency }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="stat-card stat-danger">
-                                <div class="stat-icon">
-                                    <i class="pi pi-wallet"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">
-                                        {{ "Por Cobrar" | translate }}
-                                    </div>
-                                    <div class="stat-value">
-                                        {{
-                                            calculateFaltaPorPagar() | currency
-                                        }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    </p-tabPanel>
 
-                    <!-- Card adicional de Total Envío -->
-                    <div class="row g-3 p-3 mb-2">
-                        <div class="col-md-12">
-                            <div class="stat-card stat-info">
-                                <div class="stat-icon">
-                                    <i class="pi pi-truck"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">
-                                        {{ "Total Envío" | translate }}
-                                    </div>
-                                    <div class="stat-value">
-                                        {{ calculateTotalEnvio() | currency }}
-                                    </div>
-                                </div>
-                            </div>
+                    <p-tabPanel>
+                        <ng-template pTemplate="header">
+                            <i class="pi pi-map-marker me-2"></i>
+                            <span>{{ 'Mapa de Entregas' | translate }}</span>
+                        </ng-template>
+                        <div class="p-3">
+                            <app-mapa-ubicaciones
+                                #mapaUbicaciones
+                                [configuracion]="obtenerDatosMapa()"
+                                [altura]="'60vh'"
+                                [mostrarControles]="true"
+                                [tiempoReal]="true"
+                                [geocodingInProgress]="geocodingInProgress"
+                                [geocodingProgress]="geocodingProgress"
+                                [metricas]="mapaMetricas"
+                            ></app-mapa-ubicaciones>
                         </div>
-                    </div>
+                    </p-tabPanel>
 
-                    <!-- Sección de mapa de ubicaciones -->
-                    <div
-                        class="row g-3 p-3 mb-2"
-                        *ngIf="
-                            metricasLogistica?.pedidosEnRuta > 0 ||
-                            metricasLogistica?.pedidosDespacho > 0
-                        "
-                    >
-                        <div class="col-12">
-                            <div class="card shadow-sm">
-                                <div class="card-body p-3">
-                                    <div
-                                        class="d-flex justify-content-between align-items-center mb-3"
-                                    >
-                                        <div>
-                                            <h6
-                                                class="card-title text-dark mb-1 fw-bold"
-                                            >
-                                                {{
-                                                    "Seguimiento de Entregas"
-                                                        | translate
-                                                }}
-                                            </h6>
-                                            <small class="text-muted">{{
-                                                "Monitoreo en tiempo real de pedidos"
-                                                    | translate
-                                            }}</small>
-                                        </div>
-                                        <button
-                                            pButton
-                                            type="button"
-                                            [icon]="
-                                                mostrarMapa
-                                                    ? 'pi pi-eye-slash'
-                                                    : 'pi pi-map'
-                                            "
-                                            [label]="
-                                                mostrarMapa
-                                                    ? ('Ocultar Mapa'
-                                                      | translate)
-                                                    : ('Ver Ubicaciones'
-                                                      | translate)
-                                            "
-                                            class="p-button-outlined p-button-sm p-button-info"
-                                            (click)="toggleMapa()"
-                                        ></button>
-                                    </div>
-
-                                    <!-- Estadísticas rápidas -->
-                                    <div class="row g-2 mb-3">
-                                        <div class="col-6 col-md-3">
-                                            <div
-                                                class="d-flex align-items-center p-2 bg-light rounded"
-                                            >
-                                                <i
-                                                    class="pi pi-send text-info fs-4 me-2"
-                                                ></i>
-                                                <div>
-                                                    <div
-                                                        class="fw-bold text-info"
-                                                    >
-                                                        {{
-                                                            metricasLogistica?.pedidosEnRuta ||
-                                                                0
-                                                        }}
-                                                    </div>
-                                                    <div
-                                                        class="small text-muted"
-                                                    >
-                                                        {{
-                                                            "En Ruta"
-                                                                | translate
-                                                        }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-6 col-md-3">
-                                            <div
-                                                class="d-flex align-items-center p-2 bg-light rounded"
-                                            >
-                                                <i
-                                                    class="pi pi-box text-warning fs-4 me-2"
-                                                ></i>
-                                                <div>
-                                                    <div
-                                                        class="fw-bold text-warning"
-                                                    >
-                                                        {{
-                                                            metricasLogistica?.pedidosDespacho ||
-                                                                0
-                                                        }}
-                                                    </div>
-                                                    <div
-                                                        class="small text-muted"
-                                                    >
-                                                        {{
-                                                            "Por Despachar"
-                                                                | translate
-                                                        }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-6 col-md-3">
-                                            <div
-                                                class="d-flex align-items-center p-2 bg-light rounded"
-                                            >
-                                                <i
-                                                    class="pi pi-clock text-primary fs-4 me-2"
-                                                ></i>
-                                                <div>
-                                                    <div
-                                                        class="fw-bold text-primary"
-                                                    >
-                                                        {{
-                                                            metricasLogistica?.tiempoPromedioDespacho ||
-                                                                0
-                                                        }}
-                                                    </div>
-                                                    <div
-                                                        class="small text-muted"
-                                                    >
-                                                        {{
-                                                            "min promedio"
-                                                                | translate
-                                                        }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-6 col-md-3">
-                                            <div
-                                                class="d-flex align-items-center p-2 bg-light rounded"
-                                            >
-                                                <i
-                                                    class="pi pi-percentage text-success fs-4 me-2"
-                                                ></i>
-                                                <div>
-                                                    <div
-                                                        class="fw-bold text-success"
-                                                    >
-                                                        {{
-                                                            metricasLogistica?.porcentajeEntregasTiempo
-                                                                | number
-                                                                    : "1.0-0" ||
-                                                                          0
-                                                        }}%
-                                                    </div>
-                                                    <div
-                                                        class="small text-muted"
-                                                    >
-                                                        {{
-                                                            "A Tiempo"
-                                                                | translate
-                                                        }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-                            </div>
+                    <p-tabPanel>
+                        <ng-template pTemplate="header">
+                            <i class="pi pi-inbox me-2"></i>
+                            <span>{{ 'Órdenes Generadas' | translate }}</span>
+                        </ng-template>
+                        <div class="p-3">
+                            <app-ordenes-despacho
+                                [dispatchOrders]="dispatchOrders"
+                                (onPrintOrder)="imprimirOrderToAction($event)"
+                                (onViewOrder)="handleOrderView($event)"
+                                (onDispatchOrder)="handleOrderDispatch($event)"
+                                (onDispatchPedido)="handlePedidoDispatch($event)">
+                            </app-ordenes-despacho>
                         </div>
-                    </div>
+                    </p-tabPanel>
+                </p-tabView>
 
-                    <!-- Tabla principal de pedidos con componente -->
-                    <div class="p-3">
-                        <app-tabla-pedidos
-                            [orders]="orders"
-                            [loading]="loading"
-                            [estadosProcesos]="estadosProcesos"
-                            [estadosPago]="estadosPago"
-                            (onViewDetails)="openDetalleEntrega($event)"
-                            (onPrintPdf)="pdfOrder(modalContent, $event)"
-                            (onViewTags)="verTarjetasPedido($event)"
-                            (onPrintLabel)="descargarRotulo($event)"
-                            (onChangeStatus)="
-                                cambiarEstado($event.pedido, $event.status)
-                            "
-                            (onRefreshData)="refrescar($event)"
-                            (onClearFilters)="clear($event)"
-                            (onViewNotes)="verNotasCliente($event)"
-                            (onViewFullObservaciones)="
-                                mostrarDetallesEnvio($event)
-                            "
-                            (onTrackShipment)="trackShipment($event)"
-                            (onFindShipment)="findShipment($event)"
-                        >
-                        </app-tabla-pedidos>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
