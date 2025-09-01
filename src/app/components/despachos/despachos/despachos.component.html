@@ -33,59 +33,19 @@
                         </p>
                     </div>
 
-                    <!-- Botones de KAI y alertas -->
-                    <div class="btn-group">
-                        <button
-                            pButton
-                            type="button"
-                            icon="pi pi-brain"
-                            label="{{ 'Recomendaciones KAI' | translate }}"
-                            class="p-button-info p-button-sm"
-                            (click)="mostrarRecomendacionesOptimizacion()"
-                        ></button>
-                        <button
-                            pButton
-                            type="button"
-                            icon="pi pi-map"
-                            pTooltip="{{
-                                'Mostrar/Ocultar Mapa de Ubicaciones' | translate
-                            }}"
-                            class="p-button-success p-button-sm"
-                            [class.p-button-outlined]="!mostrarMapa"
-                            (click)="toggleMapa()"
-                        ></button>
-                        <button
-                            pButton
-                            type="button"
-                            icon="pi pi-map-marker"
-                            pTooltip="{{
-                                'Forzar Geocodificación de Direcciones' | translate
-                            }}"
-                            class="p-button-warning p-button-sm"
-                            [disabled]="geocodingInProgress"
-                            (click)="forzarGeocodificacion()"
-                        ></button>
-                        <button
-                            pButton
-                            type="button"
-                            icon="pi pi-send"
-                            pTooltip="{{
-                                'Geocodificar Solo Pedidos Despachados' | translate
-                            }}"
-                            class="p-button-success p-button-sm"
-                            [disabled]="geocodingInProgress"
-                            (click)="geocodificarPedidosDespachados()"
-                        ></button>
-                        <button
-                            pButton
-                            type="button"
-                            icon="pi pi-refresh"
-                            pTooltip="{{
-                                'Reiniciar alertas de prioridad' | translate
-                            }}"
-                            class="p-button-secondary p-button-sm"
-                            (click)="reiniciarControlAlertas()"
-                        ></button>
+                    <!-- Botones de Acción Responsivos -->
+                    <div class="d-flex align-items-center">
+                        <!-- Vista Escritorio -->
+                        <div class="btn-group d-none d-lg-flex">
+                            <button pButton type="button" icon="pi pi-brain" label="{{ 'Recomendaciones KAI' | translate }}" class="p-button-info p-button-sm" (click)="mostrarRecomendacionesOptimizacion()"></button>
+                            <button pButton type="button" icon="pi pi-map" label="{{ 'Mapa' | translate }}" class="p-button-success p-button-sm" [class.p-button-outlined]="!mostrarMapa" (click)="toggleMapa()"></button>
+                            <p-splitButton label="{{ 'Geocodificar' | translate }}" icon="pi pi-map-marker" (onClick)="forzarGeocodificacion()" styleClass="p-button-warning p-button-sm" [model]="itemsGeocodificacion"></p-splitButton>
+                        </div>
+                        <!-- Vista Móvil -->
+                        <div class="d-lg-none">
+                            <button pButton type="button" icon="pi pi-ellipsis-v" class="p-button-secondary p-button-sm" (click)="menuAcciones.toggle($event)"></button>
+                            <p-menu #menuAcciones [model]="accionesMenu" [popup]="true"></p-menu>
+                        </div>
                     </div>
                 </div>
 
@@ -385,52 +345,17 @@
                                         "Filtros de búsqueda" | translate
                                     }}</span>
                                 </h6>
-                                <div class="btn-group">
-                                    <button
-                                        pButton
-                                        type="button"
-                                        icon="pi pi-truck"
-                                        label="{{
-                                            'Transportadores' | translate
-                                        }}"
-                                        class="p-button-outlined p-button-sm p-button-secondary"
-                                        (click)="
-                                            openModal(transportadoresModal)
-                                        "
-                                    ></button>
-                                    <button
-                                        pButton
-                                        type="button"
-                                        icon="pi pi-send"
-                                        label="{{
-                                            'Generar Orden' | translate
-                                        }}"
-                                        class="p-button-outlined p-button-sm p-button-secondary"
-                                        (click)="
-                                            openModal(generarOrdenEnvioModal)
-                                        "
-                                    ></button>
-                                    <button
-                                        pButton
-                                        type="button"
-                                        icon="pi pi-list"
-                                        label="{{ 'Órdenes' | translate }}"
-                                        class="p-button-outlined p-button-sm p-button-secondary"
-                                        (click)="viewAllDispatchOrders()"
-                                    ></button>
-                                    <button
-                                        pButton
-                                        type="button"
-                                        icon="pi pi-calculator"
-                                        label="{{
-                                            'Análisis de Transportadores'
-                                                | translate
-                                        }}"
-                                        class="p-button-outlined p-button-sm p-button-info"
-                                        (click)="
-                                            mostrarRecomendacionTransportadores()
-                                        "
-                                    ></button>
+                                <div class="d-flex align-items-center">
+                                    <!-- Vista Escritorio -->
+                                    <div class="btn-group d-none d-lg-flex">
+                                        <button pButton type="button" icon="pi pi-send" label="{{ 'Generar Orden' | translate }}" class="p-button-primary p-button-sm" (click)="openModal(generarOrdenEnvioModal)"></button>
+                                        <p-splitButton label="{{ 'Administrar' | translate }}" icon="pi pi-cog" (onClick)="openModal(transportadoresModal)" [model]="adminMenu" styleClass="p-button-secondary p-button-sm p-button-outlined"></p-splitButton>
+                                    </div>
+                                    <!-- Vista Móvil -->
+                                    <div class="d-lg-none">
+                                        <button pButton type="button" icon="pi pi-cog" label="{{ 'Administrar' | translate }}" class="p-button-secondary p-button-sm p-button-outlined" (click)="menuAdmin.toggle($event)"></button>
+                                        <p-menu #menuAdmin [model]="adminMenu" [popup]="true"></p-menu>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1372,6 +1297,12 @@
         </div>
     </div>
 </div>
+
+<!-- Botón de Acción Flotante (FAB) para Móvil -->
+<button pButton type="button" icon="pi pi-plus" class="p-button-rounded p-button-info fab d-lg-none" 
+        pTooltip="{{ 'Generar Orden de Envío' | translate }}" tooltipPosition="left"
+        (click)="openModal(generarOrdenEnvioModal)">
+</button>
 
 <!-- Modal de detalle de entrega -->
 <ng-template #detalleEntregaModal let-modal>

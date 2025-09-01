@@ -27,6 +27,7 @@ import { RippleModule } from "primeng/ripple";
 import { RouterModule } from "@angular/router";
 import { DynamicDialogModule, DialogService } from "primeng/dynamicdialog";
 import { MenuModule } from "primeng/menu";
+import { SplitButtonModule } from 'primeng/splitbutton';
 
 // Componentes
 import { TablaPedidosComponent } from "./components/tabla-pedidos/tabla-pedidos.component";
@@ -69,6 +70,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     RouterModule,
     DynamicDialogModule,
     MenuModule,
+    SplitButtonModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
   ],

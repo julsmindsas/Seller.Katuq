@@ -39,7 +39,7 @@ import { ObservacionesDetalleComponent } from "../components/observaciones-detal
 
 import "jspdf-autotable";
 import { LogisticaServiceV2 } from "../../../shared/services/despachos/logistica.service.v2";
-import { FilterService } from "primeng/api";
+import { FilterService, MenuItem } from "primeng/api";
 import html2pdf from "html2pdf.js";
 import { PedidoEntrega } from "../interfaces/pedido-entrega.interface";
 import { Router } from "@angular/router";
@@ -179,6 +179,11 @@ export class DespachosComponent implements OnInit {
   todasLasTarjetas: TarjetaInfo[] = [];
   tienetarjetas: boolean = true;
   detallePedidoEntregado: PedidoEntrega;
+
+  // --- Propiedades para Menús Responsivos ---
+  itemsGeocodificacion: MenuItem[];
+  accionesMenu: MenuItem[];
+  adminMenu: MenuItem[];
 
   // Properties for performance optimization
   isGeneratingPDF: boolean = false;
@@ -342,6 +347,72 @@ export class DespachosComponent implements OnInit {
     // En ngOnInit, mostrar alertas automáticas
     this.refrescarDatos(true);
     this.initForms();
+
+    // Definir items para el SplitButton de Geocodificación
+    this.itemsGeocodificacion = [
+      {
+        label: 'Solo Despachados',
+        icon: 'pi pi-send',
+        command: () => {
+          this.geocodificarPedidosDespachados();
+        }
+      },
+      {
+        label: 'Reiniciar Alertas',
+        icon: 'pi pi-refresh',
+        command: () => {
+          this.reiniciarControlAlertas();
+        }
+      }
+    ];
+
+    // Definir items para el menú de acciones principal en móvil
+    this.accionesMenu = [
+      {
+        label: 'Recomendaciones KAI',
+        icon: 'pi pi-brain',
+        command: () => this.mostrarRecomendacionesOptimizacion()
+      },
+      {
+        label: 'Mostrar/Ocultar Mapa',
+        icon: 'pi pi-map',
+        command: () => this.toggleMapa()
+      },
+      {
+        label: 'Forzar Geocodificación',
+        icon: 'pi pi-map-marker',
+        command: () => this.forzarGeocodificacion()
+      },
+      {
+        label: 'Geocodificar Despachados',
+        icon: 'pi pi-send',
+        command: () => this.geocodificarPedidosDespachados()
+      },
+      {
+        label: 'Reiniciar Alertas',
+        icon: 'pi pi-refresh',
+        command: () => this.reiniciarControlAlertas()
+      }
+    ];
+
+    // Definir items para el menú de administración de filtros
+    this.adminMenu = [
+        {
+            label: 'Transportadores',
+            icon: 'pi pi-truck',
+            command: () => this.openModal(this.transportadoresModal)
+        },
+        {
+            label: 'Órdenes de Despacho',
+            icon: 'pi pi-list',
+            command: () => this.viewAllDispatchOrders()
+        },
+        {
+            label: 'Análisis de Transportadores',
+            icon: 'pi pi-calculator',
+            command: () => this.mostrarRecomendacionTransportadores()
+        }
+    ];
   }
 
   refrescarDatos(mostrarAlertas: boolean = false) {

@@ -954,3 +954,12 @@ $border-radius: 8px;
 .pdf-progress-modal .progress-bar {
   transition: width 0.3s ease;
 }
+
+/* Estilos para Botón de Acción Flotante (FAB) */
+.fab {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 1050; /* Asegura que esté sobre el contenido pero debajo de los modales */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
