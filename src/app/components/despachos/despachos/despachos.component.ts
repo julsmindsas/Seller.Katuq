@@ -2283,7 +2283,7 @@ export class DespachosComponent implements OnInit {
         size: "xl",
         scrollable: true,
         centered: true,
-        fullscreen: true,
+        fullscreen: false,
         ariaLabelledBy: "modal-basic-title",
       })
       .result.then((result) => {
@@ -2327,7 +2327,7 @@ export class DespachosComponent implements OnInit {
     }
     this.modalRef = this.modalService.open(content, {
       size: "xl",
-      fullscreen: true,
+      fullscreen: false,
     });
     this.modalRef.result.then(
       (result) => {
@@ -2345,7 +2345,7 @@ export class DespachosComponent implements OnInit {
     this.detallePedidoEntregado = pedido;
     this.modalRef = this.modalService.open(content, {
       size: "xl",
-      fullscreen: true,
+      fullscreen: false,
     });
   }
 
@@ -2353,7 +2353,7 @@ export class DespachosComponent implements OnInit {
     this.detallePedidoEntregado = pedido;
     this.modalService.open(this.detalleEntregaModal, {
       size: "xl",
-      fullscreen: true,
+      fullscreen: false,
     });
   }
 
@@ -3080,7 +3080,7 @@ export class DespachosComponent implements OnInit {
                     });
                   this.modalService.open(this.dispatchOrdersModal, {
                     size: "xl",
-                    fullscreen: true,
+                    fullscreen: false,
                   });
                 });
             }, 500);
@@ -3230,7 +3230,7 @@ export class DespachosComponent implements OnInit {
           });
         this.modalService.open(this.dispatchOrdersModal, {
           size: "xl",
-          fullscreen: true,
+          fullscreen: false,
         });
       },
       (error) => {
@@ -3249,7 +3249,7 @@ export class DespachosComponent implements OnInit {
         size: "lg",
         scrollable: true,
         centered: true,
-        fullscreen: true,
+        fullscreen: false,
         ariaLabelledBy: "modal-basic-title",
       })
       .result.then(

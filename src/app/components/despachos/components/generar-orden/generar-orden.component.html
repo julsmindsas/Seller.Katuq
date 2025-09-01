@@ -12,71 +12,67 @@
 </div>
 <div class="modal-body">
     <form [formGroup]="ordenEnvioForm">
-        <div class="card mb-3">
+        <div class="card shadow-sm mb-4">
             <div class="card-body">
-                <h5 class="card-title">
-                    {{ "Información de Envío" | translate }}
-                </h5>
+                <h5 class="card-title fw-bold text-primary mb-3">{{ "Configuración de Envío" | translate }}</h5>
+
+                <!-- Fila de Guía Dinámica -->
+                <div class="row step-container" *ngIf="ordenEnvioForm.get('fechaEnvio')?.value && !ordenEnvioForm.get('metodoEnvio')?.value">
+                    <div class="col-12">
+                        <div class="alert alert-success text-center guidance-title py-2">
+                            <i class="pi pi-check-circle me-2"></i>
+                            <strong>¡Fecha seleccionada!</strong> Ahora elige un método de envío para ver los pedidos disponibles.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fila de Controles -->
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <!-- Columna de Fecha -->
+                    <div class="col-lg-6">
                         <div class="form-group">
-                            <label for="fechaEnvio" class="form-label">{{
-                                "Fecha de Envío" | translate
-                                }}</label>
-                            <div class="input-group">
-                                <input type="date" id="fechaEnvio" formControlName="fechaEnvio"
-                                    class="form-control form-control-sm" [class.is-invalid]="
-                                        ordenEnvioForm.get('fechaEnvio')
-                                            ?.invalid &&
-                                        ordenEnvioForm.get('fechaEnvio')
-                                            ?.touched
-                                    " (change)="actualizarPedidosDisponibles()" />
-                                <span class="input-group-text">
-                                    <i class="pi pi-calendar"></i>
-                                </span>
-                            </div>
-                            <div class="text-muted small" *ngIf="ordenEnvioForm.get('fechaEnvio')?.value">
-                                Fecha seleccionada:
-                                {{
-                                ordenEnvioForm.get("fechaEnvio")?.value
-                                | date: "dd/MM/yyyy"
-                                }}
-                            </div>
-                            <div *ngIf="
-                                    ordenEnvioForm.get('fechaEnvio')?.invalid &&
-                                    ordenEnvioForm.get('fechaEnvio')?.touched
-                                " class="text-danger small">
-                                {{
-                                "La fecha de envío es requerida" | translate
-                                }}
+                            <label for="fechaEnvio" class="form-label fw-semibold"><i class="pi pi-calendar me-2"></i>{{ "Fecha de Envío" | translate }}</label>
+                            <p-calendar inputId="fechaEnvio" 
+                                        formControlName="fechaEnvio" 
+                                        [showIcon]="true" 
+                                        placeholder="{{ 'Selecciona una fecha' | translate }}"
+                                        dateFormat="dd/mm/yy"
+                                        appendTo="body"
+                                        [baseZIndex]="10001"
+                                        styleClass="w-100">
+                            </p-calendar>
+                            <div *ngIf="ordenEnvioForm.get('fechaEnvio')?.invalid && ordenEnvioForm.get('fechaEnvio')?.touched" 
+                                class="text-danger small mt-1">
+                                {{ "La fecha de envío es requerida" | translate }}
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="metodoEnvio" class="form-label">{{
-                                "Método de Envío" | translate
-                                }}</label>
-                            <select id="metodoEnvio" formControlName="metodoEnvio" class="form-select form-select-sm">
-                                <option value="">
-                                    {{ "Seleccione un método" | translate }}
-                                </option>
-                                <option value="mensajeroPropio">
-                                    {{ "Mensajero Propio" | translate }}
-                                </option>
-                                <option value="transportadora">
-                                    {{ "Transportadora" | translate }}
-                                </option>
-                            </select>
-                            <div *ngIf="
-                                    ordenEnvioForm.get('metodoEnvio')
-                                        ?.invalid &&
-                                    ordenEnvioForm.get('metodoEnvio')?.touched
-                                " class="text-danger small">
-                                {{
-                                "El método de envío es requerido"
-                                | translate
-                                }}
+
+                    <!-- Columna de Método de Envío -->
+                    <div class="col-lg-6">
+                         <div class="form-group">
+                            <label class="form-label fw-semibold"><i class="pi pi-truck me-2"></i>{{ "Método de Envío" | translate }}</label>
+                            <div class="d-flex gap-2">
+                                <div class="selection-card flex-grow-1" 
+                                     (click)="seleccionarMetodo('mensajeroPropio')"
+                                     [ngClass]="{'selected-card': ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'}">
+                                    <i class="pi pi-user selection-icon"></i>
+                                    <div class="selection-text">
+                                        <div class="fw-bold small">{{ "Mensajero Propio" | translate }}</div>
+                                    </div>
+                                </div>
+                                <div class="selection-card flex-grow-1" 
+                                     (click)="seleccionarMetodo('transportadora')"
+                                     [ngClass]="{'selected-card': ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'}">
+                                    <i class="pi pi-send selection-icon"></i>
+                                    <div class="selection-text">
+                                        <div class="fw-bold small">{{ "Transportadora" | translate }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div *ngIf="ordenEnvioForm.get('metodoEnvio')?.invalid && ordenEnvioForm.get('metodoEnvio')?.touched" 
+                                class="text-danger small text-center mt-1">
+                                {{ "El método de envío es requerido" | translate }}
                             </div>
                         </div>
                     </div>

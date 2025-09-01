@@ -126,14 +126,25 @@ export class GenerarOrdenComponent implements OnInit {
       metodoEnvio: ["", Validators.required],
     });
 
-    // Suscribirse a cambios en metodoEnvio
+    // Suscripción a cambios de fecha para actualizar la lista
+    this.ordenEnvioForm.get("fechaEnvio")?.valueChanges.subscribe(() => {
+      this.actualizarPedidosDisponibles();
+    });
+
+    // Suscripción a cambios de método para actualizar la lista
     this.ordenEnvioForm.get("metodoEnvio")?.valueChanges.subscribe((value) => {
       this.metodoEnvio = value;
-      if (value && this.ordenEnvioForm.get("fechaEnvio")?.valid) {
-        this.actualizarPedidosDisponibles();
-      }
+      this.actualizarPedidosDisponibles();
     });
   }
+
+  seleccionarMetodo(metodo: 'mensajeroPropio' | 'transportadora'): void {
+    this.ordenEnvioForm.get('metodoEnvio')?.setValue(metodo);
+  }
+
+
+
+  
 
 
   private cargarOrdenesExistentes(): void {

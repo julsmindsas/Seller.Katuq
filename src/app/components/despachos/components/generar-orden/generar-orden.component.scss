@@ -765,3 +765,80 @@ $light-color: #f8f9fa;
     }
   }
 }
+
+/* --- NUEVOS ESTILOS PARA LA MEJORA DE UX/UI --- */
+
+.quick-date-buttons .btn {
+  font-size: 0.8rem;
+}
+
+.selection-card {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem; // Reduced padding
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+  }
+
+  &.selected-card {
+    border-color: $primary-color;
+    background-color: rgba($primary-color, 0.05);
+    box-shadow: 0 0 0 2px rgba($primary-color, 0.25);
+  }
+
+  .selection-icon {
+    font-size: 1.2rem; // Reduced icon size
+    color: $primary-color;
+    margin-right: 0.75rem;
+  }
+
+  .selection-text {
+    line-height: 1.3;
+  }
+}
+
+:host ::ng-deep {
+    .p-datepicker {
+        border: none;
+        width: 100%;
+        z-index: 1100 !important; // Force z-index to be on top
+    }
+    .p-datepicker table {
+        width: 100%;
+    }
+    .p-inputtext {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 768px) {
+  .selection-card {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Animación para el título guía */
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-container {
+  animation: fadeInSlideUp 0.5s ease-out;
+}
+
+.guidance-title {
+    font-weight: 600;
+}
