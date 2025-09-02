@@ -167,6 +167,18 @@ import { ValidationResult } from './integration-form-validator.service';
       color: #6c757d;
       line-height: 1.4;
     }
+
+    @media (max-width: 575.98px) {
+      .credential-strength-indicator {
+        padding: 12px;
+      }
+      .strength-label, .strength-score, .strength-level, .strength-recommendations h6 {
+        font-size: 13px;
+      }
+      .feedback-item, .strength-recommendations li {
+        font-size: 12px;
+      }
+    }
   `]
 })
 export class CredentialStrengthIndicatorComponent implements OnChanges {

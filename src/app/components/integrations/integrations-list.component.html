@@ -459,12 +459,12 @@
                   </tr>
                   
                   <tr *ngFor="let integration of getSortedAndFilteredIntegrations(); trackBy: trackByIntegration" (click)="openIntegrationConfig(integration)" class="integration-row">
-                    <td>
+                    <td data-label="Nombre">
                       <div class="integration-name-cell">
-                        <img *ngIf="getIntegrationLogo(integration.type) && !hasLogoError(integration)" 
-                             [src]="getIntegrationLogo(integration.type)" 
-                             [alt]="integration.name" 
-                             class="integration-logo-sm" 
+                        <img *ngIf="getIntegrationLogo(integration.type) && !hasLogoError(integration)"
+                             [src]="getIntegrationLogo(integration.type)"
+                             [alt]="integration.name"
+                             class="integration-logo-sm"
                              (error)="handleImageError($event)"
                              [attr.data-integration-id]="integration.id">
                         <div *ngIf="!getIntegrationLogo(integration.type) || hasLogoError(integration)"
@@ -477,48 +477,48 @@
                         <span>{{integration.name}}</span>
                       </div>
                     </td>
-                    <td>{{getIntegrationTypeName(integration.type)}}</td>
-                    <td>
+                    <td data-label="Tipo">{{getIntegrationTypeName(integration.type)}}</td>
+                    <td data-label="Categoría">
                       <span class="category-pill" [ngClass]="'category-' + integration.category">
                         {{ getCategoryLabel(integration.category) }}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       <span class="status-badge" [ngClass]="integration.enabled ? 'active' : 'inactive'">
                         <i class="fa" [ngClass]="integration.enabled ? 'fa-check-circle' : 'fa-times-circle'"></i>
                         {{integration.enabled ? 'Activo' : 'Inactivo'}}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Actualizado">
                       <span class="date-cell">{{integration.updatedAt | date:'dd/MM/yyyy HH:mm'}}</span>
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                       <div class="action-buttons">
                         <button class="btn btn-sm btn-info" (click)="editIntegration(integration, $event)" title="Editar">
                           <i class="fa fa-edit"></i>
                         </button>
-                        <button type="button" 
-                                class="btn btn-sm btn-outline-success" 
+                        <button type="button"
+                                class="btn btn-sm btn-outline-success"
                                 [class.loading]="isOperationLoading('test', integration.id)"
                                 [disabled]="isOperationLoading('test', integration.id)"
-                                (click)="testIntegration(integration, $event)" 
+                                (click)="testIntegration(integration, $event)"
                                 title="Probar conexión">
                           <i class="fa fa-check"></i>
                         </button>
-                        <button type="button" 
-                                class="btn btn-sm" 
+                        <button type="button"
+                                class="btn btn-sm"
                                 [class.loading]="isOperationLoading('toggle', integration.id)"
                                 [disabled]="isOperationLoading('toggle', integration.id)"
-                                [ngClass]="integration.enabled ? 'btn-warning' : 'btn-success'" 
-                                (click)="toggleIntegrationStatus(integration, $event)" 
+                                [ngClass]="integration.enabled ? 'btn-warning' : 'btn-success'"
+                                (click)="toggleIntegrationStatus(integration, $event)"
                                 [title]="integration.enabled ? 'Desactivar' : 'Activar'">
                           <i class="fa" [ngClass]="integration.enabled ? 'fa-pause' : 'fa-play'"></i>
                         </button>
-                        <button type="button" 
-                                class="btn btn-sm btn-outline-danger" 
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger"
                                 [class.loading]="isOperationLoading('delete', integration.id)"
                                 [disabled]="isOperationLoading('delete', integration.id)"
-                                (click)="deleteIntegration(integration, $event)" 
+                                (click)="deleteIntegration(integration, $event)"
                                 title="Eliminar">
                           <i class="fa fa-trash"></i>
                         </button>
