@@ -1192,14 +1192,16 @@ export class PaymentService extends BaseService {
 
     // ✅ OPTIMIZADO: Usar valores DIRECTOS del pedido (ya actualizados)
     // Esto evita recalcular y asegura consistencia con los valores mostrados en la UI
-    const subtotal = Number(pedido.totalPedidoSinDescuento) || 0;
+    // Para el PDF, usar solo el subtotal de productos sin envío
+    this.pedidoUtilService.pedido = pedido;
+    const subtotal = this.pedidoUtilService.getSubtotalSinEnvio();
     const totalIVA = Number(pedido.totalImpuesto) || 0;
     const descuentos = Number(pedido.totalDescuento) || 0;
     const envioSinIva = Number(pedido.totalEnvio) || 0;
     
     // ✅ Calcular total final usando valores del pedido
     const totalSinIvaGeneral = subtotal - descuentos;
-    const totalPagar = totalSinIvaGeneral + totalIVA;
+    const totalPagar = totalSinIvaGeneral + totalIVA + envioSinIva;
     
     // 🔍 Log para verificar que los valores coincidan
     console.log('📊 PDF - Valores del pedido actualizado:', {
