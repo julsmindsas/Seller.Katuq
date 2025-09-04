@@ -2179,29 +2179,57 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Si el pedido tiene forma de entrega, sincronizar con el carrito
-    if (pedido.formaEntrega) {
+    console.log('🔄 SINCRONIZACIÓN - Estado inicial:', {
+      nroPedido: pedido.nroPedido,
+      formaEntregaPedido: pedido.formaEntrega,
+      formaEntregaCarrito: pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega
+    });
+
+    // Obtener la forma de entrega más reciente del carrito
+    const formasEntregaCarrito = pedido.carrito
+      .map(item => item.configuracion?.datosEntrega?.formaEntrega)
+      .filter(forma => forma && forma.trim() !== '');
+
+    // Si hay formas de entrega en el carrito, usar la primera no vacía
+    if (formasEntregaCarrito.length > 0) {
+      const formaEntregaCarrito = formasEntregaCarrito[0];
+      
+      // Actualizar el pedido con la forma de entrega del carrito
+      pedido.formaEntrega = formaEntregaCarrito;
+      
+      // Asegurar que todos los items del carrito tengan la misma forma de entrega
       pedido.carrito.forEach(item => {
-        if (item.configuracion?.datosEntrega && pedido.formaEntrega) {
+        if (item.configuracion?.datosEntrega) {
+          item.configuracion.datosEntrega.formaEntrega = formaEntregaCarrito;
+        }
+      });
+      
+      console.log('🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde carrito:', {
+        nroPedido: pedido.nroPedido,
+        formaEntrega: formaEntregaCarrito,
+        itemsActualizados: pedido.carrito.length
+      });
+    }
+    // Si el pedido tiene forma de entrega pero el carrito no, sincronizar hacia el carrito
+    else if (pedido.formaEntrega) {
+      pedido.carrito.forEach(item => {
+        if (item.configuracion?.datosEntrega) {
           item.configuracion.datosEntrega.formaEntrega = pedido.formaEntrega;
         }
       });
       
-      console.log('🔄 SINCRONIZACIÓN - Forma de entrega actualizada en carrito:', {
+      console.log('🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde pedido:', {
         nroPedido: pedido.nroPedido,
         formaEntrega: pedido.formaEntrega,
         itemsActualizados: pedido.carrito.length
       });
     }
-    // Si el carrito tiene forma de entrega, sincronizar con el pedido
-    else if (pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega) {
-      pedido.formaEntrega = pedido.carrito[0].configuracion.datosEntrega.formaEntrega;
-      
-      console.log('🔄 SINCRONIZACIÓN - Forma de entrega actualizada en pedido:', {
-        nroPedido: pedido.nroPedido,
-        formaEntrega: pedido.formaEntrega
-      });
-    }
+
+    console.log('🔄 SINCRONIZACIÓN - Estado final:', {
+      nroPedido: pedido.nroPedido,
+      formaEntregaPedido: pedido.formaEntrega,
+      formaEntregaCarrito: pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega
+    });
   }
 
   async convertirImagenesAbase64YGenerarPDF(DATA: HTMLElement) {
@@ -2480,6 +2508,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     }
+
+    // Log del payload que se envía al servicio
+    console.log('📤 PAYLOAD EDIT ORDER:', {
+      nroPedido: order.nroPedido,
+      formaEntrega: order.formaEntrega,
+      carritoFormaEntrega: order.carrito?.map(item => ({
+        referencia: item.producto?.identificacion?.referencia,
+        formaEntrega: item.configuracion?.datosEntrega?.formaEntrega
+      })),
+      payloadCompleto: order
+    });
 
     this.ventasService.editOrder(order).subscribe((data) => {
       this.refrescarDatos();
@@ -3012,6 +3051,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             order.totalEnvio = 0;
           }
 
+          // Sincronizar forma de entrega antes de actualizar valores
+          console.log('🔄 CONFIGURACIÓN - Antes de sincronizar:', {
+            nroPedido: order.nroPedido,
+            formaEntregaPedido: order.formaEntrega,
+            formaEntregaCarrito: order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega
+          });
+          
+          this.sincronizarFormaEntrega(order);
+          
+          console.log('🔄 CONFIGURACIÓN - Después de sincronizar:', {
+            nroPedido: order.nroPedido,
+            formaEntregaPedido: order.formaEntrega,
+            formaEntregaCarrito: order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega
+          });
+          
           // Recalcular totales dependientes del valor de envío, descuentos, etc.
           order = this.actualizarValoresPedido(order);
 
@@ -3061,6 +3115,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (order.carrito) {
             order.carrito.push(configuracionResult);
           }
+          
+          // Sincronizar forma de entrega antes de actualizar valores
+          this.sincronizarFormaEntrega(order);
+          
           order = this.actualizarValoresPedido(order);
           this.editOrder(order);
         },
