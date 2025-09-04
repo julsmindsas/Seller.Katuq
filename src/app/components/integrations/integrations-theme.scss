@@ -1,0 +1,424 @@
+/*
+=================================================================================
+  MODERN INTEGRATION THEME V2 - Refined for a more modern, less "Windows-like" feel
+=================================================================================
+*/
+
+:root {
+  // ========================================
+  // Font System - Modern & Clean
+  // ========================================
+  --intg-font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  // ========================================
+  // Color System - Professional Palette
+  // ========================================
+  
+  // Primary Brand Colors
+  --intg-primary: #6366f1;
+  --intg-primary-50: #eef2ff;
+  --intg-primary-100: #e0e7ff;
+  --intg-primary-200: #c7d2fe;
+  --intg-primary-300: #a5b4fc;
+  --intg-primary-400: #818cf8;
+  --intg-primary-500: #6366f1;
+  --intg-primary-600: #4f46e5;
+  --intg-primary-700: #4338ca;
+  
+  // Semantic Colors
+  --intg-success: #10b981;
+  --intg-success-50: #ecfdf5;
+  --intg-success-100: #d1fae5;
+  --intg-success-200: #a7f3d0;
+  --intg-success-500: #10b981;
+  --intg-success-700: #047857;
+
+  --intg-warning: #f59e0b;
+  --intg-warning-50: #fffbeb;
+  --intg-warning-100: #fef3c7;
+  --intg-warning-200: #fde68a;
+  --intg-warning-400: #fbbf24;
+  --intg-warning-500: #f59e0b;
+  --intg-warning-700: #b45309;
+
+  --intg-error: #ef4444;
+  --intg-error-25: #fffbfa;
+  --intg-error-50: #fef2f2;
+  --intg-error-100: #fee2e2;
+  --intg-error-200: #fecaca;
+  --intg-error-500: #ef4444;
+  --intg-error-600: #dc2626;
+  --intg-error-700: #b91c1c;
+
+  --intg-info: #3b82f6;
+  --intg-info-50: #eff6ff;
+  --intg-info-500: #3b82f6;
+  --intg-info-800: #1e40af;
+
+  // Neutral Grays
+  --intg-gray-25: #fcfcfd;
+  --intg-gray-50: #f9fafb;
+  --intg-gray-100: #f3f4f6;
+  --intg-gray-200: #e5e7eb;
+  --intg-gray-300: #d1d5db;
+  --intg-gray-400: #9ca3af;
+  --intg-gray-500: #6b7280;
+  --intg-gray-600: #4b5563;
+  --intg-gray-700: #374151;
+  --intg-gray-800: #1f2937;
+  --intg-gray-900: #111827;
+
+  // ========================================
+  // Shadow System - Subtle & Layered
+  // ========================================
+  
+  --intg-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --intg-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --intg-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+  --intg-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+  --intg-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --intg-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  --intg-shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04);
+
+  // Focus Rings
+  --intg-ring-primary: 0 0 0 3px rgba(99, 102, 241, 0.2);
+
+  // ========================================
+  // Border Radius System - Softer
+  // ========================================
+  
+  --intg-radius-md: 10px;
+  --intg-radius-lg: 12px;
+  --intg-radius-xl: 16px;
+  --intg-radius-full: 9999px;
+
+  // Other variables from original theme...
+  --intg-font-size-xs: 0.75rem;    // 12px
+  --intg-font-size-sm: 0.875rem;   // 14px
+  --intg-font-size-base: 1rem;     // 16px
+  --intg-font-size-lg: 1.125rem;   // 18px
+  --intg-font-size-xl: 1.25rem;    // 20px
+  --intg-font-size-2xl: 1.5rem;    // 24px
+
+  --intg-font-weight-normal: 400;
+  --intg-font-weight-medium: 500;
+  --intg-font-weight-semibold: 600;
+  --intg-font-weight-bold: 700;
+
+  --intg-space-1: 0.25rem;  // 4px
+  --intg-space-2: 0.5rem;   // 8px
+  --intg-space-3: 0.75rem;  // 12px
+  --intg-space-4: 1rem;     // 16px
+  --intg-space-5: 1.25rem;  // 20px
+  --intg-space-6: 1.5rem;   // 24px
+  --intg-space-8: 2rem;     // 32px
+  --intg-space-10: 2.5rem;  // 40px
+  --intg-space-12: 3rem;    // 48px;
+
+  --intg-duration-150: 150ms;
+  --intg-duration-200: 200ms;
+  --intg-duration-300: 300ms;
+  --intg-duration-500: 500ms;
+
+  --intg-ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  --intg-z-toast: 1080;
+
+  --intg-card-bg: white;
+  --intg-card-border: var(--intg-gray-200);
+
+  --intg-gradient-primary: linear-gradient(135deg, var(--intg-primary-500) 0%, var(--intg-primary-600) 100%);
+  --intg-gradient-success: linear-gradient(135deg, var(--intg-success-500) 0%, var(--intg-success-700) 100%);
+  --intg-gradient-warning: linear-gradient(135deg, var(--intg-warning-400) 0%, var(--intg-warning-500) 100%);
+  --intg-gradient-error: linear-gradient(135deg, var(--intg-error-500) 0%, var(--intg-error-600) 100%);
+}
+
+// Apply base font to the body
+body {
+  font-family: var(--intg-font-family-sans);
+}
+
+// ========================================
+// Dark Mode Theme Variables
+// ========================================
+
+:root[data-theme="dark"] {
+  // Dark Mode Colors
+  --intg-gray-25: #1a1a1a;
+  --intg-gray-50: #1f1f1f;
+  --intg-gray-100: #2a2a2a;
+  --intg-gray-200: #3d3d3d;
+  --intg-gray-300: #525252;
+  --intg-gray-400: #737373;
+  --intg-gray-500: #a3a3a3;
+  --intg-gray-600: #d4d4d4;
+  --intg-gray-700: #e5e5e5;
+  --intg-gray-800: #f5f5f5;
+  --intg-gray-900: #ffffff;
+
+  // Dark Card System
+  --intg-card-bg: #1f1f1f;
+  --intg-card-border: #3d3d3d;
+
+  // Adjusted shadows for dark mode
+  --intg-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --intg-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --intg-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+  --intg-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
+}
+
+// ========================================
+// Animation System - Enhanced
+// ========================================
+
+// Keyframes for modern animations
+@keyframes intg-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes intg-fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes intg-skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes intg-pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes intg-bounce-subtle {
+  0%, 20%, 53%, 80%, 100% {
+    transform: scale(1);
+  }
+  40%, 43% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes intg-spin-smooth {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes intg-checkmark {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+// ========================================
+// Glassmorphism & Modern Effects
+// ========================================
+
+.intg-glassmorphism {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  :root[data-theme="dark"] & {
+    background: rgba(31, 31, 31, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+.intg-gradient-border {
+  position: relative;
+  background: var(--intg-card-bg);
+  border-radius: var(--intg-radius-xl);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    background: var(--intg-gradient-primary);
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+  }
+}
+
+// ========================================
+// Skeleton Loader System
+// ========================================
+
+.intg-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--intg-gray-100) 25%,
+    var(--intg-gray-200) 50%,
+    var(--intg-gray-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: intg-skeleton-loading 1.5s infinite;
+  border-radius: var(--intg-radius-md);
+}
+
+.intg-skeleton-text {
+  height: 1em;
+  margin-bottom: 0.5em;
+}
+
+.intg-skeleton-title {
+  height: 1.2em;
+  width: 70%;
+  margin-bottom: 0.75em;
+}
+
+.intg-skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.intg-skeleton-card {
+  height: 200px;
+  border-radius: var(--intg-radius-xl);
+}
+
+// ========================================
+// Enhanced Focus System
+// ========================================
+
+.intg-focus-ring {
+  outline: none;
+  transition: box-shadow var(--intg-duration-200) var(--intg-ease-out);
+  
+  &:focus-visible {
+    box-shadow: var(--intg-ring-primary);
+  }
+  
+  &:focus:not(:focus-visible) {
+    box-shadow: none;
+  }
+}
+
+// ========================================
+// Loading & State Indicators
+// ========================================
+
+.intg-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--intg-gray-300);
+  border-top-color: var(--intg-primary-500);
+  border-radius: 50%;
+  animation: intg-spin-smooth 1s linear infinite;
+}
+
+.intg-pulse-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: intg-pulse-soft 2s infinite;
+}
+
+.intg-success-indicator {
+  color: var(--intg-success-500);
+  animation: intg-bounce-subtle 1s ease-out;
+}
+
+// ========================================
+// Modern Button System
+// ========================================
+
+.intg-btn-modern {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--intg-duration-200) var(--intg-ease-out);
+  
+  &:active {
+    transform: scale(0.98);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width var(--intg-duration-300) ease, height var(--intg-duration-300) ease;
+  }
+  
+  &:active::after {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+// ========================================
+// Responsive Container Queries Support
+// ========================================
+
+.intg-container-sm {
+  container-type: inline-size;
+}
+
+@container (max-width: 400px) {
+  .intg-card-responsive {
+    padding: var(--intg-space-4);
+    
+    .intg-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--intg-space-3);
+    }
+  }
+}
+
+// ========================================
+// Utility Classes
+// ========================================
+
+.intg-animate-in {
+  animation: intg-fade-in-up var(--intg-duration-500) var(--intg-ease-out) backwards;
+}
+
+.intg-animate-in-scale {
+  animation: intg-fade-in-scale var(--intg-duration-300) var(--intg-ease-out);
+}
+
+.intg-stagger-1 { animation-delay: 50ms; }
+.intg-stagger-2 { animation-delay: 100ms; }
+.intg-stagger-3 { animation-delay: 150ms; }
+.intg-stagger-4 { animation-delay: 200ms; }
+.intg-stagger-5 { animation-delay: 250ms; }

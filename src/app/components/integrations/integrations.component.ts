@@ -10,7 +10,7 @@ import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError } 
 @Component({
   selector: 'app-integrations',
   templateUrl: './integrations.component.html',
-  styleUrls: ['./integrations.component.css']
+  styleUrls: ['./integrations.component.scss']
 })
 export class IntegrationsComponent implements OnInit, OnDestroy {
   @Input() integrationToEdit: Integration | null = null;
@@ -23,9 +23,20 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   
   // Integraciones disponibles agrupadas por categoría
   availableIntegrations: { [category: string]: Array<{id: string, name: string, description: string, logo: string}> } = {};
+  filteredIntegrations: { [category: string]: Array<{id: string, name: string, description: string, logo: string}> } = {};
   
   // Categoría actualmente seleccionada
   selectedCategory: IntegrationCategory = IntegrationCategory.ECOMMERCE;
+  
+  // Control de búsqueda y navegación
+  searchTerm: string = '';
+  isPlatformSelectorCollapsed: boolean = true;
+  showOnlyForm: boolean = false;
+  
+  // Missing properties for UI state
+  isConfigurationMode: boolean = false;
+  isStoreCollapsed: boolean = false;
+  isCategoriesCollapsed: boolean = false;
 
   integrationTypes = [
     { id: 'shopify', name: 'Shopify', logo: 'assets/images/logos/shopify.svg' },
@@ -88,6 +99,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Cargar integraciones disponibles
     this.availableIntegrations = this.integrationsService.getAvailableIntegrations();
+    this.initializeFilteredIntegrations();
     
     // Si hay una categoría preseleccionada
     if (this.preselectedCategory) {
@@ -468,6 +480,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   onSelectIntegrationType(type: string): void {
     if (this.selectedIntegrationType === type) return;
     this.selectedIntegrationType = type;
+    this.showOnlyForm = true; // Mostrar solo el formulario
     this.resetForm();
     
     // DESHABILITADO: Carga automática del esquema
@@ -1481,4 +1494,56 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   toggleApiSecretVisibility(): void {
     this.showApiSecret = !this.showApiSecret;
   }
+
+  // ===== FUNCIONALIDADES DE BÚSQUEDA Y ACORDEÓN =====
+
+  /**
+   * Inicializar integraciones filtradas con todas las integraciones
+   */
+  initializeFilteredIntegrations(): void {
+    this.filteredIntegrations = JSON.parse(JSON.stringify(this.availableIntegrations));
+  }
+
+  /**
+   * Filtrar integraciones basado en el término de búsqueda
+   */
+  filterIntegrations(searchTerm: string): void {
+    this.searchTerm = searchTerm;
+    
+    if (!searchTerm.trim()) {
+      // Si no hay término de búsqueda, mostrar todas
+      this.filteredIntegrations = JSON.parse(JSON.stringify(this.availableIntegrations));
+    } else {
+      // Filtrar por nombre y descripción
+      const term = searchTerm.toLowerCase().trim();
+      this.filteredIntegrations = {};
+      
+      for (const [category, integrations] of Object.entries(this.availableIntegrations)) {
+        const filtered = integrations.filter(integration => 
+          integration.name.toLowerCase().includes(term) ||
+          integration.description.toLowerCase().includes(term)
+        );
+        
+        if (filtered.length > 0) {
+          this.filteredIntegrations[category] = filtered;
+        }
+      }
+    }
+  }
+
+  /**
+   * Alternar el estado del acordeón de selección de plataformas
+   */
+  togglePlatformSelector(): void {
+    this.isPlatformSelectorCollapsed = !this.isPlatformSelectorCollapsed;
+  }
+
+  /**
+   * Volver a la vista de selección de integraciones
+   */
+  backToSelection(): void {
+    this.showOnlyForm = false;
+    this.isPlatformSelectorCollapsed = true;
+  }
+
 }

@@ -1,0 +1,26 @@
+{
+  "name": "katuq-platform",
+  "version": "1.0.0",
+  "description": "Katuq Platform - Frontend & Backend workspace",
+  "private": true,
+  "workspaces": [
+    ".",
+    "katuq_admin_back_firebase"
+  ],
+  "scripts": {
+    "dev": "concurrently \"pnpm start\" \"cd katuq_admin_back_firebase && pnpm dev\"",
+    "dev:frontend": "pnpm start",
+    "dev:backend": "cd katuq_admin_back_firebase/functions && pnpm run serve",
+    "build": "pnpm run build:prod && cd katuq_admin_back_firebase && pnpm build",
+    "build:frontend": "pnpm run build:prod", 
+    "build:backend": "cd katuq_admin_back_firebase && pnpm build",
+    "install:all": "pnpm install && cd katuq_admin_back_firebase && pnpm install",
+    "test": "pnpm test && cd katuq_admin_back_firebase && pnpm test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

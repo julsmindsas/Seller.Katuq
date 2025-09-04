@@ -104,3 +104,6 @@ firebase-debug.log
 # LOS ENVIROMENTS
 src/environments/environment.ts
 src/environments/environment.prod.ts
+
+# Backend Firebase
+katuq_admin_back_firebase/

@@ -17,7 +17,7 @@ interface Toast {
 @Component({
   selector: 'app-integrations-list',
   templateUrl: './integrations-list.component.html',
-  styleUrls: ['./integrations-list.component.css']
+  styleUrls: ['./integrations-list.component.scss']
 })
 export class IntegrationsListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -416,8 +416,11 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   }
 
   isFeatured(integration: Integration): boolean {
-    return false; // Placeholder
+    const featured = ['shopify', 'wompi', 'paypal', 'stripe'];
+    return featured.includes(integration.type);
   }
+
+  
 
   getIntegrationLogo(type: string): string | null {
     return this.uiHelper.getLogo(type);
@@ -692,6 +695,13 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   // Métodos de debugging mejorados para el template
   getSortedAndFilteredIntegrations(): Integration[] {
     return this.filteredIntegrations;
+  }
+
+  isDateValid(date: string | undefined | null): boolean {
+    if (!date) {
+      return false;
+    }
+    return !isNaN(new Date(date).getTime());
   }
 
   getFilteredIntegrationsByCategory(category: IntegrationCategory): Integration[] {

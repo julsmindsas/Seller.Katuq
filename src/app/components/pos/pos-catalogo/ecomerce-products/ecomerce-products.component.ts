@@ -49,7 +49,7 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnDestr
   scannedBarcode: any;
   producto: Producto;
   clearBarcodeInterval: any;
-  productoConfiguradoForm: FormGroup<{ producto: FormControl<any>; datosEntrega: FormControl<any>; cantidad: FormControl<number>; preferencias: FormControl<any[]>; adiciones: FormControl<any[]>; tarjetas: FormControl<any[]>; }>;
+  productoConfiguradoForm: FormGroup;
   datosEntrega: FormGroup<{ tipoEntrega: FormControl<any>; formaEntrega: FormControl<any>; fechaEntrega: FormControl<any>; horarioEntrega: FormControl<any>; genero: FormControl<any>; ocasion: FormControl<any>; colores: FormControl<any>; observaciones: FormControl<any>; }>;
   inStepCorrect: any;
   mobileFiltersVisible: boolean = false;
@@ -69,9 +69,9 @@ export class EcomerceProductsComponent implements OnInit, AfterViewInit, OnDestr
       producto: [ /* producto inicial */],
       datosEntrega: [null],
       cantidad: [1, Validators.required],
-      preferencias: [[]],
-      adiciones: [[]],
-      tarjetas: [[]]
+      preferencias: [[] as any[]],
+      adiciones: [[] as any[]],
+      tarjetas: [[] as any[]]
     });
     this.datosEntrega = this.fb.group({
       tipoEntrega: [null],

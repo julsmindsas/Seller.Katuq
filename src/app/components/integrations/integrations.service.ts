@@ -719,7 +719,7 @@ export class IntegrationsService {
           id: 'enviame', 
           name: 'Enviame.io',
           description: 'Plataforma de envíos y logística para e-commerce en Latinoamérica. Requiere API Key, ID Seller y configuración de bodegas.',
-          logo: 'assets/images/logos/enviame.svg' 
+          logo: 'assets/images/logos/logo-enviame-light-v3-mobile.svg' 
         },
         { 
           id: 'partners_logistics', 

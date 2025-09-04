@@ -1,6 +1,7 @@
 ---
 name: angular-code-planner
 description: Use this agent when you need to plan Angular 14 development tasks, analyze existing code for reusability, or create structured development approaches. Examples: <example>Context: User needs to implement a new feature in their Angular application. user: 'I need to add a product comparison feature to the e-commerce app' assistant: 'I'll use the angular-code-planner agent to analyze the existing codebase and create a development plan that leverages reusable components.' <commentary>Since the user needs Angular development planning, use the angular-code-planner agent to analyze existing code and create an efficient implementation strategy.</commentary></example> <example>Context: User is refactoring existing Angular code. user: 'This component is getting too complex, how should I break it down?' assistant: 'Let me use the angular-code-planner agent to analyze the component structure and propose a refactoring strategy.' <commentary>The user needs architectural guidance for Angular refactoring, so use the angular-code-planner agent to provide structured recommendations.</commentary></example>
+model: inherit
 color: blue
 ---
 
