@@ -64,6 +64,11 @@ const routes: Routes = [
     path: 'privacy-policy',
     component: PrivacyPolicyComponent
   },
+  // Test route for notification system (development only)
+  {
+    path: 'notification-test',
+    loadChildren: () => import('./components/notification-test/notification-test.module').then(m => m.NotificationTestModule)
+  },
   // Nueva ruta para live-audio en pantalla completa
   {
     path: 'live-audio',

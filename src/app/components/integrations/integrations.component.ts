@@ -10,7 +10,7 @@ import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError } 
 @Component({
   selector: 'app-integrations',
   templateUrl: './integrations.component.html',
-  styleUrls: ['./integrations.component.scss']
+  styleUrls: ['./integrations-optimized.component.scss']
 })
 export class IntegrationsComponent implements OnInit, OnDestroy {
   @Input() integrationToEdit: Integration | null = null;

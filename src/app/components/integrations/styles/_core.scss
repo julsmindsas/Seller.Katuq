@@ -1,0 +1,238 @@
+/* ==================================================================
+   INTEGRATIONS CORE STYLES - OPTIMIZED VERSION
+   Essential styles only - Reduced memory consumption
+   ================================================================== */
+
+/* CSS Custom Properties - Essential Variables Only */
+:root {
+  /* Essential Animation Values */
+  --intg-transition: 0.3s ease;
+  --intg-hover-transition: 0.2s ease;
+  
+  /* Essential Colors */
+  --intg-primary: #667eea;
+  --intg-primary-hover: #5a67d8;
+  --intg-secondary: #764ba2;
+  --intg-success: #48bb78;
+  --intg-warning: #ed8936;
+  --intg-danger: #f56565;
+  
+  /* Layout Values */
+  --intg-border-radius: 12px;
+  --intg-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --intg-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Back navigation styles */
+.back-navigation {
+  margin-bottom: 1.5rem;
+  
+  .btn-back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    color: #495057;
+    text-decoration: none;
+    transition: var(--intg-transition);
+    font-size: 0.875rem;
+    
+    &:hover {
+      background: #f8f9fa;
+      border-color: var(--intg-primary);
+      color: var(--intg-primary);
+      transform: translateX(-2px);
+    }
+    
+    i {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+/* Essential Integration Cards */
+.integration-selection-cards {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  margin: 2rem 0;
+
+  .integration-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--intg-border-radius);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: var(--intg-transition);
+    box-shadow: var(--intg-shadow);
+
+    &:hover {
+      border-color: var(--intg-primary);
+      box-shadow: var(--intg-shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    &.selected {
+      border-color: var(--intg-primary);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    }
+
+    .integration-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--intg-primary);
+      color: white;
+      
+      i {
+        font-size: 1.5rem;
+      }
+    }
+
+    .integration-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #2d3748;
+    }
+
+    .integration-description {
+      font-size: 0.875rem;
+      color: #718096;
+      line-height: 1.5;
+    }
+  }
+}
+
+/* Essential Breadcrumb */
+.integrations-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: var(--intg-border-radius);
+  margin-bottom: 2rem;
+
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #718096;
+    
+    &.active {
+      color: var(--intg-primary);
+      font-weight: 500;
+    }
+
+    &:not(:last-child)::after {
+      content: '/';
+      margin-left: 0.5rem;
+      color: #cbd5e0;
+    }
+  }
+}
+
+/* Essential Forms */
+.integration-form {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--intg-border-radius);
+  box-shadow: var(--intg-shadow);
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #2d3748;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: var(--intg-transition);
+
+      &:focus {
+        outline: none;
+        border-color: var(--intg-primary);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+    }
+  }
+
+  .btn-primary {
+    background: var(--intg-primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--intg-transition);
+
+    &:hover {
+      background: var(--intg-primary-hover);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &.success {
+    background: rgba(72, 187, 120, 0.1);
+    color: var(--intg-success);
+  }
+
+  &.warning {
+    background: rgba(237, 137, 54, 0.1);
+    color: var(--intg-warning);
+  }
+
+  &.danger {
+    background: rgba(245, 101, 101, 0.1);
+    color: var(--intg-danger);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .integration-selection-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    .integration-card {
+      padding: 1rem;
+    }
+  }
+
+  .integrations-breadcrumb {
+    flex-wrap: wrap;
+    padding: 0.75rem;
+  }
+
+  .integration-form {
+    padding: 1rem;
+  }
+}
