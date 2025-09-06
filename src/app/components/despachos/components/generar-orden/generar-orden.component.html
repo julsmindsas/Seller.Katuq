@@ -1234,8 +1234,13 @@
     </button>
 
     <button type="button" class="btn btn-primary"
-        [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0" (click)="guardarOrden()">
-        {{ "Guardar Orden" | translate }}
+        [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0 || isSaving" (click)="guardarOrden()">
+        <span *ngIf="!isSaving">
+            {{ "Guardar Orden" | translate }}
+        </span>
+        <span *ngIf="isSaving">
+            <i class="pi pi-spin pi-spinner me-1"></i>{{ "Guardando..." | translate }}
+        </span>
     </button>
 
     <button type="button" class="btn btn-success" *ngIf="nroShippingOrder" (click)="imprimirOrden()"

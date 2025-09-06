@@ -269,11 +269,12 @@
 
 <!-- Modal para generar órdenes de envío -->
 <ng-template #generarOrdenEnvioModal let-modal>
-    <app-generar-orden
+    <app-generar-orden #generarOrdenComponent
         [orders]="orders"
         [pedidosSeleccionados]="pedidosSeleccionados"
         [nuevaOrdenEnvio]="nuevaOrdenEnvio"
         [nroShippingOrder]="nroShippingOrder"
+        [ordenesExistentes]="dispatchOrders"
         [isGeneratingPDF]="isGeneratingPDF"
         [pdfProgress]="pdfProgress"
         (onClose)="modal.dismiss('Cross click')"
@@ -291,12 +292,12 @@
 
 <!-- Modal para editar órdenes de envío -->
 <ng-template #pantallaOrdenEnvioModal let-modal>
-    <app-generar-orden
+    <app-generar-orden #editarOrdenComponent
         [orders]="orders"
         [pedidosSeleccionados]="pedidosSeleccionados"
         [nuevaOrdenEnvio]="nuevaOrdenEnvio"
         [nroShippingOrder]="nroShippingOrder"
-        [isEditMode]="true"
+        [ordenesExistentes]="dispatchOrders"
         [isGeneratingPDF]="isGeneratingPDF"
         [pdfProgress]="pdfProgress"
         (onClose)="modal.dismiss('Cross click')"

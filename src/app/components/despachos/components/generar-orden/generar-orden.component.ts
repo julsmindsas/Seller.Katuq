@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { EstadoProceso, Pedido } from "../../../ventas/modelo/pedido";
 import { LogisticaServiceV2 } from "../../../../shared/services/despachos/logistica.service.v2";
 import Swal from "sweetalert2";
@@ -20,10 +21,11 @@ export class GenerarOrdenComponent implements OnInit {
   @Input() pedidosSeleccionados: Pedido[] = [];
   @Input() nuevaOrdenEnvio: any;
   @Input() nroShippingOrder: string;
-  @Input() isEditMode: boolean = false;
+  // isEditMode removed - now computed automatically
   @Input() isGeneratingPDF: boolean = false;
   @Input() pdfProgress: number = 0;
   @Input() generandoRotuloPara: Set<string> = new Set();
+  @Input() ordenesExistentes: any[] = []; // Órdenes del componente padre
 
   @Output() onClose = new EventEmitter<void>();
   @Output() onSave = new EventEmitter<any>();
@@ -56,21 +58,29 @@ export class GenerarOrdenComponent implements OnInit {
   ];
 
   selectedColumns: ColumnDefinition[] = [];
-  ordenesExistentes: any[] = []; // Para almacenar las órdenes existentes y verificar duplicados
   mostrarPedidosEnOrdenes: boolean = false; // Controla si mostrar pedidos que ya están en órdenes
   pedidosMovidos: Map<string, string> = new Map(); // Mapa para rastrear pedidos movidos: nroPedido -> ordenAnterior
   hayPedidosMovidos: boolean = false; // Flag para indicar si hay pedidos movidos
   pedidoSeleccionadoDetalle: Pedido | null = null; // Pedido seleccionado para mostrar detalles
+  isSaving: boolean = false; // Flag para prevenir múltiples clics en guardar
 
   constructor(
     private formBuilder: FormBuilder,
     private logisticaService: LogisticaServiceV2,
   ) {}
 
+  // Computed getter para determinar si estamos en modo edición
+  get isEditMode(): boolean {
+    return !!this.nroShippingOrder;
+  }
+
   ngOnInit(): void {
     this.initForm();
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
-    this.cargarOrdenesExistentes();
+    // NO cargar órdenes aquí - esperar a que se seleccione una fecha
+    // Las órdenes se cargarán cuando:
+    // 1. El usuario seleccione una fecha (mediante valueChanges)
+    // 2. Si viene en modo edición con fecha precargada
 
     // Inicializar datos según el modo (creación o edición)
     if (this.isEditMode && this.nuevaOrdenEnvio) {
@@ -111,6 +121,11 @@ export class GenerarOrdenComponent implements OnInit {
 
       // Refrescar la lista de pedidos disponibles
       this.actualizarPedidosDisponibles();
+      
+      // Cargar órdenes existentes ahora que tenemos fecha
+      if (!this.ordenesExistentes || this.ordenesExistentes.length === 0) {
+        this.cargarOrdenesExistentes();
+      }
     } else {
       // En modo creación, inicializar con valores por defecto
       if (this.nroShippingOrder) {
@@ -126,16 +141,28 @@ export class GenerarOrdenComponent implements OnInit {
       metodoEnvio: ["", Validators.required],
     });
 
-    // Suscripción a cambios de fecha para actualizar la lista
-    this.ordenEnvioForm.get("fechaEnvio")?.valueChanges.subscribe(() => {
-      this.actualizarPedidosDisponibles();
-    });
+    // Suscripción a cambios de fecha con debouncing
+    this.ordenEnvioForm.get("fechaEnvio")?.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(() => {
+        this.actualizarPedidosDisponibles();
+        // Recargar órdenes existentes con la nueva fecha para optimizar validación
+        this.cargarOrdenesExistentes();
+      });
 
-    // Suscripción a cambios de método para actualizar la lista
-    this.ordenEnvioForm.get("metodoEnvio")?.valueChanges.subscribe((value) => {
-      this.metodoEnvio = value;
-      this.actualizarPedidosDisponibles();
-    });
+    // Suscripción a cambios de método con debouncing
+    this.ordenEnvioForm.get("metodoEnvio")?.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe((value) => {
+        this.metodoEnvio = value;
+        this.actualizarPedidosDisponibles();
+      });
   }
 
   seleccionarMetodo(metodo: 'mensajeroPropio' | 'transportadora'): void {
@@ -148,15 +175,41 @@ export class GenerarOrdenComponent implements OnInit {
 
 
   private cargarOrdenesExistentes(): void {
-    // Cargar todas las órdenes existentes para verificar duplicados
-    // NOTA: Por ahora usamos el método deprecado que mantiene compatibilidad
-    // TODO: Migrar a getShippingOrdersPaginated cuando sea necesario
-    this.logisticaService.getShippingOrders().subscribe(
-      (ordenes) => {
-        // El método deprecado ya maneja la conversión automáticamente
-        this.ordenesExistentes = ordenes || [];
+    // Cargar órdenes existentes para verificar duplicados usando el método optimizado
+    let fechaEnvio = this.ordenEnvioForm.get('fechaEnvio')?.value;
+    
+    // Si no hay fecha seleccionada, usar la fecha actual
+    if (!fechaEnvio) {
+      fechaEnvio = new Date().toISOString();
+      console.log('No hay fecha seleccionada, usando fecha actual');
+    }
+    
+    const fecha = new Date(fechaEnvio);
+    const fechaStr = fecha.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    
+    let params: any = {
+      page: 1,
+      limit: 100,
+      fields: 'minimal', // Solo campos necesarios para validación
+      fechaInicio: fechaStr,
+      fechaFin: fechaStr
+    };
+    
+    console.log('Cargando órdenes con parámetros:', params);
+    
+    this.logisticaService.getShippingOrdersPaginated(params).subscribe(
+      (response) => {
+        // Manejar respuesta paginada
+        if (response && response.data) {
+          this.ordenesExistentes = response.data;
+        } else if (Array.isArray(response)) {
+          // Fallback para formato antiguo
+          this.ordenesExistentes = response;
+        } else {
+          this.ordenesExistentes = [];
+        }
         console.log(
-          "Órdenes existentes cargadas:",
+          "Órdenes existentes cargadas (optimizado):",
           this.ordenesExistentes.length,
         );
       },
@@ -286,14 +339,32 @@ export class GenerarOrdenComponent implements OnInit {
             o.estadoProceso !== EstadoProceso.Despachado &&
             o.estadoProceso !== EstadoProceso.EnProduccion &&
             o.estadoProceso !== EstadoProceso.SinProducir;
-          const formaEntregaValida = o.carrito
-            ? o.carrito[0].configuracion?.datosEntrega.formaEntrega
+          let formaEntregaValida = false;
+          try {
+            if (o.carrito && 
+                Array.isArray(o.carrito) && 
+                o.carrito.length > 0 &&
+                o.carrito[0] &&
+                o.carrito[0].configuracion &&
+                o.carrito[0].configuracion.datosEntrega &&
+                o.carrito[0].configuracion.datosEntrega.formaEntrega) {
+              formaEntregaValida = o.carrito[0].configuracion.datosEntrega.formaEntrega
                 .toLocaleUpperCase()
-                .includes("DOMICILIO")
-            : false;
+                .includes("DOMICILIO");
+            }
+          } catch (formaEntregaError) {
+            console.error("Error verificando forma entrega para pedido:", o.nroPedido, formaEntregaError);
+            formaEntregaValida = false;
+          }
 
           // Verificar si el pedido existe en otra orden
-          const existeEnOtraOrden = this.pedidoExisteEnOrden(o);
+          let existeEnOtraOrden = false;
+          try {
+            existeEnOtraOrden = this.pedidoExisteEnOrden(o);
+          } catch (ordenError) {
+            console.error("Error verificando si pedido existe en orden:", o.nroPedido, ordenError);
+            existeEnOtraOrden = false;
+          }
 
           // Si no queremos mostrar pedidos en órdenes y este pedido está en una orden, ocultarlo
           if (!this.mostrarPedidosEnOrdenes && existeEnOtraOrden) {
@@ -307,12 +378,16 @@ export class GenerarOrdenComponent implements OnInit {
             !yaSeleccionado
           );
         } catch (err) {
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "Error al procesar pedido: " + o.nroPedido + " - " + err,
-          });
           console.error("Error al procesar pedido:", o.nroPedido, err);
+          console.error("Datos del pedido problemático:", {
+            nroPedido: o.nroPedido,
+            fechaEntrega: o.fechaEntrega,
+            carritoLength: o.carrito?.length,
+            carritoFirstItem: o.carrito?.[0],
+            estadoProceso: o.estadoProceso,
+            errorStack: err instanceof Error ? err.stack : String(err)
+          });
+          // No mostrar Swal para cada error, solo log
           return false;
         }
       });
@@ -356,9 +431,12 @@ export class GenerarOrdenComponent implements OnInit {
   }
 
   guardarOrden(): void {
-    if (this.ordenEnvioForm.invalid || this.pedidosSeleccionados.length === 0) {
+    // Prevenir múltiples clics
+    if (this.isSaving || this.ordenEnvioForm.invalid || this.pedidosSeleccionados.length === 0) {
       return;
     }
+
+    this.isSaving = true;
 
     // Si hay pedidos movidos, mostrar confirmación adicional
     if (this.hayPedidosMovidos) {
@@ -392,6 +470,8 @@ export class GenerarOrdenComponent implements OnInit {
       }).then((result) => {
         if (result.isConfirmed) {
           this.ejecutarGuardarOrden();
+        } else {
+          this.isSaving = false; // Resetear si se cancela
         }
       });
     } else {
@@ -412,6 +492,12 @@ export class GenerarOrdenComponent implements OnInit {
     };
 
     this.onSave.emit(ordenData);
+    // Nota: isSaving se resetea cuando el componente padre responde
+  }
+
+  // Método para resetear el estado de guardado (llamado desde el componente padre)
+  resetSavingState(): void {
+    this.isSaving = false;
   }
 
   imprimirOrden(): void {
@@ -449,8 +535,9 @@ export class GenerarOrdenComponent implements OnInit {
       case "formaEntrega":
       case "horarioEntrega":
       case "estadoProceso":
-      case "faltaPorPagar":
         return pedido[field] || "N/A";
+      case "faltaPorPagar":
+        return pedido[field] || 0; // Retornar 0 en lugar de "N/A" para el currency pipe
       default:
         return "N/A";
     }
@@ -485,12 +572,17 @@ export class GenerarOrdenComponent implements OnInit {
 
   // Método para verificar si un pedido ya existe en una orden
   pedidoExisteEnOrden(pedido: Pedido): boolean {
-    if (!this.ordenesExistentes || this.ordenesExistentes.length === 0) {
+    // Usar órdenes del padre si están disponibles, sino las cargadas localmente
+    const ordenesParaVerificar = (this.ordenesExistentes && this.ordenesExistentes.length > 0) 
+      ? this.ordenesExistentes 
+      : [];
+    
+    if (!ordenesParaVerificar || ordenesParaVerificar.length === 0) {
       return false;
     }
 
     try {
-      const existe = this.ordenesExistentes.some((orden) => {
+      const existe = ordenesParaVerificar.some((orden) => {
         // Obtener el número de orden correctamente - maneja múltiples formatos
         const numeroOrden = this.getNumeroOrdenFromObject(orden);
 

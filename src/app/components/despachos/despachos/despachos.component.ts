@@ -143,6 +143,10 @@ export class DespachosComponent implements OnInit {
   detalleEntregaModal: TemplateRef<any>;
   @ViewChild("transportadoresModal", { static: false })
   transportadoresModal: TemplateRef<any>;
+  @ViewChild("generarOrdenComponent", { static: false })
+  generarOrdenComponent: any;
+  @ViewChild("editarOrdenComponent", { static: false })
+  editarOrdenComponent: any;
 
   @ViewChild("printContent", { static: false }) printContent!: ElementRef;
   @ViewChild("pdfTemplate", { static: false }) pdfTemplate!: PdfTemplateComponent;
@@ -179,7 +183,7 @@ export class DespachosComponent implements OnInit {
   vendors: any;
   nroShippingOrder: any;
   nuevaOrdenEnvio: any;
-  dispatchOrders: Pedido[];
+  dispatchOrders: Pedido[] = [];
   modalRef: any;
   editTransporter: boolean;
   dataEditTransporter: any;
@@ -4119,6 +4123,15 @@ export class DespachosComponent implements OnInit {
     // Validar que el evento no sea nulo
     if (!event) {
       console.error("Error: No se recibieron datos de la orden de envío");
+      
+      // Resetear flag de guardado en caso de error
+      if (this.generarOrdenComponent) {
+        this.generarOrdenComponent.resetSavingState();
+      }
+      if (this.editarOrdenComponent) {
+        this.editarOrdenComponent.resetSavingState();
+      }
+      
       Swal.fire(
         "Error",
         "No se recibieron datos para la orden de envío",
@@ -4179,6 +4192,15 @@ export class DespachosComponent implements OnInit {
       console.error(
         "Error: No hay pedidos seleccionados para la orden de envío",
       );
+      
+      // Resetear flag de guardado en caso de error
+      if (this.generarOrdenComponent) {
+        this.generarOrdenComponent.resetSavingState();
+      }
+      if (this.editarOrdenComponent) {
+        this.editarOrdenComponent.resetSavingState();
+      }
+      
       Swal.fire(
         "Error",
         "No hay pedidos seleccionados para la orden de envío",
@@ -4207,11 +4229,27 @@ export class DespachosComponent implements OnInit {
             showConfirmButton: false,
           });
 
+          // Resetear flag de guardado en el componente hijo
+          if (this.generarOrdenComponent) {
+            this.generarOrdenComponent.resetSavingState();
+          }
+          if (this.editarOrdenComponent) {
+            this.editarOrdenComponent.resetSavingState();
+          }
+
           this.refrescarDatos();
           this.modalService.dismissAll();
         },
         error: (error) => {
           console.error("Error al actualizar la orden de envío:", error);
+          // Resetear flag de guardado en caso de error
+          if (this.generarOrdenComponent) {
+            this.generarOrdenComponent.resetSavingState();
+          }
+          if (this.editarOrdenComponent) {
+            this.editarOrdenComponent.resetSavingState();
+          }
+
           Swal.fire(
             "Error",
             "Hubo un problema al actualizar la orden de envío: " +
@@ -4245,12 +4283,28 @@ export class DespachosComponent implements OnInit {
           showConfirmButton: false,
         });
 
+        // Resetear flag de guardado en el componente hijo
+        if (this.generarOrdenComponent) {
+          this.generarOrdenComponent.resetSavingState();
+        }
+        if (this.editarOrdenComponent) {
+          this.editarOrdenComponent.resetSavingState();
+        }
+
         // Actualizar la lista de órdenes y cerrar el modal
         this.refrescarDatos();
         this.modalService.dismissAll();
       },
       error: (error) => {
         console.error("Error al crear la orden de envío:", error);
+        // Resetear flag de guardado en caso de error
+        if (this.generarOrdenComponent) {
+          this.generarOrdenComponent.resetSavingState();
+        }
+        if (this.editarOrdenComponent) {
+          this.editarOrdenComponent.resetSavingState();
+        }
+
         Swal.fire(
           "Error",
           "Hubo un problema al crear la orden de envío: " +

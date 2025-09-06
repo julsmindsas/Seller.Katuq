@@ -59,12 +59,19 @@ export class OrdenesDespachoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    // Verificar que dispatchOrders sea un array válido
+    if (!this.dispatchOrders || !Array.isArray(this.dispatchOrders)) {
+      this.dispatchOrders = [];
+    }
+    
     // Mantener lógica existente para compatibilidad
     this.filteredOrders = [...this.dispatchOrders];
     this.dispatchOrders.forEach(order => {
-      order.pedidos.forEach(pedido => {
-        pedido.faltaPorPagar = this.getValorACobrarPorPedido(pedido);
-      });
+      if (order && order.pedidos && Array.isArray(order.pedidos)) {
+        order.pedidos.forEach(pedido => {
+          pedido.faltaPorPagar = this.getValorACobrarPorPedido(pedido);
+        });
+      }
     });
     this.updatePagination();
     this.loadLogisticsIntegrations();
