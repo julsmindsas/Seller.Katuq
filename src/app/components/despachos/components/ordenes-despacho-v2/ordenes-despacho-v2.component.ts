@@ -72,6 +72,7 @@ export class OrdenesDespachoV2Component implements OnInit {
     
     this.fechaInicio = hace30Dias;
     this.fechaFin = hoy;
+    this.fechaFin.setHours(23, 59, 59, 999);
     
     this.loadLogisticsIntegrations();
     this.loadVendors();
@@ -266,6 +267,7 @@ export class OrdenesDespachoV2Component implements OnInit {
     hace30Dias.setDate(hoy.getDate() - 30);
     this.fechaInicio = hace30Dias;
     this.fechaFin = hoy;
+    this.fechaFin.setHours(23, 59, 59, 999);
     this.applyFilters();
   }
 
@@ -388,11 +390,12 @@ export class OrdenesDespachoV2Component implements OnInit {
   onFechaFinChange(event: any): void {
     const dateString = event.target.value;
     if (dateString) {
-      // Crear fecha local sin conversión UTC
+      // Crear fecha local sin conversión UTC y establecer a 23:59:59
       const [year, month, day] = dateString.split('-').map(Number);
-      this.fechaFin = new Date(year, month - 1, day);
+      this.fechaFin = new Date(year, month - 1, day, 23, 59, 59, 999);
     } else {
       this.fechaFin = new Date();
+      this.fechaFin.setHours(23, 59, 59, 999);
     }
     console.log('Fecha fin cambiada:', this.fechaFin);
     // Auto-aplicar filtros cuando cambie la fecha
@@ -436,7 +439,17 @@ export class OrdenesDespachoV2Component implements OnInit {
 
   formatDate(date: string): string {
     if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString();
+    try {
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) return 'N/A';
+      return dateObj.toLocaleDateString('es-CO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return 'N/A';
+    }
   }
 
   getPedidoCliente(pedido: any): string {

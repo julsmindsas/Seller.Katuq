@@ -868,4 +868,106 @@
       margin-bottom: 1rem;
     }
   }
+
+  .cards-view .order-card {
+    .expand-details {
+      .btn {
+        font-size: 0.8rem;
+
+        &.active {
+          background-color: #667eea;
+          color: white;
+          border-color: #667eea;
+        }
+      }
+    }
+
+    .card-details {
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+      padding: 1rem;
+
+      .details-header {
+        h6 {
+          margin-bottom: 0.75rem;
+          color: #495057;
+          font-size: 0.875rem;
+          font-weight: 600;
+        }
+      }
+
+      .card-details-table {
+        font-size: 0.8rem;
+
+        th {
+          border: none;
+          padding: 0.5rem 0.25rem;
+          font-weight: 600;
+        }
+
+        td {
+          border: none;
+          padding: 0.5rem 0.25rem;
+          vertical-align: middle;
+        }
+
+        .badge-sm {
+          font-size: 0.65rem;
+          padding: 0.2rem 0.4rem;
+        }
+      }
+
+      .alert-sm {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+/* ========== ESTILOS PARA TABLA DE DETALLES MODERNA ========== */
+.modern-details-table {
+  font-size: 0.875rem;
+  margin-bottom: 0;
+
+  th {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #495057;
+    border-color: #dee2e6;
+    background-color: #f8f9fa;
+  }
+
+  td {
+    border-color: #e9ecef;
+    vertical-align: middle;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .address-cell {
+    .address-text {
+      max-width: 200px;
+      word-wrap: break-word;
+      font-size: 0.8rem;
+    }
+  }
+
+  .actions-column {
+    width: 100px;
+    min-width: 100px;
+
+    .btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .badge {
+    font-size: 0.7rem;
+  }
 }

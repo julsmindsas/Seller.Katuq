@@ -225,30 +225,68 @@
         <!-- Fila expandida con detalles -->
         <div class="row-details" *ngIf="isRowExpanded(order)">
           <div class="details-content">
-            <h6>{{ 'Pedidos en esta orden' | translate }}</h6>
-            <div class="pedidos-list" *ngIf="order.pedidos && order.pedidos.length > 0">
-              <div class="pedido-item" *ngFor="let pedido of order.pedidos">
-                <div class="pedido-header">
-                  <strong>{{ 'Cliente:' | translate }}</strong> {{ getPedidoCliente(pedido) }}
-                  <span class="badge bg-secondary ms-2">{{ pedido.referencia || 'N/A' }}</span>
-                </div>
-                <div class="pedido-details">
-                  <div class="detail-item">
-                    <span class="detail-label">{{ 'Falta por pagar:' | translate }}</span>
-                    <span class="detail-value">{{ pedido.faltaPorPagar | currency:'COP':'symbol':'1.0-0' }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">{{ 'Estado:' | translate }}</span>
-                    <span class="badge bg-info">{{ pedido.estadoProceso || 'N/A' }}</span>
-                  </div>
-                  <button *ngIf="!isPedidoDispatched(pedido)"
-                          class="btn btn-sm btn-outline-primary" 
-                          (click)="dispatchPedido(pedido)">
-                    <i class="pi pi-send me-1"></i>
-                    {{ 'Despachar Pedido' | translate }}
-                  </button>
-                </div>
-              </div>
+            <h6>{{ 'Pedidos en esta orden' | translate }} ({{ getPedidosCount(order) }})</h6>
+            <div class="table-responsive" *ngIf="order.pedidos && order.pedidos.length > 0">
+              <table class="table table-sm table-bordered modern-details-table">
+                <thead class="table-light">
+                  <tr>
+                    <th>{{ 'Nro. Pedido' | translate }}</th>
+                    <th>{{ 'Cliente' | translate }}</th>
+                    <th>{{ 'Ciudad' | translate }}</th>
+                    <th>{{ 'Dirección' | translate }}</th>
+                    <th>{{ 'Fecha Entrega' | translate }}</th>
+                    <th>{{ 'Valor a Cobrar' | translate }}</th>
+                    <th>{{ 'Estado' | translate }}</th>
+                    <th>{{ 'Acciones' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let pedido of order.pedidos">
+                    <td>
+                      <strong>{{ pedido.nroPedido || 'N/A' }}</strong>
+                      <div class="text-muted small">{{ pedido.referencia || 'Sin ref.' }}</div>
+                    </td>
+                    <td>{{ getPedidoCliente(pedido) }}</td>
+                    <td>{{ pedido.envio?.ciudad || 'N/A' }}</td>
+                    <td class="address-cell">
+                      <div class="address-text">{{ pedido.envio?.direccionEntrega || 'N/A' }}</div>
+                    </td>
+                    <td>{{ formatDate(pedido.fechaEntrega) }}</td>
+                    <td class="text-end">
+                      <strong class="text-success">{{ getValorACobrarPorPedido(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
+                    </td>
+                    <td>
+                      <span class="badge" 
+                            [ngClass]="{
+                              'bg-success': pedido.estadoProceso === 'Despachado' || isPedidoDispatched(pedido),
+                              'bg-warning text-dark': pedido.estadoProceso !== 'Despachado' && !isPedidoDispatched(pedido),
+                              'bg-secondary': !pedido.estadoProceso
+                            }">
+                        {{ pedido.estadoProceso || 'Sin estado' }}
+                      </span>
+                    </td>
+                    <td class="actions-column">
+                      <div class="d-flex gap-1">
+                        <button *ngIf="!isPedidoDispatched(pedido)"
+                                class="btn btn-sm btn-outline-primary" 
+                                (click)="dispatchPedido(pedido)"
+                                title="{{ 'Despachar Pedido' | translate }}">
+                          <i class="pi pi-send"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" 
+                                (click)="viewOrder(pedido.nroPedido)"
+                                title="{{ 'Ver Pedido' | translate }}">
+                          <i class="pi pi-eye"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="alert alert-info" *ngIf="!order.pedidos || order.pedidos.length === 0">
+              <i class="pi pi-info-circle me-2"></i>
+              {{ 'No hay pedidos asociados a esta orden' | translate }}
             </div>
           </div>
         </div>
@@ -286,6 +324,66 @@
             <div class="order-detail total">
               <i class="pi pi-dollar"></i>
               <span>{{ getFaltaPorPagarSum(order) | currency:'COP':'symbol':'1.0-0' }}</span>
+            </div>
+            
+            <!-- Botón para expandir detalles -->
+            <div class="expand-details mt-2">
+              <button class="btn btn-sm btn-outline-secondary w-100" 
+                      (click)="toggleRowDetails(order)"
+                      [class.active]="isRowExpanded(order)">
+                <i class="pi" [ngClass]="isRowExpanded(order) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                {{ isRowExpanded(order) ? ('Ocultar detalles' | translate) : ('Ver detalles' | translate) }}
+              </button>
+            </div>
+          </div>
+          
+          <!-- Detalles expandidos -->
+          <div class="card-details" *ngIf="isRowExpanded(order)">
+            <div class="details-header">
+              <h6>{{ 'Pedidos en esta orden' | translate }} ({{ getPedidosCount(order) }})</h6>
+            </div>
+            <div class="table-responsive" *ngIf="order.pedidos && order.pedidos.length > 0">
+              <table class="table table-sm table-borderless card-details-table">
+                <thead>
+                  <tr class="text-muted">
+                    <th style="font-size: 0.75rem;">{{ 'Pedido' | translate }}</th>
+                    <th style="font-size: 0.75rem;">{{ 'Cliente' | translate }}</th>
+                    <th style="font-size: 0.75rem;">{{ 'Ubicación' | translate }}</th>
+                    <th style="font-size: 0.75rem;">{{ 'Valor' | translate }}</th>
+                    <th style="font-size: 0.75rem;">{{ 'Estado' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let pedido of order.pedidos" style="font-size: 0.8rem;">
+                    <td>
+                      <strong>{{ pedido.nroPedido || 'N/A' }}</strong>
+                      <div class="text-muted" style="font-size: 0.7rem;">{{ pedido.referencia || 'Sin ref.' }}</div>
+                    </td>
+                    <td>{{ getPedidoCliente(pedido) }}</td>
+                    <td>
+                      <div>{{ pedido.envio?.ciudad || 'N/A' }}</div>
+                      <small class="text-muted">{{ (pedido.envio?.direccionEntrega || 'N/A') | slice:0:30 }}<span *ngIf="(pedido.envio?.direccionEntrega || '').length > 30">...</span></small>
+                    </td>
+                    <td class="text-end">
+                      <strong class="text-success" style="font-size: 0.75rem;">{{ getValorACobrarPorPedido(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
+                      <div class="text-muted" style="font-size: 0.7rem;">{{ formatDate(pedido.fechaEntrega) }}</div>
+                    </td>
+                    <td>
+                      <span class="badge badge-sm" 
+                            [ngClass]="{
+                              'bg-success': pedido.estadoProceso === 'Despachado' || isPedidoDispatched(pedido),
+                              'bg-warning text-dark': pedido.estadoProceso !== 'Despachado' && !isPedidoDispatched(pedido),
+                              'bg-secondary': !pedido.estadoProceso
+                            }">
+                        {{ pedido.estadoProceso || 'Sin estado' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="alert alert-sm alert-info" *ngIf="!order.pedidos || order.pedidos.length === 0">
+              <small><i class="pi pi-info-circle me-1"></i>{{ 'No hay pedidos asociados' | translate }}</small>
             </div>
           </div>
           
