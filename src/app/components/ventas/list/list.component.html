@@ -1809,22 +1809,22 @@
                         </div>
                     </button>
 
-                    <!-- Editar Dirección - BLOQUEADA EN GRUPO 2 -->
+                    <!-- Editar Dirección - BLOQUEADA SI FORMA DE ENTREGA ES RECOGE -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canEditDeliveryAddress(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canEditDeliveryAddress(selectedOrder)}"
+                        [disabled]="!canEditDeliveryAddressByDeliveryType(selectedOrder)"
+                        [ngClass]="{'disabled-option': !canEditDeliveryAddressByDeliveryType(selectedOrder)}"
                         (click)="editDatosEntrega(datosEnregaModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon address-icon">
                             <i class="fa fa-map-marker"></i>
-                            <i *ngIf="!canEditDeliveryAddress(selectedOrder)" class="fa fa-lock frozen-lock"></i>
+                            <i *ngIf="!canEditDeliveryAddressByDeliveryType(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
                             <span class="option-title">{{ 'Editar Dirección' | translate }}</span>
                             <small class="option-description">
-                                <span *ngIf="canEditDeliveryAddress(selectedOrder)">{{ 'Modificar dirección de entrega' | translate }}</span>
-                                <span *ngIf="!canEditDeliveryAddress(selectedOrder)" class="text-warning">
+                                <span *ngIf="canEditDeliveryAddressByDeliveryType(selectedOrder)">{{ 'Modificar dirección de entrega' | translate }}</span>
+                                <span *ngIf="!canEditDeliveryAddressByDeliveryType(selectedOrder)" class="text-warning">
                                     <i class="fa fa-lock me-1"></i>
-                                    {{ 'No disponible - Pedido entregado/cerrado' | translate }}
+                                    {{ 'No disponible - Solo domicilios' | translate }}
                                 </span>
                             </small>
                         </div>
