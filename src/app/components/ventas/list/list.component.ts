@@ -364,6 +364,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Verifica si se puede editar la dirección de entrega basado en la forma de entrega
+   * @param order Pedido a verificar
+   * @returns true si se puede editar (solo si forma de entrega contiene "domicilio")
+   */
+  canEditDeliveryAddressByDeliveryType(order: Pedido): boolean {
+    if (!order?.formaEntrega) return false;
+    
+    const formaEntregaLower = order.formaEntrega.toLowerCase();
+    
+    // Bloquear si contiene "recoge"
+    if (formaEntregaLower.includes('recoge')) {
+      return false;
+    }
+    
+    // Activar si contiene "domicilio"
+    if (formaEntregaLower.includes('domicilio')) {
+      return true;
+    }
+    
+    // Por defecto bloquear si no coincide con ninguna condición
+    return false;
+  }
+
+  /**
    * Verifica si se pueden editar datos básicos del pedido (cliente, entrega, facturación)
    * Los datos básicos pueden modificarse incluso en pedidos congelados, excepto dirección en GRUPO 2
    * @param order Pedido a verificar
