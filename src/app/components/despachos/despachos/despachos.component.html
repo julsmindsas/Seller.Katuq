@@ -165,6 +165,9 @@
                                 [loading]="loading"
                                 [estadosProcesos]="estadosProcesos"
                                 [estadosPago]="estadosPago"
+                                [useLazyMode]="useOptimizedLoading"
+                                [totalRecords]="totalRecords"
+                                [rowsPerPage]="currentPageSize"
                                 (onViewDetails)="openDetalleEntrega($event)"
                                 (onPrintPdf)="pdfOrder(modalContent, $event)"
                                 (onViewTags)="verTarjetasPedido($event)"
@@ -176,6 +179,7 @@
                                 (onViewFullObservaciones)="mostrarDetallesEnvio($event)"
                                 (onTrackShipment)="trackShipment($event)"
                                 (onFindShipment)="findShipment($event)"
+                                (onLazyLoad)="onTableLazyLoad($event)"
                             ></app-tabla-pedidos>
                         </div>
                     </p-tabPanel>
@@ -308,7 +312,7 @@
     </app-generar-orden>
 </ng-template>
 
-<!-- Modal para visualizar órdenes de despacho -->
+<!-- Modal para visualizar órdenes de despacho (ORIGINAL) -->
 <ng-template #dispatchOrdersModal let-modal>
     <app-ordenes-despacho
         [dispatchOrders]="dispatchOrders"
@@ -319,6 +323,19 @@
         (onDispatchPedido)="handlePedidoDispatch($event)"
     >
     </app-ordenes-despacho>
+</ng-template>
+
+<!-- NUEVO: Modal V2 para órdenes optimizadas con scroll infinito -->
+<ng-template #dispatchOrdersModalV2 let-modal>
+    <app-ordenes-despacho-v2
+        [vendors]="vendors"
+        (onClose)="modal.dismiss('Cross click')"
+        (onPrintOrder)="imprimirOrderToAction($event)"
+        (onViewOrder)="handleOrderView($event)"
+        (onDispatchOrder)="handleOrderDispatch($event)"
+        (onDispatchPedido)="handlePedidoDispatch($event)"
+    >
+    </app-ordenes-despacho-v2>
 </ng-template>
 
 <!-- PDF Generation Progress Modal -->

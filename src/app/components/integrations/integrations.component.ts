@@ -45,6 +45,20 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     { id: 'paypal', name: 'PayPal', logo: 'assets/images/logos/paypal.svg' },
     { id: 'partners_logistics', name: 'Partners Logística', logo: 'assets/images/logos/partners-logistics.svg' }
   ];
+
+  apiVersionOptions = [
+    { label: '2025-07 (Recomendada)', value: '2025-07' },
+    { label: '2025-04', value: '2025-04' },
+    { label: '2025-01', value: '2025-01' },
+    { label: '2024-10', value: '2024-10' },
+    { label: '2024-07', value: '2024-07' },
+    { label: '2024-04', value: '2024-04' },
+    { label: '2024-01', value: '2024-01' },
+    { label: '2023-10', value: '2023-10' },
+    { label: '2023-07', value: '2023-07' },
+    { label: '2023-04', value: '2023-04' },
+    { label: '2023-01', value: '2023-01' }
+  ];
   
   selectedIntegrationType = 'shopify';
   integrationForm: FormGroup;

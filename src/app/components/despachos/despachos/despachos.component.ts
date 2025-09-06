@@ -21,6 +21,7 @@ import {
   Pedido,
 } from "../../ventas/modelo/pedido";
 import { Table } from "primeng/table";
+import { LazyLoadEvent } from "primeng/api";
 import { PaymentService } from "../../../shared/services/ventas/payment.service";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { jsPDF } from "jspdf";
@@ -49,6 +50,7 @@ import { MapaUbicacionesComponent } from "../components/mapa-ubicaciones/mapa-ub
 import { AnalisisDespachosComponent } from '../components/analisis-despachos/analisis-despachos.component';
 import { SeguimientoModalComponent } from "../components/seguimiento-modal/seguimiento-modal.component";
 import { Integration, IntegrationCategory, IntegrationsService } from "../../integrations/integrations.service";
+import { PaginatedOrdersResponse } from "../interfaces/paginated-orders.interface";
 
 interface MapaMetricas {
   despachados: number;
@@ -135,6 +137,8 @@ export class DespachosComponent implements OnInit {
   pantallaOrdenEnvioModal: TemplateRef<any>;
   @ViewChild("dispatchOrdersModal", { static: false })
   dispatchOrdersModal: TemplateRef<any>;
+  @ViewChild("dispatchOrdersModalV2", { static: false })
+  dispatchOrdersModalV2: TemplateRef<any>;
   @ViewChild("detalleEntregaModal", { static: false })
   detalleEntregaModal: TemplateRef<any>;
   @ViewChild("transportadoresModal", { static: false })
@@ -148,6 +152,13 @@ export class DespachosComponent implements OnInit {
   generandoRotuloPara: Set<string> = new Set();
   orders: PedidoPriorizado[] = [];
   loading: boolean = true;
+  
+  // NEW - Lazy loading properties (2025.09.05)
+  useOptimizedLoading: boolean = true; // Flag to enable/disable optimized loading
+  totalRecords: number = 0;            // Total records from server
+  currentPage: number = 1;             // Current page number
+  currentPageSize: number = 50;        // Current page size
+  lastLazyLoadEvent?: LazyLoadEvent; // Last lazy load event for reference
   totalValorProductoBruto: number;
   totalDescuento: number;
   htmlModal: any;
@@ -348,7 +359,13 @@ export class DespachosComponent implements OnInit {
     }
 
     // En ngOnInit, mostrar alertas automáticas
-    this.refrescarDatos(true);
+    // Para modo optimizado, dejar que la tabla PrimeNG dispare onLazyLoad automáticamente
+    // Para modo legacy, llamar refrescarDatos directamente
+    if (!this.useOptimizedLoading) {
+      this.refrescarDatos(true);
+    } else {
+      console.log('🚀 Despachos - Using optimized loading, waiting for table lazy load event...');
+    }
     this.initForms();
 
     // Definir items para el menú de acciones unificado
@@ -372,6 +389,11 @@ export class DespachosComponent implements OnInit {
         label: 'Ver Órdenes de Despacho',
         icon: 'pi pi-list',
         command: () => this.viewAllDispatchOrders()
+      },
+      {
+        label: 'Ver Órdenes (Optimizado)',
+        icon: 'pi pi-bolt',
+        command: () => this.viewAllDispatchOrdersOptimized()
       },
       {
         separator: true
@@ -402,37 +424,46 @@ export class DespachosComponent implements OnInit {
   }
 
   refrescarDatos(mostrarAlertas: boolean = false) {
-    const filter = {
-      fechaInicial: this.fechaInicial,
-      fechaFinal: this.fechaFinal,
-      company: JSON.parse(localStorage.getItem("currentCompany") || "{}")
-        .nomComercial,
-      estadoProceso: [
-        EstadoProceso.Rechazado,
-        EstadoProceso.ParaDespachar,
-        EstadoProceso.ProducidoTotalmente,
-        EstadoProceso.SinProducir,
-        EstadoProceso.ProducidoParcialmente,
-        EstadoProceso.EnProduccion,
-        EstadoProceso.Entregado,
-        EstadoProceso.Despachado,
-        EstadoProceso.Empacado,
-      ],
-      estadosPago: [
-        EstadoPago.PreAprobado,
-        EstadoPago.Aprobado,
-        EstadoPago.Pendiente,
-        EstadoPago.Pospendiente,
-      ],
-      tipoFecha: "fechaEntrega",
-    };
+    // Set loading indicator
+    this.loading = true;
+    
+    // Build filter using the extracted method  
+    const filter = this.buildCurrentFilter();
 
     // Inicializar vendors para evitar errores
     if (!this.vendors) {
       this.vendors = [];
     }
 
-    this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
+    // Choose between optimized and legacy loading
+    if (this.useOptimizedLoading) {
+      // Use optimized endpoint with pagination - use component properties directly
+      console.log('🚀 Despachos - Making optimized API request:', {
+        currentPage: this.currentPage,
+        pageSize: this.currentPageSize,
+        hasLazyEvent: !!this.lastLazyLoadEvent,
+        filterKeys: Object.keys(filter)
+      });
+      
+      this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.currentPageSize).subscribe({
+        next: (response) => {
+          console.log('✅ Despachos - Optimized API response received:', {
+            ordersCount: response.orders?.length || 0,
+            totalRecords: response.pagination?.totalItems,
+            currentPage: response.pagination?.currentPage,
+            totalPages: response.pagination?.totalPages
+          });
+          this.processOrdersData(response.orders as PedidoPriorizado[], response.pagination);
+        },
+        error: (error) => {
+          console.error('❌ Despachos - Error in optimized API call:', error);
+          this.loading = false;
+          // TODO: Show user-friendly error message
+        }
+      });
+    } else {
+      // Use legacy endpoint (backward compatibility)
+      this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
       this.orders = data as PedidoPriorizado[];
       /*   this.orders.forEach((order) => {
            if (order.fechaCreacion) {
@@ -456,7 +487,8 @@ export class DespachosComponent implements OnInit {
       this.calcularMetricas();
 
       this.loading = false;
-    });
+      });
+    }
 
     this.logisticaService.getTransportadores().subscribe((data) => {
       this.vendors = data || [];
@@ -1780,6 +1812,8 @@ export class DespachosComponent implements OnInit {
     this.fechaFinal.setDate(this.fechaFinal.getDate() + 7); // Una semana desde hoy
     this.fechaFinal.setHours(23, 59, 59, 999);
 
+    // Reset pagination when clearing filters (like productos component)
+    this.currentPage = 1;
     this.refrescarDatos(false); // No mostrar alertas en clear
 
     // Si se proporciona una tabla, limpiarla
@@ -2293,6 +2327,8 @@ export class DespachosComponent implements OnInit {
     const fechaActual = new Date();
     this.fechaInicial = new Date(fechaActual.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaActual.setHours(23, 59, 59, 999));
+    // Reset pagination when applying filters (like productos component)
+    this.currentPage = 1;
     this.refrescarDatos(false); // No mostrar alertas en filtros rápidos
   }
 
@@ -2301,6 +2337,8 @@ export class DespachosComponent implements OnInit {
     fechaManana.setDate(fechaManana.getDate() + 1);
     this.fechaInicial = new Date(fechaManana.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaManana.setHours(23, 59, 59, 999));
+    // Reset pagination when applying filters (like productos component)
+    this.currentPage = 1;
     this.refrescarDatos(false); // No mostrar alertas en filtros rápidos
   }
 
@@ -2309,6 +2347,8 @@ export class DespachosComponent implements OnInit {
     fechaPasadoManana.setDate(fechaPasadoManana.getDate() + 2);
     this.fechaInicial = new Date(fechaPasadoManana.setHours(0, 0, 0, 0));
     this.fechaFinal = new Date(fechaPasadoManana.setHours(23, 59, 59, 999));
+    // Reset pagination when applying filters (like productos component)
+    this.currentPage = 1;
     this.refrescarDatos(false); // No mostrar alertas en filtros rápidos
   }
 
@@ -3104,6 +3144,7 @@ export class DespachosComponent implements OnInit {
             this.modalService.dismissAll();
             setTimeout(() => {
               // Volver a consultar las órdenes
+              // TODO: Optimizar con getShippingOrdersPaginated
               this.logisticaService
                 .getShippingOrders()
                 .subscribe((data: Pedido[]) => {
@@ -3273,6 +3314,8 @@ export class DespachosComponent implements OnInit {
   }
 
   loadDispatchOrders(openModal: boolean = false) {
+    // TODO: Migrar a getShippingOrdersPaginated para mejor rendimiento
+    // Por ahora mantenemos compatibilidad con el método existente
     this.logisticaService.getShippingOrders().subscribe(
       (data: Pedido[]) => {
         const currentCompanyStr = localStorage.getItem("currentCompany");
@@ -3309,6 +3352,205 @@ export class DespachosComponent implements OnInit {
 
   viewAllDispatchOrders() {
     this.loadDispatchOrders(true);
+  }
+
+  /**
+   * NUEVO: Método alternativo optimizado para ver órdenes con paginación del servidor
+   * No reemplaza el método existente, solo agrega nueva funcionalidad
+   */
+  viewAllDispatchOrdersOptimized() {
+    console.log('Abriendo modal V2 con scroll infinito...');
+    
+    this.modalService.open(this.dispatchOrdersModalV2, {
+      size: "xl",
+      fullscreen: false,  // Modal normal, no fullscreen
+    });
+  }
+
+  /**
+   * Método optimizado para cargar órdenes de despacho con paginación
+   * Usar este método cuando el rendimiento sea crítico
+   * @param openModal - Si debe abrir el modal después de cargar
+   * @param usePagination - Si debe usar paginación (recomendado para mejor rendimiento)
+   */
+  loadDispatchOrdersOptimized(
+    openModal: boolean = false,
+    usePagination: boolean = true
+  ): void {
+    console.log('Cargando órdenes de despacho con método optimizado...');
+    
+    if (!usePagination) {
+      // Si no se quiere paginación, cargar todas las páginas
+      this.loadAllDispatchOrdersOptimized(openModal);
+      return;
+    }
+
+    // Cargar con paginación (más eficiente)
+    const fechaInicio = new Date();
+    fechaInicio.setDate(fechaInicio.getDate() - 30); // Últimos 30 días
+    
+    this.logisticaService.getShippingOrdersPaginated({
+      page: 1,
+      limit: 100,
+      fields: 'full',
+      fechaInicio: fechaInicio.toISOString().split('T')[0]
+    }).subscribe(
+      (response) => {
+        if (!response || !response.data) {
+          console.error('Respuesta inválida del servidor');
+          this.dispatchOrders = [];
+          return;
+        }
+
+        const currentCompanyStr = localStorage.getItem("currentCompany");
+        const companyName = currentCompanyStr
+          ? JSON.parse(currentCompanyStr).nomComercial
+          : "";
+
+        // Filtrar y ordenar las órdenes
+        this.dispatchOrders = response.data
+          .filter((x) => x.company == companyName)
+          .sort((a, b) => {
+            const aNum = a.nroShippingOrder ? parseInt(a.nroShippingOrder) : 0;
+            const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
+            return bNum - aNum;
+          });
+
+        console.log(`Cargadas ${this.dispatchOrders.length} órdenes (Página 1)`);
+        
+        // Informar si hay más páginas disponibles
+        if (response.pagination?.hasMore) {
+          console.log('Hay más páginas disponibles. Use loadAllDispatchOrdersOptimized() para cargar todas.');
+        }
+
+        this.cdr.detectChanges();
+
+        if (openModal) {
+          this.modalService.open(this.dispatchOrdersModal, {
+            size: "xl",
+            fullscreen: false,
+          });
+        }
+      },
+      (error) => {
+        console.error("Error al cargar órdenes optimizadas:", error);
+        // Fallback al método tradicional
+        console.log('Intentando con método tradicional...');
+        this.loadDispatchOrders(openModal);
+      }
+    );
+  }
+
+  /**
+   * Carga TODAS las órdenes de despacho usando paginación
+   * Más eficiente que el método tradicional para grandes volúmenes
+   */
+  private async loadAllDispatchOrdersOptimized(openModal: boolean = false): Promise<void> {
+    try {
+      console.log('Cargando TODAS las órdenes de despacho...');
+      
+      // Mostrar indicador de carga
+      const loadingAlert = Swal.fire({
+        title: 'Cargando órdenes',
+        html: 'Por favor espere mientras se cargan todas las órdenes...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Cargar todas las órdenes
+      const allOrders = await this.logisticaService.getAllShippingOrdersV2('full');
+      
+      const currentCompanyStr = localStorage.getItem("currentCompany");
+      const companyName = currentCompanyStr
+        ? JSON.parse(currentCompanyStr).nomComercial
+        : "";
+
+      // Filtrar y ordenar
+      this.dispatchOrders = allOrders
+        .filter((x) => x.company == companyName)
+        .sort((a, b) => {
+          const aNum = a.nroShippingOrder ? parseInt(a.nroShippingOrder) : 0;
+          const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
+          return bNum - aNum;
+        });
+
+      console.log(`Total de órdenes cargadas: ${this.dispatchOrders.length}`);
+      
+      // Cerrar indicador de carga
+      Swal.close();
+      
+      this.cdr.detectChanges();
+
+      if (openModal) {
+        this.modalService.open(this.dispatchOrdersModal, {
+          size: "xl",
+          fullscreen: false,
+        });
+      }
+
+      // Mostrar notificación de éxito
+      if (this.dispatchOrders.length > 0) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Órdenes cargadas',
+          text: `Se cargaron ${this.dispatchOrders.length} órdenes exitosamente`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+
+    } catch (error) {
+      console.error('Error cargando todas las órdenes:', error);
+      Swal.close();
+      
+      // Fallback al método tradicional
+      Swal.fire({
+        icon: 'warning',
+        title: 'Advertencia',
+        text: 'Hubo un problema al cargar las órdenes. Intentando método alternativo...',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      
+      this.loadDispatchOrders(openModal);
+    }
+  }
+
+  /**
+   * Método para refrescar las órdenes usando caché
+   * Útil para actualizaciones periódicas sin sobrecargar el servidor
+   */
+  refreshDispatchOrdersWithCache(): void {
+    this.logisticaService.getShippingOrdersCached({
+      page: 1,
+      limit: 100,
+      fields: 'full'
+    }).subscribe(
+      (response) => {
+        if (response && response.data) {
+          const currentCompanyStr = localStorage.getItem("currentCompany");
+          const companyName = currentCompanyStr
+            ? JSON.parse(currentCompanyStr).nomComercial
+            : "";
+
+          this.dispatchOrders = response.data
+            .filter((x) => x.company == companyName)
+            .sort((a, b) => {
+              const aNum = a.nroShippingOrder ? parseInt(a.nroShippingOrder) : 0;
+              const bNum = b.nroShippingOrder ? parseInt(b.nroShippingOrder) : 0;
+              return bNum - aNum;
+            });
+
+          console.log(`Órdenes actualizadas desde caché: ${this.dispatchOrders.length}`);
+          this.cdr.detectChanges();
+        }
+      },
+      (error) => {
+        console.error('Error actualizando desde caché:', error);
+      }
+    );
   }
 
   pdfOrder(content, order: Pedido) {
@@ -5312,6 +5554,121 @@ export class DespachosComponent implements OnInit {
       confirmButtonText: 'Cerrar',
       width: '600px'
     });
+  }
+
+  // NEW METHODS for optimized pagination (2025.09.05)
+
+  /**
+   * Process orders data from either optimized or legacy endpoint
+   * Extracts common logic for data processing
+   */
+  private processOrdersData(orders: PedidoPriorizado[], pagination?: any): void {
+    console.log('🔄 Despachos - Processing orders data:', {
+      previousOrdersCount: this.orders?.length || 0,
+      newOrdersCount: orders?.length || 0,
+      hasPagination: !!pagination
+    });
+    
+    // Force change detection by creating new array reference
+    this.orders = [...(orders || [])];
+    
+    // Debug: Log first few order IDs to verify data changes
+    const firstOrderIds = this.orders.slice(0, 3).map(order => ({
+      nroPedido: order.nroPedido,
+      _id: order._id?.slice(-8) // Last 8 characters of ID for brevity
+    }));
+    console.log('🔍 Despachos - First 3 orders in new data:', firstOrderIds);
+    
+    if (pagination) {
+      this.totalRecords = pagination.totalItems;
+      console.log('📊 Despachos - Updated pagination info:', {
+        totalItems: pagination.totalItems,
+        currentPage: pagination.currentPage,
+        totalPages: pagination.totalPages,
+        hasNextPage: pagination.hasNextPage,
+        hasPreviousPage: pagination.hasPreviousPage,
+        loadedOrders: this.orders.length
+      });
+    } else {
+      console.log('📋 Despachos - No pagination info (legacy mode)');
+    }
+
+    // Apply existing logic
+    this.aplicarAlgoritmoPriorizacion(true);
+    this.calcularMetricas();
+    this.loading = false;
+    
+    console.log('✅ Despachos - Data processing completed, loading set to false');
+  }
+
+  /**
+   * Handler for PrimeNG table lazy loading events
+   * Only active when useOptimizedLoading is enabled
+   */
+  onTableLazyLoad(event: LazyLoadEvent): void {
+    if (!this.useOptimizedLoading) {
+      console.log('⚠️ Despachos - Lazy load event ignored (optimized loading disabled)');
+      return;
+    }
+
+    const newCurrentPage = event.first && event.rows ? Math.floor(event.first / event.rows) + 1 : 1;
+    const newPageSize = event.rows || this.currentPageSize;
+    
+    console.log('🔄 Despachos - Table lazy load event received:', {
+      first: event.first,
+      rows: event.rows,
+      calculatedPage: newCurrentPage,
+      sortField: event.sortField,
+      sortOrder: event.sortOrder,
+      globalFilter: event.globalFilter,
+      eventType: event.first === 0 ? 'INITIAL_LOAD' : 'PAGINATION'
+    });
+
+    // Only update and reload if there's a real change (like productos component does)
+    if (newPageSize !== this.currentPageSize || newCurrentPage !== this.currentPage) {
+      this.currentPageSize = newPageSize;
+      this.currentPage = newCurrentPage;
+      
+      console.log(`📏 Despachos - Page changed to ${this.currentPage}, size: ${this.currentPageSize}`);
+    }
+    
+    // Store the event for use in refrescarDatos
+    this.lastLazyLoadEvent = event;
+    
+    // Refresh data with current filters
+    console.log(`📄 Despachos - Requesting page ${this.currentPage} with ${this.currentPageSize} items`);
+    this.refrescarDatos();
+  }
+
+  /**
+   * Builds the current filter object based on component state
+   * Extracted for reusability between optimized and legacy loading
+   */
+  private buildCurrentFilter(): any {
+    return {
+      fechaInicial: this.fechaInicial,
+      fechaFinal: this.fechaFinal,
+      company: JSON.parse(localStorage.getItem("currentCompany") || "{}")
+        .nomComercial,
+      estadoProceso: [
+        EstadoProceso.Rechazado,
+        EstadoProceso.ParaDespachar,
+        EstadoProceso.ProducidoTotalmente,
+        EstadoProceso.SinProducir,
+        EstadoProceso.ProducidoParcialmente,
+        EstadoProceso.EnProduccion,
+        EstadoProceso.Entregado,
+        EstadoProceso.Despachado,
+        EstadoProceso.Empacado,
+      ],
+      estadosPago: [
+        EstadoPago.PreAprobado,
+        EstadoPago.Aprobado,
+        EstadoPago.Pendiente,
+        EstadoPago.Pospendiente,
+      ],
+      tipoFecha: "fechaEntrega",
+    };
   }
 }
 

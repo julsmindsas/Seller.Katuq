@@ -1,0 +1,425 @@
+<!-- Header moderno -->
+<div class="modern-header">
+  <div class="header-content">
+    <div class="title-section">
+      <h4 class="modal-title">
+        <i class="pi pi-list-check me-2"></i>
+        {{ 'Órdenes de Despacho' | translate }}
+        <span class="badge bg-light text-dark ms-2">{{ totalRecords }}</span>
+      </h4>
+      <p class="subtitle">{{ 'Gestión optimizada con scroll infinito' | translate }}</p>
+    </div>
+    <button type="button" class="btn-close-custom" (click)="closeModal()">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Filtros modernos -->
+<div class="filters-section" [ngClass]="{'collapsed': !showFilters}">
+  <div class="filters-header" (click)="toggleFilters()">
+    <span class="filters-title">
+      <i class="pi pi-filter me-2"></i>
+      {{ 'Filtros de Búsqueda' | translate }}
+    </span>
+    <i class="pi" [ngClass]="showFilters ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+  </div>
+  
+  <div class="filters-content" *ngIf="showFilters">
+    <div class="row g-3">
+      <!-- Búsqueda general -->
+      <div class="col-md-4">
+        <label class="form-label">{{ 'Buscar' | translate }}</label>
+        <div class="search-input">
+          <i class="pi pi-search"></i>
+          <input type="text" 
+                 class="form-control"
+                 [(ngModel)]="searchTerm" 
+                 placeholder="{{ 'Nro. orden, fecha, transportador...' | translate }}"
+                 (keyup.enter)="applyFilters()">
+        </div>
+      </div>
+      
+      <!-- Fecha inicio -->
+      <div class="col-md-3">
+        <label class="form-label">{{ 'Desde' | translate }}</label>
+        <input type="date" 
+               class="form-control"
+               [value]="getFechaInicioString()"
+               (change)="onFechaInicioChange($event)"
+               [max]="getFechaFinString()">
+      </div>
+      
+      <!-- Fecha fin -->
+      <div class="col-md-3">
+        <label class="form-label">{{ 'Hasta' | translate }}</label>
+        <input type="date" 
+               class="form-control"
+               [value]="getFechaFinString()"
+               (change)="onFechaFinChange($event)">
+      </div>
+      
+      <!-- Acciones de filtro -->
+      <div class="col-md-2">
+        <label class="form-label">&nbsp;</label>
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary btn-sm flex-fill" 
+                  (click)="applyFilters()"
+                  [disabled]="isLoading">
+            <i class="pi pi-search me-1"></i>
+            {{ 'Buscar' | translate }}
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" 
+                  (click)="clearFilters()"
+                  [disabled]="isLoading">
+            <i class="pi pi-refresh"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toolbar de vista -->
+<div class="view-toolbar">
+  <div class="view-info">
+    <span class="text-muted">
+      {{ 'Mostrando' | translate }} {{ allOrders.length }} 
+      {{ 'de' | translate }} {{ totalItems }} 
+      {{ 'órdenes' | translate }}
+      <small class="ms-1" *ngIf="totalPages > 0">
+        (Página {{ currentPage - 1 }}/{{ totalPages }})
+      </small>
+    </span>
+  </div>
+  
+  <div class="view-controls">
+    <button class="btn btn-sm btn-outline-primary me-2"
+            [class.active]="viewMode === 'table'"
+            (click)="viewMode = 'table'">
+      <i class="pi pi-table"></i>
+      {{ 'Tabla' | translate }}
+    </button>
+    <button class="btn btn-sm btn-outline-primary"
+            [class.active]="viewMode === 'cards'"
+            (click)="viewMode = 'cards'">
+      <i class="pi pi-th-large"></i>
+      {{ 'Tarjetas' | translate }}
+    </button>
+  </div>
+</div>
+
+<!-- Loading inicial -->
+<div class="loading-initial" *ngIf="isLoading && allOrders.length === 0">
+  <div class="loading-content">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3 text-muted">
+      <i class="pi pi-cloud-download me-2"></i>
+      {{ 'Cargando órdenes del servidor...' | translate }}
+    </p>
+  </div>
+</div>
+
+<!-- Sin resultados -->
+<div class="no-results" *ngIf="!isLoading && allOrders.length === 0">
+  <div class="no-results-content">
+    <i class="pi pi-inbox"></i>
+    <h5>{{ 'No hay órdenes disponibles' | translate }}</h5>
+    <p class="text-muted">{{ 'Intente ajustar los filtros de búsqueda' | translate }}</p>
+    <button class="btn btn-outline-primary" (click)="clearFilters()">
+      <i class="pi pi-refresh me-2"></i>
+      {{ 'Limpiar Filtros' | translate }}
+    </button>
+  </div>
+</div>
+
+<!-- Contenido principal con scroll -->
+<div class="content-container" 
+     #scrollContainer 
+     (scroll)="onScroll($event)"
+     *ngIf="allOrders.length > 0">
+  
+  <!-- Vista de tabla -->
+  <div class="table-view" *ngIf="viewMode === 'table'">
+    <div class="modern-table">
+      <!-- Encabezado de tabla -->
+      <div class="table-header">
+        <div class="header-cell">&nbsp;</div>
+        <div class="header-cell">{{ 'Nro. Orden' | translate }}</div>
+        <div class="header-cell">{{ 'Fecha' | translate }}</div>
+        <div class="header-cell">{{ 'Transportador' | translate }}</div>
+        <div class="header-cell">{{ 'Pedidos' | translate }}</div>
+        <div class="header-cell">{{ 'Estado' | translate }}</div>
+        <div class="header-cell">{{ 'Total a Cobrar' | translate }}</div>
+        <div class="header-cell">{{ 'Acciones' | translate }}</div>
+      </div>
+      
+      <!-- Filas de datos -->
+      <div class="table-row" *ngFor="let order of allOrders; let i = index">
+        <!-- Fila principal -->
+        <div class="row-main">
+          <div class="cell expand-cell">
+            <button class="btn-expand" 
+                    (click)="toggleRowDetails(order)"
+                    [class.expanded]="isRowExpanded(order)">
+              <i class="pi" [ngClass]="isRowExpanded(order) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+            </button>
+          </div>
+          
+          <div class="cell">
+            <span class="cell-label">{{ 'Nro. Orden' | translate }}:</span>
+            <span class="order-number">{{ order.nroShippingOrder || 'N/A' }}</span>
+          </div>
+          
+          <div class="cell">
+            <span class="cell-label">{{ 'Fecha' | translate }}:</span>
+            <span class="order-date">{{ formatDate(order.fecha) }}</span>
+          </div>
+          
+          <div class="cell">
+            <span class="cell-label">{{ 'Transportador' | translate }}:</span>
+            <span class="transporter-name">{{ order.transportador || 'N/A' }}</span>
+          </div>
+          
+          <div class="cell">
+            <span class="cell-label">{{ 'Pedidos' | translate }}:</span>
+            <span class="badge bg-info">{{ getPedidosCount(order) }}</span>
+          </div>
+          
+          <div class="cell">
+            <span class="cell-label">{{ 'Estado' | translate }}:</span>
+            <span class="badge" 
+                  [class]="getEstadoProceso(order) === 'Despachado' ? 'bg-success' : 'bg-warning'">
+              {{ getEstadoProceso(order) }}
+            </span>
+          </div>
+          
+          <div class="cell">
+            <span class="cell-label">{{ 'Total a Cobrar' | translate }}:</span>
+            <span class="total-amount">{{ getFaltaPorPagarSum(order) | currency:'COP':'symbol':'1.0-0' }}</span>
+          </div>
+          
+          <div class="cell actions-cell">
+            <div class="action-buttons">
+              <button class="btn btn-sm btn-outline-primary" 
+                      (click)="viewOrder(order.nroShippingOrder)"
+                      title="{{ 'Ver Orden' | translate }}">
+                <i class="pi pi-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-success" 
+                      (click)="printOrder(order.nroShippingOrder)"
+                      title="{{ 'Imprimir' | translate }}">
+                <i class="pi pi-print"></i>
+              </button>
+              <button [style.visibility]="canDispatchOrder(order) ? 'visible' : 'hidden'"
+                      [style.pointer-events]="canDispatchOrder(order) ? 'auto' : 'none'"
+                      class="btn btn-sm btn-outline-warning" 
+                      (click)="dispatchOrder(order)"
+                      title="{{ 'Despachar' | translate }}">
+                <i class="pi pi-send"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Fila expandida con detalles -->
+        <div class="row-details" *ngIf="isRowExpanded(order)">
+          <div class="details-content">
+            <h6>{{ 'Pedidos en esta orden' | translate }}</h6>
+            <div class="pedidos-list" *ngIf="order.pedidos && order.pedidos.length > 0">
+              <div class="pedido-item" *ngFor="let pedido of order.pedidos">
+                <div class="pedido-header">
+                  <strong>{{ 'Cliente:' | translate }}</strong> {{ getPedidoCliente(pedido) }}
+                  <span class="badge bg-secondary ms-2">{{ pedido.referencia || 'N/A' }}</span>
+                </div>
+                <div class="pedido-details">
+                  <div class="detail-item">
+                    <span class="detail-label">{{ 'Falta por pagar:' | translate }}</span>
+                    <span class="detail-value">{{ pedido.faltaPorPagar | currency:'COP':'symbol':'1.0-0' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">{{ 'Estado:' | translate }}</span>
+                    <span class="badge bg-info">{{ pedido.estadoProceso || 'N/A' }}</span>
+                  </div>
+                  <button *ngIf="!isPedidoDispatched(pedido)"
+                          class="btn btn-sm btn-outline-primary" 
+                          (click)="dispatchPedido(pedido)">
+                    <i class="pi pi-send me-1"></i>
+                    {{ 'Despachar Pedido' | translate }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Vista de tarjetas -->
+  <div class="cards-view" *ngIf="viewMode === 'cards'">
+    <div class="row g-3">
+      <div class="col-lg-6 col-xl-4" *ngFor="let order of allOrders">
+        <div class="order-card">
+          <div class="card-header">
+            <div class="order-info">
+              <h6 class="order-number">{{ order.nroShippingOrder || 'N/A' }}</h6>
+              <span class="order-date">{{ formatDate(order.fecha) }}</span>
+            </div>
+            <div class="order-status">
+              <span class="badge" 
+                    [class]="getEstadoProceso(order) === 'Despachado' ? 'bg-success' : 'bg-warning'">
+                {{ getEstadoProceso(order) }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <div class="order-detail">
+              <i class="pi pi-truck"></i>
+              <span>{{ order.transportador || 'N/A' }}</span>
+            </div>
+            <div class="order-detail">
+              <i class="pi pi-shopping-cart"></i>
+              <span>{{ getPedidosCount(order) }} {{ 'pedidos' | translate }}</span>
+            </div>
+            <div class="order-detail total">
+              <i class="pi pi-dollar"></i>
+              <span>{{ getFaltaPorPagarSum(order) | currency:'COP':'symbol':'1.0-0' }}</span>
+            </div>
+          </div>
+          
+          <div class="card-actions">
+            <button class="btn btn-outline-primary btn-sm" (click)="viewOrder(order.nroShippingOrder)">
+              <i class="pi pi-eye me-1"></i>{{ 'Ver' | translate }}
+            </button>
+            <button class="btn btn-outline-success btn-sm" (click)="printOrder(order.nroShippingOrder)">
+              <i class="pi pi-print me-1"></i>{{ 'Imprimir' | translate }}
+            </button>
+            <button [style.visibility]="canDispatchOrder(order) ? 'visible' : 'hidden'"
+                    [style.pointer-events]="canDispatchOrder(order) ? 'auto' : 'none'"
+                    class="btn btn-outline-warning btn-sm" 
+                    (click)="dispatchOrder(order)">
+              <i class="pi pi-send me-1"></i>{{ 'Despachar' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Indicador de scroll infinito -->
+<div class="scroll-indicator" *ngIf="hasNextPage && !isLoadingMore && allOrders.length >= pageSize">
+  <div class="scroll-hint">
+    <i class="pi pi-arrow-down animated-bounce"></i>
+    <p class="text-muted small mb-0">{{ 'Desplázate para cargar más órdenes' | translate }}</p>
+    <small class="text-muted">
+      Página {{ currentPage - 1 }} de {{ totalPages }} - 
+      {{ allOrders.length }}/{{ totalItems }} órdenes cargadas
+    </small>
+  </div>
+</div>
+
+<!-- Loading más contenido (scroll infinito) -->
+<div class="loading-more" *ngIf="isLoadingMore && allOrders.length > 0">
+  <div class="loading-more-content">
+    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    <span class="ms-2 text-muted">{{ 'Cargando más órdenes...' | translate }}</span>
+    <small class="d-block text-muted mt-1">
+      {{ 'Página' | translate }} {{ currentPage - 1 }}/{{ totalPages }} - {{ allOrders.length }}/{{ totalItems }}
+    </small>
+  </div>
+</div>
+
+<!-- Indicador de fin de datos -->
+<div class="end-of-data" *ngIf="!hasNextPage && allOrders.length > 0 && !isLoadingMore">
+  <div class="end-message">
+    <i class="pi pi-check-circle text-success"></i>
+    <span class="text-muted ms-2">{{ 'Todas las órdenes cargadas' | translate }}</span>
+    <small class="d-block text-muted mt-1">{{ totalItems }} órdenes en total</small>
+  </div>
+</div>
+
+<!-- Modal de transportadores (copiado del original) -->
+<div class="modal-overlay" *ngIf="showTransporterModal" (click)="closeTransporterModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header-custom">
+      <h5>{{ 'Seleccionar Transportador' | translate }}</h5>
+      <button type="button" class="btn-close-custom" (click)="closeTransporterModal()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body-custom">
+      <div class="mb-3">
+        <p class="text-muted mb-3">
+          {{ 'Esta orden requiere transportadora externa. Seleccione el transportador:' | translate }}
+          <strong>{{ selectedOrderForDispatch?.nroShippingOrder }}</strong>
+        </p>
+
+        <div class="form-group">
+          <label class="form-label fw-semibold">{{ 'Transportadores Externos Disponibles' | translate }}</label>
+
+          <!-- Vendors Locales -->
+          <div *ngFor="let vendor of allVendors; let i = index" 
+               class="form-check mb-2 p-3 border rounded">
+            <input class="form-check-input" type="radio" 
+                   [(ngModel)]="selectedTransporter" 
+                   [value]="getVendorValue(vendor)" 
+                   [id]="'vendor_' + i">
+            <label class="form-check-label w-100" [for]="'vendor_' + i">
+              <div class="d-flex align-items-center">
+                <i class="pi pi-truck me-3 text-success"></i>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">{{ getVendorDisplayName(vendor) }}</div>
+                  <small class="text-muted">{{ 'Transportador local' | translate }}</small>
+                  <span class="badge bg-primary ms-2">{{ 'Registrado' | translate }}</span>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Transportadores Integrados -->
+          <div *ngFor="let transporter of availableTransporters; let i = index" 
+               class="form-check mb-2 p-3 border rounded">
+            <input class="form-check-input" type="radio" 
+                   [(ngModel)]="selectedTransporter" 
+                   [value]="transporter.provider || transporter.type" 
+                   [id]="'transporter_' + i">
+            <label class="form-check-label w-100" [for]="'transporter_' + i">
+              <div class="d-flex align-items-center">
+                <i class="pi pi-send me-3 text-warning"></i>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">{{ getTransporterDisplayName(transporter) }}</div>
+                  <small class="text-muted">{{ 'Integración configurada' | translate }}</small>
+                  <span *ngIf="transporter.enabled" class="badge bg-success ms-2">{{ 'Activo' | translate }}</span>
+                  <span *ngIf="!transporter.enabled" class="badge bg-warning">{{ 'Inactivo' | translate }}</span>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Mensaje si no hay transportadores configurados -->
+          <div *ngIf="allVendors.length === 0 && availableTransporters.length === 0" class="alert alert-warning mt-3">
+            <i class="pi pi-exclamation-triangle me-2"></i>
+            {{ 'No hay transportadores configurados. Solo está disponible mensajero propio.' | translate }}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer-custom">
+      <button type="button" class="btn btn-secondary" (click)="closeTransporterModal()">
+        {{ 'Cancelar' | translate }}
+      </button>
+      <button type="button" 
+              class="btn btn-primary" 
+              (click)="confirmDispatchWithTransporter()"
+              [disabled]="!selectedTransporter || isDispatchingShipment">
+        <span *ngIf="isDispatchingShipment" class="spinner-border spinner-border-sm me-2"></span>
+        {{ 'Confirmar Despacho' | translate }}
+      </button>
+    </div>
+  </div>
+</div>

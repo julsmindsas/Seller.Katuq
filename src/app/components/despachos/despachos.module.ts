@@ -35,6 +35,7 @@ import { DetalleEntregaComponent } from "./components/detalle-entrega/detalle-en
 import { TransportadoresComponent } from "./components/transportadores/transportadores.component";
 import { GenerarOrdenComponent } from "./components/generar-orden/generar-orden.component";
 import { OrdenesDespachoComponent } from "./components/ordenes-despacho/ordenes-despacho.component";
+import { OrdenesDespachoV2Component } from "./components/ordenes-despacho-v2/ordenes-despacho-v2.component";
 import { ImprimirPdfComponent } from "./components/imprimir-pdf/imprimir-pdf.component";
 import { ObservacionesDetalleComponent } from "./components/observaciones-detalle/observaciones-detalle.component";
 import { MapaUbicacionesComponent } from "./components/mapa-ubicaciones/mapa-ubicaciones.component";
@@ -83,6 +84,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     TransportadoresComponent,
     GenerarOrdenComponent,
     OrdenesDespachoComponent,
+    OrdenesDespachoV2Component,
     ImprimirPdfComponent,
     ObservacionesDetalleComponent,
     MapaUbicacionesComponent,

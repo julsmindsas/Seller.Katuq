@@ -67,8 +67,10 @@
         </div>
         <div class="store-search">
           <div class="search-box-modern">
-            <i class="fa fa-search"></i>
-            <input type="text" placeholder="Buscar integración..." #searchInput [(ngModel)]="searchTerm">
+            <span class="p-input-icon-left">
+              <i class="fa fa-search"></i>
+              <input pInputText type="text" placeholder="Buscar integración..." #searchInput [(ngModel)]="searchTerm">
+            </span>
           </div>
         </div>
       </div>
@@ -257,7 +259,7 @@
               <i class="fa fa-tag"></i> Nombre de la integración:
               <span class="field-required">*</span>
             </label>
-            <input type="text" id="name" formControlName="name" placeholder="Ej: Mi tienda Shopify" autocomplete="off">
+            <input pInputText id="name" formControlName="name" placeholder="Ej: Mi tienda Shopify" autocomplete="off">
             <div *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched"
               class="text-danger">
               <i class="fa fa-exclamation-triangle"></i> El nombre es requerido
@@ -270,10 +272,7 @@
               <i class="fa fa-toggle-on"></i> Estado:
             </label>
             <div class="toggle-container">
-              <label class="switch">
-                <input type="checkbox" formControlName="enabled">
-                <span class="slider"></span>
-              </label>
+              <p-inputSwitch formControlName="enabled"></p-inputSwitch>
               <span class="toggle-label"
                 [ngClass]="{'active': integrationForm.get('enabled')?.value, 'inactive': !integrationForm.get('enabled')?.value}">
                 {{integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo'}}
@@ -299,10 +298,10 @@
               <i class="fa fa-link"></i> URL de la tienda:
               <span class="field-required">*</span>
             </label>
-            <div class="input-with-icon">
-              <i class="fa fa-globe prefix-icon"></i>
-              <input type="text" id="shopUrl" formControlName="shopUrl" placeholder="mitienda.myshopify.com" autocomplete="off">
-            </div>
+            <span class="p-input-icon-left">
+              <i class="fa fa-globe"></i>
+              <input pInputText id="shopUrl" formControlName="shopUrl" placeholder="mitienda.myshopify.com" autocomplete="off">
+            </span>
             <div *ngIf="integrationForm.get('shopUrl')?.invalid && integrationForm.get('shopUrl')?.touched"
               class="text-danger">
               <i class="fa fa-exclamation-triangle"></i> Ingrese una URL de tienda Shopify válida
@@ -316,10 +315,7 @@
                 <i class="fa fa-key"></i> API Key:
                 <span class="field-required">*</span>
               </label>
-              <div class="input-with-icon">
-                <i class="fa fa-lock prefix-icon"></i>
-                <input type="password" id="apiKey" formControlName="apiKey">
-              </div>
+              <p-password id="apiKey" formControlName="apiKey" [feedback]="false" [toggleMask]="true"></p-password>
               <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched"
                 class="text-danger">
                 <i class="fa fa-exclamation-triangle"></i> API Key es requerida
@@ -331,11 +327,7 @@
                 <i class="fa fa-lock"></i> API Secret:
                 <span class="field-required">*</span>
               </label>
-              <div class="input-with-icon password-field">
-                <i class="fa fa-key prefix-icon"></i>
-                <input type="password" id="apiSecret" formControlName="apiSecret" autocomplete="off">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
-              </div>
+              <p-password id="apiSecret" formControlName="apiSecret" [feedback]="false" [toggleMask]="true" autocomplete="off"></p-password>
               <div *ngIf="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched"
                 class="text-danger">
                 <i class="fa fa-exclamation-triangle"></i> API Secret es requerido
@@ -348,11 +340,7 @@
               <i class="fa fa-shield-alt"></i> Access Token:
               <span class="field-required">*</span>
             </label>
-            <div class="input-with-icon password-field">
-              <i class="fa fa-key prefix-icon"></i>
-              <input type="password" id="accessToken" class="form-control" formControlName="accessToken" placeholder="shpat_..." autocomplete="off">
-              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
-            </div>
+            <p-password id="accessToken" formControlName="accessToken" [feedback]="false" [toggleMask]="true" placeholder="shpat_..." autocomplete="off"></p-password>
             <div *ngIf="integrationForm.get('accessToken')?.invalid && integrationForm.get('accessToken')?.touched" class="text-danger">
               <i class="fa fa-exclamation-triangle"></i> El Access Token es requerido y debe empezar con shpat_
             </div>
@@ -363,20 +351,7 @@
             <label for="apiVersion">
               <i class="fa fa-code-branch"></i> Versión de API:
             </label>
-            <select id="apiVersion" formControlName="apiVersion" class="custom-select" autocomplete="off">
-              <!-- Actualizado a las versiones estables más recientes -->
-              <option value="2025-07">2025-07 (Recomendada)</option>
-              <option value="2025-04">2025-04</option>
-              <option value="2025-01">2025-01</option>
-              <option value="2024-10">2024-10</option>
-              <option value="2024-07">2024-07</option>
-              <option value="2024-04">2024-04</option>
-              <option value="2024-01">2024-01</option>
-              <option value="2023-10">2023-10</option>
-              <option value="2023-07">2023-07</option>
-              <option value="2023-04">2023-04</option>
-              <option value="2023-01">2023-01</option>
-            </select>
+            <p-dropdown id="apiVersion" formControlName="apiVersion" [options]="apiVersionOptions" optionLabel="label" optionValue="value" placeholder="Seleccione versión" autocomplete="off"></p-dropdown>
             <small class="form-text text-muted">Seleccione la versión de la API de Shopify a utilizar</small>
           </div>
         </ng-container>
@@ -405,10 +380,10 @@
                 <i class="fa fa-key"></i> Public Key:
                 <span class="field-required">*</span>
               </label>
-              <div class="input-with-icon">
-                <i class="fa fa-globe prefix-icon"></i>
-                <input type="text" id="publicKey" formControlName="publicKey" placeholder="pub_test_abcdef..." autocomplete="off">
-              </div>
+              <span class="p-input-icon-left">
+                <i class="fa fa-globe"></i>
+                <input pInputText id="publicKey" formControlName="publicKey" placeholder="pub_test_abcdef..." autocomplete="off">
+              </span>
               <div *ngIf="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched"
                 class="text-danger">
                 <i class="fa fa-exclamation-triangle"></i> Public Key es requerida

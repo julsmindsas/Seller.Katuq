@@ -41,6 +41,17 @@ export class OrdenesDespachoComponent implements OnInit {
   selectedTransporter: string = '';
   isDispatchingShipment: boolean = false;
 
+  // NUEVAS propiedades para paginación del servidor (mantener compatibilidad)
+  useServerSidePagination: boolean = false;  // Por defecto FALSE para no romper nada
+  isLoadingServerData: boolean = false;
+  serverTotalRecords: number = 0;
+  serverOrders: any[] = [];
+
+  // Filtros de fecha para optimización
+  fechaInicio: Date = new Date(new Date().setDate(new Date().getDate() - 30));
+  fechaFin: Date = new Date();
+  showDateFilters: boolean = false;
+
   constructor(
     private router: Router,
     private integrationsService: IntegrationsService,
@@ -48,6 +59,7 @@ export class OrdenesDespachoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    // Mantener lógica existente para compatibilidad
     this.filteredOrders = [...this.dispatchOrders];
     this.dispatchOrders.forEach(order => {
       order.pedidos.forEach(pedido => {
@@ -56,6 +68,23 @@ export class OrdenesDespachoComponent implements OnInit {
     });
     this.updatePagination();
     this.loadLogisticsIntegrations();
+    
+    // NUEVO: Detectar automáticamente si debe usar modo servidor
+    this.checkIfShouldUseServerMode();
+  }
+
+  /**
+   * NUEVO: Detecta automáticamente si debe usar paginación del servidor
+   * Se activa cuando no hay órdenes del padre (indica que debe cargar del servidor)
+   */
+  private checkIfShouldUseServerMode(): void {
+    // Si no hay órdenes del padre y no está ya en modo servidor, activar automáticamente
+    if (this.dispatchOrders.length === 0 && !this.useServerSidePagination) {
+      console.log('Detectando modo servidor automáticamente - activando...');
+      this.useServerSidePagination = true;
+      this.showDateFilters = true;
+      this.loadServerSideOrders();
+    }
   }
 
   applyFilter(): void {
@@ -452,5 +481,157 @@ export class OrdenesDespachoComponent implements OnInit {
     }
 
     return false;
+  }
+
+  // ========== NUEVOS MÉTODOS PARA PAGINACIÓN DEL SERVIDOR ==========
+
+  /**
+   * NUEVO: Cargar órdenes directamente del servidor con paginación
+   * Mantiene toda la funcionalidad existente intacta
+   */
+  loadServerSideOrders(): void {
+    this.isLoadingServerData = true;
+    
+    const currentCompanyStr = localStorage.getItem("currentCompany");
+    const companyName = currentCompanyStr
+      ? JSON.parse(currentCompanyStr).nomComercial
+      : "";
+    
+    const params = {
+      page: this.currentPage,
+      limit: this.pageSize,
+      fechaInicio: this.fechaInicio?.toISOString().split('T')[0],
+      fechaFin: this.fechaFin?.toISOString().split('T')[0],
+      fields: 'full' as 'minimal' | 'full'
+    };
+    
+    console.log('Cargando órdenes del servidor con parámetros:', params);
+    
+    this.logisticaService.getShippingOrdersPaginated(params).subscribe({
+      next: (response) => {
+        console.log('Respuesta del servidor:', response);
+        
+        if (!response || !response.data) {
+          console.error('Respuesta inválida del servidor');
+          this.fallbackToLocalMode();
+          return;
+        }
+
+        // Filtrar por empresa como hace el método original
+        const filteredOrders = response.data.filter((x: any) => x.company == companyName);
+        
+        // Procesar órdenes como en el método original
+        filteredOrders.forEach((order: any) => {
+          if (order.pedidos) {
+            order.pedidos.forEach((pedido: any) => {
+              pedido.faltaPorPagar = this.getValorACobrarPorPedido(pedido);
+            });
+          }
+        });
+        
+        // Actualizar datos del servidor
+        this.serverOrders = filteredOrders;
+        this.serverTotalRecords = response.pagination?.total || response.pagination?.count || filteredOrders.length;
+        
+        // IMPORTANTE: Actualizar las variables que usa la UI existente
+        this.pagedOrders = this.serverOrders;
+        this.filteredOrders = this.serverOrders;  // Para que el contador funcione
+        this.totalPages = Math.ceil(this.serverTotalRecords / this.pageSize);
+        
+        this.isLoadingServerData = false;
+        
+        console.log(`Cargadas ${this.serverOrders.length} órdenes del servidor (Página ${this.currentPage})`);
+      },
+      error: (error) => {
+        console.error('Error cargando del servidor:', error);
+        this.fallbackToLocalMode();
+      }
+    });
+  }
+
+  /**
+   * NUEVO: Cambio de página en modo servidor
+   */
+  onServerPageChange(page: number): void {
+    if (page < 1 || (this.serverTotalRecords > 0 && page > this.totalPages)) {
+      return;
+    }
+    this.currentPage = page;
+    this.loadServerSideOrders();
+  }
+
+  /**
+   * NUEVO: Toggle entre modo local y servidor
+   */
+  togglePaginationMode(): void {
+    this.useServerSidePagination = !this.useServerSidePagination;
+    
+    if (this.useServerSidePagination) {
+      console.log('Activando modo servidor...');
+      this.showDateFilters = true;
+      this.currentPage = 1;  // Reset a primera página
+      this.loadServerSideOrders();
+    } else {
+      console.log('Activando modo local...');
+      this.showDateFilters = false;
+      // Volver al comportamiento original
+      this.filteredOrders = [...this.dispatchOrders];
+      this.updatePagination();
+    }
+  }
+
+  /**
+   * NUEVO: Aplicar filtro de fechas (solo en modo servidor)
+   */
+  applyDateFilter(): void {
+    if (!this.useServerSidePagination) return;
+    
+    console.log('Aplicando filtro de fechas:', {
+      inicio: this.fechaInicio,
+      fin: this.fechaFin
+    });
+    
+    this.currentPage = 1;  // Reset a primera página
+    this.loadServerSideOrders();
+  }
+
+  /**
+   * NUEVO: Fallback al modo local si el servidor falla
+   */
+  private fallbackToLocalMode(): void {
+    console.warn('Fallback a modo local debido a error del servidor');
+    this.useServerSidePagination = false;
+    this.isLoadingServerData = false;
+    this.showDateFilters = false;
+    
+    // Restaurar comportamiento original
+    this.filteredOrders = [...this.dispatchOrders];
+    this.updatePagination();
+  }
+
+  /**
+   * NUEVO: Override del método goToPage para manejar ambos modos
+   * Mantiene compatibilidad total con el método existente
+   */
+  goToPageV2(page: number): void {
+    if (this.useServerSidePagination) {
+      this.onServerPageChange(page);
+    } else {
+      // Usar el método original
+      this.goToPage(page);
+    }
+  }
+
+  /**
+   * NUEVO: Override del cambio de tamaño de página para ambos modos
+   */
+  onPageSizeChangeV2(): void {
+    if (this.useServerSidePagination) {
+      this.currentPage = 1;
+      this.loadServerSideOrders();
+    } else {
+      // Usar el método original
+      this.onPageSizeChange();
+    }
   }
 } 

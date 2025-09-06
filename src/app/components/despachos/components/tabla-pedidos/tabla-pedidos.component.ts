@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { Table } from 'primeng/table';
+import { LazyLoadEvent } from 'primeng/api';
 import { Pedido, EstadoProceso, EstadoPago, EstadoProcesoFiltros } from '../../../ventas/modelo/pedido';
 import { ColumnDefinition } from '../../interfaces/column-definition.interface';
 import { FormBuilder, FormGroup } from '@angular/forms';
@@ -10,13 +11,18 @@ import { FilterService, MenuItem } from 'primeng/api';
   templateUrl: './tabla-pedidos.component.html',
   styleUrls: ['./tabla-pedidos.component.scss']
 })
-export class TablaPedidosComponent implements OnInit {
+export class TablaPedidosComponent implements OnInit, OnChanges {
   @ViewChild('dt1') dt1: Table;
   
   @Input() orders: Pedido[] = [];
   @Input() loading: boolean = true;
   @Input() estadosProcesos: EstadoProcesoFiltros[] = [];
   @Input() estadosPago: EstadoPago[] = [];
+  
+  // NEW - Lazy loading mode (2025.09.05)
+  @Input() useLazyMode: boolean = false;  // Default false for backward compatibility
+  @Input() totalRecords: number = 0;
+  @Input() rowsPerPage: number = 50;  // Dynamic rows per page
   
   @Output() onViewDetails = new EventEmitter<Pedido>();
   @Output() onPrintPdf = new EventEmitter<Pedido>();
@@ -29,6 +35,9 @@ export class TablaPedidosComponent implements OnInit {
   @Output() onViewFullObservaciones = new EventEmitter<any>();
   @Output() onTrackShipment = new EventEmitter<Pedido>();
   @Output() onFindShipment = new EventEmitter<Pedido>();
+  
+  // NEW - Lazy loading output (2025.09.05)
+  @Output() onLazyLoad = new EventEmitter<LazyLoadEvent>();
   
   displayedColumns: ColumnDefinition[] = [
     { field: 'detalles', header: 'Detalles', visible: true },
@@ -81,6 +90,18 @@ export class TablaPedidosComponent implements OnInit {
   ngOnInit(): void {
     // Inicializar columnas seleccionadas
     this.selectedColumns = this.displayedColumns.filter(col => col.visible);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Detectar cambios en rowsPerPage para sincronizar con la tabla
+    if (changes['rowsPerPage'] && this.useLazyMode && this.dt1) {
+      console.log(`🔄 TablaPedidos - rowsPerPage changed from ${changes['rowsPerPage'].previousValue} to ${changes['rowsPerPage'].currentValue}`);
+      
+      // Si hay una discrepancia entre el valor del input y el estado interno, corregirla
+      if (changes['rowsPerPage'].currentValue !== this.rowsPerPage) {
+        this.rowsPerPage = changes['rowsPerPage'].currentValue;
+      }
+    }
   }
   
   // Métodos para registrar filtros personalizados
@@ -299,5 +320,61 @@ export class TablaPedidosComponent implements OnInit {
   convertFechaEntregaString(fechaEntrega: { day: number, month: number, year: number }): string {
     if (!fechaEntrega) return '';
     return `${fechaEntrega.day}/${fechaEntrega.month}/${fechaEntrega.year}`;
+  }
+
+  // Helper para mostrar estados abreviados con tooltips
+  getStatusDisplay(status: string): { short: string, full: string } {
+    const statusMap: { [key: string]: { short: string, full: string } } = {
+      'ProducidoTotalmente': { short: 'Prod. Total', full: 'Producido Totalmente' },
+      'ProducidoParcialmente': { short: 'Prod. Parcial', full: 'Producido Parcialmente' },
+      'SinProducir': { short: 'Sin Producir', full: 'Sin Producir' },
+      'ParaDespachar': { short: 'P. Despachar', full: 'Para Despachar' },
+      'Despachado': { short: 'Despachado', full: 'Despachado' },
+      'Entregado': { short: 'Entregado', full: 'Entregado' },
+      'Empacado': { short: 'Empacado', full: 'Empacado' },
+      'Producido': { short: 'Producido', full: 'Producido' },
+      'Rechazado': { short: 'Rechazado', full: 'Rechazado' },
+      'Cerrado': { short: 'Cerrado', full: 'Cerrado' }
+    };
+    return statusMap[status] || { short: status, full: status };
+  }
+
+  // Helper para mostrar estados de pago abreviados con tooltips
+  getPaymentStatusDisplay(status: string): { short: string, full: string } {
+    const statusMap: { [key: string]: { short: string, full: string } } = {
+      'Pospendiente': { short: 'Pendiente', full: 'Pospendiente' },
+      'Pendiente': { short: 'Pendiente', full: 'Pendiente' },
+      'PreAprobado': { short: 'Pre-Aprob.', full: 'Pre-Aprobado' },
+      'Aprobado': { short: 'Aprobado', full: 'Aprobado' },
+      'Rechazado': { short: 'Rechazado', full: 'Rechazado' },
+      'Cancelado': { short: 'Cancelado', full: 'Cancelado' },
+      'Precancelado': { short: 'Pre-Cancel', full: 'Pre-Cancelado' }
+    };
+    return statusMap[status] || { short: status, full: status };
+  }
+
+  // NEW - Lazy loading handler (2025.09.05)
+  /**
+   * Handles lazy loading events from PrimeNG table
+   * Only emits events when useLazyMode is enabled
+   */
+  loadOrdersLazy(event: LazyLoadEvent): void {
+    if (this.useLazyMode) {
+      // Sincronizar rowsPerPage con el evento para mantener el estado del paginador
+      if (event.rows && event.rows !== this.rowsPerPage) {
+        console.log(`📏 TablaPedidos - Page size changed from ${this.rowsPerPage} to ${event.rows}`);
+        this.rowsPerPage = event.rows;
+      }
+      
+      console.log('🔄 TablaPedidos - Lazy load event:', {
+        first: event.first,
+        rows: event.rows,
+        rowsPerPage: this.rowsPerPage,
+        page: Math.floor(event.first / (event.rows || this.rowsPerPage)) + 1,
+        sortField: event.sortField,
+        sortOrder: event.sortOrder
+      });
+      this.onLazyLoad.emit(event);
+    }
   }
 }

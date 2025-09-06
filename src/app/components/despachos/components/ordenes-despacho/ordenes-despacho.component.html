@@ -10,6 +10,17 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="card-title m-0">{{ 'Órdenes de Despacho Generadas' | translate }}</h5>
         <div class="d-flex">
+          <!-- NUEVO: Toggle para cambiar modo -->
+          <button class="btn btn-sm me-2" 
+                  [class]="useServerSidePagination ? 'btn-success' : 'btn-outline-info'" 
+                  (click)="togglePaginationMode()"
+                  title="{{ useServerSidePagination ? 'Modo Servidor (Optimizado)' : 'Modo Local' }}">
+            <i class="pi" [ngClass]="useServerSidePagination ? 'pi-server' : 'pi-desktop'"></i>
+            <span class="d-none d-md-inline ms-1">
+              {{ useServerSidePagination ? 'Servidor' : 'Local' }}
+            </span>
+          </button>
+          
           <div class="input-group me-2">
             <input type="text" class="form-control form-control-sm" 
               [(ngModel)]="searchTerm" 
@@ -19,12 +30,70 @@
               <i class="pi pi-times"></i>
             </button>
           </div>
-          <span class="badge bg-primary">{{ filteredOrders.length }}</span>
+          <span class="badge bg-primary">
+            {{ useServerSidePagination ? serverTotalRecords : filteredOrders.length }}
+            <span class="small ms-1" *ngIf="useServerSidePagination">(total)</span>
+          </span>
         </div>
       </div>
 
-      <div class="alert alert-info" *ngIf="filteredOrders.length === 0">
+      <!-- NUEVO: Filtros de fecha (se muestran solo en modo servidor) -->
+      <div class="card border-info mb-3" *ngIf="useServerSidePagination && showDateFilters">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="pi pi-calendar me-1"></i>
+            {{ 'Filtros de Fecha' | translate }}
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4">
+              <label class="form-label small">{{ 'Fecha Inicio:' | translate }}</label>
+              <input type="date" 
+                     class="form-control form-control-sm"
+                     [(ngModel)]="fechaInicio" 
+                     (change)="applyDateFilter()"
+                     [value]="fechaInicio | date:'yyyy-MM-dd'">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">{{ 'Fecha Fin:' | translate }}</label>
+              <input type="date" 
+                     class="form-control form-control-sm"
+                     [(ngModel)]="fechaFin" 
+                     (change)="applyDateFilter()"
+                     [value]="fechaFin | date:'yyyy-MM-dd'">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button class="btn btn-primary btn-sm w-100" 
+                      (click)="loadServerSideOrders()"
+                      [disabled]="isLoadingServerData">
+                <i class="pi pi-search me-1"></i>
+                {{ 'Aplicar Filtros' | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NUEVO: Loading indicator para servidor -->
+      <div class="text-center py-5" *ngIf="isLoadingServerData">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">
+          <i class="pi pi-server me-1"></i>
+          {{ 'Cargando órdenes del servidor...' | translate }}
+        </p>
+      </div>
+
+      <div class="alert alert-info" *ngIf="!isLoadingServerData && filteredOrders.length === 0">
         {{ 'No hay órdenes de despacho disponibles o que coincidan con el criterio de búsqueda' | translate }}
+        <div class="mt-2" *ngIf="useServerSidePagination">
+          <small class="text-muted">
+            <i class="pi pi-info-circle me-1"></i>
+            {{ 'Intente ajustar los filtros de fecha o cambiar a modo local' | translate }}
+          </small>
+        </div>
       </div>
 
       <div class="table-responsive" *ngIf="filteredOrders.length > 0">
@@ -141,38 +210,55 @@
         </table>
       </div>
       
-      <!-- Paginador local -->
-      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredOrders.length > 0">
+      <!-- ACTUALIZADO: Paginador híbrido (local + servidor) -->
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredOrders.length > 0 && !isLoadingServerData">
         <div class="text-muted small">
-          {{ 'Mostrando' | translate }} {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, filteredOrders.length) }} 
-          {{ 'de' | translate }} {{ filteredOrders.length }} {{ 'órdenes' | translate }}
+          {{ 'Mostrando' | translate }} 
+          {{ (currentPage - 1) * pageSize + 1 }} - 
+          {{ Math.min(currentPage * pageSize, useServerSidePagination ? serverTotalRecords : filteredOrders.length) }} 
+          {{ 'de' | translate }} 
+          {{ useServerSidePagination ? serverTotalRecords : filteredOrders.length }} 
+          {{ 'órdenes' | translate }}
+          <small class="text-primary ms-1" *ngIf="useServerSidePagination">
+            <i class="pi pi-server"></i>
+            (servidor)
+          </small>
         </div>
         <div>
           <nav aria-label="Page navigation">
             <ul class="pagination pagination-sm">
               <li class="page-item" [ngClass]="{'disabled': currentPage === 1}">
-                <button class="page-link" (click)="goToPage(1)" [disabled]="currentPage === 1">
+                <button class="page-link" 
+                        (click)="useServerSidePagination ? goToPageV2(1) : goToPage(1)" 
+                        [disabled]="currentPage === 1">
                   <i class="pi pi-angle-double-left"></i>
                 </button>
               </li>
               <li class="page-item" [ngClass]="{'disabled': currentPage === 1}">
-                <button class="page-link" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+                <button class="page-link" 
+                        (click)="useServerSidePagination ? goToPageV2(currentPage - 1) : goToPage(currentPage - 1)" 
+                        [disabled]="currentPage === 1">
                   <i class="pi pi-angle-left"></i>
                 </button>
               </li>
               
               <li class="page-item" *ngFor="let page of getPagesToShow()" 
                   [ngClass]="{'active': page === currentPage}">
-                <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+                <button class="page-link" 
+                        (click)="useServerSidePagination ? goToPageV2(page) : goToPage(page)">{{ page }}</button>
               </li>
               
               <li class="page-item" [ngClass]="{'disabled': currentPage === totalPages}">
-                <button class="page-link" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+                <button class="page-link" 
+                        (click)="useServerSidePagination ? goToPageV2(currentPage + 1) : goToPage(currentPage + 1)" 
+                        [disabled]="currentPage === totalPages">
                   <i class="pi pi-angle-right"></i>
                 </button>
               </li>
               <li class="page-item" [ngClass]="{'disabled': currentPage === totalPages}">
-                <button class="page-link" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">
+                <button class="page-link" 
+                        (click)="useServerSidePagination ? goToPageV2(totalPages) : goToPage(totalPages)" 
+                        [disabled]="currentPage === totalPages">
                   <i class="pi pi-angle-double-right"></i>
                 </button>
               </li>
@@ -182,11 +268,13 @@
         <div class="d-flex align-items-center">
           <label for="pageSize" class="me-2 small">{{ 'Por página:' | translate }}</label>
           <select id="pageSize" class="form-select form-select-sm" style="width: 70px;"
-                  [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+                  [(ngModel)]="pageSize" 
+                  (change)="useServerSidePagination ? onPageSizeChangeV2() : onPageSizeChange()">
             <option [value]="5">5</option>
             <option [value]="10">10</option>
             <option [value]="20">20</option>
             <option [value]="50">50</option>
+            <option [value]="100" *ngIf="useServerSidePagination">100</option>
           </select>
         </div>
       </div>

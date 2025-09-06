@@ -5,6 +5,11 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { NgbModalModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { PasswordModule } from 'primeng/password';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { ButtonModule } from 'primeng/button';
 import { SharedModule } from '../../shared/shared.module';
 
 import { IntegrationsComponent } from './integrations.component';
@@ -40,6 +45,11 @@ const routes: Routes = [
     HttpClientModule,
     NgbModalModule,
     NgbDropdownModule,
+    InputTextModule,
+    DropdownModule,
+    PasswordModule,
+    InputSwitchModule,
+    ButtonModule,
     RouterModule.forChild(routes),
     NgbModule,
     SharedModule

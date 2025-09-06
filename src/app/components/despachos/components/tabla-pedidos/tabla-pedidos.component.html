@@ -3,10 +3,12 @@
         <div class="col-sm-12">
             <div class="card p-0">
                 <div class="card-body pb-0 px-0">
-                    <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50" [showCurrentPageReport]="true"
+                    <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="rowsPerPage" [showCurrentPageReport]="true"
                         [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [resizableColumns]="true"
                         [reorderableColumns]="true" [autoLayout]="true" [scrollable]="true"
                         [scrollHeight]="'calc(100vh - 400px)'" [paginator]="true"
+                        [lazy]="useLazyMode" [totalRecords]="useLazyMode ? totalRecords : orders.length"
+                        (onLazyLoad)="loadOrdersLazy($event)"
                         currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords} pedidos' | translate }}"
                         [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadoPago']"
                         styleClass="p-datatable-sm p-datatable-customers p-datatable-gridlines p-datatable-striped"
@@ -116,33 +118,39 @@
                                     <ng-container *ngIf="col.field !== 'detalles' && col.field !== 'opciones' && isColumnVisible(col.field)">
                                         <!-- Estado de Pago -->
                                         <td *ngIf="col.field === 'estadoPago'" class="estado-cell text-center col-estadoPago" [attr.data-label]="col.header | translate">
-                                            <span class="modern-badge" [ngClass]="{
-                                                'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
-                                                'badge-success': pedido?.estadoPago === 'Aprobado',
-                                                'badge-info': pedido?.estadoPago === 'PreAprobado',
-                                                'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
-                                            }">
+                                            <span class="modern-badge" 
+                                                [pTooltip]="getPaymentStatusDisplay(pedido?.estadoPago).full"
+                                                tooltipPosition="top"
+                                                [ngClass]="{
+                                                    'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
+                                                    'badge-success': pedido?.estadoPago === 'Aprobado',
+                                                    'badge-info': pedido?.estadoPago === 'PreAprobado',
+                                                    'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
+                                                }">
                                                 <i class="status-icon pi" [ngClass]="{
                                                     'pi-clock': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
                                                     'pi-check-circle': pedido?.estadoPago === 'Aprobado',
                                                     'pi-eye': pedido?.estadoPago === 'PreAprobado',
                                                     'pi-times-circle': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                 }"></i>
-                                                {{ pedido?.estadoPago }}
+                                                {{ getPaymentStatusDisplay(pedido?.estadoPago).short }}
                                             </span>
                                         </td>
                                         
                                         <!-- Estado de Proceso -->
                                         <td *ngIf="col.field === 'estadoProceso'" class="estado-cell text-center col-estadoProceso" [attr.data-label]="col.header | translate">
-                                            <span class="modern-badge" [ngClass]="{
-                                                'badge-secondary': pedido?.estadoProceso === 'SinProducir',
-                                                'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                                'badge-primary': pedido?.estadoProceso === 'Empacado',
-                                                'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                                'badge-success': pedido?.estadoProceso === 'Entregado',
-                                                'badge-danger': pedido?.estadoProceso === 'Rechazado',
-                                                'badge-dark': pedido?.estadoProceso === 'Cerrado'
-                                            }">
+                                            <span class="modern-badge" 
+                                                [pTooltip]="getStatusDisplay(pedido?.estadoProceso).full"
+                                                tooltipPosition="top"
+                                                [ngClass]="{
+                                                    'badge-secondary': pedido?.estadoProceso === 'SinProducir',
+                                                    'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                    'badge-primary': pedido?.estadoProceso === 'Empacado',
+                                                    'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                    'badge-success': pedido?.estadoProceso === 'Entregado',
+                                                    'badge-danger': pedido?.estadoProceso === 'Rechazado',
+                                                    'badge-dark': pedido?.estadoProceso === 'Cerrado'
+                                                }">
                                                 <i class="status-icon pi" [ngClass]="{
                                                     'pi-circle': pedido?.estadoProceso === 'SinProducir',
                                                     'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
@@ -152,7 +160,7 @@
                                                     'pi-times-circle': pedido?.estadoProceso === 'Rechazado',
                                                     'pi-lock': pedido?.estadoProceso === 'Cerrado'
                                                 }"></i>
-                                                {{ pedido?.estadoProceso }}
+                                                {{ getStatusDisplay(pedido?.estadoProceso).short }}
                                             </span>
                                         </td>
                                         

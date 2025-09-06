@@ -115,9 +115,25 @@ export class IntegrationsService {
    * Obtiene el ID de la empresa actual del contexto o localStorage
    */
   private getCurrentCompanyId(): string {
-    // TODO: Implementar lógica para obtener company ID del contexto de usuario
-    // Por ahora retorna un valor por defecto
-    return localStorage.getItem('currentCompanyId') || 'default_company';
+    // Primero verificar si existe currentCompanyId directamente
+    const directCompanyId = localStorage.getItem('currentCompanyId');
+    if (directCompanyId) {
+      return directCompanyId;
+    }
+
+    // Si no existe, extraerlo del objeto currentCompany
+    const currentCompany = localStorage.getItem('currentCompany');
+    if (currentCompany) {
+      try {
+        const company = JSON.parse(currentCompany);
+        // Intentar diferentes campos que pueden contener el ID de la empresa
+        return company.nomComercial || company.nombreComercio || company.razonSocial || company.nombre || 'default_company';
+      } catch (error) {
+        console.error('Error parsing currentCompany from localStorage:', error);
+      }
+    }
+
+    return 'default_company';
   }
 
   /**

@@ -149,8 +149,11 @@ export class GenerarOrdenComponent implements OnInit {
 
   private cargarOrdenesExistentes(): void {
     // Cargar todas las órdenes existentes para verificar duplicados
+    // NOTA: Por ahora usamos el método deprecado que mantiene compatibilidad
+    // TODO: Migrar a getShippingOrdersPaginated cuando sea necesario
     this.logisticaService.getShippingOrders().subscribe(
       (ordenes) => {
+        // El método deprecado ya maneja la conversión automáticamente
         this.ordenesExistentes = ordenes || [];
         console.log(
           "Órdenes existentes cargadas:",
@@ -160,6 +163,41 @@ export class GenerarOrdenComponent implements OnInit {
       (error) => {
         console.error("Error al cargar órdenes existentes:", error);
         this.ordenesExistentes = [];
+        
+        // Intentar con el método optimizado como fallback
+        console.log("Intentando cargar con paginación...");
+        this.cargarOrdenesConPaginacion();
+      },
+    );
+  }
+
+  /**
+   * Método alternativo que usa la nueva paginación optimizada
+   * Se usará automáticamente en futuras versiones
+   */
+  private cargarOrdenesConPaginacion(): void {
+    this.logisticaService.getShippingOrdersPaginated({
+      page: 1,
+      limit: 100,
+      fields: 'minimal' // Solo necesitamos info básica para validación
+    }).subscribe(
+      (response) => {
+        if (response && response.data) {
+          this.ordenesExistentes = response.data;
+          console.log(
+            "Órdenes cargadas con paginación:",
+            this.ordenesExistentes.length,
+            "de", response.pagination?.hasMore ? "más disponibles" : "total"
+          );
+          
+          // Si hay más páginas y necesitamos todas, cargar el resto
+          if (response.pagination?.hasMore) {
+            this.cargarTodasLasPaginas();
+          }
+        }
+      },
+      (error) => {
+        console.error("Error con paginación:", error);
         Swal.fire({
           icon: "warning",
           title: "Advertencia",
@@ -167,8 +205,21 @@ export class GenerarOrdenComponent implements OnInit {
           timer: 3000,
           showConfirmButton: false,
         });
-      },
+      }
     );
+  }
+
+  /**
+   * Carga todas las páginas de órdenes si es necesario
+   */
+  private async cargarTodasLasPaginas(): Promise<void> {
+    try {
+      const allOrders = await this.logisticaService.getAllShippingOrdersV2('minimal');
+      this.ordenesExistentes = allOrders;
+      console.log(`Total de órdenes cargadas: ${allOrders.length}`);
+    } catch (error) {
+      console.error("Error cargando todas las páginas:", error);
+    }
   }
 
   actualizarPedidosDisponibles(): void {

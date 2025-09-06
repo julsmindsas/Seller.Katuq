@@ -1,0 +1,249 @@
+<!-- Bell Icon with Badge -->
+<div class="notification-bell" (click)="togglePanel()">
+  <i class="fas fa-bell" [class.has-notifications]="unreadCount > 0"></i>
+  <span class="notification-badge" *ngIf="unreadCount > 0" [@fadeIn]>
+    {{ unreadCount > 99 ? '99+' : unreadCount }}
+  </span>
+</div>
+
+<!-- Notification Panel Overlay -->
+<div class="notification-overlay" *ngIf="isOpen" (click)="closePanel()"></div>
+
+<!-- Notification Panel -->
+<div class="notification-panel" *ngIf="isOpen" [@slideIn] (click)="$event.stopPropagation()">
+  
+  <!-- Header -->
+  <div class="panel-header">
+    <div class="header-left">
+      <h3>
+        <i class="fas fa-bell"></i>
+        Notificaciones
+        <span class="connection-status" [class.offline]="!connectionStatus">
+          <i class="fas" [class.fa-wifi]="connectionStatus" [class.fa-wifi-slash]="!connectionStatus"></i>
+        </span>
+      </h3>
+      <p class="header-subtitle" *ngIf="unreadCount > 0">
+        {{ unreadCount }} no leída{{ unreadCount > 1 ? 's' : '' }}
+      </p>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn-icon" (click)="togglePreferences()" title="Preferencias">
+        <i class="fas fa-cog"></i>
+      </button>
+      <button class="btn-icon" (click)="markAllAsRead()" *ngIf="unreadCount > 0" title="Marcar todas como leídas">
+        <i class="fas fa-check-double"></i>
+      </button>
+      <button class="btn-icon" (click)="showClearAllConfirm()" title="Limpiar todas">
+        <i class="fas fa-trash"></i>
+      </button>
+      <button class="btn-icon btn-close" (click)="closePanel()" title="Cerrar">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Preferences Panel -->
+  <div class="preferences-panel" *ngIf="showPreferences" [@slideIn]>
+    <div class="preferences-header">
+      <h4><i class="fas fa-cog"></i> Preferencias</h4>
+      <button class="btn-text" (click)="togglePreferences()">Cerrar</button>
+    </div>
+    <div class="preferences-content">
+      <p class="text-muted">Las preferencias detalladas se configurarán en una próxima versión.</p>
+      <!-- Aquí se podrían agregar controles de preferencias -->
+    </div>
+  </div>
+
+  <!-- Clear All Confirmation -->
+  <div class="confirmation-panel" *ngIf="showClearConfirm" [@slideIn]>
+    <div class="confirmation-content">
+      <h4><i class="fas fa-trash text-danger"></i> Limpiar todas</h4>
+      <p>¿Estás seguro de que quieres eliminar todas las notificaciones? Esta acción no se puede deshacer.</p>
+      <div class="confirmation-actions">
+        <button class="btn btn-sm btn-outline-secondary" (click)="cancelClearAll()">
+          Cancelar
+        </button>
+        <button class="btn btn-sm btn-danger" (click)="confirmClearAll()">
+          <i class="fas fa-trash"></i> Eliminar todas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="panel-filters" *ngIf="!showPreferences && !showClearConfirm">
+    
+    <!-- Search Bar -->
+    <div class="search-container">
+      <div class="search-input-group">
+        <i class="fas fa-search search-icon"></i>
+        <input 
+          #searchInput
+          type="text"
+          class="form-control search-input"
+          placeholder="Buscar notificaciones..."
+          (input)="onSearchChange($event)"
+          [value]="searchTerm">
+        <button 
+          class="btn-clear-search" 
+          *ngIf="searchTerm" 
+          (click)="resetFilters()"
+          title="Limpiar búsqueda">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Filters -->
+    <div class="quick-filters">
+      <button 
+        class="filter-btn"
+        [class.active]="selectedFilter === 'all'"
+        (click)="setFilter('all')">
+        Todas
+      </button>
+      <button 
+        class="filter-btn"
+        [class.active]="selectedFilter === 'unread'"
+        (click)="setFilter('unread')">
+        No leídas ({{ unreadCount }})
+      </button>
+      <button 
+        class="filter-btn"
+        [class.active]="selectedFilter === 'high-priority'"
+        (click)="setFilter('high-priority')">
+        Importante
+      </button>
+      <button 
+        class="filter-btn"
+        [class.active]="selectedFilter === 'today'"
+        (click)="setFilter('today')">
+        Hoy
+      </button>
+    </div>
+
+    <!-- Type Filter -->
+    <div class="type-filter" *ngIf="getAvailableTypes().length > 1">
+      <select 
+        class="form-control form-control-sm"
+        [value]="selectedType"
+        (change)="setTypeFilter($event.target.value)">
+        <option value="all">Todos los tipos</option>
+        <option *ngFor="let type of getAvailableTypes()" [value]="type">
+          {{ getTypeName(type) }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="panel-loading" *ngIf="showLoader">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <p>Cargando notificaciones...</p>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-list" *ngIf="!showLoader && !showPreferences && !showClearConfirm">
+    
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!hasNotifications">
+      <div class="empty-icon">
+        <i class="fas fa-bell-slash"></i>
+      </div>
+      <h4>{{ emptyMessage }}</h4>
+      <p class="text-muted" *ngIf="selectedFilter === 'all' && !searchTerm">
+        Las notificaciones aparecerán aquí cuando ocurran eventos importantes.
+      </p>
+      <button 
+        class="btn btn-sm btn-outline-primary" 
+        *ngIf="searchTerm || selectedFilter !== 'all' || selectedType !== 'all'"
+        (click)="resetFilters()">
+        <i class="fas fa-undo"></i> Limpiar filtros
+      </button>
+    </div>
+
+    <!-- Notifications -->
+    <div class="notification-items" *ngIf="hasNotifications">
+      <div 
+        class="notification-item"
+        *ngFor="let notification of getPagedNotifications(); trackBy: trackByNotificationId"
+        [class.unread]="notification.status !== NotificationStatus.READ"
+        [class]="getPriorityClass(notification.priority)"
+        (click)="onNotificationClick(notification)"
+        [@fadeIn]>
+        
+        <!-- Notification Icon -->
+        <div class="notification-icon">
+          <i class="fas" [class]="getNotificationIcon(notification.type)"></i>
+        </div>
+
+        <!-- Notification Content -->
+        <div class="notification-content">
+          <div class="notification-header">
+            <h5 class="notification-title">{{ notification.title }}</h5>
+            <div class="notification-meta">
+              <span class="notification-time">{{ getRelativeTime(notification.createdAt) }}</span>
+              <span class="notification-type">{{ getTypeName(notification.type) }}</span>
+            </div>
+          </div>
+          
+          <p class="notification-message">{{ notification.message }}</p>
+          
+          <div class="notification-footer" *ngIf="notification.actionText || notification.data">
+            <button 
+              class="btn btn-sm btn-link notification-action"
+              *ngIf="notification.actionText && notification.actionUrl"
+              (click)="$event.stopPropagation(); onNotificationClick(notification)">
+              {{ notification.actionText }}
+            </button>
+            
+            <!-- Additional Data (for debugging or detailed info) -->
+            <div class="notification-data" *ngIf="notification.data && notification.data.additionalInfo">
+              <small class="text-muted">{{ notification.data.additionalInfo }}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Actions -->
+        <div class="notification-actions">
+          <button 
+            class="btn-icon btn-mark-read"
+            *ngIf="notification.status !== NotificationStatus.READ"
+            (click)="$event.stopPropagation(); markAsRead(notification)"
+            title="Marcar como leída">
+            <i class="fas fa-check"></i>
+          </button>
+          
+          <button 
+            class="btn-icon btn-delete"
+            (click)="$event.stopPropagation(); deleteNotification(notification)"
+            title="Eliminar">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+
+        <!-- Unread Indicator -->
+        <div class="unread-indicator" *ngIf="notification.status !== NotificationStatus.READ"></div>
+      </div>
+    </div>
+
+    <!-- Load More -->
+    <div class="load-more-container" *ngIf="hasMore && hasNotifications">
+      <button class="btn btn-outline-primary btn-load-more" (click)="loadMore()">
+        <i class="fas fa-chevron-down"></i>
+        Cargar más
+      </button>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="results-summary" *ngIf="hasNotifications">
+      <small class="text-muted">
+        Mostrando {{ getPagedNotifications().length }} de {{ filteredNotifications.length }} notificaciones
+      </small>
+    </div>
+  </div>
+</div>
+

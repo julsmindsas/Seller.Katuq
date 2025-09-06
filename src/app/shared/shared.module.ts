@@ -59,6 +59,10 @@ import { ProduccionService } from './services/produccion/produccion.service';
 import { BottomNavigationComponent } from './components/bottom-navigation/bottom-navigation.component';
 import { AdaptiveNavigationComponent } from './components/adaptive-navigation/adaptive-navigation.component';
 import { HapticFeedbackService } from './services/haptic-feedback.service';
+// Notification Center
+import { NotificationCenterComponent } from './components/notification-center/notification-center.component';
+import { NotificationManagerService } from './services/notifications/notification-manager.service';
+import { NotificationPreferencesService } from './services/notifications/notification-preferences.service';
 
 @NgModule({
   declarations: [
@@ -95,7 +99,9 @@ import { HapticFeedbackService } from './services/haptic-feedback.service';
     PlanSelectorComponent,
     // Mobile Navigation Components
     BottomNavigationComponent,
-    AdaptiveNavigationComponent
+    AdaptiveNavigationComponent,
+    // Notification Center
+    NotificationCenterComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],
@@ -123,7 +129,9 @@ import { HapticFeedbackService } from './services/haptic-feedback.service';
     BaseService,
     CacheService,
     ProduccionService,
-    HapticFeedbackService
+    HapticFeedbackService,
+    NotificationManagerService,
+    NotificationPreferencesService
     // SE ELIMINAN LOS PROVEEDORES DE HERRAMIENTAS DE AQUÍ
     // { provide: TOOL_ADAPTER, useClass: DefaultToolAdapterService },
     // { provide: TOOL_REGISTRARS, useExisting: SalesToolsRegistrarService, multi: true },
@@ -151,7 +159,9 @@ import { HapticFeedbackService } from './services/haptic-feedback.service';
     CarouselModule,
     // Mobile Navigation Components
     BottomNavigationComponent,
-    AdaptiveNavigationComponent
+    AdaptiveNavigationComponent,
+    // Notification Center
+    NotificationCenterComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],
