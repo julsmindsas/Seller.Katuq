@@ -2173,6 +2173,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * 🔄 SINCRONIZA la forma de entrega entre el pedido y el carrito
    * Asegura que ambos tengan la misma información para el PDF
+   * También maneja el costo de envío según la forma de entrega
    */
   private sincronizarFormaEntrega(pedido: Pedido): void {
     if (!pedido.carrito || pedido.carrito.length === 0) {
@@ -2182,7 +2183,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('🔄 SINCRONIZACIÓN - Estado inicial:', {
       nroPedido: pedido.nroPedido,
       formaEntregaPedido: pedido.formaEntrega,
-      formaEntregaCarrito: pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega
+      formaEntregaCarrito: pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega,
+      totalEnvio: pedido.totalEnvio
     });
 
     // Obtener la forma de entrega más reciente del carrito
@@ -2190,34 +2192,38 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       .map(item => item.configuracion?.datosEntrega?.formaEntrega)
       .filter(forma => forma && forma.trim() !== '');
 
+    let formaEntregaFinal = '';
+
     // Si hay formas de entrega en el carrito, usar la primera no vacía
     if (formasEntregaCarrito.length > 0) {
-      const formaEntregaCarrito = formasEntregaCarrito[0];
+      formaEntregaFinal = formasEntregaCarrito[0];
       
       // Actualizar el pedido con la forma de entrega del carrito
-      pedido.formaEntrega = formaEntregaCarrito;
+      pedido.formaEntrega = formaEntregaFinal;
       
       // Asegurar que todos los items del carrito tengan la misma forma de entrega
       pedido.carrito.forEach(item => {
         if (item.configuracion?.datosEntrega) {
-          item.configuracion.datosEntrega.formaEntrega = formaEntregaCarrito;
+          item.configuracion.datosEntrega.formaEntrega = formaEntregaFinal;
         }
       });
       
       console.log('🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde carrito:', {
         nroPedido: pedido.nroPedido,
-        formaEntrega: formaEntregaCarrito,
+        formaEntrega: formaEntregaFinal,
         itemsActualizados: pedido.carrito.length
       });
     }
     // Si el pedido tiene forma de entrega pero el carrito no, sincronizar hacia el carrito
     else if (pedido.formaEntrega) {
+      formaEntregaFinal = pedido.formaEntrega;
+      
       pedido.carrito.forEach(item => {
         if (item.configuracion?.datosEntrega) {
           item.configuracion.datosEntrega.formaEntrega = pedido.formaEntrega;
         }
       });
-      
+
       console.log('🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde pedido:', {
         nroPedido: pedido.nroPedido,
         formaEntrega: pedido.formaEntrega,
@@ -2225,10 +2231,63 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
+    // 🚚 MANEJO DEL COSTO DE ENVÍO según la forma de entrega
+    if (formaEntregaFinal && formaEntregaFinal.toLowerCase().includes('recoge')) {
+      // Si es "recoge en tienda", el costo de envío debe ser 0
+      if (pedido.totalEnvio && pedido.totalEnvio > 0) {
+        console.log('🚚 SINCRONIZACIÓN - Cambiando costo de envío a 0 para recoge en tienda:', {
+          nroPedido: pedido.nroPedido,
+          formaEntrega: formaEntregaFinal,
+          totalEnvioAnterior: pedido.totalEnvio,
+          totalEnvioNuevo: 0
+        });
+        
+        pedido.totalEnvio = 0;
+        
+        // Recalcular totales del pedido
+        this.recalcularTotalesPedido(pedido);
+      }
+    }
+
     console.log('🔄 SINCRONIZACIÓN - Estado final:', {
       nroPedido: pedido.nroPedido,
       formaEntregaPedido: pedido.formaEntrega,
-      formaEntregaCarrito: pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega
+      formaEntregaCarrito: pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega,
+      totalEnvio: pedido.totalEnvio
+    });
+  }
+
+  /**
+   * 🧮 RECALCULA los totales del pedido después de cambiar el costo de envío
+   */
+  private recalcularTotalesPedido(pedido: Pedido): void {
+    if (!pedido) return;
+
+    // Recalcular totales usando el servicio de utilidades
+    this.pedidoUtilService.pedido = pedido;
+    
+    // Actualizar totales
+    const subtotalSinEnvio = this.pedidoUtilService.getSubtotalSinEnvio();
+    const totalDescuento = Number(pedido.totalDescuento) || 0;
+    const totalImpuesto = Number(pedido.totalImpuesto) || 0;
+    const totalEnvio = Number(pedido.totalEnvio) || 0;
+    
+    // Calcular total final
+    const totalFinal = subtotalSinEnvio + totalEnvio + totalImpuesto - totalDescuento;
+    
+    // Actualizar propiedades del pedido
+    pedido.totalPedidoSinDescuento = subtotalSinEnvio + totalEnvio;
+    pedido.totalPedididoConDescuento = totalFinal;
+    pedido.faltaPorPagar = totalFinal - (Number(pedido.anticipo) || 0);
+    
+    console.log('🧮 RECÁLCULO - Totales actualizados:', {
+      nroPedido: pedido.nroPedido,
+      subtotalSinEnvio,
+      totalEnvio,
+      totalDescuento,
+      totalImpuesto,
+      totalFinal,
+      faltaPorPagar: pedido.faltaPorPagar
     });
   }
 

@@ -577,7 +577,7 @@
                                                             <span class="badge" [ngClass]="getLocalSearchResultsCount() > 0 ? 'bg-primary' : 'bg-warning'">
                                                                 <i class="pi" [ngClass]="getLocalSearchResultsCount() > 0 ? 'pi-filter' : 'pi-exclamation-triangle'"></i>
                                                                 <span *ngIf="getLocalSearchResultsCount() > 0">
-                                                                    {{ getLocalSearchResultsCount() }} {{ 'resultados' | translate }}
+                                                                {{ getLocalSearchResultsCount() }} {{ 'resultados' | translate }}
                                                                 </span>
                                                                 <span *ngIf="getLocalSearchResultsCount() === 0">
                                                                     {{ 'Sin resultados' | translate }}

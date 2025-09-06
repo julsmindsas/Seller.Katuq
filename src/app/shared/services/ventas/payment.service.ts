@@ -1083,13 +1083,17 @@ export class PaymentService extends BaseService {
           const valorUnitarioSinIvaAdic = Number(adic.valorUnitarioSinIva) || 0;
           const valorIvaAdic = Number(adic.valorIva) || 0;
           const precioTotalConIvaAdic = Number(adic.precioTotalConIva) || 0;
-          const valorIvaAdicTotal = valorIvaAdic * cantidad;
-          const precioTotalConIvaAdicTotal = precioTotalConIvaAdic * cantidad;
+          // Obtener la cantidad de la adición (si existe) o usar 1 por defecto
+          const cantidadAdicion = (adic as any).cantidad || 1;
+          const cantidadTotalAdicion = cantidadAdicion * cantidad;
+          const valorIvaAdicTotal = valorIvaAdic * cantidadTotalAdicion;
+          const precioTotalConIvaAdicTotal = precioTotalConIvaAdic * cantidadTotalAdicion;
           carritoHtml += `
             <tr style="background-color: #f0f0f0;">
               <td></td> <!-- Indentación -->
               <td style="border: 1px solid #ddd; padding: 8px;"><img src="${adic.imagen ?? ""}" alt="Adición" style="width: 40px; height: auto;"></td>
-              <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">${adic.titulo ?? ""}: ${adic.subtitulo ?? ""}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${adic.titulo ?? ""}: ${adic.subtitulo ?? ""}</td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${cantidadTotalAdicion}</td>
               <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorUnitarioSinIvaAdic)}</td>
               <td style="border: 1px solid #ddd; padding: 8px;">${adic.porcentajeIva ?? "0"}%</td>
               <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaAdicTotal)}</td>
