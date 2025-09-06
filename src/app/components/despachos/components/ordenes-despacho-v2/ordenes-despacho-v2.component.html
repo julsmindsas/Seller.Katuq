@@ -236,7 +236,6 @@
                     <th>{{ 'Dirección' | translate }}</th>
                     <th>{{ 'Fecha Entrega' | translate }}</th>
                     <th>{{ 'Valor a Cobrar' | translate }}</th>
-                    <th>{{ 'Estado' | translate }}</th>
                     <th>{{ 'Acciones' | translate }}</th>
                   </tr>
                 </thead>
@@ -254,16 +253,6 @@
                     <td>{{ formatDate(pedido.fechaEntrega) }}</td>
                     <td class="text-end">
                       <strong class="text-success">{{ getValorACobrarPorPedido(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
-                    </td>
-                    <td>
-                      <span class="badge" 
-                            [ngClass]="{
-                              'bg-success': pedido.estadoProceso === 'Despachado' || isPedidoDispatched(pedido),
-                              'bg-warning text-dark': pedido.estadoProceso !== 'Despachado' && !isPedidoDispatched(pedido),
-                              'bg-secondary': !pedido.estadoProceso
-                            }">
-                        {{ pedido.estadoProceso || 'Sin estado' }}
-                      </span>
                     </td>
                     <td class="actions-column">
                       <div class="d-flex gap-1">
@@ -350,7 +339,6 @@
                     <th style="font-size: 0.75rem;">{{ 'Cliente' | translate }}</th>
                     <th style="font-size: 0.75rem;">{{ 'Ubicación' | translate }}</th>
                     <th style="font-size: 0.75rem;">{{ 'Valor' | translate }}</th>
-                    <th style="font-size: 0.75rem;">{{ 'Estado' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -367,16 +355,6 @@
                     <td class="text-end">
                       <strong class="text-success" style="font-size: 0.75rem;">{{ getValorACobrarPorPedido(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
                       <div class="text-muted" style="font-size: 0.7rem;">{{ formatDate(pedido.fechaEntrega) }}</div>
-                    </td>
-                    <td>
-                      <span class="badge badge-sm" 
-                            [ngClass]="{
-                              'bg-success': pedido.estadoProceso === 'Despachado' || isPedidoDispatched(pedido),
-                              'bg-warning text-dark': pedido.estadoProceso !== 'Despachado' && !isPedidoDispatched(pedido),
-                              'bg-secondary': !pedido.estadoProceso
-                            }">
-                        {{ pedido.estadoProceso || 'Sin estado' }}
-                      </span>
                     </td>
                   </tr>
                 </tbody>
