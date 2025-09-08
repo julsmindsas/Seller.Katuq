@@ -1544,6 +1544,12 @@
     <div class="modal-body">
         <pedido-entrega #entrega [pedidoGral]="pedidoSeleccionado" [formulario]="formulario" [isEdit]="true"
             [documentoBusqueda]="clienteSeleccionado.documento"
+            [datosEntregas]="datosEntregaDelCliente"
+            [paisInicial]="pedidoSeleccionado?.envio?.pais || ''"
+            [departamentoInicial]="pedidoSeleccionado?.envio?.departamento || ''"
+            [ciudad]="pedidoSeleccionado?.envio?.ciudad || ''"
+            [direccionEntrega]="pedidoSeleccionado?.envio?.direccionEntrega || ''"
+            [codigoPostal]="pedidoSeleccionado?.envio?.codigoPV || ''"
             (overridePedido)="overridePedidoByEntrega($event)"></pedido-entrega>
     </div>
 </ng-template>
