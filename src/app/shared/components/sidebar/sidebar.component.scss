@@ -2923,6 +2923,221 @@
 }
 
 // ===================================================
+// NOTIFICATION BELL SECTION
+// ===================================================
+
+.sidebar-notification-section {
+  margin: 16px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeIn 0.6s ease-out;
+  
+  &:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+    border-color: rgba(99, 102, 241, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+  }
+  
+  &.collapsed {
+    display: none;
+  }
+  
+  &.compact {
+    margin: 8px;
+    padding: 8px;
+    
+    .notification-label,
+    .notification-preview,
+    .notification-quick-actions {
+      display: none;
+    }
+  }
+}
+
+.sidebar-notification-bell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+  position: relative;
+  
+  &:hover {
+    background: rgba(99, 102, 241, 0.1);
+    
+    .bell-container {
+      transform: scale(1.1);
+    }
+    
+    .fa-bell {
+      animation: bellShake 0.5s ease;
+    }
+  }
+  
+  .bell-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    transition: transform 0.2s ease;
+    
+    .fa-bell {
+      font-size: 18px;
+      color: var(--text-secondary);
+      transition: all 0.3s ease;
+      
+      &.has-notifications {
+        color: var(--primary-color);
+        animation: bellPulse 2s infinite;
+      }
+      
+      &.ringing {
+        animation: bellRing 1s ease infinite;
+      }
+    }
+    
+    .notification-count-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      border-radius: 12px;
+      min-width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 2px solid var(--sidebar-bg);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+      animation: badgeAppear 0.3s ease;
+      
+      &.pulse {
+        animation: badgePulse 1.5s ease infinite;
+      }
+    }
+  }
+  
+  .notification-label {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  
+  .notification-preview {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    
+    .preview-text {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 12px;
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.notification-quick-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(99, 102, 241, 0.1);
+  
+  .quick-action-btn {
+    flex: 1;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &:hover {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    &.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    
+    i {
+      font-size: 14px;
+    }
+  }
+}
+
+// Animaciones para notificaciones
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(14deg); }
+  20%, 40% { transform: rotate(-14deg); }
+  50% { transform: rotate(10deg); }
+  60% { transform: rotate(-10deg); }
+  70% { transform: rotate(5deg); }
+  80% { transform: rotate(-5deg); }
+  90% { transform: rotate(2deg); }
+}
+
+@keyframes bellPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes badgeAppear {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes badgePulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+// ===================================================
 // PLAN CARD (Mantener estilos existentes)
 // ===================================================
 

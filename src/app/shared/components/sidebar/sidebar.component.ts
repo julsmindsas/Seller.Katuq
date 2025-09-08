@@ -5,6 +5,8 @@ import { LayoutService } from '../../services/layout.service';
 import { environment } from '../../../../environments/environment';
 import { SecurityService } from '../../services/security/security.service';
 import { CompanyInformation } from '../../models/User/CompanyInformation';
+import { NotificationManagerService } from '../../services/notifications/notification-manager.service';
+import { Subscription } from 'rxjs';
 // Asegúrate de que PlanSelectorComponent esté importado si aún no lo está
 // import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
 
@@ -61,6 +63,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // Nueva propiedad para las secciones colapsables
   public sections: SidebarSection[] = [];
+  
+  // Propiedades para notificaciones
+  public unreadNotificationCount: number = 0;
+  public hasNewNotifications: boolean = false;
+  public latestNotification: string = '';
+  public notificationSoundEnabled: boolean = true;
+  private notificationSubscription: Subscription;
+  private newNotificationTimer: any;
 
   constructor(
     private router: Router,
@@ -68,7 +78,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     public layout: LayoutService,
     private securityService: SecurityService,
     private renderer: Renderer2,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private notificationManager: NotificationManagerService
   ) {
     this.navServices.items.subscribe(menuItems => {
       this.processMenuItems(menuItems); // Procesar items para crear secciones
@@ -134,6 +145,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     
     // Configurar estado inicial basado en tamaño de pantalla
     this.initializeSidebarState();
+    
+    // Inicializar sistema de notificaciones
+    this.initializeNotifications();
     
     // Cargar preferencia de modo compacto
     const compactMode = localStorage.getItem('sidebarCompactMode');
@@ -1790,6 +1804,15 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
+    
+    // Limpiar suscripciones de notificaciones
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
+    }
+    
+    if (this.newNotificationTimer) {
+      clearTimeout(this.newNotificationTimer);
+    }
   }
 
   // ===================================================
@@ -2058,7 +2081,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'fa-times-circle': 'fa-times-circle',
       'fa-exclamation-triangle': 'fa-warning',
       'fa-info-circle': 'fa-info-circle',
-      'fa-question-circle': 'fa-question-circle'
+      'fa-question-circle': 'fa-question-circle',
+      // Mapeos adicionales para iconos problemáticos
+      'fa-pencil-alt': 'fa-pencil',
+      'fa-user-edit': 'fa-user',
+      'fa-battery-empty': 'fa-battery-0',
+      'fa-hand-holding-usd': 'fa-usd',
+      'fa-industry': 'fa-cogs',
+      'fa-box': 'fa-cube'
     };
 
     return fa5ToFa4Map[iconClass] || null;
@@ -2300,6 +2330,102 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => {
       this.renderer.removeClass(element, 'cinematic-glow');
     }, 2000);
+  }
+  
+  // ===================================================
+  // MÉTODOS DE NOTIFICACIONES
+  // ===================================================
+  
+  private initializeNotifications(): void {
+    // Suscribirse a las notificaciones del NotificationManagerService
+    if (this.notificationManager) {
+      this.notificationSubscription = this.notificationManager.notifications$.subscribe(notifications => {
+        // Contar notificaciones no leídas
+        this.unreadNotificationCount = notifications.filter(n => n.status !== 'READ').length;
+        
+        // Obtener la última notificación para el preview
+        if (notifications.length > 0) {
+          const latest = notifications[0];
+          this.latestNotification = latest.message || latest.title || '';
+          
+          // Si hay nuevas notificaciones, activar animación
+          if (this.unreadNotificationCount > 0) {
+            this.triggerNewNotificationAnimation();
+          }
+        } else {
+          this.latestNotification = '';
+        }
+      });
+    }
+    
+    // Cargar preferencia de sonido
+    const soundPref = localStorage.getItem('notificationSound');
+    this.notificationSoundEnabled = soundPref !== 'false';
+  }
+  
+  private triggerNewNotificationAnimation(): void {
+    this.hasNewNotifications = true;
+    
+    // Reproducir sonido si está habilitado
+    if (this.notificationSoundEnabled) {
+      this.playNotificationSound();
+    }
+    
+    // Desactivar la animación después de 3 segundos
+    if (this.newNotificationTimer) {
+      clearTimeout(this.newNotificationTimer);
+    }
+    
+    this.newNotificationTimer = setTimeout(() => {
+      this.hasNewNotifications = false;
+    }, 3000);
+  }
+  
+  private playNotificationSound(): void {
+    try {
+      // Crear un sonido simple usando Web Audio API
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (error) {
+      console.log('No se pudo reproducir el sonido de notificación', error);
+    }
+  }
+  
+  public openNotificationCenter(): void {
+    // Emitir evento para abrir el panel de notificaciones
+    // Esto puede comunicarse con el notification-center component
+    const notificationBell = document.querySelector('app-notification-center .notification-bell') as HTMLElement;
+    if (notificationBell) {
+      notificationBell.click();
+    }
+  }
+  
+  public markAllNotificationsAsRead(event: Event): void {
+    event.stopPropagation();
+    
+    if (this.notificationManager) {
+      this.notificationManager.markAllAsRead();
+    }
+  }
+  
+  public toggleNotificationSound(event: Event): void {
+    event.stopPropagation();
+    
+    this.notificationSoundEnabled = !this.notificationSoundEnabled;
+    localStorage.setItem('notificationSound', this.notificationSoundEnabled.toString());
   }
 
 }

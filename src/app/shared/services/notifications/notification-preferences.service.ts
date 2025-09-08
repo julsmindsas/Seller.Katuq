@@ -86,12 +86,23 @@ export class NotificationPreferencesService {
    * Carga preferencias desde el servidor
    */
   private async loadFromServer(): Promise<NotificationPreferences | null> {
+    // Si la API está deshabilitada, retornar null inmediatamente
+    if (!NOTIFICATION_CONFIG.api.enabled) {
+      return null;
+    }
+    
     const endpoint = `${NOTIFICATION_CONFIG.api.baseUrl}${NOTIFICATION_CONFIG.api.endpoints.preferences}/${this.currentUserId}`;
     
     try {
       const response = await this.http.get<NotificationPreferences>(endpoint).toPromise();
       return response || null;
-    } catch (error) {
+    } catch (error: any) {
+      // Silenciar error 404 ya que es esperado cuando no hay preferencias guardadas
+      if (error?.status === 404) {
+        console.log('Preferencias de notificación no encontradas en el servidor, usando valores locales');
+      } else {
+        console.warn('Error cargando preferencias del servidor:', error?.message || error);
+      }
       return null;
     }
   }
@@ -100,9 +111,19 @@ export class NotificationPreferencesService {
    * Guarda preferencias en el servidor
    */
   private async saveToServer(preferences: NotificationPreferences): Promise<void> {
+    // Si la API está deshabilitada, no intentar guardar
+    if (!NOTIFICATION_CONFIG.api.enabled) {
+      return;
+    }
+    
     const endpoint = `${NOTIFICATION_CONFIG.api.baseUrl}${NOTIFICATION_CONFIG.api.endpoints.preferences}`;
     
-    await this.http.put(endpoint, preferences).toPromise();
+    try {
+      await this.http.put(endpoint, preferences).toPromise();
+    } catch (error: any) {
+      // Silenciar errores de guardado en el servidor
+      console.warn('No se pudieron guardar las preferencias en el servidor:', error?.message || error);
+    }
   }
 
   /**

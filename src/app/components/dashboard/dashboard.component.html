@@ -8,7 +8,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-4">
                             <h2 class="dashboard-title mb-2">
-                                <i class="fas fa-chart-line me-2"></i>
+                                <i class="fa fa-chart-line me-2"></i>
                                 {{ 'Panel de Control' | translate }}
                             </h2>
                             <p class="text-muted mb-0">
@@ -37,15 +37,15 @@
                                 </div>
                                 <div class="button-group">
                                     <button class="btn btn-primary" (click)="cargarDatos()">
-                                        <i class="fas fa-filter me-1"></i>
+                                        <i class="fa fa-filter me-1"></i>
                                         {{ 'Filtrar' | translate }}
                                     </button>
                                     <button class="btn btn-outline-primary" (click)="cargarDatosMesActual()">
-                                        <i class="fas fa-calendar-day me-1"></i>
+                                        <i class="fa fa-calendar-day me-1"></i>
                                         {{ 'Mes actual' | translate }}
                                     </button>
                                     <button class="btn btn-outline-primary" (click)="cargarDatosMesAnterior()">
-                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        <i class="fa fa-calendar-alt me-1"></i>
                                         {{ 'Mes anterior' | translate }}
                                     </button>
                                 </div>
@@ -56,25 +56,25 @@
                                         <button class="btn btn-sm btn-outline-secondary" 
                                                 (click)="expandAll()" 
                                                 title="Expandir todos los módulos">
-                                            <i class="fas fa-expand-alt me-1"></i>
+                                            <i class="fa fa-expand-alt me-1"></i>
                                             {{ 'Expandir Todo' | translate }}
                                         </button>
                                         <button class="btn btn-sm btn-outline-secondary" 
                                                 (click)="collapseAll()" 
                                                 title="Colapsar todos los módulos">
-                                            <i class="fas fa-compress-alt me-1"></i>
+                                            <i class="fa fa-compress-alt me-1"></i>
                                             {{ 'Colapsar Todo' | translate }}
                                         </button>
                                         <button class="btn btn-sm btn-info me-2" 
                                                 (click)="startDashboardTour()" 
                                                 title="Iniciar tour guiado del dashboard">
-                                            <i class="fas fa-route me-1"></i>
+                                            <i class="fa fa-route me-1"></i>
                                             {{ 'Tour Guiado' | translate }}
                                         </button>
                                         <button class="btn btn-sm btn-outline-secondary" 
                                                 (click)="resetTours()" 
                                                 title="Reiniciar todos los tours">
-                                            <i class="fas fa-redo me-1"></i>
+                                            <i class="fa fa-redo me-1"></i>
                                             {{ 'Reiniciar Tours' | translate }}
                                         </button>
                                     </div>
@@ -86,7 +86,7 @@
 
                 <!-- Error Section -->
                 <div *ngIf="estadoCarga.error" class="alert alert-warning m-4" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <i class="fa fa-exclamation-triangle me-2"></i>
                     {{ estadoCarga.error }}
                 </div>
 
@@ -94,15 +94,15 @@
                 <div class="alert alert-info alert-dismissible fade show m-4" role="alert" id="tour-welcome-banner">
                     <div class="d-flex align-items-center">
                         <div class="me-3">
-                            <i class="fas fa-route fa-2x text-info"></i>
+                            <i class="fa fa-route fa-2x text-info"></i>
                         </div>
                         <div class="flex-grow-1">
                             <h5 class="alert-heading mb-1">
-                                <i class="fas fa-sparkles me-2"></i>{{ '¡Descubre Katuq Seller!' | translate }}
+                                <i class="fa fa-sparkles me-2"></i>{{ '¡Descubre Katuq Seller!' | translate }}
                             </h5>
                             <p class="mb-2">{{ 'Inicia el tour guiado para conocer todas las funcionalidades de tu panel de control.' | translate }}</p>
                             <button class="btn btn-info btn-sm me-2" (click)="startDashboardTour()">
-                                <i class="fas fa-play me-1"></i>{{ 'Comenzar Tour' | translate }}
+                                <i class="fa fa-play me-1"></i>{{ 'Comenzar Tour' | translate }}
                             </button>
                             <small class="text-muted">{{ 'Solo toma 2 minutos' | translate }}</small>
                         </div>
@@ -129,12 +129,12 @@
                                                 <h6 class="card-title mb-1">{{ 'Ventas Totales' | translate }}</h6>
                                                 <h3 class="mb-0">{{ totalVentas | currency:'COP':'symbol':'1.0-0' }}</h3>
                                                 <small class="text-white-50">
-                                                    <i class="fas fa-arrow-up me-1" *ngIf="crecimientoVentas > 0"></i>
-                                                    <i class="fas fa-arrow-down me-1" *ngIf="crecimientoVentas < 0"></i>
+                                                    <i class="fa fa-arrow-up me-1" *ngIf="crecimientoVentas > 0"></i>
+                                                    <i class="fa fa-arrow-down me-1" *ngIf="crecimientoVentas < 0"></i>
                                                     {{ crecimientoVentas }}% vs período anterior
                                                 </small>
                                             </div>
-                                            <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                                            <i class="fa fa-dollar-sign fa-2x opacity-75"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -157,7 +157,7 @@
                                                 <h3 class="mb-0">{{ promedioTicket | currency:'COP':'symbol':'1.0-0' }}</h3>
                                                 <small class="text-white-50">Por pedido aprobado</small>
                                             </div>
-                                            <i class="fas fa-ticket-alt fa-2x opacity-75"></i>
+                                            <i class="fa fa-ticket-alt fa-2x opacity-75"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -180,7 +180,7 @@
                                                 <h3 class="mb-0">{{ tasaConversion }}%</h3>
                                                 <small class="text-white-50">{{ pedidosAprobados }} de {{ totalPedidos }} pedidos</small>
                                             </div>
-                                            <i class="fas fa-percentage fa-2x opacity-75"></i>
+                                            <i class="fa fa-percentage fa-2x opacity-75"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -203,7 +203,7 @@
                                                 <h3 class="mb-0">{{ totalPedidos }}</h3>
                                                 <small class="text-white-50">{{ pedidosAprobados }} aprobados</small>
                                             </div>
-                                            <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                                            <i class="fa fa-shopping-cart fa-2x opacity-75"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -222,7 +222,7 @@
                                                         <h3 class="module-title clickable">
                         <img src="assets/icons/dashboard/sales-chart.svg" class="module-icon me-2" alt="Ventas">
                         {{ 'Módulo de Ventas' | translate }}
-                        <i class="fas fa-chevron-down ms-2 collapse-icon" 
+                        <i class="fa fa-chevron-down ms-2 collapse-icon" 
                            [class.rotated]="modulosExpandidos.ventas"></i>
                     </h3>
                                     <p class="module-description text-muted">
@@ -231,7 +231,7 @@
                                 </div>
                                 <div class="col-auto">
                                     <div class="module-badge bg-primary text-white px-3 py-1 rounded-pill">
-                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        <i class="fa fa-dollar-sign me-1"></i>
                                         {{ 'Comercial' | translate }}
                                     </div>
                                 </div>
@@ -245,7 +245,7 @@
                                     <div class="card chart-card h-100" data-tour="chart-ventas">
                                         <div class="card-header bg-gradient-primary text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-chart-area me-2"></i>
+                                                <i class="fa fa-chart-area me-2"></i>
                                                 {{ 'Tendencia de Ventas del Período' | translate }}
                                             </h5>
                                         </div>
@@ -276,7 +276,7 @@
                                                     class="btn btn-secondary btn-sm" 
                                             (click)="analizar('VentasMes')"
                                             [disabled]="isAnalyzing">
-                                            <i class="fas fa-magic me-1" *ngIf="!isAnalyzing"></i>
+                                            <i class="fa fa-magic me-1" *ngIf="!isAnalyzing"></i>
                                             <div class="spinner-border spinner-border-sm me-1" role="status" *ngIf="isAnalyzing">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
@@ -295,7 +295,7 @@
                                     <!-- Resultado del análisis -->
                                     <div *ngIf="ventasMesCheck && !isAnalyzing" class="analysis-result">
                                         <div class="alert alert-info mb-2" role="alert">
-                                            <i class="fas fa-lightbulb me-1"></i>
+                                            <i class="fa fa-lightbulb me-1"></i>
                                                     <small>{{ 'Análisis por K.A.I.' | translate }}</small>
                                         </div>
                                         <div 
@@ -307,7 +307,7 @@
                                     
                                     <!-- Estado inicial -->
                                     <div *ngIf="!ventasMesCheck && !isAnalyzing" class="text-center text-muted">
-                                                <i class="fas fa-brain fa-2x mb-2 opacity-50"></i>
+                                                <i class="fa fa-brain fa-2x mb-2 opacity-50"></i>
                                                 <p class="mb-0 small">{{ 'Obtén insights inteligentes sobre tus ventas' | translate }}</p>
                                             </div>
                                         </div>
@@ -319,7 +319,7 @@
                                     <div class="card chart-card h-100">
                                         <div class="card-header bg-gradient-success text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-store me-2"></i>
+                                                <i class="fa fa-store me-2"></i>
                                                 {{ 'Ticket Promedio por Canal' | translate }}
                                             </h5>
                                         </div>
@@ -334,7 +334,7 @@
                                                 <!-- Canal más rentable destacado -->
                                                 <div class="alert alert-success mb-3" *ngIf="canalMasRentable">
                                                     <div class="d-flex align-items-center">
-                                                        <i class="fas fa-trophy me-2"></i>
+                                                        <i class="fa fa-trophy me-2"></i>
                                                         <div>
                                                             <strong>{{ canalMasRentable.canal }}</strong> - Canal Líder
                                                             <br>
@@ -349,7 +349,7 @@
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div class="canal-info">
                                                                 <h6 class="mb-1">
-                                                                    <i class="fas fa-circle me-2" [style.color]="getChannelColor(i)"></i>
+                                                                    <i class="fa fa-circle me-2" [style.color]="getChannelColor(i)"></i>
                                                                     {{ canal.canal }}
                                                                 </h6>
                                                                 <small class="text-muted">
@@ -382,7 +382,7 @@
                                     <div class="card chart-card h-100">
                                         <div class="card-header bg-gradient-info text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-user-tie me-2"></i>
+                                                <i class="fa fa-user-tie me-2"></i>
                                                 {{ 'Top Vendedores' | translate }}
                                             </h5>
                                         </div>
@@ -397,7 +397,7 @@
                                                 <!-- Vendedor top destacado -->
                                                 <div class="alert alert-info mb-3" *ngIf="vendedorTop">
                                                     <div class="d-flex align-items-center">
-                                                        <i class="fas fa-crown me-2"></i>
+                                                        <i class="fa fa-crown me-2"></i>
                                                         <div>
                                                             <strong>{{ formatVendedorName(vendedorTop.vendedor) }}</strong> - Vendedor Estrella
                                                             <br>
@@ -412,7 +412,7 @@
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div class="vendedor-info">
                                                                 <h6 class="mb-1">
-                                                                    <i class="fas fa-user-circle me-2 text-primary"></i>
+                                                                    <i class="fa fa-user-circle me-2 text-primary"></i>
                                                                     {{ formatVendedorName(vendedor.vendedor) }}
                                                                 </h6>
                                                                 <small class="text-muted">
@@ -428,13 +428,13 @@
                                                                 </div>
                                                                 <div class="performance" *ngIf="vendedor.ticketPromedio > promedioTicket">
                                                                     <small class="text-success">
-                                                                        <i class="fas fa-arrow-up me-1"></i>
+                                                                        <i class="fa fa-arrow-up me-1"></i>
                                                                         Sobre promedio
                                                                     </small>
                                                                 </div>
                                                                 <div class="performance" *ngIf="vendedor.ticketPromedio <= promedioTicket">
                                                                     <small class="text-warning">
-                                                                        <i class="fas fa-arrow-down me-1"></i>
+                                                                        <i class="fa fa-arrow-down me-1"></i>
                                                                         Bajo promedio
                                                                     </small>
                                                                 </div>
@@ -479,7 +479,7 @@
                                     <div class="card chart-card h-100">
                                         <div class="card-header bg-gradient-warning text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                <i class="fa fa-exclamation-triangle me-2"></i>
                                                 {{ 'Productos Con Oportunidad' | translate }}
                                             </h5>
                                         </div>
@@ -500,7 +500,7 @@
                                     <div class="card chart-card h-100">
                                         <div class="card-header bg-gradient-info text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-chart-pie me-2"></i>
+                                                <i class="fa fa-chart-pie me-2"></i>
                                                 {{ 'Distribución por Categorías' | translate }}
                                             </h5>
                                         </div>
@@ -521,7 +521,7 @@
                                     <div class="card chart-card h-100">
                                         <div class="card-header bg-gradient-purple text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-credit-card me-2"></i>
+                                                <i class="fa fa-credit-card me-2"></i>
                                                 {{ 'Comportamiento de Pago' | translate }}
                                             </h5>
                                         </div>
@@ -548,7 +548,7 @@
                                                         <h3 class="module-title clickable">
                         <img src="assets/icons/dashboard/logistics-truck.svg" class="module-icon me-2" alt="Logística">
                         {{ 'Módulo de Logística' | translate }}
-                        <i class="fas fa-chevron-down ms-2 collapse-icon" 
+                        <i class="fa fa-chevron-down ms-2 collapse-icon" 
                            [class.rotated]="modulosExpandidos.logistica"></i>
                     </h3>
                                     <p class="module-description text-muted">
@@ -557,7 +557,7 @@
                                 </div>
                                 <div class="col-auto">
                                     <div class="module-badge bg-warning text-dark px-3 py-1 rounded-pill">
-                                        <i class="fas fa-shipping-fast me-1"></i>
+                                        <i class="fa fa-shipping-fast me-1"></i>
                                         {{ 'Distribución' | translate }}
                                     </div>
                                 </div>
@@ -581,7 +581,7 @@
                                     <div class="card metric-card-enhanced h-100">
                                         <div class="card-header bg-gradient-warning text-dark">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-tachometer-alt me-2"></i>
+                                                <i class="fa fa-tachometer-alt me-2"></i>
                                                 {{ 'Performance de Entregas' | translate }}
                                             </h5>
                                         </div>
@@ -589,7 +589,7 @@
                                             <div class="row g-3 text-center">
                                                 <div class="col-6">
                                                     <div class="metric-item">
-                                                        <i class="fas fa-percentage fa-2x text-success mb-2"></i>
+                                                        <i class="fa fa-percentage fa-2x text-success mb-2"></i>
                                                         <h3 class="metric-value">{{ logisticaData.performanceEntregas.resumen.tasaEntrega | number:'1.1-1' }}%</h3>
                                                         <small class="text-muted">Tasa de entrega</small>
                                                         <div class="progress mt-2">
@@ -600,7 +600,7 @@
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="metric-item">
-                                                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                                        <i class="fa fa-clock fa-2x text-primary mb-2"></i>
                                                         <h3 class="metric-value">{{ logisticaData.performanceEntregas.insights.tiempoPromedioGeneral | number:'1.1-1' }}</h3>
                                                         <small class="text-muted">Días promedio</small>
                                                         <div class="progress mt-2">
@@ -619,18 +619,18 @@
                                     <div class="card metric-card-enhanced h-100">
                                         <div class="card-header bg-gradient-info text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-map-marked-alt me-2"></i>
+                                                <i class="fa fa-map-marked-alt me-2"></i>
                                                 {{ 'Cobertura Geográfica' | translate }}
                                             </h5>
                                         </div>
                                         <div class="card-body">
                                             <div class="text-center">
                                                 <div class="coverage-circle">
-                                                    <i class="fas fa-map-marker-alt fa-3x text-info mb-3"></i>
+                                                    <i class="fa fa-map-marker-alt fa-3x text-info mb-3"></i>
                                                     <h2 class="metric-value text-info">{{ logisticaData.analisisGeografico.resumen.ciudadesAtendidas }}</h2>
                                                     <p class="text-muted mb-0">Ciudades cubiertas</p>
                                                     <small class="text-success">
-                                                        <i class="fas fa-building me-1"></i>
+                                                        <i class="fa fa-building me-1"></i>
                                                         {{ logisticaData.analisisGeografico.resumen.bodegasActivas }} bodegas activas
                                                     </small>
                                                 </div>
@@ -644,7 +644,7 @@
                                     <div class="card metric-card-enhanced h-100">
                                         <div class="card-header bg-gradient-success text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-truck me-2"></i>
+                                                <i class="fa fa-truck me-2"></i>
                                                 {{ 'Mejor Transportador' | translate }}
                                             </h5>
                                         </div>
@@ -672,7 +672,7 @@
                                     <div class="card metric-card-enhanced h-100">
                                         <div class="card-header bg-gradient-warning text-dark">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-stopwatch me-2"></i>
+                                                <i class="fa fa-stopwatch me-2"></i>
                                                 {{ 'Métricas Básicas' | translate }}
                                             </h5>
                                         </div>
@@ -680,14 +680,14 @@
                                             <div class="row g-3 text-center">
                                                 <div class="col-6">
                                                     <div class="metric-item">
-                                                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                                        <i class="fa fa-clock fa-2x text-primary mb-2"></i>
                                                         <h3 class="metric-value">{{ detailsData.metricas.tiempoPromedioEntrega | number:'1.1-1' }}</h3>
                                                         <small class="text-muted">Días promedio</small>
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="metric-item">
-                                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                                        <i class="fa fa-check-circle fa-2x text-success mb-2"></i>
                                                         <h3 class="metric-value">{{ detailsData.metricas.pedidosEntregados }}</h3>
                                                         <small class="text-muted">Entregados</small>
                                                     </div>
@@ -708,7 +708,7 @@
                                                         <h3 class="module-title clickable">
                         <img src="assets/icons/dashboard/production-gear.svg" class="module-icon me-2" alt="Producción">
                         {{ 'Módulo de Producción' | translate }}
-                        <i class="fas fa-chevron-down ms-2 collapse-icon" 
+                        <i class="fa fa-chevron-down ms-2 collapse-icon" 
                            [class.rotated]="modulosExpandidos.produccion"></i>
                     </h3>
                                     <p class="module-description text-muted">
@@ -717,7 +717,7 @@
                                 </div>
                                 <div class="col-auto">
                                     <div class="module-badge bg-info text-white px-3 py-1 rounded-pill">
-                                        <i class="fas fa-cogs me-1"></i>
+                                        <i class="fa fa-cogs me-1"></i>
                                         {{ 'Procesos' | translate }}
                                     </div>
                                 </div>
@@ -741,7 +741,7 @@
                                     <div class="card metric-card-enhanced h-100" data-tour="pedidos-recientes">
                                         <div class="card-header bg-gradient-info text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-stream me-2"></i>
+                                                <i class="fa fa-stream me-2"></i>
                                                 {{ 'Resumen de Procesos' | translate }}
                                             </h5>
                                         </div>
@@ -767,7 +767,7 @@
                                     <div class="card metric-card-enhanced h-100">
                                         <div class="card-header bg-gradient-warning text-dark">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-chart-bar me-2"></i>
+                                                <i class="fa fa-chart-bar me-2"></i>
                                                 {{ 'Estado Predominante' | translate }}
                                             </h5>
                                         </div>
@@ -791,7 +791,7 @@
                                     <div class="card metric-card-enhanced h-100">
                                         <div class="card-header bg-gradient-success text-white">
                                             <h5 class="card-title mb-0">
-                                                <i class="fas fa-stopwatch me-2"></i>
+                                                <i class="fa fa-stopwatch me-2"></i>
                                                 {{ 'Tiempos de Proceso' | translate }}
                                             </h5>
                                         </div>
@@ -826,13 +826,13 @@
                                 <div class="col-md-12" *ngIf="!estadoCarga.pedidos && !pedidosData.flujoEstados && !pedidosData.tiemposProcesamiento">
                                     <div class="card coming-soon-card">
                                         <div class="card-body text-center py-5">
-                                            <i class="fas fa-wrench fa-3x text-info mb-3 opacity-50"></i>
+                                            <i class="fa fa-wrench fa-3x text-info mb-3 opacity-50"></i>
                                             <h4 class="text-info">{{ 'Análisis de Procesos Disponible' | translate }}</h4>
                                             <p class="text-muted mb-3">
                                                 {{ 'Expande este módulo para ver el análisis detallado del flujo de estados de pedidos.' | translate }}
                                             </p>
                                             <button class="btn btn-info" (click)="toggleModule('produccion')" *ngIf="!modulosExpandidos.produccion">
-                                                <i class="fas fa-expand me-1"></i>
+                                                <i class="fa fa-expand me-1"></i>
                                                 {{ 'Expandir Módulo' | translate }}
                                             </button>
                                         </div>
@@ -850,7 +850,7 @@
                                                         <h3 class="module-title clickable">
                         <img src="assets/icons/dashboard/financial-chart.svg" class="module-icon me-2" alt="Financiero">
                         {{ 'Módulo Financiero' | translate }}
-                        <i class="fas fa-chevron-down ms-2 collapse-icon" 
+                        <i class="fa fa-chevron-down ms-2 collapse-icon" 
                            [class.rotated]="modulosExpandidos.financiero"></i>
                     </h3>
                                     <p class="module-description text-muted">
@@ -859,7 +859,7 @@
                                 </div>
                                 <div class="col-auto">
                                     <div class="module-badge bg-success text-white px-3 py-1 rounded-pill">
-                                        <i class="fas fa-calculator me-1"></i>
+                                        <i class="fa fa-calculator me-1"></i>
                                         {{ 'Finanzas' | translate }}
                                     </div>
                                 </div>
@@ -873,17 +873,17 @@
                                 <div class="card metric-card-enhanced h-100">
                                     <div class="card-header bg-gradient-success text-white">
                                     <h5 class="card-title mb-0">
-                                            <i class="fas fa-hand-holding-usd me-2"></i>
+                                            <i class="fa fa-hand-holding-usd me-2"></i>
                                             {{ 'Gestión de Descuentos' | translate }}
                                     </h5>
                                     </div>
                                     <div class="card-body">
                                         <div class="text-center">
-                                            <i class="fas fa-percentage fa-3x text-success mb-3"></i>
+                                            <i class="fa fa-percentage fa-3x text-success mb-3"></i>
                                             <h3 class="metric-value text-success">{{ detailsData.metricas.totalDescuentos | currency:'COP':'symbol':'1.0-0' }}</h3>
                                             <p class="text-muted mb-2">Total en descuentos aplicados</p>
                                             <small class="text-warning">
-                                                <i class="fas fa-info-circle me-1"></i>
+                                                <i class="fa fa-info-circle me-1"></i>
                                                 {{ ((detailsData.metricas.totalDescuentos / totalVentas) * 100) | number:'1.1-1' }}% de las ventas totales
                                             </small>
                                         </div>
@@ -895,7 +895,7 @@
                             <div class="col-md-6">
                                 <div class="card coming-soon-card">
                                     <div class="card-body text-center py-4">
-                                        <i class="fas fa-chart-line fa-3x text-success mb-3 opacity-50"></i>
+                                        <i class="fa fa-chart-line fa-3x text-success mb-3 opacity-50"></i>
                                         <h5 class="text-success">{{ 'Análisis Avanzado' | translate }}</h5>
                                         <p class="text-muted mb-3 small">
                                             {{ 'Próximamente: análisis de rentabilidad, flujo de caja y ROI' | translate }}
@@ -910,7 +910,7 @@
                     <div class="row mt-4" *ngIf="coreData?.periodo">
                         <div class="col-12">
                             <div class="alert alert-light border" role="alert">
-                                <i class="fas fa-info-circle me-2"></i>
+                                <i class="fa fa-info-circle me-2"></i>
                                 <strong>Período analizado:</strong> 
                                 {{ coreData.periodo.inicio | date:'dd/MM/yyyy' }} - {{ coreData.periodo.fin | date:'dd/MM/yyyy' }}
                                 ({{ coreData.periodo.dias }} días)

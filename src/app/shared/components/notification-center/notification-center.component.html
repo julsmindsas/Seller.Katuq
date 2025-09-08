@@ -1,6 +1,6 @@
 <!-- Bell Icon with Badge -->
 <div class="notification-bell" (click)="togglePanel()">
-  <i class="fas fa-bell" [class.has-notifications]="unreadCount > 0"></i>
+  <i class="fa fa-bell" [class.has-notifications]="unreadCount > 0"></i>
   <span class="notification-badge" *ngIf="unreadCount > 0" [@fadeIn]>
     {{ unreadCount > 99 ? '99+' : unreadCount }}
   </span>
@@ -16,10 +16,10 @@
   <div class="panel-header">
     <div class="header-left">
       <h3>
-        <i class="fas fa-bell"></i>
+        <i class="fa fa-bell"></i>
         Notificaciones
         <span class="connection-status" [class.offline]="!connectionStatus">
-          <i class="fas" [class.fa-wifi]="connectionStatus" [class.fa-wifi-slash]="!connectionStatus"></i>
+          <i class="fa" [class.fa-wifi]="connectionStatus" [class.fa-wifi-slash]="!connectionStatus"></i>
         </span>
       </h3>
       <p class="header-subtitle" *ngIf="unreadCount > 0">
@@ -29,16 +29,16 @@
     
     <div class="header-actions">
       <button class="btn-icon" (click)="togglePreferences()" title="Preferencias">
-        <i class="fas fa-cog"></i>
+        <i class="fa fa-cog"></i>
       </button>
       <button class="btn-icon" (click)="markAllAsRead()" *ngIf="unreadCount > 0" title="Marcar todas como leídas">
-        <i class="fas fa-check-double"></i>
+        <i class="fa fa-check"></i>
       </button>
       <button class="btn-icon" (click)="showClearAllConfirm()" title="Limpiar todas">
-        <i class="fas fa-trash"></i>
+        <i class="fa fa-trash"></i>
       </button>
       <button class="btn-icon btn-close" (click)="closePanel()" title="Cerrar">
-        <i class="fas fa-times"></i>
+        <i class="fa fa-times"></i>
       </button>
     </div>
   </div>
@@ -46,7 +46,7 @@
   <!-- Preferences Panel -->
   <div class="preferences-panel" *ngIf="showPreferences" [@slideIn]>
     <div class="preferences-header">
-      <h4><i class="fas fa-cog"></i> Preferencias</h4>
+      <h4><i class="fa fa-cog"></i> Preferencias</h4>
       <button class="btn-text" (click)="togglePreferences()">Cerrar</button>
     </div>
     <div class="preferences-content">
@@ -58,14 +58,14 @@
   <!-- Clear All Confirmation -->
   <div class="confirmation-panel" *ngIf="showClearConfirm" [@slideIn]>
     <div class="confirmation-content">
-      <h4><i class="fas fa-trash text-danger"></i> Limpiar todas</h4>
+      <h4><i class="fa fa-trash text-danger"></i> Limpiar todas</h4>
       <p>¿Estás seguro de que quieres eliminar todas las notificaciones? Esta acción no se puede deshacer.</p>
       <div class="confirmation-actions">
         <button class="btn btn-sm btn-outline-secondary" (click)="cancelClearAll()">
           Cancelar
         </button>
         <button class="btn btn-sm btn-danger" (click)="confirmClearAll()">
-          <i class="fas fa-trash"></i> Eliminar todas
+          <i class="fa fa-trash"></i> Eliminar todas
         </button>
       </div>
     </div>
@@ -77,7 +77,7 @@
     <!-- Search Bar -->
     <div class="search-container">
       <div class="search-input-group">
-        <i class="fas fa-search search-icon"></i>
+        <i class="fa fa-search search-icon"></i>
         <input 
           #searchInput
           type="text"
@@ -90,7 +90,7 @@
           *ngIf="searchTerm" 
           (click)="resetFilters()"
           title="Limpiar búsqueda">
-          <i class="fas fa-times"></i>
+          <i class="fa fa-times"></i>
         </button>
       </div>
     </div>
@@ -140,7 +140,7 @@
   <!-- Loading State -->
   <div class="panel-loading" *ngIf="showLoader">
     <div class="loading-spinner">
-      <i class="fas fa-spinner fa-spin"></i>
+      <i class="fa fa-spinner fa-spin"></i>
     </div>
     <p>Cargando notificaciones...</p>
   </div>
@@ -151,7 +151,7 @@
     <!-- Empty State -->
     <div class="empty-state" *ngIf="!hasNotifications">
       <div class="empty-icon">
-        <i class="fas fa-bell-slash"></i>
+        <i class="fa fa-bell-slash"></i>
       </div>
       <h4>{{ emptyMessage }}</h4>
       <p class="text-muted" *ngIf="selectedFilter === 'all' && !searchTerm">
@@ -161,7 +161,7 @@
         class="btn btn-sm btn-outline-primary" 
         *ngIf="searchTerm || selectedFilter !== 'all' || selectedType !== 'all'"
         (click)="resetFilters()">
-        <i class="fas fa-undo"></i> Limpiar filtros
+        <i class="fa fa-undo"></i> Limpiar filtros
       </button>
     </div>
 
@@ -176,8 +176,8 @@
         [@fadeIn]>
         
         <!-- Notification Icon -->
-        <div class="notification-icon">
-          <i class="fas" [class]="getNotificationIcon(notification.type)"></i>
+        <div class="notification-icon" [ngClass]="getNotificationIconClass(notification.type)">
+          <i class="fa" [class]="getNotificationIcon(notification.type)"></i>
         </div>
 
         <!-- Notification Content -->
@@ -214,14 +214,14 @@
             *ngIf="notification.status !== NotificationStatus.READ"
             (click)="$event.stopPropagation(); markAsRead(notification)"
             title="Marcar como leída">
-            <i class="fas fa-check"></i>
+            <i class="fa fa-check"></i>
           </button>
           
           <button 
             class="btn-icon btn-delete"
             (click)="$event.stopPropagation(); deleteNotification(notification)"
             title="Eliminar">
-            <i class="fas fa-trash"></i>
+            <i class="fa fa-trash"></i>
           </button>
         </div>
 
@@ -233,7 +233,7 @@
     <!-- Load More -->
     <div class="load-more-container" *ngIf="hasMore && hasNotifications">
       <button class="btn btn-outline-primary btn-load-more" (click)="loadMore()">
-        <i class="fas fa-chevron-down"></i>
+        <i class="fa fa-chevron-down"></i>
         Cargar más
       </button>
     </div>

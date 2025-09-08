@@ -28,20 +28,20 @@ import { ValidationResult } from './integration-form-validator.service';
       <div class="strength-feedback" *ngIf="hasWarningsOrSuggestions()">
         <div *ngFor="let warning of validationResult.warnings" 
              class="feedback-item feedback-warning">
-          <i class="fas fa-exclamation-triangle"></i>
+          <i class="fa fa-exclamation-triangle"></i>
           <span>{{ warning }}</span>
         </div>
         
         <div *ngFor="let suggestion of validationResult.suggestions" 
              class="feedback-item feedback-suggestion">
-          <i class="fas fa-lightbulb"></i>
+          <i class="fa fa-lightbulb"></i>
           <span>{{ suggestion }}</span>
         </div>
       </div>
       
       <!-- Recommendations -->
       <div class="strength-recommendations" *ngIf="showRecommendations && validationResult.score < 80">
-        <h6><i class="fas fa-shield-alt"></i> Recomendaciones de seguridad</h6>
+        <h6><i class="fa fa-shield-alt"></i> Recomendaciones de seguridad</h6>
         <ul>
           <li *ngIf="validationResult.score < 30">Usa credenciales más largas y complejas</li>
           <li *ngIf="validationResult.score < 50">Configura webhooks para monitoreo en tiempo real</li>

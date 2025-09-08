@@ -52,7 +52,7 @@
   <!-- INFORMACIÓN DEL CIERRE -->
   <div class="seccion-efectivo" style="margin-bottom: 25px;">
     <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-      <i class="fas fa-money-bill-wave" style="margin-right: 8px;"></i>CONTROL DE EFECTIVO
+      <i class="fa fa-money-bill-wave" style="margin-right: 8px;"></i>CONTROL DE EFECTIVO
     </h3>
     
     <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
@@ -100,7 +100,7 @@
   <!-- RESUMEN POR FORMAS DE PAGO -->
   <div class="seccion-formas-pago" style="margin-bottom: 25px;">
     <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-      <i class="fas fa-credit-card" style="margin-right: 8px;"></i>RESUMEN POR FORMAS DE PAGO
+      <i class="fa fa-credit-card" style="margin-right: 8px;"></i>RESUMEN POR FORMAS DE PAGO
     </h3>
     
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #333;">
@@ -137,7 +137,7 @@
   <!-- PRODUCTOS VENDIDOS -->
   <div class="seccion-productos" style="margin-bottom: 25px;" *ngIf="datosCierre?.productosVendidos && datosCierre.productosVendidos.length > 0">
     <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-      <i class="fas fa-box" style="margin-right: 8px;"></i>PRODUCTOS VENDIDOS
+      <i class="fa fa-box" style="margin-right: 8px;"></i>PRODUCTOS VENDIDOS
     </h3>
     
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #333; font-size: 11px;">
@@ -210,20 +210,20 @@
     class="btn btn-primary me-3" 
     (click)="print()" 
     style="padding: 12px 24px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
-    <i class="fas fa-print"></i> Imprimir (PC)
+    <i class="fa fa-print"></i> Imprimir (PC)
   </button>
   
   <button 
     class="btn btn-secondary me-3" 
     (click)="printPOS()" 
     style="padding: 12px 24px; background-color: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
-    <i class="fas fa-receipt"></i> Imprimir (POS)
+    <i class="fa fa-receipt"></i> Imprimir (POS)
   </button>
   
   <button 
     class="btn btn-success" 
     (click)="goBack()" 
     style="padding: 12px 24px; background-color: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
-    <i class="fas fa-arrow-left"></i> Volver
+    <i class="fa fa-arrow-left"></i> Volver
   </button>
 </div> 

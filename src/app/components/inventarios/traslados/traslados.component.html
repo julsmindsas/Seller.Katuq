@@ -1,7 +1,7 @@
 <div class="dashboard-container">
   <div class="traslados-card">
     <div class="card-header">
-      <h2><i class="fas fa-exchange-alt"></i> Traslado de Productos</h2>
+      <h2><i class="fa fa-exchange-alt"></i> Traslado de Productos</h2>
       <div class="header-line"></div>
     </div>
 
@@ -9,7 +9,7 @@
       <div class="bodegas-section">
         <div class="bodega-card origen">
           <div class="bodega-icon">
-            <i class="fas fa-warehouse"></i>
+            <i class="fa fa-warehouse"></i>
           </div>
           <h3>Bodega Origen</h3>
           <select id="bodegaOrigen" formControlName="bodegaOrigenId" class="form-control"
@@ -26,12 +26,12 @@
         </div>
 
         <div class="transfer-arrow">
-          <i class="fas fa-long-arrow-alt-right"></i>
+          <i class="fa fa-long-arrow-alt-right"></i>
         </div>
 
         <div class="bodega-card destino">
           <div class="bodega-icon">
-            <i class="fas fa-dolly"></i>
+            <i class="fa fa-dolly"></i>
           </div>
           <h3>Bodega Destino</h3>
           <select id="bodegaDestino" formControlName="bodegaDestinoId" class="form-control"
@@ -52,7 +52,7 @@
       </div>
 
       <div class="product-section">
-        <h3 class="section-title"><i class="fas fa-box"></i> Producto a Trasladar</h3>
+        <h3 class="section-title"><i class="fa fa-box"></i> Producto a Trasladar</h3>
         <div class="ng-select-container">
           <ng-select [items]="productos" bindLabel="producto.crearProducto.titulo" bindValue="producto.cd"
             [loading]="loading" [disabled]="!trasladoForm.get('bodegaOrigenId')?.value" formControlName="productoId"
@@ -65,7 +65,7 @@
                     [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls" class="producto-imagen"
                     [alt]="item.producto?.crearProducto?.titulo">
                   <div *ngIf="!item.producto?.crearProducto?.imagenesPrincipales?.length" class="no-image">
-                    <i class="fas fa-image"></i>
+                    <i class="fa fa-image"></i>
                   </div>
                 </div>
                 <span>{{item.producto?.crearProducto?.titulo}}</span>
@@ -79,13 +79,13 @@
                     [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls" class="producto-imagen"
                     [alt]="item.producto?.crearProducto?.titulo">
                   <div *ngIf="!item.producto?.crearProducto?.imagenesPrincipales?.length" class="no-image">
-                    <i class="fas fa-image"></i>
+                    <i class="fa fa-image"></i>
                   </div>
                 </div>
                 <div class="producto-info">
                   <span class="producto-titulo">{{item.producto?.crearProducto?.titulo}}</span>
                   <div class="stock-badge">
-                    <i class="fas fa-cubes"></i> {{item.cantidad}} disponibles
+                    <i class="fa fa-cubes"></i> {{item.cantidad}} disponibles
                   </div>
                 </div>
               </div>
@@ -100,9 +100,9 @@
 
       <div class="quantity-section">
         <div class="cantidad-container">
-          <h3 class="section-title"><i class="fas fa-hashtag"></i> Cantidad a Trasladar</h3>
+          <h3 class="section-title"><i class="fa fa-hashtag"></i> Cantidad a Trasladar</h3>
           <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+            <span class="input-group-text"><i class="fa fa-hashtag"></i></span>
             <input type="number" id="cantidad" formControlName="cantidad" class="form-control"
               [class.is-invalid]="(trasladoForm.get('cantidad')?.invalid && trasladoForm.get('cantidad')?.touched) || trasladoForm.get('cantidad')?.errors?.stockInsuficiente"
               min="1" [max]="stockDisponible" placeholder="Ingrese cantidad">
@@ -120,14 +120,14 @@
               <div class="meter-fill" [style.width.%]="(trasladoForm.get('cantidad')?.value / stockDisponible) * 100">
               </div>
             </div>
-            <span><i class="fas fa-info-circle"></i> Stock disponible: {{stockDisponible}} unidades</span>
+            <span><i class="fa fa-info-circle"></i> Stock disponible: {{stockDisponible}} unidades</span>
           </div>
         </div>
 
         <div class="observaciones-container">
-          <h3 class="section-title"><i class="fas fa-comment-alt"></i> Observaciones</h3>
+          <h3 class="section-title"><i class="fa fa-comment-alt"></i> Observaciones</h3>
           <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-comment-alt"></i></span>
+            <span class="input-group-text"><i class="fa fa-comment-alt"></i></span>
             <textarea id="observaciones" formControlName="observaciones" class="form-control" rows="2"
               placeholder="Detalles adicionales del traslado (opcional)"></textarea>
           </div>
@@ -136,10 +136,10 @@
 
       <div class="submit-section">
         <button type="button" class="btn btn-outline-secondary">
-          <i class="fas fa-times"></i> Cancelar
+          <i class="fa fa-times"></i> Cancelar
         </button>
         <button type="submit" class="btn btn-primary" [disabled]="!trasladoForm.valid || loading || errorMensaje">
-          <i class="fas fa-exchange-alt"></i>
+          <i class="fa fa-exchange-alt"></i>
           {{ loading ? 'Procesando...' : 'Realizar Traslado' }}
         </button>
       </div>

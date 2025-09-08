@@ -121,9 +121,6 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     setInterval(() => {
       this.notificationManager.cleanupExpiredNotifications();
     }, 5 * 60 * 1000); // Cada 5 minutos
-
-    // TEMPORAL: Agregar notificaciones de prueba para verificar la campanita
-    this.addSampleNotifications();
   }
 
   /**
@@ -321,49 +318,72 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    */
   public getNotificationIcon(type: NotificationType): string {
     const iconMap: Record<NotificationType, string> = {
-      [NotificationType.ORDER_CREATED]: 'fa-shopping-cart',
-      [NotificationType.ORDER_UPDATED]: 'fa-edit',
+      // Order notifications (📦)
+      [NotificationType.ORDER_CREATED]: 'fa-shopping-bag',
+      [NotificationType.ORDER_UPDATED]: 'fa-pencil',
       [NotificationType.ORDER_CANCELLED]: 'fa-times-circle',
       [NotificationType.ORDER_CONFIRMED]: 'fa-check-circle',
       
-      [NotificationType.PAYMENT_PENDING]: 'fa-clock',
-      [NotificationType.PAYMENT_APPROVED]: 'fa-credit-card',
-      [NotificationType.PAYMENT_REJECTED]: 'fa-exclamation-triangle',
-      [NotificationType.PAYMENT_PREAPPROVED]: 'fa-hand-paper',
+      // Payment notifications (💰)
+      [NotificationType.PAYMENT_PENDING]: 'fa-hourglass-half',
+      [NotificationType.PAYMENT_APPROVED]: 'fa-check-circle',
+      [NotificationType.PAYMENT_REJECTED]: 'fa-times-circle',
+      [NotificationType.PAYMENT_PREAPPROVED]: 'fa-usd',
       
-      [NotificationType.PRODUCTION_STARTED]: 'fa-play-circle',
-      [NotificationType.PRODUCTION_COMPLETED]: 'fa-check-circle',
-      [NotificationType.ORDER_PACKED]: 'fa-box',
+      // Production notifications (🏭)
+      [NotificationType.PRODUCTION_STARTED]: 'fa-cogs',
+      [NotificationType.PRODUCTION_COMPLETED]: 'fa-wrench',
+      [NotificationType.ORDER_PACKED]: 'fa-cube',
       [NotificationType.ORDER_DISPATCHED]: 'fa-truck',
-      [NotificationType.ORDER_DELIVERED]: 'fa-flag-checkered',
-      [NotificationType.ORDER_PROCESS_REJECTED]: 'fa-ban',
+      [NotificationType.ORDER_DELIVERED]: 'fa-check-square-o',
+      [NotificationType.ORDER_PROCESS_REJECTED]: 'fa-exclamation-circle',
       
+      // Inventory notifications (📊)
       [NotificationType.LOW_STOCK]: 'fa-exclamation-triangle',
-      [NotificationType.OUT_OF_STOCK]: 'fa-times-circle',
+      [NotificationType.OUT_OF_STOCK]: 'fa-battery-0',
       [NotificationType.STOCK_REPLENISHED]: 'fa-plus-circle',
       
       [NotificationType.NEW_CUSTOMER]: 'fa-user-plus',
-      [NotificationType.CUSTOMER_UPDATED]: 'fa-user-edit',
+      [NotificationType.CUSTOMER_UPDATED]: 'fa-user',
       
-      [NotificationType.SHIPPING_CREATED]: 'fa-shipping-fast',
-      [NotificationType.SHIPPING_UPDATED]: 'fa-route',
+      [NotificationType.SHIPPING_CREATED]: 'fa-truck',
+      [NotificationType.SHIPPING_UPDATED]: 'fa-map',
       [NotificationType.DELIVERY_PROBLEM]: 'fa-exclamation-circle',
       
       [NotificationType.CART_ABANDONED]: 'fa-shopping-cart',
       [NotificationType.CART_REMINDER]: 'fa-bell',
       
       [NotificationType.SYSTEM_ALERT]: 'fa-exclamation-triangle',
-      [NotificationType.SYSTEM_MAINTENANCE]: 'fa-tools',
+      [NotificationType.SYSTEM_MAINTENANCE]: 'fa-wrench',
       
-      [NotificationType.CASH_CLOSING_REQUIRED]: 'fa-cash-register',
+      [NotificationType.CASH_CLOSING_REQUIRED]: 'fa-calculator',
       [NotificationType.POS_TRANSACTION_FAILED]: 'fa-times-circle',
       
-      [NotificationType.SUPPLIER_ORDER_ACCEPTED]: 'fa-handshake',
+      [NotificationType.SUPPLIER_ORDER_ACCEPTED]: 'fa-handshake-o',
       [NotificationType.SUPPLIER_ORDER_REJECTED]: 'fa-times-circle',
       [NotificationType.SUPPLIER_ORDER_DISPATCHED]: 'fa-truck'
     };
 
     return iconMap[type] || 'fa-info-circle';
+  }
+
+  /**
+   * Obtiene la clase CSS para el icono según el tipo de notificación
+   */
+  public getNotificationIconClass(type: NotificationType): string {
+    // Categorizar por tipo de notificación
+    if (type.includes('ORDER')) return 'icon-order';
+    if (type.includes('PAYMENT')) return 'icon-payment';
+    if (type.includes('PRODUCTION') || type.includes('PACKED')) return 'icon-production';
+    if (type.includes('SHIPPING') || type.includes('DELIVERY') || type.includes('DISPATCHED')) return 'icon-shipping';
+    if (type.includes('CUSTOMER')) return 'icon-customer';
+    if (type.includes('STOCK')) return 'icon-info';
+    if (type.includes('CART')) return 'icon-marketing';
+    if (type.includes('SYSTEM') || type.includes('ALERT')) return 'icon-alert';
+    if (type.includes('POS') || type.includes('CASH')) return 'icon-payment';
+    if (type.includes('SUPPLIER')) return 'icon-shipping';
+    
+    return 'icon-info';
   }
 
   /**
@@ -536,51 +556,51 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * TEMPORAL: Método para agregar notificaciones de prueba
-   * Esto es solo para verificar que la campanita funciona correctamente
+   * Método para agregar notificaciones de prueba
+   * NOTA: Deshabilitado en producción. Solo descomentar para pruebas de desarrollo.
    */
-  private addSampleNotifications(): void {
-    // Esperar un momento para que el servicio esté listo
-    setTimeout(() => {
-      // Notificación de pedido creado
-      const orderNotification: NotificationEvent = {
-        type: NotificationType.ORDER_CREATED,
-        data: {
-          nroPedido: 'DEMO-001',
-          cliente: 'Cliente Demo',
-          total: '$125.000'
-        },
-        priority: NotificationPriority.HIGH
-      };
+  // private addSampleNotifications(): void {
+  //   // Esperar un momento para que el servicio esté listo
+  //   setTimeout(() => {
+  //     // Notificación de pedido creado
+  //     const orderNotification: NotificationEvent = {
+  //       type: NotificationType.ORDER_CREATED,
+  //       data: {
+  //         nroPedido: 'DEMO-001',
+  //         cliente: 'Cliente Demo',
+  //         total: '$125.000'
+  //       },
+  //       priority: NotificationPriority.HIGH
+  //     };
 
-      // Notificación de stock bajo
-      const stockNotification: NotificationEvent = {
-        type: NotificationType.LOW_STOCK,
-        data: {
-          productName: 'Producto Demo',
-          currentStock: 3,
-          minimumStock: 10
-        },
-        priority: NotificationPriority.NORMAL
-      };
+  //     // Notificación de stock bajo
+  //     const stockNotification: NotificationEvent = {
+  //       type: NotificationType.LOW_STOCK,
+  //       data: {
+  //         productName: 'Producto Demo',
+  //         currentStock: 3,
+  //         minimumStock: 10
+  //       },
+  //       priority: NotificationPriority.NORMAL
+  //     };
 
-      // Notificación de pago aprobado
-      const paymentNotification: NotificationEvent = {
-        type: NotificationType.PAYMENT_APPROVED,
-        data: {
-          nroPedido: 'DEMO-002',
-          monto: '$89.500',
-          cliente: 'Otro Cliente Demo'
-        },
-        priority: NotificationPriority.HIGH
-      };
+  //     // Notificación de pago aprobado
+  //     const paymentNotification: NotificationEvent = {
+  //       type: NotificationType.PAYMENT_APPROVED,
+  //       data: {
+  //         nroPedido: 'DEMO-002',
+  //         monto: '$89.500',
+  //         cliente: 'Otro Cliente Demo'
+  //       },
+  //       priority: NotificationPriority.HIGH
+  //     };
 
-      // Enviar las notificaciones
-      this.notificationManager.triggerNotification(orderNotification);
-      this.notificationManager.triggerNotification(stockNotification);
-      this.notificationManager.triggerNotification(paymentNotification);
+  //     // Enviar las notificaciones
+  //     this.notificationManager.triggerNotification(orderNotification);
+  //     this.notificationManager.triggerNotification(stockNotification);
+  //     this.notificationManager.triggerNotification(paymentNotification);
 
-      console.log('🔔 Notificaciones de prueba agregadas para verificar la campanita');
-    }, 1000);
-  }
+  //     console.log('🔔 Notificaciones de prueba agregadas para verificar la campanita');
+  //   }, 1000);
+  // }
 }

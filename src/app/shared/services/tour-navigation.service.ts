@@ -55,13 +55,13 @@ export class TourNavigationService {
     const swalHtml = `
       <div class="tours-menu">
         <h5 class="text-center mb-4 text-primary">
-          <i class="fas fa-route me-2"></i>Tours Guiados Disponibles
+          <i class="fa fa-route me-2"></i>Tours Guiados Disponibles
         </h5>
         ${tourOptions}
         <hr>
         <div class="text-center">
           <button class="btn btn-outline-danger btn-sm" onclick="window.tourNavigationService.resetAllTours()">
-            <i class="fas fa-redo me-1"></i>Reiniciar todos los tours
+            <i class="fa fa-redo me-1"></i>Reiniciar todos los tours
           </button>
         </div>
       </div>
@@ -119,7 +119,7 @@ export class TourNavigationService {
       if (element) {
         const badge = document.createElement('span');
         badge.className = 'badge bg-info ms-2 tour-trigger';
-        badge.innerHTML = '<i class="fas fa-route"></i>';
+        badge.innerHTML = '<i class="fa fa-route"></i>';
         badge.style.cursor = 'pointer';
         badge.title = 'Iniciar tour guiado';
         badge.onclick = () => {

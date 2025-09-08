@@ -4,7 +4,7 @@
     <div class="header-content">
       <div class="title-section">
         <h1 class="demo-title">
-          <i class="fas fa-robot"></i>
+          <i class="fa fa-robot"></i>
           Demostración: Agente de Voz para Ventas Katuq
         </h1>
         <p class="demo-subtitle">Experiencia completa de ventas usando comandos de voz</p>
@@ -15,14 +15,14 @@
           class="btn btn-success btn-lg"
           (click)="startFullDemo()"
           [disabled]="isDemoActive">
-          <i class="fas fa-play"></i>
+          <i class="fa fa-play"></i>
           Iniciar Demo Completo
         </button>
         
         <button 
           class="btn btn-outline-primary btn-lg"
           (click)="openFullWizard()">
-          <i class="fas fa-external-link-alt"></i>
+          <i class="fa fa-external-link-alt"></i>
           Abrir Wizard Completo
         </button>
       </div>
@@ -47,7 +47,7 @@
       <!-- Panel Izquierdo - Pasos del Demo -->
       <div class="demo-steps-panel">
         <h3 class="panel-title">
-          <i class="fas fa-list-check"></i>
+          <i class="fa fa-list-check"></i>
           Pasos de la Demostración
         </h3>
         
@@ -73,7 +73,7 @@
                   [class]="getDemoStepClass(step.id) === 'demo-step-active' ? 'btn-primary' : 'btn-outline-primary'"
                   (click)="executeStepManually(step.id)"
                   [disabled]="!isDemoActive || getDemoStepClass(step.id) === 'demo-step-completed'">
-                  <i class="fas fa-play"></i>
+                  <i class="fa fa-play"></i>
                 </button>
               </div>
             </div>
@@ -90,7 +90,7 @@
             class="btn btn-warning btn-block"
             (click)="resetDemo()"
             [disabled]="!isDemoActive">
-            <i class="fas fa-redo"></i>
+            <i class="fa fa-redo"></i>
             Reiniciar Demo
           </button>
         </div>
@@ -100,11 +100,11 @@
       <div class="demo-status-panel">
         <div class="status-header">
           <h3 class="status-title">
-            <i class="fas fa-chart-line"></i>
+            <i class="fa fa-chart-line"></i>
             Estado de la Demostración
           </h3>
           <div class="status-indicator" [class]="isDemoActive ? 'active' : 'inactive'">
-            <i [class]="isDemoActive ? 'fas fa-circle' : 'fas fa-circle'"></i>
+            <i [class]="isDemoActive ? 'fa fa-circle' : 'fa fa-circle'"></i>
             {{ isDemoActive ? 'Activo' : 'Inactivo' }}
           </div>
         </div>
@@ -113,14 +113,14 @@
           <!-- Estado Actual -->
           <div class="status-card current-status">
             <div class="card-header">
-              <i class="fas fa-info-circle"></i>
+              <i class="fa fa-info-circle"></i>
               <span>Estado Actual</span>
             </div>
             <div class="card-body">
               <div class="status-item">
                 <span class="label">Demo Activo:</span>
                 <span class="value" [class]="isDemoActive ? 'text-success' : 'text-danger'">
-                  <i [class]="isDemoActive ? 'fas fa-check' : 'fas fa-times'"></i>
+                  <i [class]="isDemoActive ? 'fa fa-check' : 'fa fa-times'"></i>
                   {{ isDemoActive ? 'Sí' : 'No' }}
                 </span>
               </div>
@@ -144,14 +144,14 @@
           <!-- Información del Sistema -->
           <div class="status-card system-info">
             <div class="card-header">
-              <i class="fas fa-cogs"></i>
+              <i class="fa fa-cogs"></i>
               <span>Información del Sistema</span>
             </div>
             <div class="card-body">
               <div class="status-item">
                 <span class="label">Servicio de Voz:</span>
                 <span class="value text-success">
-                  <i class="fas fa-check"></i>
+                  <i class="fa fa-check"></i>
                   Disponible
                 </span>
               </div>
@@ -159,7 +159,7 @@
               <div class="status-item">
                 <span class="label">Integración:</span>
                 <span class="value text-success">
-                  <i class="fas fa-check"></i>
+                  <i class="fa fa-check"></i>
                   Conectada
                 </span>
               </div>
@@ -167,7 +167,7 @@
               <div class="status-item">
                 <span class="label">Herramientas:</span>
                 <span class="value text-success">
-                  <i class="fas fa-check"></i>
+                  <i class="fa fa-check"></i>
                   Cargadas
                 </span>
               </div>
@@ -177,7 +177,7 @@
           <!-- Instrucciones -->
           <div class="status-card instructions">
             <div class="card-header">
-              <i class="fas fa-lightbulb"></i>
+              <i class="fa fa-lightbulb"></i>
               <span>Instrucciones</span>
             </div>
             <div class="card-body">
@@ -196,7 +196,7 @@
       <!-- Panel Derecho - Logs y Resultados -->
       <div class="demo-logs-panel">
         <h3 class="panel-title">
-          <i class="fas fa-terminal"></i>
+          <i class="fa fa-terminal"></i>
           Logs de la Demostración
         </h3>
         
@@ -204,14 +204,14 @@
           <!-- Log en Tiempo Real -->
           <div class="log-section">
             <h4 class="log-title">
-              <i class="fas fa-stream"></i>
+              <i class="fa fa-stream"></i>
               Log en Tiempo Real
             </h4>
             
             <div class="log-container">
               <div class="log-entry" *ngFor="let step of demoSteps.slice(0, 5)">
                 <div class="log-timestamp">
-                  <i class="fas fa-clock"></i>
+                  <i class="fa fa-clock"></i>
                   {{ getDemoStepStatus(step.id) === 'completed' ? 'Completado' : 'Pendiente' }}
                 </div>
                 <div class="log-message">
@@ -223,7 +223,7 @@
               </div>
               
               <div *ngIf="demoSteps.length === 0" class="no-logs">
-                <i class="fas fa-inbox"></i>
+                <i class="fa fa-inbox"></i>
                 <span>No hay logs disponibles</span>
               </div>
             </div>
@@ -232,7 +232,7 @@
           <!-- Estadísticas del Demo -->
           <div class="stats-section">
             <h4 class="stats-title">
-              <i class="fas fa-chart-bar"></i>
+              <i class="fa fa-chart-bar"></i>
               Estadísticas
             </h4>
             
@@ -262,7 +262,7 @@
           <!-- Acciones Rápidas -->
           <div class="quick-actions">
             <h4 class="actions-title">
-              <i class="fas fa-bolt"></i>
+              <i class="fa fa-bolt"></i>
               Acciones Rápidas
             </h4>
             
@@ -271,7 +271,7 @@
                 class="btn btn-outline-info btn-sm action-btn"
                 (click)="executeStepManually('warehouse')"
                 [disabled]="!isDemoActive">
-                <i class="fas fa-warehouse"></i>
+                <i class="fa fa-warehouse"></i>
                 Bodega
               </button>
               
@@ -279,7 +279,7 @@
                 class="btn btn-outline-info btn-sm action-btn"
                 (click)="executeStepManually('products')"
                 [disabled]="!isDemoActive">
-                <i class="fas fa-search"></i>
+                <i class="fa fa-search"></i>
                 Productos
               </button>
               
@@ -287,7 +287,7 @@
                 class="btn btn-outline-info btn-sm action-btn"
                 (click)="executeStepManually('client')"
                 [disabled]="!isDemoActive">
-                <i class="fas fa-user"></i>
+                <i class="fa fa-user"></i>
                 Cliente
               </button>
               
@@ -295,7 +295,7 @@
                 class="btn btn-outline-info btn-sm action-btn"
                 (click)="executeStepManually('process')"
                 [disabled]="!isDemoActive">
-                <i class="fas fa-check"></i>
+                <i class="fa fa-check"></i>
                 Finalizar
               </button>
             </div>
@@ -310,11 +310,11 @@
     <div class="footer-content">
       <div class="footer-info">
         <span class="demo-version">
-          <i class="fas fa-code-branch"></i>
+          <i class="fa fa-code-branch"></i>
           v1.0.0 - Agente de Voz para Ventas
         </span>
         <span class="demo-status">
-          <i class="fas fa-circle" [class]="isDemoActive ? 'text-success' : 'text-muted'"></i>
+          <i class="fa fa-circle" [class]="isDemoActive ? 'text-success' : 'text-muted'"></i>
           {{ isDemoActive ? 'Demo Activo' : 'Demo Inactivo' }}
         </span>
       </div>
@@ -324,14 +324,14 @@
           class="btn btn-outline-secondary btn-sm"
           (click)="resetDemo()"
           [disabled]="!isDemoActive">
-          <i class="fas fa-redo"></i>
+          <i class="fa fa-redo"></i>
           Reiniciar
         </button>
         
         <button 
           class="btn btn-outline-primary btn-sm"
           (click)="openFullWizard()">
-          <i class="fas fa-external-link-alt"></i>
+          <i class="fa fa-external-link-alt"></i>
           Wizard Completo
         </button>
       </div>

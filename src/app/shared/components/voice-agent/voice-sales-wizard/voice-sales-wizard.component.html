@@ -4,7 +4,7 @@
     <div class="header-content">
       <div class="title-section">
         <h2 class="wizard-title">
-          <i class="fas fa-microphone-alt"></i>
+          <i class="fa fa-microphone-alt"></i>
           Agente de Voz para Ventas Katuq
         </h2>
         <p class="wizard-subtitle">Realiza ventas completas usando comandos de voz</p>
@@ -15,13 +15,13 @@
           class="btn btn-outline-primary btn-sm" 
           (click)="resetVoiceSales()"
           [disabled]="isProcessing">
-          <i class="fas fa-redo"></i> Reiniciar
+          <i class="fa fa-redo"></i> Reiniciar
         </button>
         <button 
           class="btn btn-outline-secondary btn-sm" 
           (click)="endVoiceSales()"
           [disabled]="isProcessing">
-          <i class="fas fa-stop"></i> Finalizar
+          <i class="fa fa-stop"></i> Finalizar
         </button>
       </div>
     </div>
@@ -45,7 +45,7 @@
       <!-- Panel Izquierdo - Pasos del Wizard -->
       <div class="steps-panel">
         <h3 class="panel-title">
-          <i class="fas fa-list-ol"></i>
+          <i class="fa fa-list-ol"></i>
           Pasos del Proceso
         </h3>
         
@@ -68,9 +68,9 @@
             </div>
             
             <div class="step-status">
-              <i *ngIf="step.isCompleted" class="fas fa-check text-success"></i>
-              <i *ngIf="step.isActive" class="fas fa-play text-primary"></i>
-              <i *ngIf="!step.isCompleted && !step.isActive" class="fas fa-clock text-muted"></i>
+              <i *ngIf="step.isCompleted" class="fa fa-check text-success"></i>
+              <i *ngIf="step.isActive" class="fa fa-play text-primary"></i>
+              <i *ngIf="!step.isCompleted && !step.isActive" class="fa fa-clock text-muted"></i>
             </div>
           </div>
         </div>
@@ -99,14 +99,14 @@
           <div class="step-info" *ngIf="salesProgress">
             <div class="info-card">
               <div class="info-header">
-                <i class="fas fa-info-circle"></i>
+                <i class="fa fa-info-circle"></i>
                 <span>Estado del Paso</span>
               </div>
               <div class="info-content">
                 <div class="info-item">
                   <span class="label">Puede avanzar:</span>
                   <span class="value" [class]="salesProgress.canProceed ? 'text-success' : 'text-danger'">
-                    <i [class]="salesProgress.canProceed ? 'fas fa-check' : 'fas fa-times'"></i>
+                    <i [class]="salesProgress.canProceed ? 'fa fa-check' : 'fa fa-times'"></i>
                     {{ salesProgress.canProceed ? 'Sí' : 'No' }}
                   </span>
                 </div>
@@ -134,7 +134,7 @@
           <div class="voice-commands-section">
             <div class="commands-header">
               <h4>
-                <i class="fas fa-microphone"></i>
+                <i class="fa fa-microphone"></i>
                 Comandos de Voz
               </h4>
               <p class="help-text">{{ getCurrentStepHelp() }}</p>
@@ -156,8 +156,8 @@
                   class="btn btn-primary command-button"
                   (click)="executeVoiceCommand()"
                   [disabled]="!voiceCommand.trim() || isProcessing">
-                  <i class="fas fa-play" *ngIf="!isProcessing"></i>
-                  <i class="fas fa-spinner fa-spin" *ngIf="isProcessing"></i>
+                  <i class="fa fa-play" *ngIf="!isProcessing"></i>
+                  <i class="fa fa-spinner fa-spin" *ngIf="isProcessing"></i>
                   Ejecutar
                 </button>
               </div>
@@ -208,14 +208,14 @@
         <!-- Estado de la Sesión -->
         <div class="session-status">
           <h4 class="panel-title">
-            <i class="fas fa-chart-line"></i>
+            <i class="fa fa-chart-line"></i>
             Estado de la Sesión
           </h4>
           
           <div class="status-cards">
             <div class="status-card">
               <div class="status-icon">
-                <i class="fas fa-microphone"></i>
+                <i class="fa fa-microphone"></i>
               </div>
               <div class="status-info">
                 <span class="status-label">Agente Activo</span>
@@ -227,7 +227,7 @@
 
             <div class="status-card">
               <div class="status-icon">
-                <i class="fas fa-cog"></i>
+                <i class="fa fa-cog"></i>
               </div>
               <div class="status-info">
                 <span class="status-label">Procesando</span>
@@ -239,7 +239,7 @@
 
             <div class="status-card">
               <div class="status-icon">
-                <i class="fas fa-shopping-cart"></i>
+                <i class="fa fa-shopping-cart"></i>
               </div>
               <div class="status-info">
                 <span class="status-label">Productos</span>
@@ -254,13 +254,13 @@
         <!-- Último Resultado -->
         <div class="last-result" *ngIf="lastResult">
           <h4 class="panel-title">
-            <i class="fas fa-terminal"></i>
+            <i class="fa fa-terminal"></i>
             Último Comando
           </h4>
           
           <div class="result-card" [class]="lastResult.success ? 'success' : 'error'">
             <div class="result-header">
-              <i [class]="lastResult.success ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+              <i [class]="lastResult.success ? 'fa fa-check-circle' : 'fa fa-exclamation-circle'"></i>
               <span class="result-status">
                 {{ lastResult.success ? 'Exitoso' : 'Error' }}
               </span>
@@ -280,14 +280,14 @@
         <div class="command-history">
           <div class="history-header">
             <h4 class="panel-title">
-              <i class="fas fa-history"></i>
+              <i class="fa fa-history"></i>
               Historial de Comandos
             </h4>
             <button 
               class="btn btn-outline-danger btn-sm"
               (click)="clearCommandHistory()"
               [disabled]="commandHistory.length === 0">
-              <i class="fas fa-trash"></i>
+              <i class="fa fa-trash"></i>
             </button>
           </div>
           
@@ -305,12 +305,12 @@
               </div>
               
               <div class="command-status">
-                <i [class]="command.success ? 'fas fa-check' : 'fas fa-times'"></i>
+                <i [class]="command.success ? 'fa fa-check' : 'fa fa-times'"></i>
               </div>
             </div>
             
             <div *ngIf="commandHistory.length === 0" class="no-history">
-              <i class="fas fa-inbox"></i>
+              <i class="fa fa-inbox"></i>
               <span>No hay comandos ejecutados</span>
             </div>
           </div>
@@ -324,11 +324,11 @@
     <div class="footer-content">
       <div class="footer-info">
         <span class="session-time">
-          <i class="fas fa-clock"></i>
+          <i class="fa fa-clock"></i>
           Sesión activa
         </span>
         <span class="completion-status">
-          <i class="fas fa-flag-checkered"></i>
+          <i class="fa fa-flag-checkered"></i>
           {{ completionPercentage }}% completado
         </span>
       </div>
@@ -337,7 +337,7 @@
         <button 
           class="btn btn-outline-info btn-sm"
           (click)="onUpdateProgressClick()">
-          <i class="fas fa-sync"></i>
+          <i class="fa fa-sync"></i>
           Actualizar Estado
         </button>
       </div>

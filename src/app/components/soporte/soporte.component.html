@@ -129,10 +129,10 @@
                               (dragover)="$event.preventDefault()" 
                               (drop)="onFileDrop($event)">
                             <div class="upload-zone">
-                                <i class="fas fa-cloud-upload-alt fa-3x"></i>
+                                <i class="fa fa-cloud-upload-alt fa-3x"></i>
                                 <span class="label-text">Arrastre archivos aquí o haga clic para seleccionar</span>
                                 <div class="upload-button">
-                                    <i class="fas fa-upload"></i> Seleccionar Archivos
+                                    <i class="fa fa-upload"></i> Seleccionar Archivos
                                 </div>
                                 <small>Formatos aceptados: JPG, PNG, GIF, MP4, MOV, AVI - Máximo 50MB por archivo</small>
                             </div>
@@ -183,13 +183,13 @@
             
                 <div class="form-actions mt-4">
                     <button type="button" class="btn btn-outline-secondary mr-2" (click)="resetForm()">
-                        <i class="fas fa-undo"></i> Cancelar
+                        <i class="fa fa-undo"></i> Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary" [disabled]="ticketForm.invalid || isSubmitting">
-                        <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
+                        <i class="fa fa-paper-plane" *ngIf="!isSubmitting"></i>
                         <span *ngIf="!isSubmitting">Crear Ticket</span>
                         <span *ngIf="isSubmitting">
-                            <i class="fas fa-spinner fa-spin"></i> Procesando...
+                            <i class="fa fa-spinner fa-spin"></i> Procesando...
                         </span>
                     </button>
                 </div>

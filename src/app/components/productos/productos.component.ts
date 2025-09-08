@@ -220,8 +220,8 @@ export class ProductosComponent implements OnInit {
       showCancelButton: true,
       confirmButtonColor: '#28a745',
       cancelButtonColor: '#6c757d',
-      confirmButtonText: '<i class="fas fa-copy"></i> Sí, duplicar',
-      cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+      confirmButtonText: '<i class="fa fa-copy"></i> Sí, duplicar',
+      cancelButtonText: '<i class="fa fa-times"></i> Cancelar',
       focusCancel: true,
       customClass: {
         popup: 'swal-wide'
@@ -288,7 +288,7 @@ export class ProductosComponent implements OnInit {
           title: '¡Producto Duplicado!',
           html: `
             <div style="text-align: left; margin: 20px 0;">
-              <p><i class="fas fa-check-circle" style="color: #28a745;"></i> El producto se ha duplicado exitosamente.</p>
+              <p><i class="fa fa-check-circle" style="color: #28a745;"></i> El producto se ha duplicado exitosamente.</p>
               <hr>
               <p><strong>Producto original:</strong> ${row.crearProducto?.titulo}</p>
               <p><strong>Nueva referencia:</strong> <span style="color: #28a745; font-weight: bold;">${productoDuplicado.identificacion?.referencia}</span></p>
@@ -296,9 +296,9 @@ export class ProductosComponent implements OnInit {
             </div>
           `,
           icon: 'success',
-          confirmButtonText: '<i class="fas fa-check"></i> Perfecto',
+          confirmButtonText: '<i class="fa fa-check"></i> Perfecto',
           showCancelButton: true,
-          cancelButtonText: '<i class="fas fa-edit"></i> Editar ahora',
+          cancelButtonText: '<i class="fa fa-edit"></i> Editar ahora',
           confirmButtonColor: '#28a745',
           cancelButtonColor: '#007bff'
         }).then((result) => {
@@ -317,16 +317,16 @@ export class ProductosComponent implements OnInit {
           title: 'Error al Duplicar',
           html: `
             <div style="text-align: left; margin: 20px 0;">
-              <p><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> No se pudo guardar el producto duplicado.</p>
+              <p><i class="fa fa-exclamation-triangle" style="color: #dc3545;"></i> No se pudo guardar el producto duplicado.</p>
               <hr>
               <p><strong>Error:</strong> ${error.error?.msg || 'Error desconocido'}</p>
               <p style="color: #666; font-size: 14px;">Puedes intentar de nuevo o editar manualmente el producto.</p>
             </div>
           `,
           icon: 'error',
-          confirmButtonText: '<i class="fas fa-redo"></i> Intentar de nuevo',
+          confirmButtonText: '<i class="fa fa-redo"></i> Intentar de nuevo',
           showCancelButton: true,
-          cancelButtonText: '<i class="fas fa-edit"></i> Editar manualmente',
+          cancelButtonText: '<i class="fa fa-edit"></i> Editar manualmente',
           confirmButtonColor: '#dc3545',
           cancelButtonColor: '#6c757d'
         }).then((result) => {

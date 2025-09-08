@@ -938,7 +938,233 @@
   margin-right: 8px;
 }
 
-/* Input de credenciales mejorado */
+/* Enhanced modal styling to complement Bootstrap */
+.modal-header {
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.modal-footer {
+  border-top: 2px solid #f8f9fa;
+  background-color: #f8f9fa;
+}
+
+.card-header {
+  background-color: #f8f9fa !important;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.card-header .btn-link {
+  color: #333;
+  font-weight: 600;
+}
+
+.card-header .btn-link:hover {
+  color: #7366ff;
+}
+
+.form-label.fw-semibold {
+  color: #495057;
+  font-weight: 600 !important;
+  margin-bottom: 0.5rem;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+  color: #6c757d;
+  min-width: 45px;
+  justify-content: center;
+}
+
+.input-group-text.bg-light {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6;
+}
+
+.form-control:focus {
+  border-color: #7366ff;
+  box-shadow: 0 0 0 0.2rem rgba(115, 102, 255, 0.25);
+}
+
+.form-select:focus {
+  border-color: #7366ff;
+  box-shadow: 0 0 0 0.2rem rgba(115, 102, 255, 0.25);
+}
+
+.btn-primary {
+  background-color: #7366ff;
+  border-color: #7366ff;
+}
+
+.btn-primary:hover {
+  background-color: #5a54d6;
+  border-color: #5a54d6;
+}
+
+.btn-outline-info:hover {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+}
+
+/* Enhanced input group styling */
+.input-group {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.input-group:focus-within {
+  box-shadow: 0 0 0 0.2rem rgba(115, 102, 255, 0.25);
+}
+
+.input-group .form-control {
+  border-left: 0;
+  border-right: 0;
+}
+
+.input-group .form-control:first-child {
+  border-left: 1px solid #ced4da;
+}
+
+.input-group .form-control:last-child {
+  border-right: 1px solid #ced4da;
+}
+
+/* Card spacing and styling */
+.card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.card + .card {
+  margin-top: 1.5rem;
+}
+
+/* Row gutters enhancement */
+.row.g-3 > * {
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
+@media (max-width: 768px) {
+  .row.g-3 > * {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Form text improvements */
+.form-text {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+/* Badge improvements */
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+.badge.fs-6 {
+  font-size: 0.9rem !important;
+  padding: 0.5rem 1rem;
+}
+
+/* Button group spacing */
+.d-flex.gap-2 > * + * {
+  margin-left: 0.5rem;
+}
+
+/* Input group sizing and consistency */
+.input-group {
+  min-height: 48px;
+}
+
+.input-group .form-control {
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  border-radius: 0;
+}
+
+.input-group-text {
+  min-width: 50px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.input-group .btn {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+}
+
+.input-group .btn:last-child {
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+.input-group .input-group-text:first-child {
+  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+}
+
+/* Form control in special containers (like the state toggle) */
+.form-control.d-flex {
+  min-height: 48px;
+  padding: 0.5rem 1rem;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .input-group {
+    min-height: 50px;
+  }
+  
+  .input-group .form-control {
+    min-height: 50px;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+  }
+  
+  .input-group-text {
+    min-height: 50px;
+    min-width: 52px;
+    font-size: 0.95rem;
+  }
+  
+  .input-group .btn {
+    min-height: 50px;
+    min-width: 50px;
+  }
+  
+  .form-control.d-flex {
+    min-height: 50px;
+    padding: 0.6rem 1rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .input-group .form-control {
+    font-size: 0.96rem;
+    padding: 0.75rem 0.95rem;
+  }
+}
+
+/* Form styling now handled by Bootstrap classes - keeping for reference */
+/*
 .credential-input-group {
   margin-bottom: 20px;
   position: relative;
@@ -977,6 +1203,7 @@
   font-size: 13px;
   cursor: help;
 }
+*/
 
 /* Mejoras en los indicadores de estado */
 .status-badge {

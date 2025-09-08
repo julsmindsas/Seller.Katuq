@@ -250,6 +250,7 @@ export interface NotificationConfig {
   
   // API endpoints
   api: {
+    enabled: boolean;  // Flag to enable/disable API calls
     baseUrl: string;
     endpoints: {
       send: string;

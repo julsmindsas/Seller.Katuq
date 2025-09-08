@@ -31,7 +31,7 @@
         <!-- Manejo de errores con iconos -->
         <div *ngIf="error && !loading" class="text-center py-4">
           <div class="mb-3">
-            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
+            <i class="fa fa-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
             <h4 class="text-center mt-3" style="color: #dc3545; font-weight: 600;">ERROR DE TRANSACCIÓN</h4>
           </div>
           <div class="alert alert-danger mx-auto" style="max-width: 90%;">
@@ -56,7 +56,7 @@
         <!-- Transacción rechazada con diseño mejorado -->
         <div *ngIf="!aprobada && !loading && !error" class="text-center py-4">
           <div class="mb-3">
-            <i class="fas fa-times-circle" style="font-size: 4rem; color: #ff6b6b;"></i>
+            <i class="fa fa-times-circle" style="font-size: 4rem; color: #ff6b6b;"></i>
             <h4 class="text-center mt-3" style="color: #ff6b6b; font-weight: 600;">TRANSACCIÓN RECHAZADA</h4>
           </div>
           <div class="alert alert-warning mx-auto" style="max-width: 90%;">
@@ -93,7 +93,7 @@
         <!-- Transacción aprobada con diseño mejorado y celebración -->
         <div *ngIf="aprobada && !loading && !error" class="text-center py-4">
           <div class="mb-3">
-            <i class="fas fa-check-circle" style="font-size: 4rem; color: #28a745;"></i>
+            <i class="fa fa-check-circle" style="font-size: 4rem; color: #28a745;"></i>
             <h4 class="text-center mt-3" style="color: #28a745; font-weight: 600;">¡PAGO APROBADO!</h4>
           </div>
           <div class="alert alert-success mx-auto my-3" style="max-width: 90%;">
@@ -139,12 +139,12 @@
         <!-- Agregar un nuevo div para mostrar el estado de la notificación, justo antes del botón de regresar -->
         <!-- <div *ngIf="!loading && notificationSent" class="text-center mb-3">
           <div *ngIf="notificationSuccess" class="alert alert-success mx-auto" style="max-width: 90%;">
-            <i class="fas fa-sync-alt"></i> La transacción ha sido registrada en el sistema correctamente.
+            <i class="fa fa-sync-alt"></i> La transacción ha sido registrada en el sistema correctamente.
           </div>
           <div *ngIf="!notificationSuccess" class="alert alert-warning mx-auto" style="max-width: 90%;">
-            <i class="fas fa-exclamation-triangle"></i> No se pudo registrar la transacción en el sistema.
+            <i class="fa fa-exclamation-triangle"></i> No se pudo registrar la transacción en el sistema.
             <button class="btn btn-outline-warning btn-sm ml-3" (click)="resendTransactionNotification()">
-              <i class="fas fa-sync"></i> Reintentar
+              <i class="fa fa-sync"></i> Reintentar
             </button>
           </div>
         </div> -->

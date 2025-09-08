@@ -22,7 +22,7 @@ import {
           <button class="notification-close" 
                   (click)="removeMessage(message.id)"
                   type="button">
-            <i class="fas fa-times"></i>
+            <i class="fa fa-times"></i>
           </button>
         </div>
       </div>
@@ -169,11 +169,11 @@ export class IntegrationNotificationsComponent implements OnInit, OnDestroy {
 
   getIconClass(type: string): string {
     const icons = {
-      success: 'fas fa-check-circle',
-      error: 'fas fa-exclamation-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle'
+      success: 'fa fa-check-circle',
+      error: 'fa fa-exclamation-circle',
+      warning: 'fa fa-exclamation-triangle',
+      info: 'fa fa-info-circle'
     };
-    return icons[type] || 'fas fa-info-circle';
+    return icons[type] || 'fa fa-info-circle';
   }
 } 

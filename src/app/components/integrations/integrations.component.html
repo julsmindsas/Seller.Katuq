@@ -251,34 +251,59 @@
         </div>
       </div>
 
-      <form [formGroup]="integrationForm" (ngSubmit)="onSubmit()" autocomplete="off">
-        <!-- Common Fields -->
-        <div class="field-row">
-          <div class="field-col form-group">
-            <label for="name">
-              <i class="fa fa-tag"></i> Nombre de la integración:
-              <span class="field-required">*</span>
-            </label>
-            <input pInputText id="name" formControlName="name" placeholder="Ej: Mi tienda Shopify" autocomplete="off">
-            <div *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched"
-              class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> El nombre es requerido
-            </div>
-            <small class="form-text text-muted">Nombre descriptivo para identificar esta integración</small>
+      <form [formGroup]="integrationForm" (ngSubmit)="onSubmit()" autocomplete="off" class="integration-form">
+        <!-- Configuración General -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">
+              <i class="fa fa-cog me-2"></i>Configuración General
+            </h6>
           </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-lg-8 col-md-7 mb-3">
+                <label for="name" class="form-label fw-semibold">
+                  <i class="fa fa-tag me-2 text-primary"></i>Nombre de la integración <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fa fa-tag"></i></span>
+                  <input type="text" 
+                         class="form-control" 
+                         id="name" 
+                         formControlName="name" 
+                         placeholder="Nombre descriptivo para identificar esta integración"
+                         [class.is-invalid]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
+                </div>
+                <div class="invalid-feedback" *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
+                  El nombre es obligatorio
+                </div>
+              </div>
 
-          <div class="field-col form-group">
-            <label>
-              <i class="fa fa-toggle-on"></i> Estado:
-            </label>
-            <div class="toggle-container">
-              <p-inputSwitch formControlName="enabled"></p-inputSwitch>
-              <span class="toggle-label"
-                [ngClass]="{'active': integrationForm.get('enabled')?.value, 'inactive': !integrationForm.get('enabled')?.value}">
-                {{integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo'}}
-              </span>
+              <div class="col-lg-4 col-md-5 mb-3 d-flex align-items-end">
+                <div class="w-100">
+                  <label class="form-label fw-semibold">
+                    <i class="fa fa-power-off me-2 text-primary"></i>Estado
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fa" [ngClass]="integrationForm.get('enabled')?.value ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'"></i>
+                    </span>
+                    <div class="form-control d-flex align-items-center">
+                      <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               id="integration-enabled" 
+                               formControlName="enabled">
+                        <label class="form-check-label fw-semibold ms-2" for="integration-enabled">
+                          {{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-text">Habilitar o deshabilitar esta integración</div>
+                </div>
+              </div>
             </div>
-            <small class="form-text text-muted">Habilitar o deshabilitar esta integración</small>
           </div>
         </div>
 
@@ -454,80 +479,171 @@
 
         <!-- ePayco Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'epayco'">
-          <div class="integration-info-box">
-            <i class="fa fa-info-circle"></i>
-            <span>Para configurar ePayco, necesitas las credenciales de tu cuenta. Puedes encontrarlas en tu dashboard
-              de ePayco.</span>
-            <a href="https://docs.epayco.co/" target="_blank" class="learn-more">
-              <i class="fa fa-external-link"></i> Ver documentación
-            </a>
+          <div class="alert alert-info d-flex align-items-start mb-4">
+            <i class="fa fa-info-circle fa-lg me-3 mt-1"></i>
+            <div>
+              <strong>Para configurar ePayco, necesitas las credenciales de tu cuenta.</strong><br>
+              Puedes encontrarlas en tu dashboard de ePayco.
+              <br><br>
+              <a href="https://docs.epayco.co/" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="fa fa-external-link me-1"></i>Ver documentación
+              </a>
+            </div>
           </div>
 
-          <div class="environment-badge">
-            <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
-              <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
+          <div class="mb-4 text-center">
+            <span class="badge fs-6 px-3 py-2" [ngClass]="isTestMode ? 'bg-warning text-dark' : 'bg-success'">
+              <i class="fa me-2" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
               {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
             </span>
           </div>
 
-          <div class="field-row">
-            <div class="field-col form-group">
-              <label for="clientId">
-                <i class="fa fa-id-card"></i> Client ID:
-                <span class="field-required">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="fa fa-user prefix-icon"></i>
-                <input type="text" id="clientId" formControlName="clientId">
-              </div>
-              <div *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched"
-                class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Client ID es requerido
-              </div>
+          <!-- Configuración General -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-cog me-2"></i>Configuración General
+              </h6>
             </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-lg-8 col-md-7 mb-3">
+                  <label for="name" class="form-label fw-semibold">
+                    <i class="fa fa-tag me-2 text-primary"></i>Nombre de la integración <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-tag"></i></span>
+                    <input type="text" 
+                           class="form-control" 
+                           id="name" 
+                           formControlName="name" 
+                           placeholder="Nombre descriptivo para identificar esta integración"
+                           [class.is-invalid]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
+                  </div>
+                  <div class="invalid-feedback" *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
+                    El nombre es obligatorio
+                  </div>
+                </div>
 
-            <div class="field-col form-group">
-              <label for="publicKey">
-                <i class="fa fa-key"></i> Public Key:
-                <span class="field-required">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="fa fa-key prefix-icon"></i>
-                <input type="text" id="publicKey" formControlName="publicKey">
-              </div>
-              <div *ngIf="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched"
-                class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Public Key es requerida
+                <div class="col-lg-4 col-md-5 mb-3 d-flex align-items-end">
+                  <div class="w-100">
+                    <label class="form-label fw-semibold">
+                      <i class="fa fa-power-off me-2 text-primary"></i>Estado
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="fa" [ngClass]="integrationForm.get('enabled')?.value ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'"></i>
+                      </span>
+                      <div class="form-control d-flex align-items-center">
+                        <div class="form-check form-switch mb-0">
+                          <input class="form-check-input" 
+                                 type="checkbox" 
+                                 id="integration-enabled" 
+                                 formControlName="enabled">
+                          <label class="form-check-label fw-semibold ms-2" for="integration-enabled">
+                            {{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-text">Habilitar o deshabilitar esta integración</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="field-row">
-            <div class="field-col form-group">
-              <label for="privateKey">
-                <i class="fa fa-lock"></i> Private Key:
-                <span class="field-required">*</span>
-              </label>
-              <div class="input-with-icon password-field">
-                <i class="fa fa-key prefix-icon"></i>
-                <input type="password" id="privateKey" formControlName="privateKey">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
-              </div>
-              <div *ngIf="integrationForm.get('privateKey')?.invalid && integrationForm.get('privateKey')?.touched"
-                class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Private Key es requerida
-              </div>
+          <!-- Credenciales de Acceso -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-shield-alt me-2"></i>Credenciales de Acceso
+              </h6>
             </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <!-- Primera fila: Client ID y Public Key -->
+                <div class="col-xl-6 col-lg-12 col-md-6">
+                  <label for="clientId" class="form-label fw-semibold">
+                    <i class="fa fa-user me-2 text-primary"></i>Client ID <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa fa-user text-muted"></i></span>
+                    <input type="text" 
+                           class="form-control" 
+                           id="clientId" 
+                           formControlName="clientId"
+                           placeholder="Ingresa tu Client ID"
+                           [class.is-invalid]="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
+                  </div>
+                  <div class="invalid-feedback" *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
+                    El Client ID es obligatorio
+                  </div>
+                </div>
 
-            <div class="field-col form-group">
-              <label for="p_key">
-                <i class="fa fa-key"></i> P_Key:
-              </label>
-              <div class="input-with-icon">
-                <i class="fa fa-key prefix-icon"></i>
-                <input type="text" id="p_key" formControlName="p_key">
+                <div class="col-xl-6 col-lg-12 col-md-6">
+                  <label for="publicKey" class="form-label fw-semibold">
+                    <i class="fa fa-key me-2 text-primary"></i>Public Key <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa fa-key text-muted"></i></span>
+                    <input [type]="showPublicKey ? 'text' : 'password'" 
+                           class="form-control" 
+                           id="publicKey" 
+                           formControlName="publicKey"
+                           placeholder="Ingresa tu Public Key"
+                           [class.is-invalid]="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched">
+                    <button class="btn btn-outline-secondary" type="button" (click)="togglePublicKeyVisibility()">
+                      <i class="fa" [ngClass]="showPublicKey ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched">
+                    La Public Key es obligatoria
+                  </div>
+                </div>
+
+                <!-- Segunda fila: Private Key y P_Key -->  
+                <div class="col-xl-6 col-lg-12 col-md-6">
+                  <label for="privateKey" class="form-label fw-semibold">
+                    <i class="fa fa-lock me-2 text-primary"></i>Private Key <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa fa-lock text-muted"></i></span>
+                    <input [type]="showPrivateKey ? 'text' : 'password'" 
+                           class="form-control" 
+                           id="privateKey" 
+                           formControlName="privateKey"
+                           placeholder="Ingresa tu Private Key"
+                           [class.is-invalid]="integrationForm.get('privateKey')?.invalid && integrationForm.get('privateKey')?.touched">
+                    <button class="btn btn-outline-secondary" type="button" (click)="togglePrivateKeyVisibility()">
+                      <i class="fa" [ngClass]="showPrivateKey ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="integrationForm.get('privateKey')?.invalid && integrationForm.get('privateKey')?.touched">
+                    La Private Key es obligatoria
+                  </div>
+                </div>
+
+                <div class="col-xl-6 col-lg-12 col-md-6">
+                  <label for="p_key" class="form-label fw-semibold">
+                    <i class="fa fa-key me-2 text-primary"></i>P_Key 
+                    <small class="text-muted">(opcional)</small>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa fa-key text-muted"></i></span>
+                    <input type="text" 
+                           class="form-control" 
+                           id="p_key" 
+                           formControlName="p_key"
+                           placeholder="Clave adicional (opcional)">
+                    <span class="input-group-text bg-light">
+                      <i class="fa fa-question-circle text-info" 
+                         title="Clave adicional proporcionada por ePayco para funcionalidades específicas"></i>
+                    </span>
+                  </div>
+                  <div class="form-text">Clave adicional proporcionada por ePayco</div>
+                </div>
               </div>
-              <small class="form-text text-muted">Clave adicional (opcional)</small>
             </div>
           </div>
         </ng-container>
@@ -1566,19 +1682,29 @@
         </div>
 
         <!-- Form Actions -->
-        <div class="button-group">
-          <button type="button" class="btn btn-secondary" (click)="resetForm()">
-            <i class="fa fa-times"></i> Cancelar
-          </button>
-          <button type="button" class="btn btn-test" (click)="testConnection()"
-            [disabled]="integrationForm.invalid || isTesting">
-            <i class="fa" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
-            {{isTesting ? 'Probando conexión...' : 'Probar conexión'}}
-          </button>
-          <button type="submit" class="btn btn-primary" [disabled]="integrationForm.invalid || isSaving">
-            <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-            {{isSaving ? 'Guardando...' : (editingIntegrationId ? 'Actualizar' : 'Guardar')}}
-          </button>
+        <div class="integration-actions-footer">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <button type="button" class="btn btn-outline-light text-muted" (click)="resetForm()">
+                <i class="fa fa-times me-2"></i>Cancelar
+              </button>
+            </div>
+            <div class="d-flex gap-3">
+              <button type="button" 
+                      class="btn btn-info" 
+                      (click)="testConnection()"
+                      [disabled]="integrationForm.invalid || isTesting">
+                <i class="fa me-2" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
+                {{isTesting ? 'Probando...' : 'Probar conexión'}}
+              </button>
+              <button type="submit" 
+                      class="btn btn-primary btn-lg px-4" 
+                      [disabled]="integrationForm.invalid || isSaving">
+                <i class="fa me-2" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                {{isSaving ? 'Guardando...' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar integración')}}
+              </button>
+            </div>
+          </div>
         </div>
       </form>
     </div>

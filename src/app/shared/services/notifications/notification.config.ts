@@ -564,6 +564,7 @@ export const NOTIFICATION_CONFIG: NotificationConfig = {
   },
 
   api: {
+    enabled: false, // Deshabilitado hasta que el backend tenga los endpoints disponibles
     baseUrl: environment.urlApi,
     endpoints: {
       send: '/v1/notifications/send',

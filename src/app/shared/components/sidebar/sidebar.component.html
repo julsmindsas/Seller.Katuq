@@ -334,6 +334,48 @@
     </div>
   </nav>
 
+  <!-- Notification Bell Section -->
+  <div class="sidebar-notification-section" 
+       [class.collapsed]="collapseMenu || isCompactMode"
+       [class.compact]="isCompactMode">
+    <div class="sidebar-notification-bell" 
+         (click)="openNotificationCenter()"
+         [attr.title]="'Notificaciones' + (unreadNotificationCount > 0 ? ' (' + unreadNotificationCount + ' no leídas)' : '')">
+      <div class="bell-container">
+        <i class="fa fa-bell" 
+           [class.has-notifications]="unreadNotificationCount > 0"
+           [class.ringing]="hasNewNotifications"></i>
+        <span class="notification-count-badge" 
+              *ngIf="unreadNotificationCount > 0"
+              [class.pulse]="hasNewNotifications">
+          {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+        </span>
+      </div>
+      <span class="notification-label" *ngIf="!collapseMenu && !isCompactMode">
+        Notificaciones
+      </span>
+      <div class="notification-preview" *ngIf="latestNotification && !collapseMenu && !isCompactMode">
+        <small class="preview-text">{{ latestNotification }}</small>
+      </div>
+    </div>
+    
+    <!-- Quick Actions for Notifications -->
+    <div class="notification-quick-actions" *ngIf="!collapseMenu && !isCompactMode">
+      <button class="quick-action-btn" 
+              (click)="markAllNotificationsAsRead($event)"
+              *ngIf="unreadNotificationCount > 0"
+              title="Marcar todas como leídas">
+        <i class="fa fa-check"></i>
+      </button>
+      <button class="quick-action-btn" 
+              (click)="toggleNotificationSound($event)"
+              [class.active]="notificationSoundEnabled"
+              title="Sonido de notificaciones">
+        <i class="fa" [ngClass]="notificationSoundEnabled ? 'fa-volume-up' : 'fa-volume-off'"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- Plan Card -->
   <div class="plan-card-container" 
        *appRoleBasedVisibility="['Katuq', 'Administrador']"

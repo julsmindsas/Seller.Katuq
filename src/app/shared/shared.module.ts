@@ -35,6 +35,7 @@ import { ShowOptionsDirective } from './directives/show-options.directive';
 import { RoleBasedVisibilityDirective } from './directives/role-based-visibility.directive';
 import { ImageFallbackDirective } from './directives/image-fallback.directive';
 import { SafeImageDirective } from './directives/safe-image.directive';
+import { SafeTableStyleDirective } from './directives/safe-table-style.directive';
 // Services
 import { LayoutService } from './services/layout.service';
 import { NavService } from './services/nav.service';
@@ -80,6 +81,7 @@ import { NotificationPreferencesService } from './services/notifications/notific
     RoleBasedVisibilityDirective,
     ImageFallbackDirective,
     SafeImageDirective,
+    SafeTableStyleDirective,
     LoaderComponent,
     TapToTopComponent,
     SearchComponent,
@@ -153,6 +155,7 @@ import { NotificationPreferencesService } from './services/notifications/notific
     RoleBasedVisibilityDirective,
     ImageFallbackDirective,
     SafeImageDirective,
+    SafeTableStyleDirective,
     ImagesManagerComponent,
     KatuqIntelligenceComponent,
     SharedChangePasswordComponent,

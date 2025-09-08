@@ -19,6 +19,8 @@ import {
   NotificationPriority,
   NotificationChannel
 } from '../notifications/notification.types';
+import { VentasNotificationInterceptor } from '../notifications/ventas-notification.interceptor';
+import { FeatureFlagsService } from '../feature-flags.service';
 
 @Injectable({
   providedIn: 'root'
@@ -59,9 +61,23 @@ export class VentasService extends BaseService {
 
   constructor(
     httpClient: HttpClient,
-    private notificationManager: NotificationManagerService
+    private notificationManager: NotificationManagerService,
+    private notificationInterceptor: VentasNotificationInterceptor,
+    private featureFlags: FeatureFlagsService
   ) {
     super(httpClient);
+    
+    // Inicializar interceptor de notificaciones de forma segura
+    // Solo se activa si el feature flag está habilitado
+    setTimeout(() => {
+      try {
+        this.notificationInterceptor.initialize(this);
+        console.log('✅ Interceptor de notificaciones inicializado en VentasService');
+      } catch (error) {
+        // Los errores en el interceptor no afectan el servicio
+        console.error('Error inicializando interceptor (no crítico):', error);
+      }
+    }, 0);
   }
 
   public getProducts() {
