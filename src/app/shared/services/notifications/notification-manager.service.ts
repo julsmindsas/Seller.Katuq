@@ -143,9 +143,12 @@ export class NotificationManagerService {
   private setupFirebaseListener(): void {
     if (!this.currentCompanyId) return;
 
-    const notificationsPath = `notifications_${this.currentCompanyId}`;
+    // 🏢 Usar colección unificada con filtro por compañía
+    const notificationsPath = 'notification_queue';
     
-    this.db.list(notificationsPath)
+    this.db.list(notificationsPath, ref => 
+      ref.orderByChild('company').equalTo(this.currentCompanyId)
+    )
       .snapshotChanges()
       .subscribe((snapshots) => {
         const firebaseNotifications = snapshots.map((snapshot) => {
@@ -476,9 +479,11 @@ export class NotificationManagerService {
   private async sendFirebaseNotification(notification: KatuqNotification): Promise<void> {
     if (!this.currentCompanyId) throw new Error('Company ID no disponible');
 
-    const notificationsPath = `notifications_${this.currentCompanyId}`;
+    // 🏢 Usar colección unificada con campo company
+    const notificationsPath = 'notification_queue';
     await this.db.list(notificationsPath).push({
       ...notification,
+      company: this.currentCompanyId, // 🔑 Campo para multi-tenant
       createdAt: notification.createdAt.toISOString(),
       scheduledFor: notification.scheduledFor?.toISOString(),
       expiresAt: notification.expiresAt?.toISOString(),
@@ -611,9 +616,9 @@ export class NotificationManagerService {
         this.saveLocalNotifications();
       }
 
-      // Actualizar en Firebase
+      // Actualizar en Firebase usando colección unificada
       if (this.currentCompanyId) {
-        const notificationsPath = `notifications_${this.currentCompanyId}/${notificationId}`;
+        const notificationsPath = `notification_queue/${notificationId}`;
         await this.db.object(notificationsPath).update({
           status: NotificationStatus.READ,
           readAt: new Date().toISOString()
@@ -657,9 +662,9 @@ export class NotificationManagerService {
       this.localNotifications = this.localNotifications.filter(n => n.id !== notificationId);
       this.saveLocalNotifications();
 
-      // Eliminar de Firebase
+      // Eliminar de Firebase usando colección unificada
       if (this.currentCompanyId) {
-        const notificationsPath = `notifications_${this.currentCompanyId}/${notificationId}`;
+        const notificationsPath = `notification_queue/${notificationId}`;
         await this.db.object(notificationsPath).remove();
       }
 
@@ -683,10 +688,13 @@ export class NotificationManagerService {
       this.localNotifications = [];
       this.saveLocalNotifications();
 
-      // Limpiar en Firebase
+      // Eliminar individualmente todas las notificaciones de la compañía actual
       if (this.currentCompanyId) {
-        const notificationsPath = `notifications_${this.currentCompanyId}`;
-        await this.db.object(notificationsPath).remove();
+        const currentNotifications = this.notificationsSubject.getValue();
+        const deletePromises = currentNotifications.map(notification => 
+          this.db.object(`notification_queue/${notification.id}`).remove()
+        );
+        await Promise.allSettled(deletePromises);
       }
 
       // Actualizar observables

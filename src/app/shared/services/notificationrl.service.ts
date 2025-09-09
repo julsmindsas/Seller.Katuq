@@ -26,17 +26,31 @@ export class NotificationrlService implements OnDestroy {
     if (this.firebaseSubscription) {
       this.firebaseSubscription.unsubscribe();
     }
-    const nit=JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
-    this.firebaseSubscription = this.db.list('ActualizacionTicket'+nit.nit)
+    
+    // 🔍 DEBUG: Verificar company data
+    const companyData = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
+    console.log('🔍 DEBUG NotificationRL - Company data:', companyData);
+    
+    // Usar múltiples fuentes para obtener el company identifier
+    let companyId = companyData.nit || companyData.nombreComercio || 'almara'; // fallback a 'almara'
+    
+    const notificationPath = 'ActualizacionTicket' + companyId;
+    console.log('🔍 DEBUG NotificationRL - Listening to path:', notificationPath);
+    
+    this.firebaseSubscription = this.db.list(notificationPath)
       .snapshotChanges()
       .subscribe((snapshots) => {
+        console.log('🔍 DEBUG NotificationRL - Received snapshots:', snapshots.length);
+        
         const notifications = snapshots.map((snapshot) => {
           const data: any = snapshot.payload.val();
           const id = snapshot.key; // Obtener el key (nombre del nodo)
+          console.log('🔍 DEBUG NotificationRL - Processing notification:', { id, data });
           return { id, show: false, ...data }; // Combinar el key con los datos
         });
 
         const sorted = notifications.sort((a, b) => b.timestamp - a.timestamp); // Ordenar por más recientes
+        console.log('🔍 DEBUG NotificationRL - Sorted notifications:', sorted.length);
         this.notifications$.next(sorted);
 
         // Obtener la última notificación no leída

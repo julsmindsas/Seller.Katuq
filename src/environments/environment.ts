@@ -1,9 +1,10 @@
 export const environment = {
   production: true,
-  version: "2025.09.07.17 - 7 de Septiembre 2025 (Beta)",
+  version: "2025.09.08.2 - 8 de Septiembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
+    databaseURL: "https://julsmind-katuq-default-rtdb.firebaseio.com",
     projectId: "julsmind-katuq",
     storageBucket: "julsmind-katuq.appspot.com",
     messagingSenderId: "262274219539",
