@@ -51,14 +51,22 @@
                                     <th *ngIf="isColumnVisible(col.field)">
                                         <div>
                                             {{ col.header | translate }}
-                                            <!-- Si es una columna con filtro de texto -->
+                                            <!-- Si es una columna con filtro de texto con debouncing -->
                                             <p-columnFilter *ngIf="['nroPedido', 'nroFactura', 'shippingOrder', 'cliente', 'ciudad', 'zonaCobro', 'formaEntrega', 'horarioEntrega', 'fechaHoraEmpacado', 'fechaYHorarioDespachado', 'empacador', 'transportador'].includes(col.field)" 
                                                 type="text" 
                                                 [field]="col.field"
                                                 [placeholder]="col.header | translate" 
                                                 matchMode="contains" 
                                                 display="menu"
-                                                [showMenu]="true">
+                                                [showMenu]="true"
+                                                [showClearButton]="true">
+                                                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                                    <input type="text" pInputText 
+                                                           [value]="value" 
+                                                           (input)="onColumnFilterInput($event, filter)"
+                                                           [placeholder]="col.header | translate"
+                                                           class="p-column-filter">
+                                                </ng-template>
                                             </p-columnFilter>
                                             
                                             <!-- Si es una columna con filtro de fecha -->

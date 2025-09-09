@@ -1,17 +1,19 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { Table } from 'primeng/table';
 import { LazyLoadEvent } from 'primeng/api';
 import { Pedido, EstadoProceso, EstadoPago, EstadoProcesoFiltros } from '../../../ventas/modelo/pedido';
 import { ColumnDefinition } from '../../interfaces/column-definition.interface';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { FilterService, MenuItem } from 'primeng/api';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tabla-pedidos',
   templateUrl: './tabla-pedidos.component.html',
   styleUrls: ['./tabla-pedidos.component.scss']
 })
-export class TablaPedidosComponent implements OnInit, OnChanges {
+export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('dt1') dt1: Table;
   
   @Input() orders: Pedido[] = [];
@@ -38,6 +40,10 @@ export class TablaPedidosComponent implements OnInit, OnChanges {
   
   // NEW - Lazy loading output (2025.09.05)
   @Output() onLazyLoad = new EventEmitter<LazyLoadEvent>();
+  
+  // Debouncing properties for column filters
+  private filterSubject = new Subject<{ value: string, filterCallback: Function }>();
+  private filterSubscription: any;
   
   displayedColumns: ColumnDefinition[] = [
     { field: 'detalles', header: 'Detalles', visible: true },
@@ -90,6 +96,15 @@ export class TablaPedidosComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     // Inicializar columnas seleccionadas
     this.selectedColumns = this.displayedColumns.filter(col => col.visible);
+    
+    // Setup debouncing for filter inputs
+    this.filterSubscription = this.filterSubject.pipe(
+      debounceTime(300), // Wait 300ms after the last event
+      distinctUntilChanged((prev, curr) => prev.value === curr.value)
+    ).subscribe(({ value, filterCallback }) => {
+      filterCallback(value);
+      console.log('🔍 TablaPedidos - Filter applied after debounce:', value);
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -102,6 +117,23 @@ export class TablaPedidosComponent implements OnInit, OnChanges {
         this.rowsPerPage = changes['rowsPerPage'].currentValue;
       }
     }
+  }
+  
+  ngOnDestroy(): void {
+    // Clean up subscription to avoid memory leaks
+    if (this.filterSubscription) {
+      this.filterSubscription.unsubscribe();
+    }
+  }
+  
+  /**
+   * Handles column filter input with debouncing
+   * @param event - Input event from filter field
+   * @param filterCallback - PrimeNG filter callback function
+   */
+  onColumnFilterInput(event: Event, filterCallback: Function): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.filterSubject.next({ value, filterCallback });
   }
   
   // Métodos para registrar filtros personalizados
@@ -357,6 +389,7 @@ export class TablaPedidosComponent implements OnInit, OnChanges {
   /**
    * Handles lazy loading events from PrimeNG table
    * Only emits events when useLazyMode is enabled
+   * Now includes column filters for server-side filtering
    */
   loadOrdersLazy(event: LazyLoadEvent): void {
     if (this.useLazyMode) {
@@ -366,14 +399,25 @@ export class TablaPedidosComponent implements OnInit, OnChanges {
         this.rowsPerPage = event.rows;
       }
       
-      console.log('🔄 TablaPedidos - Lazy load event:', {
+      // Enhanced logging to include filters
+      console.log('🔄 TablaPedidos - Lazy load event with filters:', {
         first: event.first,
         rows: event.rows,
         rowsPerPage: this.rowsPerPage,
         page: Math.floor(event.first / (event.rows || this.rowsPerPage)) + 1,
         sortField: event.sortField,
-        sortOrder: event.sortOrder
+        sortOrder: event.sortOrder,
+        filters: event.filters ? Object.keys(event.filters).reduce((acc, key) => {
+          acc[key] = {
+            value: event.filters[key].value,
+            matchMode: event.filters[key].matchMode
+          };
+          return acc;
+        }, {} as any) : null,
+        globalFilter: event.globalFilter
       });
+      
+      // Emit complete event with filters for server-side processing
       this.onLazyLoad.emit(event);
     }
   }

@@ -163,6 +163,7 @@ export class DespachosComponent implements OnInit {
   currentPage: number = 1;             // Current page number
   currentPageSize: number = 50;        // Current page size
   lastLazyLoadEvent?: LazyLoadEvent; // Last lazy load event for reference
+  private columnFilters: any = {};     // Store column filters separately for reliable access
   totalValorProductoBruto: number;
   totalDescuento: number;
   htmlModal: any;
@@ -446,7 +447,9 @@ export class DespachosComponent implements OnInit {
         currentPage: this.currentPage,
         pageSize: this.currentPageSize,
         hasLazyEvent: !!this.lastLazyLoadEvent,
-        filterKeys: Object.keys(filter)
+        hasColumnFilters: Object.keys(this.columnFilters).length > 0,
+        filterKeys: Object.keys(filter),
+        fullFilter: filter // Log the complete filter to verify column filters are included
       });
       
       this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.currentPageSize).subscribe({
@@ -5658,6 +5661,7 @@ export class DespachosComponent implements OnInit {
   /**
    * Handler for PrimeNG table lazy loading events
    * Only active when useOptimizedLoading is enabled
+   * Enhanced to handle column filters for server-side filtering
    */
   onTableLazyLoad(event: LazyLoadEvent): void {
     if (!this.useOptimizedLoading) {
@@ -5668,13 +5672,17 @@ export class DespachosComponent implements OnInit {
     const newCurrentPage = event.first && event.rows ? Math.floor(event.first / event.rows) + 1 : 1;
     const newPageSize = event.rows || this.currentPageSize;
     
-    console.log('🔄 Despachos - Table lazy load event received:', {
+    // Store column filters separately for reliable access
+    this.columnFilters = event.filters || {};
+    
+    console.log('🔄 Despachos - Table lazy load event received with filters:', {
       first: event.first,
       rows: event.rows,
       calculatedPage: newCurrentPage,
       sortField: event.sortField,
       sortOrder: event.sortOrder,
       globalFilter: event.globalFilter,
+      columnFilters: this.columnFilters,
       eventType: event.first === 0 ? 'INITIAL_LOAD' : 'PAGINATION'
     });
 
@@ -5686,20 +5694,21 @@ export class DespachosComponent implements OnInit {
       console.log(`📏 Despachos - Page changed to ${this.currentPage}, size: ${this.currentPageSize}`);
     }
     
-    // Store the event for use in refrescarDatos
+    // Store the event for use in refrescarDatos (includes filters now)
     this.lastLazyLoadEvent = event;
     
-    // Refresh data with current filters
-    console.log(`📄 Despachos - Requesting page ${this.currentPage} with ${this.currentPageSize} items`);
+    // Refresh data with current filters (including column filters)
+    console.log(`📄 Despachos - Requesting page ${this.currentPage} with ${this.currentPageSize} items and filters`);
     this.refrescarDatos();
   }
 
   /**
    * Builds the current filter object based on component state
    * Extracted for reusability between optimized and legacy loading
+   * Enhanced to include column filters from LazyLoadEvent
    */
   private buildCurrentFilter(): any {
-    return {
+    const baseFilter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       company: JSON.parse(localStorage.getItem("currentCompany") || "{}")
@@ -5723,6 +5732,88 @@ export class DespachosComponent implements OnInit {
       ],
       tipoFecha: "fechaEntrega",
     };
+
+    // Add column filters if available (using stored columnFilters for reliability)
+    if (this.columnFilters && Object.keys(this.columnFilters).length > 0) {
+      const filters = this.columnFilters;
+      
+      // Text filters (PrimeNG sends filters as arrays)
+      if (filters['nroPedido'] && filters['nroPedido'][0]?.value) {
+        baseFilter['nroPedido'] = filters['nroPedido'][0].value;
+      }
+      if (filters['nroFactura'] && filters['nroFactura'][0]?.value) {
+        baseFilter['nroFactura'] = filters['nroFactura'][0].value;
+      }
+      if (filters['shippingOrder'] && filters['shippingOrder'][0]?.value) {
+        baseFilter['shippingOrder'] = filters['shippingOrder'][0].value;
+      }
+      if (filters['cliente'] && filters['cliente'][0]?.value) {
+        baseFilter['cliente'] = filters['cliente'][0].value;
+      }
+      if (filters['ciudad'] && filters['ciudad'][0]?.value) {
+        baseFilter['ciudad'] = filters['ciudad'][0].value;
+      }
+      if (filters['zonaCobro'] && filters['zonaCobro'][0]?.value) {
+        baseFilter['zonaCobro'] = filters['zonaCobro'][0].value;
+      }
+      if (filters['formaEntrega'] && filters['formaEntrega'][0]?.value) {
+        baseFilter['formaEntrega'] = filters['formaEntrega'][0].value;
+      }
+      if (filters['horarioEntrega'] && filters['horarioEntrega'][0]?.value) {
+        baseFilter['horarioEntrega'] = filters['horarioEntrega'][0].value;
+      }
+      
+      // Multi-select filters (may have direct value property for multiselect)
+      if (filters['estadoPago']) {
+        // Check if it's the multiselect format (direct value) or array format
+        const estadoPagoValue = filters['estadoPago'].value || (filters['estadoPago'][0]?.value);
+        if (estadoPagoValue && estadoPagoValue.length > 0) {
+          baseFilter['estadosPago'] = estadoPagoValue;
+        }
+      }
+      if (filters['estadoProceso']) {
+        // Check if it's the multiselect format (direct value) or array format
+        const estadoProcesoValue = filters['estadoProceso'].value || (filters['estadoProceso'][0]?.value);
+        if (estadoProcesoValue && estadoProcesoValue.length > 0) {
+          baseFilter['estadoProceso'] = estadoProcesoValue;
+        }
+      }
+      
+      // Date filters (also sent as arrays)
+      if (filters['fechaCreacion'] && filters['fechaCreacion'][0]?.value) {
+        baseFilter['fechaCreacionFilter'] = filters['fechaCreacion'][0].value;
+      }
+      if (filters['fechaEntrega'] && filters['fechaEntrega'][0]?.value) {
+        baseFilter['fechaEntregaFilter'] = filters['fechaEntrega'][0].value;
+      }
+      
+      // Additional text filters (also sent as arrays)
+      if (filters['empacador'] && filters['empacador'][0]?.value) {
+        baseFilter['empacador'] = filters['empacador'][0].value;
+      }
+      if (filters['transportador'] && filters['transportador'][0]?.value) {
+        baseFilter['transportador'] = filters['transportador'][0].value;
+      }
+
+      console.log('🔍 Despachos - Column filters applied to request:', {
+        totalFilters: Object.keys(filters).length,
+        activeFilters: Object.keys(filters).filter(key => {
+          // Check for array format (text/date filters) or direct value (multiselect)
+          return (filters[key][0]?.value !== undefined) || 
+                 (filters[key].value !== undefined);
+        }).length,
+        filterDetails: filters,
+        extractedValues: Object.keys(filters).reduce((acc, key) => {
+          const value = filters[key][0]?.value || filters[key].value;
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      });
+    }
+
+    return baseFilter;
   }
 }
 
