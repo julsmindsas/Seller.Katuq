@@ -669,14 +669,18 @@
                                     </div>
                                     <div class="form-check mt-2">
                                         <input type="checkbox" class="form-check-input" id="tarjetas" name="tarjetas"
-                                            value="tarjetas" (change)="onChangeTarjetas($event)">
+                                            value="tarjetas" 
+                                            [checked]="isOnlyOneTarjeta" 
+                                            (change)="onChangeTarjetas($event)">
                                         <label class="form-check-label" for="tarjetas">{{'Solo quiero una tarjeta para
                                             este producto' | translate}}
                                         </label>
                                     </div>
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" id="notarjetas"
-                                            name="notarjetas" value="notarjetas" (change)="onChangeNoTarjetas($event)">
+                                            name="notarjetas" value="notarjetas" 
+                                            [checked]="SinTarjeta" 
+                                            (change)="onChangeNoTarjetas($event)">
                                         <label class="form-check-label" for="notarjetas">{{'No quiero tarjeta para este
                                             producto' | translate}}
                                         </label>

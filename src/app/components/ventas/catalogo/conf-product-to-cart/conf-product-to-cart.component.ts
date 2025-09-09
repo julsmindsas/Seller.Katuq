@@ -10,6 +10,7 @@ import {
   ViewChild,
   ElementRef,
   Renderer2,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
 import {
@@ -76,7 +77,7 @@ export class ConfProductToCartComponent
   rangoPreciosActual: any;
   selectedFiles: any = [];
   adicionesPreferencias: any;
-  public activeAccordionPanel: string = "datosEntregaPanel";
+  public activeAccordionPanel: string = "datosEntregaPanel,preferenciasPanel,tarjetasPanel,adicionesPanel,cantidadPanel";
 
   // Propiedades para controlar el colapso de textos
   public mostrarDescripcionCompleta: boolean = false;
@@ -193,6 +194,7 @@ export class ConfProductToCartComponent
     private pedidoUtilService: PedidosUtilService,
     private notificacionService: NotificationService,
     private renderer: Renderer2,
+    private cdr: ChangeDetectorRef,
   ) {
     this.libConfigCarouselFixed = {
       carouselPreviewsConfig: {
@@ -842,22 +844,23 @@ export class ConfProductToCartComponent
 
   /**
    * Determina qué sección del acordeón debe estar abierta inicialmente
-   * basándose en qué campos son requeridos y no tienen valor
+   * Ahora retorna todos los paneles para que estén expandidos
    */
   determineInitialOpenSection(): string {
-    if (this.datosEntrega.invalid) {
-      return "datosEntregaPanel";
-    } else if (this.producto?.procesoComercial?.aceptaVariable) {
-      return "preferenciasPanel";
-    } else if (
-      this.producto?.procesoComercial?.llevaTarjeta &&
-      !this.SinTarjeta
-    ) {
-      return "tarjetasPanel";
-    } else if (this.producto?.procesoComercial?.aceptaAdiciones) {
-      return "adicionesPanel";
+    const panels = ["datosEntregaPanel"];
+    
+    if (this.producto?.procesoComercial?.aceptaVariable) {
+      panels.push("preferenciasPanel");
     }
-    return "cantidadPanel";
+    if (this.producto?.procesoComercial?.llevaTarjeta) {
+      panels.push("tarjetasPanel");
+    }
+    if (this.producto?.procesoComercial?.aceptaAdiciones) {
+      panels.push("adicionesPanel");
+    }
+    panels.push("cantidadPanel");
+    
+    return panels.join(",");
   }
 
   getAdiciones() {
@@ -1072,34 +1075,8 @@ export class ConfProductToCartComponent
     this.initializeFormsIfNeeded();
 
     // 4. Cargar datos maestros de forma asíncrona
+    // Los datos se procesarán en fillDataFromConfiguration después de cargar los maestros
     await this.loadDataWithMaestros(configuracion);
-    
-    // 5. Cargar adiciones seleccionadas de manera segura
-    if (configuracion) {
-      const baseAdiciones: any[] =
-        (this.adicionesrows && this.adicionesrows.length > 0)
-          ? this.adicionesrows
-          : (() => {
-              try {
-                return JSON.parse(this.rowsinicialesSinMod || '[]');
-              } catch {
-                return [];
-              }
-            })();
-
-      if (Array.isArray(baseAdiciones) && Array.isArray(configuracion.adiciones)) {
-        const adiciones = baseAdiciones.filter(
-          (x: any) => configuracion.adiciones.find((y: any) => y.titulo === x.descripcion) != null,
-        );
-        adiciones.forEach((adicion: any) => {
-          this.addAdicionToProduct(adicion);
-        });
-      }
-
-      // 6. Reconstruir árbol de variables desde las preferencias guardadas
-      this.reconstruirArbolDesdePedido(configuracion);
-      this.addOpcionesPersonalizacion();
-    }
     
     this.isConfigLoading = false;
   }
@@ -1178,6 +1155,12 @@ export class ConfProductToCartComponent
    */
   private fillDataFromConfiguration(configuracion: any) {
     console.log('🔄 Llenando datos desde configuración...');
+    console.log('📊 Configuración recibida:', {
+      adiciones: configuracion?.adiciones?.length || 0,
+      tarjetas: configuracion?.tarjetas?.length || 0,
+      preferencias: configuracion?.preferencias?.length || 0,
+      configuracionCompleta: configuracion
+    });
 
     if (!configuracion) {
       console.warn('⚠️ No hay configuración disponible');
@@ -1229,9 +1212,8 @@ export class ConfProductToCartComponent
         this.actualizarTodosLosInputsCantidad();
       }, 100);
 
-      // 9. Configurar tarjetas
-      this.isOnlyOneTarjeta = this.cantidadTarjetas == 1;
-      this.SinTarjeta = this.cantidadTarjetas == 0;
+      // 9. Configurar tarjetas (ya se configuraron en processTarjetas)
+      // Las propiedades isOnlyOneTarjeta y SinTarjeta ya se establecieron en processTarjetas
 
       console.log('✅ Llenado de datos completado exitosamente');
 
@@ -1249,17 +1231,30 @@ export class ConfProductToCartComponent
    * Procesa las adiciones del producto
    */
   private processAdditions(adiciones: any[]) {
+    console.log('🔄 Procesando adiciones...', {
+      adicionesRecibidas: adiciones?.length || 0,
+      adicionesrowsDisponibles: this.adicionesrows?.length || 0,
+      adiciones: adiciones,
+      adicionesrows: this.adicionesrows
+    });
+
     if (!adiciones || !this.adicionesrows) {
-      console.warn('⚠️ No hay adiciones para procesar');
+      console.warn('⚠️ No hay adiciones para procesar', {
+        adiciones: !!adiciones,
+        adicionesrows: !!this.adicionesrows
+      });
       return;
     }
 
     try {
       const adicionesFiltradas = this.adicionesrows.filter(
-        (x) => adiciones.find((y: any) => y.titulo == x.descripcion) != null
+        (x) => adiciones.find((y: any) => y.titulo === x.titulo || y.titulo === x.descripcion) != null
       );
 
+      console.log('🔍 Adiciones filtradas:', adicionesFiltradas.length, adicionesFiltradas);
+
       adicionesFiltradas.forEach((adicion: any) => {
+        console.log('➕ Agregando adición:', adicion);
         this.addAdicionToProduct(adicion);
       });
 
@@ -1273,13 +1268,42 @@ export class ConfProductToCartComponent
    * Procesa las tarjetas del producto
    */
   private processTarjetas(tarjetas: any[]) {
+    console.log('🔄 Procesando tarjetas...', {
+      tarjetasRecibidas: tarjetas?.length || 0,
+      tarjetas: tarjetas
+    });
+
     if (!tarjetas || !Array.isArray(tarjetas)) {
       console.warn('⚠️ No hay tarjetas para procesar');
+      // Si no hay tarjetas, configurar como "Sin Tarjeta"
+      this.cantidadTarjetas = 0;
+      this.isOnlyOneTarjeta = false;
+      this.SinTarjeta = true;
       return;
     }
 
     try {
       this.cantidadTarjetas = tarjetas.length;
+      
+      console.log('🔧 Configurando propiedades de tarjetas:', {
+        cantidadTarjetas: this.cantidadTarjetas
+      });
+      
+      // Verificar si todas las tarjetas están vacías (para, mensaje, de están vacíos)
+      const todasLasTarjetasVacias = tarjetas.every((tarjeta: any) => 
+        (!tarjeta.para || tarjeta.para.trim() === '') &&
+        (!tarjeta.mensaje || tarjeta.mensaje.trim() === '') &&
+        (!tarjeta.de || tarjeta.de.trim() === '')
+      );
+      
+      console.log('🔍 Verificando tarjetas vacías:', {
+        todasLasTarjetasVacias,
+        tarjetas: tarjetas.map(t => ({
+          para: t.para,
+          mensaje: t.mensaje,
+          de: t.de
+        }))
+      });
       
       // Limpiar tarjetas existentes
       const tarjetasArray = this.tarjetasForm.get("tarjetas") as FormArray;
@@ -1287,12 +1311,37 @@ export class ConfProductToCartComponent
         tarjetasArray.removeAt(0);
       }
 
-      // Agregar nuevas tarjetas
-      tarjetas.forEach((tarjeta: any) => {
-        tarjetasArray.push(this.crearTarjetaItem(tarjeta));
-      });
+      // Si todas las tarjetas están vacías, configurar como "Sin Tarjeta"
+      if (todasLasTarjetasVacias) {
+        console.log('📝 Todas las tarjetas están vacías, configurando como "Sin Tarjeta"');
+        this.cantidadTarjetas = 0;
+        this.isOnlyOneTarjeta = false;
+        this.SinTarjeta = true;
+        // Forzar detección de cambios para actualizar el HTML
+        this.cdr.detectChanges();
+      } else {
+        // Agregar nuevas tarjetas solo si no están vacías
+        tarjetas.forEach((tarjeta: any) => {
+          console.log('➕ Agregando tarjeta:', tarjeta);
+          tarjetasArray.push(this.crearTarjetaItem(tarjeta));
+        });
 
-      console.log('✅ Tarjetas procesadas:', tarjetas.length);
+        // Configurar propiedades de tarjetas DESPUÉS de agregar las tarjetas
+        // para evitar conflictos con el getter tarjetas
+        this.isOnlyOneTarjeta = this.cantidadTarjetas === 1;
+        this.SinTarjeta = this.cantidadTarjetas === 0;
+      }
+      
+      console.log('✅ Tarjetas procesadas:', {
+        cantidad: tarjetas.length,
+        isOnlyOneTarjeta: this.isOnlyOneTarjeta,
+        SinTarjeta: this.SinTarjeta,
+        tarjetasEnFormArray: tarjetasArray.length,
+        todasLasTarjetasVacias
+      });
+      
+      // Forzar detección de cambios para asegurar que el HTML se actualice
+      this.cdr.detectChanges();
     } catch (error) {
       console.error('❌ Error procesando tarjetas:', error);
     }

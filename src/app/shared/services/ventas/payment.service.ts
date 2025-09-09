@@ -1205,6 +1205,7 @@ export class PaymentService extends BaseService {
     
     // ✅ Calcular total final usando valores del pedido
     const totalSinIvaGeneral = subtotal - descuentos;
+    const totalBase = totalSinIvaGeneral + envioSinIva; // Total base debe incluir envío
     const totalPagar = totalSinIvaGeneral + totalIVA + envioSinIva;
     
     // 🔍 Log para verificar que los valores coincidan
@@ -1213,6 +1214,7 @@ export class PaymentService extends BaseService {
       envioSinIva,
       descuentos,
       totalSinIvaGeneral,
+      totalBase,
       totalIVA,
       totalPagar,
       pedidoOriginal: {
@@ -1236,6 +1238,7 @@ export class PaymentService extends BaseService {
       envioSinIva,
       descuentos,
       totalSinIvaGeneral,
+      totalBase,
       totalIVA,
       totalPagar,
       excluidos,
@@ -1463,7 +1466,7 @@ export class PaymentService extends BaseService {
           </tr>
           <tr>
             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Total Base (antes de IVA):</th>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(totalSinIvaGeneral)}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${this.formatCurrency(totalBase)}</td>
           </tr>
           <tr><td colspan="2" style="padding: 5px 0;"></td></tr> <!-- Separador -->
           <tr>

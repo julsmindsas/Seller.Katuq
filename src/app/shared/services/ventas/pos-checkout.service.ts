@@ -229,6 +229,11 @@ export class PosCheckoutService {
     pedido.formaDePago = paymentMethod;
     pedido.nroFactura = pedido.nroPedido;
 
+    // Asegurar fechaEntrega para que aparezca en la lista de pedidos (filtro por fechaEntrega)
+    if (!pedido.fechaEntrega) {
+      pedido.fechaEntrega = new Date().toISOString();
+    }
+
     // Guardar el pedido
     this.orderCreatorService.savePedido(pedido);
   }
@@ -251,6 +256,10 @@ export class PosCheckoutService {
     pedido.estadoPago = EstadoPago.Pendiente;
     pedido.formaEntrega = paymentMethod;
     pedido.formaDePago = paymentMethod;
+    // Asegurar fechaEntrega para que aparezca en la lista de pedidos (filtro por fechaEntrega)
+    if (!pedido.fechaEntrega) {
+      pedido.fechaEntrega = new Date().toISOString();
+    }
     this.orderCreatorService.assignUserToOrder(pedido);
 
     // Actualizar el Observable del pedido

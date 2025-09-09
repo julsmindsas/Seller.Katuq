@@ -73,6 +73,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   clienteSeleccionado: Cliente;
   formulario: any;
   pedidoSeleccionado: Pedido;
+  datosEntregaDelCliente: any[] = [];
   estadosPago = Object.values(EstadoPago);
   ciudadSeleccionada: any;
 
@@ -2711,12 +2712,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  editDatosEntrega(content, order: Pedido) {
-    this.scrollStack.push(window.scrollY);
-    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
-    this.pedidoSeleccionado = order;
-    this.initForms(this.clienteSeleccionado);
-    this.modalService
+  private convertirDatosEntregaAArray(datosEntrega: any): any[] {
+    if (!datosEntrega) return [];
+    if (Array.isArray(datosEntrega)) return datosEntrega;
+    // Si es un objeto único, convertirlo a array
+    return [datosEntrega];
+  }
+
+  private openEntregaModal(content: any, order: Pedido) {
+    return this.modalService
       .open(content, {
         size: "xl",
         scrollable: true,
@@ -2750,6 +2754,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.editOrder(order);
         },
       );
+  }
+
+  editDatosEntrega(content, order: Pedido) {
+    this.scrollStack.push(window.scrollY);
+    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
+    this.pedidoSeleccionado = order;
+    
+    // Buscar datos actualizados del cliente usando búsqueda activa
+    if (order.cliente?.documento) {
+      const data = { documento: order.cliente.documento };
+      this.maestroService.getClientByDocument(data).subscribe({
+        next: (res: any) => {
+          // Usar datos actualizados de la base de datos
+          this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(res.datosEntrega);
+          this.initForms(this.clienteSeleccionado);
+          this.openEntregaModal(content, order);
+        },
+        error: (error) => {
+          console.warn('Error al buscar cliente, usando datos del pedido:', error);
+          // Fallback: usar datos del pedido si hay error en la búsqueda
+          this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(order.cliente?.datosEntrega);
+          this.initForms(this.clienteSeleccionado);
+          this.openEntregaModal(content, order);
+        }
+      });
+    } else {
+      // Fallback: usar datos del pedido si no hay documento
+      this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(order.cliente?.datosEntrega);
+      this.initForms(this.clienteSeleccionado);
+      this.openEntregaModal(content, order);
+    }
   }
 
   /**
