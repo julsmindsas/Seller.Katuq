@@ -138,6 +138,11 @@ export class PosOrderCreatorService {
         // Cambiar estado de productos que no se producen
         this.updateProductStates(pedido);
         
+        // Asegurar fechaEntrega para filtro en lista de pedidos
+        if (!pedido.fechaEntrega) {
+          pedido.fechaEntrega = new Date().toISOString();
+        }
+
         // Crear el pedido
         this.ventasService.createOrder({ order: pedido, emailHtml: htmlSanizado }).subscribe({
           next: (res: any) => {

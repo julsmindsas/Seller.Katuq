@@ -3746,6 +3746,10 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
       // Configurar datos del pedido
       this.pedidoEnProgreso.carrito = cart;
       this.pedidoEnProgreso.formaDePago = paymentMethod;
+      // Asegurar fechaEntrega para filtro en lista de pedidos
+      if (!this.pedidoEnProgreso.fechaEntrega) {
+        this.pedidoEnProgreso.fechaEntrega = new Date().toISOString();
+      }
       
       // Calcular totales
       this.pedidosUtilService.pedido = this.pedidoEnProgreso;

@@ -1282,6 +1282,11 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
           }
         });
 
+        // Asegurar fechaEntrega para filtro en lista de pedidos
+        if (!this.pedidoGral.fechaEntrega) {
+          this.pedidoGral.fechaEntrega = new Date().toISOString();
+        }
+
         context.ventasService.createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado }).subscribe({
           next: (res: any) => {
 
