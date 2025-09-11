@@ -296,3 +296,83 @@ Order utilities and calculations:
 - **Despachos Module** - Shipping and fulfillment
 - **Analytics Dashboard** - Sales reporting and KPIs
 - **Payment Gateways** - Electronic payment processing
+
+## Backend Firebase Functions
+
+The backend system (`katuq_admin_back_firebase/functions/`) provides a comprehensive notification and order processing system with multi-cloud architecture.
+
+### Backend Commands
+- `npm run start-express` - Start Express server (port 3300)
+- `node index.js` - Direct Node.js execution
+- Environment file: `.env` (contains AWS, notification, and feature flags)
+
+### Notification System Architecture
+
+#### Core Components
+- **handlers/sqsListener.js** - AWS SQS message processor with spam prevention
+- **services/notifications/notificationHooks.js** - Smart notification logic with state detection
+- **services/notifications/notificationQueue.js** - Email templates and queue processing
+- **controllers/orders.js** - Order management with notification integration
+
+#### Smart Notification System
+**Problem Solved**: Eliminated notification spam by implementing intelligent state detection.
+
+**Configuration** (`.env`):
+```bash
+# Smart Notification Rules - Only notify customers for these states
+CUSTOMER_NOTIFY_STATES=ProducidoTotalmente,Despachado,Entregado,Rechazado
+CUSTOMER_NOTIFY_PAYMENT_STATES=Aprobado
+
+# Testing Mode - Redirect all emails to test email when not in public mode
+NOTIFICATIONS_PUBLIC_MODE=false
+NOTIFICATIONS_TEST_EMAIL=test@example.com
+
+# Feature Flags
+ENABLE_ORDER_NOTIFICATIONS=true
+ENABLE_EMAIL_NOTIFICATIONS=true
+ENABLE_SYSTEM_NOTIFICATIONS=true
+```
+
+#### Notification Flow
+1. **Order Update** → `controllers/orders.js` 
+2. **Smart Detection** → `notificationHooks.detectOrderChanges()` 
+3. **State Filtering** → Only significant states trigger customer notifications
+4. **Template Selection** → State-specific email templates
+5. **Queue Processing** → `notificationQueue.js` handles delivery
+
+#### Order States & Customer Notifications
+**Customer-Facing States** (trigger notifications):
+- `ProducidoTotalmente` - Production completed
+- `Despachado` - Order shipped
+- `Entregado` - Order delivered  
+- `Rechazado` - Order rejected
+- `Aprobado` (payment) - Payment approved
+
+**Internal States** (no customer notification):
+- `SinProducir`, `EnProduccion`, `ProducidoParcialmente`, `ParaDespachar`, `Empacado`
+
+#### Spam Prevention
+- **Dual Path Issue Fixed**: Disabled direct SQS → Firestore processing that bypassed smart logic
+- **Smart Filtering**: Only processes notifications through `notificationHooks.detectOrderChanges()`
+- **State-Based Logic**: Compares current vs. new order state before triggering notifications
+- **Logging**: Clear debugging with `🚫 SPAM FIX` messages when spam is prevented
+
+#### Multi-Cloud Integration
+- **AWS SQS** - Message queuing for scalability
+- **Firebase Firestore** - Order and notification storage
+- **AWS X-Ray** - Distributed tracing and monitoring
+- **EventBus** - Multi-cloud event distribution
+
+#### Email Templates
+State-specific templates in `notificationQueue.js`:
+- `ORDER_ProducidoTotalmente` - Production completion notification
+- `ORDER_Despachado` - Shipping notification with tracking
+- `ORDER_Entregado` - Delivery confirmation
+- `ORDER_Rechazado` - Order rejection with explanation
+- `PAYMENT_Aprobado` - Payment confirmation
+
+#### Monitoring & Debugging
+- Comprehensive logging with emoji indicators
+- Smart state change detection with before/after comparison
+- Test mode email redirection for safe testing
+- Background processing to avoid blocking main operations
