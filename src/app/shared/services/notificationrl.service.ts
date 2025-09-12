@@ -18,6 +18,9 @@ export class NotificationrlService implements OnDestroy {
     private db: AngularFireDatabase,
     private toastr: ToastrService
   ) {
+    console.log('🔔 NotificationRL: Inicializando servicio (LEGACY - solo para compatibilidad)...');
+    // NOTA: Este servicio ahora es solo para compatibilidad con componentes legacy
+    // Las notificaciones reales se procesan en NotificationManagerService
     this.listenForNotifications();
   }
 
@@ -28,11 +31,15 @@ export class NotificationrlService implements OnDestroy {
     }
     
     // 🔍 DEBUG: Verificar company data
-    const companyData = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
+    const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
     console.log('🔍 DEBUG NotificationRL - Company data:', companyData);
+    if(!companyData || !companyData.nomComercial){
+      console.log('⚠️ NotificationRL - No company data found, skipping notification setup');
+      return;
+    }
     
     // Usar múltiples fuentes para obtener el company identifier
-    let companyId = companyData.nit || companyData.nombreComercio || 'almara'; // fallback a 'almara'
+    let companyId = companyData?.nomComercial ; // fallback a 'almara'
     
     const notificationPath = 'ActualizacionTicket' + companyId;
     console.log('🔍 DEBUG NotificationRL - Listening to path:', notificationPath);
@@ -53,19 +60,27 @@ export class NotificationrlService implements OnDestroy {
         console.log('🔍 DEBUG NotificationRL - Sorted notifications:', sorted.length);
         this.notifications$.next(sorted);
 
+        // LEGACY: Solo mantener para compatibilidad con componentes antiguos
+        // NotificationManagerService ahora escucha directamente ActualizacionTicket
+        
         // Obtener la última notificación no leída
         const newNotification = sorted.find((n) => !n.read);
+        
         if (newNotification && newNotification.id !== this.lastNotificationId) {
-          this.lastNotificationId = newNotification.id; // Guardar la última notificación procesada
+          console.log('🔔 NotificationRL (LEGACY): Procesando para compatibilidad:', newNotification.id);
+          this.lastNotificationId = newNotification.id;
           
+          // Solo mantener el toast simple para componentes legacy que aún usan este servicio
           this.notificationKatuq.addNotification({
-            message: newNotification.message,
+            message: newNotification.message || newNotification.type || 'Nueva notificación',
             type: 'info',
             timestamp: new Date(),
             action: () => {
               this.markAsRead(newNotification.id);
             }
           });
+          
+          // YA NO enviamos a NotificationManagerService porque él escucha directamente
         }
       });
   }
@@ -77,7 +92,22 @@ export class NotificationrlService implements OnDestroy {
 
   // Marcar como leída
   markAsRead(notificationId: string): Promise<void> {
-    return this.db.object(`notificaciones/${notificationId}`).update({ read: true });
+    const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+    if(!companyData || !companyData.nomComercial){
+      console.log('⚠️ NotificationRL - Cannot mark as read, no company data');
+      return Promise.resolve();
+    }
+    const notificationPath = 'ActualizacionTicket' + companyData.nomComercial;
+    return this.db.object(`${notificationPath}/${notificationId}`).update({ read: true });
+  }
+
+
+  /**
+   * DEPRECATED: Las pruebas ahora se deben hacer directamente en NotificationManagerService
+   * @deprecated
+   */
+  public testFirebaseNotification(): void {
+    console.log('⚠️ NotificationRL: Este método está deprecado. Use NotificationManagerService para pruebas.');
   }
 
   ngOnDestroy() {

@@ -1619,7 +1619,7 @@
 
         <div class="mb-3">
             <label class="form-label fw-bold">{{ 'Nuevo estado de pago:' | translate }}</label>
-            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoPago">
+            <select class="form-select" [(ngModel)]="tempEstadoPago">
                 <option *ngFor="let estado of getAvailablePaymentStates()" [value]="estado">
                     {{ estado }}
                 </option>
@@ -1628,7 +1628,7 @@
 
         <div class="mb-3">
             <label class="form-label fw-bold">{{ 'Estado de proceso:' | translate }}</label>
-            <select class="form-select" [(ngModel)]="pedidoSeleccionado.estadoProceso"
+            <select class="form-select" [(ngModel)]="tempEstadoProceso"
                 [disabled]="!canEditProcessStatus(pedidoSeleccionado)">
                 <option *ngFor="let estado of estadosProcesos" [value]="estado">
                     {{ estado }}
@@ -1677,7 +1677,7 @@
             {{'Cancelar' | translate}}
         </button>
         <button type="button" class="btn btn-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)"
-            [disabled]="!pedidoSeleccionado?.estadoPago">
+            [disabled]="!tempEstadoPago">
             <i class="fa fa-check me-1"></i>
             {{'Confirmar cambio' | translate}}
         </button>
@@ -1805,7 +1805,7 @@
 
                     <!-- Editar Cliente - SIEMPRE DISPONIBLE -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        (click)="editDatosClientes(clientesModal, selectedOrder); closeOptionsModal()">
+                        (click)="editDatosClientes(clientesModal, selectedOrder)">
                         <div class="option-icon client-icon">
                             <i class="fa fa-user"></i>
                         </div>
@@ -1819,7 +1819,7 @@
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
                         [disabled]="!canEditDeliveryAddressByDeliveryType(selectedOrder)"
                         [ngClass]="{'disabled-option': !canEditDeliveryAddressByDeliveryType(selectedOrder)}"
-                        (click)="editDatosEntrega(datosEnregaModal, selectedOrder); closeOptionsModal()">
+                        (click)="editDatosEntrega(datosEnregaModal, selectedOrder)">
                         <div class="option-icon address-icon">
                             <i class="fa fa-map-marker"></i>
                             <i *ngIf="!canEditDeliveryAddressByDeliveryType(selectedOrder)" class="fa fa-lock frozen-lock"></i>
@@ -1840,7 +1840,7 @@
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
                         [disabled]="!canEditBilling(selectedOrder)"
                         [ngClass]="{'disabled-option': !canEditBilling(selectedOrder)}"
-                        (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder); closeOptionsModal()">
+                        (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder)">
                         <div class="option-icon billing-icon">
                             <i class="fa fa-credit-card"></i>
                         </div>
@@ -1852,7 +1852,7 @@
 
                     <!-- Editar Notas - SIEMPRE DISPONIBLE -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        (click)="editNotas(notasModal, selectedOrder); closeOptionsModal()">
+                        (click)="editNotas(notasModal, selectedOrder)">
                         <div class="option-icon notes-icon">
                             <i class="fa fa-sticky-note"></i>
                         </div>

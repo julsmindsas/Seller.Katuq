@@ -90,6 +90,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+
   /**
    * Inicializa el componente y sus suscripciones
    */

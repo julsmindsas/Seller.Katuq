@@ -10,6 +10,7 @@ import {
   AfterViewInit,
   HostListener,
   OnDestroy,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import {
@@ -76,6 +77,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   datosEntregaDelCliente: any[] = [];
   estadosPago = Object.values(EstadoPago);
   ciudadSeleccionada: any;
+
+  // Variables temporales para el modal de cambio de estado
+  tempEstadoPago: EstadoPago;
+  tempEstadoProceso: EstadoProceso;
+  originalEstadoPago: EstadoPago;
+  originalEstadoProceso: EstadoProceso;
 
   // ------ NUEVAS PROPIEDADES PARA FILTRAR POR BODEGA Y CIUDAD EN RECOMPRA ------
   public bodegas: any[] = [];
@@ -220,7 +227,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     ];
 
     return estadosGrupo1.includes(order.estadoProceso as unknown as EstadoProcesoFiltros) ||
-           estadosGrupo2.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+      estadosGrupo2.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
   }
 
   /**
@@ -371,19 +378,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   canEditDeliveryAddressByDeliveryType(order: Pedido): boolean {
     if (!order?.formaEntrega) return false;
-    
+
     const formaEntregaLower = order.formaEntrega.toLowerCase();
-    
+
     // Bloquear si contiene "recoge"
     if (formaEntregaLower.includes('recoge')) {
       return false;
     }
-    
+
     // Activar si contiene "domicilio"
     if (formaEntregaLower.includes('domicilio')) {
       return true;
     }
-    
+
     // Por defecto bloquear si no coincide con ninguna condición
     return false;
   }
@@ -475,10 +482,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   canAssignSeller(order: Pedido): boolean {
     // Solo administradores pueden asignar asesores
     return !!(
-      this.UserLogged?.rol && 
-      (this.UserLogged.rol.toLowerCase() === 'administrador' || 
-       this.UserLogged.rol.toLowerCase() === 'admin' ||
-       this.UserLogged.rol.toLowerCase() === 'super administrador')
+      this.UserLogged?.rol &&
+      (this.UserLogged.rol.toLowerCase() === 'administrador' ||
+        this.UserLogged.rol.toLowerCase() === 'admin' ||
+        this.UserLogged.rol.toLowerCase() === 'super administrador')
     );
   }
 
@@ -742,6 +749,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private bodegaService: BodegaService,
     private toastrService: ToastrService,
     private loaderService: LoaderService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {
     console.log('🔧 Constructor - Registrando filtros personalizados...');
     this.registerCustomFilters();
@@ -964,7 +972,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   onLocalSearchInput(event: any): void {
     const query = event.target.value;
     this.localSearchQuery = query;
-    
+
     if (query.trim().length === 0) {
       this.clearLocalSearch();
     } else {
@@ -983,7 +991,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const searchTerm = query.toLowerCase().trim();
-    
+
     // Guardar los pedidos originales si es la primera búsqueda
     if (!this.isLocalSearchActive) {
       this.originalOrders = [...this.orders];
@@ -1004,20 +1012,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       // Buscar por nombre del cliente
-      if (order.cliente?.nombres_completos && 
-          order.cliente.nombres_completos.toLowerCase().includes(searchTerm)) {
+      if (order.cliente?.nombres_completos &&
+        order.cliente.nombres_completos.toLowerCase().includes(searchTerm)) {
         return true;
       }
 
       // Buscar por documento del cliente
-      if (order.cliente?.documento && 
-          order.cliente.documento.toLowerCase().includes(searchTerm)) {
+      if (order.cliente?.documento &&
+        order.cliente.documento.toLowerCase().includes(searchTerm)) {
         return true;
       }
 
       // Buscar por referencia
-      if (order.referencia && 
-          order.referencia.toLowerCase().includes(searchTerm)) {
+      if (order.referencia &&
+        order.referencia.toLowerCase().includes(searchTerm)) {
         return true;
       }
 
@@ -1047,12 +1055,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   clearLocalSearch(): void {
     this.localSearchQuery = '';
     this.isLocalSearchActive = false;
-    
+
     // Restaurar los pedidos originales
     if (this.originalOrders.length > 0) {
       this.orders = [...this.originalOrders];
     }
-    
+
     this.filteredOrders = [];
     // No resetear hasLoadedOrdersOnce para mantener la barra visible
   }
@@ -1078,10 +1086,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   shouldShowLocalSearch(): boolean {
     // Mostrar si hay pedidos originales (sin filtrar) o si hay una búsqueda activa
     // También mostrar si se ha cargado al menos una vez (para mantener la barra visible)
-    return this.originalOrders.length > 0 || 
-           this.isLocalSearchActive || 
-           this.localSearchQuery.trim().length > 0 ||
-           this.hasLoadedOrdersOnce;
+    return this.originalOrders.length > 0 ||
+      this.isLocalSearchActive ||
+      this.localSearchQuery.trim().length > 0 ||
+      this.hasLoadedOrdersOnce;
   }
 
   ngOnInit(): void {
@@ -1248,7 +1256,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private registerCustomFilters() {
     console.log('🔧 registerCustomFilters - Iniciando registro...');
-    
+
     this.filterService.register(
       "horarioEntregaCustom",
       (value, filter): boolean => {
@@ -1271,7 +1279,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.filterService.register("customDate", (value, filter): boolean => {
       console.log('🔍 FILTRO customDate - Valor:', value, 'Filtro:', filter);
-      
+
       if (filter === undefined || filter === null) {
         console.log('✅ Filtro vacío, retornando true');
         return true;
@@ -1312,16 +1320,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Comparar solo la fecha (sin hora)
       const valueDateOnly = new Date(valueDate.getFullYear(), valueDate.getMonth(), valueDate.getDate());
       const filterDateOnly = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
-      
+
       console.log('📅 Comparando fechas:', valueDateOnly, 'vs', filterDateOnly);
-      
+
       const result = valueDateOnly.getTime() === filterDateOnly.getTime();
       console.log('✅ Resultado del filtro:', result);
-      
+
       return result;
     });
     console.log('✅ Filtro customDate registrado');
-    
+
     console.log('🎯 registerCustomFilters - Todos los filtros registrados exitosamente');
   }
 
@@ -1336,7 +1344,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('🗓️ Valor del evento:', event);
     console.log('🗓️ Filter callback:', filterCallback);
     console.log('🗓️ Filter callback tipo:', typeof filterCallback);
-    
+
     try {
       // Llamar al callback original
       console.log('🗓️ Ejecutando filterCallback...');
@@ -1351,7 +1359,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   testDateFilter(event: any) {
     console.log('🧪 TEST - Evento del calendario:', event);
     console.log('🧪 TEST - Tipo de evento:', typeof event);
-    
+
     if (event && event.target) {
       console.log('🧪 TEST - Valor del input:', event.target.value);
     }
@@ -1362,12 +1370,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('🧪 TEST FILTER - Iniciando prueba manual del filtro');
     console.log('🧪 TEST FILTER - Filter callback:', filterCallback);
     console.log('🧪 TEST FILTER - Tipo de callback:', typeof filterCallback);
-    
+
     try {
       // Crear una fecha de prueba
       const testDate = new Date();
       console.log('🧪 TEST FILTER - Fecha de prueba:', testDate);
-      
+
       // Ejecutar el filtro con la fecha de prueba
       filterCallback(testDate);
       console.log('🧪 TEST FILTER - Filtro ejecutado exitosamente');
@@ -1383,22 +1391,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const ahora = Date.now();
     const tiempoDesdeUltimoRefresco = ahora - this.ultimoRefresco;
     const tiempoMinimoEntreRefrescos = 30 * 1000; // 30 segundos mínimo entre refrescos
-    
+
     if (!forceRefresh && tiempoDesdeUltimoRefresco < tiempoMinimoEntreRefrescos) {
       console.log(`⏰ REFRESCO OMITIDO - Último refresco hace ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s (mínimo ${tiempoMinimoEntreRefrescos / 1000}s)`);
       return;
     }
-    
+
     if (this.refrescoEnProgreso) {
       console.log(`🔄 REFRESCO EN PROGRESO - Omitiendo solicitud duplicada`);
       return;
     }
-    
+
     this.refrescoEnProgreso = true;
     this.ultimoRefresco = ahora;
-    
+
     console.log(`🔄 INICIANDO REFRESCO - Forzado: ${forceRefresh}, Tiempo desde último: ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s`);
-    
+
     // Ensure dates are set with fallback to today
     if (!this.fechaInicial || !this.fechaFinal) {
       const today = new Date().toISOString().split('T')[0];
@@ -1447,295 +1455,314 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.ventasService.getOrdersByFilter(filter).subscribe({
       next: (data: Pedido[]) => {
-      console.log(data);
-      this.orders = data;
+        console.log(data);
 
-      this.orders.forEach((order: any) => {
-        // Recalcular montos base con consistencia
-        order.totalPedidoSinDescuento = Number(this.checkPriceScale(order) || 0);
-        order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
-        // Subtotal estándar: solo productos sin IVA
-        order.subtotal = Number(order.totalPedidoSinDescuento || 0);
-        // Total = subtotal + IVA + envío − descuento
-        const envio = Number(order.totalEnvio || 0);
-        const descuento = Number(order.totalDescuento || 0);
-        order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto + envio - descuento;
 
-        // Calcular anticipo basado en PagosAsentados si existen
-        if (order.PagosAsentados && order.PagosAsentados.length > 0) {
-          console.log(`🔍 PROCESANDO PAGOS - Pedido ${order.nroPedido}:`, {
-            totalPagos: order.PagosAsentados.length,
-            pagos: order.PagosAsentados.map(p => ({
-              formaPago: p.formaPago,
-              estadoVerificacion: p.estadoVerificacion,
-              valor: p.valor || p.valorRegistrado,
-              numeroComprobante: p.numeroComprobante
-            }))
-          });
-          
-          order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
-            // ✅ CORREGIDO: Incluir TODOS los pagos, incluso los pendientes
-            // Los pagos pendientes también representan dinero que el cliente ya pagó
-            // Solo excluir pagos rechazados o cancelados
-            
-            // Verificar si el pago está en un estado válido para sumar
-            const estadoValido = pago.estadoVerificacion !== "Rechazado" && 
-                                pago.estadoVerificacion !== "Cancelado";
-            
-            if (estadoValido) {
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = Number(pago.valor || pago.valorRegistrado || 0);
-              console.log(`💰 PAGO INCLUIDO - Pedido ${order.nroPedido}:`, {
-                formaPago: pago.formaPago,
-                estadoVerificacion: pago.estadoVerificacion,
-                valor: valorPago,
-                numeroComprobante: pago.numeroComprobante
-              });
-              return acc + valorPago;
-            } else {
-              console.log(`❌ PAGO EXCLUIDO - Pedido ${order.nroPedido}:`, {
-                formaPago: pago.formaPago,
-                estadoVerificacion: pago.estadoVerificacion,
-                valor: pago.valor || pago.valorRegistrado,
-                numeroComprobante: pago.numeroComprobante,
-                razon: "Estado inválido"
-              });
-              return acc;
-            }
-          }, 0);
-          
-          console.log(`📊 RESUMEN CÁLCULO - Pedido ${order.nroPedido}:`, {
-            anticipoCalculado: order.anticipo,
-            faltaPorPagar: order.faltaPorPagar,
-            totalPedido: order.totalPedididoConDescuento
-          });
-        } else if (order.anticipo == null || order.anticipo == undefined) {
-          order.anticipo = 0;
-        }
+        // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
+        this.orders = [];
+        this.changeDetectorRef.detectChanges();
 
-        // Calcular falta por pagar basado en el total y anticipo real
-        order.faltaPorPagar = Math.max(0, Number(order.totalPedididoConDescuento || 0) - Number(order.anticipo || 0));
+        data.forEach((order: any) => {
+          // Recalcular montos base con consistencia
+          order.totalPedidoSinDescuento = Number(this.checkPriceScale(order) || 0);
+          order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
+          // Subtotal estándar: solo productos sin IVA
+          order.subtotal = Number(order.totalPedidoSinDescuento || 0);
+          // Total = subtotal + IVA + envío − descuento
+          const envio = Number(order.totalEnvio || 0);
+          const descuento = Number(order.totalDescuento || 0);
+          order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto + envio - descuento;
 
-        // 🔍 DEBUG: Log del estado de pago antes de procesar
-        console.log(`💰 ESTADO DE PAGO - Pedido ${order.nroPedido}:`, {
-          estadoActual: order.estadoPago,
-          _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
-          _timestamp: order._timestamp,
-          anticipo: order.anticipo,
-          faltaPorPagar: order.faltaPorPagar,
-          totalPedido: order.totalPedididoConDescuento,
-          pagosAsentados: order.PagosAsentados?.length || 0
-        });
+          // Calcular anticipo basado en PagosAsentados si existen
+          if (order.PagosAsentados && order.PagosAsentados.length > 0) {
+            console.log(`🔍 PROCESANDO PAGOS - Pedido ${order.nroPedido}:`, {
+              totalPagos: order.PagosAsentados.length,
+              pagos: order.PagosAsentados.map(p => ({
+                formaPago: p.formaPago,
+                estadoVerificacion: p.estadoVerificacion,
+                valor: p.valor || p.valorRegistrado,
+                numeroComprobante: p.numeroComprobante
+              }))
+            });
 
-        // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
-        // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
-        const debeRecalcular = !order._estadoCalculadoEnFrontend || 
-                              (order.estadoPago === "Precancelado" || order.estadoPago === "Cancelado");
-        
-        console.log(`🔍 VERIFICACIÓN ESTADO - Pedido ${order.nroPedido}:`, {
-          _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
-          _timestamp: order._timestamp,
-          debeRecalcular: debeRecalcular,
-          estadoActual: order.estadoPago
-        });
+            order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
+              // ✅ CORREGIDO: Incluir TODOS los pagos, incluso los pendientes
+              // Los pagos pendientes también representan dinero que el cliente ya pagó
+              // Solo excluir pagos rechazados o cancelados
 
-        // Actualizar estado de pago basado en los cálculos reales
-        // SOLO recalcular estado si no viene ya calculado del frontend
-        if (
-          debeRecalcular &&
-          order.estadoPago !== "Precancelado" &&
-          order.estadoPago !== "Cancelado"
-        ) {
-          // Regla: si la forma de entrega es "Recoge", el estado de pago debe ser siempre "Pendiente"
-          const formaEntregaActual =
-            (order.formaEntrega as string) ||
-            (order?.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega as string) ||
-            "";
-          const esRecoge =
-            typeof formaEntregaActual === "string" &&
-            formaEntregaActual.toLowerCase().includes("recoge");
+              // Verificar si el pago está en un estado válido para sumar
+              const estadoValido = pago.estadoVerificacion !== "Rechazado" &&
+                pago.estadoVerificacion !== "Cancelado";
 
-          if (esRecoge) {
-            order.estadoPago = "Pendiente";
-          } else {
-            // Evitar marcar como Aprobado pedidos con total 0
-            const totalPedido = Number(order.totalPedididoConDescuento || 0);
-            if (totalPedido <= 0) {
-              order.estadoPago = "Pendiente";
-            } else if (order.faltaPorPagar <= 0) {
-              order.estadoPago = "Aprobado";
-            } else if (
-              order.faltaPorPagar > 0 &&
-              order.faltaPorPagar < totalPedido
-            ) {
-              order.estadoPago = "PreAprobado";
-                      } else if (order.preAprobadoManual) {
-            order.estadoPago = "PreAprobado";
-          } else {
-            order.estadoPago = "Pendiente";
+              if (estadoValido) {
+                // Considerar tanto valor como valorRegistrado
+                const valorPago = Number(pago.valor || pago.valorRegistrado || 0);
+                console.log(`💰 PAGO INCLUIDO - Pedido ${order.nroPedido}:`, {
+                  formaPago: pago.formaPago,
+                  estadoVerificacion: pago.estadoVerificacion,
+                  valor: valorPago,
+                  numeroComprobante: pago.numeroComprobante
+                });
+                return acc + valorPago;
+              } else {
+                console.log(`❌ PAGO EXCLUIDO - Pedido ${order.nroPedido}:`, {
+                  formaPago: pago.formaPago,
+                  estadoVerificacion: pago.estadoVerificacion,
+                  valor: pago.valor || pago.valorRegistrado,
+                  numeroComprobante: pago.numeroComprobante,
+                  razon: "Estado inválido"
+                });
+                return acc;
+              }
+            }, 0);
+
+            console.log(`📊 RESUMEN CÁLCULO - Pedido ${order.nroPedido}:`, {
+              anticipoCalculado: order.anticipo,
+              faltaPorPagar: order.faltaPorPagar,
+              totalPedido: order.totalPedididoConDescuento
+            });
+          } else if (order.anticipo == null || order.anticipo == undefined) {
+            order.anticipo = 0;
           }
-          
-          console.log(`🔄 ESTADO RECALCULADO - Pedido ${order.nroPedido}:`, {
-            estadoAnterior: order.estadoPago,
-            estadoNuevo: order.estadoPago,
-            razon: "Recalculado en refrescarDatos",
+
+          // Calcular falta por pagar basado en el total y anticipo real
+          order.faltaPorPagar = Math.max(0, Number(order.totalPedididoConDescuento || 0) - Number(order.anticipo || 0));
+
+          // 🔍 DEBUG: Log del estado de pago antes de procesar
+          console.log(`💰 ESTADO DE PAGO - Pedido ${order.nroPedido}:`, {
+            estadoActual: order.estadoPago,
+            _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
+            _timestamp: order._timestamp,
             anticipo: order.anticipo,
             faltaPorPagar: order.faltaPorPagar,
-            totalPedido: order.totalPedididoConDescuento
+            totalPedido: order.totalPedididoConDescuento,
+            pagosAsentados: order.PagosAsentados?.length || 0
           });
-        }
-        } else if (order._estadoCalculadoEnFrontend && 
-                   order.estadoPago !== "Precancelado" && 
-                   order.estadoPago !== "Cancelado") {
-          
-          // 🔒 PROTECCIÓN MEJORADA: Si el estado ya fue calculado en el frontend, 
-          // verificar que sea consistente con los pagos actuales para evitar inconsistencias
-          
-          // Verificar si hay inconsistencias entre el estado y los pagos
-          const totalPedido = Number(order.totalPedididoConDescuento || 0);
-          const anticipoReal = Number(order.anticipo || 0);
-          const faltaPorPagarReal = Math.max(0, totalPedido - anticipoReal);
-          
-          // ✅ CORREGIDO: Solo corregir inconsistencias CRÍTICAS y OBVIAS
-          // Evitar cambios automáticos que puedan causar confusión
-          let estadoCorregido = false;
-          
-          if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
-            // Solo corregir si la inconsistencia es muy clara (falta más del 10% del total)
-            const porcentajeFaltante = (faltaPorPagarReal / totalPedido) * 100;
-            if (porcentajeFaltante > 10) {
-            if (faltaPorPagarReal < totalPedido) {
-              order.estadoPago = "PreAprobado";
-            } else {
-              order.estadoPago = "Pendiente";
-              }
-              estadoCorregido = true;
-              console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Aprobado → ${order.estadoPago} (falta ${porcentajeFaltante.toFixed(1)}%)`);
-            }
-          } else if (order.estadoPago === "PreAprobado" && faltaPorPagarReal <= 0) {
-            // Solo corregir si realmente no falta nada por pagar
-            if (faltaPorPagarReal <= 0) {
-            order.estadoPago = "Aprobado";
-              estadoCorregido = true;
-              console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado PreAprobado → Aprobado (pago completo)`);
-            }
-          } else if (order.estadoPago === "Pendiente" && anticipoReal > 0) {
-            // Solo corregir si hay pagos significativos (más del 50% del total)
-            const porcentajePagado = (anticipoReal / totalPedido) * 100;
-            if (porcentajePagado > 50) {
-            if (faltaPorPagarReal <= 0) {
-              order.estadoPago = "Aprobado";
-            } else if (faltaPorPagarReal < totalPedido) {
-              order.estadoPago = "PreAprobado";
-              }
-              estadoCorregido = true;
-              console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Pendiente → ${order.estadoPago} (pagado ${porcentajePagado.toFixed(1)}%)`);
-            }
-          }
-          
-          if (!estadoCorregido) {
-            // ✅ NO SOBRESCRIBIR el estado si ya fue calculado en frontend y no hay inconsistencias críticas
-          console.log(`🔒 ESTADO PRESERVADO - Pedido ${order.nroPedido}:`, {
-            estadoPreservado: order.estadoPago,
-              razon: "Ya calculado en frontend - Sin inconsistencias críticas",
+
+          // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
+          // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
+          const debeRecalcular = !order._estadoCalculadoEnFrontend ||
+            (order.estadoPago === "Precancelado" || order.estadoPago === "Cancelado");
+
+          console.log(`🔍 VERIFICACIÓN ESTADO - Pedido ${order.nroPedido}:`, {
             _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
-              _timestamp: order._timestamp
+            _timestamp: order._timestamp,
+            debeRecalcular: debeRecalcular,
+            estadoActual: order.estadoPago
           });
+
+          // Actualizar estado de pago basado en los cálculos reales
+          // SOLO recalcular estado si no viene ya calculado del frontend
+          if (
+            debeRecalcular &&
+            order.estadoPago !== "Precancelado" &&
+            order.estadoPago !== "Cancelado"
+          ) {
+            // Regla: si la forma de entrega es "Recoge", el estado de pago debe ser siempre "Pendiente"
+            const formaEntregaActual =
+              (order.formaEntrega as string) ||
+              (order?.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega as string) ||
+              "";
+            const esRecoge =
+              typeof formaEntregaActual === "string" &&
+              formaEntregaActual.toLowerCase().includes("recoge");
+
+            if (esRecoge) {
+              order.estadoPago = "Pendiente";
+            } else {
+              // Evitar marcar como Aprobado pedidos con total 0
+              const totalPedido = Number(order.totalPedididoConDescuento || 0);
+              if (totalPedido <= 0) {
+                order.estadoPago = "Pendiente";
+              } else if (order.faltaPorPagar <= 0) {
+                order.estadoPago = "Aprobado";
+              } else if (
+                order.faltaPorPagar > 0 &&
+                order.faltaPorPagar < totalPedido
+              ) {
+                order.estadoPago = "PreAprobado";
+              } else if (order.preAprobadoManual) {
+                order.estadoPago = "PreAprobado";
+              } else {
+                order.estadoPago = "Pendiente";
+              }
+
+              console.log(`🔄 ESTADO RECALCULADO - Pedido ${order.nroPedido}:`, {
+                estadoAnterior: order.estadoPago,
+                estadoNuevo: order.estadoPago,
+                razon: "Recalculado en refrescarDatos",
+                anticipo: order.anticipo,
+                faltaPorPagar: order.faltaPorPagar,
+                totalPedido: order.totalPedididoConDescuento
+              });
+            }
+          } else if (order._estadoCalculadoEnFrontend &&
+            order.estadoPago !== "Precancelado" &&
+            order.estadoPago !== "Cancelado") {
+
+            // 🔒 PROTECCIÓN MEJORADA: Si el estado ya fue calculado en el frontend, 
+            // verificar que sea consistente con los pagos actuales para evitar inconsistencias
+
+            // Verificar si hay inconsistencias entre el estado y los pagos
+            const totalPedido = Number(order.totalPedididoConDescuento || 0);
+            const anticipoReal = Number(order.anticipo || 0);
+            const faltaPorPagarReal = Math.max(0, totalPedido - anticipoReal);
+
+            // ✅ CORREGIDO: Solo corregir inconsistencias CRÍTICAS y OBVIAS
+            // Evitar cambios automáticos que puedan causar confusión
+            let estadoCorregido = false;
+
+            if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
+              // Solo corregir si la inconsistencia es muy clara (falta más del 10% del total)
+              const porcentajeFaltante = (faltaPorPagarReal / totalPedido) * 100;
+              if (porcentajeFaltante > 10) {
+                if (faltaPorPagarReal < totalPedido) {
+                  order.estadoPago = "PreAprobado";
+                } else {
+                  order.estadoPago = "Pendiente";
+                }
+                estadoCorregido = true;
+                console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Aprobado → ${order.estadoPago} (falta ${porcentajeFaltante.toFixed(1)}%)`);
+              }
+            } else if (order.estadoPago === "PreAprobado" && faltaPorPagarReal <= 0) {
+              // Solo corregir si realmente no falta nada por pagar
+              if (faltaPorPagarReal <= 0) {
+                order.estadoPago = "Aprobado";
+                estadoCorregido = true;
+                console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado PreAprobado → Aprobado (pago completo)`);
+              }
+            } else if (order.estadoPago === "Pendiente" && anticipoReal > 0) {
+              // Solo corregir si hay pagos significativos (más del 50% del total)
+              const porcentajePagado = (anticipoReal / totalPedido) * 100;
+              if (porcentajePagado > 50) {
+                if (faltaPorPagarReal <= 0) {
+                  order.estadoPago = "Aprobado";
+                } else if (faltaPorPagarReal < totalPedido) {
+                  order.estadoPago = "PreAprobado";
+                }
+                estadoCorregido = true;
+                console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Pendiente → ${order.estadoPago} (pagado ${porcentajePagado.toFixed(1)}%)`);
+              }
+            }
+
+            if (!estadoCorregido) {
+              // ✅ NO SOBRESCRIBIR el estado si ya fue calculado en frontend y no hay inconsistencias críticas
+              console.log(`🔒 ESTADO PRESERVADO - Pedido ${order.nroPedido}:`, {
+                estadoPreservado: order.estadoPago,
+                razon: "Ya calculado en frontend - Sin inconsistencias críticas",
+                _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
+                _timestamp: order._timestamp
+              });
+            }
           }
-        }
-        // if (order.estadoPago != 'Precancelado' && order.estadoPago != 'Cancelado') {
-        //   if (order.faltaPorPagar <= 0) {
-        //     order.estadoPago = EstadoPago.Aprobado
-        //   } else if (order.faltaPorPagar > 0 && order.faltaPorPagar < order.totalPedididoConDescuento) {
-        //     order.estadoPago = EstadoPago.PreAprobado
-        //   } else if(order.preAprobadoManual){
-        //     order.estadoPago = EstadoPago.PreAprobado
-        //   }else{
-        //     order.estadoPago = EstadoPago.Pendiente
-        //   }
-        // }
+          // if (order.estadoPago != 'Precancelado' && order.estadoPago != 'Cancelado') {
+          //   if (order.faltaPorPagar <= 0) {
+          //     order.estadoPago = EstadoPago.Aprobado
+          //   } else if (order.faltaPorPagar > 0 && order.faltaPorPagar < order.totalPedididoConDescuento) {
+          //     order.estadoPago = EstadoPago.PreAprobado
+          //   } else if(order.preAprobadoManual){
+          //     order.estadoPago = EstadoPago.PreAprobado
+          //   }else{
+          //     order.estadoPago = EstadoPago.Pendiente
+          //   }
+          // }
 
-        if (
-          !order.validacion ||
-          order.validacion == null ||
-          order.validacion == undefined
-        ) {
-          order.validacion = false;
-        }
-      });
-      //   let precioTotalProductosSinIva=0
-      //   let precioTotalIVA=0
-      //   let precioTotalProductosConIva=0
-      //   order.carrito.forEach(producto=>
-      //     {
-      //       let precioAdicionesSinIva=0
-      //       let precioAdicionesConIva=0
-      //       let precioIvaAdiciones=0
-      //       let precioPreferenciaSinIva=0
-      //       let precioPreferenciaConIva=0
-      //       let precioIvaPreferencia=0
-      //       let precioTotalProductoSinIva=0
-      //       let precioIvaProducto=0
-      //       let precioTotalProductoConIva=0
-      //       if (producto.producto.precio.preciosVolumen.length > 0) {
-      //         producto.producto.precio.preciosVolumen.map(x => {
-      //           if (producto.cantidad >= x.numeroUnidadesInicial && producto.cantidad <= x.numeroUnidadesLimite) {
-      //             precioTotalProductoConIva= x.valorUnitarioPorVolumenConIVA*producto.cantidad
-      //             precioTotalProductoSinIva=x.valorUnitarioPorVolumenSinIVA*producto.cantidad
-      //             precioIvaProducto=x.valorUnitarioPorVolumenIva*producto.cantidad
+          if (
+            !order.validacion ||
+            order.validacion == null ||
+            order.validacion == undefined
+          ) {
+            order.validacion = false;
+          }
+        });
 
-      //           }
-      //         })
-      //       } else {
-      //         precioTotalProductoConIva = producto.producto?.precio?.precioUnitarioConIva*producto.cantidad
-      //         precioTotalProductoSinIva = producto.producto?.precio?.precioUnitarioSinIva*producto.cantidad
-      //         precioIvaProducto=producto.producto?.precio?.valorIva*producto.cantidad
-      //       }
-      //       producto.configuracion.adiciones.forEach(adicion=>{
-      //         precioAdicionesSinIva+=adicion["referencia"].precioUnitario*adicion["cantidad"]*producto.cantidad
-      //         precioIvaAdiciones+=adicion["referencia"].precioIva*adicion["cantidad"]*producto.cantidad
-      //         precioAdicionesConIva+=adicion["referencia"].precioTotal*adicion["cantidad"]*producto.cantidad
-      //       })
-      //       producto.configuracion.preferencias.forEach(preferencia=>{
-      //         precioPreferenciaSinIva+=preferencia.valorUnitarioSinIva * producto.cantidad
-      //         precioIvaPreferencia+=preferencia.valorIva* producto.cantidad
-      //         precioPreferenciaConIva+=preferencia.precioTotalConIva * producto.cantidad
-      //       })
-      //       precioTotalProductosSinIva+=precioTotalProductoSinIva+precioAdicionesSinIva+precioPreferenciaSinIva
-      //       precioTotalIVA+=precioIvaProducto+precioIvaAdiciones+precioIvaPreferencia
-      //       precioTotalProductosConIva+=precioTotalProductoConIva+precioAdicionesConIva+precioPreferenciaConIva
-      //     })
-      //     order.totalImpuesto=precioTotalIVA
-      //     order.totalPedidoSinDescuento=precioTotalProductosSinIva
-      //     order.totalPedididoConDescuento=precioTotalProductosSinIva+order.totalEnvio-order.totalDescuento
+        // Forzar actualización de la tabla usando setTimeout para el siguiente ciclo de detección
+        setTimeout(() => {
+          this.orders = [...data];
+          this.changeDetectorRef.detectChanges();
+          this.changeDetectorRef.markForCheck();
+          // ✅ FINALIZAR REFRESCO
+          this.refrescoEnProgreso = false;
+          this.loading = false;
 
-      // })
-      
-      // ✅ FINALIZAR REFRESCO
-      this.refrescoEnProgreso = false;
-      this.loading = false;
-      
-      // Actualizar pedidos originales para búsqueda local
-      this.originalOrders = [...this.orders];
-      
-      // Marcar que se han cargado pedidos al menos una vez
-      if (this.orders.length > 0) {
-        this.hasLoadedOrdersOnce = true;
-      }
-      
-      // Si hay búsqueda local activa, aplicar el filtro nuevamente
-      if (this.hasActiveLocalSearch()) {
-        this.performLocalSearch(this.localSearchQuery);
-      }
-      
-      console.log(`✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados`);
+          // Actualizar pedidos originales para búsqueda local
+          this.originalOrders = [...this.orders];
+
+          // Marcar que se han cargado pedidos al menos una vez
+          if (this.orders.length > 0) {
+            this.hasLoadedOrdersOnce = true;
+          }
+
+          // Si hay búsqueda local activa, aplicar el filtro nuevamente
+          if (this.hasActiveLocalSearch()) {
+            this.performLocalSearch(this.localSearchQuery);
+          }
+
+          console.log(`✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados`);
+          // Si hay una referencia a la tabla, forzar su actualización
+          if (this.table) {
+            this.table.reset();
+            this.table.value = this.orders;
+            this.table.totalRecords = this.orders.length;
+            this.table.loading = false;
+          }
+        }, 100);
+        //   let precioTotalProductosSinIva=0
+        //   let precioTotalIVA=0
+        //   let precioTotalProductosConIva=0
+        //   order.carrito.forEach(producto=>
+        //     {
+        //       let precioAdicionesSinIva=0
+        //       let precioAdicionesConIva=0
+        //       let precioIvaAdiciones=0
+        //       let precioPreferenciaSinIva=0
+        //       let precioPreferenciaConIva=0
+        //       let precioIvaPreferencia=0
+        //       let precioTotalProductoSinIva=0
+        //       let precioIvaProducto=0
+        //       let precioTotalProductoConIva=0
+        //       if (producto.producto.precio.preciosVolumen.length > 0) {
+        //         producto.producto.precio.preciosVolumen.map(x => {
+        //           if (producto.cantidad >= x.numeroUnidadesInicial && producto.cantidad <= x.numeroUnidadesLimite) {
+        //             precioTotalProductoConIva= x.valorUnitarioPorVolumenConIVA*producto.cantidad
+        //             precioTotalProductoSinIva=x.valorUnitarioPorVolumenSinIVA*producto.cantidad
+        //             precioIvaProducto=x.valorUnitarioPorVolumenIva*producto.cantidad
+
+        //           }
+        //         })
+        //       } else {
+        //         precioTotalProductoConIva = producto.producto?.precio?.precioUnitarioConIva*producto.cantidad
+        //         precioTotalProductoSinIva = producto.producto?.precio?.precioUnitarioSinIva*producto.cantidad
+        //         precioIvaProducto=producto.producto?.precio?.valorIva*producto.cantidad
+        //       }
+        //       producto.configuracion.adiciones.forEach(adicion=>{
+        //         precioAdicionesSinIva+=adicion["referencia"].precioUnitario*adicion["cantidad"]*producto.cantidad
+        //         precioIvaAdiciones+=adicion["referencia"].precioIva*adicion["cantidad"]*producto.cantidad
+        //         precioAdicionesConIva+=adicion["referencia"].precioTotal*adicion["cantidad"]*producto.cantidad
+        //       })
+        //       producto.configuracion.preferencias.forEach(preferencia=>{
+        //         precioPreferenciaSinIva+=preferencia.valorUnitarioSinIva * producto.cantidad
+        //         precioIvaPreferencia+=preferencia.valorIva* producto.cantidad
+        //         precioPreferenciaConIva+=preferencia.precioTotalConIva * producto.cantidad
+        //       })
+        //       precioTotalProductosSinIva+=precioTotalProductoSinIva+precioAdicionesSinIva+precioPreferenciaSinIva
+        //       precioTotalIVA+=precioIvaProducto+precioIvaAdiciones+precioIvaPreferencia
+        //       precioTotalProductosConIva+=precioTotalProductoConIva+precioAdicionesConIva+precioPreferenciaConIva
+        //     })
+        //     order.totalImpuesto=precioTotalIVA
+        //     order.totalPedidoSinDescuento=precioTotalProductosSinIva
+        //     order.totalPedididoConDescuento=precioTotalProductosSinIva+order.totalEnvio-order.totalDescuento
+
+        // })
+
+
       },
       error: (error) => {
         console.error("❌ ERROR EN REFRESCO:", error);
         // ✅ RESETEAR FLAGS EN CASO DE ERROR
         this.refrescoEnProgreso = false;
         this.loading = false;
-        
+
         Swal.fire({
           icon: "error",
           title: "Error al cargar pedidos",
@@ -2106,12 +2133,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   pdfOrder(content, order: Pedido) {
     this.scrollStack.push(window.scrollY);
-    
+
     // 🔄 CRÍTICO: Actualizar valores del pedido ANTES de generar PDF
     // Esto asegura que el PDF muestre los valores más recientes
     const pedidoActualizado = this.actualizarPedidoParaPDF(order);
     this.pedidoSeleccionado = pedidoActualizado;
-    
+
     // ✅ Ahora generar PDF con pedido ACTUALIZADO
     this.htmlModal = this.paymentService.getHtmlContent(
       pedidoActualizado,  // ← Pedido con valores actualizados
@@ -2164,11 +2191,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   produceOrder(order: Pedido) {
     this.producirPedido.emit(order);
 
-    setTimeout(() => {
-      this.refrescarDatos();
-    }, 1000);
+    // No refrescar aquí con timeout arbitrario
+    // El componente padre debe llamar a refrescarDatos() cuando termine
   }
-  
+
   /**
    * 🔄 MÉTODO AUXILIAR: Actualizar pedido antes de generar PDF
    * Asegura que todos los valores estén sincronizados
@@ -2176,13 +2202,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private actualizarPedidoParaPDF(order: Pedido): Pedido {
     // Clonar el pedido para no modificar el original
     const pedidoActualizado = { ...order };
-    
+
     // Sincronizar forma de entrega entre pedido y carrito
     this.sincronizarFormaEntrega(pedidoActualizado);
-    
+
     // Actualizar valores usando el servicio
     this.actualizarValoresPedido(pedidoActualizado);
-    
+
     console.log('📊 PDF - Pedido actualizado antes de generar:', {
       nroPedido: pedidoActualizado.nroPedido,
       formaEntrega: pedidoActualizado.formaEntrega,
@@ -2191,7 +2217,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       totalDescuento: pedidoActualizado.totalDescuento,
       totalPedididoConDescuento: pedidoActualizado.totalPedididoConDescuento
     });
-    
+
     return pedidoActualizado;
   }
 
@@ -2222,17 +2248,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Si hay formas de entrega en el carrito, usar la primera no vacía
     if (formasEntregaCarrito.length > 0) {
       formaEntregaFinal = formasEntregaCarrito[0];
-      
+
       // Actualizar el pedido con la forma de entrega del carrito
       pedido.formaEntrega = formaEntregaFinal;
-      
+
       // Asegurar que todos los items del carrito tengan la misma forma de entrega
       pedido.carrito.forEach(item => {
         if (item.configuracion?.datosEntrega) {
           item.configuracion.datosEntrega.formaEntrega = formaEntregaFinal;
         }
       });
-      
+
       console.log('🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde carrito:', {
         nroPedido: pedido.nroPedido,
         formaEntrega: formaEntregaFinal,
@@ -2242,7 +2268,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Si el pedido tiene forma de entrega pero el carrito no, sincronizar hacia el carrito
     else if (pedido.formaEntrega) {
       formaEntregaFinal = pedido.formaEntrega;
-      
+
       pedido.carrito.forEach(item => {
         if (item.configuracion?.datosEntrega) {
           item.configuracion.datosEntrega.formaEntrega = pedido.formaEntrega;
@@ -2266,9 +2292,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           totalEnvioAnterior: pedido.totalEnvio,
           totalEnvioNuevo: 0
         });
-        
+
         pedido.totalEnvio = 0;
-        
+
         // Recalcular totales del pedido
         this.recalcularTotalesPedido(pedido);
       }
@@ -2290,21 +2316,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Recalcular totales usando el servicio de utilidades
     this.pedidoUtilService.pedido = pedido;
-    
+
     // Actualizar totales
     const subtotalSinEnvio = this.pedidoUtilService.getSubtotalSinEnvio();
     const totalDescuento = Number(pedido.totalDescuento) || 0;
     const totalImpuesto = Number(pedido.totalImpuesto) || 0;
     const totalEnvio = Number(pedido.totalEnvio) || 0;
-    
+
     // Calcular total final
     const totalFinal = subtotalSinEnvio + totalEnvio + totalImpuesto - totalDescuento;
-    
+
     // Actualizar propiedades del pedido
     pedido.totalPedidoSinDescuento = subtotalSinEnvio + totalEnvio;
     pedido.totalPedididoConDescuento = totalFinal;
     pedido.faltaPorPagar = totalFinal - (Number(pedido.anticipo) || 0);
-    
+
     console.log('🧮 RECÁLCULO - Totales actualizados:', {
       nroPedido: pedido.nroPedido,
       subtotalSinEnvio,
@@ -2457,6 +2483,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   editDatosClientes(content, order: Pedido) {
+    // Prevenir ejecución cuando está en modo producción
+    if (this.isFromProduction) {
+      return;
+    }
+
     if (!this.canModifyBasicData(order)) {
       this.toastrService.warning(
         "No se pueden modificar los datos del cliente en pedidos entregados",
@@ -2464,6 +2495,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       return;
     }
+
+    // Cerrar el modal de opciones primero
+    this.closeOptionsModal();
+
     this.scrollStack.push(window.scrollY);
     this.clienteSeleccionado = order.cliente ?? {} as Cliente;
     this.pedidoSeleccionado = order;
@@ -2694,7 +2729,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           showConfirmButton: false,
           timer: 1500,
         });
-        
+
         // ✅ NUEVO: Refrescar solo después de cambios importantes
         setTimeout(() => {
           this.refrescarDespuesDeCambio();
@@ -2757,10 +2792,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   editDatosEntrega(content, order: Pedido) {
+    // Prevenir ejecución cuando está en modo producción
+    if (this.isFromProduction) {
+      return;
+    }
+
+    // Cerrar el modal de opciones primero
+    this.closeOptionsModal();
+
     this.scrollStack.push(window.scrollY);
     this.clienteSeleccionado = order.cliente ?? {} as Cliente;
     this.pedidoSeleccionado = order;
-    
+
     // Buscar datos actualizados del cliente usando búsqueda activa
     if (order.cliente?.documento) {
       const data = { documento: order.cliente.documento };
@@ -2859,6 +2902,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   editDatosFacturacion(content, order: Pedido) {
+    // Prevenir ejecución cuando está en modo producción
+    if (this.isFromProduction) {
+      return;
+    }
+
+    // Cerrar el modal de opciones primero
+    this.closeOptionsModal();
+
     this.scrollStack.push(window.scrollY);
     this.clienteSeleccionado = order.cliente ?? {} as Cliente;
     this.pedidoSeleccionado = order;
@@ -2897,6 +2948,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // edutar Notas
   editNotas(content, order: Pedido) {
+    // Prevenir ejecución cuando está en modo producción
+    if (this.isFromProduction) {
+      return;
+    }
+
+    // Cerrar el modal de opciones primero
+    this.closeOptionsModal();
+
     if (!order.carrito || order.carrito.length === 0) {
       Swal.fire({
         icon: "error",
@@ -3009,6 +3068,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scrollStack.push(window.scrollY);
     this.clienteSeleccionado = order.cliente ?? {} as Cliente;
     this.pedidoSeleccionado = order;
+
+    // Guardar valores originales antes de abrir el modal
+    this.originalEstadoPago = order.estadoPago;
+    this.originalEstadoProceso = order.estadoProceso;
+    this.tempEstadoPago = order.estadoPago;
+    this.tempEstadoProceso = order.estadoProceso;
+
     this.initForms(this.clienteSeleccionado);
     this.modalService
       .open(content, {
@@ -3020,6 +3086,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .result.then(
         (result) => {
+          // Modal confirmado - no hacer nada aquí, cambiarEstadoPago() ya maneja la actualización
           const last = this.scrollStack.pop();
           if (last !== undefined) {
             setTimeout(() => {
@@ -3028,21 +3095,27 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         },
         (reason) => {
+          // Modal cancelado - restaurar valores originales
           const last = this.scrollStack.pop();
           if (last !== undefined) {
             setTimeout(() => {
               window.scrollTo({ top: last });
             }, 0);
           }
-          if (reason == "Cross click") {
-            return;
-          }
-          this.editOrder(order);
+          // Restaurar valores originales
+          order.estadoPago = this.originalEstadoPago;
+          order.estadoProceso = this.originalEstadoProceso;
+          this.clienteSeleccionado = {} as Cliente;
+          // NO llamar a editOrder aquí - el modal fue cancelado
         },
       );
   }
 
   cambiarEstadoPago(order: Pedido) {
+    // Aplicar los valores temporales al pedido
+    order.estadoPago = this.tempEstadoPago;
+    order.estadoProceso = this.tempEstadoProceso;
+
     // Marcar como calculado en frontend para evitar recálculo automático
     (order as any)._estadoCalculadoEnFrontend = true;
 
@@ -3074,7 +3147,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       if (active && typeof active.blur === 'function') {
         active.blur();
       }
-    } catch {}
+    } catch { }
     if (!this.canModifyProducts(order)) {
       this.toastrService.warning(
         `No se pueden modificar productos. El pedido está en estado: ${order.estadoProceso}`,
@@ -3083,15 +3156,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.scrollStack.push(window.scrollY);
-    
+
     // Verificar preferencias antes de establecer la configuración
     this.verifyCartPreferences(carritoConfiguracion);
-    
+
     this.configuracionCarritoSeleccionado = carritoConfiguracion;
-    
+
     // Establecer el producto seleccionado desde la configuración del carrito
     this.productoSeleccionado = carritoConfiguracion?.producto;
-    
+
     console.log('🔄 Abriendo modal de configuración:', {
       configuracion: carritoConfiguracion,
       producto: this.productoSeleccionado,
@@ -3175,15 +3248,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             formaEntregaPedido: order.formaEntrega,
             formaEntregaCarrito: order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega
           });
-          
+
           this.sincronizarFormaEntrega(order);
-          
+
           console.log('🔄 CONFIGURACIÓN - Después de sincronizar:', {
             nroPedido: order.nroPedido,
             formaEntregaPedido: order.formaEntrega,
             formaEntregaCarrito: order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega
           });
-          
+
           // Recalcular totales dependientes del valor de envío, descuentos, etc.
           order = this.actualizarValoresPedido(order);
 
@@ -3233,10 +3306,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (order.carrito) {
             order.carrito.push(configuracionResult);
           }
-          
+
           // Sincronizar forma de entrega antes de actualizar valores
           this.sincronizarFormaEntrega(order);
-          
+
           order = this.actualizarValoresPedido(order);
           this.editOrder(order);
         },
@@ -3250,24 +3323,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private eliminarPedidoCompleto(pedido: Pedido) {
     try {
       console.log(`🗑️ Eliminando pedido completo: ${pedido.nroPedido}`);
-      
+
       // Eliminar el pedido del backend
       this.ventasService.deleteOrder(pedido).subscribe({
         next: (response) => {
           console.log("✅ Pedido eliminado exitosamente:", response);
-          
+
           // Mostrar mensaje de éxito
           this.toastrService.success(
             `Pedido ${pedido.nroPedido} eliminado exitosamente`,
             "Pedido Eliminado"
           );
-          
+
           // Remover el pedido de la lista local
           const index = this.orders.findIndex(order => order._id === pedido._id);
           if (index !== -1) {
             this.orders.splice(index, 1);
           }
-          
+
           // Refrescar los datos para actualizar la UI
           this.refrescarDatos();
         },
@@ -3308,24 +3381,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       if (result.isConfirmed) {
         try {
           console.log(`🗑️ Eliminando pedido sin productos: ${pedido.nroPedido}`);
-          
+
           // Eliminar el pedido del backend
           this.ventasService.deleteOrder(pedido).subscribe({
             next: (response) => {
               console.log("✅ Pedido sin productos eliminado exitosamente:", response);
-              
+
               // Mostrar mensaje de éxito
               this.toastrService.success(
                 `Pedido ${pedido.nroPedido} eliminado automáticamente por no tener productos`,
                 "Pedido Eliminado"
               );
-              
+
               // Remover el pedido de la lista local
               const index = this.orders.findIndex(order => order._id === pedido._id);
               if (index !== -1) {
                 this.orders.splice(index, 1);
               }
-              
+
               // Refrescar los datos para actualizar la UI
               this.refrescarDatos();
             },
@@ -3412,7 +3485,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (index !== -1 && index !== undefined) {
             // Eliminar el producto del carrito
             pedido.carrito?.splice(index, 1);
-            
+
             console.log(`🗑️ Último producto eliminado del pedido ${pedido.nroPedido}:`, {
               producto: item.producto?.crearProducto?.titulo,
               referencia: item.producto?.identificacion?.referencia,
@@ -3478,7 +3551,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (index !== -1 && index !== undefined) {
             // Eliminar el producto del carrito
             pedido.carrito?.splice(index, 1);
-            
+
             console.log(`🗑️ Producto eliminado del pedido ${pedido.nroPedido}:`, {
               producto: item.producto?.crearProducto?.titulo,
               referencia: item.producto?.identificacion?.referencia,
@@ -3514,28 +3587,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   actualizarValoresPedido(order: Pedido) {
     this.pedidoUtilService.pedido = order;
-    
+
     // Sincronizar forma de entrega antes de actualizar valores
     this.sincronizarFormaEntrega(order);
-    
+
     // Recalcular descuentos
     order.totalDescuento = this.pedidoUtilService.getDiscount();
-    
+
     // 🔍 DETECTAR CAMBIOS EN FORMA DE ENTREGA
     const tieneDomicilio = (order.carrito ?? []).some((car) => {
       const forma = car?.configuracion?.datosEntrega?.formaEntrega || "";
       return forma.toLowerCase().includes("domicilio");
     });
-    
+
     // 🔄 SINCRONIZAR ENVÍO CON FORMA DE ENTREGA ACTUAL
     let costoEnvioAnterior = order.totalEnvio || 0;
     let costoEnvioNuevo = 0;
-    
+
     if (tieneDomicilio && order.envio?.zonaCobro) {
       try {
         costoEnvioNuevo = Number(this.pedidoUtilService.getShippingCost(this.allBillingZone));
         order.totalEnvio = costoEnvioNuevo;
-        
+
         console.log('🚚 ACTUALIZAR VALORES - Envío domicilio detectado:', {
           costoAnterior: costoEnvioAnterior,
           costoNuevo: costoEnvioNuevo,
@@ -3555,14 +3628,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       order.totalEnvio = 0;
       costoEnvioNuevo = 0;
     }
-    
+
     // 🔄 CALCULAR SUBTOTAL CORRECTAMENTE
     // 1. Obtener subtotal SOLO de productos
     const subtotalProductos = this.pedidoUtilService.getSubtotal();
-    
+
     // 2. Sumar envío al subtotal
     order.totalPedidoSinDescuento = subtotalProductos + (order.totalEnvio || 0);
-    
+
     console.log('💰 ACTUALIZAR VALORES - Cálculo del subtotal:', {
       subtotalProductos,
       totalEnvio: order.totalEnvio,
@@ -3570,26 +3643,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       cambioEnvio: costoEnvioAnterior !== costoEnvioNuevo,
       formaEntrega: order.carrito?.map(c => c.configuracion?.datosEntrega?.formaEntrega)
     });
-    
+
     // Recalcular total con descuentos (el envío ya está incluido en el subtotal)
     const totalConDescuento = this.pedidoUtilService.getTotalToPay(0); // 0 porque el subtotal ya incluye envío
     order.totalPedididoConDescuento = totalConDescuento;
-    
+
     // Recalcular falta por pagar si hay anticipos
     if (order.PagosAsentados && order.PagosAsentados.length > 0) {
       const anticipoReal = order.PagosAsentados.reduce((sum, pago) => {
-        if (pago.formaPago?.toLowerCase().includes("wompi") && 
-            pago.estadoVerificacion === "Pendiente") {
+        if (pago.formaPago?.toLowerCase().includes("wompi") &&
+          pago.estadoVerificacion === "Pendiente") {
           return sum; // No sumar pagos de Wompi pendientes
         }
         const valorPago = pago.valor || pago.valorRegistrado || 0;
         return sum + valorPago;
       }, 0);
-      
+
       order.anticipo = anticipoReal;
       order.faltaPorPagar = Math.max(0, order.totalPedididoConDescuento - anticipoReal);
     }
-    
+
     return order;
   }
 
@@ -3629,7 +3702,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   editSeller(order: Pedido) {
     // Obtener la empresa del pedido para filtrar usuarios
     const empresaPedido = order.company;
-    
+
     if (!empresaPedido) {
       Swal.fire({
         title: "Error",
@@ -3644,14 +3717,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Cargar la lista de usuarios para mostrar como opciones de asesores
     this.maestroService.consultarUsuarios().subscribe((usuarios: any) => {
       // Filtrar solo usuarios activos de la empresa específica que puedan ser asesores
-      const asesoresDisponibles = usuarios.filter((usuario: any) => 
-        usuario.activo && 
+      const asesoresDisponibles = usuarios.filter((usuario: any) =>
+        usuario.activo &&
         (usuario.empresa === empresaPedido || usuario.company === empresaPedido) &&
-        usuario.roles && 
-        (usuario.roles.toLowerCase().includes('vendedor') || 
-         usuario.roles.toLowerCase().includes('asesor') ||
-         usuario.roles.toLowerCase().includes('comercial') ||
-         usuario.roles.toLowerCase().includes('ventas'))
+        usuario.roles &&
+        (usuario.roles.toLowerCase().includes('vendedor') ||
+          usuario.roles.toLowerCase().includes('asesor') ||
+          usuario.roles.toLowerCase().includes('comercial') ||
+          usuario.roles.toLowerCase().includes('ventas'))
       );
 
       if (asesoresDisponibles.length === 0) {
@@ -3690,7 +3763,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           acc[option.value] = option.label;
           return acc;
         }, {} as any),
-        inputValue: order.asesorAsignado?.nit !== "9999" ? 
+        inputValue: order.asesorAsignado?.nit !== "9999" ?
           asesoresDisponibles.find((a: any) => a.nit === order.asesorAsignado?.nit)?.cd : '',
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -3706,17 +3779,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }).then((result) => {
         if (result.isConfirmed && result.value) {
           const asesorSeleccionado = asesoresDisponibles.find((a: any) => a.cd === result.value);
-          
+
           if (asesorSeleccionado) {
-          const userLite: UserLite = {
+            const userLite: UserLite = {
               name: `${asesorSeleccionado.nombre} ${asesorSeleccionado.apellido}`,
               email: asesorSeleccionado.email,
               nit: asesorSeleccionado.nit,
             };
-            
-          order.asesorAsignado = userLite;
-          this.editOrder(order);
-            
+
+            order.asesorAsignado = userLite;
+            this.editOrder(order);
+
             Swal.fire({
               title: "Asesor Asignado",
               text: `El asesor ${userLite.name} ha sido asignado exitosamente al pedido.`,
@@ -3736,7 +3809,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         confirmButtonColor: "#3085d6",
         confirmButtonText: "Aceptar",
       });
-      });
+    });
   }
 
   buscarPorFechas(table?: Table): void {

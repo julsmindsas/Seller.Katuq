@@ -73,8 +73,6 @@ export class NotificationManagerService {
    */
   private async initializeService(): Promise<void> {
     try {
-      console.log('🔔 Inicializando NotificationManager...');
-      
       // Obtener información del usuario actual
       await this.loadCurrentUser();
       
@@ -88,7 +86,6 @@ export class NotificationManagerService {
       this.setupEventProcessing();
       
       this.isInitialized = true;
-      console.log('✅ NotificationManager inicializado correctamente');
     } catch (error) {
       console.error('❌ Error inicializando NotificationManager:', error);
     }
@@ -99,17 +96,29 @@ export class NotificationManagerService {
    */
   private async loadCurrentUser(): Promise<void> {
     try {
-      const currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
-      const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+      // Intentar primero localStorage (más común en la app)
+      let currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       
-      this.currentCompanyId = currentCompany.nit || currentCompany.id;
-      this.currentUserId = currentUser.id || 'default_user';
+      // Fallback a sessionStorage si no hay datos en localStorage
+      if (!currentCompany.nomComercial && !currentCompany.nit) {
+        currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
+      }
+      
+      if (!currentUser.id && !currentUser.email) {
+        currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+      }
+      
+      // Extraer IDs con múltiples fallbacks
+      this.currentCompanyId = currentCompany.nomComercial || currentCompany.nit || currentCompany.id || null;
+      this.currentUserId = currentUser.id || currentUser.uid || currentUser.email || 'default_user';
       this.currentUserRole = this.determineUserRole(currentUser);
       
       console.log('👤 Usuario cargado:', {
         userId: this.currentUserId,
         role: this.currentUserRole,
-        company: this.currentCompanyId
+        company: this.currentCompanyId,
+        companyData: currentCompany
       });
     } catch (error) {
       console.error('Error cargando usuario actual:', error);
@@ -141,16 +150,35 @@ export class NotificationManagerService {
    * Configura la escucha de notificaciones en Firebase
    */
   private setupFirebaseListener(): void {
-    if (!this.currentCompanyId) return;
+    console.log('🔔 NotificationManager: Configurando listeners de Firebase...');
+    
+    // Escuchar AMBAS rutas para compatibilidad
+    // 1. Ruta nueva (notification_queue) - para futuro
+    this.listenToNotificationQueue();
+    
+    // 2. Ruta legacy (ActualizacionTicket) - actual sistema en producción
+    this.listenToActualizacionTicket();
+  }
 
-    // 🏢 Usar colección unificada con filtro por compañía
+  /**
+   * Escucha la ruta nueva de notificaciones (notification_queue)
+   */
+  private listenToNotificationQueue(): void {
+    if (!this.currentCompanyId) {
+      console.log('⚠️ No hay companyId para notification_queue');
+      return;
+    }
+
     const notificationsPath = 'notification_queue';
+    console.log('🔔 Escuchando notification_queue para company:', this.currentCompanyId);
     
     this.db.list(notificationsPath, ref => 
       ref.orderByChild('company').equalTo(this.currentCompanyId)
     )
       .snapshotChanges()
       .subscribe((snapshots) => {
+        console.log('📨 Notificaciones de notification_queue:', snapshots.length);
+        
         const firebaseNotifications = snapshots.map((snapshot) => {
           const data: any = snapshot.payload.val();
           const id = snapshot.key;
@@ -164,23 +192,175 @@ export class NotificationManagerService {
           } as KatuqNotification;
         });
 
-        // Filtrar notificaciones relevantes para el usuario actual
-        const relevantNotifications = firebaseNotifications.filter(notification => 
-          this.isNotificationRelevantForUser(notification)
-        );
-
-        // Mergear con notificaciones locales
-        const allNotifications = this.mergeNotifications(relevantNotifications, this.localNotifications);
-        
-        // Ordenar por fecha de creación (más recientes primero)
-        allNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-        this.notificationsSubject.next(allNotifications);
-        this.updateUnreadCount(allNotifications);
-
-        // Procesar nuevas notificaciones para mostrar toasts
-        this.processNewNotifications(allNotifications);
+        this.processFirebaseNotifications(firebaseNotifications, 'notification_queue');
       });
+  }
+
+  /**
+   * Escucha la ruta legacy de notificaciones (ActualizacionTicket)
+   */
+  private listenToActualizacionTicket(): void {
+    // Obtener company data del localStorage
+    const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+    
+    if (!companyData || !companyData.nomComercial) {
+      console.log('⚠️ No hay datos de empresa para ActualizacionTicket');
+      return;
+    }
+    
+    const notificationPath = 'ActualizacionTicket' + companyData.nomComercial;
+    console.log('🔔 Escuchando ActualizacionTicket en:', notificationPath);
+    
+    // Suscripción para rastrear última notificación procesada
+    let lastProcessedId: string | null = null;
+    
+    this.db.list(notificationPath)
+      .snapshotChanges()
+      .subscribe((snapshots) => {
+        console.log('📨 Notificaciones de ActualizacionTicket:', snapshots.length);
+        
+        const notifications = snapshots.map((snapshot) => {
+          const data: any = snapshot.payload.val();
+          const id = snapshot.key;
+          return { id, ...data };
+        });
+
+        // Ordenar por timestamp
+        const sorted = notifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        
+        // Buscar nueva notificación no leída
+        const newNotification = sorted.find((n) => !n.read);
+        
+        if (newNotification && newNotification.id !== lastProcessedId) {
+          lastProcessedId = newNotification.id;
+          
+          console.log('🔔 Nueva notificación de ActualizacionTicket:', newNotification);
+          
+          // Convertir al formato KatuqNotification
+          const katuqNotification: KatuqNotification = {
+            id: 'actualizacion_' + newNotification.id,
+            type: this.mapLegacyType(newNotification.type),
+            title: this.extractTitle(newNotification),
+            message: newNotification.message || newNotification.type || 'Nueva notificación',
+            data: {
+              orderId: newNotification.orderId,
+              cliente: newNotification.cliente,
+              total: newNotification.total,
+              originalType: newNotification.type,
+              firebaseId: newNotification.id,
+              ...newNotification
+            },
+            
+            userId: this.currentUserId || undefined,
+            userRole: this.currentUserRole,
+            companyId: this.currentCompanyId || undefined,
+            
+            channels: [NotificationChannel.IN_APP],
+            priority: NotificationPriority.NORMAL,
+            status: newNotification.read ? NotificationStatus.READ : NotificationStatus.PENDING,
+            
+            createdAt: new Date(newNotification.timestamp || Date.now()),
+            readAt: newNotification.read ? new Date() : undefined
+          };
+          
+          // Agregar a notificaciones locales
+          this.addLocalNotification(katuqNotification);
+        }
+      });
+  }
+
+  /**
+   * Procesa notificaciones de Firebase (común para ambas rutas)
+   */
+  private processFirebaseNotifications(notifications: KatuqNotification[], source: string): void {
+    console.log(`📥 Procesando ${notifications.length} notificaciones de ${source}`);
+    
+    // Filtrar notificaciones relevantes para el usuario actual
+    const relevantNotifications = notifications.filter(notification => 
+      this.isNotificationRelevantForUser(notification)
+    );
+
+    // Mergear con notificaciones locales
+    const allNotifications = this.mergeNotifications(relevantNotifications, this.localNotifications);
+    
+    // Ordenar por fecha de creación (más recientes primero)
+    allNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    this.notificationsSubject.next(allNotifications);
+    this.updateUnreadCount(allNotifications);
+
+    // Procesar nuevas notificaciones para mostrar toasts
+    this.processNewNotifications(allNotifications);
+  }
+
+  /**
+   * Mapea tipos legacy de ActualizacionTicket a NotificationType
+   */
+  private mapLegacyType(type: string): NotificationType {
+    const typeMap: Record<string, NotificationType> = {
+      // Mapeos en inglés
+      'ORDER_CREATED': NotificationType.ORDER_CREATED,
+      'ORDER_UPDATED': NotificationType.ORDER_UPDATED,
+      'PAYMENT_APPROVED': NotificationType.PAYMENT_APPROVED,
+      'PAYMENT_REJECTED': NotificationType.PAYMENT_REJECTED,
+      
+      // Mapeos en español
+      'Pedido Creado': NotificationType.ORDER_CREATED,
+      'Pedido Actualizado': NotificationType.ORDER_UPDATED,
+      'Pago Aprobado': NotificationType.PAYMENT_APPROVED,
+      'Pago Rechazado': NotificationType.PAYMENT_REJECTED,
+      'En Producción': NotificationType.PRODUCTION_STARTED,
+      'Producción Completada': NotificationType.PRODUCTION_COMPLETED,
+      'Empacado': NotificationType.ORDER_PACKED,
+      'Despachado': NotificationType.ORDER_DISPATCHED,
+      'Entregado': NotificationType.ORDER_DELIVERED
+    };
+    
+    return typeMap[type] || NotificationType.SYSTEM_ALERT;
+  }
+
+  /**
+   * Extrae el título de una notificación legacy
+   */
+  private extractTitle(notification: any): string {
+    if (notification.title) return notification.title;
+    
+    // Generar título basado en el tipo
+    const typeNames: Record<string, string> = {
+      'Pedido Creado': 'Nuevo Pedido',
+      'Pedido Actualizado': 'Pedido Actualizado',
+      'Pago Aprobado': 'Pago Confirmado',
+      'Pago Rechazado': 'Pago Rechazado',
+      'En Producción': 'En Producción',
+      'Despachado': 'Pedido Despachado',
+      'Entregado': 'Pedido Entregado'
+    };
+    
+    return typeNames[notification.type] || 'Notificación';
+  }
+
+  /**
+   * Agrega una notificación local sin duplicar
+   */
+  private addLocalNotification(notification: KatuqNotification): void {
+    // Verificar si ya existe
+    const exists = this.localNotifications.some(n => n.id === notification.id);
+    if (!exists) {
+      this.localNotifications.push(notification);
+      this.saveLocalNotifications();
+      
+      // Actualizar observable
+      const allNotifications = [...this.localNotifications];
+      allNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      this.notificationsSubject.next(allNotifications);
+      this.updateUnreadCount(allNotifications);
+      
+      // Mostrar toast si es nueva
+      if (notification.status !== NotificationStatus.READ) {
+        this.showInAppNotification(notification);
+      }
+    }
   }
 
   /**
@@ -316,13 +496,12 @@ export class NotificationManagerService {
     try {
       const template = NOTIFICATION_TEMPLATES[event.type];
       if (!template) {
-        console.warn(`Template no encontrado para tipo: ${event.type}`);
+        console.warn(`❌ Template no encontrado para tipo: ${event.type}`);
         return;
       }
 
       // Verificar throttling
       if (await this.isThrottled(event)) {
-        console.log(`Notificación throttled: ${event.type}`);
         return;
       }
 
@@ -336,7 +515,7 @@ export class NotificationManagerService {
       this.updateThrottleCache(event);
 
     } catch (error) {
-      console.error('Error procesando evento de notificación:', error);
+      console.error('❌ Error procesando evento de notificación:', error);
     }
   }
 
@@ -380,9 +559,9 @@ export class NotificationManagerService {
       message: this.processTemplate(template.templates[NotificationChannel.IN_APP]?.message || '', event.data),
       data: event.data,
       
-      userId: event.userId || this.currentUserId,
+      userId: event.userId || this.currentUserId || undefined,
       userRole: this.currentUserRole,
-      companyId: event.companyId || this.currentCompanyId,
+      companyId: event.companyId || this.currentCompanyId || undefined,
       
       channels: event.channels || template.channels,
       priority: event.priority || template.priority,
@@ -460,7 +639,7 @@ export class NotificationManagerService {
       notification.status = NotificationStatus.FAILED;
       notification.errorMessage = error instanceof Error ? error.message : 'Unknown error';
       notification.attempts = (notification.attempts || 0) + 1;
-      console.error('Error enviando notificación:', error);
+      console.error('❌ Error enviando notificación:', error);
     }
   }
 
@@ -470,6 +649,11 @@ export class NotificationManagerService {
   private async sendInAppNotification(notification: KatuqNotification): Promise<void> {
     this.localNotifications.push(notification);
     this.saveLocalNotifications();
+    
+    // Actualizar el observable de notificaciones
+    const allNotifications = this.mergeNotifications([], this.localNotifications);
+    this.notificationsSubject.next(allNotifications);
+    
     this.showInAppNotification(notification);
   }
 
@@ -596,7 +780,7 @@ export class NotificationManagerService {
    */
   public triggerNotification(event: NotificationEvent): void {
     if (!this.isInitialized) {
-      console.warn('NotificationManager no está inicializado');
+      console.warn('❌ NotificationManager no está inicializado');
       return;
     }
     

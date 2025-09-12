@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { Table } from 'primeng/table';
 import { PaymentService } from 'src/app/shared/services/ventas/payment.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -163,7 +163,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     private formBuilder: FormBuilder,
     private pedidoUtilService: PedidosUtilService,
     private utilService: UtilsService,
-    private filterService: FilterService
+    private filterService: FilterService,
+    private changeDetectorRef: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {
     this.registerCustomFilters();
 
@@ -394,15 +396,60 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
 
   private editOrder(order: Pedido) {
-    this.ventasService.editOrder(order).subscribe((data) => {
-      this.refrescarDatos();
-      Swal.fire({
-        icon: 'success',
-        title: 'Pedido  actualizado correctamente',
-        showConfirmButton: false,
-        timer: 1500
-      });
-    });
+    this.ventasService.editOrder(order).subscribe(
+      (data) => {
+        // Ejecutar dentro de NgZone para asegurar la detección de cambios
+        this.ngZone.run(() => {
+          // Refrescar datos de la pestaña plano
+          this.refrescarDatos();
+
+          // Refrescar datos de la pestaña ensamble (la vista principal de producción)
+          this.refrescarDatosEnsamble();
+
+          // Dar tiempo para que Angular procese los cambios antes de refrescar el componente hijo
+          setTimeout(() => {
+            // También refrescar la lista de pedidos si está visible
+            if (this.listaPedidos) {
+              this.listaPedidos.refrescarDatos();
+              // Forzar la detección de cambios
+              this.changeDetectorRef.detectChanges();
+              this.changeDetectorRef.markForCheck();
+            }
+          }, 500);
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Pedido  actualizado correctamente',
+            showConfirmButton: false,
+            timer: 1500
+          });
+        });
+      },
+      (error) => {
+        console.error('Error al actualizar el pedido:', error);
+
+        // Ejecutar dentro de NgZone incluso en caso de error
+        this.ngZone.run(() => {
+          // Refrescar datos incluso en caso de error para mantener sincronización
+          this.refrescarDatos();
+          this.refrescarDatosEnsamble();
+
+          setTimeout(() => {
+            if (this.listaPedidos) {
+              this.listaPedidos.refrescarDatos();
+              this.changeDetectorRef.detectChanges();
+            }
+          }, 500);
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al actualizar el pedido',
+            text: 'Por favor, intente nuevamente',
+            showConfirmButton: true
+          });
+        });
+      }
+    );
   }
 
   // Helper functions for data validation
@@ -2825,12 +2872,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     // Aplicar agrupación por artículo si está habilitada
     let listaFinal = lista;
-    
+
     if (this.agruparSoloPorArticulo) {
       // Agrupar por artículo sumando cantidades
       const agrupadoPorArticulo = lista.reduce((acumulador, item) => {
         const clave = item.articulo.trim();
-        
+
         if (!acumulador[clave]) {
           acumulador[clave] = {
             producto: item.producto,
@@ -2839,30 +2886,30 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             fecha: item.fecha
           };
         }
-        
+
         // Sumar cantidades del mismo artículo
         acumulador[clave].cantidad += item.cantidad;
-        
+
         return acumulador;
       }, {});
-      
+
       // Convertir el objeto agrupado a array
       listaFinal = Object.values(agrupadoPorArticulo);
     }
-    
+
     // Ordenar alfabéticamente por artículo A-Z sin importar mayúsculas o minúsculas
     this.listaPorProcesoParaImprimir = listaFinal.sort((a, b) => {
       // Asegurar que los valores no sean null o undefined
       const articuloA = (a.articulo || '').toString().trim();
       const articuloB = (b.articulo || '').toString().trim();
-      
+
       // Usar localeCompare para ordenamiento correcto en español
-      return articuloA.localeCompare(articuloB, 'es', { 
+      return articuloA.localeCompare(articuloB, 'es', {
         sensitivity: 'base',
-        numeric: true 
+        numeric: true
       });
     });
-    
+
 
     // Si no hay resultados, mostrar mensaje adicional
     if (lista.length === 0) {

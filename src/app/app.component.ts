@@ -12,6 +12,8 @@ import { Keepalive } from '@ng-idle/keepalive';
 import { Router } from '@angular/router';
 import { NotificationService } from './shared/services/notification.service'
 import { NotificationrlService } from './shared/services/notificationrl.service'
+import { NotificationManagerService } from './shared/services/notifications/notification-manager.service'
+import { NotificationType, NotificationPriority } from './shared/services/notifications/notification.types'
 import { Toast, ToastrService } from 'ngx-toastr';
 import { ErrorHandlerService } from './shared/services/errores/error-handler.service';
 import { AuthService } from './shared/services/firebase/auth.service';
@@ -34,18 +36,16 @@ export class AppComponent implements OnInit, OnDestroy {
   UserLogged: any;
 
   // For Progressbar
-  loaders = this.loader.progress$.pipe(
-    delay(1000),
-    withLatestFrom(this.loader.progress$),
-    map(v => v[1]),
-  );
+  loaders: any;
   unreadNotifications: any[];
   newTickets: any[];
   private destroy$ = new Subject<void>();
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object,
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
     private notificationService: NotificationService,
     private notificationrlService: NotificationrlService,
+    private notificationManager: NotificationManagerService,
     private idle: Idle,
     private keepalive: Keepalive,
     private router: Router,
@@ -54,8 +54,18 @@ export class AppComponent implements OnInit, OnDestroy {
     public layout: LayoutService,
     public ngpService: NgpThemeService,
     private idleInterruptService: IdleInterruptService,
-    private loader: LoadingBarService, translate: TranslateService, private updates: SwUpdate,
-    private errorHandlerService: ErrorHandlerService) {
+    private loader: LoadingBarService, 
+    translate: TranslateService, 
+    private updates: SwUpdate,
+    private errorHandlerService: ErrorHandlerService
+  ) {
+    // Initialize loader
+    this.loaders = this.loader.progress$.pipe(
+      delay(1000),
+      withLatestFrom(this.loader.progress$),
+      map(v => v[1]),
+    );
+
     if (isPlatformBrowser(this.platformId)) {
       translate.setDefaultLang('es');
       translate.addLangs(['en', 'de', 'es', 'fr', 'pt', 'cn', 'ae']);
@@ -211,7 +221,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
     document.body.style.backgroundColor = tema ? 'black' : 'white';
 
+
   }
+
 
   /**
    * Inicializa y restaura los datos de sesión críticos
