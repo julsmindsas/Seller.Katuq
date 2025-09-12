@@ -699,6 +699,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
     { field: "referencia", header: "Referencia", visible: true, type: "text", filterable: true },
     { field: "ultimaImpresion", header: "Última impresión", visible: true, type: "date", filterable: false },
+    { field: "revisadoParaProduccion", header: "Revisado", visible: true, type: "date", filterable: true },
     { field: "nroPedido", header: "# Pedido", visible: true, type: "text", filterable: true },
     { field: "cantidad", header: "Cantidad", visible: true, type: "text", filterable: true },
     { field: "cliente", header: "Cliente", visible: true, type: "text", filterable: true },
@@ -4250,6 +4251,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
       { field: "referencia", header: "Referencia", visible: true, type: "text", filterable: true },
       { field: "ultimaImpresion", header: "Última impresión", visible: true, type: "date", filterable: false },
+      { field: "revisadoParaProduccion", header: "Revisado", visible: true, type: "date", filterable: true },
       { field: "nroPedido", header: "# Pedido", visible: true, type: "text", filterable: true },
       { field: "cantidad", header: "Cantidad", visible: true, type: "text", filterable: true },
       { field: "cliente", header: "Cliente", visible: true, type: "text", filterable: true },
@@ -4271,7 +4273,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       { field: "formaEntrega", header: "Forma de Entrega", visible: false, type: "text", filterable: true },
       { field: "horarioEntrega", header: "Horario de Entrega", visible: false, type: "text", filterable: true },
       { field: "channel", header: "Canal", visible: false, type: "text", filterable: true },
-      { field: "vendedor", header: "Vendedor", visible: false, type: "text", filterable: true }
+      { field: "vendedor", header: "Vendedor", visible: false, type: "text", filterable: true },
+      { field: "revisadoParaProduccion", header: "Revisado Producción", visible: false, type: "date", filterable: true }
     ];
     // Asegurar que selectedColumnsProduccion mantenga la nueva configuración
     this.selectedColumnsProduccion = this.displayedColumnsProduccion.filter((col) => col.visible);
@@ -4541,6 +4544,35 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedOrder = event.pedido;
     this.productoSeleccionado = event.producto;
     this.openOptionsModal(event.pedido, event.producto);
+  }
+
+  checkIfUserIsBrenda(): boolean {
+
+    return true;
+    // const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    // return userData.email === 'gerencia@almara.com.co';
+  }
+
+  marcarComoRevisado(order: Pedido): void {
+    if (!order) return;
+    
+    // Cambiar estado a EnProduccion
+    order.estadoProceso = EstadoProceso.EnProduccion;
+    
+    // Agregar fecha de revisión
+    order.revisadoParaProduccion = new Date().toISOString();
+    
+    // Guardar cambios
+    this.ventasService.editOrder(order).subscribe({
+      next: () => {
+        this.toastrService.success('Pedido marcado como revisado y enviado a producción', 'Éxito');
+        this.refrescarDatos();
+      },
+      error: (error) => {
+        console.error('Error al marcar como revisado:', error);
+        this.toastrService.error('Error al marcar como revisado', 'Error');
+      }
+    });
   }
 
   /**

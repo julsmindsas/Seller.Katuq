@@ -12,20 +12,21 @@
                 </div>
 
                 <!-- Header del módulo -->
-                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                <div
+                    class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="mb-1 fw-bold text-primary"><i class="pi pi-box me-2"></i>Producción</h5>
                         <p class="text-muted small mb-0">Gestión de producción y seguimiento de artículos</p>
                     </div>
-                    
+
                     <!-- Botón de recomendaciones KAI -->
-                    <button pButton type="button" icon="pi pi-brain" label="Recomendaciones KAI" 
-                        class="p-button-info p-button-sm"
-                        (click)="mostrarRecomendacionesProduccion()"></button>
+                    <button pButton type="button" icon="pi pi-brain" label="Recomendaciones KAI"
+                        class="p-button-info p-button-sm" (click)="mostrarRecomendacionesProduccion()"></button>
                 </div>
-                
+
                 <!-- Alertas de producción -->
-                <div class="px-4 py-3 bg-light border-bottom" *ngIf="!loading && (pedidosUrgentes?.length > 0 || pedidosEnRiesgo?.length > 0)">
+                <div class="px-4 py-3 bg-light border-bottom"
+                    *ngIf="!loading && (pedidosUrgentes?.length > 0 || pedidosEnRiesgo?.length > 0)">
                     <div class="d-flex flex-column">
                         <div class="alert alert-warning mb-2" *ngIf="pedidosUrgentes?.length > 0">
                             <div class="d-flex align-items-center">
@@ -33,29 +34,32 @@
                                 <div>
                                     <h6 class="mb-1 fw-bold">Producción Urgente</h6>
                                     <p class="mb-0">
-                                        Hay <strong>{{ pedidosUrgentes?.length }}</strong> artículos que requieren atención inmediata
+                                        Hay <strong>{{ pedidosUrgentes?.length }}</strong> artículos que requieren
+                                        atención inmediata
                                         <span *ngIf="pedidosUrgentes?.length > 0">
-                                            (Más urgente: {{ pedidosUrgentes[0]?.nombreArticulo }} - Entrega: {{ pedidosUrgentes[0]?.detallePedido[0]?.fechaEntrega | date:'dd/MM/yyyy' }})
+                                            (Más urgente: {{ pedidosUrgentes[0]?.nombreArticulo }} - Entrega: {{
+                                            pedidosUrgentes[0]?.detallePedido[0]?.fechaEntrega | date:'dd/MM/yyyy' }})
                                         </span>
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="alert alert-info mb-0" *ngIf="pedidosEnRiesgo?.length > 0">
                             <div class="d-flex align-items-center">
                                 <i class="pi pi-clock fs-4 me-3"></i>
                                 <div>
                                     <h6 class="mb-1 fw-bold">Producción en Riesgo</h6>
                                     <p class="mb-0">
-                                        Hay <strong>{{ pedidosEnRiesgo?.length }}</strong> artículos que podrían retrasarse
+                                        Hay <strong>{{ pedidosEnRiesgo?.length }}</strong> artículos que podrían
+                                        retrasarse
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Panel de KPI avanzados de producción -->
                 <div class="metrics-container p-3 mb-3 border-bottom bg-white" *ngIf="!loading">
                     <div class="row">
@@ -65,7 +69,7 @@
                                 Métricas Avanzadas de Producción
                             </h6>
                         </div>
-                        
+
                         <!-- KPIs de estado de producción -->
                         <div class="col-md-4">
                             <div class="card shadow-sm h-100">
@@ -75,8 +79,11 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="text-danger fw-bold">Urgentes</span>
                                             <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
-                                                    <div class="progress-bar bg-danger" [style.width.%]="(pedidosUrgentes?.length / ordersEnsamble?.length) * 100 || 0"></div>
+                                                <div class="progress flex-grow-1 me-2"
+                                                    style="width: 100px; height: 6px;">
+                                                    <div class="progress-bar bg-danger"
+                                                        [style.width.%]="(pedidosUrgentes?.length / ordersEnsamble?.length) * 100 || 0">
+                                                    </div>
                                                 </div>
                                                 <span class="text-danger">
                                                     {{ pedidosUrgentes?.length || 0 }}
@@ -86,8 +93,11 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="text-warning fw-bold">En Riesgo</span>
                                             <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
-                                                    <div class="progress-bar bg-warning" [style.width.%]="(pedidosEnRiesgo?.length / ordersEnsamble?.length) * 100 || 0"></div>
+                                                <div class="progress flex-grow-1 me-2"
+                                                    style="width: 100px; height: 6px;">
+                                                    <div class="progress-bar bg-warning"
+                                                        [style.width.%]="(pedidosEnRiesgo?.length / ordersEnsamble?.length) * 100 || 0">
+                                                    </div>
                                                 </div>
                                                 <span class="text-warning">
                                                     {{ pedidosEnRiesgo?.length || 0 }}
@@ -97,8 +107,11 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="text-success fw-bold">Al día</span>
                                             <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
-                                                    <div class="progress-bar bg-success" [style.width.%]="(pedidosNormales?.length / ordersEnsamble?.length) * 100 || 0"></div>
+                                                <div class="progress flex-grow-1 me-2"
+                                                    style="width: 100px; height: 6px;">
+                                                    <div class="progress-bar bg-success"
+                                                        [style.width.%]="(pedidosNormales?.length / ordersEnsamble?.length) * 100 || 0">
+                                                    </div>
                                                 </div>
                                                 <span class="text-success">{{ pedidosNormales?.length || 0 }}</span>
                                             </div>
@@ -107,24 +120,24 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- KPIs de eficiencia por proceso -->
                         <div class="col-md-4">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body p-3">
                                     <h6 class="card-title text-muted mb-3">Eficiencia por Proceso</h6>
                                     <div class="d-flex flex-column gap-2">
-                                        <div class="d-flex justify-content-between align-items-center" *ngFor="let proceso of procesosEficiencia">
+                                        <div class="d-flex justify-content-between align-items-center"
+                                            *ngFor="let proceso of procesosEficiencia">
                                             <span class="fw-bold">{{ proceso.nombre }}</span>
                                             <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="width: 100px; height: 6px;">
-                                                    <div class="progress-bar" 
-                                                         [ngClass]="{
+                                                <div class="progress flex-grow-1 me-2"
+                                                    style="width: 100px; height: 6px;">
+                                                    <div class="progress-bar" [ngClass]="{
                                                             'bg-success': proceso.eficiencia >= 80,
                                                             'bg-warning': proceso.eficiencia < 80 && proceso.eficiencia >= 50,
                                                             'bg-danger': proceso.eficiencia < 50
-                                                         }"
-                                                         [style.width.%]="proceso.eficiencia"></div>
+                                                         }" [style.width.%]="proceso.eficiencia"></div>
                                                 </div>
                                                 <span [ngClass]="{
                                                     'text-success': proceso.eficiencia >= 80,
@@ -139,7 +152,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- KPI de capacidad y carga -->
                         <div class="col-md-4">
                             <div class="card shadow-sm h-100">
@@ -151,8 +164,8 @@
                                                 <span class="value">{{ capacidadUtilizada || 0 }}%</span>
                                                 <span class="label">Utilizada</span>
                                             </div>
-                                            <div class="capacity-fill" [style.width.%]="capacidadUtilizada || 0" 
-                                                 [ngClass]="{
+                                            <div class="capacity-fill" [style.width.%]="capacidadUtilizada || 0"
+                                                [ngClass]="{
                                                     'bg-success': capacidadUtilizada < 70,
                                                     'bg-warning': capacidadUtilizada >= 70 && capacidadUtilizada < 90,
                                                     'bg-danger': capacidadUtilizada >= 90
@@ -180,45 +193,50 @@
                 </div>
 
                 <div class="card-body p-0">
-                        <p-tabView [scrollable]="false" (onChange)="handleChange($event)">
+                    <p-tabView [scrollable]="false" (onChange)="handleChange($event)">
+                        <!-- TAB DE LISTA DE PEDIDOS -->
+                        <p-tabPanel header="Lista pedidos">
+                            <app-list-orders [isFromProduction]="true" #listOrders
+                                (producirPedido)="producirPedido($event)">
+                            </app-list-orders>
+                        </p-tabPanel>
                         <!-- TAB DE ENSAMBLE -->
-                            <p-tabPanel header="Ensamble">
+                        <p-tabPanel header="Ensamble">
                             <!-- Filtros modernos -->
                             <div class="modern-filters-container">
                                 <!-- Header compacto y colapsable -->
                                 <div class="filters-compact-header">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <div class="filter-toggle-section" style="cursor: pointer;" (click)="toggleFilters()">
-                                            <i class="pi me-2 text-primary" [ngClass]="showFilters ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                                        <div class="filter-toggle-section" style="cursor: pointer;"
+                                            (click)="toggleFilters()">
+                                            <i class="pi me-2 text-primary"
+                                                [ngClass]="showFilters ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
                                             <i class="pi pi-filter me-2 text-primary"></i>
                                             <span class="fw-bold text-dark">Filtros</span>
                                             <span class="filter-count ms-2" *ngIf="hasActiveFilters()">
                                                 <span class="badge bg-primary">{{ getActiveFiltersCount() }}</span>
                                             </span>
                                         </div>
-                                        
+
                                         <div class="quick-actions">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="header-quick-filters">
                                                     <div class="d-flex align-items-center gap-2">
                                                         <span class="shortcuts-label">Filtros rápidos:</span>
                                                         <div class="shortcuts-group d-flex">
-                                                            <button type="button"
-                                                                class="btn btn-sm shortcut-btn"
+                                                            <button type="button" class="btn btn-sm shortcut-btn"
                                                                 [ngClass]="{'btn-primary': quickFilters.estadoProceso === 'SinProducir', 'btn-outline-secondary': quickFilters.estadoProceso !== 'SinProducir'}"
                                                                 (click)="setQuickFilter('estadoProceso', quickFilters.estadoProceso === 'SinProducir' ? 'all' : 'SinProducir')"
                                                                 pTooltip="Sin Producir">
                                                                 <i class="pi pi-clock"></i>
                                                             </button>
-                                                            <button type="button"
-                                                                class="btn btn-sm shortcut-btn"
+                                                            <button type="button" class="btn btn-sm shortcut-btn"
                                                                 [ngClass]="{'btn-warning': quickFilters.estadoProceso === 'EnProceso', 'btn-outline-secondary': quickFilters.estadoProceso !== 'EnProceso'}"
                                                                 (click)="setQuickFilter('estadoProceso', quickFilters.estadoProceso === 'EnProceso' ? 'all' : 'EnProceso')"
                                                                 pTooltip="En Proceso">
                                                                 <i class="pi pi-sync"></i>
                                                             </button>
-                                                            <button type="button"
-                                                                class="btn btn-sm shortcut-btn"
+                                                            <button type="button" class="btn btn-sm shortcut-btn"
                                                                 [ngClass]="{'btn-success': quickFilters.estadoProceso === 'Completado', 'btn-outline-secondary': quickFilters.estadoProceso !== 'Completado'}"
                                                                 (click)="setQuickFilter('estadoProceso', quickFilters.estadoProceso === 'Completado' ? 'all' : 'Completado')"
                                                                 pTooltip="Completado">
@@ -227,21 +245,17 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="vertical-separator"></div>
-                                                
+
                                                 <div class="actions-group d-flex">
-                                                    <button pButton type="button"
-                                                        icon="pi pi-refresh"
+                                                    <button pButton type="button" icon="pi pi-refresh"
                                                         class="p-button-sm p-button-text action-btn"
-                                                        pTooltip="Actualizar datos"
-                                                        (click)="refrescarDatosEnsamble()">
+                                                        pTooltip="Actualizar datos" (click)="refrescarDatosEnsamble()">
                                                     </button>
-                                                    <button pButton type="button"
-                                                        icon="pi pi-filter-slash"
+                                                    <button pButton type="button" icon="pi pi-filter-slash"
                                                         class="p-button-sm p-button-text action-btn"
-                                                        pTooltip="Limpiar filtros"
-                                                        (click)="clearAllFilters()">
+                                                        pTooltip="Limpiar filtros" (click)="clearAllFilters()">
                                                     </button>
                                                     <button pButton type="button"
                                                         [icon]="agruparSoloPorArticulo ? 'pi pi-th-large' : 'pi pi-grid'"
@@ -249,14 +263,12 @@
                                                         [pTooltip]="agruparSoloPorArticulo ? 'Agrupar por Producto+Artículo' : 'Agrupar solo por Artículo'"
                                                         (click)="toggleGrouping()">
                                                     </button>
-                                                    <button pButton type="button"
-                                                        icon="pi pi-inbox"
+                                                    <button pButton type="button" icon="pi pi-inbox"
                                                         class="p-button-sm p-button-outlined action-btn"
                                                         pTooltip="Cerrar productos"
                                                         (click)="cerrarProductosSeleccionados(cerrarProductoModal)">
                                                     </button>
-                                                    <button type="button"
-                                                        class="btn btn-outline-secondary btn-sm"
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm"
                                                         (click)="abrirModalImprimirListaPorProceso(imprimirListaPorProcesoModal)"
                                                         pTooltip="Imprimir lista por proceso">
                                                         <i class="pi pi-print me-1"></i> Imprimir lista por proceso
@@ -275,23 +287,28 @@
                                         <div class="d-flex flex-wrap gap-2 mt-2">
                                             <span class="filter-tag" *ngIf="quickFilters.estadoProceso !== 'all'">
                                                 Estado: {{ quickFilters.estadoProceso }}
-                                                <i class="pi pi-times ms-1" (click)="clearQuickFilter('estadoProceso')"></i>
+                                                <i class="pi pi-times ms-1"
+                                                    (click)="clearQuickFilter('estadoProceso')"></i>
                                             </span>
                                             <span class="filter-tag" *ngIf="selectedProcesosFilter">
                                                 Proceso: {{ selectedProcesosFilter.nombre }}
-                                                <i class="pi pi-times ms-1" (click)="selectedProcesosFilter = null; filterOrderByProcess({value: null})"></i>
+                                                <i class="pi pi-times ms-1"
+                                                    (click)="selectedProcesosFilter = null; filterOrderByProcess({value: null})"></i>
                                             </span>
                                             <span class="filter-tag" *ngIf="fechaInicial">
                                                 Desde: {{ fechaInicial | date:'dd/MM/yyyy' }}
-                                                <i class="pi pi-times ms-1" (click)="fechaInicial = null; refrescarDatosEnsamble()"></i>
+                                                <i class="pi pi-times ms-1"
+                                                    (click)="fechaInicial = null; refrescarDatosEnsamble()"></i>
                                             </span>
                                             <span class="filter-tag" *ngIf="fechaFinal">
                                                 Hasta: {{ fechaFinal | date:'dd/MM/yyyy' }}
-                                                <i class="pi pi-times ms-1" (click)="fechaFinal = null; refrescarDatosEnsamble()"></i>
+                                                <i class="pi pi-times ms-1"
+                                                    (click)="fechaFinal = null; refrescarDatosEnsamble()"></i>
                                             </span>
                                             <span class="filter-tag" *ngIf="nroPedido">
                                                 Pedido: {{ nroPedido }}
-                                                <i class="pi pi-times ms-1" (click)="nroPedido = null; refrescarDatosEnsamble()"></i>
+                                                <i class="pi pi-times ms-1"
+                                                    (click)="nroPedido = null; refrescarDatosEnsamble()"></i>
                                             </span>
                                         </div>
                                     </div>
@@ -308,38 +325,33 @@
                                                 <div class="date-range-container">
                                                     <div class="date-input-wrapper">
                                                         <label class="filter-label">Fecha Inicial</label>
-                                                        <p-calendar [(ngModel)]="fechaInicial" 
-                                                            class="modern-date-input"
-                                                            [showIcon]="true"
-                                                            dateFormat="dd/mm/yy"
-                                                            [readonlyInput]="true"
-                                                            styleClass="w-100"
-                                                            (onSelect)="onDateChange()"
-                                                            (onClearClick)="onDateChange()">
+                                                        <p-calendar [(ngModel)]="fechaInicial" class="modern-date-input"
+                                                            [showIcon]="true" dateFormat="dd/mm/yy"
+                                                            [readonlyInput]="true" styleClass="w-100"
+                                                            (onSelect)="onDateChange()" (onClearClick)="onDateChange()">
                                                         </p-calendar>
                                                     </div>
                                                     <span class="date-separator">a</span>
                                                     <div class="date-input-wrapper">
                                                         <label class="filter-label">Fecha Final</label>
-                                                        <p-calendar [(ngModel)]="fechaFinal" 
-                                                            class="modern-date-input"
-                                                            [showIcon]="true"
-                                                            dateFormat="dd/mm/yy"
-                                                            [readonlyInput]="true"
-                                                            styleClass="w-100"
-                                                            (onSelect)="onDateChange()"
-                                                            (onClearClick)="onDateChange()">
+                                                        <p-calendar [(ngModel)]="fechaFinal" class="modern-date-input"
+                                                            [showIcon]="true" dateFormat="dd/mm/yy"
+                                                            [readonlyInput]="true" styleClass="w-100"
+                                                            (onSelect)="onDateChange()" (onClearClick)="onDateChange()">
                                                         </p-calendar>
                                                     </div>
                                                 </div>
                                                 <div class="mt-3 d-flex gap-2">
-                                                    <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaHoy()">
+                                                    <button class="btn btn-sm btn-outline-primary"
+                                                        (click)="filtrarParaHoy()">
                                                         <i class="pi pi-calendar-today me-1"></i>Hoy
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaManana()">
+                                                    <button class="btn btn-sm btn-outline-primary"
+                                                        (click)="filtrarParaManana()">
                                                         <i class="pi pi-calendar me-1"></i>Mañana
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaPasadoManana()">
+                                                    <button class="btn btn-sm btn-outline-primary"
+                                                        (click)="filtrarParaPasadoManana()">
                                                         <i class="pi pi-calendar-plus me-1"></i>Pasado mañana
                                                     </button>
                                                 </div>
@@ -354,9 +366,7 @@
                                             </div>
                                             <div class="filter-group-content">
                                                 <label class="filter-label">Número de Pedido</label>
-                                                <input type="text" 
-                                                    class="form-control" 
-                                                    [(ngModel)]="nroPedido" 
+                                                <input type="text" class="form-control" [(ngModel)]="nroPedido"
                                                     placeholder="Buscar por número de pedido"
                                                     (input)="onOrderNumberChange()">
                                             </div>
@@ -372,10 +382,8 @@
                                                 <label class="filter-label">Proceso</label>
                                                 <p-dropdown [options]="filterProcessCombo"
                                                     [(ngModel)]="selectedProcesosFilter"
-                                                    placeholder="Seleccione un proceso"
-                                                    optionLabel="label"
-                                                    optionValue="value"
-                                                    styleClass="w-100"
+                                                    placeholder="Seleccione un proceso" optionLabel="label"
+                                                    optionValue="value" styleClass="w-100"
                                                     (onChange)="filterOrderByProcess($event)">
                                                     <ng-template let-item pTemplate="item">
                                                         <div class="d-flex align-items-center">
@@ -396,19 +404,19 @@
                                             <div class="filter-group-content">
                                                 <label class="filter-label">Estado del Proceso</label>
                                                 <div class="status-chips">
-                                                    <div class="status-chip" 
+                                                    <div class="status-chip"
                                                         [class.active]="quickFilters.estadoProceso === 'SinProducir'"
                                                         (click)="setQuickFilter('estadoProceso', quickFilters.estadoProceso === 'SinProducir' ? 'all' : 'SinProducir')">
                                                         <i class="pi pi-clock me-1"></i>
                                                         Sin Producir
                                                     </div>
-                                                    <div class="status-chip status-warning" 
+                                                    <div class="status-chip status-warning"
                                                         [class.active]="quickFilters.estadoProceso === 'EnProceso'"
                                                         (click)="setQuickFilter('estadoProceso', quickFilters.estadoProceso === 'EnProceso' ? 'all' : 'EnProceso')">
                                                         <i class="pi pi-sync me-1"></i>
                                                         En Proceso
                                                     </div>
-                                                    <div class="status-chip status-success" 
+                                                    <div class="status-chip status-success"
                                                         [class.active]="quickFilters.estadoProceso === 'Completado'"
                                                         (click)="setQuickFilter('estadoProceso', quickFilters.estadoProceso === 'Completado' ? 'all' : 'Completado')">
                                                         <i class="pi pi-check me-1"></i>
@@ -426,11 +434,13 @@
                                             </div>
                                             <div class="filter-group-content">
                                                 <div class="action-buttons">
-                                                    <button class="action-btn btn-primary" (click)="refrescarDatosEnsamble()">
+                                                    <button class="action-btn btn-primary"
+                                                        (click)="refrescarDatosEnsamble()">
                                                         <i class="pi pi-search me-1"></i>
                                                         <span>Buscar</span>
                                                     </button>
-                                                    <button class="action-btn btn-secondary" (click)="clearAllFilters()">
+                                                    <button class="action-btn btn-secondary"
+                                                        (click)="clearAllFilters()">
                                                         <i class="pi pi-refresh me-1"></i>
                                                         <span>Limpiar</span>
                                                     </button>
@@ -444,16 +454,11 @@
                             <!-- Selector de columnas moderno -->
                             <div class="mb-3 d-flex align-items-center gap-2 px-3 pt-3 justify-content-between">
                                 <div class="column-selector-container">
-                                    <p-multiSelect [options]="columns"
-                                                  [(ngModel)]="selectedColumns"
-                                                  optionLabel="header"
-                                                  display="chip"
-                                                  [panelStyle]="{ 'min-width': '280px', 'max-width': '340px', 'border-radius': '12px', 'box-shadow': '0 4px 20px rgba(0,0,0,0.08)' }"
-                                                  styleClass="modern-multiselect"
-                                                  [showToggleAll]="false"
-                                                  [filter]="true"
-                                                  defaultLabel="Columnas a mostrar"
-                                                  selectedItemsLabel="{0} columnas">
+                                    <p-multiSelect [options]="columns" [(ngModel)]="selectedColumns"
+                                        optionLabel="header" display="chip"
+                                        [panelStyle]="{ 'min-width': '280px', 'max-width': '340px', 'border-radius': '12px', 'box-shadow': '0 4px 20px rgba(0,0,0,0.08)' }"
+                                        styleClass="modern-multiselect" [showToggleAll]="false" [filter]="true"
+                                        defaultLabel="Columnas a mostrar" selectedItemsLabel="{0} columnas">
                                         <ng-template let-option pTemplate="item">
                                             <div class="column-option-item">
                                                 <i [ngClass]="option.icon" class="option-icon"></i>
@@ -469,43 +474,38 @@
                                             </div>
                                         </ng-template>
                                     </p-multiSelect>
-                                    <button pButton pRipple type="button" icon="pi pi-undo" 
-                                            class="reset-columns-btn"
-                                            pTooltip="Restaurar columnas"
-                                            tooltipPosition="top"
-                                            (click)="resetColumnConfig()">
+                                    <button pButton pRipple type="button" icon="pi pi-undo" class="reset-columns-btn"
+                                        pTooltip="Restaurar columnas" tooltipPosition="top"
+                                        (click)="resetColumnConfig()">
                                     </button>
                                 </div>
-                                
+
                                 <!-- Control de densidad de visualización -->
                                 <div class="density-control-container">
                                     <span class="density-label me-2">Densidad:</span>
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn" 
-                                                [ngClass]="{'btn-primary': tableDensity === 'compact', 'btn-outline-secondary': tableDensity !== 'compact'}"
-                                                (click)="setTableDensity('compact')"
-                                                pTooltip="Vista compacta" tooltipPosition="top">
+                                        <button type="button" class="btn"
+                                            [ngClass]="{'btn-primary': tableDensity === 'compact', 'btn-outline-secondary': tableDensity !== 'compact'}"
+                                            (click)="setTableDensity('compact')" pTooltip="Vista compacta"
+                                            tooltipPosition="top">
                                             <i class="pi pi-align-justify"></i>
                                         </button>
-                                        <button type="button" class="btn" 
-                                                [ngClass]="{'btn-primary': tableDensity === 'normal', 'btn-outline-secondary': tableDensity !== 'normal'}"
-                                                (click)="setTableDensity('normal')"
-                                                pTooltip="Vista normal" tooltipPosition="top">
+                                        <button type="button" class="btn"
+                                            [ngClass]="{'btn-primary': tableDensity === 'normal', 'btn-outline-secondary': tableDensity !== 'normal'}"
+                                            (click)="setTableDensity('normal')" pTooltip="Vista normal"
+                                            tooltipPosition="top">
                                             <i class="pi pi-list"></i>
                                         </button>
-                                        <button type="button" class="btn" 
-                                                [ngClass]="{'btn-primary': tableDensity === 'expanded', 'btn-outline-secondary': tableDensity !== 'expanded'}"
-                                                (click)="setTableDensity('expanded')"
-                                                pTooltip="Vista expandida" tooltipPosition="top">
+                                        <button type="button" class="btn"
+                                            [ngClass]="{'btn-primary': tableDensity === 'expanded', 'btn-outline-secondary': tableDensity !== 'expanded'}"
+                                            (click)="setTableDensity('expanded')" pTooltip="Vista expandida"
+                                            tooltipPosition="top">
                                             <i class="pi pi-th-large"></i>
                                         </button>
                                     </div>
-                                    <button pButton 
-                                            class="ms-2 p-button-outlined p-button-sm"
-                                            icon="pi pi-arrows-alt" 
-                                            pTooltip="Ajustar columnas automáticamente" 
-                                            tooltipPosition="top"
-                                            (click)="autoAdjustColumns()">
+                                    <button pButton class="ms-2 p-button-outlined p-button-sm" icon="pi pi-arrows-alt"
+                                        pTooltip="Ajustar columnas automáticamente" tooltipPosition="top"
+                                        (click)="autoAdjustColumns()">
                                     </button>
                                 </div>
                             </div>
@@ -513,187 +513,197 @@
                             <!-- Tabla de Producción Moderna -->
                             <div class="px-3 pb-3">
                                 <div class="production-table-container">
-                                    <p-table #dtEnsamble 
-                                        [value]="ordersEnsamble" 
-                                        dataKey="nombreArticulo" 
-                                        [rows]="10"
-                                        [rowsPerPageOptions]="[5,10,25,50]" 
-                                        [loading]="loading"
-                                        styleClass="modern-production-table density-{{tableDensity}}" 
-                                        [paginator]="true"
+                                    <p-table #dtEnsamble [value]="ordersEnsamble" dataKey="nombreArticulo" [rows]="10"
+                                        [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading"
+                                        styleClass="modern-production-table density-{{tableDensity}}" [paginator]="true"
                                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} artículos"
                                         [globalFilterFields]="['nombreProducto', 'nombreArticulo']">
-                                        
+
                                         <ng-template pTemplate="header">
                                             <tr>
                                                 <td class="action-column"></td>
-                                                <th *ngFor="let col of selectedColumns" 
+                                                <th *ngFor="let col of selectedColumns"
                                                     [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega' || col.field === 'estadoPago',
                                                               'text-end': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble'}"
                                                     [pSortableColumn]="col.field">
-                                                    <div class="header-cell" pTooltip="{{ col.description }}" tooltipPosition="top">
+                                                    <div class="header-cell" pTooltip="{{ col.description }}"
+                                                        tooltipPosition="top">
                                                         <i [ngClass]="col.icon"></i>
                                                         <span>{{ col.header }}</span>
                                                         <p-sortIcon [field]="col.field"></p-sortIcon>
-                                                        <p-columnFilter type="text" [field]="col.field" display="menu" class="ml-auto filter-icon">
-                                                            <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                                        <p-columnFilter type="text" [field]="col.field" display="menu"
+                                                            class="ml-auto filter-icon">
+                                                            <ng-template pTemplate="filter" let-value
+                                                                let-filter="filterCallback">
                                                                 <div class="p-column-filter-matchmode-dropdown">
-                                                                    <p-dropdown [options]="matchModeOptions" [(ngModel)]="matchMode" (onChange)="filter($event.value)">
+                                                                    <p-dropdown [options]="matchModeOptions"
+                                                                        [(ngModel)]="matchMode"
+                                                                        (onChange)="filter($event.value)">
                                                                         <ng-template pTemplate="item" let-option>
                                                                             <span>{{option.label}}</span>
                                                                         </ng-template>
                                                                     </p-dropdown>
                                                                 </div>
                                                                 <div class="p-column-filter-constraint mt-2">
-                                                                    <input type="text" pInputText [ngModel]="value" (ngModelChange)="filter($event)" 
-                                                                        class="p-inputtext p-component w-100" placeholder="Buscar...">
+                                                                    <input type="text" pInputText [ngModel]="value"
+                                                                        (ngModelChange)="filter($event)"
+                                                                        class="p-inputtext p-component w-100"
+                                                                        placeholder="Buscar...">
                                                                 </div>
                                                             </ng-template>
                                                             <ng-template pTemplate="header">
                                                                 <div class="p-column-filter-row-header">
-                                                                    <span class="p-column-filter-menu-button-open">Filtrar por {{ col.header }}</span>
+                                                                    <span
+                                                                        class="p-column-filter-menu-button-open">Filtrar
+                                                                        por {{ col.header }}</span>
                                                                 </div>
                                                             </ng-template>
                                                             <ng-template pTemplate="footer">
                                                                 <div class="p-column-filter-row-footer">
-                                                                    <button type="button" pButton label="Limpiar" class="p-button-outlined p-button-sm" (click)="filter('', 'equals')"></button>
-                                                                    <button type="button" pButton label="Aplicar" class="p-button-sm" (click)="filter(value)"></button>
+                                                                    <button type="button" pButton label="Limpiar"
+                                                                        class="p-button-outlined p-button-sm"
+                                                                        (click)="filter('', 'equals')"></button>
+                                                                    <button type="button" pButton label="Aplicar"
+                                                                        class="p-button-sm"
+                                                                        (click)="filter(value)"></button>
                                                                 </div>
                                                             </ng-template>
                                                         </p-columnFilter>
                                                     </div>
-                                            </th>
-                                        </tr>
-                                    </ng-template>
+                                                </th>
+                                            </tr>
+                                        </ng-template>
 
                                         <ng-template pTemplate="body" let-row>
                                             <tr class="product-row">
                                                 <td class="action-column">
-                                                    <button type="button" 
-                                                        pButton 
-                                                        pRipple 
-                                                        icon="pi pi-sitemap"
-                                                        class="process-menu-btn"
-                                                        pTooltip="Ver procesos de fabricación"
+                                                    <button type="button" pButton pRipple icon="pi pi-sitemap"
+                                                        class="process-menu-btn" pTooltip="Ver procesos de fabricación"
                                                         tooltipPosition="right"
                                                         *ngIf="getProcessStatusClass(row) !== 'status-complete'"
                                                         (click)="seleccionarProcesoACerrar(processSelecteModal, row)">
                                                     </button>
-                                            </td>
+                                                </td>
                                                 <td *ngFor="let col of selectedColumns"
                                                     [ngClass]="{'text-start': col.field === 'nombreArticulo' || col.field === 'nombreProducto' || col.field === 'tracking' || col.field === 'fechaEntrega' || col.field === 'horarioEntrega' || col.field === 'estadoPago',
                                                                 'text-end': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble',
                                                                 'numeric-cell': col.field === 'cantidadTotalProducto' || col.field === 'cantidadTotalProductoEnsamble'}">
-                                                    
+
                                                     <ng-container [ngSwitch]="col.field">
                                                         <!-- Tracking/Proceso -->
                                                         <ng-container *ngSwitchCase="'tracking'">
-                                                            <button pButton 
-                                                                icon="pi pi-cog"
-                                                                class="process-action-btn"
+                                                            <button pButton icon="pi pi-cog" class="process-action-btn"
                                                                 pTooltip="Ver proceso de fabricación"
                                                                 tooltipPosition="top"
                                                                 (click)="mostrarTracking(trackinModal, row)">
                                                             </button>
                                                         </ng-container>
-                                                        
+
                                                         <!-- Estado de Proceso -->
                                                         <ng-container *ngSwitchCase="'proceso'">
-                                                            <div class="process-status-indicator" 
-                                                                 [ngClass]="getProcessStatusClass(row)"
-                                                                 pTooltip="{{getProcessStatusTooltip(row)}}"
-                                                                 tooltipPosition="top">
+                                                            <div class="process-status-indicator"
+                                                                [ngClass]="getProcessStatusClass(row)"
+                                                                pTooltip="{{getProcessStatusTooltip(row)}}"
+                                                                tooltipPosition="top">
                                                                 <i [class]="getProcessStatusIcon(row)"></i>
                                                             </div>
                                                         </ng-container>
-                                                        
+
                                                         <!-- Estado de Pago -->
                                                         <ng-container *ngSwitchCase="'estadoPago'">
-                                                            <div class="payment-status-badge" 
-                                                                 [ngClass]="getPaymentStatusClass(getPaymentStatus(row))"
-                                                                 pTooltip="Estado de pago: {{getPaymentStatus(row)}}"
-                                                                 tooltipPosition="top">
-                                                                <i [class]="getPaymentStatusIcon(getPaymentStatus(row))"></i>
-                                                                <span class="payment-status-text">{{ getPaymentStatus(row) }}</span>
+                                                            <div class="payment-status-badge"
+                                                                [ngClass]="getPaymentStatusClass(getPaymentStatus(row))"
+                                                                pTooltip="Estado de pago: {{getPaymentStatus(row)}}"
+                                                                tooltipPosition="top">
+                                                                <i
+                                                                    [class]="getPaymentStatusIcon(getPaymentStatus(row))"></i>
+                                                                <span class="payment-status-text">{{
+                                                                    getPaymentStatus(row) }}</span>
                                                             </div>
                                                         </ng-container>
-                                                        
+
                                                         <!-- Cantidades con estilo numérico -->
                                                         <ng-container *ngSwitchCase="'cantidadTotalProducto'">
                                                             <div class="quantity-value">{{ row[col.field] }}</div>
                                                         </ng-container>
-                                                        
+
                                                         <ng-container *ngSwitchCase="'cantidadTotalProductoEnsamble'">
                                                             <div class="quantity-value">{{ row[col.field] }}</div>
                                                         </ng-container>
-                                                        
+
                                                         <!-- Fechas y horarios -->
                                                         <ng-container *ngSwitchCase="'fechaEntrega'">
-                                                            <div class="date-cell" pTooltip="{{ row[col.field] }}" tooltipPosition="top">
+                                                            <div class="date-cell" pTooltip="{{ row[col.field] }}"
+                                                                tooltipPosition="top">
                                                                 <i class="pi pi-calendar-plus date-icon"></i>
                                                                 <span>{{ row[col.field] }}</span>
                                                             </div>
                                                         </ng-container>
-                                                        
+
                                                         <ng-container *ngSwitchCase="'horarioEntrega'">
-                                                            <div class="time-cell" pTooltip="{{ row[col.field] }}" tooltipPosition="top">
+                                                            <div class="time-cell" pTooltip="{{ row[col.field] }}"
+                                                                tooltipPosition="top">
                                                                 <i class="pi pi-clock time-icon"></i>
                                                                 <span>{{ row[col.field] }}</span>
                                                             </div>
                                                         </ng-container>
-                                                        
+
                                                         <!-- Artículo - columna principal -->
                                                         <ng-container *ngSwitchCase="'nombreArticulo'">
                                                             <div class="article-name-container">
-                                                                <div class="article-name" [class.truncated]="row[col.field] && row[col.field].length > 60" [pTooltip]="row[col.field]" tooltipPosition="top" [escape]="false" [showDelay]="300" tooltipStyleClass="tooltip-custom">
+                                                                <div class="article-name"
+                                                                    [class.truncated]="row[col.field] && row[col.field].length > 60"
+                                                                    [pTooltip]="row[col.field]" tooltipPosition="top"
+                                                                    [escape]="false" [showDelay]="300"
+                                                                    tooltipStyleClass="tooltip-custom">
                                                                     {{ row[col.field] }}
                                                                 </div>
                                                             </div>
                                                         </ng-container>
-                                                        
+
                                                         <!-- Producto -->
                                                         <ng-container *ngSwitchCase="'nombreProducto'">
                                                             <div class="product-name-container">
-                                                                <div class="product-name" [class.truncated]="row[col.field] && row[col.field].length > 60" [pTooltip]="row[col.field]" tooltipPosition="top" [escape]="false" [showDelay]="300" tooltipStyleClass="tooltip-custom">
+                                                                <div class="product-name"
+                                                                    [class.truncated]="row[col.field] && row[col.field].length > 60"
+                                                                    [pTooltip]="row[col.field]" tooltipPosition="top"
+                                                                    [escape]="false" [showDelay]="300"
+                                                                    tooltipStyleClass="tooltip-custom">
                                                                     {{ row[col.field] }}
                                                                 </div>
                                                             </div>
                                                         </ng-container>
-                                                        
+
                                                         <!-- Default para otras columnas -->
                                                         <ng-container *ngSwitchDefault>
                                                             <span>{{ row[col.field] }}</span>
                                                         </ng-container>
                                                     </ng-container>
-                                            </td>
-                                        </tr>
-                                    </ng-template>
+                                                </td>
+                                            </tr>
+                                        </ng-template>
 
-                                    <ng-template pTemplate="emptymessage">
-                                        <tr>
+                                        <ng-template pTemplate="emptymessage">
+                                            <tr>
                                                 <td [attr.colspan]="selectedColumns.length + 1">
                                                     <div class="empty-state">
                                                         <div class="empty-icon-container">
                                                             <i class="pi pi-box"></i>
                                                         </div>
                                                         <h5>Sin artículos disponibles</h5>
-                                                        <p>No se encontraron artículos que coincidan con los criterios establecidos.</p>
+                                                        <p>No se encontraron artículos que coincidan con los criterios
+                                                            establecidos.</p>
                                                     </div>
                                                 </td>
-                                        </tr>
-                                    </ng-template>
-                                </p-table>
+                                            </tr>
+                                        </ng-template>
+                                    </p-table>
                                 </div>
                             </div>
-                            </p-tabPanel>
+                        </p-tabPanel>
 
-                        <!-- TAB DE LISTA DE PEDIDOS -->
-                            <p-tabPanel header="Lista pedidos">
-                                <app-list-orders [isFromProduction]="true" #listOrders
-                                (producirPedido)="producirPedido($event)">
-                            </app-list-orders>
-                            </p-tabPanel>
-                        </p-tabView>
+
+                    </p-tabView>
                 </div>
             </div>
         </div>
@@ -807,8 +817,8 @@
             <p class="mb-3">Estás a punto de cambiar el estado de pago. Por favor, selecciona el nuevo estado:</p>
             <div class="estado-select-container">
                 <select class="form-control modern-select" [(ngModel)]="pedidoSeleccionado.estadoPago">
-            <option *ngFor="let estado of estadosPago" [value]="estado">{{estado}}</option>
-        </select>
+                    <option *ngFor="let estado of estadosPago" [value]="estado">{{estado}}</option>
+                </select>
                 <i class="pi pi-chevron-down select-icon"></i>
             </div>
         </div>
@@ -846,19 +856,20 @@
                     <span>{{selectedOrdersEnsamble[0]?.nombreArticulo}}</span>
                 </div>
             </div>
-            
+
             <div class="procesos-list-container">
                 <h6 class="procesos-list-title">Seleccione un proceso para continuar:</h6>
                 <div class="proceso-info-message mb-3">
                     <i class="pi pi-info-circle text-primary me-2"></i>
-                    <span>Los procesos completados <i class="pi pi-check text-success"></i> y en progreso <i class="pi pi-sync text-warning"></i> pueden ser seleccionados incluso si hay dependencias.</span>
+                    <span>Los procesos completados <i class="pi pi-check text-success"></i> y en progreso <i
+                            class="pi pi-sync text-warning"></i> pueden ser seleccionados incluso si hay
+                        dependencias.</span>
                 </div>
                 <div class="procesos-list">
-                    <div *ngFor="let proceso of filterProcess" 
-                        class="proceso-item" 
+                    <div *ngFor="let proceso of filterProcess" class="proceso-item"
                         [ngClass]="{'proceso-disabled': !proceso.statusJararquiaProcess && proceso.icon !== 'pi-cog' && proceso.icon !== 'pi-sync', 
                                    'proceso-selected': selectedProcesos === proceso.label,
-                                   'proceso-available': proceso.statusJararquiaProcess || proceso.icon === 'pi-cog' || proceso.icon === 'pi-sync'}" 
+                                   'proceso-available': proceso.statusJararquiaProcess || proceso.icon === 'pi-cog' || proceso.icon === 'pi-sync'}"
                         (click)="selectProcess(proceso)">
                         <div class="proceso-icon" [ngClass]="{
                             'icon-complete': proceso.status === 'TOTALMENTE', 
@@ -883,7 +894,8 @@
         <button type="button" class="btn-modal-secondary" (click)="modal.dismiss('cancel')">
             <i class="pi pi-times me-2"></i>Cancelar
         </button>
-        <button type="button" class="btn-modal-primary" [disabled]="!selectedProcesos" (click)="cerrarArticuloEnsamble(cerrarArticuloModal, {label: selectedProcesos})">
+        <button type="button" class="btn-modal-primary" [disabled]="!selectedProcesos"
+            (click)="cerrarArticuloEnsamble(cerrarArticuloModal, {label: selectedProcesos})">
             <i class="pi pi-arrow-right me-2"></i>Continuar
         </button>
     </div>
@@ -984,39 +996,30 @@
     <div class="modal-body">
         <div class="alert alert-info mb-3" style="font-size:1em;">
             <i class="pi pi-info-circle me-2"></i>
-            Esta funcionalidad está diseñada para imprimir listas de trabajo para personal operativo (cocina, bodega, suministros, etc.). La lista es tipo checklist para marcar manualmente en piso o bodega.
+            Esta funcionalidad está diseñada para imprimir listas de trabajo para personal operativo (cocina, bodega,
+            suministros, etc.). La lista es tipo checklist para marcar manualmente en piso o bodega.
         </div>
         <div class="mb-3">
             <label class="form-label">Estado</label>
-            <p-dropdown [options]="estadosProcesoParaImprimir"
-                        [(ngModel)]="estadoParaImprimir"
-                        placeholder="Todos"
-                        optionLabel="label"
-                        optionValue="value"
-                        styleClass="w-100">
+            <p-dropdown [options]="estadosProcesoParaImprimir" [(ngModel)]="estadoParaImprimir" placeholder="Todos"
+                optionLabel="label" optionValue="value" styleClass="w-100">
             </p-dropdown>
         </div>
         <div class="mb-3">
             <label class="form-label">Proceso</label>
-            <p-dropdown [options]="filterProcessCombo"
-                        [(ngModel)]="procesoParaImprimir"
-                        placeholder="Seleccione un proceso"
-                        optionLabel="label"
-                        optionValue="value"
-                        styleClass="w-100"
-                        (onChange)="onProcesoChange()">
+            <p-dropdown [options]="filterProcessCombo" [(ngModel)]="procesoParaImprimir"
+                placeholder="Seleccione un proceso" optionLabel="label" optionValue="value" styleClass="w-100"
+                (onChange)="onProcesoChange()">
             </p-dropdown>
         </div>
-        
+
         <!-- Mensaje de ayuda con fechas disponibles -->
         <div *ngIf="procesoParaImprimir" class="alert alert-warning mb-3">
             <i class="pi pi-calendar me-2"></i>
             <strong>Fechas disponibles:</strong> Selecciona una de estas fechas para encontrar pedidos:
             <div class="dates-container mt-2">
-                <span *ngFor="let fecha of fechasDisponiblesParaUi" 
-                      class="date-tag" 
-                      [class.active]="isSameDay(fecha, fechaParaImprimir)"
-                      (click)="seleccionarFecha(fecha)">
+                <span *ngFor="let fecha of fechasDisponiblesParaUi" class="date-tag"
+                    [class.active]="isSameDay(fecha, fechaParaImprimir)" (click)="seleccionarFecha(fecha)">
                     {{fecha | date:'dd/MM/yyyy'}}
                 </span>
                 <span *ngIf="!fechasDisponiblesParaUi || fechasDisponiblesParaUi.length === 0" class="text-muted">
@@ -1024,16 +1027,11 @@
                 </span>
             </div>
         </div>
-        
+
         <div class="mb-3">
             <label class="form-label">Fecha o rango de fechas</label>
-            <p-calendar [(ngModel)]="fechaParaImprimir"
-                        class="modern-date-input"
-                        [showIcon]="true"
-                        dateFormat="dd/mm/yy"
-                        [readonlyInput]="true"
-                        [selectionMode]="'range'"
-                        styleClass="w-100">
+            <p-calendar [(ngModel)]="fechaParaImprimir" class="modern-date-input" [showIcon]="true"
+                dateFormat="dd/mm/yy" [readonlyInput]="true" [selectionMode]="'range'" styleClass="w-100">
             </p-calendar>
             <small class="form-text text-muted mt-1">
                 <i class="pi pi-info-circle me-1"></i>
@@ -1045,7 +1043,8 @@
         <button type="button" class="btn-modal-secondary" (click)="modal.close('cancel')">
             <i class="pi pi-times me-2"></i>Cancelar
         </button>
-        <button type="button" class="btn-modal-primary" [disabled]="!procesoParaImprimir" (click)="generarVistaPreviaImpresion(modal)">
+        <button type="button" class="btn-modal-primary" [disabled]="!procesoParaImprimir"
+            (click)="generarVistaPreviaImpresion(modal)">
             <i class="pi pi-eye me-2"></i>Vista previa
         </button>
     </div>
@@ -1065,7 +1064,8 @@
     <div class="modal-body">
         <div class="alert alert-info mb-3" style="font-size:1em;">
             <i class="pi pi-info-circle me-2"></i>
-            Esta lista es imprimible y está pensada para ser utilizada por personal operativo en piso, cocina o bodega. Puede marcar los productos conforme los prepare o retire.
+            Esta lista es imprimible y está pensada para ser utilizada por personal operativo en piso, cocina o bodega.
+            Puede marcar los productos conforme los prepare o retire.
         </div>
         <div id="printable-lista-proceso">
             <style>
@@ -1075,40 +1075,50 @@
                     font-weight: bold;
                     margin-bottom: 0.5em;
                 }
+
                 .print-subheader {
                     text-align: center;
                     font-size: 1.1em;
                     margin-bottom: 1em;
                 }
+
                 .print-table {
                     width: 100%;
                     border-collapse: collapse;
                     font-size: 1.2em;
                 }
-                .print-table th, .print-table td {
+
+                .print-table th,
+                .print-table td {
                     border: 1px solid #333;
                     padding: 1em 0.5em;
                     text-align: left;
                 }
+
                 .print-table th {
                     background: #f5f5f5;
                     font-size: 1.1em;
                 }
+
                 .print-table td.check {
                     text-align: center;
                     width: 3em;
                 }
+
                 .print-table td.obs {
                     min-width: 120px;
                 }
+
                 .print-table tr {
                     height: 2.5em;
                 }
+
                 .print-footer {
                     margin-top: 2em;
                     font-size: 1em;
                     text-align: right;
                 }
+
                 .print-empty {
                     text-align: center;
                     padding: 3em;
@@ -1118,12 +1128,14 @@
                     margin: 1em 0;
                     background: #f9f9f9;
                 }
+
                 .print-total {
                     margin: 1em 0;
                     font-weight: bold;
                     font-size: 1.1em;
                     text-align: right;
                 }
+
                 .print-highpriority {
                     background-color: #FFF3E0;
                 }
@@ -1132,18 +1144,18 @@
             <div class="print-subheader">
                 <span>{{ getFormattedDateForPrint() }}</span>
             </div>
-            
+
             <div class="print-total" *ngIf="listaPorProcesoParaImprimir.length > 0">
-                Total: {{listaPorProcesoParaImprimir.length}} items | 
+                Total: {{listaPorProcesoParaImprimir.length}} items |
                 Cantidad total: {{getTotalCantidad()}} unidades
             </div>
-            
+
             <div class="print-empty" *ngIf="listaPorProcesoParaImprimir.length === 0">
                 No se encontraron artículos con los criterios seleccionados.
                 <br><br>
                 <small>Verifique el proceso, la fecha o ambos y vuelva a generar la vista previa.</small>
             </div>
-            
+
             <table class="print-table" *ngIf="listaPorProcesoParaImprimir.length > 0">
                 <thead>
                     <tr>
@@ -1157,7 +1169,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let item of listaPorProcesoParaImprimir; let i = index" 
+                    <tr *ngFor="let item of listaPorProcesoParaImprimir; let i = index"
                         [ngClass]="{'print-highpriority': item.cantidad > 5}">
                         <td>{{i+1}}</td>
                         <td *ngIf="shouldShowDateColumnForPrint()">{{item.fecha}}</td>
@@ -1185,1112 +1197,1120 @@
 </ng-template>
 
 <style>
-/* Variables globales */
-:root {
-    --primary-color: #6366f1;
-    --primary-light: rgba(99, 102, 241, 0.1);
-    --primary-lightest: rgba(99, 102, 241, 0.05);
-    --secondary-color: #3b82f6;
-    --secondary-light: rgba(59, 130, 246, 0.1);
-    --secondary-dark: #1e40af;
-    --text-dark: #374151;
-    --text-medium: #6b7280;
-    --text-light: #9ca3af;
-    --border-color: #e5e7eb;
-    --border-hover: #d1d5db;
-    --surface-0: #ffffff;
-    --surface-50: #f9fafb;
-    --surface-100: #f3f4f6;
-    --surface-200: #e5e7eb;
-    --accent-purple: #8b5cf6;
-    --accent-blue: #3b82f6;
-    --accent-cyan: #06b6d4;
-    --accent-green: #10b981;
-    --accent-orange: #f59e0b;
-    --error-color: #ef4444;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-    --radius-sm: 0.375rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
-    --transition-fast: 0.15s ease;
-    --transition-normal: 0.25s ease;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-/* Selector de columnas */
-.column-selector-container {
-    display: flex;
-    align-items: center;
-    background-color: var(--surface-50);
-    border-radius: var(--radius-md);
-    padding: 0.5rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
-    transition: all var(--transition-normal);
-}
-
-.column-selector-container:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--border-hover);
-}
-
-.modern-multiselect {
-    border: none !important;
-    box-shadow: none !important;
-}
-
-.modern-multiselect .p-multiselect-label {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-    color: var(--text-medium);
-}
-
-.modern-multiselect .p-multiselect-trigger {
-    width: 2rem;
-    color: var(--text-medium);
-}
-
-.column-option-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0;
-}
-
-.option-icon {
-    color: var(--primary-color);
-    font-size: 1rem;
-}
-
-.option-title {
-    font-weight: 500;
-    color: var(--text-dark);
-    font-size: 0.875rem;
-}
-
-.option-description {
-    color: var(--text-light);
-    font-size: 0.75rem;
-    margin-top: 0.125rem;
-}
-
-.selected-columns-chip {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-    border-radius: var(--radius-md);
-    padding: 0.25rem 0.75rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-}
-
-.reset-columns-btn {
-    width: 2rem !important;
-    height: 2rem !important;
-    margin-left: 0.5rem;
-    background-color: var(--surface-50) !important;
-    border: 1px solid var(--border-color) !important;
-    color: var(--text-medium) !important;
-    border-radius: var(--radius-md) !important;
-    transition: all var(--transition-normal);
-}
-
-.reset-columns-btn:hover {
-    background-color: var(--primary-lightest) !important;
-    color: var(--primary-color) !important;
-    border-color: var(--primary-color) !important;
-    transform: translateY(-1px);
-}
-
-/* Contenedor de tabla */
-.production-table-container {
-    background-color: var(--surface-0);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border-color);
-    transition: all var(--transition-normal);
-}
-
-.production-table-container:hover {
-    box-shadow: var(--shadow-lg);
-}
-
-/* Tabla moderna */
-.modern-production-table {
-    font-family: var(--font-sans);
-}
-
-.modern-production-table .p-datatable-header {
-    background-color: var(--surface-0);
-    border: none;
-    padding: 1rem;
-}
-
-/* Encabezados */
-.modern-production-table .p-datatable-thead > tr > th {
-    background-color: var(--surface-50);
-    color: var(--text-medium);
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border: none;
-    padding: 0.75rem 1rem;
-    transition: all var(--transition-normal);
-}
-
-.modern-production-table .p-datatable-thead > tr > th:first-child {
-    border-top-left-radius: var(--radius-md);
-}
-
-.modern-production-table .p-datatable-thead > tr > th:last-child {
-    border-top-right-radius: var(--radius-md);
-}
-
-.header-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.header-cell i {
-    color: var(--primary-color);
-    opacity: 0.8;
-    font-size: 0.875rem;
-}
-
-/* Celdas y filas */
-.modern-production-table .p-datatable-tbody > tr > td {
-    border: none;
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    color: var(--text-dark);
-    vertical-align: middle;
-    background-color: transparent;
-    transition: all var(--transition-normal);
-}
-
-.product-row {
-    border-bottom: 1px solid var(--border-color);
-    transition: all var(--transition-normal);
-}
-
-.product-row:hover {
-    background-color: var(--primary-lightest) !important;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.product-row:last-child {
-    border-bottom: none;
-}
-
-/* Columna de acciones */
-.action-column {
-    width: 3rem;
-    text-align: center;
-    padding: 0.5rem !important;
-}
-
-.process-menu-btn {
-    width: 2rem !important;
-    height: 2rem !important;
-    background-color: transparent !important;
-    border: none !important;
-    color: var(--text-medium) !important;
-    border-radius: 50% !important;
-    transition: all var(--transition-normal);
-}
-
-.process-menu-btn:hover {
-    background-color: var(--primary-light) !important;
-    color: var(--primary-color) !important;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-/* Botón de proceso */
-.process-action-btn {
-    width: 2.25rem !important;
-    height: 2.25rem !important;
-    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color)) !important;
-    border: none !important;
-    color: white !important;
-    border-radius: 50% !important;
-    transition: all var(--transition-normal);
-    box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
-}
-
-.process-action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
-}
-
-.process-action-btn .pi-cog {
-    font-size: 1rem;
-}
-
-/* Valores numéricos */
-.quantity-value {
-    font-family: 'Inter', monospace;
-    font-weight: 600;
-    font-size: 0.9375rem;
-    color: var(--secondary-color);
-    background-color: var(--secondary-light);
-    border-radius: var(--radius-md);
-    padding: 0.25rem 0.5rem;
-    display: inline-block;
-    min-width: 2.5rem;
-    text-align: center;
-}
-
-/* Mejoras para la legibilidad de artículos y productos */
-.article-name-container, .product-name-container {
-    padding: 0.875rem 1rem;
-    background-color: var(--surface-0);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
-    position: relative;
-    border: 1px solid var(--border-color);
-    width: 100%;
-    margin: 0.25rem 0;
-}
-
-.article-name-container:hover, .product-name-container:hover {
-    background-color: var(--primary-lightest);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
-    transform: translateY(-2px);
-    z-index: 10;
-    border-color: var(--primary-color);
-}
-
-.article-name, .product-name {
-    font-size: 0.95rem;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    position: relative;
-    max-width: 100%;
-    word-wrap: break-word;
-    padding-right: 20px; /* Espacio para el indicador de truncado */
-}
-
-.article-name {
-    font-weight: 600;
-    color: var(--text-dark);
-}
-
-.product-name {
-    font-weight: 500;
-    color: var(--text-dark);
-}
-
-/* Indicador de contenido truncado */
-.article-name.truncated::after,
-.product-name.truncated::after {
-    content: '•••';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, var(--primary-lightest) 40%);
-    padding: 0 6px 0 15px;
-    color: var(--primary-color);
-    font-weight: bold;
-    border-radius: 0 0 var(--radius-md) 0;
-    line-height: 1.5;
-}
-
-.tooltip-custom {
-    max-width: 350px !important;
-    white-space: normal !important;
-    word-wrap: break-word !important;
-    font-size: 0.95rem !important;
-    padding: 0.875rem !important;
-    line-height: 1.5 !important;
-    background-color: var(--surface-0) !important;
-    color: var(--text-dark) !important;
-    border: 1px solid var(--primary-color) !important;
-    border-radius: var(--radius-md) !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Ajuste para la densidad de tabla */
-.modern-production-table.density-compact .article-name, 
-.modern-production-table.density-compact .product-name {
-    -webkit-line-clamp: 1;
-}
-
-.modern-production-table.density-expanded .article-name, 
-.modern-production-table.density-expanded .product-name {
-    -webkit-line-clamp: 3;
-}
-
-/* Estilos para tooltips más grandes */
-:host ::ng-deep .p-tooltip {
-    max-width: 300px;
-    white-space: pre-wrap;
-}
-
-/* Fechas y horas */
-.date-cell, .time-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.8125rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-md);
-    max-width: 300px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.date-cell {
-    background-color: rgba(59, 130, 246, 0.08);
-    color: var(--accent-blue);
-}
-
-.time-cell {
-    background-color: rgba(139, 92, 246, 0.08);
-    color: var(--accent-purple);
-}
-
-.date-icon, .time-icon {
-    font-size: 0.75rem;
-}
-
-/* Estado vacío */
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    text-align: center;
-}
-
-.empty-icon-container {
-    width: 4rem;
-    height: 4rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
-    border-radius: 50%;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
-}
-
-.empty-icon-container i {
-    font-size: 1.75rem;
-    color: white;
-}
-
-.empty-state h5 {
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 0.5rem;
-    font-size: 1.125rem;
-}
-
-.empty-state p {
-    color: var(--text-medium);
-    max-width: 300px;
-    margin: 0 auto;
-    font-size: 0.875rem;
-}
-
-/* Paginador */
-.modern-production-table .p-paginator {
-    background-color: var(--surface-50);
-    border: none;
-    padding: 0.5rem;
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-}
-
-.modern-production-table .p-paginator .p-paginator-pages .p-paginator-page {
-    min-width: 2.25rem;
-    height: 2.25rem;
-    margin: 0 0.125rem;
-    border-radius: var(--radius-md);
-    transition: all var(--transition-normal);
-}
-
-.modern-production-table .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
-}
-
-.modern-production-table .p-paginator button {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: var(--radius-md);
-}
-
-.modern-production-table .p-paginator button:not(.p-highlight):hover {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-}
-
-/* Estilos para el control de densidad */
-.density-control-container {
-    display: flex;
-    align-items: center;
-    background-color: var(--surface-50);
-    border-radius: var(--radius-md);
-    padding: 0.5rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
-}
-
-.density-label {
-    font-size: 0.8125rem;
-    color: var(--text-medium);
-    font-weight: 500;
-}
-
-.density-control-container .btn-group {
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-.density-control-container .btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.2rem;
-    height: 2.2rem;
-    padding: 0;
-    border-radius: 0;
-}
-
-.density-control-container .btn i {
-    font-size: 0.875rem;
-}
-
-.density-control-container .btn.btn-primary {
-    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
-    border-color: var(--secondary-color);
-}
-
-.density-control-container .p-button-outlined {
-    border-color: var(--border-color);
-    color: var(--text-medium);
-    transition: all var(--transition-normal);
-}
-
-.density-control-container .p-button-outlined:hover {
-    background-color: var(--primary-lightest);
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-    transform: translateY(-1px);
-}
-
-/* Estilos para los filtros de columna */
-:host ::ng-deep .modern-production-table .p-column-filter-menu-button {
-    width: 2rem;
-    height: 2rem;
-    color: var(--text-medium);
-    border-radius: 50%;
-    transition: all var(--transition-fast);
-    margin-left: 0.25rem;
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-menu-button:hover {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-menu-button.p-column-filter-menu-button-active {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-}
-
-:host ::ng-deep .p-column-filter-overlay {
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-color);
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-column-filter-row-items {
-    padding: 0.5rem;
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    margin-bottom: 0.25rem;
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item:hover {
-    background-color: var(--primary-lightest);
-    color: var(--primary-color);
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item.p-highlight {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-dropdown-label {
-    font-size: 0.875rem;
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-input-icon-left > i:first-of-type {
-    color: var(--text-medium);
-    left: 0.75rem;
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-inputtext {
-    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
-    font-size: 0.875rem;
-    border-radius: var(--radius-md);
-    border-color: var(--border-color);
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-inputtext:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-lightest);
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-button.p-button-outlined {
-    color: var(--text-medium);
-    border-color: var(--border-color);
-    background-color: transparent;
-    transition: all var(--transition-fast);
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-button.p-button-outlined:hover {
-    background-color: var(--primary-lightest);
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-button.p-button-primary {
-    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
-    border-color: var(--secondary-color);
-}
-
-:host ::ng-deep .p-column-filter-overlay .p-button.p-button-primary:hover {
-    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-}
-
-/* Ajustes para los filtros de columna */
-:host ::ng-deep .header-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-}
-
-:host ::ng-deep .header-cell .p-column-filter {
-    margin-left: auto;
-}
-
-:host ::ng-deep .filter-icon .pi-filter {
-    font-size: 0.75rem;
-    color: var(--text-medium);
-    transition: all var(--transition-fast);
-}
-
-:host ::ng-deep .filter-icon:hover .pi-filter,
-:host ::ng-deep .p-column-filter-menu-button.p-column-filter-menu-button-active .pi-filter {
-    color: var(--primary-color);
-}
-
-:host ::ng-deep .modern-production-table th .p-column-title {
-    display: inline-flex;
-    align-items: center;
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-overlay {
-    min-width: 280px;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-color);
-    padding: 0.5rem;
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-row {
-    padding: 0.5rem 0;
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-row .p-column-filter-constraint {
-    margin-bottom: 0.5rem;
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-row .p-column-filter-constraint:last-child {
-    margin-bottom: 0;
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-menu-button {
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 50%;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: transparent;
-    margin-left: 0.25rem;
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-menu-button:hover {
-    background-color: var(--primary-light);
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-menu-button.p-column-filter-menu-button-active {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-menu-button .pi-filter-icon {
-    font-size: 0.75rem;
-}
-
-:host ::ng-deep .modern-production-table .p-datatable-thead th.p-highlight {
-    background-color: var(--primary-lightest);
-}
-
-:host ::ng-deep .modern-production-table .p-column-filter-clear-button {
-    margin-right: 0.5rem;
-}
-
-:host ::ng-deep .modern-production-table .p-inputtext {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.875rem;
-}
-
-:host ::ng-deep .modern-production-table .p-dropdown {
-    min-width: 100%;
-}
-
-:host ::ng-deep .modern-production-table .p-dropdown-panel {
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-}
-
-:host ::ng-deep .modern-production-table .p-dropdown-items {
-    padding: 0.5rem 0;
-}
-
-:host ::ng-deep .modern-production-table .p-dropdown-item {
-    padding: 0.5rem 1rem;
-    border-radius: 0;
-    transition: background-color var(--transition-fast);
-}
-
-:host ::ng-deep .modern-production-table .p-dropdown-item:hover {
-    background-color: var(--primary-lightest);
-    color: var(--primary-color);
-}
-
-:host ::ng-deep .modern-production-table .p-dropdown-item.p-highlight {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-}
-
-/* Personalización de filtros en español */
-:host ::ng-deep .p-column-filter-row-header {
-    padding: 0.5rem 1rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--surface-50);
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-}
-
-:host ::ng-deep .p-column-filter-row-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background-color: var(--surface-50);
-    border-top: 1px solid var(--border-color);
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-}
-
-:host ::ng-deep .p-column-filter-menu-button-open {
-    font-size: 0.875rem;
-}
-
-:host ::ng-deep .p-inputtext[placeholder="Buscar..."] {
-    width: 100%;
-    margin: 0.5rem 0;
-    border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
-}
-
-:host ::ng-deep .p-inputtext[placeholder="Buscar..."]:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-lightest);
-}
-
-:host ::ng-deep .p-column-filter-overlay {
-    padding: 0 !important;
-    overflow: hidden;
-}
-
-:host ::ng-deep .p-column-filter .p-button-sm {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.75rem;
-    border-radius: var(--radius-md);
-}
-
-:host ::ng-deep .p-column-filter .p-button-outlined {
-    color: var(--text-medium);
-    border-color: var(--border-color);
-}
-
-:host ::ng-deep .p-column-filter .p-button-outlined:hover {
-    background-color: var(--primary-lightest);
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-:host ::ng-deep .p-column-filter .p-button-sm:not(.p-button-outlined) {
-    background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
-    border-color: var(--secondary-color);
-}
-
-/* Estilos para el dropdown de modos de coincidencia */
-:host ::ng-deep .p-column-filter-matchmode-dropdown {
-    margin-bottom: 0.5rem;
-    width: 100%;
-}
-
-:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown {
-    width: 100%;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    background-color: var(--surface-0);
-}
-
-:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown:hover {
-    border-color: var(--primary-color);
-}
-
-:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-label {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-}
-
-:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-trigger {
-    width: 2.5rem;
-}
-
-:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-panel {
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-color);
-}
-
-:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item {
-    padding: 0.65rem 1rem;
-    font-size: 0.875rem;
-    color: var(--text-dark);
-    transition: all var(--transition-fast);
-}
-
-:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item:hover {
-    background-color: var(--primary-lightest);
-    color: var(--primary-color);
-}
-
-:host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item.p-highlight {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-    font-weight: 500;
-}
-
-/* Estilos mejorados para los indicadores de estado de proceso */
-.process-status-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    transition: all var(--transition-normal);
-}
-
-.status-complete {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--accent-green);
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    animation: pulse-success 2s infinite;
-}
-
-.status-partial {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: var(--accent-orange);
-}
-
-.status-pending {
-    background-color: rgba(107, 114, 128, 0.1);
-    color: var(--text-medium);
-}
-
-.status-none {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: var(--error-color);
-}
-
-.process-status-indicator i {
-    font-size: 1.25rem;
-}
-
-.status-complete i {
-    font-size: 1.4rem;
-    font-weight: bold;
-}
-
-/* Animación de pulso para estado completado */
-@keyframes pulse-success {
-    0% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    /* Variables globales */
+    :root {
+        --primary-color: #6366f1;
+        --primary-light: rgba(99, 102, 241, 0.1);
+        --primary-lightest: rgba(99, 102, 241, 0.05);
+        --secondary-color: #3b82f6;
+        --secondary-light: rgba(59, 130, 246, 0.1);
+        --secondary-dark: #1e40af;
+        --text-dark: #374151;
+        --text-medium: #6b7280;
+        --text-light: #9ca3af;
+        --border-color: #e5e7eb;
+        --border-hover: #d1d5db;
+        --surface-0: #ffffff;
+        --surface-50: #f9fafb;
+        --surface-100: #f3f4f6;
+        --surface-200: #e5e7eb;
+        --accent-purple: #8b5cf6;
+        --accent-blue: #3b82f6;
+        --accent-cyan: #06b6d4;
+        --accent-green: #10b981;
+        --accent-orange: #f59e0b;
+        --error-color: #ef4444;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-xl: 1rem;
+        --transition-fast: 0.15s ease;
+        --transition-normal: 0.25s ease;
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
-    70% {
-        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+
+    /* Selector de columnas */
+    .column-selector-container {
+        display: flex;
+        align-items: center;
+        background-color: var(--surface-50);
+        border-radius: var(--radius-md);
+        padding: 0.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+        transition: all var(--transition-normal);
     }
-    100% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+
+    .column-selector-container:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-hover);
     }
-}
 
-/* Ajuste de columnas en la tabla para garantizar legibilidad */
-:host ::ng-deep .modern-production-table th[data-field="nombreArticulo"],
-:host ::ng-deep .modern-production-table th[data-field="nombreProducto"] {
-    min-width: 300px !important;
-    max-width: 450px !important;
-}
-
-:host ::ng-deep .modern-production-table td:has(.article-name-container),
-:host ::ng-deep .modern-production-table td:has(.product-name-container) {
-    min-width: 300px !important;
-    max-width: 450px !important;
-    width: auto !important;
-}
-
-/* Estilos para el mensaje informativo de procesos */
-.proceso-info-message {
-    display: flex;
-    align-items: center;
-    background-color: rgba(59, 130, 246, 0.08);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: var(--radius-md);
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    color: var(--text-dark);
-}
-
-.proceso-info-message i {
-    font-size: 1rem;
-    margin-right: 0.5rem;
-}
-
-.proceso-info-message .pi-check {
-    color: var(--accent-green);
-    margin: 0 0.25rem;
-}
-
-.proceso-info-message .pi-sync {
-    color: var(--accent-orange);
-    margin: 0 0.25rem;
-}
-
-/* Indicador visual de proceso disponible */
-.proceso-available {
-    border-left: 3px solid var(--primary-color);
-    background-color: rgba(99, 102, 241, 0.05);
-}
-
-.proceso-available:hover {
-    background-color: rgba(99, 102, 241, 0.1);
-    transform: translateY(-1px);
-    transition: all 0.2s ease;
-}
-
-.proceso-available .proceso-icon {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-/* Estilos para el estado de pago */
-.payment-status-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-lg);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    white-space: nowrap;
-    min-width: 120px;
-    transition: all var(--transition-normal);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid transparent;
-}
-
-.payment-status-badge:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.payment-status-badge i {
-    font-size: 1rem;
-    flex-shrink: 0;
-}
-
-.payment-status-text {
-    font-weight: 500;
-    letter-spacing: 0.025em;
-}
-
-/* Estados específicos de pago */
-.payment-status-approved {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.15));
-    color: var(--accent-green);
-    border-color: rgba(16, 185, 129, 0.3);
-}
-
-.payment-status-approved:hover {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.2));
-    border-color: rgba(16, 185, 129, 0.4);
-}
-
-.payment-status-preapproved {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.15));
-    color: var(--accent-blue);
-    border-color: rgba(59, 130, 246, 0.3);
-}
-
-.payment-status-preapproved:hover {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.2));
-    border-color: rgba(59, 130, 246, 0.4);
-}
-
-.payment-status-pending {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.15));
-    color: var(--accent-orange);
-    border-color: rgba(245, 158, 11, 0.3);
-}
-
-.payment-status-pending:hover {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.2));
-    border-color: rgba(245, 158, 11, 0.4);
-}
-
-.payment-status-rejected {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.15));
-    color: var(--error-color);
-    border-color: rgba(239, 68, 68, 0.3);
-}
-
-.payment-status-rejected:hover {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-    border-color: rgba(239, 68, 68, 0.4);
-}
-
-.payment-status-cancelled {
-    background: linear-gradient(135deg, rgba(107, 114, 128, 0.1), rgba(107, 114, 128, 0.15));
-    color: var(--text-medium);
-    border-color: rgba(107, 114, 128, 0.3);
-}
-
-.payment-status-cancelled:hover {
-    background: linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(107, 114, 128, 0.2));
-    border-color: rgba(107, 114, 128, 0.4);
-}
-
-.payment-status-unknown {
-    background: linear-gradient(135deg, rgba(156, 163, 175, 0.1), rgba(156, 163, 175, 0.15));
-    color: var(--text-light);
-    border-color: rgba(156, 163, 175, 0.3);
-}
-
-.payment-status-unknown:hover {
-    background: linear-gradient(135deg, rgba(156, 163, 175, 0.15), rgba(156, 163, 175, 0.2));
-    border-color: rgba(156, 163, 175, 0.4);
-}
-
-/* Responsividad para pantallas pequeñas */
-@media (max-width: 768px) {
-    .payment-status-badge {
-        min-width: 100px;
-        padding: 0.375rem 0.5rem;
-        font-size: 0.75rem;
+    .modern-multiselect {
+        border: none !important;
+        box-shadow: none !important;
     }
-    
-    .payment-status-badge i {
+
+    .modern-multiselect .p-multiselect-label {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        color: var(--text-medium);
+    }
+
+    .modern-multiselect .p-multiselect-trigger {
+        width: 2rem;
+        color: var(--text-medium);
+    }
+
+    .column-option-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+    }
+
+    .option-icon {
+        color: var(--primary-color);
+        font-size: 1rem;
+    }
+
+    .option-title {
+        font-weight: 500;
+        color: var(--text-dark);
         font-size: 0.875rem;
     }
-}
 
-/* Densidad de tabla */
-.modern-production-table.density-compact .payment-status-badge {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    min-width: 90px;
-}
+    .option-description {
+        color: var(--text-light);
+        font-size: 0.75rem;
+        margin-top: 0.125rem;
+    }
 
-.modern-production-table.density-compact .payment-status-badge i {
-    font-size: 0.875rem;
-}
+    .selected-columns-chip {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        border-radius: var(--radius-md);
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
 
-.modern-production-table.density-expanded .payment-status-badge {
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    min-width: 140px;
-}
+    .reset-columns-btn {
+        width: 2rem !important;
+        height: 2rem !important;
+        margin-left: 0.5rem;
+        background-color: var(--surface-50) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-medium) !important;
+        border-radius: var(--radius-md) !important;
+        transition: all var(--transition-normal);
+    }
 
-.modern-production-table.density-expanded .payment-status-badge i {
-    font-size: 1.125rem;
-}
+    .reset-columns-btn:hover {
+        background-color: var(--primary-lightest) !important;
+        color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        transform: translateY(-1px);
+    }
 
-/* Estilos para las etiquetas de fechas disponibles */
-.dates-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
+    /* Contenedor de tabla */
+    .production-table-container {
+        background-color: var(--surface-0);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+        transition: all var(--transition-normal);
+    }
 
-.date-tag {
-  display: inline-block;
-  padding: 0.3rem 0.7rem;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 30px;
-  font-size: 0.9rem;
-  color: #495057;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+    .production-table-container:hover {
+        box-shadow: var(--shadow-lg);
+    }
 
-.date-tag:hover {
-  background-color: #e9ecef;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
-}
+    /* Tabla moderna */
+    .modern-production-table {
+        font-family: var(--font-sans);
+    }
 
-.date-tag.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
-}
+    .modern-production-table .p-datatable-header {
+        background-color: var(--surface-0);
+        border: none;
+        padding: 1rem;
+    }
+
+    /* Encabezados */
+    .modern-production-table .p-datatable-thead>tr>th {
+        background-color: var(--surface-50);
+        color: var(--text-medium);
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: none;
+        padding: 0.75rem 1rem;
+        transition: all var(--transition-normal);
+    }
+
+    .modern-production-table .p-datatable-thead>tr>th:first-child {
+        border-top-left-radius: var(--radius-md);
+    }
+
+    .modern-production-table .p-datatable-thead>tr>th:last-child {
+        border-top-right-radius: var(--radius-md);
+    }
+
+    .header-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .header-cell i {
+        color: var(--primary-color);
+        opacity: 0.8;
+        font-size: 0.875rem;
+    }
+
+    /* Celdas y filas */
+    .modern-production-table .p-datatable-tbody>tr>td {
+        border: none;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        color: var(--text-dark);
+        vertical-align: middle;
+        background-color: transparent;
+        transition: all var(--transition-normal);
+    }
+
+    .product-row {
+        border-bottom: 1px solid var(--border-color);
+        transition: all var(--transition-normal);
+    }
+
+    .product-row:hover {
+        background-color: var(--primary-lightest) !important;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .product-row:last-child {
+        border-bottom: none;
+    }
+
+    /* Columna de acciones */
+    .action-column {
+        width: 3rem;
+        text-align: center;
+        padding: 0.5rem !important;
+    }
+
+    .process-menu-btn {
+        width: 2rem !important;
+        height: 2rem !important;
+        background-color: transparent !important;
+        border: none !important;
+        color: var(--text-medium) !important;
+        border-radius: 50% !important;
+        transition: all var(--transition-normal);
+    }
+
+    .process-menu-btn:hover {
+        background-color: var(--primary-light) !important;
+        color: var(--primary-color) !important;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Botón de proceso */
+    .process-action-btn {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color)) !important;
+        border: none !important;
+        color: white !important;
+        border-radius: 50% !important;
+        transition: all var(--transition-normal);
+        box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+    }
+
+    .process-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+    }
+
+    .process-action-btn .pi-cog {
+        font-size: 1rem;
+    }
+
+    /* Valores numéricos */
+    .quantity-value {
+        font-family: 'Inter', monospace;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        color: var(--secondary-color);
+        background-color: var(--secondary-light);
+        border-radius: var(--radius-md);
+        padding: 0.25rem 0.5rem;
+        display: inline-block;
+        min-width: 2.5rem;
+        text-align: center;
+    }
+
+    /* Mejoras para la legibilidad de artículos y productos */
+    .article-name-container,
+    .product-name-container {
+        padding: 0.875rem 1rem;
+        background-color: var(--surface-0);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+        position: relative;
+        border: 1px solid var(--border-color);
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+
+    .article-name-container:hover,
+    .product-name-container:hover {
+        background-color: var(--primary-lightest);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
+        transform: translateY(-2px);
+        z-index: 10;
+        border-color: var(--primary-color);
+    }
+
+    .article-name,
+    .product-name {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: relative;
+        max-width: 100%;
+        word-wrap: break-word;
+        padding-right: 20px;
+        /* Espacio para el indicador de truncado */
+    }
+
+    .article-name {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .product-name {
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+
+    /* Indicador de contenido truncado */
+    .article-name.truncated::after,
+    .product-name.truncated::after {
+        content: '•••';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, var(--primary-lightest) 40%);
+        padding: 0 6px 0 15px;
+        color: var(--primary-color);
+        font-weight: bold;
+        border-radius: 0 0 var(--radius-md) 0;
+        line-height: 1.5;
+    }
+
+    .tooltip-custom {
+        max-width: 350px !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        font-size: 0.95rem !important;
+        padding: 0.875rem !important;
+        line-height: 1.5 !important;
+        background-color: var(--surface-0) !important;
+        color: var(--text-dark) !important;
+        border: 1px solid var(--primary-color) !important;
+        border-radius: var(--radius-md) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* Ajuste para la densidad de tabla */
+    .modern-production-table.density-compact .article-name,
+    .modern-production-table.density-compact .product-name {
+        -webkit-line-clamp: 1;
+    }
+
+    .modern-production-table.density-expanded .article-name,
+    .modern-production-table.density-expanded .product-name {
+        -webkit-line-clamp: 3;
+    }
+
+    /* Estilos para tooltips más grandes */
+    :host ::ng-deep .p-tooltip {
+        max-width: 300px;
+        white-space: pre-wrap;
+    }
+
+    /* Fechas y horas */
+    .date-cell,
+    .time-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.8125rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-md);
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .date-cell {
+        background-color: rgba(59, 130, 246, 0.08);
+        color: var(--accent-blue);
+    }
+
+    .time-cell {
+        background-color: rgba(139, 92, 246, 0.08);
+        color: var(--accent-purple);
+    }
+
+    .date-icon,
+    .time-icon {
+        font-size: 0.75rem;
+    }
+
+    /* Estado vacío */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+        text-align: center;
+    }
+
+    .empty-icon-container {
+        width: 4rem;
+        height: 4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    }
+
+    .empty-icon-container i {
+        font-size: 1.75rem;
+        color: white;
+    }
+
+    .empty-state h5 {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        font-size: 1.125rem;
+    }
+
+    .empty-state p {
+        color: var(--text-medium);
+        max-width: 300px;
+        margin: 0 auto;
+        font-size: 0.875rem;
+    }
+
+    /* Paginador */
+    .modern-production-table .p-paginator {
+        background-color: var(--surface-50);
+        border: none;
+        padding: 0.5rem;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+    }
+
+    .modern-production-table .p-paginator .p-paginator-pages .p-paginator-page {
+        min-width: 2.25rem;
+        height: 2.25rem;
+        margin: 0 0.125rem;
+        border-radius: var(--radius-md);
+        transition: all var(--transition-normal);
+    }
+
+    .modern-production-table .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+        background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+    }
+
+    .modern-production-table .p-paginator button {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: var(--radius-md);
+    }
+
+    .modern-production-table .p-paginator button:not(.p-highlight):hover {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+    }
+
+    /* Estilos para el control de densidad */
+    .density-control-container {
+        display: flex;
+        align-items: center;
+        background-color: var(--surface-50);
+        border-radius: var(--radius-md);
+        padding: 0.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+    }
+
+    .density-label {
+        font-size: 0.8125rem;
+        color: var(--text-medium);
+        font-weight: 500;
+    }
+
+    .density-control-container .btn-group {
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+    }
+
+    .density-control-container .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.2rem;
+        height: 2.2rem;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .density-control-container .btn i {
+        font-size: 0.875rem;
+    }
+
+    .density-control-container .btn.btn-primary {
+        background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+        border-color: var(--secondary-color);
+    }
+
+    .density-control-container .p-button-outlined {
+        border-color: var(--border-color);
+        color: var(--text-medium);
+        transition: all var(--transition-normal);
+    }
+
+    .density-control-container .p-button-outlined:hover {
+        background-color: var(--primary-lightest);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: translateY(-1px);
+    }
+
+    /* Estilos para los filtros de columna */
+    :host ::ng-deep .modern-production-table .p-column-filter-menu-button {
+        width: 2rem;
+        height: 2rem;
+        color: var(--text-medium);
+        border-radius: 50%;
+        transition: all var(--transition-fast);
+        margin-left: 0.25rem;
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-menu-button:hover {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-menu-button.p-column-filter-menu-button-active {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay {
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-color);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-column-filter-row-items {
+        padding: 0.5rem;
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item {
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-sm);
+        transition: all var(--transition-fast);
+        margin-bottom: 0.25rem;
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item:hover {
+        background-color: var(--primary-lightest);
+        color: var(--primary-color);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-column-filter-row-item.p-highlight {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-dropdown-label {
+        font-size: 0.875rem;
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-input-icon-left>i:first-of-type {
+        color: var(--text-medium);
+        left: 0.75rem;
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-inputtext {
+        padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+        font-size: 0.875rem;
+        border-radius: var(--radius-md);
+        border-color: var(--border-color);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-inputtext:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px var(--primary-lightest);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-button.p-button-outlined {
+        color: var(--text-medium);
+        border-color: var(--border-color);
+        background-color: transparent;
+        transition: all var(--transition-fast);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-button.p-button-outlined:hover {
+        background-color: var(--primary-lightest);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-button.p-button-primary {
+        background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+        border-color: var(--secondary-color);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay .p-button.p-button-primary:hover {
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Ajustes para los filtros de columna */
+    :host ::ng-deep .header-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    :host ::ng-deep .header-cell .p-column-filter {
+        margin-left: auto;
+    }
+
+    :host ::ng-deep .filter-icon .pi-filter {
+        font-size: 0.75rem;
+        color: var(--text-medium);
+        transition: all var(--transition-fast);
+    }
+
+    :host ::ng-deep .filter-icon:hover .pi-filter,
+    :host ::ng-deep .p-column-filter-menu-button.p-column-filter-menu-button-active .pi-filter {
+        color: var(--primary-color);
+    }
+
+    :host ::ng-deep .modern-production-table th .p-column-title {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-overlay {
+        min-width: 280px;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-color);
+        padding: 0.5rem;
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-row {
+        padding: 0.5rem 0;
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-row .p-column-filter-constraint {
+        margin-bottom: 0.5rem;
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-row .p-column-filter-constraint:last-child {
+        margin-bottom: 0;
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-menu-button {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: transparent;
+        margin-left: 0.25rem;
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-menu-button:hover {
+        background-color: var(--primary-light);
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-menu-button.p-column-filter-menu-button-active {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-menu-button .pi-filter-icon {
+        font-size: 0.75rem;
+    }
+
+    :host ::ng-deep .modern-production-table .p-datatable-thead th.p-highlight {
+        background-color: var(--primary-lightest);
+    }
+
+    :host ::ng-deep .modern-production-table .p-column-filter-clear-button {
+        margin-right: 0.5rem;
+    }
+
+    :host ::ng-deep .modern-production-table .p-inputtext {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    :host ::ng-deep .modern-production-table .p-dropdown {
+        min-width: 100%;
+    }
+
+    :host ::ng-deep .modern-production-table .p-dropdown-panel {
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+    }
+
+    :host ::ng-deep .modern-production-table .p-dropdown-items {
+        padding: 0.5rem 0;
+    }
+
+    :host ::ng-deep .modern-production-table .p-dropdown-item {
+        padding: 0.5rem 1rem;
+        border-radius: 0;
+        transition: background-color var(--transition-fast);
+    }
+
+    :host ::ng-deep .modern-production-table .p-dropdown-item:hover {
+        background-color: var(--primary-lightest);
+        color: var(--primary-color);
+    }
+
+    :host ::ng-deep .modern-production-table .p-dropdown-item.p-highlight {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+    }
+
+    /* Personalización de filtros en español */
+    :host ::ng-deep .p-column-filter-row-header {
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--surface-50);
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+
+    :host ::ng-deep .p-column-filter-row-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background-color: var(--surface-50);
+        border-top: 1px solid var(--border-color);
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+    }
+
+    :host ::ng-deep .p-column-filter-menu-button-open {
+        font-size: 0.875rem;
+    }
+
+    :host ::ng-deep .p-inputtext[placeholder="Buscar..."] {
+        width: 100%;
+        margin: 0.5rem 0;
+        border-radius: var(--radius-md);
+        transition: all var(--transition-fast);
+    }
+
+    :host ::ng-deep .p-inputtext[placeholder="Buscar..."]:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px var(--primary-lightest);
+    }
+
+    :host ::ng-deep .p-column-filter-overlay {
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    :host ::ng-deep .p-column-filter .p-button-sm {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: var(--radius-md);
+    }
+
+    :host ::ng-deep .p-column-filter .p-button-outlined {
+        color: var(--text-medium);
+        border-color: var(--border-color);
+    }
+
+    :host ::ng-deep .p-column-filter .p-button-outlined:hover {
+        background-color: var(--primary-lightest);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    :host ::ng-deep .p-column-filter .p-button-sm:not(.p-button-outlined) {
+        background: linear-gradient(135deg, var(--accent-blue), var(--secondary-color));
+        border-color: var(--secondary-color);
+    }
+
+    /* Estilos para el dropdown de modos de coincidencia */
+    :host ::ng-deep .p-column-filter-matchmode-dropdown {
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+
+    :host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown {
+        width: 100%;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        background-color: var(--surface-0);
+    }
+
+    :host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown:hover {
+        border-color: var(--primary-color);
+    }
+
+    :host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-label {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    :host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-trigger {
+        width: 2.5rem;
+    }
+
+    :host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-panel {
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-color);
+    }
+
+    :host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item {
+        padding: 0.65rem 1rem;
+        font-size: 0.875rem;
+        color: var(--text-dark);
+        transition: all var(--transition-fast);
+    }
+
+    :host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item:hover {
+        background-color: var(--primary-lightest);
+        color: var(--primary-color);
+    }
+
+    :host ::ng-deep .p-column-filter-matchmode-dropdown .p-dropdown-item.p-highlight {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+
+    /* Estilos mejorados para los indicadores de estado de proceso */
+    .process-status-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        transition: all var(--transition-normal);
+    }
+
+    .status-complete {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        animation: pulse-success 2s infinite;
+    }
+
+    .status-partial {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: var(--accent-orange);
+    }
+
+    .status-pending {
+        background-color: rgba(107, 114, 128, 0.1);
+        color: var(--text-medium);
+    }
+
+    .status-none {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--error-color);
+    }
+
+    .process-status-indicator i {
+        font-size: 1.25rem;
+    }
+
+    .status-complete i {
+        font-size: 1.4rem;
+        font-weight: bold;
+    }
+
+    /* Animación de pulso para estado completado */
+    @keyframes pulse-success {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+
+    /* Ajuste de columnas en la tabla para garantizar legibilidad */
+    :host ::ng-deep .modern-production-table th[data-field="nombreArticulo"],
+    :host ::ng-deep .modern-production-table th[data-field="nombreProducto"] {
+        min-width: 300px !important;
+        max-width: 450px !important;
+    }
+
+    :host ::ng-deep .modern-production-table td:has(.article-name-container),
+    :host ::ng-deep .modern-production-table td:has(.product-name-container) {
+        min-width: 300px !important;
+        max-width: 450px !important;
+        width: auto !important;
+    }
+
+    /* Estilos para el mensaje informativo de procesos */
+    .proceso-info-message {
+        display: flex;
+        align-items: center;
+        background-color: rgba(59, 130, 246, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        color: var(--text-dark);
+    }
+
+    .proceso-info-message i {
+        font-size: 1rem;
+        margin-right: 0.5rem;
+    }
+
+    .proceso-info-message .pi-check {
+        color: var(--accent-green);
+        margin: 0 0.25rem;
+    }
+
+    .proceso-info-message .pi-sync {
+        color: var(--accent-orange);
+        margin: 0 0.25rem;
+    }
+
+    /* Indicador visual de proceso disponible */
+    .proceso-available {
+        border-left: 3px solid var(--primary-color);
+        background-color: rgba(99, 102, 241, 0.05);
+    }
+
+    .proceso-available:hover {
+        background-color: rgba(99, 102, 241, 0.1);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+    }
+
+    .proceso-available .proceso-icon {
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Estilos para el estado de pago */
+    .payment-status-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--radius-lg);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        white-space: nowrap;
+        min-width: 120px;
+        transition: all var(--transition-normal);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid transparent;
+    }
+
+    .payment-status-badge:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .payment-status-badge i {
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .payment-status-text {
+        font-weight: 500;
+        letter-spacing: 0.025em;
+    }
+
+    /* Estados específicos de pago */
+    .payment-status-approved {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.15));
+        color: var(--accent-green);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .payment-status-approved:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.2));
+        border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .payment-status-preapproved {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.15));
+        color: var(--accent-blue);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .payment-status-preapproved:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.2));
+        border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .payment-status-pending {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.15));
+        color: var(--accent-orange);
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .payment-status-pending:hover {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.2));
+        border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .payment-status-rejected {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.15));
+        color: var(--error-color);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .payment-status-rejected:hover {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .payment-status-cancelled {
+        background: linear-gradient(135deg, rgba(107, 114, 128, 0.1), rgba(107, 114, 128, 0.15));
+        color: var(--text-medium);
+        border-color: rgba(107, 114, 128, 0.3);
+    }
+
+    .payment-status-cancelled:hover {
+        background: linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(107, 114, 128, 0.2));
+        border-color: rgba(107, 114, 128, 0.4);
+    }
+
+    .payment-status-unknown {
+        background: linear-gradient(135deg, rgba(156, 163, 175, 0.1), rgba(156, 163, 175, 0.15));
+        color: var(--text-light);
+        border-color: rgba(156, 163, 175, 0.3);
+    }
+
+    .payment-status-unknown:hover {
+        background: linear-gradient(135deg, rgba(156, 163, 175, 0.15), rgba(156, 163, 175, 0.2));
+        border-color: rgba(156, 163, 175, 0.4);
+    }
+
+    /* Responsividad para pantallas pequeñas */
+    @media (max-width: 768px) {
+        .payment-status-badge {
+            min-width: 100px;
+            padding: 0.375rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .payment-status-badge i {
+            font-size: 0.875rem;
+        }
+    }
+
+    /* Densidad de tabla */
+    .modern-production-table.density-compact .payment-status-badge {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        min-width: 90px;
+    }
+
+    .modern-production-table.density-compact .payment-status-badge i {
+        font-size: 0.875rem;
+    }
+
+    .modern-production-table.density-expanded .payment-status-badge {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        min-width: 140px;
+    }
+
+    .modern-production-table.density-expanded .payment-status-badge i {
+        font-size: 1.125rem;
+    }
+
+    /* Estilos para las etiquetas de fechas disponibles */
+    .dates-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .date-tag {
+        display: inline-block;
+        padding: 0.3rem 0.7rem;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        color: #495057;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .date-tag:hover {
+        background-color: #e9ecef;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .date-tag.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+        box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+    }
 </style>

@@ -27,6 +27,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   // Columnas fijas para producción
   readonly fixedFields = ['imagen', 'producto', 'descripcion', 'opciones', 'ultimaImpresion'];
 
+
   constructor(private ventasService: VentasService, private toastrService: ToastrService) {}
 
   ngOnInit(): void {
@@ -76,7 +77,12 @@ export class ListProduccionComponent implements OnInit, OnChanges {
         channel: pedido.channel,
         vendedor: pedido.asesorAsignado?.name,
         pedidoOriginal: pedido,
-        carritoOriginal: carrito
+        carritoOriginal: carrito,
+        revisadoParaProduccion: pedido.revisadoParaProduccion,
+        // Propiedades planas para ordenamiento
+        productoTitulo: carrito.producto?.crearProducto?.titulo || '',
+        clienteNombre: pedido.cliente?.nombres_completos || '',
+        ultimaImpresion: pedido.ultimaImpresion
       }));
     });
   }
@@ -180,4 +186,12 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     );
     this.handleColumnSelectionChange(defaultColumns);
   }
+
+  checkIfUserIsBrenda(): boolean {
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const isBrenda = (userData.email === 'brendazora@almara.com.co' || userData.email === 'gerencia@almara.com.co');
+    console.log('🔍 Verificando usuario Brenda:', { email: userData.email, isBrenda });
+    return isBrenda;
+  }
+
 } 

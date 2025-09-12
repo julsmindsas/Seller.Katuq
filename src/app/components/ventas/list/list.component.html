@@ -1803,6 +1803,18 @@
                         </div>
                     </button>
 
+                    <!-- Marcar como Revisado (solo para brenda@almara.com.co y desde producción) -->
+                    <button *ngIf="isFromProduction && checkIfUserIsBrenda()" class="option-btn" type="button"
+                        (click)="marcarComoRevisado(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon revision-icon" style="background-color: #28a745; color: white;">
+                            <i class="fa fa-check-circle"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">Marcar como Revisado</span>
+                            <small class="option-description">Revisar y enviar a producción</small>
+                        </div>
+                    </button>
+
                     <!-- Editar Cliente - SIEMPRE DISPONIBLE -->
                     <button *ngIf="!isFromProduction" class="option-btn" type="button"
                         (click)="editDatosClientes(clientesModal, selectedOrder)">

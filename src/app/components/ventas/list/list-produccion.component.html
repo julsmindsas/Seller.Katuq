@@ -17,16 +17,18 @@
             [scrollable]="true" scrollHeight="500px" [rows]="50" [paginator]="true" 
             [rowsPerPageOptions]="[5,10,25,50]" [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
-            [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.identificacion.referencia','cliente.nombres_completos','estadoPago','estadoProceso']">
+            [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.identificacion.referencia','cliente.nombres_completos','estadoPago','estadoProceso']"
+            [sortMode]="'multiple'">
             <ng-template pTemplate="header">
               <tr style="font-size: 0.8em;">
                 <!-- Columna Imagen -->
                 <th style="width: 56px; text-align: center;">Imagen</th>
                 
                 <!-- Columna Producto -->
-                <th *ngIf="isColumnVisibleProduccion('producto')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('producto')" pSortableColumn="productoTitulo" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Producto
+                    <p-sortIcon field="productoTitulo"></p-sortIcon>
                     <p-columnFilter type="text" field="producto.crearProducto.titulo" 
                       matchMode="contains" placeholder="Buscar producto" 
                       [showMenu]="true" display="menu">
@@ -35,9 +37,10 @@
                 </th>
                 
                 <!-- Columna Referencia -->
-                <th *ngIf="isColumnVisibleProduccion('referencia')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('referencia')" pSortableColumn="referencia" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Referencia
+                    <p-sortIcon field="referencia"></p-sortIcon>
                     <p-columnFilter type="text" field="producto.identificacion.referencia" 
                       matchMode="contains" placeholder="Buscar referencia" 
                       [showMenu]="true" display="menu">
@@ -48,15 +51,28 @@
                 <!-- Columna Opciones -->
                 <th style="width: 3rem; text-align: center;">Opciones</th>
                 <!-- Columna Última Impresión -->
-                <th *ngIf="isColumnVisibleProduccion('ultimaImpresion')" style= "white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('ultimaImpresion')" pSortableColumn="ultimaImpresion" style= "white-space: nowrap;">
                   <div class="flex align-items-center">
                     Última impresión
+                    <p-sortIcon field="ultimaImpresion"></p-sortIcon>
+                  </div>
+                </th>
+                <!-- Columna Revisado -->
+                <th *ngIf="isColumnVisibleProduccion('revisadoParaProduccion')" pSortableColumn="revisadoParaProduccion" style="white-space: nowrap;">
+                  <div class="flex align-items-center">
+                    Revisado
+                    <p-sortIcon field="revisadoParaProduccion"></p-sortIcon>
+                    <p-columnFilter type="text" field="revisadoParaProduccion" 
+                      matchMode="contains" placeholder="Revisado" 
+                      [showMenu]="true" display="menu">
+                    </p-columnFilter>
                   </div>
                 </th>
                 <!-- Columna # Pedido -->
-                <th *ngIf="isColumnVisibleProduccion('nroPedido')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('nroPedido')" pSortableColumn="nroPedido" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     # Pedido
+                    <p-sortIcon field="nroPedido"></p-sortIcon>
                     <p-columnFilter type="text" field="nroPedido" 
                       matchMode="contains" placeholder="Buscar pedido" 
                       [showMenu]="true" display="menu">
@@ -65,9 +81,10 @@
                 </th>
                 
                 <!-- Columna Cantidad -->
-                <th *ngIf="isColumnVisibleProduccion('cantidad')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('cantidad')" pSortableColumn="cantidad" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Cantidad
+                    <p-sortIcon field="cantidad"></p-sortIcon>
                     <p-columnFilter type="numeric" field="cantidad" 
                       matchMode="contains" placeholder="Cantidad" 
                       [showMenu]="true" display="menu">
@@ -76,9 +93,10 @@
                 </th>
                 
                 <!-- Columna Cliente -->
-                <th *ngIf="isColumnVisibleProduccion('cliente')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('cliente')" pSortableColumn="clienteNombre" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Cliente
+                    <p-sortIcon field="clienteNombre"></p-sortIcon>
                     <p-columnFilter type="text" field="cliente.nombres_completos" 
                       matchMode="contains" placeholder="Cliente" 
                       [showMenu]="true" display="menu">
@@ -87,9 +105,10 @@
                 </th>
                 
                 <!-- Columna Estado Pago -->
-                <th *ngIf="isColumnVisibleProduccion('estadoPago')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('estadoPago')" pSortableColumn="estadoPago" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Estado de Pago
+                    <p-sortIcon field="estadoPago"></p-sortIcon>
                     <p-columnFilter field="estadoPago" matchMode="equals" 
                       [showMenu]="true" display="menu">
                       <ng-template pTemplate="filter" let-value let-filter="filterCallback">
@@ -103,9 +122,10 @@
                 </th>
                 
                 <!-- Columna Estado Proceso -->
-                <th *ngIf="isColumnVisibleProduccion('estadoProceso')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('estadoProceso')" pSortableColumn="estadoProceso" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Estado de Proceso
+                    <p-sortIcon field="estadoProceso"></p-sortIcon>
                     <p-columnFilter field="estadoProceso" matchMode="equals" 
                       [showMenu]="true" display="menu">
                       <ng-template pTemplate="filter" let-value let-filter="filterCallback">
@@ -119,9 +139,10 @@
                 </th>
                 
                 <!-- Columna Validación -->
-                <th *ngIf="isColumnVisibleProduccion('validacion')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('validacion')" pSortableColumn="validacion" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Validación
+                    <p-sortIcon field="validacion"></p-sortIcon>
                     <p-columnFilter field="validacion" matchMode="equals" 
                       [showMenu]="true" display="menu">
                       <ng-template pTemplate="filter" let-value let-filter="filterCallback">
@@ -222,9 +243,10 @@
                   </div>
                 </th>
                 <!-- Columna Fecha Entrega -->
-                <th *ngIf="isColumnVisibleProduccion('fechaEntrega')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('fechaEntrega')" pSortableColumn="fechaEntrega" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Fecha Entrega
+                    <p-sortIcon field="fechaEntrega"></p-sortIcon>
                     <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega" 
                       type="date" display="menu" [showMatchModes]="false" 
                       [showOperator]="false" [showAddButton]="false">
@@ -237,9 +259,10 @@
                 </th>
                 
                 <!-- Columna Fecha de compra -->
-                <th *ngIf="isColumnVisibleProduccion('fechaCreacion')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('fechaCreacion')" pSortableColumn="fechaCreacion" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Fecha de compra
+                    <p-sortIcon field="fechaCreacion"></p-sortIcon>
                     <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion" 
                       type="date" display="menu" [showMatchModes]="false" 
                       [showOperator]="false" [showAddButton]="false">
@@ -251,9 +274,10 @@
                   </div>
                 </th>
                 <!-- Columna Ciudad -->
-                <th *ngIf="isColumnVisibleProduccion('ciudad')" style="white-space: nowrap;">
+                <th *ngIf="isColumnVisibleProduccion('ciudad')" pSortableColumn="ciudad" style="white-space: nowrap;">
                   <div class="flex align-items-center">
                     Ciudad
+                    <p-sortIcon field="ciudad"></p-sortIcon>
                     <p-columnFilter type="text" field="ciudad" 
                       matchMode="contains" placeholder="Ciudad" 
                       [showMenu]="true" display="menu">
@@ -318,7 +342,9 @@
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
-              <tr>
+              <tr [ngClass]="{'row-revisada': row.pedidoOriginal?.revisadoParaProduccion && checkIfUserIsBrenda()}" 
+                  [style.background-color]="(row.pedidoOriginal?.revisadoParaProduccion && checkIfUserIsBrenda()) ? '#d4edda' : null"
+                  [style.border-left]="(row.pedidoOriginal?.revisadoParaProduccion && checkIfUserIsBrenda()) ? '4px solid #28a745' : null">
                 <td style="width: 56px;">
                   <ng-container *ngIf="row.producto?.crearProducto?.imagenesPrincipales?.length > 0 && row.producto?.crearProducto?.imagenesPrincipales[0]?.urls as imgUrl">
                     <img *ngIf="!row._imgError" [src]="imgUrl" width="48" height="48" style="object-fit:cover; border-radius:6px; border:1px solid #eee;" (error)="row._imgError = true" [alt]="row.producto?.crearProducto?.titulo" />
@@ -348,6 +374,10 @@
                 <!-- Columna Última Impresión -->
                 <td *ngIf="isColumnVisibleProduccion('ultimaImpresion')">
                   {{ row.pedidoOriginal?.ultimaImpresion ? (row.pedidoOriginal.ultimaImpresion | date: 'dd/MM/yyyy HH:mm') : '-' }}
+                </td>
+                <!-- Columna Revisado -->
+                <td *ngIf="isColumnVisibleProduccion('revisadoParaProduccion')">
+                  {{ row.pedidoOriginal?.revisadoParaProduccion ? (row.pedidoOriginal.revisadoParaProduccion | date: 'dd/MM/yyyy HH:mm') : '-' }}
                 </td>
                 <td *ngIf="isColumnVisibleProduccion('nroPedido')">{{ row.nroPedido }}</td>
                 <td *ngIf="isColumnVisibleProduccion('cantidad')">{{ row.cantidad }}</td>

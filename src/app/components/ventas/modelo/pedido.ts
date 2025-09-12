@@ -65,6 +65,7 @@ export interface Pedido {
   signatureImage?: string;
   historialEstadoProceso?: HistorialEstadoProceso[];
   ultimaImpresion?: string; // Fecha/hora de la última impresión
+  revisadoParaProduccion?: string; // Fecha/hora de revisión para producción
 }
 
 export interface HistorialEstadoProceso {
