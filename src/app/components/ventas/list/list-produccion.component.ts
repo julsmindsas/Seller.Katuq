@@ -1,24 +1,39 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, Output, EventEmitter, ViewChild } from '@angular/core';
-import { Pedido, Carrito, EstadoPago, EstadoProcesoFiltros } from '../modelo/pedido';
-import { ColumnDefinition } from '../interfaces/column-definition.interface';
-import { VentasService } from '../../../shared/services/ventas/ventas.service';
-import { ToastrService } from 'ngx-toastr';
-import { Table } from 'primeng/table';
+import {
+  Component,
+  Input,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  Output,
+  EventEmitter,
+  ViewChild,
+} from "@angular/core";
+import {
+  Pedido,
+  Carrito,
+  EstadoPago,
+  EstadoProcesoFiltros,
+} from "../modelo/pedido";
+import { ColumnDefinition } from "../interfaces/column-definition.interface";
+import { VentasService } from "../../../shared/services/ventas/ventas.service";
+import { ToastrService } from "ngx-toastr";
+import { Table } from "primeng/table";
+import { FilterService } from "primeng/api";
 
 @Component({
-  selector: 'app-list-produccion-orders',
-  templateUrl: './list-produccion.component.html',
-  styleUrls: ['./list-produccion.component.scss']
+  selector: "app-list-produccion-orders",
+  templateUrl: "./list-produccion.component.html",
+  styleUrls: ["./list-produccion.component.scss"],
 })
 export class ListProduccionComponent implements OnInit, OnChanges {
   @Input() isFromProduction: boolean = false;
   @Input() pedidos: Pedido[] = [];
   @Input() displayedColumns: ColumnDefinition[] = [];
   @Input() selectedColumns: ColumnDefinition[] = [];
-  @Output() onPrintProduct = new EventEmitter<{pedido: any, producto: any}>();
-  @Output() onOptions = new EventEmitter<{pedido: any, producto: any}>();
+  @Output() onPrintProduct = new EventEmitter<{ pedido: any; producto: any }>();
+  @Output() onOptions = new EventEmitter<{ pedido: any; producto: any }>();
   @Output() onColumnSelectionChange = new EventEmitter<ColumnDefinition[]>();
-  @ViewChild('dt1') dt1!: Table;
+  @ViewChild("dt1") dt1!: Table;
 
   productsView: any[] = [];
 
@@ -28,15 +43,19 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   validaciones: { value: boolean; nombre: string }[];
 
   // Columnas fijas para producción
-  readonly fixedFields = ['imagen', 'producto', 'descripcion', 'opciones'];
+  readonly fixedFields = ["imagen", "producto", "descripcion", "opciones"];
 
-
-  constructor(private ventasService: VentasService, private toastrService: ToastrService) {}
+  constructor(
+    private ventasService: VentasService,
+    private toastrService: ToastrService,
+    private filterService: FilterService,
+  ) {}
 
   ngOnInit(): void {
     this.initializeFilterArrays();
     this.transformPedidosToProductsView();
     this.loadColumnConfiguration();
+    this.registerCustomDateFilter();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -56,7 +75,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
       return pedido.carrito.map((carrito: Carrito) => ({
         nroPedido: pedido.nroPedido,
         producto: carrito.producto,
-        referencia: carrito.producto?.identificacion?.referencia || '-',
+        referencia: carrito.producto?.identificacion?.referencia || "-",
         descripcion: carrito.producto?.crearProducto?.descripcion,
         cantidad: carrito.cantidad,
         totalPedidoSinDescuento: pedido.totalPedidoSinDescuento,
@@ -71,7 +90,12 @@ export class ListProduccionComponent implements OnInit, OnChanges {
         estadoProceso: pedido.estadoProceso,
         validacion: pedido.validacion,
         cliente: pedido.cliente,
-        fechaEntrega: (pedido.carrito && pedido.carrito.length > 0) ? this.convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega) : '',
+        fechaEntrega:
+          pedido.carrito && pedido.carrito.length > 0
+            ? this.convertFechaEntregaString(
+                pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega,
+              )
+            : "",
         fechaCreacion: pedido.fechaCreacion,
         ciudad: pedido.envio?.ciudad,
         zonaCobro: pedido.envio?.zonaCobro,
@@ -83,9 +107,10 @@ export class ListProduccionComponent implements OnInit, OnChanges {
         carritoOriginal: carrito,
         revisadoParaProduccion: pedido.revisadoParaProduccion,
         // Propiedades planas para ordenamiento
-        productoTitulo: carrito.producto?.crearProducto?.titulo || '',
-        clienteNombre: pedido.cliente?.nombres_completos || '',
-        ultimaImpresion: pedido.ultimaImpresion
+        productoTitulo: carrito.producto?.crearProducto?.titulo || "",
+        clienteNombre: pedido.cliente?.nombres_completos || "",
+        channelName: pedido.channel?.name || "",
+        ultimaImpresion: pedido.ultimaImpresion,
       }));
     });
   }
@@ -96,23 +121,36 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     row.pedidoOriginal.ultimaImpresion = now;
     this.ventasService.editOrder(row.pedidoOriginal).subscribe({
       next: () => {
-        this.toastrService.success('Fecha de impresión registrada', 'Pedido actualizado');
+        this.toastrService.success(
+          "Fecha de impresión registrada",
+          "Pedido actualizado",
+        );
       },
       error: () => {
-        this.toastrService.error('No se pudo actualizar la fecha de impresión', 'Error');
-      }
+        this.toastrService.error(
+          "No se pudo actualizar la fecha de impresión",
+          "Error",
+        );
+      },
     });
-    this.onPrintProduct.emit({ pedido: row.pedidoOriginal, producto: row.carritoOriginal });
+    this.onPrintProduct.emit({
+      pedido: row.pedidoOriginal,
+      producto: row.carritoOriginal,
+    });
   }
 
   openOptionsModalProduccion(row: any) {
-    this.onOptions.emit({ pedido: row.pedidoOriginal, producto: row.carritoOriginal });
+    this.onOptions.emit({
+      pedido: row.pedidoOriginal,
+      producto: row.carritoOriginal,
+    });
   }
 
   isColumnVisibleProduccion(field: string): boolean {
     if (this.fixedFields.includes(field)) return true;
-    return this.selectedColumns.some(col => col.field === field && col.visible);
-    
+    return this.selectedColumns.some(
+      (col) => col.field === field && col.visible,
+    );
   }
 
   handleColumnSelectionChange(newSelected: ColumnDefinition[]) {
@@ -128,10 +166,10 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   }
 
   stripHtml(html: string): string {
-    if (!html) return '';
-    const div = document.createElement('div');
+    if (!html) return "";
+    const div = document.createElement("div");
     div.innerHTML = html;
-    return div.textContent || div.innerText || '';
+    return div.textContent || div.innerText || "";
   }
 
   convertFechaEntregaString(fechaEntrega: {
@@ -140,7 +178,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     year: number;
   }): string {
     if (!fechaEntrega) {
-      return '';
+      return "";
     }
     return `${fechaEntrega.day}/${fechaEntrega.month}/${fechaEntrega.year}`;
   }
@@ -149,30 +187,33 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     // Estados de proceso para producción
     this.estadosProcesos = Object.values(EstadoProcesoFiltros);
     if (this.isFromProduction) {
-      this.estadosProcesos = this.estadosProcesos.filter(estado => 
-        estado === EstadoProcesoFiltros.SinProducir || 
-        estado === EstadoProcesoFiltros.EnProduccion || 
-        estado === EstadoProcesoFiltros.ProducidoParcialmente ||
-        estado === EstadoProcesoFiltros.ProducidoTotalmente
+      this.estadosProcesos = this.estadosProcesos.filter(
+        (estado) =>
+          estado === EstadoProcesoFiltros.SinProducir ||
+          estado === EstadoProcesoFiltros.EnProduccion ||
+          estado === EstadoProcesoFiltros.ProducidoParcialmente ||
+          estado === EstadoProcesoFiltros.ProducidoTotalmente,
       );
     }
-    
+
     // Opciones de validación
     this.validaciones = [
-      { value: true, nombre: 'Validado' },
-      { value: false, nombre: 'No validado' }
+      { value: true, nombre: "Validado" },
+      { value: false, nombre: "No validado" },
     ];
   }
 
   private loadColumnConfiguration(): void {
-    const savedColumns = localStorage.getItem('produccionColumnsConfig');
+    const savedColumns = localStorage.getItem("produccionColumnsConfig");
     if (savedColumns) {
       try {
         const parsed = JSON.parse(savedColumns);
         if (Array.isArray(parsed) && parsed.length > 0) {
           // Validar que las columnas guardadas coincidan con las actuales
-          const validColumns = parsed.filter(savedCol => 
-            this.displayedColumns.some(displayCol => displayCol.field === savedCol.field)
+          const validColumns = parsed.filter((savedCol) =>
+            this.displayedColumns.some(
+              (displayCol) => displayCol.field === savedCol.field,
+            ),
           );
           if (validColumns.length > 0) {
             this.selectedColumns = validColumns;
@@ -181,67 +222,183 @@ export class ListProduccionComponent implements OnInit, OnChanges {
           }
         }
       } catch (e) {
-        console.error('Error parsing saved production columns configuration', e);
+        console.error(
+          "Error parsing saved production columns configuration",
+          e,
+        );
       }
     }
   }
 
   private saveColumnConfiguration(): void {
     if (this.selectedColumns && this.selectedColumns.length > 0) {
-      localStorage.setItem('produccionColumnsConfig', JSON.stringify(this.selectedColumns));
+      localStorage.setItem(
+        "produccionColumnsConfig",
+        JSON.stringify(this.selectedColumns),
+      );
     }
   }
 
   resetColumnConfiguration(): void {
-    localStorage.removeItem('produccionColumnsConfig');
+    localStorage.removeItem("produccionColumnsConfig");
     // Restaurar configuración por defecto - mostrar solo columnas fijas y las visibles por defecto
-    const defaultColumns = this.displayedColumns.filter(col => 
-      this.fixedFields.includes(col.field) || col.visible
+    const defaultColumns = this.displayedColumns.filter(
+      (col) => this.fixedFields.includes(col.field) || col.visible,
     );
     this.handleColumnSelectionChange(defaultColumns);
   }
 
   checkIfUserIsBrenda(): boolean {
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    const isBrenda = (userData.email === 'brendazora@almara.com.co' || userData.email === 'gerencia@almara.com.co');
-    console.log('🔍 Verificando usuario Brenda:', { email: userData.email, isBrenda });
+    const userData = JSON.parse(localStorage.getItem("user") || "{}");
+    const isBrenda =
+      userData.email === "brendazora@almara.com.co" ||
+      userData.email === "gerencia@almara.com.co";
+    console.log("🔍 Verificando usuario Brenda:", {
+      email: userData.email,
+      isBrenda,
+    });
     return isBrenda;
   }
 
+  private registerCustomDateFilter(): void {
+    this.filterService.register(
+      "customDate",
+      (value: any, filter: Date): boolean => {
+        if (filter === undefined || filter === null) {
+          return true;
+        }
+        if (
+          value === undefined ||
+          value === null ||
+          (typeof value === "string" && value.trim() === "")
+        ) {
+          return false;
+        }
+
+        let valueDate: Date;
+        if (typeof value === "string") {
+          const parts = value.split("/");
+          if (parts.length === 3) {
+            // Handles "dd/MM/yyyy"
+            valueDate = new Date(
+              parseInt(parts[2]),
+              parseInt(parts[1]) - 1,
+              parseInt(parts[0]),
+            );
+          } else {
+            // Handles ISO strings or other parsable formats
+            valueDate = new Date(value);
+          }
+        } else if (value instanceof Date) {
+          valueDate = value;
+        } else {
+          return false;
+        }
+
+        if (isNaN(valueDate.getTime())) {
+          return false;
+        }
+
+        // Compare year, month, and day
+        return (
+          valueDate.getFullYear() === filter.getFullYear() &&
+          valueDate.getMonth() === filter.getMonth() &&
+          valueDate.getDate() === filter.getDate()
+        );
+      },
+    );
+  }
+
   customSort(event: any): void {
-    const { data, field, order } = event;
+    let { data, field, order } = event.multiSortMeta[0];
+    data = event.data;
 
-    if (field === 'revisadoParaProduccion') {
-      // Ordenamiento personalizado para revisadoParaProduccion
+    const dateFields = ["fechaEntrega", "fechaCreacion", "ultimaImpresion"];
+    const numericFields = [
+      "cantidad",
+      "totalPedidoSinDescuento",
+      "totalDescuento",
+      "totalEnvio",
+      "subtotal",
+      "totalImpuesto",
+      "totalPedididoConDescuento",
+      "anticipo",
+      "faltaPorPagar",
+    ];
+
+    const parseDate = (dateValue: any): Date | null => {
+      if (!dateValue) return null;
+      if (dateValue instanceof Date) return dateValue;
+      if (typeof dateValue !== "string") return null;
+
+      let parts = dateValue.match(
+        /(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/,
+      );
+      if (parts) {
+        return new Date(
+          +parts[3],
+          +parts[2] - 1,
+          +parts[1],
+          +parts[4],
+          +parts[5],
+        );
+      }
+
+      parts = dateValue.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (parts) {
+        return new Date(+parts[3], +parts[2] - 1, +parts[1]);
+      }
+
+      const d = new Date(dateValue);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    if (numericFields.includes(field)) {
       data.sort((a: any, b: any) => {
-        const aValue = a.pedidoOriginal?.revisadoParaProduccion || '';
-        const bValue = b.pedidoOriginal?.revisadoParaProduccion || '';
+        const numA = parseFloat(a[field]);
+        const numB = parseFloat(b[field]);
+        if (isNaN(numA) && isNaN(numB)) return 0;
+        if (isNaN(numA)) return order;
+        if (isNaN(numB)) return -order;
+        return (numA - numB) * order;
+      });
+    } else if (dateFields.includes(field)) {
+      data.sort((a: any, b: any) => {
+        const dateA = parseDate(a[field]);
+        const dateB = parseDate(b[field]);
 
-        // Los vacíos van primero cuando es ascendente, al final cuando es descendente
+        if (dateA === null && dateB === null) return 0;
+        if (dateA === null) return order;
+        if (dateB === null) return -order;
+
+        return (dateA.getTime() - dateB.getTime()) * order;
+      });
+    } else if (field === "revisadoParaProduccion") {
+      data.sort((a: any, b: any) => {
+        const aValue = a.pedidoOriginal?.revisadoParaProduccion || "";
+        const bValue = b.pedidoOriginal?.revisadoParaProduccion || "";
+
         if (!aValue && bValue) return order === 1 ? -1 : 1;
         if (aValue && !bValue) return order === 1 ? 1 : -1;
 
-        // Si ambos tienen valor o ambos están vacíos, ordenar alfabéticamente
         return aValue.localeCompare(bValue) * order;
       });
     } else {
-      // Ordenamiento estándar para otros campos
       data.sort((a: any, b: any) => {
-        let aValue = a[field];
-        let bValue = b[field];
+        const getValue = (data: any, field: string) => {
+          if (field === "productoTitulo")
+            return data.producto?.crearProducto?.titulo || "";
+          if (field === "clienteNombre")
+            return data.cliente?.nombres_completos || "";
+          if (field === "channelName") return data.channel?.name || "";
+          return data[field];
+        };
 
-        // Manejo especial para campos anidados
-        if (field === 'productoTitulo') {
-          aValue = a.producto?.crearProducto?.titulo || '';
-          bValue = b.producto?.crearProducto?.titulo || '';
-        } else if (field === 'clienteNombre') {
-          aValue = a.cliente?.nombres_completos || '';
-          bValue = b.cliente?.nombres_completos || '';
-        }
+        let aValue = getValue(a, field);
+        let bValue = getValue(b, field);
 
-        // Convertir a string para comparación segura
-        aValue = String(aValue || '');
-        bValue = String(bValue || '');
+        aValue = String(aValue || "");
+        bValue = String(bValue || "");
 
         return aValue.localeCompare(bValue) * order;
       });
@@ -260,5 +417,4 @@ export class ListProduccionComponent implements OnInit, OnChanges {
       return total + cantidad;
     }, 0);
   }
-
-} 
+}
