@@ -14,8 +14,8 @@
           </div>
           <p-table #dt1 [value]="productsView" [responsiveLayout]="'scroll'"
             styleClass="p-datatable-sm modern-prod-table p-datatable-gridlines p-datatable-striped"
-            [scrollable]="true" scrollHeight="500px" [rows]="50" [paginator]="true"
-            [rowsPerPageOptions]="[5,10,25,50]" [showCurrentPageReport]="true"
+            [scrollable]="true" scrollHeight="80vh" [rows]="200" [paginator]="true"
+            [rowsPerPageOptions]="[5,10,25,50,100,200]" [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
             [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.identificacion.referencia','cliente.nombres_completos','estadoPago','estadoProceso']"
             [sortMode]="'multiple'" (customSort)="customSort($event)"
@@ -469,6 +469,63 @@
                 <td *ngIf="isColumnVisibleProduccion('horarioEntrega')">{{ row.horarioEntrega }}</td>
                 <td *ngIf="isColumnVisibleProduccion('channel')">{{ row.channel?.name || 'Regular' }}</td>
                 <td *ngIf="isColumnVisibleProduccion('vendedor')">{{ row.vendedor }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="footer">
+              <tr style="font-weight: bold; background-color: #f8f9fa;">
+                <!-- Columna Imagen -->
+                <td style="width: 56px; text-align: center; border-top: 2px solid #007bff;">
+                  <i class="fa fa-calculator text-primary"></i>
+                </td>
+
+                <!-- Columna Producto -->
+                <td *ngIf="isColumnVisibleProduccion('producto')" style="border-top: 2px solid #007bff;">
+                  <span class="text-primary">TOTAL:</span>
+                </td>
+
+                <!-- Columna Referencia -->
+                <td *ngIf="isColumnVisibleProduccion('referencia')" style="border-top: 2px solid #007bff;"></td>
+
+                <!-- Columna Opciones -->
+                <td style="width: 3rem; text-align: center; border-top: 2px solid #007bff;"></td>
+
+                <!-- Columna Última Impresión -->
+                <td *ngIf="isColumnVisibleProduccion('ultimaImpresion')" style="border-top: 2px solid #007bff;"></td>
+
+                <!-- Columna Revisado -->
+                <td *ngIf="isColumnVisibleProduccion('revisadoParaProduccion')" style="border-top: 2px solid #007bff;"></td>
+
+                <!-- Columna # Pedido -->
+                <td *ngIf="isColumnVisibleProduccion('nroPedido')" style="border-top: 2px solid #007bff;"></td>
+
+                <!-- Columna Cantidad - AQUÍ VA EL TOTAL -->
+                <td *ngIf="isColumnVisibleProduccion('cantidad')" style="border-top: 2px solid #007bff; text-align: center;">
+                  <span class="badge bg-primary px-3 py-2" style="font-size: 0.9rem; font-weight: 600;">
+                    {{ calculateTotalQuantity() | number }}
+                  </span>
+                </td>
+
+                <!-- Resto de columnas vacías -->
+                <td *ngIf="isColumnVisibleProduccion('cliente')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('estadoPago')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('estadoProceso')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('validacion')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('totalDescuento')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('totalEnvio')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('subtotal')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('totalImpuesto')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('totalPedididoConDescuento')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('anticipo')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('faltaPorPagar')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('fechaEntrega')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('fechaCreacion')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('ciudad')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('zonaCobro')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('formaEntrega')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('horarioEntrega')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('channel')" style="border-top: 2px solid #007bff;"></td>
+                <td *ngIf="isColumnVisibleProduccion('vendedor')" style="border-top: 2px solid #007bff;"></td>
               </tr>
             </ng-template>
           </p-table>

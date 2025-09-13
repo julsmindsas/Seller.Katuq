@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, Output, EventEmitter, ViewChild } from '@angular/core';
 import { Pedido, Carrito, EstadoPago, EstadoProcesoFiltros } from '../modelo/pedido';
 import { ColumnDefinition } from '../interfaces/column-definition.interface';
 import { VentasService } from '../../../shared/services/ventas/ventas.service';
 import { ToastrService } from 'ngx-toastr';
+import { Table } from 'primeng/table';
 
 @Component({
   selector: 'app-list-produccion-orders',
@@ -17,6 +18,8 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   @Output() onPrintProduct = new EventEmitter<{pedido: any, producto: any}>();
   @Output() onOptions = new EventEmitter<{pedido: any, producto: any}>();
   @Output() onColumnSelectionChange = new EventEmitter<ColumnDefinition[]>();
+  @ViewChild('dt1') dt1!: Table;
+
   productsView: any[] = [];
 
   // Arrays para filtros
@@ -243,6 +246,19 @@ export class ListProduccionComponent implements OnInit, OnChanges {
         return aValue.localeCompare(bValue) * order;
       });
     }
+  }
+
+  private getFilteredProductsView(): any[] {
+    // Devuelve los datos filtrados por la tabla, o todos los datos si no hay filtros
+    return this.dt1?.filteredValue || this.productsView || [];
+  }
+
+  calculateTotalQuantity(): number {
+    const filteredData = this.getFilteredProductsView();
+    return filteredData.reduce((total, item) => {
+      const cantidad = Number(item.cantidad) || 0;
+      return total + cantidad;
+    }, 0);
   }
 
 } 
