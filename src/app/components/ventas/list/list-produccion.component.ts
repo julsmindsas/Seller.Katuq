@@ -25,7 +25,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   validaciones: { value: boolean; nombre: string }[];
 
   // Columnas fijas para producción
-  readonly fixedFields = ['imagen', 'producto', 'descripcion', 'opciones', 'ultimaImpresion'];
+  readonly fixedFields = ['imagen', 'producto', 'descripcion', 'opciones'];
 
 
   constructor(private ventasService: VentasService, private toastrService: ToastrService) {}
@@ -192,6 +192,46 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     const isBrenda = (userData.email === 'brendazora@almara.com.co' || userData.email === 'gerencia@almara.com.co');
     console.log('🔍 Verificando usuario Brenda:', { email: userData.email, isBrenda });
     return isBrenda;
+  }
+
+  customSort(event: any): void {
+    const { data, field, order } = event;
+
+    if (field === 'revisadoParaProduccion') {
+      // Ordenamiento personalizado para revisadoParaProduccion
+      data.sort((a: any, b: any) => {
+        const aValue = a.pedidoOriginal?.revisadoParaProduccion || '';
+        const bValue = b.pedidoOriginal?.revisadoParaProduccion || '';
+
+        // Los vacíos van primero cuando es ascendente, al final cuando es descendente
+        if (!aValue && bValue) return order === 1 ? -1 : 1;
+        if (aValue && !bValue) return order === 1 ? 1 : -1;
+
+        // Si ambos tienen valor o ambos están vacíos, ordenar alfabéticamente
+        return aValue.localeCompare(bValue) * order;
+      });
+    } else {
+      // Ordenamiento estándar para otros campos
+      data.sort((a: any, b: any) => {
+        let aValue = a[field];
+        let bValue = b[field];
+
+        // Manejo especial para campos anidados
+        if (field === 'productoTitulo') {
+          aValue = a.producto?.crearProducto?.titulo || '';
+          bValue = b.producto?.crearProducto?.titulo || '';
+        } else if (field === 'clienteNombre') {
+          aValue = a.cliente?.nombres_completos || '';
+          bValue = b.cliente?.nombres_completos || '';
+        }
+
+        // Convertir a string para comparación segura
+        aValue = String(aValue || '');
+        bValue = String(bValue || '');
+
+        return aValue.localeCompare(bValue) * order;
+      });
+    }
   }
 
 } 

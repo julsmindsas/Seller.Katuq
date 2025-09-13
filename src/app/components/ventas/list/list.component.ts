@@ -747,7 +747,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumnsProduccion: ColumnDefinition[] = [
     { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
     { field: "referencia", header: "Referencia", visible: true, type: "text", filterable: true },
-    { field: "ultimaImpresion", header: "Última impresión", visible: true, type: "date", filterable: false },
+    { field: "ultimaImpresion", header: "Última impresión", visible: false, type: "date", filterable: false },
     { field: "revisadoParaProduccion", header: "Revisado", visible: true, type: "date", filterable: true },
     { field: "nroPedido", header: "# Pedido", visible: true, type: "text", filterable: true },
     { field: "cantidad", header: "Cantidad", visible: true, type: "text", filterable: true },
@@ -4309,7 +4309,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.displayedColumnsProduccion = [
       { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
       { field: "referencia", header: "Referencia", visible: true, type: "text", filterable: true },
-      { field: "ultimaImpresion", header: "Última impresión", visible: true, type: "date", filterable: false },
+      { field: "ultimaImpresion", header: "Última impresión", visible: false, type: "date", filterable: false },
       { field: "revisadoParaProduccion", header: "Revisado", visible: true, type: "date", filterable: true },
       { field: "nroPedido", header: "# Pedido", visible: true, type: "text", filterable: true },
       { field: "cantidad", header: "Cantidad", visible: true, type: "text", filterable: true },
@@ -4606,21 +4606,23 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   checkIfUserIsBrenda(): boolean {
-
-    return true;
-    // const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    // return userData.email === 'gerencia@almara.com.co';
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const allowedEmails = [
+      'brendazora@almara.com.co',
+      'gerencia@almara.com.co'
+    ];
+    return allowedEmails.includes(userData.email);
   }
 
   marcarComoRevisado(order: Pedido): void {
     if (!order) return;
-    
+
     // Cambiar estado a EnProduccion
     order.estadoProceso = EstadoProceso.EnProduccion;
-    
-    // Agregar fecha de revisión
-    order.revisadoParaProduccion = new Date().toISOString();
-    
+
+    // Agregar texto "Revisado" en lugar de fecha
+    order.revisadoParaProduccion = 'Revisado';
+
     // Guardar cambios
     this.ventasService.editOrder(order).subscribe({
       next: () => {
@@ -4632,6 +4634,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.toastrService.error('Error al marcar como revisado', 'Error');
       }
     });
+  }
+
+  quitarRevision(order: Pedido): void {
+    if (!order || !order.revisadoParaProduccion) return;
+
+    // Confirmar acción
+    if (confirm('¿Está seguro de quitar la revisión de este pedido?')) {
+      // Quitar fecha de revisión - dejar en blanco
+      order.revisadoParaProduccion = '';
+
+      // Opcionalmente cambiar estado si está en producción sin actividad
+      if (order.estadoProceso === EstadoProceso.EnProduccion) {
+        order.estadoProceso = EstadoProceso.SinProducir;
+      }
+
+      // Guardar cambios
+      this.ventasService.editOrder(order).subscribe({
+        next: () => {
+          this.toastrService.success('Revisión removida correctamente', 'Éxito');
+          this.refrescarDatos();
+        },
+        error: (error) => {
+          console.error('Error al quitar revisión:', error);
+          this.toastrService.error('Error al quitar revisión', 'Error');
+        }
+      });
+    }
+  }
+
+  isOrderRevisado(order: Pedido): boolean {
+    return order?.revisadoParaProduccion && order.revisadoParaProduccion !== '' ? true : false;
   }
 
   /**

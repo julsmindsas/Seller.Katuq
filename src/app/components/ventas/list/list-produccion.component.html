@@ -12,13 +12,14 @@
               (onChange)="handleColumnSelectionChange($event.value)">
             </p-multiSelect>
           </div>
-          <p-table #dt1 [value]="productsView" [responsiveLayout]="'scroll'" 
-            styleClass="p-datatable-sm modern-prod-table p-datatable-gridlines p-datatable-striped" 
-            [scrollable]="true" scrollHeight="500px" [rows]="50" [paginator]="true" 
+          <p-table #dt1 [value]="productsView" [responsiveLayout]="'scroll'"
+            styleClass="p-datatable-sm modern-prod-table p-datatable-gridlines p-datatable-striped"
+            [scrollable]="true" scrollHeight="500px" [rows]="50" [paginator]="true"
             [rowsPerPageOptions]="[5,10,25,50]" [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
             [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.identificacion.referencia','cliente.nombres_completos','estadoPago','estadoProceso']"
-            [sortMode]="'multiple'">
+            [sortMode]="'multiple'" (customSort)="customSort($event)"
+            [customSort]="true">
             <ng-template pTemplate="header">
               <tr style="font-size: 0.8em;">
                 <!-- Columna Imagen -->
@@ -377,7 +378,18 @@
                 </td>
                 <!-- Columna Revisado -->
                 <td *ngIf="isColumnVisibleProduccion('revisadoParaProduccion')">
-                  {{ row.pedidoOriginal?.revisadoParaProduccion ? (row.pedidoOriginal.revisadoParaProduccion | date: 'dd/MM/yyyy HH:mm') : '-' }}
+                  <div class="d-flex align-items-center">
+                    <span *ngIf="row.pedidoOriginal?.revisadoParaProduccion"
+                          class="badge bg-success px-3 py-2 revisado-badge"
+                          style="font-size: 0.85rem; font-weight: 600;">
+                      <i class="fa fa-check-circle me-1"></i>
+                      {{ row.pedidoOriginal.revisadoParaProduccion }}
+                    </span>
+                    <span *ngIf="!row.pedidoOriginal?.revisadoParaProduccion"
+                          class="text-muted">
+                      -
+                    </span>
+                  </div>
                 </td>
                 <td *ngIf="isColumnVisibleProduccion('nroPedido')">{{ row.nroPedido }}</td>
                 <td *ngIf="isColumnVisibleProduccion('cantidad')">{{ row.cantidad }}</td>

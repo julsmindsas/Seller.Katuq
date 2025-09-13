@@ -1803,15 +1803,36 @@
                         </div>
                     </button>
 
-                    <!-- Marcar como Revisado (solo para brenda@almara.com.co y desde producción) -->
-                    <button *ngIf="isFromProduction && checkIfUserIsBrenda()" class="option-btn" type="button"
-                        (click)="marcarComoRevisado(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon revision-icon" style="background-color: #28a745; color: white;">
-                            <i class="fa fa-check-circle"></i>
+                    <!-- Botón dinámico: Marcar/Quitar Revisión -->
+                    <button *ngIf="isFromProduction && checkIfUserIsBrenda()"
+                        class="option-btn"
+                        type="button"
+                        (click)="selectedOrder?.revisadoParaProduccion ?
+                                 quitarRevision(selectedOrder) :
+                                 marcarComoRevisado(selectedOrder);
+                                 closeOptionsModal()">
+
+                        <!-- Icono y colores dinámicos -->
+                        <div class="option-icon revision-icon"
+                             [style.background-color]="selectedOrder?.revisadoParaProduccion ? '#dc3545' : '#28a745'"
+                             style="color: white;">
+                            <i [class]="selectedOrder?.revisadoParaProduccion ?
+                                        'fa fa-times-circle' :
+                                        'fa fa-check-circle'"></i>
                         </div>
+
+                        <!-- Texto dinámico -->
                         <div class="option-content">
-                            <span class="option-title">Marcar como Revisado</span>
-                            <small class="option-description">Revisar y enviar a producción</small>
+                            <span class="option-title">
+                                {{ selectedOrder?.revisadoParaProduccion ?
+                                   'Quitar Revisión' :
+                                   'Marcar como Revisado' }}
+                            </span>
+                            <small class="option-description">
+                                {{ selectedOrder?.revisadoParaProduccion ?
+                                   'Quitar estado de revisión' :
+                                   'Revisar y enviar a producción' }}
+                            </small>
                         </div>
                     </button>
 
