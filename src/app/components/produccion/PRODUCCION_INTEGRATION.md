@@ -42,7 +42,31 @@ EstadosProcesos = [
 ]
 ```
 
-#### 4. Sistema de Columnas Configurables
+#### 4. Sistema de Revisión Inteligente
+```javascript
+// Lógica condicional para marcar como revisado
+marcarComoRevisado(order: Pedido): void {
+    if (order.estadoProceso === EstadoProceso.SinProducir) {
+        // Solo cambiar a EnProduccion si está sin producir
+        order.estadoProceso = EstadoProceso.EnProduccion;
+    }
+    // Si está en EnProduccion, ProducidoParcialmente o ProducidoTotalmente, mantener estado
+    order.revisadoParaProduccion = 'Revisado';
+}
+
+// Quitar revisión sin alterar estado de producción
+quitarRevision(order: Pedido): void {
+    order.revisadoParaProduccion = '';
+    // NO modificar estadoProceso - mantener estado actual
+}
+```
+
+**Reglas de Estado de Revisión:**
+- **SinProducir** + Marcar Revisado → **EnProduccion** + "Revisado"
+- **EnProduccion/Producido** + Marcar Revisado → **Mantiene Estado** + "Revisado"
+- **Cualquier Estado** + Quitar Revisado → **Mantiene Estado** + Sin revisar
+
+#### 5. Sistema de Columnas Configurables
 ```javascript
 // Configuración persistente en localStorage
 produccionColumnsConfig: ColumnDefinition[]
@@ -371,6 +395,67 @@ transformPedidosToProductsView(): PedidoParaProduccion[] {
 
 ---
 
+## ACTUALIZACIONES RECIENTES (2025-09-13)
+
+### 🆕 **Nueva Funcionalidad de Revisión**
+
+#### **Sistema Toggle Revisado/No Revisado**
+- **Botón dinámico**: Verde "Marcar como Revisado" ↔ Rojo "Quitar Revisión"
+- **Display visual**: Badge verde animado con texto "Revisado" en lugar de fecha/timestamp
+- **Ordenamiento inteligente**: Items sin revisar aparecen primero en orden ascendente
+
+#### **Campo revisadoParaProduccion Actualizado**
+```typescript
+// Antes: Guardaba timestamp ISO
+order.revisadoParaProduccion = new Date().toISOString();
+
+// Ahora: Guarda texto simple
+order.revisadoParaProduccion = 'Revisado';  // o '' para quitar
+```
+
+#### **Lógica de Estados Inteligente**
+```typescript
+// MARCAR COMO REVISADO:
+if (order.estadoProceso === EstadoProceso.SinProducir) {
+    order.estadoProceso = EstadoProceso.EnProduccion;  // ✅ Cambiar estado
+} else {
+    // Mantener estado actual (EnProduccion, ProducidoParcialmente, ProducidoTotalmente)
+}
+
+// QUITAR REVISIÓN:
+order.revisadoParaProduccion = '';  // Solo limpiar revisión
+// NO modificar estadoProceso - preservar estado de producción actual
+```
+
+### 🎨 **Mejoras Visuales**
+- **Badge animado**: Gradiente verde con efectos hover y animación fadeInScale
+- **Iconos dinámicos**: ✓ check-circle (verde) ↔ ✗ times-circle (rojo)
+- **Ordenamiento personalizado**: PrimeNG customSort para priorizar items pendientes
+
+### 🔧 **Configuración de Columnas**
+- **Última Impresión**: Ahora se puede ocultar (removida de `fixedFields`)
+- **Fecha de Entrega**: Visible por defecto con conversión correcta de objetos Fecha
+
+### 🎯 **Casos de Uso Implementados**
+
+#### **Flujo: Pedido Nuevo → Revisión → Producción**
+1. **Estado inicial**: `SinProducir` + Sin revisar
+2. **Marcar revisado**: `EnProduccion` + Badge "Revisado" ✅
+3. **Quitar revisión**: `EnProduccion` + Sin badge (mantiene estado de producción)
+
+#### **Flujo: Pedido En Proceso → Revisión**
+1. **Estado inicial**: `ProducidoParcialmente` + Sin revisar
+2. **Marcar revisado**: `ProducidoParcialmente` + Badge "Revisado" ✅ (no cambia estado)
+3. **Quitar revisión**: `ProducidoParcialmente` + Sin badge (mantiene estado)
+
+### ⚡ **Optimizaciones**
+- **Ordenamiento inteligente**: Prioriza items pendientes de revisión
+- **Mensajes contextuales**: Diferentes notificaciones según la acción
+- **Performance**: Reduced redraws con custom sorting
+- **UX mejorada**: Confirmación antes de quitar revisión
+
+---
+
 ## TROUBLESHOOTING GUIDE
 
 ### Problemas Comunes y Soluciones:
@@ -421,8 +506,30 @@ console.log('Is from production:', this.isFromProduction);
 - Webhooks para notificaciones a sistemas terceros
 - Dashboard analytics para métricas de producción
 
+### Implementaciones Recientes Completadas:
+- ✅ **Sistema de revisión toggle** con lógica de estados inteligente
+- ✅ **Campo revisadoParaProduccion** cambiado de timestamp a texto "Revisado"
+- ✅ **Configuración de columnas** mejorada (Última Impresión ocultable, Fecha Entrega visible)
+- ✅ **Ordenamiento personalizado** para priorizar items pendientes
+- ✅ **Badge animado** con gradientes y efectos visuales
+- ✅ **Permisos de usuario** reactivados para brendazora@almara.com.co y gerencia@almara.com.co
+
+---
+
+## PRÓXIMAS MEJORAS SUGERIDAS
+
+### Corto Plazo:
+1. **Bulk Operations**: Marcar múltiples pedidos como revisados
+2. **Filtros Avanzados**: Filtrar por estado de revisión
+3. **Audit Trail**: Historial de cambios de revisión por usuario
+
+### Largo Plazo:
+1. **Notificaciones Push**: Alertas cuando pedidos requieren revisión
+2. **Dashboard Analytics**: Métricas de revisión y tiempo de procesamiento
+3. **Workflow Automático**: Reglas automáticas para revisión según criterios
+
 ---
 
 *Documento actualizado: 2025-09-13*
-*Versión: 1.0*
+*Versión: 2.0 - Actualización Mayor con Sistema de Revisión*
 *Módulo: Katuq Seller - Integración Producción*

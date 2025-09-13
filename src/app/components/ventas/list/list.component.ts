@@ -4617,8 +4617,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   marcarComoRevisado(order: Pedido): void {
     if (!order) return;
 
-    // Cambiar estado a EnProduccion
-    order.estadoProceso = EstadoProceso.EnProduccion;
+    // Lógica condicional para el cambio de estado
+    if (order.estadoProceso === EstadoProceso.SinProducir) {
+      // Solo cambiar a EnProduccion si está sin producir
+      order.estadoProceso = EstadoProceso.EnProduccion;
+    }
+    // Si está en EnProduccion, ProducidoParcialmente o ProducidoTotalmente, mantener el estado actual
 
     // Agregar texto "Revisado" en lugar de fecha
     order.revisadoParaProduccion = 'Revisado';
@@ -4626,7 +4630,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Guardar cambios
     this.ventasService.editOrder(order).subscribe({
       next: () => {
-        this.toastrService.success('Pedido marcado como revisado y enviado a producción', 'Éxito');
+        const mensaje = order.estadoProceso === EstadoProceso.EnProduccion ?
+          'Pedido marcado como revisado y enviado a producción' :
+          'Pedido marcado como revisado';
+        this.toastrService.success(mensaje, 'Éxito');
         this.refrescarDatos();
       },
       error: (error) => {
@@ -4641,13 +4648,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Confirmar acción
     if (confirm('¿Está seguro de quitar la revisión de este pedido?')) {
-      // Quitar fecha de revisión - dejar en blanco
+      // Quitar revisión - dejar en blanco
       order.revisadoParaProduccion = '';
 
-      // Opcionalmente cambiar estado si está en producción sin actividad
-      if (order.estadoProceso === EstadoProceso.EnProduccion) {
-        order.estadoProceso = EstadoProceso.SinProducir;
-      }
+      // Mantener el estado de proceso actual - NO modificar estadoProceso
 
       // Guardar cambios
       this.ventasService.editOrder(order).subscribe({
