@@ -458,7 +458,7 @@
                 <td *ngIf="isColumnVisibleProduccion('anticipo')">{{ row.anticipo | currency }}</td>
                 <td *ngIf="isColumnVisibleProduccion('faltaPorPagar')">{{ row.faltaPorPagar | currency }}</td>
                 <td *ngIf="isColumnVisibleProduccion('fechaEntrega')">
-                  {{ isValidDate(row.fechaEntrega) ? (row.fechaEntrega | date: 'dd/MM/yyyy') : '-' }}
+                  {{ row.fechaEntrega || '-' }}
                 </td>
                 <td *ngIf="isColumnVisibleProduccion('fechaCreacion')">
                   {{ isValidDate(row.fechaCreacion) ? (row.fechaCreacion | date: 'dd/MM/yyyy') : '-' }}

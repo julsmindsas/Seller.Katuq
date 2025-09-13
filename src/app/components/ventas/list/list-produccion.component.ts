@@ -68,7 +68,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
         estadoProceso: pedido.estadoProceso,
         validacion: pedido.validacion,
         cliente: pedido.cliente,
-        fechaEntrega: (pedido.carrito && pedido.carrito.length > 0) ? pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega : undefined,
+        fechaEntrega: (pedido.carrito && pedido.carrito.length > 0) ? this.convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega) : '',
         fechaCreacion: pedido.fechaCreacion,
         ciudad: pedido.envio?.ciudad,
         zonaCobro: pedido.envio?.zonaCobro,
@@ -129,6 +129,17 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.textContent || div.innerText || '';
+  }
+
+  convertFechaEntregaString(fechaEntrega: {
+    day: number;
+    month: number;
+    year: number;
+  }): string {
+    if (!fechaEntrega) {
+      return '';
+    }
+    return `${fechaEntrega.day}/${fechaEntrega.month}/${fechaEntrega.year}`;
   }
 
   private initializeFilterArrays(): void {
