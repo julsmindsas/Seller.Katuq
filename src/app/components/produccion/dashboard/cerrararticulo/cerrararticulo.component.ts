@@ -1,6 +1,12 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { SafeHtml } from '@angular/platform-browser';
 import { Detalle, DetallePedido, PedidosParaProduccionEnsamble } from '../../../../shared/models/produccion/Produccion';
+import { ServiciosService } from '../../../../shared/services/servicios.service';
+import { VentasService } from '../../../../shared/services/ventas/ventas.service';
+import { PaymentService } from '../../../../shared/services/ventas/payment.service';
+import { Pedido } from '../../../ventas/modelo/pedido';
 
 @Component({
   selector: 'app-cerrararticulo',
@@ -26,7 +32,15 @@ export class CerrararticuloComponent implements OnInit {
     piezasFaltantesPorRepartir: new FormControl('0'),
     totalHistoricoProducido: new FormControl('0')
   });
-  constructor() { }
+  htmlModal: SafeHtml | null = null;
+  scrollStack: number[] = [];
+
+  constructor(
+    private serviciosService: ServiciosService,
+    private ventasService: VentasService,
+    private paymentService: PaymentService,
+    private modalService: NgbModal
+  ) { }
 
   ngOnInit(): void {
     console.log(this.selectedOrdersEnsamble);
@@ -353,5 +367,97 @@ export class CerrararticuloComponent implements OnInit {
     else {
       return 0;
     }
+  }
+
+  /**
+   * Abre el PDF del pedido usando la misma lógica del componente de ventas
+   * @param nroPedido - Número del pedido a abrir
+   */
+  async openPdfOrder(nroPedido: string): Promise<void> {
+    if (!nroPedido) {
+      console.warn('No se puede abrir PDF: número de pedido no válido');
+      return;
+    }
+
+    try {
+      // Usar el método específico para obtener pedido por número
+      const response = await this.serviciosService.getOrderByName(nroPedido);
+      
+      // El servicio devuelve un array, tomamos el primer elemento
+      if (response && Array.isArray(response) && response.length > 0) {
+        const pedidoEncontrado = response[0];
+        // Usar la misma lógica de PDF que el componente de ventas
+        this.pdfOrder(pedidoEncontrado);
+      } else {
+        console.warn('No se encontró el pedido:', nroPedido);
+      }
+    } catch (error) {
+      console.error('Error al buscar el pedido:', error);
+    }
+  }
+
+  /**
+   * Usa la misma lógica de PDF que el componente de ventas/list
+   * @param order - Datos del pedido
+   */
+  pdfOrder(order: Pedido) {
+    this.scrollStack.push(window.scrollY);
+
+    // Actualizar el pedido antes de generar PDF (misma lógica que ventas/list)
+    const pedidoActualizado = this.actualizarPedidoParaPDF(order);
+
+    // Generar HTML usando PaymentService (misma lógica que ventas/list)
+    this.htmlModal = this.paymentService.getHtmlContent(
+      pedidoActualizado,
+      true // isFromProduction = true
+    );
+
+    // Solo mostrar PDF sin actualizar el pedido
+    // (comentamos la actualización para evitar errores innecesarios)
+    // const now = new Date().toISOString();
+    // order.ultimaImpresion = now;
+    // this.ventasService.editOrder(order).subscribe({...});
+
+    // Abrir nueva ventana para mostrar el PDF
+    const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+    
+    if (newWindow && this.htmlModal) {
+      // Convertir SafeHtml a string para escritura en nueva ventana
+      const htmlString = (this.htmlModal as any).changingThisBreaksApplicationSecurity || this.htmlModal.toString();
+      newWindow.document.write(htmlString);
+      newWindow.document.close();
+      
+      // Solo mostrar el PDF sin auto-imprimir
+      // setTimeout(() => {
+      //   newWindow.print();
+      // }, 500);
+    }
+
+    // Limpiar el HTML modal después de usarlo
+    setTimeout(() => {
+      this.htmlModal = null;
+      const last = this.scrollStack.pop();
+      if (last !== undefined) {
+        window.scrollTo({ top: last });
+      }
+    }, 1000);
+  }
+
+  /**
+   * Actualizar pedido antes de generar PDF (misma lógica que ventas/list)
+   */
+  private actualizarPedidoParaPDF(order: Pedido): Pedido {
+    // Clonar el pedido para no modificar el original
+    const pedidoActualizado = { ...order };
+
+    console.log('📊 PDF - Pedido actualizado antes de generar:', {
+      nroPedido: pedidoActualizado.nroPedido,
+      totalPedidoSinDescuento: pedidoActualizado.totalPedidoSinDescuento,
+      totalEnvio: pedidoActualizado.totalEnvio,
+      totalDescuento: pedidoActualizado.totalDescuento,
+      totalPedididoConDescuento: pedidoActualizado.totalPedididoConDescuento
+    });
+
+    return pedidoActualizado;
   }
 }

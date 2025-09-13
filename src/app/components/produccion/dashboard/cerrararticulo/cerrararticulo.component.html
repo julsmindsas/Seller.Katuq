@@ -85,6 +85,13 @@
                         </div>
                         <div class="info-value">
                             <strong>{{detalle.nroPedido}}</strong>
+                            <button class="pdf-link-btn" 
+                                    (click)="openPdfOrder(detalle.nroPedido)"
+                                    title="Abrir PDF del pedido"
+                                    type="button">
+                                <i class="pi pi-file-pdf"></i>
+                                <span>Ver PDF</span>
+                            </button>
                         </div>
                     </div>
                     <div class="info-row">
@@ -168,4 +175,54 @@
         margin-left: 0.5rem;
         font-weight: 500;
     }
+    
+    .pdf-link-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.6rem;
+        margin-left: 0.75rem;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+    
+    .pdf-link-btn:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+    }
+    
+    .pdf-link-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+    
+    .pdf-link-btn i {
+        margin-right: 0.3rem;
+        font-size: 0.9rem;
+    }
+    
+    .pdf-link-btn span {
+        font-size: 0.8rem;
+    }
 </style>
+
+<!-- Modal para mostrar PDF -->
+<ng-template #modalContent let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">PDF del Pedido</h4>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div [innerHTML]="htmlModal" *ngIf="htmlModal"></div>
+    </div>
+</ng-template>
