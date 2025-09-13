@@ -302,6 +302,55 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Verifica si un producto es "fantasma" (tiene valores null que causan problemas)
+   * @param item Producto del carrito a verificar
+   * @returns true si el producto es fantasma y debe permitirse su eliminación
+   */
+  isGhostProduct(item: Carrito): boolean {
+    if (!item || !item.producto) {
+      return true;
+    }
+
+    // Verificar si el producto tiene propiedades críticas como null
+    const producto = item.producto;
+    
+    // Si el título del producto es null, es un producto fantasma
+    if (!producto.crearProducto?.titulo || producto.crearProducto.titulo === 'null') {
+      return true;
+    }
+
+    // Si la referencia es null, es un producto fantasma
+    if (!producto.identificacion?.referencia || producto.identificacion.referencia === 'null') {
+      return true;
+    }
+
+    // Si el precio es null o 0, podría ser un producto fantasma
+    if (!producto.precio?.precioUnitarioConIva || producto.precio.precioUnitarioConIva === 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Genera el título del tooltip para el botón de eliminación
+   * @param item Producto del carrito
+   * @param pedido Pedido al que pertenece
+   * @returns Mensaje del tooltip
+   */
+  getDeleteButtonTitle(item: Carrito, pedido: Pedido): string {
+    if (this.isGhostProduct(item)) {
+      return 'Eliminar producto fantasma (producto con datos corruptos)';
+    }
+    
+    if (this.canDeleteProducts(pedido)) {
+      return 'Eliminar producto';
+    }
+    
+    return `No se puede eliminar - Solo permitido en estados Pendiente o SinProducir. Estado actual: ${pedido.estadoProceso}`;
+  }
+
+  /**
    * Verifica si se pueden editar notas de producción
    * Solo se pueden editar si NO está en GRUPO 1
    * @param order Pedido a verificar
@@ -3435,12 +3484,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   eliminarProductoDelPedido(item: Carrito, pedido: Pedido) {
     // Verificar si se pueden ELIMINAR productos (más restrictivo que modificar)
-    if (!this.canDeleteProducts(pedido)) {
+    // EXCEPTO para productos fantasma que siempre se pueden eliminar
+    if (!this.canDeleteProducts(pedido) && !this.isGhostProduct(item)) {
       this.toastrService.warning(
         `No se pueden eliminar productos. Solo se permiten eliminaciones en pedidos con estado "Pendiente" o "SinProducir". Estado actual: ${pedido.estadoProceso}`,
         "Eliminación No Permitida",
       );
       return;
+    }
+
+    // Mostrar mensaje especial si se está eliminando un producto fantasma
+    if (this.isGhostProduct(item)) {
+      this.toastrService.info(
+        "Eliminando producto fantasma (producto con datos corruptos). Se está saltando la restricción de estado para limpiar el pedido.",
+        "Eliminación Especial",
+        { timeOut: 5000 }
+      );
     }
 
     // Verificar si será el último producto del pedido
@@ -4585,6 +4644,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Mostrar confirmación antes de duplicar
+    Swal.fire({
+      title: '¿Duplicar pedido?',
+      text: `¿Está seguro de que desea duplicar el pedido ${order.nroPedido}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, duplicar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.procesarDuplicacion(order);
+      }
+    });
+  }
+
+  /**
+   * Procesa la duplicación del pedido después de la confirmación
+   */
+  private procesarDuplicacion(order: Pedido): void {
     try {
       const empresaActual = JSON.parse(localStorage.getItem('currentCompany') || '{}');
       const companyNom: string = empresaActual?.nomComercial || (order.company as unknown as string) || '';

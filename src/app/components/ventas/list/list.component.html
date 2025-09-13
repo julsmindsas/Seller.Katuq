@@ -1171,11 +1171,11 @@
                                                             style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
                                                     </button>
                                                     <button type="button" pButton pRipple
-                                                        [disabled]="!canDeleteProducts(pedido)"
-                                                        [title]="canDeleteProducts(pedido) ? 'Eliminar producto' : 'No se puede eliminar - Solo permitido en estados Pendiente o SinProducir. Estado actual: ' + pedido.estadoProceso"
+                                                        [disabled]="!canDeleteProducts(pedido) && !isGhostProduct(item)"
+                                                        [title]="getDeleteButtonTitle(item, pedido)"
                                                         (click)="eliminarProductoDelPedido(item, pedido)"
                                                         class="p-button-text p-button-rounded p-button-danger"
-                                                        [ngClass]="{'disabled-btn': !canDeleteProducts(pedido)}">
+                                                        [ngClass]="{'disabled-btn': !canDeleteProducts(pedido) && !isGhostProduct(item)}">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
                                                 </div>

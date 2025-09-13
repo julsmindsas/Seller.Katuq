@@ -232,9 +232,11 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         documento: this.documentoBusqueda,
       };
       this.service.getClientByDocument(data).subscribe((res: any) => {
-        res.datosEntrega.map((x) => {
-          this.datosEntregas.push(x);
-        });
+        if (res && res.datosEntrega && Array.isArray(res.datosEntrega)) {
+          res.datosEntrega.map((x) => {
+            this.datosEntregas.push(x);
+          });
+        }
 
         this.formulario.controls["datosFacturacionElectronica"].setValue(
           res.datosFacturacionElectronica,
@@ -296,9 +298,11 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     }
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
-      res.datosEntrega.map((x) => {
-        this.datosEntregas.push(x);
-      });
+      if (res && res.datosEntrega && Array.isArray(res.datosEntrega)) {
+        res.datosEntrega.map((x) => {
+          this.datosEntregas.push(x);
+        });
+      }
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         res.datosFacturacionElectronica,
       );
