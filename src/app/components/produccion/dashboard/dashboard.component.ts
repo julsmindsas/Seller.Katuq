@@ -48,6 +48,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   AllOrdersEnsamble: PedidosParaProduccionEnsamble[] = [];
   loading: boolean = true;
   totalValorProductoBruto: number;
+  showMetrics: boolean = false; // Ocultar métricas por defecto
   totalDescuento: number;
   htmlModal: any;
   clienteSeleccionado: Cliente;
@@ -270,6 +271,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.loadFiltersFromStorage();
 
     this.refrescarDatosEnsamble();
+  }
+
+  /**
+   * Alterna la visibilidad de las métricas avanzadas
+   */
+  toggleMetrics(): void {
+    this.showMetrics = !this.showMetrics;
   }
 
   async refrescarDatos() {

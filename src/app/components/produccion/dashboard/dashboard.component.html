@@ -24,50 +24,66 @@
                         class="p-button-info p-button-sm" (click)="mostrarRecomendacionesProduccion()"></button>
                 </div>
 
-                <!-- Alertas de producción -->
-                <div class="px-4 py-3 bg-light border-bottom"
-                    *ngIf="!loading && (pedidosUrgentes?.length > 0 || pedidosEnRiesgo?.length > 0)">
-                    <div class="d-flex flex-column">
-                        <div class="alert alert-warning mb-2" *ngIf="pedidosUrgentes?.length > 0">
-                            <div class="d-flex align-items-center">
-                                <i class="pi pi-exclamation-triangle fs-4 me-3"></i>
-                                <div>
-                                    <h6 class="mb-1 fw-bold">Producción Urgente</h6>
-                                    <p class="mb-0">
-                                        Hay <strong>{{ pedidosUrgentes?.length }}</strong> artículos que requieren
-                                        atención inmediata
-                                        <span *ngIf="pedidosUrgentes?.length > 0">
-                                            (Más urgente: {{ pedidosUrgentes[0]?.nombreArticulo }} - Entrega: {{
-                                            pedidosUrgentes[0]?.detallePedido[0]?.fechaEntrega | date:'dd/MM/yyyy' }})
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info mb-0" *ngIf="pedidosEnRiesgo?.length > 0">
-                            <div class="d-flex align-items-center">
-                                <i class="pi pi-clock fs-4 me-3"></i>
-                                <div>
-                                    <h6 class="mb-1 fw-bold">Producción en Riesgo</h6>
-                                    <p class="mb-0">
-                                        Hay <strong>{{ pedidosEnRiesgo?.length }}</strong> artículos que podrían
-                                        retrasarse
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Panel de KPI avanzados de producción -->
                 <div class="metrics-container p-3 mb-3 border-bottom bg-white" *ngIf="!loading">
-                    <div class="row">
-                        <div class="col-12 mb-2">
-                            <h6 class="fw-bold text-primary mb-2">
+                    <!-- Botón para mostrar/ocultar métricas -->
+                    <div class="row mb-2">
+                        <div class="col-12 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-primary mb-0">
                                 <i class="pi pi-chart-line me-2"></i>
                                 Métricas Avanzadas de Producción
                             </h6>
+                            <button 
+                                type="button" 
+                                class="btn btn-outline-primary btn-sm" 
+                                (click)="toggleMetrics()"
+                                [attr.aria-expanded]="showMetrics">
+                                <i class="pi" [ngClass]="showMetrics ? 'pi-eye-slash' : 'pi-eye'"></i>
+                                {{ showMetrics ? 'Ocultar Métricas' : 'Mostrar Métricas' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sección de métricas (colapsable) -->
+                    <div class="row" *ngIf="showMetrics">
+                        <div class="col-12 mb-3">
+                            <div class="text-muted small mb-3">
+                                Vista detallada del estado y eficiencia de producción
+                            </div>
+                            
+                            <!-- Alertas de producción movidas aquí -->
+                            <div class="d-flex flex-column gap-2" *ngIf="pedidosUrgentes?.length > 0 || pedidosEnRiesgo?.length > 0">
+                                <div class="alert alert-warning mb-2" *ngIf="pedidosUrgentes?.length > 0">
+                                    <div class="d-flex align-items-center">
+                                        <i class="pi pi-exclamation-triangle fs-4 me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">Producción Urgente</h6>
+                                            <p class="mb-0">
+                                                Hay <strong>{{ pedidosUrgentes?.length }}</strong> artículos que requieren
+                                                atención inmediata
+                                                <span *ngIf="pedidosUrgentes?.length > 0">
+                                                    (Más urgente: {{ pedidosUrgentes[0]?.nombreArticulo }} - Entrega: {{
+                                                    pedidosUrgentes[0]?.detallePedido[0]?.fechaEntrega | date:'dd/MM/yyyy' }})
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info mb-2" *ngIf="pedidosEnRiesgo?.length > 0">
+                                    <div class="d-flex align-items-center">
+                                        <i class="pi pi-clock fs-4 me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">Producción en Riesgo</h6>
+                                            <p class="mb-0">
+                                                Hay <strong>{{ pedidosEnRiesgo?.length }}</strong> artículos que podrían
+                                                retrasarse
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- KPIs de estado de producción -->
