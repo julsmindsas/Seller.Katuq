@@ -10,6 +10,7 @@ export interface PedidoEntrega extends Pedido {
   // Datos de quien recibe
   quienRecibio?: string;
   telefono?: string;
+  parentesco?: string;
   
   // Evidencias de entrega
   fotosEvidencia?: string[];

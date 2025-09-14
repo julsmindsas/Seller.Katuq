@@ -9,8 +9,8 @@
 </div>
 <div class="modal-body">
     <!-- DEBUG: Mostrar datos JSON temporalmente -->
-   
-    
+
+
     <div class="container-fluid">
         <!-- Información Principal -->
         <div class="row mb-3">
@@ -41,7 +41,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Receptor y Contacto -->
         <div class="row mb-3">
             <div class="col-md-6">
@@ -51,7 +51,8 @@
                         {{ 'Quién Recibió' | translate }}
                     </div>
                     <div class="info-card-content">
-                        {{ pedido?.quienRecibio || 'N/A' }}
+                        {{ pedido?.quienRecibio || 'N/A' }}<br>
+                        <small><strong>Parentesco:</strong> <span *ngIf="pedido?.parentesco">({{ pedido?.parentesco }})</span></small>
                     </div>
                 </div>
             </div>
@@ -67,7 +68,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Transportador y Fecha -->
         <div class="row mb-3">
             <div class="col-md-6">
@@ -93,7 +94,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Evidencias -->
         <div class="mb-3">
             <div class="card">
@@ -105,27 +106,30 @@
                     <div class="d-flex justify-content-center flex-wrap mt-2">
                         <ng-container *ngIf="isArray(pedido?.fotosEvidencia); else singleImage">
                             <div *ngFor="let image of pedido?.fotosEvidencia" class="position-relative m-1">
-                                <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" 
-                                    class="img-thumbnail" 
+                                <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" class="img-thumbnail"
                                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                <a href="javascript:void(0)" class="position-absolute top-0 end-0" (click)="openFullImage(image)">
-                                    <i class="pi pi-search" style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
+                                <a href="javascript:void(0)" class="position-absolute top-0 end-0"
+                                    (click)="openFullImage(image)">
+                                    <i class="pi pi-search"
+                                        style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
                                 </a>
                             </div>
                         </ng-container>
                         <ng-template #singleImage>
                             <div *ngIf="pedido?.fotoEvidencia" class="position-relative">
-                                <img [src]="pedido?.fotoEvidencia" alt="{{ 'Foto de evidencia' | translate }}" 
+                                <img [src]="pedido?.fotoEvidencia" alt="{{ 'Foto de evidencia' | translate }}"
                                     class="img-thumbnail"
                                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                <a href="javascript:void(0)" class="position-absolute top-0 end-0" (click)="openFullImage(pedido?.fotoEvidencia)">
-                                    <i class="pi pi-search" style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
+                                <a href="javascript:void(0)" class="position-absolute top-0 end-0"
+                                    (click)="openFullImage(pedido?.fotoEvidencia)">
+                                    <i class="pi pi-search"
+                                        style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
                                 </a>
                             </div>
                         </ng-template>
-                        
-                        <div *ngIf="(!pedido?.fotosEvidencia || pedido?.fotosEvidencia.length === 0) && !pedido?.fotoEvidencia" 
-                             class="text-center text-secondary py-3">
+
+                        <div *ngIf="(!pedido?.fotosEvidencia || pedido?.fotosEvidencia.length === 0) && !pedido?.fotoEvidencia"
+                            class="text-center text-secondary py-3">
                             <i class="pi pi-image" style="font-size: 2rem;"></i>
                             <p class="mt-2">{{ 'No hay imágenes disponibles' | translate }}</p>
                         </div>
@@ -133,7 +137,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Firma -->
         <div class="mb-3">
             <div class="card">
@@ -142,10 +146,9 @@
                     {{ 'Firma del Cliente' | translate }}
                 </div>
                 <div class="card-body text-center p-3">
-                    <img *ngIf="pedido?.signatureImage" [src]="pedido?.signatureImage" 
-                        alt="{{ 'Firma' | translate }}" class="img-fluid mt-2 border rounded"
-                        style="max-width: 300px; max-height: 100px;">
-                        
+                    <img *ngIf="pedido?.signatureImage" [src]="pedido?.signatureImage" alt="{{ 'Firma' | translate }}"
+                        class="img-fluid mt-2 border rounded" style="max-width: 300px; max-height: 100px;">
+
                     <div *ngIf="!pedido?.signatureImage" class="text-center text-secondary py-3">
                         <i class="pi pi-file" style="font-size: 2rem;"></i>
                         <p class="mt-2">{{ 'No hay firma disponible' | translate }}</p>
@@ -153,7 +156,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Notas de Entrega del Mensajero -->
         <div class="mb-3">
             <div class="card">
@@ -181,4 +184,4 @@
         <i class="pi pi-times me-1"></i>
         {{ 'Cerrar' | translate }}
     </button>
-</div> 
+</div>
