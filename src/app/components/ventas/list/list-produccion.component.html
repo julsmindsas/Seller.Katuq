@@ -18,7 +18,7 @@
             [rowsPerPageOptions]="[5,10,25,50,100,200]" [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
             [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.identificacion.referencia','cliente.nombres_completos','estadoPago','estadoProceso']"
-            [sortMode]="'multiple'"  (sortFunction)="customSort($event)"
+            [sortMode]="'multiple'" (sortFunction)="customSort($event)"
             [customSort]="true">
             <ng-template pTemplate="header">
               <tr style="font-size: 0.8em;">
@@ -361,7 +361,7 @@
                   [style.border-left]="(row.pedidoOriginal?.revisadoParaProduccion && checkIfUserIsBrenda()) ? '4px solid #28a745' : null">
                 <td style="width: 56px;">
                   <ng-container *ngIf="row.producto?.crearProducto?.imagenesPrincipales?.length > 0 && row.producto?.crearProducto?.imagenesPrincipales[0]?.urls as imgUrl">
-                    <img *ngIf="!row._imgError" [src]="imgUrl" width="48" height="48" style="object-fit:cover; border-radius:6px; border:1px solid #eee;" (error)="row._imgError = true" [alt]="row.producto?.crearProducto?.titulo" />
+                    <img *ngIf="!row._imgError" [src]="imgUrl" width="48" height="48" style="object-fit:cover; border-radius:6px; border:1px solid #eee; cursor: pointer;" (error)="row._imgError = true" [alt]="row.producto?.crearProducto?.titulo" (click)="showImageViewer(imgUrl)" />
                     <p-avatar *ngIf="row._imgError" [label]="row.producto?.crearProducto?.titulo ? row.producto.crearProducto.titulo.charAt(0) : '?'" [shape]="'square'" size="large" style="border-radius:6px; border:1px solid #eee; width:48px; height:48px; background:#f3f6fb; color:#888; font-weight:600;">
                       <i *ngIf="!row.producto?.crearProducto?.titulo" class="pi pi-image"></i>
                     </p-avatar>
@@ -545,5 +545,13 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Custom Image Viewer Modal -->
+<div *ngIf="imageViewerVisible" class="image-viewer-overlay" (click)="hideImageViewer()">
+  <div class="image-viewer-content">
+    <span class="image-viewer-close">&times;</span>
+    <img [src]="selectedImageUrl" class="image-viewer-image">
   </div>
 </div>

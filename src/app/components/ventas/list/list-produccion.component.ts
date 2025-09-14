@@ -45,6 +45,10 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   // Columnas fijas para producción
   readonly fixedFields = ["imagen", "producto", "descripcion", "opciones"];
 
+  // Properties for Image Viewer
+  imageViewerVisible = false;
+  selectedImageUrl = "";
+
   constructor(
     private ventasService: VentasService,
     private toastrService: ToastrService,
@@ -62,6 +66,17 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     if (changes.pedidos) {
       this.transformPedidosToProductsView();
     }
+  }
+
+  // Methods for Image Viewer
+  showImageViewer(url: string): void {
+    this.selectedImageUrl = url;
+    this.imageViewerVisible = true;
+  }
+
+  hideImageViewer(): void {
+    this.imageViewerVisible = false;
+    this.selectedImageUrl = "";
   }
 
   private transformPedidosToProductsView(): void {
@@ -312,7 +327,6 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   customSort(event: any): void {
     let { data, field, order } = event.multiSortMeta[0];
     data = event.data;
-
     const dateFields = ["fechaEntrega", "fechaCreacion", "ultimaImpresion"];
     const numericFields = [
       "cantidad",
