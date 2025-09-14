@@ -16,6 +16,7 @@
   height: auto; /* Mantiene la proporción */
   max-width: 150px; /* Tamaño máximo */
   max-height: 150px;
+  animation: pulse 2.5s infinite cubic-bezier(0.66, 0, 0.34, 1);
 }
 
 @media (max-width: 600px) {
@@ -36,4 +37,42 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@keyframes colorChange {
+  0%,
+  100% {
+    fill: #00fcd6;
+  }
+  50% {
+    fill: #9b00ff;
+  }
+}
+
+@keyframes colorChange2 {
+  0%,
+  100% {
+    fill: #9b00ff;
+  }
+  50% {
+    fill: #00fcd6;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+#path1 {
+  animation: colorChange 2s infinite linear;
+}
+
+#path4 {
+  animation: colorChange2 3s infinite linear;
 }
