@@ -1,187 +1,212 @@
-<div class="modal-header" style="background-color: #f7f3fc; border-bottom: 2px solid #d3c3f3;">
-    <h5 class="modal-title">
-        <i class="pi pi-truck me-2"></i>
-        <span>{{ 'Detalle de Entrega' | translate }}</span>
-    </h5>
-    <button type="button" class="close" aria-label="Close" (click)="closeModal()">
-        <span aria-hidden="true">&times;</span>
+<!-- Header mejorado con gradiente y mejor diseño -->
+<div class="modal-header">
+    <div class="header-content">
+        <div class="header-icon">
+            <i class="pi pi-truck"></i>
+        </div>
+        <div class="header-text">
+            <h5 class="modal-title">{{ 'Detalle de Entrega' | translate }}</h5>
+            <small class="header-subtitle">{{ 'Información completa de la entrega' | translate }}</small>
+        </div>
+    </div>
+    <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()">
+        <i class="pi pi-times"></i>
     </button>
 </div>
+
 <div class="modal-body">
-    <!-- DEBUG: Mostrar datos JSON temporalmente -->
-
-
-    <div class="container-fluid">
-        <!-- Información Principal -->
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="info-card">
-                    <div class="info-card-title">
-                        <i class="pi pi-hashtag me-1"></i>
-                        {{ 'Número de Pedido' | translate }}
-                    </div>
-                    <div class="info-card-content">
-                        {{ pedido?.nroPedido }}
-                    </div>
+    <div class="delivery-detail-container">
+        
+        <!-- Sección de Información Principal -->
+        <div class="section-header">
+            <i class="pi pi-info-circle"></i>
+            <h6>{{ 'Información Principal' | translate }}</h6>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="pi pi-hashtag"></i>
+                </div>
+                <div class="info-content">
+                    <label>{{ 'Número de Pedido' | translate }}</label>
+                    <span class="info-value">{{ pedido?.nroPedido || 'N/A' }}</span>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="info-card">
-                    <div class="info-card-title">
-                        <i class="pi pi-flag me-1"></i>
-                        {{ 'Estado de Entrega' | translate }}
-                    </div>
-                    <div class="info-card-content">
-                        <span [ngClass]="{
-                            'badge bg-success': pedido?.estadoProceso === 'Entregado',
-                            'badge bg-warning': pedido?.estadoProceso === 'En proceso',
-                            'badge bg-danger': pedido?.estadoProceso === 'Fallido'
-                        }">{{ pedido?.estadoProceso }}</span>
-                    </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="pi pi-flag"></i>
+                </div>
+                <div class="info-content">
+                    <label>{{ 'Estado de Entrega' | translate }}</label>
+                    <span class="status-badge" [ngClass]="{
+                        'status-delivered': pedido?.estadoProceso === 'Entregado',
+                        'status-processing': pedido?.estadoProceso === 'En proceso',
+                        'status-failed': pedido?.estadoProceso === 'Fallido'
+                    }">{{ pedido?.estadoProceso || 'N/A' }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Receptor y Contacto -->
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="info-card">
-                    <div class="info-card-title">
-                        <i class="pi pi-user me-1"></i>
-                        {{ 'Quién Recibió' | translate }}
-                    </div>
-                    <div class="info-card-content">
-                        {{ pedido?.quienRecibio || 'N/A' }}<br>
-                        <small><strong>Parentesco:</strong> <span *ngIf="pedido?.parentesco">({{ pedido?.parentesco }})</span></small>
-                    </div>
+        <!-- Sección de Receptor -->
+        <div class="section-header">
+            <i class="pi pi-user"></i>
+            <h6>{{ 'Información del Receptor' | translate }}</h6>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="pi pi-user"></i>
+                </div>
+                <div class="info-content">
+                    <label>{{ 'Quién Recibió' | translate }}</label>
+                    <span class="info-value">{{ pedido?.quienRecibio || 'N/A' }}</span>
+                    <small class="info-subtitle" *ngIf="pedido?.parentesco">
+                        <i class="pi pi-users"></i> {{ pedido?.parentesco }}
+                    </small>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="info-card">
-                    <div class="info-card-title">
-                        <i class="pi pi-phone me-1"></i>
-                        {{ 'Teléfono' | translate }}
-                    </div>
-                    <div class="info-card-content">
-                        {{ pedido?.telefono || 'N/A' }}
-                    </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="pi pi-phone"></i>
+                </div>
+                <div class="info-content">
+                    <label>{{ 'Teléfono' | translate }}</label>
+                    <span class="info-value">{{ pedido?.telefono || 'N/A' }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Transportador y Fecha -->
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="info-card">
-                    <div class="info-card-title">
-                        <i class="pi pi-id-card me-1"></i>
-                        {{ 'Transportador' | translate }}
-                    </div>
-                    <div class="info-card-content">
-                        {{ pedido?.transportador || 'N/A' }}
-                    </div>
+        <!-- Sección de Entrega -->
+        <div class="section-header">
+            <i class="pi pi-truck"></i>
+            <h6>{{ 'Detalles de Entrega' | translate }}</h6>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="pi pi-id-card"></i>
+                </div>
+                <div class="info-content">
+                    <label>{{ 'Transportador' | translate }}</label>
+                    <span class="info-value">{{ pedido?.transportador || 'N/A' }}</span>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="info-card">
-                    <div class="info-card-title">
-                        <i class="pi pi-calendar me-1"></i>
-                        {{ 'Fecha y Hora de Entrega' | translate }}
-                    </div>
-                    <div class="info-card-content">
-                        {{ pedido?.fechaEntrega | date: 'dd/MM/yyyy HH:mm' || 'N/A' }}
-                    </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="pi pi-calendar"></i>
+                </div>
+                <div class="info-content">
+                    <label>{{ 'Fecha y Hora de Entrega' | translate }}</label>
+                    <span class="info-value">{{ pedido?.fechaEntrega | date: 'dd/MM/yyyy HH:mm' || 'N/A' }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Evidencias -->
-        <div class="mb-3">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <i class="pi pi-camera me-1"></i>
-                    {{ 'Fotos de Evidencia' | translate }}
-                </div>
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-center flex-wrap mt-2">
-                        <ng-container *ngIf="isArray(pedido?.fotosEvidencia); else singleImage">
-                            <div *ngFor="let image of pedido?.fotosEvidencia" class="position-relative m-1">
-                                <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" class="img-thumbnail"
-                                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                <a href="javascript:void(0)" class="position-absolute top-0 end-0"
-                                    (click)="openFullImage(image)">
-                                    <i class="pi pi-search"
-                                        style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
-                                </a>
+        <!-- Sección de Evidencias -->
+        <div class="evidence-section">
+            <div class="section-header">
+                <i class="pi pi-camera"></i>
+                <h6>{{ 'Fotos de Evidencia' | translate }}</h6>
+            </div>
+            
+            <div class="evidence-gallery">
+                <ng-container *ngIf="isArray(pedido?.fotosEvidencia); else singleImage">
+                    <div class="gallery-grid">
+                        <div *ngFor="let image of pedido?.fotosEvidencia" class="gallery-item">
+                            <div class="image-container">
+                                <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" class="evidence-image" (click)="showImageViewer(image)">
+                                <div class="image-overlay" (click)="showImageViewer(image)">
+                                    <i class="pi pi-search"></i>
+                                </div>
                             </div>
-                        </ng-container>
-                        <ng-template #singleImage>
-                            <div *ngIf="pedido?.fotoEvidencia" class="position-relative">
-                                <img [src]="pedido?.fotoEvidencia" alt="{{ 'Foto de evidencia' | translate }}"
-                                    class="img-thumbnail"
-                                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                <a href="javascript:void(0)" class="position-absolute top-0 end-0"
-                                    (click)="openFullImage(pedido?.fotoEvidencia)">
-                                    <i class="pi pi-search"
-                                        style="font-size: 1rem; color: #fff; background-color: rgba(0,0,0,0.5); padding: 3px; border-radius: 50%;"></i>
-                                </a>
-                            </div>
-                        </ng-template>
-
-                        <div *ngIf="(!pedido?.fotosEvidencia || pedido?.fotosEvidencia.length === 0) && !pedido?.fotoEvidencia"
-                            class="text-center text-secondary py-3">
-                            <i class="pi pi-image" style="font-size: 2rem;"></i>
-                            <p class="mt-2">{{ 'No hay imágenes disponibles' | translate }}</p>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Firma -->
-        <div class="mb-3">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <i class="pi pi-pencil me-1"></i>
-                    {{ 'Firma del Cliente' | translate }}
-                </div>
-                <div class="card-body text-center p-3">
-                    <img *ngIf="pedido?.signatureImage" [src]="pedido?.signatureImage" alt="{{ 'Firma' | translate }}"
-                        class="img-fluid mt-2 border rounded" style="max-width: 300px; max-height: 100px;">
-
-                    <div *ngIf="!pedido?.signatureImage" class="text-center text-secondary py-3">
-                        <i class="pi pi-file" style="font-size: 2rem;"></i>
-                        <p class="mt-2">{{ 'No hay firma disponible' | translate }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Notas de Entrega del Mensajero -->
-        <div class="mb-3">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <i class="pi pi-comment me-1"></i>
-                    {{ 'Notas de Entrega del Mensajero' | translate }}
-                </div>
-                <div class="card-body p-3">
-                    <div *ngIf="pedido?.notasEntregaMensajero; else noNotas" class="notas-content">
-                        <p class="mb-0">{{ pedido?.notasEntregaMensajero }}</p>
-                    </div>
-                    <ng-template #noNotas>
-                        <div class="text-center text-secondary py-3">
-                            <i class="pi pi-comment" style="font-size: 2rem;"></i>
-                            <p class="mt-2">{{ 'No hay notas de entrega disponibles' | translate }}</p>
+                </ng-container>
+                
+                <ng-template #singleImage>
+                    <div *ngIf="pedido?.fotoEvidencia" class="single-image-container">
+                        <div class="image-container">
+                            <img [src]="pedido?.fotoEvidencia" alt="{{ 'Foto de evidencia' | translate }}" class="evidence-image" (click)="showImageViewer(pedido?.fotoEvidencia)">
+                            <div class="image-overlay" (click)="showImageViewer(pedido?.fotoEvidencia)">
+                                <i class="pi pi-search"></i>
+                            </div>
                         </div>
-                    </ng-template>
+                    </div>
+                </ng-template>
+
+                <div *ngIf="(!pedido?.fotosEvidencia || pedido?.fotosEvidencia.length === 0) && !pedido?.fotoEvidencia" 
+                     class="no-evidence">
+                    <div class="no-evidence-icon">
+                        <i class="pi pi-image"></i>
+                    </div>
+                    <p>{{ 'No hay imágenes disponibles' | translate }}</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Sección de Firma -->
+        <div class="signature-section">
+            <div class="section-header">
+                <i class="pi pi-pencil"></i>
+                <h6>{{ 'Firma del Cliente' | translate }}</h6>
+            </div>
+            
+            <div class="signature-container">
+                <div *ngIf="pedido?.signatureImage" class="signature-display">
+                    <img [src]="pedido?.signatureImage" alt="{{ 'Firma' | translate }}" class="signature-image" (click)="showImageViewer(pedido?.signatureImage)">
+                </div>
+                
+                <div *ngIf="!pedido?.signatureImage" class="no-signature">
+                    <div class="no-signature-icon">
+                        <i class="pi pi-file"></i>
+                    </div>
+                    <p>{{ 'No hay firma disponible' | translate }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Notas -->
+        <div class="notes-section">
+            <div class="section-header">
+                <i class="pi pi-comment"></i>
+                <h6>{{ 'Notas de Entrega del Mensajero' | translate }}</h6>
+            </div>
+            
+            <div class="notes-container">
+                <div *ngIf="pedido?.notasEntregaMensajero; else noNotas" class="notes-content">
+                    <p>{{ pedido?.notasEntregaMensajero }}</p>
+                </div>
+                
+                <ng-template #noNotas>
+                    <div class="no-notes">
+                        <div class="no-notes-icon">
+                            <i class="pi pi-comment"></i>
+                        </div>
+                        <p>{{ 'No hay notas de entrega disponibles' | translate }}</p>
+                    </div>
+                </ng-template>
             </div>
         </div>
     </div>
 </div>
+
 <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="closeModal()">
-        <i class="pi pi-times me-1"></i>
+    <button type="button" class="btn btn-close-modal" (click)="closeModal()">
+        <i class="pi pi-times"></i>
         {{ 'Cerrar' | translate }}
     </button>
+</div>
+
+<!-- Custom Image Viewer Modal -->
+<div *ngIf="imageViewerVisible" class="image-viewer-overlay" (click)="hideImageViewer()">
+  <div class="image-viewer-content">
+    <span class="image-viewer-close">&times;</span>
+    <img [src]="selectedImageUrl" class="image-viewer-image">
+  </div>
 </div>

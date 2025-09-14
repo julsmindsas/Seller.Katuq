@@ -11,6 +11,10 @@ export class DetalleEntregaComponent implements OnInit, OnChanges {
   @Output() onClose = new EventEmitter<void>();
   @Output() onImageClick = new EventEmitter<string>();
   
+  // Image viewer properties
+  imageViewerVisible = false;
+  selectedImageUrl = '';
+  
   constructor() { }
 
   ngOnInit(): void {
@@ -34,5 +38,15 @@ export class DetalleEntregaComponent implements OnInit, OnChanges {
   
   openFullImage(imageUrl: string): void {
     this.onImageClick.emit(imageUrl);
+  }
+  
+  showImageViewer(imageUrl: string): void {
+    this.selectedImageUrl = imageUrl;
+    this.imageViewerVisible = true;
+  }
+  
+  hideImageViewer(): void {
+    this.imageViewerVisible = false;
+    this.selectedImageUrl = '';
   }
 } 
