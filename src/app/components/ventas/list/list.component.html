@@ -32,508 +32,208 @@
                                         styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
                                         [tableStyle]="{ 'min-width': '14rem', 'padding':'2px' }"
                                         style="font-size: 0.65em; table-layout: fixed;">
-                                    <!-- CAPTION: Filtros modernos y selector de columnas -->
+                                    <!-- CAPTION: Filtros minimalistas y compactos -->
                                     <ng-template pTemplate="caption">
-                                        <div class="modern-filters-container">
-                                            <!-- Header compacto y colapsable -->
-                                            <div class="filters-compact-header">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div class="filter-toggle-section" style="cursor: pointer;"
-                                                        (click)="toggleFilters()">
-                                                        <i class="pi me-2 text-primary"
-                                                            [ngClass]="showFilters ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
-                                                        <i class="pi pi-filter me-2 text-primary"></i>
-                                                        <span class="fw-bold text-dark">{{ 'Filtros' | translate
-                                                            }}</span>
-                                                        <span class="filter-count ms-2" *ngIf="hasActiveFilters()">
-                                                            <span class="badge bg-primary">{{ getActiveFiltersCount()
-                                                                }}</span>
-                                                        </span>
-                                                    </div>
-                                                    <div class="quick-actions d-flex align-items-center">
-                                                        <!-- Filtros rápidos en header -->
-                                                        <div class="header-quick-filters d-flex align-items-center">
-                                                            <span class="shortcuts-label me-2">{{ 'Rápidos:' | translate
-                                                                }}</span>
-                                                            <div class="shortcuts-group d-flex">
-                                                                <button type="button" class="btn btn-sm shortcut-btn"
-                                                                    [ngClass]="{'btn-primary': quickFilters.estadoPago === 'Pendiente', 'btn-outline-secondary': quickFilters.estadoPago !== 'Pendiente'}"
-                                                                    (click)="setQuickFilter('estadoPago', quickFilters.estadoPago === 'Pendiente' ? 'all' : 'Pendiente')"
-                                                                    pTooltip="{{ 'Pendientes' | translate }}">
-                                                                    <i class="pi pi-clock"></i>
-                                                                </button>
-                                                                <button type="button" class="btn btn-sm shortcut-btn"
-                                                                    [ngClass]="{'btn-success': quickFilters.estadoPago === 'Aprobado', 'btn-outline-secondary': quickFilters.estadoPago !== 'Aprobado'}"
-                                                                    (click)="setQuickFilter('estadoPago', quickFilters.estadoPago === 'Aprobado' ? 'all' : 'Aprobado')"
-                                                                    pTooltip="{{ 'Aprobados' | translate }}">
-                                                                    <i class="pi pi-check"></i>
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="btn btn-sm btn-outline-secondary shortcut-btn"
-                                                                    (click)="setDateRange('today')"
-                                                                    pTooltip="{{ 'Filtrar por hoy' | translate }}">
-                                                                    <i class="pi pi-calendar"></i>
-                                                                </button>
-                                                            </div>
+                                        <div class="minimalist-filters-container">
+                                            <!-- Barra de filtros principal - siempre visible -->
+                                            <div class="filter-bar-main">
+                                                <div class="filter-bar-row">
+                                                    <!-- Sección izquierda: Filtros inline -->
+                                                    <div class="filter-inline-section">
+                                                        <!-- Búsqueda rápida -->
+                                                        <div class="filter-inline-item search-box">
+                                                            <span class="p-input-icon-left">
+                                                                <i class="pi pi-search"></i>
+                                                                <input type="text" pInputText placeholder="{{ 'Buscar pedido...' | translate }}"
+                                                                    [(ngModel)]="searchQuery" (input)="onSearchQueryChange($event.target.value)"
+                                                                    class="p-inputtext-sm" />
+                                                            </span>
                                                         </div>
 
-                                                        <div class="vertical-separator mx-3"></div>
+                                                        <!-- Rango de fechas compacto -->
+                                                        <div class="filter-inline-item date-range-compact">
+                                                            <p-calendar [(ngModel)]="fechaInicialDate" dateFormat="dd/mm/yy"
+                                                                placeholder="{{ 'Desde' | translate }}"
+                                                                [showIcon]="true" inputStyleClass="p-inputtext-sm"
+                                                                appendTo="body" (onSelect)="onDateFromChange($event)"
+                                                                (onClear)="onDateFromChange(null)"
+                                                                [maxDate]="fechaFinalDate"
+                                                                [showButtonBar]="true"
+                                                                [readonlyInput]="false"
+                                                                [showClear]="true"
+                                                                [locale]="es"
+                                                                [firstDayOfWeek]="1"
+                                                                [monthNavigator]="true"
+                                                                [yearNavigator]="true"
+                                                                yearRange="2020:2030">
+                                                            </p-calendar>
+                                                            <span class="date-separator">→</span>
+                                                            <p-calendar [(ngModel)]="fechaFinalDate" dateFormat="dd/mm/yy"
+                                                                placeholder="{{ 'Hasta' | translate }}"
+                                                                [showIcon]="true" inputStyleClass="p-inputtext-sm"
+                                                                appendTo="body" (onSelect)="onDateToChange($event)"
+                                                                (onClear)="onDateToChange(null)"
+                                                                [minDate]="fechaInicialDate"
+                                                                [showButtonBar]="true"
+                                                                [readonlyInput]="false"
+                                                                [showClear]="true"
+                                                                [locale]="es"
+                                                                [firstDayOfWeek]="1"
+                                                                [monthNavigator]="true"
+                                                                [yearNavigator]="true"
+                                                                yearRange="2020:2030">
+                                                            </p-calendar>
+                                                            <!-- Presets de fecha -->
+                                                            <p-dropdown [options]="datePresets" [(ngModel)]="selectedDatePreset"
+                                                                optionLabel="label" optionValue="value" placeholder="Rápido"
+                                                                styleClass="p-dropdown-sm date-preset-dropdown"
+                                                                (onChange)="onDatePresetChange($event.value)" appendTo="body">
+                                                            </p-dropdown>
+                                                        </div>
 
-                                                        <div class="action-buttons d-flex align-items-center">
-                                                            <span class="actions-label me-2">{{ 'Acciones:' | translate
-                                                                }}</span>
-                                                            <div class="actions-group d-flex">
-                                                                <button pButton type="button" icon="pi pi-search"
-                                                                    class="p-button-sm p-button-primary action-btn"
-                                                                    pTooltip="{{ 'Filtrar' | translate }}"
-                                                                    (click)="refrescar(dt1)">
-                                                                </button>
-                                                                <button pButton type="button" icon="pi pi-refresh"
-                                                                    class="p-button-sm p-button-text action-btn"
-                                                                    pTooltip="{{ 'Limpiar filtros' | translate }}"
-                                                                    (click)="clearAllFilters()">
-                                                                </button>
-                                                                <button pButton type="button" icon="pi pi-file-excel"
-                                                                    class="p-button-sm p-button-success action-btn"
-                                                                    [disabled]="orders.length == 0"
-                                                                    pTooltip="{{ 'Exportar Excel' | translate }}"
-                                                                    (click)="exportarExcel()">
-                                                                </button>
-                                                            </div>
+                                                        <!-- Estados con dropdowns -->
+                                                        <div class="filter-inline-item">
+                                                            <p-dropdown [options]="estadosPagoOptions" [(ngModel)]="quickFilters.estadoPago"
+                                                                optionLabel="label" optionValue="value"
+                                                                placeholder="{{ 'Estado Pago' | translate }}"
+                                                                styleClass="p-dropdown-sm" appendTo="body"
+                                                                (onChange)="onEstadoPagoChange()">
+                                                                <ng-template let-option pTemplate="item">
+                                                                    <div class="dropdown-item-with-badge">
+                                                                        <span [class]="'status-dot ' + getStatusClass(option.value, 'pago')"></span>
+                                                                        <span>{{ option.label }}</span>
+                                                                    </div>
+                                                                </ng-template>
+                                                            </p-dropdown>
+                                                        </div>
+
+                                                        <div class="filter-inline-item">
+                                                            <p-dropdown [options]="estadosProcesoOptions" [(ngModel)]="quickFilters.estadoProceso"
+                                                                optionLabel="label" optionValue="value"
+                                                                placeholder="{{ 'Estado Proceso' | translate }}"
+                                                                styleClass="p-dropdown-sm" appendTo="body"
+                                                                (onChange)="onEstadoProcesoChange()">
+                                                                <ng-template let-option pTemplate="item">
+                                                                    <div class="dropdown-item-with-badge">
+                                                                        <span [class]="'status-dot ' + getStatusClass(option.value, 'proceso')"></span>
+                                                                        <span>{{ option.label }}</span>
+                                                                    </div>
+                                                                </ng-template>
+                                                            </p-dropdown>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Sección derecha: Acciones y opciones -->
+                                                    <div class="filter-actions-section">
+                                                        <!-- Indicador de filtros activos -->
+                                                        <div class="active-filters-badge" *ngIf="hasActiveFilters()">
+                                                            <span class="badge rounded-pill bg-info text-white">
+                                                                <i class="pi pi-filter-fill me-1"></i>
+                                                                {{ getActiveFiltersCount() }}
+                                                            </span>
+                                                            <button type="button" class="btn-clear-filters"
+                                                                (click)="clearAllFilters()"
+                                                                pTooltip="{{ 'Limpiar todos los filtros' | translate }}">
+                                                                <i class="pi pi-times"></i>
+                                                            </button>
+                                                        </div>
+
+                                                        <!-- Botón de configuración avanzada -->
+                                                        <button pButton type="button" icon="pi pi-cog"
+                                                            class="p-button-sm p-button-text p-button-rounded"
+                                                            (click)="toggleAdvancedFilters()"
+                                                            pTooltip="{{ 'Configuración avanzada' | translate }}">
+                                                        </button>
+
+                                                        <!-- Acciones principales -->
+                                                        <div class="main-actions">
+                                                            <button pButton type="button" icon="pi pi-search"
+                                                                label="{{ 'Filtrar' | translate }}"
+                                                                class="p-button-sm p-button-primary"
+                                                                (click)="refrescar(dt1)">
+                                                            </button>
+                                                            <button pButton type="button" icon="pi pi-file-excel"
+                                                                class="p-button-sm p-button-success"
+                                                                [disabled]="orders.length == 0"
+                                                                pTooltip="{{ 'Exportar Excel' | translate }}"
+                                                                (click)="exportarExcel()">
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <!-- Contenido expandible de filtros -->
-                                            <div class="filters-expanded-content mt-3"
-                                                [ngClass]="{'d-none': !showFilters}">
-
-                                                <!-- Indicadores de filtros activos en la parte superior -->
-                                                <div class="active-filters-summary mb-3" *ngIf="hasActiveFilters()">
-                                                    <div class="d-flex align-items-center flex-wrap gap-2">
-                                                        <span class="filter-indicator-label">
-                                                            <i class="pi pi-filter me-1"></i>
-                                                            {{ 'Filtros activos:' | translate }}
-                                                        </span>
-                                                        <div class="filter-tags d-flex flex-wrap gap-1">
+                                            <!-- Panel de configuración avanzada (colapsible) -->
+                                            <div class="advanced-filters-panel" *ngIf="showAdvancedFilters"
+                                                [@slideInOut]>
+                                                <div class="advanced-panel-content">
+                                                    <!-- Tags de filtros activos -->
+                                                    <div class="active-filters-tags" *ngIf="hasActiveFilters()">
+                                                        <div class="tags-container">
                                                             <span class="filter-tag" *ngIf="fechaInicial">
-                                                                {{ 'Desde: ' + (fechaInicial | date:'dd/MM/yyyy') }}
-                                                                <i class="pi pi-times ms-1"
-                                                                    (click)="clearDateFilter('inicial')"></i>
+                                                                <i class="pi pi-calendar me-1"></i>
+                                                                {{ 'Desde: ' + formatDateForDisplay(fechaInicial) }}
+                                                                <button class="tag-remove" (click)="clearDateFilter('inicial')">
+                                                                    <i class="pi pi-times"></i>
+                                                                </button>
                                                             </span>
                                                             <span class="filter-tag" *ngIf="fechaFinal">
-                                                                {{ 'Hasta: ' + (fechaFinal | date:'dd/MM/yyyy') }}
-                                                                <i class="pi pi-times ms-1"
-                                                                    (click)="clearDateFilter('final')"></i>
+                                                                <i class="pi pi-calendar me-1"></i>
+                                                                {{ 'Hasta: ' + formatDateForDisplay(fechaFinal) }}
+                                                                <button class="tag-remove" (click)="clearDateFilter('final')">
+                                                                    <i class="pi pi-times"></i>
+                                                                </button>
                                                             </span>
                                                             <span class="filter-tag" *ngIf="searchQuery">
-                                                                {{ 'Pedido: ' + searchQuery }}
-                                                                <i class="pi pi-times ms-1"
-                                                                    (click)="clearSearchFilter()"></i>
+                                                                <i class="pi pi-search me-1"></i>
+                                                                {{ searchQuery }}
+                                                                <button class="tag-remove" (click)="clearSearchFilter()">
+                                                                    <i class="pi pi-times"></i>
+                                                                </button>
                                                             </span>
-                                                            <span class="filter-tag status-filter-tag"
-                                                                *ngIf="quickFilters.estadoPago !== 'all'">
-                                                                {{ 'Estado Pago: ' + quickFilters.estadoPago }}
-                                                                <i class="pi pi-times ms-1"
-                                                                    (click)="clearQuickFilter('estadoPago')"></i>
+                                                            <span class="filter-tag" *ngIf="quickFilters.estadoPago !== 'all'">
+                                                                <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoPago, 'pago')"></span>
+                                                                {{ quickFilters.estadoPago }}
+                                                                <button class="tag-remove" (click)="clearQuickFilter('estadoPago')">
+                                                                    <i class="pi pi-times"></i>
+                                                                </button>
                                                             </span>
-                                                            <span class="filter-tag status-filter-tag"
-                                                                *ngIf="quickFilters.estadoProceso !== 'all'">
-                                                                {{ 'Estado Proceso: ' + quickFilters.estadoProceso }}
-                                                                <i class="pi pi-times ms-1"
-                                                                    (click)="clearQuickFilter('estadoProceso')"></i>
+                                                            <span class="filter-tag" *ngIf="quickFilters.estadoProceso !== 'all'">
+                                                                <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoProceso, 'proceso')"></span>
+                                                                {{ quickFilters.estadoProceso }}
+                                                                <button class="tag-remove" (click)="clearQuickFilter('estadoProceso')">
+                                                                    <i class="pi pi-times"></i>
+                                                                </button>
                                                             </span>
-                                                            <button type="button"
-                                                                class="btn btn-outline-secondary btn-sm ms-2"
-                                                                (click)="clearAllFilters()">
-                                                                <i class="pi pi-times me-1"></i>
-                                                                {{ 'Limpiar todo' | translate }}
-                                                            </button>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                <!-- Configuración de columnas colapsible -->
-                                                <div class="column-config-section mb-4">
-                                                    <div class="config-header" style="cursor: pointer;"
-                                                        (click)="toggleColumnConfig()">
-                                                        <i class="pi"
-                                                            [ngClass]="showColumnConfig ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
-                                                        <span class="ms-2 fw-medium">{{ 'Configurar Columnas' |
-                                                            translate }}</span>
-                                                    </div>
-                                                    <div class="config-content mt-2"
-                                                        [ngClass]="{'d-none': !showColumnConfig}">
-                                                        <div class="d-flex align-items-center flex-wrap">
+                                                    <!-- Configuración de columnas -->
+                                                    <div class="config-section">
+                                                        <div class="config-section-header">
+                                                            <i class="pi pi-table me-2"></i>
+                                                            <span>{{ 'Columnas visibles' | translate }}</span>
+                                                        </div>
+                                                        <div class="config-section-content">
                                                             <p-multiSelect [options]="displayedColumns"
                                                                 [(ngModel)]="selectedColumns" optionLabel="header"
                                                                 defaultLabel="{{ 'Seleccionar columnas' | translate }}"
-                                                                selectedItemsLabel="{0} columnas seleccionadas"
-                                                                styleClass="me-2 column-selector"
-                                                                [style]="{'min-width': '250px'}"
-                                                                (onChange)="onColumnSelectionChange()">
+                                                                selectedItemsLabel="{0} columnas"
+                                                                styleClass="column-selector-compact"
+                                                                [style]="{'width': '100%'}"
+                                                                (onChange)="onColumnSelectionChange()"
+                                                                appendTo="body">
                                                             </p-multiSelect>
                                                             <button pButton type="button" icon="pi pi-undo"
                                                                 label="{{ 'Restaurar' | translate }}"
-                                                                class="p-button-outlined p-button-sm"
-                                                                pTooltip="{{ 'Restaurar columnas por defecto' | translate }}"
+                                                                class="p-button-text p-button-sm mt-2"
                                                                 (click)="resetColumnConfig()">
                                                             </button>
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                <!-- Filtros principales -->
-                                                <div class="main-filters-grid">
-                                                    <!-- Grupo de fechas -->
-                                                    <div class="filter-group date-filters">
-                                                        <div class="filter-group-header">
-                                                            <i class="pi pi-calendar me-2 text-primary"></i>
-                                                            <span class="fw-medium">{{ 'Rango de Fechas' | translate
-                                                                }}</span>
-                                                        </div>
-                                                        <div class="filter-group-content">
-                                                            <div class="date-range-container">
-                                                                <div class="date-input-wrapper">
-                                                                    <label class="filter-label">{{ 'Desde' | translate
-                                                                        }}</label>
-                                                                    <input type="date"
-                                                                        class="form-control modern-date-input"
-                                                                        [(ngModel)]="fechaInicial"
-                                                                        (change)="firstEvent($event.target.value)" />
-                                                                </div>
-                                                                <div class="date-separator">
-                                                                    <i class="pi pi-arrow-right"></i>
-                                                                </div>
-                                                                <div class="date-input-wrapper">
-                                                                    <label class="filter-label">{{ 'Hasta' | translate
-                                                                        }}</label>
-                                                                    <input type="date"
-                                                                        class="form-control modern-date-input"
-                                                                        [(ngModel)]="fechaFinal"
-                                                                        (change)="secondEvent($event.target.value)" />
-                                                                </div>
-                                                            </div>
-                                                            <!-- Filtros rápidos de fecha -->
-                                                            <div class="quick-date-filters mt-2">
-                                                                <button type="button"
-                                                                    class="btn btn-outline-primary btn-sm me-2"
-                                                                    (click)="filtrarParaHoy()">
-                                                                    <i class="pi pi-sun me-1"></i>
-                                                                    {{ 'Hoy' | translate }}
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="btn btn-outline-primary btn-sm me-2"
-                                                                    (click)="filtrarParaManana()">
-                                                                    <i class="pi pi-forward me-1"></i>
-                                                                    {{ 'Mañana' | translate }}
-                                                                </button>
-                                                            </div>
-                                                            <!-- Rangos predefinidos -->
-                                                            <div class="predefined-ranges mt-2">
-                                                                <small class="text-muted d-block mb-2">{{ 'Rangos
-                                                                    predefinidos:' | translate }}</small>
-                                                                <div class="d-flex gap-1 flex-wrap">
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary btn-xs"
-                                                                        (click)="setDateRange('today')">
-                                                                        {{ 'Hoy' | translate }}
-                                                                    </button>
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary btn-xs"
-                                                                        (click)="setDateRange('week')">
-                                                                        {{ 'Esta semana' | translate }}
-                                                                    </button>
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary btn-xs"
-                                                                        (click)="setDateRange('month')">
-                                                                        {{ 'Este mes' | translate }}
-                                                                    </button>
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary btn-xs"
-                                                                        (click)="setDateRange('lastWeek')">
-                                                                        {{ 'Semana pasada' | translate }}
-                                                                    </button>
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary btn-xs"
-                                                                        (click)="setDateRange('lastMonth')">
-                                                                        {{ 'Mes pasado' | translate }}
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Filtros rápidos por estado -->
-                                                    <div class="filter-group status-filters">
-                                                        <div class="filter-group-header">
-                                                            <i class="pi pi-flag me-2 text-primary"></i>
-                                                            <span class="fw-medium">{{ 'Filtros Rápidos' | translate
-                                                                }}</span>
-                                                        </div>
-                                                        <div class="filter-group-content">
-                                                            <div class="status-filter-section">
-                                                                <label class="filter-label">{{ 'Estado de Pago' |
-                                                                    translate }}</label>
-                                                                <div class="status-chips mb-3">
-                                                                    <button type="button" class="status-chip"
-                                                                        [ngClass]="{'active': quickFilters.estadoPago === 'all'}"
-                                                                        (click)="setQuickFilter('estadoPago', 'all')">
-                                                                        <i class="pi pi-list me-1"></i>
-                                                                        {{ 'Todos' | translate }}
-                                                                    </button>
-
-                                                                    <!-- Filtros para modo producción -->
-                                                                    <ng-container *ngIf="isFromProduction">
-                                                                        <button type="button"
-                                                                            class="status-chip status-success"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Aprobado'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Aprobado')">
-                                                                            <i class="pi pi-check me-1"></i>
-                                                                            {{ 'Aprobados' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-warning"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Pendiente'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Pendiente')">
-                                                                            <i class="pi pi-clock me-1"></i>
-                                                                            {{ 'Pendientes' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'PreAprobado'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'PreAprobado')">
-                                                                            <i class="pi pi-eye me-1"></i>
-                                                                            {{ 'Pre-aprobados' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-warning"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Pospendiente'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Pospendiente')">
-                                                                            <i class="pi pi-clock me-1"></i>
-                                                                            {{ 'Pospendientes' | translate }}
-                                                                        </button>
-                                                                    </ng-container>
-
-                                                                    <!-- Filtros para modo normal (no producción) - TODOS los estados -->
-                                                                    <ng-container *ngIf="!isFromProduction">
-                                                                        <button type="button"
-                                                                            class="status-chip status-success"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Aprobado'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Aprobado')">
-                                                                            <i class="pi pi-check me-1"></i>
-                                                                            {{ 'Aprobados' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-warning"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Pendiente'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Pendiente')">
-                                                                            <i class="pi pi-clock me-1"></i>
-                                                                            {{ 'Pendientes' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-warning"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Pospendiente'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Pospendiente')">
-                                                                            <i class="pi pi-clock me-1"></i>
-                                                                            {{ 'Pospendientes' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'PreAprobado'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'PreAprobado')">
-                                                                            <i class="pi pi-eye me-1"></i>
-                                                                            {{ 'Pre-aprobados' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-danger"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Rechazado'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Rechazado')">
-                                                                            <i class="pi pi-times-circle me-1"></i>
-                                                                            {{ 'Rechazados' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-danger"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Precancelado'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Precancelado')">
-                                                                            <i class="pi pi-times-circle me-1"></i>
-                                                                            {{ 'Precancelados' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-danger"
-                                                                            [ngClass]="{'active': quickFilters.estadoPago === 'Cancelado'}"
-                                                                            (click)="setQuickFilter('estadoPago', 'Cancelado')">
-                                                                            <i class="pi pi-ban me-1"></i>
-                                                                            {{ 'Cancelados' | translate }}
-                                                                        </button>
-                                                                    </ng-container>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="status-filter-section">
-                                                                <label class="filter-label">{{ 'Estado de Proceso' |
-                                                                    translate }}</label>
-                                                                <div class="status-chips">
-                                                                    <button type="button" class="status-chip"
-                                                                        [ngClass]="{'active': quickFilters.estadoProceso === 'all'}"
-                                                                        (click)="setQuickFilter('estadoProceso', 'all')">
-                                                                        <i class="pi pi-list me-1"></i>
-                                                                        {{ 'Todos' | translate }}
-                                                                    </button>
-
-                                                                    <!-- Filtros para modo producción -->
-                                                                    <ng-container *ngIf="isFromProduction">
-                                                                        <button type="button"
-                                                                            class="status-chip status-secondary"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'SinProducir'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'SinProducir')">
-                                                                            <i class="pi pi-circle me-1"></i>
-                                                                            {{ 'Sin Producir' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'EnProduccion'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'EnProduccion')">
-                                                                            <i class="pi pi-cog me-1"></i>
-                                                                            {{ 'En Producción' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ProducidoParcialmente'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'ProducidoParcialmente')">
-                                                                            <i class="pi pi-cog me-1"></i>
-                                                                            {{ 'Producido Parcialmente' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ProducidoTotalmente'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'ProducidoTotalmente')">
-                                                                            <i class="pi pi-check-circle me-1"></i>
-                                                                            {{ 'Producido Totalmente' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ParaDespachar'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'ParaDespachar')">
-                                                                            <i class="pi pi-cog me-1"></i>
-                                                                            {{ 'Para Despachar' | translate }}
-                                                                        </button>
-                                                                    </ng-container>
-
-                                                                    <!-- Filtros para modo normal (no producción) - TODOS los estados -->
-                                                                    <ng-container *ngIf="!isFromProduction">
-                                                                        <button type="button"
-                                                                            class="status-chip status-secondary"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'SinProducir'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'SinProducir')">
-                                                                            <i class="pi pi-circle me-1"></i>
-                                                                            {{ 'Sin Producir' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'EnProduccion'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'EnProduccion')">
-                                                                            <i class="pi pi-cog me-1"></i>
-                                                                            {{ 'En Producción' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Producido'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'Producido')">
-                                                                            <i class="pi pi-cog me-1"></i>
-                                                                            {{ 'Producido' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ProducidoParcialmente'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'ProducidoParcialmente')">
-                                                                            <i class="pi pi-cog me-1"></i>
-                                                                            {{ 'Producido Parcialmente' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-info"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ProducidoTotalmente'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'ProducidoTotalmente')">
-                                                                            <i class="pi pi-check-circle me-1"></i>
-                                                                            {{ 'Producido Totalmente' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-primary"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Empacado'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'Empacado')">
-                                                                            <i class="pi pi-box me-1"></i>
-                                                                            {{ 'Empacado' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-warning"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'ParaDespachar'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'ParaDespachar')">
-                                                                            <i class="pi pi-truck me-1"></i>
-                                                                            {{ 'Para Despachar' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-warning"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Despachado'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'Despachado')">
-                                                                            <i class="pi pi-truck me-1"></i>
-                                                                            {{ 'Despachado' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-success"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Entregado'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'Entregado')">
-                                                                            <i class="pi pi-check-circle me-1"></i>
-                                                                            {{ 'Entregado' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-danger"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Rechazado'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'Rechazado')">
-                                                                            <i class="pi pi-times-circle me-1"></i>
-                                                                            {{ 'Rechazado' | translate }}
-                                                                        </button>
-                                                                        <button type="button"
-                                                                            class="status-chip status-dark"
-                                                                            [ngClass]="{'active': quickFilters.estadoProceso === 'Cerrado'}"
-                                                                            (click)="setQuickFilter('estadoProceso', 'Cerrado')">
-                                                                            <i class="pi pi-lock me-1"></i>
-                                                                            {{ 'Cerrado' | translate }}
-                                                                        </button>
-                                                                    </ng-container>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-
-
-                                                    <!-- Acciones -->
-                                                    <div class="filter-group action-filters">
-                                                        <div class="filter-group-header">
-                                                            <i class="pi pi-cog me-2 text-primary"></i>
-                                                            <span class="fw-medium">{{ 'Acciones' | translate }}</span>
-                                                        </div>
-                                                        <div class="filter-group-content">
-                                                            <div class="action-buttons">
-                                                                <button pButton type="button" icon="pi pi-search"
-                                                                    label="{{ 'Filtrar' | translate }}"
-                                                                    class="p-button-primary action-btn"
-                                                                    (click)="refrescar(dt1)">
-                                                                </button>
-                                                                <button pButton type="button" icon="pi pi-file-excel"
-                                                                    label="{{ 'Exportar' | translate }}"
-                                                                    class="p-button-success action-btn"
-                                                                    [disabled]="orders.length == 0"
-                                                                    (click)="exportarExcel()">
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                            </div> <!-- Cierre de filters-expanded-content -->
-                                        </div> <!-- Cierre de modern-filters-container -->
+                                            </div>
+                                        </div> <!-- Cierre de minimalist-filters-container -->
 
                                         <!-- BÚSQUEDA LOCAL ADICIONAL -->
                                         <div class="local-search-container mt-3 mb-2" *ngIf="shouldShowLocalSearch()">
@@ -916,6 +616,50 @@
                                                     {{'Última impresión' | translate}}
                                                 </div>
                                             </th>
+
+                                            <!-- Columna Despachador -->
+                                            <th *ngIf="isColumnVisible('despachador') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                <div class="flex align-items-center">
+                                                    {{'Despachador' | translate}}
+                                                    <p-columnFilter type="text" field="despachador.name"
+                                                        matchMode="contains" placeholder="{{'Despachador' | translate}}"
+                                                        [showMenu]="true" display="menu">
+                                                    </p-columnFilter>
+                                                </div>
+                                            </th>
+
+                                            <!-- Columna Transportador -->
+                                            <th *ngIf="isColumnVisible('transportador') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                <div class="flex align-items-center">
+                                                    {{'Transportador' | translate}}
+                                                    <p-columnFilter type="text" field="transportador"
+                                                        matchMode="contains" placeholder="{{'Transportador' | translate}}"
+                                                        [showMenu]="true" display="menu">
+                                                    </p-columnFilter>
+                                                </div>
+                                            </th>
+
+                                            <!-- Columna Fecha y Horario de Despachado -->
+                                            <th *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                <div class="flex align-items-center">
+                                                    {{'Fecha y Horario de Despachado' | translate}}
+                                                    <p-columnFilter [matchMode]="'customDate'" field="fechaYHorarioDespachado"
+                                                        type="date" display="menu" [showMatchModes]="false"
+                                                        [showOperator]="false" [showAddButton]="false">
+                                                        <ng-template pTemplate="filter" let-value
+                                                            let-filter="filterCallback">
+                                                             <p-calendar (onSelect)="onDateFilterSelect($event, filter)"
+                                                                 dateFormat="yy-mm-dd"
+                                                                 [showIcon]="true"
+                                                                 [showButtonBar]="true">
+                                                            </p-calendar>
+                                                        </ng-template>
+                                                    </p-columnFilter>
+                                                </div>
+                                            </th>
                                         </tr>
                                     </ng-template>
 
@@ -1122,6 +866,24 @@
                                             <td *ngIf="isColumnVisible('ultimaImpresion')" class="text-nowrap">
                                                 {{ pedido.ultimaImpresion ? (pedido.ultimaImpresion | date: 'dd/MM/yyyy
                                                 HH:mm') : '-' }}
+                                            </td>
+
+                                            <!-- Columna Despachador -->
+                                            <td *ngIf="isColumnVisible('despachador') && !isFromProduction"
+                                                class="text-nowrap">
+                                                {{ pedido.despachador?.name }}
+                                            </td>
+
+                                            <!-- Columna Transportador -->
+                                            <td *ngIf="isColumnVisible('transportador') && !isFromProduction"
+                                                class="text-nowrap">
+                                                {{ pedido.transportador }}
+                                            </td>
+
+                                            <!-- Columna Fecha y Horario de Despachado -->
+                                            <td *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction"
+                                                class="text-nowrap">
+                                                {{ pedido.fechaYHorarioDespachado ? (pedido.fechaYHorarioDespachado | date: 'dd-MM-yyyy HH:mm') : '-' }}
                                             </td>
                                         </tr>
                                     </ng-template>
@@ -1490,6 +1252,21 @@
 
                                 <!-- Columna Fecha Última Impresión -->
                                 <td *ngIf="isColumnVisible('ultimaImpresion')" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Despachador -->
+                                <td *ngIf="isColumnVisible('despachador') && !isFromProduction" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Transportador -->
+                                <td *ngIf="isColumnVisible('transportador') && !isFromProduction" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
+                                <!-- Columna Fecha y Horario de Despachado -->
+                                <td *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction" class="summary-cell">
                                     <!-- Vacía -->
                                 </td>
                             </tr>

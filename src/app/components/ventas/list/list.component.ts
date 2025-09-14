@@ -12,6 +12,7 @@ import {
   OnDestroy,
   ChangeDetectorRef,
 } from "@angular/core";
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import {
   Carrito,
@@ -53,6 +54,17 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
   selector: "app-list-orders",
   templateUrl: "./list.component.html",
   styleUrls: ["./list.component.scss"],
+  animations: [
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ transform: 'translateY(-100%)', opacity: 0 }),
+        animate('200ms ease-in', style({ transform: 'translateY(0)', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-out', style({ transform: 'translateY(-100%)', opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
@@ -556,6 +568,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   configuracionCarritoSeleccionado: Carrito;
   fechaInicial: string;
   fechaFinal: string;
+  // Date objects for p-calendar components
+  fechaInicialDate: Date;
+  fechaFinalDate: Date;
   estadosProcesos: EstadoProcesoFiltros[];
   validaciones: { value: boolean; nombre: string }[];
   numberProduct: string;
@@ -739,6 +754,27 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       type: "date",
       filterable: false,
     },
+    {
+      field: "despachador",
+      header: "Despachador",
+      visible: false,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "transportador",
+      header: "Transportador",
+      visible: false,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "fechaYHorarioDespachado",
+      header: "Fecha y Horario de Despachado",
+      visible: false,
+      type: "date",
+      filterable: true,
+    },
   ];
 
   selectedColumns: ColumnDefinition[] = [];
@@ -770,12 +806,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     { field: "formaEntrega", header: "Forma de Entrega", visible: true, type: "text", filterable: true },
     { field: "horarioEntrega", header: "Horario de Entrega", visible: true, type: "text", filterable: true },
     { field: "channel", header: "Canal", visible: true, type: "text", filterable: true },
-    { field: "vendedor", header: "Vendedor", visible: true, type: "text", filterable: true }
+    { field: "vendedor", header: "Vendedor", visible: true, type: "text", filterable: true },
+    { field: "despachador", header: "Despachador", visible: false, type: "text", filterable: true },
+    { field: "transportador", header: "Transportador", visible: false, type: "text", filterable: true },
+    { field: "fechaYHorarioDespachado", header: "Fecha y Horario de Despachado", visible: false, type: "date", filterable: true }
   ];
   selectedColumnsProduccion: ColumnDefinition[] = [];
 
   showColumnConfig: boolean = false;
   showFilters: boolean = false;
+  showAdvancedFilters: boolean = false;
   nroPedido: any;
 
   // Filtros rápidos
@@ -783,6 +823,57 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     estadoPago: "all",
     estadoProceso: "all",
   };
+
+  // Nuevas propiedades para el diseño minimalista
+  selectedDatePreset: string = '';
+  datePresets = [
+    { label: 'Hoy', value: 'today' },
+    { label: 'Esta semana', value: 'week' },
+    { label: 'Este mes', value: 'month' },
+    { label: 'Semana pasada', value: 'lastWeek' },
+    { label: 'Mes pasado', value: 'lastMonth' }
+  ];
+
+  // Spanish locale configuration for p-calendar
+  es: any = {
+    firstDayOfWeek: 1,
+    dayNames: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+    dayNamesShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
+    dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+    monthNames: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+    monthNamesShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+    today: 'Hoy',
+    clear: 'Limpiar',
+    dateFormat: 'dd/mm/yy',
+    weekHeader: 'Sm'
+  };
+
+  // Opciones para los dropdowns de estado
+  estadosPagoOptions = [
+    { label: 'Todos', value: 'all' },
+    { label: 'Aprobado', value: 'Aprobado' },
+    { label: 'Pendiente', value: 'Pendiente' },
+    { label: 'PreAprobado', value: 'PreAprobado' },
+    { label: 'Pospendiente', value: 'Pospendiente' },
+    { label: 'Rechazado', value: 'Rechazado' },
+    { label: 'Precancelado', value: 'Precancelado' },
+    { label: 'Cancelado', value: 'Cancelado' }
+  ];
+
+  estadosProcesoOptions = [
+    { label: 'Todos', value: 'all' },
+    { label: 'Sin Producir', value: 'SinProducir' },
+    { label: 'En Producción', value: 'EnProduccion' },
+    { label: 'Producido', value: 'Producido' },
+    { label: 'Producido Parcialmente', value: 'ProducidoParcialmente' },
+    { label: 'Producido Totalmente', value: 'ProducidoTotalmente' },
+    { label: 'Empacado', value: 'Empacado' },
+    { label: 'Para Despachar', value: 'ParaDespachar' },
+    { label: 'Despachado', value: 'Despachado' },
+    { label: 'Entregado', value: 'Entregado' },
+    { label: 'Rechazado', value: 'Rechazado' },
+    { label: 'Cerrado', value: 'Cerrado' }
+  ];
 
   constructor(
     private renderer: Renderer2,
@@ -819,8 +910,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         });
     }
 
-    this.fechaInicial = new Date().toISOString().split("T")[0];
-    this.fechaFinal = new Date().toISOString().split("T")[0];
+    // Initialize both string and Date properties
+    const today = new Date();
+    this.fechaInicial = today.toISOString().split("T")[0];
+    this.fechaFinal = today.toISOString().split("T")[0];
+    this.fechaInicialDate = new Date(today);
+    this.fechaFinalDate = new Date(today);
 
     this.UserLogged = JSON.parse(localStorage.getItem("user")!) as UserLogged;
 
@@ -1151,6 +1246,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.fechaInicial = this.fechaInicial || thirtyDaysAgo.toISOString().split('T')[0];
       this.fechaFinal = this.fechaFinal || today.toISOString().split('T')[0];
+      // Initialize Date objects
+      this.fechaInicialDate = this.stringToDate(this.fechaInicial);
+      this.fechaFinalDate = this.stringToDate(this.fechaFinal);
+    } else {
+      // If dates exist, sync the Date objects
+      this.fechaInicialDate = this.stringToDate(this.fechaInicial);
+      this.fechaFinalDate = this.stringToDate(this.fechaFinal);
     }
 
     this.estadosPago = Object.values(EstadoPago);
@@ -2898,7 +3000,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pedidoEntregaData = {
       ...order,
       // Datos adicionales que podrían venir del backend
-      quienRecibio: order.envio?.nombres || 'No especificado',
+      quienRecibio: order.envio?.nombres + ' ' + order.envio?.apellidos || 'No especificado',
+      parentesco: order.parentesco || 'No especificado',
       telefono: order.envio?.celular || order.cliente?.numero_celular_comprador,
       fechaRecepcion: order.fechaEntrega || new Date().toISOString(),
       observacionesEntrega: order.notasPedido?.notasEntregas?.[0]?.descripcion || '',
@@ -4404,8 +4507,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   clearDateFilter(type: "inicial" | "final"): void {
     if (type === "inicial") {
       this.fechaInicial = "";
+      this.fechaInicialDate = null;
     } else {
       this.fechaFinal = "";
+      this.fechaFinalDate = null;
     }
     this.refrescarDatos();
     this.saveFiltersState();
@@ -4425,13 +4530,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     switch (range) {
       case "today":
-        const todayDate = new Date().toISOString().split("T")[0];
-        this.fechaInicial = todayDate;
-        this.fechaFinal = todayDate;
+        const todayDate = new Date();
+        this.fechaInicial = todayDate.toISOString().split("T")[0];
+        this.fechaFinal = todayDate.toISOString().split("T")[0];
+        this.fechaInicialDate = new Date(todayDate);
+        this.fechaFinalDate = new Date(todayDate);
         break;
       case "week":
         this.fechaInicial = startOfWeek.toISOString().split("T")[0];
         this.fechaFinal = endOfWeek.toISOString().split("T")[0];
+        this.fechaInicialDate = new Date(startOfWeek);
+        this.fechaFinalDate = new Date(endOfWeek);
         break;
       case "month":
         const startOfMonth = new Date(
@@ -4446,6 +4555,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         );
         this.fechaInicial = startOfMonth.toISOString().split("T")[0];
         this.fechaFinal = endOfMonth.toISOString().split("T")[0];
+        this.fechaInicialDate = new Date(startOfMonth);
+        this.fechaFinalDate = new Date(endOfMonth);
         break;
       case "lastWeek":
         const lastWeekStart = new Date(
@@ -4456,6 +4567,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         );
         this.fechaInicial = lastWeekStart.toISOString().split("T")[0];
         this.fechaFinal = lastWeekEnd.toISOString().split("T")[0];
+        this.fechaInicialDate = new Date(lastWeekStart);
+        this.fechaFinalDate = new Date(lastWeekEnd);
         break;
       case "lastMonth":
         const lastMonthStart = new Date(
@@ -4470,6 +4583,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         );
         this.fechaInicial = lastMonthStart.toISOString().split("T")[0];
         this.fechaFinal = lastMonthEnd.toISOString().split("T")[0];
+        this.fechaInicialDate = new Date(lastMonthStart);
+        this.fechaFinalDate = new Date(lastMonthEnd);
         break;
     }
     this.refrescarDatos();
@@ -4487,6 +4602,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   clearAllFilters(): void {
     this.fechaInicial = "";
     this.fechaFinal = "";
+    this.fechaInicialDate = null;
+    this.fechaFinalDate = null;
     this.nroPedido = null;
     this.quickFilters = {
       estadoPago: "all",
@@ -4511,8 +4628,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showFilters = state.showFilters || false;
 
         // Restore filter values (NEW)
-        if (state.fechaInicial) this.fechaInicial = state.fechaInicial;
-        if (state.fechaFinal) this.fechaFinal = state.fechaFinal;
+        if (state.fechaInicial) {
+          this.fechaInicial = state.fechaInicial;
+          this.fechaInicialDate = this.stringToDate(state.fechaInicial);
+        }
+        if (state.fechaFinal) {
+          this.fechaFinal = state.fechaFinal;
+          this.fechaFinalDate = this.stringToDate(state.fechaFinal);
+        }
         if (state.nroPedido) this.nroPedido = state.nroPedido;
         if (state.quickFilters) {
           this.quickFilters = { ...this.quickFilters, ...state.quickFilters };
@@ -4596,6 +4719,181 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   onPrintProduct(event: { pedido: any, producto: any }) {
     console.log('Imprimir producto:', event.producto, 'del pedido:', event.pedido);
     // Aquí puedes llamar a la lógica de impresión específica por producto
+  }
+
+  // ==================== NUEVOS MÉTODOS PARA DISEÑO MINIMALISTA ====================
+
+  /**
+   * Alterna la visibilidad del panel de filtros avanzados
+   */
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  /**
+   * Maneja el cambio en el preset de fecha seleccionado
+   */
+  onDatePresetChange(value: string): void {
+    if (value) {
+      this.setDateRange(value);
+      this.selectedDatePreset = '';
+    }
+  }
+
+  /**
+   * Maneja el cambio en el estado de pago seleccionado
+   */
+  onEstadoPagoChange(): void {
+    this.refrescarDatos();
+    this.saveFiltersState();
+  }
+
+  /**
+   * Maneja el cambio en el estado de proceso seleccionado
+   */
+  onEstadoProcesoChange(): void {
+    this.refrescarDatos();
+    this.saveFiltersState();
+  }
+
+  /**
+   * Maneja el cambio en el campo de búsqueda con debounce
+   */
+  onSearchQueryChange(value: string): void {
+    this.searchQuery = value;
+    this.searchSubject.next(value);
+  }
+
+  /**
+   * Formatea una fecha para mostrar en los tags de filtros
+   */
+  formatDateForDisplay(dateString: string | Date): string {
+    if (!dateString) return '';
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return date.toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  }
+
+  /**
+   * Obtiene la clase CSS para un estado específico
+   */
+  getStatusClass(status: string, type: 'pago' | 'proceso'): string {
+    if (type === 'pago') {
+      switch (status) {
+        case 'Aprobado': return 'status-success';
+        case 'Pendiente':
+        case 'Pospendiente': return 'status-warning';
+        case 'PreAprobado': return 'status-info';
+        case 'Rechazado':
+        case 'Precancelado':
+        case 'Cancelado': return 'status-danger';
+        default: return 'status-secondary';
+      }
+    } else {
+      switch (status) {
+        case 'Entregado': return 'status-success';
+        case 'Despachado':
+        case 'ParaDespachar': return 'status-warning';
+        case 'EnProduccion':
+        case 'ProducidoParcialmente':
+        case 'ProducidoTotalmente': return 'status-info';
+        case 'Empacado': return 'status-primary';
+        case 'Rechazado': return 'status-danger';
+        case 'Cerrado': return 'status-dark';
+        default: return 'status-secondary';
+      }
+    }
+  }
+
+  /**
+   * Convert string date (YYYY-MM-DD) to Date object
+   */
+  private stringToDate(dateString: string): Date {
+    if (!dateString) return null;
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      // Create date at noon to avoid timezone issues
+      return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
+    }
+    return null;
+  }
+
+  /**
+   * Convert Date object to string (YYYY-MM-DD)
+   */
+  private dateToString(date: Date): string {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Sync Date objects with string values
+   */
+  private syncDatesToStrings(): void {
+    this.fechaInicial = this.dateToString(this.fechaInicialDate);
+    this.fechaFinal = this.dateToString(this.fechaFinalDate);
+  }
+
+  /**
+   * Maneja el evento de cambio de fecha inicial
+   */
+  onDateFromChange(date: Date): void {
+    // Handle clear event
+    if (!date) {
+      this.fechaInicialDate = null;
+      this.fechaInicial = '';
+      this.selectedDatePreset = '';
+      this.saveFiltersState();
+      return;
+    }
+
+    this.fechaInicialDate = date;
+    this.fechaInicial = this.dateToString(date);
+
+    // Ensure end date is not before start date
+    if (this.fechaFinalDate && this.fechaFinalDate < date) {
+      this.fechaFinalDate = new Date(date);
+      this.fechaFinal = this.dateToString(this.fechaFinalDate);
+    }
+
+    // Clear date preset when manually selecting dates
+    this.selectedDatePreset = '';
+
+    this.saveFiltersState();
+  }
+
+  /**
+   * Maneja el evento de cambio de fecha final
+   */
+  onDateToChange(date: Date): void {
+    // Handle clear event
+    if (!date) {
+      this.fechaFinalDate = null;
+      this.fechaFinal = '';
+      this.selectedDatePreset = '';
+      this.saveFiltersState();
+      return;
+    }
+
+    this.fechaFinalDate = date;
+    this.fechaFinal = this.dateToString(date);
+
+    // Ensure start date is not after end date
+    if (this.fechaInicialDate && this.fechaInicialDate > date) {
+      this.fechaInicialDate = new Date(date);
+      this.fechaInicial = this.dateToString(this.fechaInicialDate);
+    }
+
+    // Clear date preset when manually selecting dates
+    this.selectedDatePreset = '';
+
+    this.saveFiltersState();
   }
 
   onOptionsProduccion(event: { pedido: any, producto: any }) {

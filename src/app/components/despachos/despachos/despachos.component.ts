@@ -5706,6 +5706,7 @@ export class DespachosComponent implements OnInit {
    * Builds the current filter object based on component state
    * Extracted for reusability between optimized and legacy loading
    * Enhanced to include column filters from LazyLoadEvent
+   * Now includes sorting parameters for server-side sorting
    */
   private buildCurrentFilter(): any {
     const baseFilter = {
@@ -5732,6 +5733,20 @@ export class DespachosComponent implements OnInit {
       ],
       tipoFecha: "fechaEntrega",
     };
+
+    // Add sorting parameters from LazyLoadEvent
+    if (this.lastLazyLoadEvent) {
+      if (this.lastLazyLoadEvent.sortField) {
+        baseFilter['sortField'] = this.lastLazyLoadEvent.sortField;
+        baseFilter['sortOrder'] = this.lastLazyLoadEvent.sortOrder || 1; // 1 for asc, -1 for desc
+
+        console.log('🔄 Despachos - Sorting parameters added to filter:', {
+          sortField: baseFilter['sortField'],
+          sortOrder: baseFilter['sortOrder'],
+          sortDirection: baseFilter['sortOrder'] === 1 ? 'ASC' : 'DESC'
+        });
+      }
+    }
 
     // Add column filters if available (using stored columnFilters for reliability)
     if (this.columnFilters && Object.keys(this.columnFilters).length > 0) {

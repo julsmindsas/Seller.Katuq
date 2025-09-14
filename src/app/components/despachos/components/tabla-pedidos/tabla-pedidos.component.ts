@@ -389,7 +389,8 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   /**
    * Handles lazy loading events from PrimeNG table
    * Only emits events when useLazyMode is enabled
-   * Now includes column filters for server-side filtering
+   * Now includes column filters and sorting for server-side processing
+   * @since 2025.09.14 - Enhanced to properly log and emit sorting information
    */
   loadOrdersLazy(event: LazyLoadEvent): void {
     if (this.useLazyMode) {
@@ -398,15 +399,16 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
         console.log(`📏 TablaPedidos - Page size changed from ${this.rowsPerPage} to ${event.rows}`);
         this.rowsPerPage = event.rows;
       }
-      
-      // Enhanced logging to include filters
-      console.log('🔄 TablaPedidos - Lazy load event with filters:', {
+
+      // Enhanced logging to include filters and sorting
+      console.log('🔄 TablaPedidos - Lazy load event with filters and sorting:', {
         first: event.first,
         rows: event.rows,
         rowsPerPage: this.rowsPerPage,
         page: Math.floor(event.first / (event.rows || this.rowsPerPage)) + 1,
         sortField: event.sortField,
         sortOrder: event.sortOrder,
+        sortDirection: event.sortOrder === 1 ? 'ASC' : event.sortOrder === -1 ? 'DESC' : 'NONE',
         filters: event.filters ? Object.keys(event.filters).reduce((acc, key) => {
           acc[key] = {
             value: event.filters[key].value,
@@ -416,8 +418,13 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
         }, {} as any) : null,
         globalFilter: event.globalFilter
       });
-      
-      // Emit complete event with filters for server-side processing
+
+      // Special logging for sorting changes
+      if (event.sortField) {
+        console.log(`📊 TablaPedidos - Sorting by "${event.sortField}" in ${event.sortOrder === 1 ? 'ascending' : 'descending'} order`);
+      }
+
+      // Emit complete event with filters and sorting for server-side processing
       this.onLazyLoad.emit(event);
     }
   }

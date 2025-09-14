@@ -23,6 +23,7 @@ import { NotasComponent } from "./notas/notas/notas.component";
 import { CheckOutComponent } from "../ventas/checkout/checkout.component";
 import { ConfirmComponent } from "./confirm/confirm.component";
 import { CalendarModule } from "primeng/calendar";
+import { DropdownModule } from "primeng/dropdown";
 import { NgxHotkeysModule, NgxHotkeysService } from "@balticcode/ngx-hotkeys";
 import { NgxStarRatingModule } from "ngx-star-rating";
 import { ListOrdersComponent } from "./list/list.component";
@@ -79,6 +80,7 @@ import { ListProduccionComponent } from './list/list-produccion.component';
     FormsModule,
     ReactiveFormsModule,
     CalendarModule,
+    DropdownModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
     TableModule,

@@ -143,15 +143,30 @@ export class VentasService extends BaseService {
   /**
    * Optimized paginated endpoint - sub-millisecond response vs 84-second timeout
    * @since 2025.09.05 - Server-side pagination implementation
+   * @since 2025.09.14 - Added server-side sorting support
    * @param filter - Filter criteria (same as legacy method) - sent in request body
    * @param page - Page number (1-based) - sent as query parameter
    * @param pageSize - Number of items per page (default 50, max 100) - sent as query parameter
    * @returns Observable with paginated orders and metadata
    */
   getOrdersByFilterOptimized(filter: any, page: number = 1, pageSize: number = 50): Observable<PaginatedOrdersResponse> {
-    // Pagination parameters go in query string, filter data in request body
-    const endpoint = `/v1/orders/all/filter/optimized?page=${page}&pageSize=${pageSize}`;
-    
+    // Extract sorting parameters from filter object if present
+    let queryParams = `page=${page}&pageSize=${pageSize}`;
+
+    // Add sorting parameters to query string if they exist in the filter
+    if (filter.sortField) {
+      queryParams += `&sortField=${encodeURIComponent(filter.sortField)}`;
+      queryParams += `&sortOrder=${filter.sortOrder || 1}`; // Default to ascending (1) if not specified
+
+      console.log('📊 VentasService - Adding sorting parameters to API call:', {
+        sortField: filter.sortField,
+        sortOrder: filter.sortOrder,
+        direction: filter.sortOrder === -1 ? 'DESC' : 'ASC'
+      });
+    }
+
+    const endpoint = `/v1/orders/all/filter/optimized?${queryParams}`;
+
     return this.post<PaginatedOrdersResponse>(endpoint, filter);
   }
   getOrdersByNroPedido(nroPedido: any) {

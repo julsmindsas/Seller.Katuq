@@ -48,9 +48,18 @@
                             <tr class="p-table-tr-th" style="font-size: 0.85em; background-color: #f8f9fa;">
                                 <!-- Recorremos todas las columnas -->
                                 <ng-container *ngFor="let col of selectedColumns">
-                                    <th *ngIf="isColumnVisible(col.field)">
+                                    <!-- Columnas especiales sin ordenamiento -->
+                                    <th *ngIf="isColumnVisible(col.field) && (col.field === 'detalles' || col.field === 'opciones')">
                                         <div>
                                             {{ col.header | translate }}
+                                        </div>
+                                    </th>
+                                    <!-- Columnas ordenables -->
+                                    <th *ngIf="isColumnVisible(col.field) && col.field !== 'detalles' && col.field !== 'opciones'"
+                                        [pSortableColumn]="col.field">
+                                        <div class="d-flex align-items-center">
+                                            <span>{{ col.header | translate }}</span>
+                                            <p-sortIcon [field]="col.field"></p-sortIcon>
                                             <!-- Si es una columna con filtro de texto con debouncing -->
                                             <p-columnFilter *ngIf="['nroPedido', 'nroFactura', 'shippingOrder', 'cliente', 'ciudad', 'zonaCobro', 'formaEntrega', 'horarioEntrega', 'fechaHoraEmpacado', 'fechaYHorarioDespachado', 'empacador', 'transportador'].includes(col.field)" 
                                                 type="text" 
