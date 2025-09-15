@@ -11,8 +11,9 @@ $filter-bar-bg: #ffffff;
 $filter-border-color: #e0e0e0;
 
 // ==================== ESTILOS MINIMALISTAS PARA FILTROS ====================
-
-// Contenedor principal de filtros minimalista
+// NOTA: Los estilos de filtros han sido movidos al componente compartido SharedFiltersComponent
+// Se mantienen comentados para referencia histórica
+/*
 .minimalist-filters-container {
   background: $filter-bar-bg;
   border: 1px solid $filter-border-color;
@@ -353,6 +354,8 @@ $filter-border-color: #e0e0e0;
     }
   }
 }
+*/
+// FIN DE ESTILOS COMENTADOS DE FILTROS
 
 // Estilos para items en dropdowns
 .dropdown-item-with-badge {

@@ -37,6 +37,7 @@ import { PedidosUtilService } from "../service/pedidos.util.service";
 import { UserLogged } from "../../../shared/models/User/UserLogged";
 import { UserLite } from "../../../shared/models/User/UserLite";
 import { FilterService } from "primeng/api";
+import { FilterService as SharedFilterService } from "../../../shared/services/filters/filter.service";
 import { ServiciosService } from "../../../shared/services/servicios.service";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
@@ -569,8 +570,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   fechaInicial: string;
   fechaFinal: string;
   // Date objects for p-calendar components
-  fechaInicialDate: Date;
-  fechaFinalDate: Date;
+  fechaInicialDate: Date | null;
+  fechaFinalDate: Date | null;
   estadosProcesos: EstadoProcesoFiltros[];
   validaciones: { value: boolean; nombre: string }[];
   numberProduct: string;
@@ -881,6 +882,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private service: ServiciosService,
     private route: ActivatedRoute,
     private filterService: FilterService,
+    private sharedFilterService: SharedFilterService,
     private ventasService: VentasService,
     private paymentService: PaymentService,
     private modalService: NgbModal,
@@ -909,13 +911,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           console.log(this.orders);
         });
     }
-
-    // Initialize both string and Date properties
-    const today = new Date();
-    this.fechaInicial = today.toISOString().split("T")[0];
-    this.fechaFinal = today.toISOString().split("T")[0];
-    this.fechaInicialDate = new Date(today);
-    this.fechaFinalDate = new Date(today);
 
     this.UserLogged = JSON.parse(localStorage.getItem("user")!) as UserLogged;
 
@@ -1237,21 +1232,136 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.hasLoadedOrdersOnce;
   }
 
-  ngOnInit(): void {
-    // Initialize default date range if not set
-    if (!this.fechaInicial || !this.fechaFinal) {
-      const today = new Date();
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(today.getDate() - 30);
+  // ===== MÉTODOS PARA INTEGRACIÓN CON SHARED FILTERS =====
 
-      this.fechaInicial = this.fechaInicial || thirtyDaysAgo.toISOString().split('T')[0];
-      this.fechaFinal = this.fechaFinal || today.toISOString().split('T')[0];
-      // Initialize Date objects
+  /**
+   * Maneja el cambio de búsqueda desde el componente compartido
+   */
+  onSharedSearchQueryChange(query: string): void {
+    this.searchQuery = query;
+    this.sharedFilterService.updateFilterState({ searchQuery: query });
+    this.onSearchQueryChange(query);
+  }
+
+  /**
+   * Maneja el cambio de fecha inicial desde el componente compartido
+   */
+  onSharedDateFromChange(date: Date | null): void {
+    this.fechaInicialDate = date;
+    this.fechaInicial = date ? date.toISOString().split('T')[0] : '';
+    this.sharedFilterService.updateFilterState({ fechaInicial: date });
+    this.onDateFromChange(date);
+  }
+
+  /**
+   * Maneja el cambio de fecha final desde el componente compartido
+   */
+  onSharedDateToChange(date: Date | null): void {
+    this.fechaFinalDate = date;
+    this.fechaFinal = date ? date.toISOString().split('T')[0] : '';
+    this.sharedFilterService.updateFilterState({ fechaFinal: date });
+    this.onDateToChange(date);
+  }
+
+  /**
+   * Maneja el cambio de estado de pago desde el componente compartido
+   */
+  onSharedEstadoPagoChange(estado: string): void {
+    this.quickFilters.estadoPago = estado;
+    this.sharedFilterService.updateFilterState({ estadoPago: estado });
+    this.onEstadoPagoChange();
+  }
+
+  /**
+   * Maneja el cambio de estado de proceso desde el componente compartido
+   */
+  onSharedEstadoProcesoChange(estado: string): void {
+    this.quickFilters.estadoProceso = estado;
+    this.sharedFilterService.updateFilterState({ estadoProceso: estado });
+    this.onEstadoProcesoChange();
+  }
+
+  /**
+   * Maneja el cambio de preset de fecha desde el componente compartido
+   */
+  onSharedDatePresetChange(preset: string): void {
+    this.selectedDatePreset = preset;
+    this.onDatePresetChange(preset);
+  }
+
+  /**
+   * Maneja el cambio de selección de columnas desde el componente compartido
+   */
+  onSharedColumnSelectionChange(columns: any[]): void {
+    this.selectedColumns = columns;
+    this.onColumnSelectionChange();
+  }
+
+  /**
+   * Maneja la limpieza de todos los filtros desde el componente compartido
+   */
+  onSharedClearAllFilters(): void {
+    this.sharedFilterService.clearAllFilters();
+    this.clearAllFilters();
+  }
+
+  /**
+   * Maneja la limpieza de un filtro específico desde el componente compartido
+   */
+  onSharedClearSpecificFilter(event: {type: string, value?: string}): void {
+    switch(event.type) {
+      case 'search':
+        this.clearSearchFilter();
+        break;
+      case 'date':
+        this.clearDateFilter(event.value as 'inicial' | 'final');
+        break;
+      case 'estadoPago':
+        this.clearQuickFilter('estadoPago');
+        break;
+      case 'estadoProceso':
+        this.clearQuickFilter('estadoProceso');
+        break;
+    }
+  }
+
+  ngOnInit(): void {
+    // Initialize dates first before subscribing to service
+    const today = new Date();
+    this.fechaInicial = today.toISOString().split("T")[0];
+    this.fechaFinal = today.toISOString().split("T")[0];
+    this.fechaInicialDate = new Date(today);
+    this.fechaFinalDate = new Date(today);
+
+    // Update the shared filter service with initial dates
+    this.sharedFilterService.updateFilterState({
+      fechaInicial: this.fechaInicialDate,
+      fechaFinal: this.fechaFinalDate
+    });
+
+    // Suscribirse a los cambios del servicio de filtros compartido
+    this.sharedFilterService.filterState$.subscribe(state => {
+      this.searchQuery = state.searchQuery;
+      // Only update dates if they are provided by the service
+      if (state.fechaInicial !== undefined && state.fechaInicial !== null) {
+        this.fechaInicialDate = state.fechaInicial;
+        this.fechaInicial = state.fechaInicial.toISOString().split('T')[0];
+      }
+      if (state.fechaFinal !== undefined && state.fechaFinal !== null) {
+        this.fechaFinalDate = state.fechaFinal;
+        this.fechaFinal = state.fechaFinal.toISOString().split('T')[0];
+      }
+      this.quickFilters.estadoPago = state.estadoPago;
+      this.quickFilters.estadoProceso = state.estadoProceso;
+      this.selectedDatePreset = state.selectedDatePreset || '';
+    });
+
+    // Sync Date objects with string dates (dates should already be initialized)
+    // This ensures calendar components always have the correct Date objects
+    if (this.fechaInicial && !this.fechaInicialDate) {
       this.fechaInicialDate = this.stringToDate(this.fechaInicial);
-      this.fechaFinalDate = this.stringToDate(this.fechaFinal);
-    } else {
-      // If dates exist, sync the Date objects
-      this.fechaInicialDate = this.stringToDate(this.fechaInicial);
+    }
+    if (this.fechaFinal && !this.fechaFinalDate) {
       this.fechaFinalDate = this.stringToDate(this.fechaFinal);
     }
 
@@ -1566,9 +1676,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.fechaFinal = this.fechaFinal || today;
     }
 
+    // Create proper date range for filtering
+    // Using local timezone to avoid issues with UTC conversion
+    const startDate = new Date(this.fechaInicial + "T00:00:00");
+    const endDate = new Date(this.fechaFinal + "T23:59:59.999");
+
     const filter: any = {
-      fechaInicial: this.fechaInicial + "T00:00:00.0000Z",
-      fechaFinal: this.fechaFinal + "T23:59:59.9999Z",
+      fechaInicial: startDate.toISOString(),
+      fechaFinal: endDate.toISOString(),
       company: JSON.parse(localStorage.getItem("currentCompany")!)
         .nomComercial,
       tipoFecha: "fechaEntrega",
@@ -3018,7 +3133,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pedidoEntregaData = {
       ...order,
       // Datos adicionales que podrían venir del backend
-      quienRecibio: order.envio?.nombres + ' ' + order.envio?.apellidos || 'No especificado',
+      quienRecibio: order.quienRecibio || 'No especificado',
       parentesco: order.parentesco || 'No especificado',
       telefono: order.envio?.celular || order.cliente?.numero_celular_comprador,
       fechaRecepcion: order.fechaEntrega || new Date().toISOString(),
@@ -4017,10 +4132,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   filtrarParaHoy(): void {
-    // Implementar lógica para ajustar fechaInicial y fechaFinal al día actual y luego filtrar
+    // Ajustar fechaInicial y fechaFinal al día actual
     const fechaActual = new Date();
     this.fechaInicial = fechaActual.toISOString().split("T")[0];
     this.fechaFinal = fechaActual.toISOString().split("T")[0];
+    // Update Date objects for calendar components
+    this.fechaInicialDate = new Date(fechaActual);
+    this.fechaFinalDate = new Date(fechaActual);
     this.refrescarDatos();
   }
   filter(event) {
@@ -4028,20 +4146,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   filtrarParaManana(): void {
-    // Similar a filtrarParaHoy pero ajustando las fechas para mañana
+    // Ajustar las fechas para mañana
     const fechaManana = new Date();
     fechaManana.setDate(fechaManana.getDate() + 1);
     this.fechaInicial = fechaManana.toISOString().split("T")[0];
     this.fechaFinal = fechaManana.toISOString().split("T")[0];
+    // Update Date objects for calendar components
+    this.fechaInicialDate = new Date(fechaManana);
+    this.fechaFinalDate = new Date(fechaManana);
     this.refrescarDatos();
   }
 
   filtrarParaPasadoManana(): void {
-    // Similar a filtrarParaHoy pero ajustando las fechas para pasado mañana
+    // Ajustar las fechas para pasado mañana
     const fechaPasadoManana = new Date();
     fechaPasadoManana.setDate(fechaPasadoManana.getDate() + 2);
     this.fechaInicial = fechaPasadoManana.toISOString().split("T")[0];
     this.fechaFinal = fechaPasadoManana.toISOString().split("T")[0];
+    // Update Date objects for calendar components
+    this.fechaInicialDate = new Date(fechaPasadoManana);
+    this.fechaFinalDate = new Date(fechaPasadoManana);
     this.refrescarDatos();
   }
 
@@ -4668,6 +4792,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showFilters = false;
       }
     }
+
+    // Ensure Date objects are always initialized even if no saved state
+    // or if saved state doesn't have dates
+    if (!this.fechaInicialDate && this.fechaInicial) {
+      this.fechaInicialDate = this.stringToDate(this.fechaInicial);
+    }
+    if (!this.fechaFinalDate && this.fechaFinal) {
+      this.fechaFinalDate = this.stringToDate(this.fechaFinal);
+    }
   }
 
   private saveFiltersState(): void {
@@ -4861,7 +4994,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Maneja el evento de cambio de fecha inicial
    */
-  onDateFromChange(date: Date): void {
+  onDateFromChange(date: Date | null): void {
     // Handle clear event
     if (!date) {
       this.fechaInicialDate = null;
@@ -4871,13 +5004,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Set the date for the calendar component
     this.fechaInicialDate = date;
-    this.fechaInicial = this.dateToString(date);
+
+    // Create a new date at start of day for the filter
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    this.fechaInicial = this.dateToString(startDate);
 
     // Ensure end date is not before start date
     if (this.fechaFinalDate && this.fechaFinalDate < date) {
       this.fechaFinalDate = new Date(date);
-      this.fechaFinal = this.dateToString(this.fechaFinalDate);
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+      this.fechaFinal = this.dateToString(endDate);
     }
 
     // Clear date preset when manually selecting dates
@@ -4889,7 +5029,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Maneja el evento de cambio de fecha final
    */
-  onDateToChange(date: Date): void {
+  onDateToChange(date: Date | null): void {
     // Handle clear event
     if (!date) {
       this.fechaFinalDate = null;
@@ -4899,13 +5039,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Set the date for the calendar component
     this.fechaFinalDate = date;
-    this.fechaFinal = this.dateToString(date);
+
+    // Create a new date at end of day for the filter
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+    this.fechaFinal = this.dateToString(endDate);
 
     // Ensure start date is not after end date
     if (this.fechaInicialDate && this.fechaInicialDate > date) {
       this.fechaInicialDate = new Date(date);
-      this.fechaInicial = this.dateToString(this.fechaInicialDate);
+      const startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+      this.fechaInicial = this.dateToString(startDate);
     }
 
     // Clear date preset when manually selecting dates

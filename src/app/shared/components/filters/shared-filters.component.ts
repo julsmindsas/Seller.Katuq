@@ -55,6 +55,8 @@ export class SharedFiltersComponent implements OnInit {
   @Input() searchPlaceholder: string = 'Buscar pedido...';
   @Input() filterButtonLabel: string = 'Filtrar';
   @Input() exportButtonTooltip: string = 'Exportar Excel';
+  @Input() initialDateFrom: Date | null = null;
+  @Input() initialDateTo: Date | null = null;
 
   @Output() searchQueryChange = new EventEmitter<string>();
   @Output() dateFromChange = new EventEmitter<Date | null>();
@@ -102,6 +104,13 @@ export class SharedFiltersComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeFilters();
+    // Initialize dates from Input properties if provided
+    if (this.initialDateFrom) {
+      this.fechaInicialDate = this.initialDateFrom;
+    }
+    if (this.initialDateTo) {
+      this.fechaFinalDate = this.initialDateTo;
+    }
   }
 
   private initializeFilters(): void {
