@@ -47,7 +47,7 @@ import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
-import { Subject } from 'rxjs';
+import { Subject, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 @Component({
@@ -1605,25 +1605,43 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    this.ventasService.getOrdersByFilter(filter).subscribe({
-      next: (data: Pedido[]) => {
-        console.log(data);
+    // Crear payload específico para POS (más simple)
+    const posFilter = {
+      fechaInicial: filter.fechaInicial,
+      fechaFinal: filter.fechaFinal,
+      company: filter.company
+    };
 
+    console.log('Payload para pedidos normales:', filter);
+    console.log('Payload para pedidos POS:', posFilter);
+
+    // Obtener pedidos normales y pedidos del POS en paralelo
+    forkJoin([
+      this.ventasService.getOrdersByFilter(filter),
+      this.ventasService.getOrdersPOSByFilter(posFilter)
+    ]).subscribe({
+      next: ([normalOrders, posOrders]) => {
+        console.log('Pedidos normales:', normalOrders);
+        console.log('Pedidos POS:', posOrders);
+
+        // Combinar ambos tipos de pedidos
+        const allOrders = [...(normalOrders || []), ...(posOrders || [])];
+        console.log('Total de pedidos combinados:', allOrders.length);
 
         // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
         this.orders = [];
         this.changeDetectorRef.detectChanges();
 
-        data.forEach((order: any) => {
+        allOrders.forEach((order: any) => {
           // Recalcular montos base con consistencia
           order.totalPedidoSinDescuento = Number(this.checkPriceScale(order) || 0);
           order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
-          // Subtotal estándar: solo productos sin IVA
-          order.subtotal = Number(order.totalPedidoSinDescuento || 0);
-          // Total = subtotal + IVA + envío − descuento
-          const envio = Number(order.totalEnvio || 0);
+          // Subtotal: productos sin IVA - descuento
           const descuento = Number(order.totalDescuento || 0);
-          order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto + envio - descuento;
+          order.subtotal = Number(order.totalPedidoSinDescuento || 0) - descuento;
+          // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
+          const envio = Number(order.totalEnvio || 0);
+          order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto + envio;
 
           // Calcular anticipo basado en PagosAsentados si existen
           if (order.PagosAsentados && order.PagosAsentados.length > 0) {
@@ -1830,7 +1848,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Forzar actualización de la tabla usando setTimeout para el siguiente ciclo de detección
         setTimeout(() => {
-          this.orders = [...data];
+          this.orders = [...allOrders];
           this.changeDetectorRef.detectChanges();
           this.changeDetectorRef.markForCheck();
           // ✅ FINALIZAR REFRESCO
