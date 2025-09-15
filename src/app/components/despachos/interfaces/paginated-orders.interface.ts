@@ -15,6 +15,15 @@ export interface PaginationInfo {
 export interface PaginatedOrdersResponse {
   orders: any[]; // Using any[] to maintain compatibility with existing Pedido interface
   pagination: PaginationInfo;
+  metrics?: {
+    totalPedidos: number;
+    enProduccion: number;
+    empacados: number;
+    enRuta: number;
+    paraDespachar: number;
+    entregados: number;
+    porCobrar: number;
+  };
 }
 
 /**

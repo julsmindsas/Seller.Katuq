@@ -64,6 +64,16 @@ import { HapticFeedbackService } from './services/haptic-feedback.service';
 import { NotificationCenterComponent } from './components/notification-center/notification-center.component';
 import { NotificationManagerService } from './services/notifications/notification-manager.service';
 import { NotificationPreferencesService } from './services/notifications/notification-preferences.service';
+// Shared Filters Component
+import { SharedFiltersComponent } from './components/filters/shared-filters.component';
+import { FilterService } from './services/filters/filter.service';
+// PrimeNG Modules for filters
+import { CalendarModule } from 'primeng/calendar';
+import { DropdownModule } from 'primeng/dropdown';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { InputTextModule } from 'primeng/inputtext';
 
 @NgModule({
   declarations: [
@@ -103,7 +113,9 @@ import { NotificationPreferencesService } from './services/notifications/notific
     BottomNavigationComponent,
     AdaptiveNavigationComponent,
     // Notification Center
-    NotificationCenterComponent
+    NotificationCenterComponent,
+    // Shared Filters Component
+    SharedFiltersComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],
@@ -116,7 +128,14 @@ import { NotificationPreferencesService } from './services/notifications/notific
     HttpClientModule,
     DragulaModule.forRoot(),
     TranslateModule,
-    CarouselModule
+    CarouselModule,
+    // PrimeNG Modules for filters
+    CalendarModule,
+    DropdownModule,
+    MultiSelectModule,
+    ButtonModule,
+    TooltipModule,
+    InputTextModule
   ],
   providers: [
     NavService,
@@ -133,7 +152,8 @@ import { NotificationPreferencesService } from './services/notifications/notific
     ProduccionService,
     HapticFeedbackService,
     NotificationManagerService,
-    NotificationPreferencesService
+    NotificationPreferencesService,
+    FilterService
     // SE ELIMINAN LOS PROVEEDORES DE HERRAMIENTAS DE AQUÍ
     // { provide: TOOL_ADAPTER, useClass: DefaultToolAdapterService },
     // { provide: TOOL_REGISTRARS, useExisting: SalesToolsRegistrarService, multi: true },
@@ -164,7 +184,9 @@ import { NotificationPreferencesService } from './services/notifications/notific
     BottomNavigationComponent,
     AdaptiveNavigationComponent,
     // Notification Center
-    NotificationCenterComponent
+    NotificationCenterComponent,
+    // Shared Filters Component
+    SharedFiltersComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],

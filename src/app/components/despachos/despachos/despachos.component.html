@@ -39,46 +39,6 @@
                     </div>
                 </div>
 
-                <!-- NUEVO: Panel de Control de Métricas Clave -->
-                <div class="metrics-panel row g-3 p-3">
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="stat-card stat-primary">
-                            <div class="stat-icon"><i class="pi pi-shopping-cart"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-label">{{ "Total Pedidos" | translate }}</div>
-                                <div class="stat-value">{{ orders.length }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="stat-card stat-danger">
-                            <div class="stat-icon"><i class="pi pi-wallet"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-label">{{ "Por Cobrar" | translate }}</div>
-                                <div class="stat-value">{{ calculateFaltaPorPagar() | currency }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="stat-card stat-info">
-                            <div class="stat-icon"><i class="pi pi-send"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-label">{{ "En Ruta" | translate }}</div>
-                                <div class="stat-value">{{ metricasLogistica?.pedidosEnRuta || 0 }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="stat-card stat-warning">
-                            <div class="stat-icon"><i class="pi pi-box"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-label">{{ "Para Despacho" | translate }}</div>
-                                <div class="stat-value">{{ metricasLogistica?.pedidosDespacho || 0 }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Alertas importantes (si existen) -->
                 <div class="px-4 py-3 bg-light border-top border-bottom" *ngIf="!loading && (obtenerConteoPedidosUrgentesNoDespachados() > 0 || obtenerConteoPedidosSinProducirUrgentes() > 0)">
                     <div class="d-flex justify-content-between align-items-center">
@@ -122,37 +82,294 @@
                             <span *ngIf="orders.length > 0" class="p-badge ms-2" [value]="orders.length"></span>
                         </ng-template>
                         
-                        <div class="filtros-container bg-light p-3 border-bottom">
-                            <div class="d-flex flex-column">
-                                <!-- Encabezado de filtros -->
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="mb-0 text-muted">
-                                        <i class="pi pi-filter text-primary me-2"></i>
-                                        <span>{{ "Filtros de búsqueda" | translate }}</span>
-                                    </h6>
-                                </div>
+                        <!-- CAPTION: Filtros minimalistas y compactos -->
+                        <div class="minimalist-filters-container">
+                            <!-- Barra de filtros principal - siempre visible -->
+                            <div class="filter-bar-main">
+                                <div class="filter-bar-row">
+                                    <!-- Sección izquierda: Filtros inline -->
+                                    <div class="filter-inline-section">
+                                        <!-- Búsqueda rápida -->
+                                        <div class="filter-inline-item search-box">
+                                            <div class="p-inputgroup">
+                                                <span class="p-inputgroup-addon">
+                                                    <i class="pi pi-search"></i>
+                                                </span>
+                                                <input type="text" 
+                                                    pInputText 
+                                                    placeholder="{{ 'Buscar pedido...' | translate }}"
+                                                    [(ngModel)]="searchQuery" 
+                                                    (input)="onSearchQueryChange($event.target.value)"
+                                                    class="p-inputtext-sm search-input"
+                                                    [style]="{'min-width': '250px'}" />
+                                                <button *ngIf="searchQuery && searchQuery.trim().length > 0"
+                                                    pButton 
+                                                    type="button" 
+                                                    icon="pi pi-times" 
+                                                    class="p-button-text p-button-sm p-button-danger"
+                                                    (click)="clearSearchFilter()"
+                                                    pTooltip="{{ 'Limpiar búsqueda' | translate }}">
+                                                </button>
+                                            </div>
+                                        </div>
 
-                                <!-- Filtros de fecha -->
-                                <div class="row g-3 align-items-end">
-                                    <div class="col-md-3 col-sm-6">
-                                        <label class="form-label small text-muted mb-1">{{ "Desde" | translate }}</label>
-                                        <p-calendar [(ngModel)]="fechaInicial" [showIcon]="true" dateFormat="dd/mm/yy" [readonlyInput]="true" styleClass="w-100" [inputStyleClass]="'form-control form-control-sm rounded'"></p-calendar>
-                                    </div>
-                                    <div class="col-md-3 col-sm-6">
-                                        <label class="form-label small text-muted mb-1">{{ "Hasta" | translate }}</label>
-                                        <p-calendar [(ngModel)]="fechaFinal" [showIcon]="true" dateFormat="dd/mm/yy" [readonlyInput]="true" styleClass="w-100" [inputStyleClass]="'form-control form-control-sm rounded'"></p-calendar>
-                                    </div>
-                                    <div class="col-md-3 col-sm-6">
-                                        <div class="btn-group w-100">
-                                            <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaHoy()"><i class="pi pi-calendar-today me-1"></i>{{ "Hoy" | translate }}</button>
-                                            <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaManana()"><i class="pi pi-calendar me-1"></i>{{ "Mañana" | translate }}</button>
-                                            <button class="btn btn-sm btn-outline-primary" (click)="filtrarParaPasadoManana()"><i class="pi pi-calendar-plus me-1"></i>{{ "Pasado" | translate }}</button>
+                                        <!-- Rango de fechas compacto -->
+                                        <div class="filter-inline-item date-range-compact">
+                                            <p-calendar [(ngModel)]="fechaInicialDate" dateFormat="dd/mm/yy"
+                                                placeholder="{{ 'Desde' | translate }}"
+                                                [showIcon]="true" inputStyleClass="p-inputtext-sm"
+                                                appendTo="body" (onSelect)="onDateFromChange($event)"
+                                                (onClear)="onDateFromChange(null)"
+                                                [maxDate]="fechaFinalDate"
+                                                [showButtonBar]="true"
+                                                [readonlyInput]="false"
+                                                [showClear]="true"
+                                                [locale]="es"
+                                                [firstDayOfWeek]="1"
+                                                [monthNavigator]="true"
+                                                [yearNavigator]="true"
+                                                yearRange="2020:2030">
+                                            </p-calendar>
+                                            <span class="date-separator">→</span>
+                                            <p-calendar [(ngModel)]="fechaFinalDate" dateFormat="dd/mm/yy"
+                                                placeholder="{{ 'Hasta' | translate }}"
+                                                [showIcon]="true" inputStyleClass="p-inputtext-sm"
+                                                appendTo="body" (onSelect)="onDateToChange($event)"
+                                                (onClear)="onDateToChange(null)"
+                                                [minDate]="fechaInicialDate"
+                                                [showButtonBar]="true"
+                                                [readonlyInput]="false"
+                                                [showClear]="true"
+                                                [locale]="es"
+                                                [firstDayOfWeek]="1"
+                                                [monthNavigator]="true"
+                                                [yearNavigator]="true"
+                                                yearRange="2020:2030">
+                                            </p-calendar>
+                                            <!-- Presets de fecha -->
+                                            <p-dropdown [options]="datePresets" [(ngModel)]="selectedDatePreset"
+                                                optionLabel="label" optionValue="value" placeholder="Rápido"
+                                                styleClass="p-dropdown-sm date-preset-dropdown"
+                                                (onChange)="onDatePresetChange($event.value)" appendTo="body">
+                                            </p-dropdown>
+                                        </div>
+
+                                        <!-- Estados con dropdowns -->
+                                        <div class="filter-inline-item">
+                                            <p-dropdown [options]="estadosPagoOptions" [(ngModel)]="quickFilters.estadoPago"
+                                                optionLabel="label" optionValue="value"
+                                                placeholder="{{ 'Estado Pago' | translate }}"
+                                                styleClass="p-dropdown-sm" appendTo="body"
+                                                (onChange)="onEstadoPagoChange()">
+                                                <ng-template let-option pTemplate="item">
+                                                    <div class="dropdown-item-with-badge">
+                                                        <span [class]="'status-dot ' + getStatusClass(option.value, 'pago')"></span>
+                                                        <span>{{ option.label }}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
+                                        </div>
+
+                                        <div class="filter-inline-item">
+                                            <p-dropdown [options]="estadosProcesoOptions" [(ngModel)]="quickFilters.estadoProceso"
+                                                optionLabel="label" optionValue="value"
+                                                placeholder="{{ 'Estado Proceso' | translate }}"
+                                                styleClass="p-dropdown-sm" appendTo="body"
+                                                (onChange)="onEstadoProcesoChange()">
+                                                <ng-template let-option pTemplate="item">
+                                                    <div class="dropdown-item-with-badge">
+                                                        <span [class]="'status-dot ' + getStatusClass(option.value, 'proceso')"></span>
+                                                        <span>{{ option.label }}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-dropdown>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 col-sm-6 text-end">
-                                        <div class="btn-group w-100">
-                                            <button class="btn btn-sm btn-primary" (click)="buscarPorFechas()"><i class="pi pi-search me-1"></i>{{ "Buscar" | translate }}</button>
-                                            <button class="btn btn-sm btn-outline-secondary" (click)="clear()"><i class="pi pi-refresh me-1"></i>{{ "Limpiar" | translate }}</button>
+
+                                    <!-- Sección derecha: Acciones y opciones -->
+                                    <div class="filter-actions-section">
+                                        <!-- Indicador de filtros activos -->
+                                        <div class="active-filters-badge" *ngIf="hasActiveFilters()">
+                                            <span class="badge rounded-pill bg-info text-white">
+                                                <i class="pi pi-filter-fill me-1"></i>
+                                                {{ getActiveFiltersCount() }}
+                                            </span>
+                                            <button type="button" class="btn-clear-filters"
+                                                (click)="clearAllFilters()"
+                                                pTooltip="{{ 'Limpiar todos los filtros' | translate }}">
+                                                <i class="pi pi-times"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Botón de configuración avanzada -->
+                                        <button pButton type="button" icon="pi pi-cog"
+                                            class="p-button-sm p-button-text p-button-rounded"
+                                            (click)="toggleAdvancedFilters()"
+                                            pTooltip="{{ 'Configuración avanzada' | translate }}">
+                                        </button>
+
+                                        <!-- Acciones principales -->
+                                        <div class="main-actions">
+                                            <button pButton type="button" icon="pi pi-search"
+                                                label="{{ 'Filtrar' | translate }}"
+                                                class="p-button-sm p-button-primary"
+                                                (click)="refrescar()">
+                                            </button>
+                                            <button pButton type="button" icon="pi pi-file-excel"
+                                                class="p-button-sm p-button-success"
+                                                [disabled]="orders.length == 0"
+                                                pTooltip="{{ 'Exportar Excel' | translate }}"
+                                                (click)="exportarExcel()">
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Panel de configuración avanzada (colapsible) -->
+                            <div class="advanced-filters-panel" *ngIf="showAdvancedFilters"
+                                [@slideInOut]>
+                                <div class="advanced-panel-content">
+                                    <!-- Tags de filtros activos -->
+                                    <div class="active-filters-tags" *ngIf="hasActiveFilters()">
+                                        <div class="tags-container">
+                                            <span class="filter-tag" *ngIf="fechaInicial">
+                                                <i class="pi pi-calendar me-1"></i>
+                                                {{ 'Desde: ' + formatDateForDisplay(fechaInicial) }}
+                                                <button class="tag-remove" (click)="clearDateFilter('inicial')">
+                                                    <i class="pi pi-times"></i>
+                                                </button>
+                                            </span>
+                                            <span class="filter-tag" *ngIf="fechaFinal">
+                                                <i class="pi pi-calendar me-1"></i>
+                                                {{ 'Hasta: ' + formatDateForDisplay(fechaFinal) }}
+                                                <button class="tag-remove" (click)="clearDateFilter('final')">
+                                                    <i class="pi pi-times"></i>
+                                                </button>
+                                            </span>
+                                            <span class="filter-tag" *ngIf="searchQuery">
+                                                <i class="pi pi-search me-1"></i>
+                                                {{ searchQuery }}
+                                                <button class="tag-remove" (click)="clearSearchFilter()">
+                                                    <i class="pi pi-times"></i>
+                                                </button>
+                                            </span>
+                                            <span class="filter-tag" *ngIf="quickFilters.estadoPago !== 'all'">
+                                                <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoPago, 'pago')"></span>
+                                                {{ quickFilters.estadoPago }}
+                                                <button class="tag-remove" (click)="clearQuickFilter('estadoPago')">
+                                                    <i class="pi pi-times"></i>
+                                                </button>
+                                            </span>
+                                            <span class="filter-tag" *ngIf="quickFilters.estadoProceso !== 'all'">
+                                                <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoProceso, 'proceso')"></span>
+                                                {{ quickFilters.estadoProceso }}
+                                                <button class="tag-remove" (click)="clearQuickFilter('estadoProceso')">
+                                                    <i class="pi pi-times"></i>
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Configuración de columnas -->
+                                    <div class="config-section">
+                                        <div class="config-section-header">
+                                            <i class="pi pi-table me-2"></i>
+                                            <span>{{ 'Columnas visibles' | translate }}</span>
+                                        </div>
+                                        <div class="config-section-content">
+                                            <p-multiSelect [options]="displayedColumns"
+                                                [(ngModel)]="selectedColumns" optionLabel="header"
+                                                defaultLabel="{{ 'Seleccionar columnas' | translate }}"
+                                                selectedItemsLabel="{0} columnas"
+                                                styleClass="column-selector-compact"
+                                                [style]="{'width': '100%'}"
+                                                (onChange)="onColumnSelectionChange()"
+                                                appendTo="body">
+                                            </p-multiSelect>
+                                            <button pButton type="button" icon="pi pi-undo"
+                                                label="{{ 'Restaurar' | translate }}"
+                                                class="p-button-text p-button-sm mt-2"
+                                                (click)="resetColumnConfig()">
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> <!-- Cierre de minimalist-filters-container -->
+
+                        <!-- Panel de Métricas Compactas (movido debajo de filtros) -->
+                        <div class="metrics-panel-compact bg-light p-2 border-top mt-2">
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3 col-lg-3 col-xl-2">
+                                    <div class="stat-card-compact stat-primary">
+                                        <div class="stat-icon"><i class="pi pi-shopping-cart"></i></div>
+                                        <div class="stat-content">
+                                            <div class="stat-label">{{ "Total Pedidos" | translate }}</div>
+                                            <div class="stat-value">{{ metricasLogistica?.totalPedidos || orders.length }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3 col-lg-3 col-xl-2">
+                                    <div class="stat-card-compact stat-danger">
+                                        <div class="stat-icon"><i class="pi pi-wallet"></i></div>
+                                        <div class="stat-content">
+                                            <div class="stat-label">{{ "Por Cobrar" | translate }}</div>
+                                            <div class="stat-value">{{ metricasLogistica?.porCobrar || calculateFaltaPorPagar() | currency:'USD':'symbol':'1.0-0' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3 col-lg-3 col-xl-2">
+                                    <div class="stat-card-compact stat-info">
+                                        <div class="stat-icon"><i class="pi pi-send"></i></div>
+                                        <div class="stat-content">
+                                            <div class="stat-label">{{ "En Ruta" | translate }}</div>
+                                            <div class="stat-value">{{ metricasLogistica?.enRuta || metricasLogistica?.pedidosEnRuta || 0 }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3 col-lg-3 col-xl-2">
+                                    <div class="stat-card-compact stat-warning">
+                                        <div class="stat-icon"><i class="pi pi-box"></i></div>
+                                        <div class="stat-content">
+                                            <div class="stat-label">{{ "Para Despacho" | translate }}</div>
+                                            <div class="stat-value">{{ metricasLogistica?.paraDespachar || metricasLogistica?.pedidosDespacho || 0 }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3 col-lg-3 col-xl-2">
+                                    <div class="stat-card-compact stat-success">
+                                        <div class="stat-icon"><i class="pi pi-check-circle"></i></div>
+                                        <div class="stat-content">
+                                            <div class="stat-label">{{ "Entregados" | translate }}</div>
+                                            <div class="stat-value">{{ metricasLogistica?.entregados || contarPedidosPorEstado('Entregado') }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3 col-lg-3 col-xl-2">
+                                    <div class="stat-card-compact stat-secondary">
+                                        <div class="stat-icon"><i class="pi pi-clock"></i></div>
+                                        <div class="stat-content">
+                                            <div class="stat-label">{{ "Urgentes" | translate }}</div>
+                                            <div class="stat-value">{{ obtenerConteoPedidosUrgentesNoDespachados() }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3 col-lg-3 col-xl-2">
+                                    <div class="stat-card-compact stat-production">
+                                        <div class="stat-icon"><i class="pi pi-cog"></i></div>
+                                        <div class="stat-content">
+                                            <div class="stat-label">{{ "En Producción" | translate }}</div>
+                                            <div class="stat-value">{{ metricasLogistica?.enProduccion || contarPedidosPorEstado('EnProduccion') }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3 col-lg-3 col-xl-2">
+                                    <div class="stat-card-compact stat-packed">
+                                        <div class="stat-icon"><i class="pi pi-inbox"></i></div>
+                                        <div class="stat-content">
+                                            <div class="stat-label">{{ "Empacados" | translate }}</div>
+                                            <div class="stat-value">{{ metricasLogistica?.empacados || contarPedidosPorEstado('Empacado') }}</div>
                                         </div>
                                     </div>
                                 </div>

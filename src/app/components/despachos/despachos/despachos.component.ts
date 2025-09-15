@@ -11,6 +11,7 @@ import {
   ViewContainerRef,
   ChangeDetectorRef,
 } from "@angular/core";
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import {
   Carrito,
@@ -92,6 +93,14 @@ interface MetricasLogistica {
   transportadoresEficiencia: { [transportador: string]: number };
   prediccionCargaProximosDias: { [fecha: string]: CargaDiaria };
   ubicacionesPedidos?: UbicacionPedido[]; // Para el mapa de ubicaciones
+  // Nuevos campos del servicio optimized
+  totalPedidos?: number;
+  enProduccion?: number;
+  empacados?: number;
+  enRuta?: number;
+  paraDespachar?: number;
+  entregados?: number;
+  porCobrar?: number;
 }
 
 // Nueva interfaz para la carga diaria
@@ -129,6 +138,17 @@ interface UbicacionPedido {
   selector: "app-list-despachos",
   templateUrl: "./despachos.component.html",
   styleUrls: ["./despachos.component.scss"],
+  animations: [
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-10px)', maxHeight: '0' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)', maxHeight: '500px' }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)', maxHeight: '0' }))
+      ])
+    ])
+  ]
 })
 export class DespachosComponent implements OnInit {
   @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
@@ -174,8 +194,35 @@ export class DespachosComponent implements OnInit {
   ciudadSeleccionada: string;
   ESTADOPAGO: any[];
   configuracionCarritoSeleccionado: Carrito;
-  fechaInicial: Date;
-  fechaFinal: Date;
+  fechaInicial: Date | null;
+  fechaFinal: Date | null;
+  
+  // Propiedades para el sistema de filtros avanzados
+  searchQuery: string = '';
+  fechaInicialDate: Date | null;
+  fechaFinalDate: Date | null;
+  selectedDatePreset: string = '';
+  showAdvancedFilters: boolean = false;
+  quickFilters = {
+    estadoPago: 'all',
+    estadoProceso: 'all'
+  };
+  // Opciones para los dropdowns de filtros
+  estadosPagoOptions: any[] = [];
+  estadosProcesoOptions: any[] = [];
+  datePresets: any[] = [];
+  
+  // Configuración de localización
+  es: any = {
+    firstDayOfWeek: 1,
+    dayNames: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+    dayNamesShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
+    dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+    monthNames: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+    monthNamesShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+    today: 'Hoy',
+    clear: 'Limpiar'
+  };
   transportadorForm: FormGroup;
   ordenEnvioForm: FormGroup;
   metodoEnvio: any;
@@ -318,11 +365,13 @@ export class DespachosComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private integrationsService: IntegrationsService
   ) {
-    const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
-    this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
-    this.fechaInicial.setHours(0, 0, 0, 0);
-    this.fechaFinal = new Date(new Date().getTime() + unaSemana);
-    this.fechaFinal.setHours(23, 59, 59, 999);
+    // Las fechas se inicializan en ngOnInit mediante initializeDefaultDates()
+    // para evitar conflictos y asegurar consistencia
+    // const unaSemana = 15 * 24 * 60 * 60 * 1000; // dos semanas en milisegundos
+    // this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
+    // this.fechaInicial.setHours(0, 0, 0, 0);
+    // this.fechaFinal = new Date(new Date().getTime() + unaSemana);
+    // this.fechaFinal.setHours(23, 59, 59, 999);
     this.registerCustomFilters();
 
     // Inicializar métricas de logística
@@ -351,6 +400,13 @@ export class DespachosComponent implements OnInit {
       { id: 5, nombre: "Pospendiente" },
 
     ];
+    
+    // Inicializar opciones de filtros avanzados
+    this.initializeFilterOptions();
+    
+    // Inicializar fechas por defecto al mismo día (hoy)
+    this.initializeDefaultDates();
+    
     // Inicializar las columnas seleccionadas al cargar
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
 
@@ -458,9 +514,10 @@ export class DespachosComponent implements OnInit {
             ordersCount: response.orders?.length || 0,
             totalRecords: response.pagination?.totalItems,
             currentPage: response.pagination?.currentPage,
-            totalPages: response.pagination?.totalPages
+            totalPages: response.pagination?.totalPages,
+            hasMetrics: !!response.metrics
           });
-          this.processOrdersData(response.orders as PedidoPriorizado[], response.pagination);
+          this.processOrdersData(response.orders as PedidoPriorizado[], response.pagination, response.metrics);
         },
         error: (error) => {
           console.error('❌ Despachos - Error in optimized API call:', error);
@@ -4066,6 +4123,14 @@ export class DespachosComponent implements OnInit {
     ).length;
   }
 
+  // Método para contar pedidos por estado específico
+  contarPedidosPorEstado(estado: string): number {
+    if (!this.orders || this.orders.length === 0) {
+      return 0;
+    }
+    return this.orders.filter(p => p.estadoProceso === estado).length;
+  }
+
   // Método para formatear fechas en español con formato 'Nombre Día semana, Día Mes'
   formatearFecha(fecha: any): string {
     let fechaObj: Date;
@@ -5619,23 +5684,24 @@ export class DespachosComponent implements OnInit {
    * Process orders data from either optimized or legacy endpoint
    * Extracts common logic for data processing
    */
-  private processOrdersData(orders: PedidoPriorizado[], pagination?: any): void {
+  private processOrdersData(orders: PedidoPriorizado[], pagination?: any, metrics?: any): void {
     console.log('🔄 Despachos - Processing orders data:', {
       previousOrdersCount: this.orders?.length || 0,
       newOrdersCount: orders?.length || 0,
-      hasPagination: !!pagination
+      hasPagination: !!pagination,
+      hasMetrics: !!metrics
     });
-    
+
     // Force change detection by creating new array reference
     this.orders = [...(orders || [])];
-    
+
     // Debug: Log first few order IDs to verify data changes
     const firstOrderIds = this.orders.slice(0, 3).map(order => ({
       nroPedido: order.nroPedido,
       _id: order._id?.slice(-8) // Last 8 characters of ID for brevity
     }));
     console.log('🔍 Despachos - First 3 orders in new data:', firstOrderIds);
-    
+
     if (pagination) {
       this.totalRecords = pagination.totalItems;
       console.log('📊 Despachos - Updated pagination info:', {
@@ -5650,11 +5716,27 @@ export class DespachosComponent implements OnInit {
       console.log('📋 Despachos - No pagination info (legacy mode)');
     }
 
+    // Update metrics from service if provided
+    if (metrics) {
+      console.log('📈 Despachos - Updating metrics from service:', metrics);
+      // Merge service metrics with existing calculated metrics
+      this.metricasLogistica = {
+        ...this.metricasLogistica,
+        totalPedidos: metrics.totalPedidos,
+        enProduccion: metrics.enProduccion,
+        empacados: metrics.empacados,
+        enRuta: metrics.enRuta,
+        paraDespachar: metrics.paraDespachar,
+        entregados: metrics.entregados,
+        porCobrar: metrics.porCobrar
+      };
+    }
+
     // Apply existing logic
     this.aplicarAlgoritmoPriorizacion(true);
     this.calcularMetricas();
     this.loading = false;
-    
+
     console.log('✅ Despachos - Data processing completed, loading set to false');
   }
 
@@ -5829,6 +5911,366 @@ export class DespachosComponent implements OnInit {
     }
 
     return baseFilter;
+  }
+
+  // ===== MÉTODOS PARA EL SISTEMA DE FILTROS AVANZADOS =====
+
+  /**
+   * Inicializa las opciones para los filtros avanzados
+   */
+  initializeFilterOptions(): void {
+    // Opciones para estados de pago
+    this.estadosPagoOptions = [
+      { label: 'Todos', value: 'all' },
+      { label: 'Pendiente', value: 'Pendiente' },
+      { label: 'Aprobado', value: 'Aprobado' },
+      { label: 'PreAprobado', value: 'PreAprobado' },
+      { label: 'Rechazado', value: 'Rechazado' },
+      { label: 'Cancelado', value: 'Cancelado' },
+      { label: 'Pospendiente', value: 'Pospendiente' },
+      { label: 'Precancelado', value: 'Precancelado' }
+    ];
+
+    // Opciones para estados de proceso
+    this.estadosProcesoOptions = [
+      { label: 'Todos', value: 'all' },
+      { label: 'Sin Producir', value: 'SinProducir' },
+      { label: 'En Producción', value: 'EnProduccion' },
+      { label: 'Producido Parcialmente', value: 'ProducidoParcialmente' },
+      { label: 'Producido Totalmente', value: 'ProducidoTotalmente' },
+      { label: 'Empacado', value: 'Empacado' },
+      { label: 'Para Despachar', value: 'ParaDespachar' },
+      { label: 'Despachado', value: 'Despachado' },
+      { label: 'Entregado', value: 'Entregado' },
+      { label: 'Rechazado', value: 'Rechazado' },
+      { label: 'Cerrado', value: 'Cerrado' }
+    ];
+
+    // Presets de fechas
+    this.datePresets = [
+      { label: 'Hoy', value: 'today' },
+      { label: 'Ayer', value: 'yesterday' },
+      { label: 'Esta semana', value: 'thisWeek' },
+      { label: 'Semana pasada', value: 'lastWeek' },
+      { label: 'Este mes', value: 'thisMonth' },
+      { label: 'Mes pasado', value: 'lastMonth' },
+      { label: 'Últimos 7 días', value: 'last7Days' },
+      { label: 'Últimos 30 días', value: 'last30Days' }
+    ];
+  }
+
+  /**
+   * Maneja el cambio en la búsqueda rápida
+   */
+  onSearchQueryChange(value: string): void {
+    this.searchQuery = value;
+    // Aplicar filtro inmediatamente si hay texto
+    if (value.trim().length > 0) {
+      this.refrescar();
+    }
+  }
+
+  /**
+   * Maneja el cambio en la fecha inicial
+   */
+  onDateFromChange(date: Date | null): void {
+    this.fechaInicialDate = date;
+    if (date) {
+      // Crear nueva instancia para no modificar la fecha original
+      const startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+      this.fechaInicial = startDate;
+    } else {
+      this.fechaInicial = date;
+    }
+    if (date) {
+      this.refrescar();
+    }
+  }
+
+  /**
+   * Maneja el cambio en la fecha final
+   */
+  onDateToChange(date: Date | null): void {
+    this.fechaFinalDate = date;
+    if (date) {
+      // Crear nueva instancia para no modificar la fecha original
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+      this.fechaFinal = endDate;
+    } else {
+      this.fechaFinal = date;
+    }
+    if (date) {
+      this.refrescar();
+    }
+  }
+
+  /**
+   * Maneja el cambio en el preset de fecha
+   */
+  onDatePresetChange(preset: string): void {
+    const today = new Date();
+    let startDate: Date;
+    let endDate: Date = new Date(today);
+
+    switch (preset) {
+      case 'today':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        break;
+      case 'yesterday':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 1);
+        endDate = new Date(startDate);
+        break;
+      case 'thisWeek':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - today.getDay() + 1);
+        break;
+      case 'lastWeek':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - today.getDay() - 6);
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        break;
+      case 'thisMonth':
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        break;
+      case 'lastMonth':
+        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+        break;
+      case 'last7Days':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 7);
+        break;
+      case 'last30Days':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 30);
+        break;
+      default:
+        return;
+    }
+
+    // Set proper times for start and end dates
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    this.fechaInicialDate = startDate;
+    this.fechaFinalDate = endDate;
+    this.fechaInicial = startDate;
+    this.fechaFinal = endDate;
+    this.selectedDatePreset = '';
+
+    this.refrescar();
+  }
+
+  /**
+   * Maneja el cambio en el estado de pago
+   */
+  onEstadoPagoChange(): void {
+    this.refrescar();
+  }
+
+  /**
+   * Maneja el cambio en el estado de proceso
+   */
+  onEstadoProcesoChange(): void {
+    this.refrescar();
+  }
+
+  /**
+   * Alterna la visualización de filtros avanzados
+   */
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  /**
+   * Verifica si hay filtros activos
+   */
+  hasActiveFilters(): boolean {
+    return !!(
+      this.searchQuery ||
+      this.fechaInicial ||
+      this.fechaFinal ||
+      this.quickFilters.estadoPago !== 'all' ||
+      this.quickFilters.estadoProceso !== 'all'
+    );
+  }
+
+  /**
+   * Obtiene el número de filtros activos
+   */
+  getActiveFiltersCount(): number {
+    let count = 0;
+    if (this.searchQuery) count++;
+    if (this.fechaInicial) count++;
+    if (this.fechaFinal) count++;
+    if (this.quickFilters.estadoPago !== 'all') count++;
+    if (this.quickFilters.estadoProceso !== 'all') count++;
+    return count;
+  }
+
+  /**
+   * Limpia todos los filtros
+   */
+  clearAllFilters(): void {
+    this.searchQuery = '';
+    this.fechaInicial = null;
+    this.fechaFinal = null;
+    this.fechaInicialDate = null;
+    this.fechaFinalDate = null;
+    this.selectedDatePreset = '';
+    this.quickFilters = {
+      estadoPago: 'all',
+      estadoProceso: 'all'
+    };
+    this.refrescar();
+  }
+
+  /**
+   * Limpia el filtro de fecha específico
+   */
+  clearDateFilter(type: 'inicial' | 'final'): void {
+    if (type === 'inicial') {
+      this.fechaInicial = null;
+      this.fechaInicialDate = null;
+    } else {
+      this.fechaFinal = null;
+      this.fechaFinalDate = null;
+    }
+    this.refrescar();
+  }
+
+  /**
+   * Limpia el filtro de búsqueda
+   */
+  clearSearchFilter(): void {
+    this.searchQuery = '';
+    this.refrescar();
+  }
+
+  /**
+   * Limpia un filtro rápido específico
+   */
+  clearQuickFilter(filterType: 'estadoPago' | 'estadoProceso'): void {
+    this.quickFilters[filterType] = 'all';
+    this.refrescar();
+  }
+
+  /**
+   * Formatea una fecha para mostrar en los tags
+   */
+  formatDateForDisplay(date: Date): string {
+    if (!date) return '';
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
+  /**
+   * Obtiene la clase CSS para el estado
+   */
+  getStatusClass(value: string, type: 'pago' | 'proceso'): string {
+    if (type === 'pago') {
+      switch (value) {
+        case 'Pendiente':
+        case 'Pospendiente':
+          return 'status-warning';
+        case 'Aprobado':
+          return 'status-success';
+        case 'PreAprobado':
+          return 'status-info';
+        case 'Rechazado':
+        case 'Cancelado':
+        case 'Precancelado':
+          return 'status-danger';
+        default:
+          return 'status-secondary';
+      }
+    } else {
+      switch (value) {
+        case 'SinProducir':
+          return 'status-secondary';
+        case 'EnProduccion':
+        case 'ProducidoParcialmente':
+        case 'ProducidoTotalmente':
+          return 'status-info';
+        case 'Empacado':
+          return 'status-primary';
+        case 'ParaDespachar':
+        case 'Despachado':
+          return 'status-warning';
+        case 'Entregado':
+          return 'status-success';
+        case 'Rechazado':
+          return 'status-danger';
+        case 'Cerrado':
+          return 'status-dark';
+        default:
+          return 'status-secondary';
+      }
+    }
+  }
+
+
+  /**
+   * Maneja el cambio en la selección de columnas
+   */
+  onColumnSelectionChange(): void {
+    // Actualizar la visibilidad de las columnas
+    this.displayedColumns.forEach(col => {
+      col.visible = this.selectedColumns.some(selected => selected.field === col.field);
+    });
+  }
+
+  /**
+   * Restaura la configuración de columnas por defecto
+   */
+  resetColumnConfig(): void {
+    this.selectedColumns = this.displayedColumns.filter(col => col.visible);
+  }
+
+  /**
+   * Exporta los datos a Excel
+   */
+  exportarExcel(): void {
+    // Implementar exportación a Excel
+    console.log('Exportando a Excel...', this.orders);
+    // Aquí puedes implementar la lógica de exportación
+  }
+
+  /**
+   * Inicializa las fechas por defecto al mismo día (hoy)
+   */
+  initializeDefaultDates(): void {
+    const today = new Date();
+
+    // Crear fechas para el inicio del día (00:00:00)
+    const startDate = new Date(today);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Crear fechas para el final del día (23:59:59.999)
+    const endDate = new Date(today);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Establecer la misma fecha para desde y hasta (hoy) con tiempos correctos
+    this.fechaInicial = startDate;
+    this.fechaFinal = endDate;
+    this.fechaInicialDate = new Date(today); // Para el calendar UI (sin modificar tiempo)
+    this.fechaFinalDate = new Date(today);   // Para el calendar UI (sin modificar tiempo)
+
+    console.log('📅 Fechas inicializadas:', {
+      fechaInicial: this.fechaInicial,
+      fechaFinal: this.fechaFinal,
+      fechaInicialDate: this.fechaInicialDate,
+      fechaFinalDate: this.fechaFinalDate
+    });
   }
 }
 
