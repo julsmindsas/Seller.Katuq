@@ -446,11 +446,11 @@ export class DespachosComponent implements OnInit {
         icon: 'pi pi-truck',
         command: () => this.openModal(this.transportadoresModal)
       },
-      {
+     /* {
         label: 'Ver Órdenes de Despacho',
         icon: 'pi pi-list',
         command: () => this.viewAllDispatchOrders()
-      },
+      },*/
       {
         label: 'Ver Órdenes (Optimizado)',
         icon: 'pi pi-bolt',

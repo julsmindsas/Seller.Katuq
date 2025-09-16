@@ -118,6 +118,7 @@ export enum EstadoProceso {
   SinProducir = "SinProducir",
   Producido = "Producido",
   Empacado = "Empacado",
+  EnDespacho = "EnDespacho",
   Despachado = "Despachado",
   Rechazado = "Rechazado",
   Entregado = "Entregado",
