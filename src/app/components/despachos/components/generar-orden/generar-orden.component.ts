@@ -147,10 +147,10 @@ export class GenerarOrdenComponent implements OnInit {
         debounceTime(300),
         distinctUntilChanged()
       )
-      .subscribe(() => {
-        this.actualizarPedidosDisponibles();
+      .subscribe(async () => {
         // Recargar órdenes existentes con la nueva fecha para optimizar validación
-        this.cargarOrdenesExistentes();
+        await this.cargarOrdenesExistentes();
+        this.actualizarPedidosDisponibles();
       });
 
     // Suscripción a cambios de método con debouncing
@@ -174,7 +174,7 @@ export class GenerarOrdenComponent implements OnInit {
   
 
 
-  private cargarOrdenesExistentes(): void {
+  private async cargarOrdenesExistentes(): Promise<void> {
     // Cargar órdenes existentes para verificar duplicados usando el método optimizado
     let fechaEnvio = this.ordenEnvioForm.get('fechaEnvio')?.value;
     
@@ -185,14 +185,31 @@ export class GenerarOrdenComponent implements OnInit {
     }
     
     const fecha = new Date(fechaEnvio);
-    const fechaStr = fecha.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    // Formato YYYY-MM-DD
+    // Restar una semana a la fecha de inicio
+    const fechaInicio = new Date(fecha);
+    // Rango del mes de la fecha seleccionada: primer día y último día del mes (local)
+    const formatDate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    const inicioMes = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
+    const finMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0);
+
+    const fechaInicioStr = formatDate(inicioMes);
+    const fechaFinStr = formatDate(finMes);
+
     
     let params: any = {
       page: 1,
       limit: 100,
-      fields: 'minimal', // Solo campos necesarios para validación
-      fechaInicio: fechaStr,
-      fechaFin: fechaStr
+      fields: 'minimal', // Solo campos necesarios para validación,
+      estado: 'Despachado',
+      fechaInicio: fechaInicioStr,
+      fechaFin: fechaFinStr
     };
     
     console.log('Cargando órdenes con parámetros:', params);
