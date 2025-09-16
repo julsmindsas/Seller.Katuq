@@ -10,7 +10,7 @@
 
   .header-content {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
   }
 
@@ -39,6 +39,7 @@
     }
   }
 
+  /* Botón de cerrar comentado - ya no es modal
   .btn-close-custom {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
@@ -61,6 +62,7 @@
       font-size: 1rem;
     }
   }
+  */
 }
 
 /* ========== SECCIÓN DE FILTROS ========== */

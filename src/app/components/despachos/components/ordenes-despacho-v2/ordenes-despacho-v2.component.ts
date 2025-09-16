@@ -12,7 +12,7 @@ import Swal from 'sweetalert2';
 export class OrdenesDespachoV2Component implements OnInit {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
-  @Output() onClose = new EventEmitter<void>();
+  // @Output() onClose = new EventEmitter<void>(); // No necesario al estar integrado en tabs
   @Output() onPrintOrder = new EventEmitter<string>();
   @Output() onViewOrder = new EventEmitter<string>();
   @Output() onDispatchOrder = new EventEmitter<any>();
@@ -287,9 +287,10 @@ export class OrdenesDespachoV2Component implements OnInit {
 
   // ========== MÉTODOS DE ACCIONES (COPIADOS DEL ORIGINAL) ==========
 
-  closeModal(): void {
-    this.onClose.emit();
-  }
+  // Método comentado porque el componente ahora está integrado en tabs
+  // closeModal(): void {
+  //   this.onClose.emit();
+  // }
 
   printOrder(orderId: string): void {
     this.onPrintOrder.emit(orderId);

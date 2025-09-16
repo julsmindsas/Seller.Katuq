@@ -452,11 +452,6 @@ export class DespachosComponent implements OnInit {
         command: () => this.viewAllDispatchOrders()
       },*/
       {
-        label: 'Ver Órdenes (Optimizado)',
-        icon: 'pi pi-bolt',
-        command: () => this.viewAllDispatchOrdersOptimized()
-      },
-      {
         separator: true
       },
       {
@@ -478,9 +473,8 @@ export class DespachosComponent implements OnInit {
     }
     // El índice de la pestaña de Órdenes es 2
     if (event.index === 2) {
-
+      // Solo cargar transportadores, el componente v2 carga sus propios datos
       this.loadLogisticsIntegrations();
-      this.loadDispatchOrders();
     }
   }
 
@@ -5809,6 +5803,7 @@ export class DespachosComponent implements OnInit {
         EstadoProceso.Entregado,
         EstadoProceso.Despachado,
         EstadoProceso.Empacado,
+        EstadoProceso.EnDespacho
       ],
       estadosPago: [
         EstadoPago.PreAprobado,
