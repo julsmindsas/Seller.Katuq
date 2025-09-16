@@ -138,6 +138,7 @@ export enum EstadoProceso {
 export enum EstadoProcesoFiltros {
   SinProducir = "SinProducir",
   Empacado = "Empacado",
+  EnDespacho = "EnDespacho",
   Despachado = "Despachado",
   Entregado = "Entregado",
   Rechazado = "Rechazado",
