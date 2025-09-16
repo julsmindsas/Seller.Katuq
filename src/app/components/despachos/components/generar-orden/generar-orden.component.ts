@@ -189,24 +189,28 @@ export class GenerarOrdenComponent implements OnInit {
     // Restar una semana a la fecha de inicio
     const fechaInicio = new Date(fecha);
     // Rango del mes de la fecha seleccionada: primer día y último día del mes (local)
-    const formatDate = (d: Date) => {
+    const formatDate = (d: Date,isDateInicio: boolean=false) => {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      if (isDateInicio) {
+        return `${y}-${m}-${day}T00:00:00.000Z`;
+      } else {
+        return `${y}-${m}-${day}T23:59:59.999Z`;
+      }
     };
 
     const inicioMes = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
     const finMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0);
 
-    const fechaInicioStr = formatDate(inicioMes);
+    const fechaInicioStr = formatDate(inicioMes,true);
     const fechaFinStr = formatDate(finMes);
 
     
     let params: any = {
       page: 1,
-      limit: 100,
-      fields: 'minimal', // Solo campos necesarios para validación,
+      limit: 50,
+      fields: 'full', // Solo campos necesarios para validación,
       estado: 'Despachado',
       fechaInicio: fechaInicioStr,
       fechaFin: fechaFinStr
@@ -297,60 +301,16 @@ export class GenerarOrdenComponent implements OnInit {
   }
 
   loadPedidosDisponibles(): Pedido[] {
-    const fechaEnvioValue = this.ordenEnvioForm.get("fechaEnvio")?.value;
-    if (!fechaEnvioValue) {
-      return [];
-    }
-
     try {
-      // Para evitar problemas con timezone, vamos a trabajar solo con la parte del string de fecha
-      // El formato del input date es 'YYYY-MM-DD'
-      let fechaSeleccionada = "";
-      if (typeof fechaEnvioValue === "string") {
-        // Si es string, tomamos solo la parte de la fecha (YYYY-MM-DD)
-        fechaSeleccionada = fechaEnvioValue.split("T")[0];
-      } else {
-        // Si es un objeto Date, lo convertimos a string en formato YYYY-MM-DD
-        const d = new Date(fechaEnvioValue);
-        // Usamos UTC para evitar problemas de timezone
-        fechaSeleccionada = [
-          d.getFullYear(),
-          ("0" + (d.getMonth() + 1)).slice(-2), // Mes en formato 01-12
-          ("0" + d.getDate()).slice(-2), // Día en formato 01-31
-        ].join("-");
-      }
-
-      // Usamos la fecha seleccionada directamente como string para comparar
-      const pedidosFiltrados = this.orders.filter((o) => {
+      // Filtrar pedidos disponibles sin depender de la fecha de envío
+      const pedidosFiltrados = this.obtenerTodosLosPedidos().filter((o) => {
         try {
-          // Verificar si la fecha de entrega existe
-          if (!o.fechaEntrega) {
-            return false;
-          }
-
-          // Normalizar la fecha del pedido a formato YYYY-MM-DD
-          let fechaPedidoStr = "";
-
-          if (typeof o.fechaEntrega === "string") {
-            // Si es un string ISO (2023-05-15T00:00:00.000Z)
-            fechaPedidoStr = o.fechaEntrega.split("T")[0];
-          } else {
-            // Si es un objeto Date
-            const fechaPedido = new Date(o.fechaEntrega);
-            fechaPedidoStr = [
-              fechaPedido.getFullYear(),
-              ("0" + (fechaPedido.getMonth() + 1)).slice(-2),
-              ("0" + fechaPedido.getDate()).slice(-2),
-            ].join("-");
-          }
-
           // Verificar si el pedido ya está seleccionado en la orden actual
           const yaSeleccionado = this.pedidosSeleccionados.some(
             (p) => p.nroPedido === o.nroPedido,
           );
 
           // Verificar todas las condiciones
-          const fechasCoinciden = fechaPedidoStr === fechaSeleccionada;
           const estadoValido =
             o.estadoProceso !== EstadoProceso.Entregado &&
             o.estadoProceso !== EstadoProceso.Despachado &&
@@ -389,7 +349,6 @@ export class GenerarOrdenComponent implements OnInit {
           }
 
           return (
-            fechasCoinciden &&
             estadoValido &&
             formaEntregaValida &&
             !yaSeleccionado
@@ -414,6 +373,39 @@ export class GenerarOrdenComponent implements OnInit {
       console.error("Error general en loadPedidosDisponibles:", err);
       return [];
     }
+  }
+
+  /**
+   * Obtiene todos los pedidos disponibles, incluyendo los que están en órdenes existentes
+   * si el checkbox mostrarPedidosEnOrdenes está activado
+   */
+  private obtenerTodosLosPedidos(): Pedido[] {
+    // Comenzar con los pedidos del componente padre
+    let todosLosPedidos = [...this.orders];
+
+    // Si queremos mostrar pedidos en órdenes y hay órdenes existentes
+    if (this.mostrarPedidosEnOrdenes && this.ordenesExistentes && this.ordenesExistentes.length > 0) {
+      // Extraer pedidos de cada orden existente
+      this.ordenesExistentes.forEach(orden => {
+        if (orden.pedidos && Array.isArray(orden.pedidos)) {
+          // Agregar los pedidos de esta orden
+          todosLosPedidos = [...todosLosPedidos, ...orden.pedidos];
+        }
+      });
+
+      // Eliminar duplicados basándose en nroPedido
+      const pedidosUnicos = new Map<string, Pedido>();
+      todosLosPedidos.forEach(pedido => {
+        if (pedido.nroPedido && !pedidosUnicos.has(pedido.nroPedido)) {
+          pedidosUnicos.set(pedido.nroPedido, pedido);
+        }
+      });
+
+      return Array.from(pedidosUnicos.values());
+    }
+
+    // Si no queremos mostrar pedidos en órdenes, solo retornar los pedidos normales
+    return this.orders;
   }
 
   agregarPedido(pedido: Pedido): void {

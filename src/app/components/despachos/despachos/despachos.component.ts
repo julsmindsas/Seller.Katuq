@@ -4226,6 +4226,7 @@ export class DespachosComponent implements OnInit {
         transportador: this.transportadorSeleccionado || "",
         company: companyName,
         pedidos: this.pedidosSeleccionados || [],
+        pedidosMovidos: event.pedidosMovidos || [],
       };
     } else {
       // Actualizar la orden existente con datos del formulario
@@ -4246,11 +4247,13 @@ export class DespachosComponent implements OnInit {
       }
       this.nuevaOrdenEnvio.fecha = event.fechaEnvio || new Date().toISOString();
       this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados || [];
+      this.nuevaOrdenEnvio.pedidosMovidos = event.pedidosMovidos || [];
 
       console.log('✅ ORDEN ACTUALIZADA con metodoEnvio:', {
         metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
         fechaEnvio: this.nuevaOrdenEnvio.fechaEnvio,
         nroShippingOrder: this.nuevaOrdenEnvio.nroShippingOrder,
+        pedidosMovidos: this.nuevaOrdenEnvio.pedidosMovidos,
         _forceUpdate: this.nuevaOrdenEnvio._forceUpdate
       });
     }
