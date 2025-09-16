@@ -64,6 +64,11 @@ export class GenerarOrdenComponent implements OnInit {
   pedidoSeleccionadoDetalle: Pedido | null = null; // Pedido seleccionado para mostrar detalles
   isSaving: boolean = false; // Flag para prevenir múltiples clics en guardar
 
+  // Propiedades para búsqueda y filtrado
+  searchValue: string = '';
+  columnFilters: any = {};
+  globalFilterFields: string[] = ['nroPedido', 'clienteNombre', 'ciudadNombre', 'direccionEntregaNombre'];
+
   constructor(
     private formBuilder: FormBuilder,
     private logisticaService: LogisticaServiceV2,
@@ -303,7 +308,18 @@ export class GenerarOrdenComponent implements OnInit {
   loadPedidosDisponibles(): Pedido[] {
     try {
       // Filtrar pedidos disponibles sin depender de la fecha de envío
-      const pedidosFiltrados = this.obtenerTodosLosPedidos().filter((o) => {
+      const pedidosFiltrados = this.obtenerTodosLosPedidos().map((pedido) => {
+        // Pre-procesar campos anidados para facilitar el filtrado y búsqueda
+        // Siempre asignar para asegurar que los campos existan para el filtrado
+        pedido['clienteNombre'] = pedido.cliente?.nombres_completos ||
+          pedido.cliente?.apellidos_completos ||
+          "N/A";
+
+        pedido['ciudadNombre'] = pedido.envio?.ciudad || "N/A";
+
+        pedido['direccionEntregaNombre'] = pedido.envio?.direccionEntrega || "N/A";
+        return pedido;
+      }).filter((o) => {
         try {
           // Verificar si el pedido ya está seleccionado en la orden actual
           const yaSeleccionado = this.pedidosSeleccionados.some(
@@ -529,17 +545,20 @@ export class GenerarOrdenComponent implements OnInit {
   getNestedProperty(pedido: any, field: string): any {
     switch (field) {
       case "cliente":
-        return (
-          pedido.cliente?.nombres_completos ||
-          pedido.cliente?.nombres ||
-          (pedido.cliente
-            ? `${pedido.cliente.nombres || ""} ${pedido.cliente.apellidos || ""}`
-            : "N/A")
-        );
+        const nombreCliente = pedido.cliente?.nombres_completos ||
+          pedido.cliente?.apellidos_completos ||
+          "N/A";
+        // Asignar a una propiedad plana para facilitar el filtrado
+        pedido['clienteNombre'] = nombreCliente;
+        return nombreCliente;
       case "ciudad":
-        return pedido.envio?.ciudad || "N/A";
+        const ciudad = pedido.envio?.ciudad || "N/A";
+        pedido['ciudadNombre'] = ciudad;
+        return ciudad;
       case "direccionEntrega":
-        return pedido.envio?.direccionEntrega || "N/A";
+        const direccion = pedido.envio?.direccionEntrega || "N/A";
+        pedido['direccionEntregaNombre'] = direccion;
+        return direccion;
       case "nroPedido":
       case "formaEntrega":
       case "horarioEntrega":

@@ -86,6 +86,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="card-title m-0">
                         {{ "Pedidos Disponibles" | translate }}
+                        <span class="badge bg-secondary ms-2">{{ pedidosDisponibles.length }}</span>
                     </h5>
 
                     <!-- Controles de filtrado y columnas -->
@@ -113,6 +114,9 @@
                     </div>
                 </div>
 
+                <!-- Barra de búsqueda global -->
+             
+
                 <div class="alert alert-info" *ngIf="pedidosDisponibles.length === 0">
                     <i class="pi pi-info-circle me-2"></i>
                     {{
@@ -127,20 +131,56 @@
                 </div>
 
                 <div class="table-responsive" *ngIf="pedidosDisponibles.length > 0">
-                    <p-table [value]="pedidosDisponibles" styleClass="p-datatable-sm"
-                        [paginator]="pedidosDisponibles.length > 10" [rows]="10" [rowsPerPageOptions]="[5, 10, 25, 50]"
+                    <p-table #dt [value]="pedidosDisponibles" styleClass="p-datatable-sm p-datatable-gridlines"
+                        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25, 50]"
                         [showCurrentPageReport]="true"
-                        currentPageReportTemplate="{first} - {last} de {totalRecords} pedidos"
-                        [tableStyle]="{ 'min-width': '100%' }">
+                        currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} pedidos"
+                        [tableStyle]="{ 'min-width': '100%' }"
+                        [globalFilterFields]="globalFilterFields"
+                        [sortMode]="'single'"
+                        dataKey="nroPedido">
                         <ng-template pTemplate="header">
                             <tr>
                                 <ng-container *ngFor="let col of selectedColumns">
-                                    <th *ngIf="col.field !== 'accion'">
+                                    <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'"
+                                        [pSortableColumn]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field"
+                                        [ngStyle]="{'min-width': col.field === 'direccionEntrega' ? '200px' : 'auto'}">
+                                        {{ col.header | translate }}
+                                        <p-sortIcon [field]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field"></p-sortIcon>
+                                    </th>
+                                    <th *ngIf="col.field === 'opciones' || col.field === 'enOrden'"
+                                        [ngStyle]="{'min-width': col.field === 'enOrden' ? '150px' : 'auto'}">
                                         {{ col.header | translate }}
                                     </th>
                                 </ng-container>
                                 <th *ngIf="isActionColumnVisible()">
                                     {{ "Acción" | translate }}
+                                </th>
+                            </tr>
+                            <tr>
+                                <ng-container *ngFor="let col of selectedColumns">
+                                    <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'">
+                                        <p-columnFilter type="text"
+                                                        [field]="col.field"
+                                                        [placeholder]="'Filtrar ' + col.header"
+                                                        [showMenu]="false"
+                                                        [matchMode]="'contains'">
+                                            <ng-template pTemplate="filter" let-value>
+                                                <input type="text"
+                                                       pInputText
+                                                       class="p-column-filter"
+                                                       style="width: 100%; font-size: 12px;"
+                                                       [value]="value"
+                                                       (input)="dt.filter($any($event.target).value, col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field, 'contains')">
+                                            </ng-template>
+                                        </p-columnFilter>
+                                    </th>
+                                    <th *ngIf="col.field === 'opciones' || col.field === 'enOrden'">
+                                        <!-- Sin filtro para columnas de opciones -->
+                                    </th>
+                                </ng-container>
+                                <th *ngIf="isActionColumnVisible()">
+                                    <!-- Sin filtro para columna de acción -->
                                 </th>
                             </tr>
                         </ng-template>
