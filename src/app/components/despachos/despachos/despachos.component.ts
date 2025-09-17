@@ -2095,6 +2095,9 @@ export class DespachosComponent implements OnInit {
     // Determinar el nuevo estado basado en el código
     let nuevoEstado: EstadoProceso;
     switch (estado) {
+      case 0:
+        nuevoEstado = EstadoProceso.ProducidoTotalmente;
+        break;
       case 1:
         nuevoEstado = EstadoProceso.Empacado;
         break;
@@ -2132,6 +2135,9 @@ export class DespachosComponent implements OnInit {
     }
 
     switch (estado) {
+      case 0:
+        order.estadoProceso = EstadoProceso.ProducidoTotalmente;
+        break;
       case 1:
         order.estadoProceso = EstadoProceso.Empacado;
         order.fechaHoraEmpacado = new Date().toISOString();
