@@ -299,21 +299,27 @@
                             </tr>
                         </ng-template>
 
-                        <!-- EXPANSIÓN DE FILAS: Productos del carrito -->
+                        <!-- EXPANSIÓN DE FILAS: Productos del carrito con preferencias y adiciones -->
                         <ng-template pTemplate="rowexpansion" let-pedido>
                             <tr style="font-size: 0.85em;">
                                 <td [attr.colspan]="selectedColumns.length">
                                     <div class="p-2">
-                                        <p-table [value]="pedido.carrito" dataKey="id" styleClass="p-datatable-sm expanded-table">
+                                        <p-table [value]="pedido.carrito" dataKey="pedido.carrito" styleClass="p-datatable-sm expanded-table">
                                             <ng-template pTemplate="header">
                                                 <tr>
+                                                    <th style="width: 2rem;"></th>
                                                     <th style="width: 60px">{{ 'Imagen' | translate }}</th>
                                                     <th>{{ 'Producto' | translate }}</th>
                                                     <th style="width: 80px">{{ 'Cantidad' | translate }}</th>
                                                 </tr>
                                             </ng-template>
-                                            <ng-template pTemplate="body" let-item>
+                                            <ng-template pTemplate="body" let-item let-expanded="expanded">
                                                 <tr>
+                                                    <td>
+                                                        <button type="button" pButton pRipple [pRowToggler]="item"
+                                                            class="p-button-text p-button-rounded p-button-plain"
+                                                            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
+                                                    </td>
                                                     <td style="width: 60px; text-align: center;">
                                                         <img style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;"
                                                             [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls"
@@ -323,9 +329,87 @@
                                                     <td style="width: 80px; text-align: center;">{{ item.cantidad }}</td>
                                                 </tr>
                                             </ng-template>
+
+                                            <!-- Segundo nivel de expansión: Preferencias y Adiciones -->
+                                            <ng-template pTemplate="rowexpansion" let-item>
+                                                <tr>
+                                                    <td colspan="4">
+                                                        <div class="p-2">
+                                                            <!-- Preferencias -->
+                                                            <h5 *ngIf="item?.configuracion?.preferencias && item?.configuracion?.preferencias.length > 0">{{ 'Preferencias' | translate }}</h5>
+                                                            <p-table *ngIf="item?.configuracion?.preferencias && item?.configuracion?.preferencias.length > 0"
+                                                                [value]="item.configuracion.preferencias"
+                                                                styleClass="p-datatable-sm nested-table">
+                                                                <ng-template pTemplate="header">
+                                                                    <tr>
+                                                                        <th>{{ 'Imagen' | translate }}</th>
+                                                                        <th>{{ 'Título' | translate }}</th>
+                                                                        <th>{{ 'SubTítulo' | translate }}</th>
+                                                                        <th>{{ 'Iva' | translate }}</th>
+                                                                        <th>{{ 'Total Iva' | translate }}</th>
+                                                                        <th>{{ 'Total sin Iva' | translate }}</th>
+                                                                        <th>{{ 'Cantidad' | translate }}</th>
+                                                                        <th>{{ 'Total con Iva' | translate }}</th>
+                                                                    </tr>
+                                                                </ng-template>
+                                                                <ng-template pTemplate="body" let-itemconf>
+                                                                    <tr>
+                                                                        <td>
+                                                                            <img height="40" width="40" [src]="itemconf.imagen"
+                                                                                style="border:1px solid #ccc;" />
+                                                                        </td>
+                                                                        <td>{{ itemconf.titulo }}</td>
+                                                                        <td>{{ itemconf.subtitulo }}</td>
+                                                                        <td>{{ itemconf.porcentajeIva }}</td>
+                                                                        <td>{{ itemconf.valorIva | currency }}</td>
+                                                                        <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
+                                                                        <td>1</td>
+                                                                        <td>{{ itemconf.precioTotalConIva | currency }}</td>
+                                                                    </tr>
+                                                                </ng-template>
+                                                            </p-table>
+
+                                                            <!-- Adiciones -->
+                                                            <h5 *ngIf="item?.configuracion?.adiciones && item?.configuracion?.adiciones.length > 0" class="mt-3">{{ 'Adiciones' | translate }}</h5>
+                                                            <p-table *ngIf="item?.configuracion?.adiciones && item?.configuracion?.adiciones.length > 0"
+                                                                [value]="item.configuracion.adiciones"
+                                                                styleClass="p-datatable-sm nested-table">
+                                                                <ng-template pTemplate="header">
+                                                                    <tr>
+                                                                        <th>{{ 'Imagen' | translate }}</th>
+                                                                        <th>{{ 'Título' | translate }}</th>
+                                                                        <th>{{ 'SubTítulo' | translate }}</th>
+                                                                        <th>{{ 'Iva' | translate }}</th>
+                                                                        <th>{{ 'Total Iva' | translate }}</th>
+                                                                        <th>{{ 'Total sin Iva' | translate }}</th>
+                                                                        <th>{{ 'Cantidad' | translate }}</th>
+                                                                        <th>{{ 'Total con Iva' | translate }}</th>
+                                                                    </tr>
+                                                                </ng-template>
+                                                                <ng-template pTemplate="body" let-itemconf>
+                                                                    <tr>
+                                                                        <td>
+                                                                            <img height="40" width="40" [src]="itemconf.imagen"
+                                                                                style="border:1px solid #ccc;" />
+                                                                        </td>
+                                                                        <td>{{ itemconf.titulo }}</td>
+                                                                        <td>{{ itemconf.subtitulo }}</td>
+                                                                        <td>{{ itemconf.porcentajeIva }}</td>
+                                                                        <td>{{ itemconf.valorIva | currency }}</td>
+                                                                        <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
+                                                                        <td>1</td>
+                                                                        <td>{{ itemconf.precioTotalConIva | currency }}</td>
+                                                                    </tr>
+                                                                </ng-template>
+                                                            </p-table>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </ng-template>
+
                                             <ng-template pTemplate="emptymessage">
                                                 <tr>
-                                                    <td colspan="3">{{ 'No hay productos en el carrito para este pedido.' | translate }}</td>
+                                                    <td colspan="4">{{ 'No hay productos en el carrito para este pedido.' | translate }}</td>
                                                 </tr>
                                             </ng-template>
                                         </p-table>
