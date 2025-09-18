@@ -1006,13 +1006,51 @@ export class PaymentService extends BaseService {
       const tituloProducto =
         producto?.crearProducto?.titulo ?? "Producto no disponible";
       const referenciaProducto = producto?.identificacion?.referencia ?? "N/A";
-      // Asegurar valores numéricos
-      const precioUnitarioSinIva =
-        Number(producto?.precio?.precioUnitarioSinIva) || 0;
+      
+      // 🔄 NUEVO: Calcular precios considerando escalas de volumen
+      const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
+      
+      // Precio unitario sin IVA con escalas de volumen
+      let precioUnitarioSinIva = Number(producto?.precio?.precioUnitarioSinIva) || 0;
+      if (preciosVolumen.length > 0) {
+        const precioVolumen = preciosVolumen.find((x: any) => {
+          const min = Number(x.numeroUnidadesInicial) || 0;
+          const max = Number(x.numeroUnidadesLimite) || Infinity;
+          return cantidad >= min && cantidad <= max;
+        });
+        if (precioVolumen) {
+          precioUnitarioSinIva = Number(precioVolumen.valorUnitarioPorVolumenSinIVA) || 0;
+        }
+      }
+      
+      // Precio unitario con IVA con escalas de volumen
+      let precioUnitarioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
+      if (preciosVolumen.length > 0) {
+        const precioVolumen = preciosVolumen.find((x: any) => {
+          const min = Number(x.numeroUnidadesInicial) || 0;
+          const max = Number(x.numeroUnidadesLimite) || Infinity;
+          return cantidad >= min && cantidad <= max;
+        });
+        if (precioVolumen) {
+          precioUnitarioConIva = Number(precioVolumen.valorUnitarioPorVolumenConIVA) || 0;
+        }
+      }
+      
+      // IVA unitario con escalas de volumen
+      let valorIva = Number(producto?.precio?.valorIva) || 0;
+      if (preciosVolumen.length > 0) {
+        const precioVolumen = preciosVolumen.find((x: any) => {
+          const min = Number(x.numeroUnidadesInicial) || 0;
+          const max = Number(x.numeroUnidadesLimite) || Infinity;
+          return cantidad >= min && cantidad <= max;
+        });
+        if (precioVolumen) {
+          valorIva = Number(precioVolumen.valorUnitarioPorVolumenIva) || 0;
+        }
+      }
+      
       const porcentajeIva = producto?.precio?.precioUnitarioIva ?? "0";
-      const valorIva = Number(producto?.precio?.valorIva) || 0;
-      const precioUnitarioConIva =
-        Number(producto?.precio?.precioUnitarioConIva) || 0;
+      
       // Totales por cantidad (respetando precio unitario en las columnas unitarias)
       const valorIvaTotalProducto = valorIva * cantidad;
       const totalConIvaProducto = precioUnitarioConIva * cantidad;

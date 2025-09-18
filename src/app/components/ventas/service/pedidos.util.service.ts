@@ -532,24 +532,81 @@ export class PedidosUtilService {
     //calcular valores del pedido
     pedido: Pedido;
 
+    /**
+     * Calcula el precio unitario sin IVA considerando escalas de volumen
+     */
+    private calcularPrecioUnitarioSinIVA(itemCarrito: any): number {
+        const producto = itemCarrito.producto;
+        const cantidad = itemCarrito.cantidad;
+        
+        if (!producto?.precio) {
+            return 0;
+        }
+
+        const preciosVolumen = producto.precio.preciosVolumen || [];
+        
+        // Si no hay precios por volumen, usar precio base
+        if (preciosVolumen.length === 0) {
+            return Number(producto.precio.precioUnitarioSinIva) || 0;
+        }
+
+        // Buscar el precio por volumen que aplique para esta cantidad
+        const precioVolumen = preciosVolumen.find((x: any) => {
+            const min = Number(x.numeroUnidadesInicial) || 0;
+            const max = Number(x.numeroUnidadesLimite) || Infinity;
+            return cantidad >= min && cantidad <= max;
+        });
+
+        // Si se encuentra un precio por volumen, usarlo; sino usar precio base
+        if (precioVolumen) {
+            return Number(precioVolumen.valorUnitarioPorVolumenSinIVA) || 0;
+        } else {
+            return Number(producto.precio.precioUnitarioSinIva) || 0;
+        }
+    }
+
+    /**
+     * Calcula el precio unitario con IVA considerando escalas de volumen
+     */
+    private calcularPrecioUnitarioConIVA(itemCarrito: any): number {
+        const producto = itemCarrito.producto;
+        const cantidad = itemCarrito.cantidad;
+        
+        if (!producto?.precio) {
+            return 0;
+        }
+
+        const preciosVolumen = producto.precio.preciosVolumen || [];
+        
+        // Si no hay precios por volumen, usar precio base
+        if (preciosVolumen.length === 0) {
+            return Number(producto.precio.precioUnitarioConIva) || 0;
+        }
+
+        // Buscar el precio por volumen que aplique para esta cantidad
+        const precioVolumen = preciosVolumen.find((x: any) => {
+            const min = Number(x.numeroUnidadesInicial) || 0;
+            const max = Number(x.numeroUnidadesLimite) || Infinity;
+            return cantidad >= min && cantidad <= max;
+        });
+
+        // Si se encuentra un precio por volumen, usarlo; sino usar precio base
+        if (precioVolumen) {
+            return Number(precioVolumen.valorUnitarioPorVolumenConIVA) || 0;
+        } else {
+            return Number(producto.precio.precioUnitarioConIva) || 0;
+        }
+    }
+
     getSubtotal(): number {
-        let totalPrecioSinIVA = 0;
         let totalPrecioSinIVADef = 0;
         if (this.pedido && this.pedido.carrito) {
 
             this.pedido.carrito.forEach((itemCarrito: any) => {
-                if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-                    itemCarrito.producto.precio.preciosVolumen.map((x: any) => {
-                        if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-                            totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * itemCarrito.cantidad;
-                        } else {
-                            totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
-                        }
+                // Calcular precio base del producto con escalas de volumen
+                const precioUnitarioSinIVA = this.calcularPrecioUnitarioSinIVA(itemCarrito);
+                let totalPrecioSinIVA = precioUnitarioSinIVA * itemCarrito.cantidad;
 
-                    });
-                } else {
-                    totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
-                }
                 // Sumar precios de adiciones
                 if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
                     itemCarrito.configuracion.adiciones.forEach(adicion => {
@@ -563,7 +620,8 @@ export class PedidosUtilService {
                         totalPrecioSinIVA += (preferencia['valorUnitarioSinIva']) * itemCarrito.cantidad;
                     });
                 }
-                totalPrecioSinIVADef += totalPrecioSinIVA
+                
+                totalPrecioSinIVADef += totalPrecioSinIVA;
             });
 
         }
@@ -583,23 +641,14 @@ export class PedidosUtilService {
      * Útil para casos donde se necesita el subtotal base
      */
     getSubtotalSinEnvio(): number {
-        let totalPrecioSinIVA = 0;
         let totalPrecioSinIVADef = 0;
         if (this.pedido && this.pedido.carrito) {
 
             this.pedido.carrito.forEach((itemCarrito: any) => {
-                if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-                    itemCarrito.producto.precio.preciosVolumen.map((x: any) => {
-                        if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-                            totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * itemCarrito.cantidad;
-                        } else {
-                            totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
-                        }
+                // Calcular precio base del producto con escalas de volumen
+                const precioUnitarioSinIVA = this.calcularPrecioUnitarioSinIVA(itemCarrito);
+                let totalPrecioSinIVA = precioUnitarioSinIVA * itemCarrito.cantidad;
 
-                    });
-                } else {
-                    totalPrecioSinIVA = (itemCarrito.producto?.precio?.precioUnitarioSinIva) * itemCarrito.cantidad;
-                }
                 // Sumar precios de adiciones
                 if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
                     itemCarrito.configuracion.adiciones.forEach(adicion => {
@@ -613,26 +662,55 @@ export class PedidosUtilService {
                         totalPrecioSinIVA += (preferencia['valorUnitarioSinIva']) * itemCarrito.cantidad;
                     });
                 }
-                totalPrecioSinIVADef += totalPrecioSinIVA
+                
+                totalPrecioSinIVADef += totalPrecioSinIVA;
             });
 
         }
         
         return totalPrecioSinIVADef;
     }
+    /**
+     * Calcula el IVA unitario considerando escalas de volumen
+     */
+    private calcularIVAUnitario(itemCarrito: any): number {
+        const producto = itemCarrito.producto;
+        const cantidad = itemCarrito.cantidad;
+        
+        if (!producto?.precio) {
+            return 0;
+        }
+
+        const preciosVolumen = producto.precio.preciosVolumen || [];
+        
+        // Si no hay precios por volumen, usar IVA base
+        if (preciosVolumen.length === 0) {
+            return Number(producto.precio.valorIva) || 0;
+        }
+
+        // Buscar el precio por volumen que aplique para esta cantidad
+        const precioVolumen = preciosVolumen.find((x: any) => {
+            const min = Number(x.numeroUnidadesInicial) || 0;
+            const max = Number(x.numeroUnidadesLimite) || Infinity;
+            return cantidad >= min && cantidad <= max;
+        });
+
+        // Si se encuentra un precio por volumen, usar su IVA; sino usar IVA base
+        if (precioVolumen) {
+            return Number(precioVolumen.valorUnitarioPorVolumenIva) || 0;
+        } else {
+            return Number(producto.precio.valorIva) || 0;
+        }
+    }
+
     checkIVAPrice() {
         let totalPrecioIVA = 0;
 
         this.pedido.carrito?.forEach((itemCarrito: any) => {
-            if (itemCarrito.producto.precio.preciosVolumen.length > 0) {
-                itemCarrito.producto.precio.preciosVolumen.forEach(x => {
-                    if (itemCarrito.cantidad >= x.numeroUnidadesInicial && itemCarrito.cantidad <= x.numeroUnidadesLimite) {
-                        totalPrecioIVA += x.valorUnitarioPorVolumenIva * itemCarrito.cantidad;
-                    }
-                });
-            } else {
-                totalPrecioIVA += (itemCarrito.producto?.precio?.valorIva) * itemCarrito.cantidad;
-            }
+            // Calcular IVA base del producto con escalas de volumen
+            const ivaUnitario = this.calcularIVAUnitario(itemCarrito);
+            totalPrecioIVA += ivaUnitario * itemCarrito.cantidad;
+
             // Sumar precios de adiciones
             if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
                 itemCarrito.configuracion.adiciones.forEach(adicion => {
@@ -643,7 +721,7 @@ export class PedidosUtilService {
             // Sumar precios de preferencias
             if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
                 itemCarrito.configuracion.preferencias.forEach(preferencia => {
-                    totalPrecioIVA += preferencia['valorIva'] * itemCarrito.cantidad;;
+                    totalPrecioIVA += preferencia['valorIva'] * itemCarrito.cantidad;
                 });
             }
         });
