@@ -48,6 +48,7 @@ import { Router } from "@angular/router";
 import { PdfTemplateComponent } from "../components/pdf-template/pdf-template.component";
 import { GeocodingService, GeocodingResponse } from "../../../shared/services/geocoding.service";
 import { MapaUbicacionesComponent } from "../components/mapa-ubicaciones/mapa-ubicaciones.component";
+import { OrdenesDespachoV2Component } from "../components/ordenes-despacho-v2/ordenes-despacho-v2.component";
 import { AnalisisDespachosComponent } from '../components/analisis-despachos/analisis-despachos.component';
 import { SeguimientoModalComponent } from "../components/seguimiento-modal/seguimiento-modal.component";
 import { Integration, IntegrationCategory, IntegrationsService } from "../../integrations/integrations.service";
@@ -173,6 +174,7 @@ export class DespachosComponent implements OnInit {
   @ViewChild("pdfTemplateContainer", { static: false })
   pdfTemplateContainer!: ElementRef;
   @ViewChild("mapaUbicaciones", { static: false }) mapaComponent?: MapaUbicacionesComponent;
+  @ViewChild("ordenesDespachoV2Component", { static: false }) ordenesDespachoV2Component?: OrdenesDespachoV2Component;
   generandoRotuloPara: Set<string> = new Set();
   orders: PedidoPriorizado[] = [];
   loading: boolean = true;
@@ -2480,6 +2482,8 @@ export class DespachosComponent implements OnInit {
     this.modalRef = this.modalService.open(content, {
       size: "xl",
       fullscreen: false,
+      centered: true,
+      scrollable: true
     });
     this.modalRef.result.then(
       (result) => {
@@ -4309,6 +4313,13 @@ export class DespachosComponent implements OnInit {
           }
 
           this.refrescarDatos();
+
+          // Actualizar también el componente ordenes-despacho-v2 si está presente
+          if (this.ordenesDespachoV2Component) {
+            console.log('Actualizando ordenes-despacho-v2 después de actualizar orden...');
+            this.ordenesDespachoV2Component.loadInitialOrders();
+          }
+
           this.modalService.dismissAll();
         },
         error: (error) => {
@@ -4364,6 +4375,13 @@ export class DespachosComponent implements OnInit {
 
         // Actualizar la lista de órdenes y cerrar el modal
         this.refrescarDatos();
+
+        // Actualizar también el componente ordenes-despacho-v2 si está presente
+        if (this.ordenesDespachoV2Component) {
+          console.log('Actualizando ordenes-despacho-v2 después de crear orden...');
+          this.ordenesDespachoV2Component.loadInitialOrders();
+        }
+
         this.modalService.dismissAll();
       },
       error: (error) => {

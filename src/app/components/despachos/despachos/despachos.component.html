@@ -427,6 +427,7 @@
                         </ng-template>
                         <div class="p-3">
                             <app-ordenes-despacho-v2
+                                #ordenesDespachoV2Component
                                 [vendors]="availableTransporters"
                                 (onPrintOrder)="imprimirOrderToAction($event)"
                                 (onViewOrder)="handleOrderView($event)"

@@ -1,8 +1,10 @@
-import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { Component, EventEmitter, Input, OnInit, OnDestroy, Output, ViewEncapsulation } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { EstadoProceso, Pedido } from "../../../ventas/modelo/pedido";
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { EstadoPago, EstadoProceso, Pedido } from "../../../ventas/modelo/pedido";
 import { LogisticaServiceV2 } from "../../../../shared/services/despachos/logistica.service.v2";
+import { VentasService } from "../../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
 
 interface ColumnDefinition {
@@ -15,8 +17,13 @@ interface ColumnDefinition {
   selector: "app-generar-orden",
   templateUrl: "./generar-orden.component.html",
   styleUrls: ["./generar-orden.component.scss"],
+  encapsulation: ViewEncapsulation.None
 })
-export class GenerarOrdenComponent implements OnInit {
+export class GenerarOrdenComponent implements OnInit, OnDestroy {
+  // Control de modo de operación
+  @Input() usarPedidosPadre: boolean = false; // DEFAULT: modo independiente
+
+  // Inputs existentes
   @Input() orders: Pedido[] = [];
   @Input() pedidosSeleccionados: Pedido[] = [];
   @Input() nuevaOrdenEnvio: any;
@@ -69,9 +76,19 @@ export class GenerarOrdenComponent implements OnInit {
   columnFilters: any = {};
   globalFilterFields: string[] = ['nroPedido', 'clienteNombre', 'ciudadNombre', 'direccionEntregaNombre'];
 
+  // Cache y estado para modo independiente
+  private pedidosPropiosCache: Pedido[] = [];
+  loadingPedidos: boolean = false;
+  private destroy$ = new Subject<void>();
+  totalPedidosEncontrados: number = 0;
+
+  // Límite de pedidos
+  readonly LIMITE_PEDIDOS = 200;
+
   constructor(
     private formBuilder: FormBuilder,
     private logisticaService: LogisticaServiceV2,
+    private ventasService: VentasService // NUEVO - para modo independiente
   ) {}
 
   // Computed getter para determinar si estamos en modo edición
@@ -82,87 +99,104 @@ export class GenerarOrdenComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
-    // NO cargar órdenes aquí - esperar a que se seleccione una fecha
-    // Las órdenes se cargarán cuando:
-    // 1. El usuario seleccione una fecha (mediante valueChanges)
-    // 2. Si viene en modo edición con fecha precargada
 
-    // Inicializar datos según el modo (creación o edición)
-    if (this.isEditMode && this.nuevaOrdenEnvio) {
-      // Debug: Analizar datos de edición
-      console.log('=== DEBUG: EDIT MODE ACTIVATION ===');
-      console.log('isEditMode:', this.isEditMode);
-      console.log('nuevaOrdenEnvio completa:', this.nuevaOrdenEnvio);
-      console.log('Estructura de campos relevantes:', {
-        metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
-        metodo_envio: this.nuevaOrdenEnvio.metodo_envio,
-        tipoEnvio: this.nuevaOrdenEnvio.tipoEnvio,
-        transportador: this.nuevaOrdenEnvio.transportador,
-        fecha: this.nuevaOrdenEnvio.fecha
-      });
+    // Detectar modo de operación
+    if (!this.usarPedidosPadre) {
+      // MODO INDEPENDIENTE: Inicializar fechas por defecto y cargar pedidos
+      this.inicializarFechasPorDefecto();
+      this.configurarSuscripcionesFechas();
 
-      // En modo edición, cargar los datos de la orden existente
-      this.metodoEnvio = this.getShippingMethodFromOrder(this.nuevaOrdenEnvio);
-      
-      console.log('Método de envío detectado:', this.metodoEnvio);
-      console.log('Fecha formateada:', this.formatDateForInput(this.nuevaOrdenEnvio.fecha));
-
-      // Inicializar el formulario con los valores de la orden existente
-      this.ordenEnvioForm.patchValue({
-        fechaEnvio: this.formatDateForInput(this.nuevaOrdenEnvio.fecha),
-        metodoEnvio: this.metodoEnvio,
-      });
-
-      // Forzar actualización del formulario
-      this.ordenEnvioForm.updateValueAndValidity();
-      this.ordenEnvioForm.markAllAsTouched();
-
-      console.log('Estado del formulario después del patchValue:', {
-        fechaEnvio: this.ordenEnvioForm.get('fechaEnvio')?.value,
-        metodoEnvio: this.ordenEnvioForm.get('metodoEnvio')?.value,
-        formValid: this.ordenEnvioForm.valid
-      });
-      console.log('=====================================');
-
-      // Refrescar la lista de pedidos disponibles
-      this.actualizarPedidosDisponibles();
-      
-      // Cargar órdenes existentes ahora que tenemos fecha
-      if (!this.ordenesExistentes || this.ordenesExistentes.length === 0) {
-        this.cargarOrdenesExistentes();
-      }
+      // Cargar órdenes existentes para detectar pedidos duplicados
+      // y permitir mover pedidos entre órdenes
+      this.cargarOrdenesExistentes();
     } else {
-      // En modo creación, inicializar con valores por defecto
-      if (this.nroShippingOrder) {
-        // Si ya hay un número de orden, es porque se está editando después de guardar
+      // MODO DEPENDIENTE: Funciona como actualmente
+      // NO cargar órdenes aquí - esperar a que se seleccione una fecha
+      // Las órdenes se cargarán cuando:
+      // 1. El usuario seleccione una fecha (mediante valueChanges)
+      // 2. Si viene en modo edición con fecha precargada
+
+      // Inicializar datos según el modo (creación o edición)
+      if (this.isEditMode && this.nuevaOrdenEnvio) {
+        // Debug: Analizar datos de edición
+        console.log('=== DEBUG: EDIT MODE ACTIVATION ===');
+        console.log('isEditMode:', this.isEditMode);
+        console.log('nuevaOrdenEnvio completa:', this.nuevaOrdenEnvio);
+        console.log('Estructura de campos relevantes:', {
+          metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
+          metodo_envio: this.nuevaOrdenEnvio.metodo_envio,
+          tipoEnvio: this.nuevaOrdenEnvio.tipoEnvio,
+          transportador: this.nuevaOrdenEnvio.transportador,
+          fecha: this.nuevaOrdenEnvio.fecha
+        });
+
+        // En modo edición, cargar los datos de la orden existente
+        this.metodoEnvio = this.getShippingMethodFromOrder(this.nuevaOrdenEnvio);
+
+        console.log('Método de envío detectado:', this.metodoEnvio);
+        console.log('Fecha formateada:', this.formatDateForInput(this.nuevaOrdenEnvio.fecha));
+
+        // Inicializar el formulario con los valores de la orden existente
+        this.ordenEnvioForm.patchValue({
+          metodoEnvio: this.metodoEnvio,
+        });
+
+        // Si estamos en modo independiente, setear las fechas de búsqueda basadas en la fecha de la orden
+        if (!this.usarPedidosPadre && this.nuevaOrdenEnvio.fecha) {
+          const fechaOrden = new Date(this.nuevaOrdenEnvio.fecha);
+          // p-calendar de PrimeNG espera objetos Date, no strings
+          this.ordenEnvioForm.patchValue({
+            fechaInicio: fechaOrden,
+            fechaFin: fechaOrden
+          });
+        }
+
+        // Forzar actualización del formulario
+        this.ordenEnvioForm.updateValueAndValidity();
+        this.ordenEnvioForm.markAllAsTouched();
+
+        console.log('Estado del formulario después del patchValue:', {
+          metodoEnvio: this.ordenEnvioForm.get('metodoEnvio')?.value,
+          fechaInicio: this.ordenEnvioForm.get('fechaInicio')?.value,
+          fechaFin: this.ordenEnvioForm.get('fechaFin')?.value,
+          formValid: this.ordenEnvioForm.valid
+        });
+        console.log('=====================================');
+
+        // Refrescar la lista de pedidos disponibles
         this.actualizarPedidosDisponibles();
+
+        // Cargar órdenes existentes ahora que tenemos fecha
+        if (!this.ordenesExistentes || this.ordenesExistentes.length === 0) {
+          this.cargarOrdenesExistentes();
+        }
+      } else {
+        // En modo creación, inicializar con valores por defecto
+        if (this.nroShippingOrder) {
+          // Si ya hay un número de orden, es porque se está editando después de guardar
+          this.actualizarPedidosDisponibles();
+        }
       }
     }
   }
 
   private initForm(): void {
+    // Determinar validadores según el modo
+    const fechaValidators = this.usarPedidosPadre ? [] : [Validators.required];
+
     this.ordenEnvioForm = this.formBuilder.group({
-      fechaEnvio: ["", Validators.required],
+      // Solo dos fechas para todo
+      fechaInicio: ["", fechaValidators],
+      fechaFin: ["", fechaValidators],
       metodoEnvio: ["", Validators.required],
     });
-
-    // Suscripción a cambios de fecha con debouncing
-    this.ordenEnvioForm.get("fechaEnvio")?.valueChanges
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged()
-      )
-      .subscribe(async () => {
-        // Recargar órdenes existentes con la nueva fecha para optimizar validación
-        await this.cargarOrdenesExistentes();
-        this.actualizarPedidosDisponibles();
-      });
 
     // Suscripción a cambios de método con debouncing
     this.ordenEnvioForm.get("metodoEnvio")?.valueChanges
       .pipe(
         debounceTime(300),
-        distinctUntilChanged()
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
       )
       .subscribe((value) => {
         this.metodoEnvio = value;
@@ -174,6 +208,168 @@ export class GenerarOrdenComponent implements OnInit {
     this.ordenEnvioForm.get('metodoEnvio')?.setValue(metodo);
   }
 
+  // ===== NUEVOS MÉTODOS PARA MODO INDEPENDIENTE =====
+
+  private inicializarFechasPorDefecto(): void {
+    const hoy = new Date();
+
+    // Setear ambas fechas a hoy por defecto
+    // p-calendar de PrimeNG espera objetos Date, no strings
+    this.ordenEnvioForm.patchValue({
+      fechaInicio: hoy,
+      fechaFin: hoy
+    });
+
+    // NO cargar pedidos automáticamente - esperar a que el usuario haga clic en Filtrar
+  }
+
+  private configurarSuscripcionesFechas(): void {
+    // NO suscribirse a cambios automáticos - el usuario debe hacer clic en Filtrar
+    // Esta función se mantiene vacía pero disponible para futuras mejoras
+  }
+
+  private cargarPedidosPropios(): void {
+    if (this.usarPedidosPadre) return;
+
+    const fechaInicio = this.ordenEnvioForm.get('fechaInicio')?.value;
+    const fechaFin = this.ordenEnvioForm.get('fechaFin')?.value;
+
+    if (!fechaInicio || !fechaFin) return;
+
+    this.loadingPedidos = true;
+
+    // Formatear fechas al formato YYYY-MM-DD que espera la API
+    const formatDateForAPI = (dateValue: string , isDateInicio: boolean = false): string => {
+      const date = new Date(dateValue);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      if (isDateInicio) {
+        return `${year}-${month}-${day}T00:00:00.000Z`;
+      } else {
+        return `${year}-${month}-${day}T23:59:59.999Z`;
+      }
+    };
+
+    const filter = {
+      fechaInicial: formatDateForAPI(fechaInicio, true),
+      fechaFinal: formatDateForAPI(fechaFin, false),
+      company: JSON.parse(localStorage.getItem("currentCompany") || "{}").nomComercial,
+      estadoProceso: [
+        EstadoProceso.ParaDespachar,
+        EstadoProceso.Empacado,
+        EstadoProceso.ProducidoTotalmente
+      ],
+      estadosPago: [
+        EstadoPago.PreAprobado,
+        EstadoPago.Aprobado,
+        EstadoPago.Pendiente,
+        EstadoPago.Pospendiente,
+      ],
+      fields: 'full',
+      limit: this.LIMITE_PEDIDOS,
+      tipoFecha: "fechaEntrega",
+    };
+
+    this.ventasService.getOrdersByFilterOptimized(filter, 1, this.LIMITE_PEDIDOS)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.pedidosPropiosCache = response.orders || [];
+          this.totalPedidosEncontrados = response.pagination?.totalItems || 0;
+          this.actualizarPedidosDisponibles();
+          this.loadingPedidos = false;
+
+          // Mostrar advertencia si hay más pedidos del límite
+          if (this.totalPedidosEncontrados > this.LIMITE_PEDIDOS) {
+            Swal.fire({
+              icon: 'info',
+              title: 'Límite de pedidos alcanzado',
+              html: `
+                <div class="text-start">
+                  <p>Se encontraron <strong>${this.totalPedidosEncontrados}</strong> pedidos.</p>
+                  <p>Por rendimiento, solo se muestran los primeros <strong>${this.LIMITE_PEDIDOS}</strong>.</p>
+                  <p class="text-muted small mt-2">
+                    <i class="pi pi-info-circle me-1"></i>
+                    Ajusta el rango de fechas para ver pedidos específicos.
+                  </p>
+                </div>
+              `,
+              confirmButtonText: 'Entendido'
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error cargando pedidos propios:', error);
+          this.loadingPedidos = false;
+          this.pedidosPropiosCache = [];
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al cargar pedidos',
+            text: 'No se pudieron obtener los pedidos. Intenta nuevamente.',
+            confirmButtonText: 'Reintentar'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.cargarPedidosPropios();
+            }
+          });
+        }
+      });
+  }
+
+  private validarRangoFechas(): boolean {
+    if (this.usarPedidosPadre) return true;
+
+    const fechaInicio = this.ordenEnvioForm.get('fechaInicio')?.value;
+    const fechaFin = this.ordenEnvioForm.get('fechaFin')?.value;
+
+    if (!fechaInicio || !fechaFin) return false;
+
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+
+    // Validar que fin >= inicio
+    if (fin < inicio) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Fechas inválidas',
+        text: 'La fecha fin debe ser posterior a la fecha inicio',
+        timer: 3000,
+        showConfirmButton: false
+      });
+      return false;
+    }
+
+    // Validar rango máximo 30 días
+    const diffTime = Math.abs(fin.getTime() - inicio.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 30) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Rango muy amplio',
+        text: 'El rango máximo permitido es de 30 días',
+        timer: 3000,
+        showConfirmButton: false
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  // Botón manual de filtrado
+  filtrarPedidos(): void {
+    if (!this.usarPedidosPadre) {
+      if (this.validarRangoFechas()) {
+        this.cargarPedidosPropios();
+      }
+    } else {
+      this.actualizarPedidosDisponibles();
+    }
+  }
+
 
 
   
@@ -181,15 +377,16 @@ export class GenerarOrdenComponent implements OnInit {
 
   private async cargarOrdenesExistentes(): Promise<void> {
     // Cargar órdenes existentes para verificar duplicados usando el método optimizado
-    let fechaEnvio = this.ordenEnvioForm.get('fechaEnvio')?.value;
-    
+    // Usar fechaFin como referencia para cargar las órdenes del mes
+    let fechaReferencia = this.ordenEnvioForm.get('fechaFin')?.value;
+
     // Si no hay fecha seleccionada, usar la fecha actual
-    if (!fechaEnvio) {
-      fechaEnvio = new Date().toISOString();
+    if (!fechaReferencia) {
+      fechaReferencia = new Date().toISOString();
       console.log('No hay fecha seleccionada, usando fecha actual');
     }
-    
-    const fecha = new Date(fechaEnvio);
+
+    const fecha = new Date(fechaReferencia);
     // Formato YYYY-MM-DD
     // Restar una semana a la fecha de inicio
     const fechaInicio = new Date(fecha);
@@ -396,32 +593,57 @@ export class GenerarOrdenComponent implements OnInit {
    * si el checkbox mostrarPedidosEnOrdenes está activado
    */
   private obtenerTodosLosPedidos(): Pedido[] {
-    // Comenzar con los pedidos del componente padre
-    let todosLosPedidos = [...this.orders];
+    if (this.usarPedidosPadre) {
+      // MODO DEPENDIENTE: usar pedidos del padre
+      let todosLosPedidos = [...this.orders];
 
-    // Si queremos mostrar pedidos en órdenes y hay órdenes existentes
-    if (this.mostrarPedidosEnOrdenes && this.ordenesExistentes && this.ordenesExistentes.length > 0) {
-      // Extraer pedidos de cada orden existente
-      this.ordenesExistentes.forEach(orden => {
-        if (orden.pedidos && Array.isArray(orden.pedidos)) {
-          // Agregar los pedidos de esta orden
-          todosLosPedidos = [...todosLosPedidos, ...orden.pedidos];
-        }
-      });
+      // Si queremos mostrar pedidos en órdenes y hay órdenes existentes
+      if (this.mostrarPedidosEnOrdenes && this.ordenesExistentes && this.ordenesExistentes.length > 0) {
+        // Extraer pedidos de cada orden existente
+        this.ordenesExistentes.forEach(orden => {
+          if (orden.pedidos && Array.isArray(orden.pedidos)) {
+            // Agregar los pedidos de esta orden
+            todosLosPedidos = [...todosLosPedidos, ...orden.pedidos];
+          }
+        });
 
-      // Eliminar duplicados basándose en nroPedido
-      const pedidosUnicos = new Map<string, Pedido>();
-      todosLosPedidos.forEach(pedido => {
-        if (pedido.nroPedido && !pedidosUnicos.has(pedido.nroPedido)) {
-          pedidosUnicos.set(pedido.nroPedido, pedido);
-        }
-      });
+        // Eliminar duplicados basándose en nroPedido
+        const pedidosUnicos = new Map<string, Pedido>();
+        todosLosPedidos.forEach(pedido => {
+          if (pedido.nroPedido && !pedidosUnicos.has(pedido.nroPedido)) {
+            pedidosUnicos.set(pedido.nroPedido, pedido);
+          }
+        });
 
-      return Array.from(pedidosUnicos.values());
+        return Array.from(pedidosUnicos.values());
+      }
+
+      return this.orders || [];
+    } else {
+      // MODO INDEPENDIENTE: usar cache propio
+      if (this.mostrarPedidosEnOrdenes && this.ordenesExistentes?.length > 0) {
+        // Combinar pedidos propios con los de órdenes existentes
+        const todosLosPedidos = [...this.pedidosPropiosCache];
+
+        this.ordenesExistentes.forEach(orden => {
+          if (orden.pedidos && Array.isArray(orden.pedidos)) {
+            todosLosPedidos.push(...orden.pedidos);
+          }
+        });
+
+        // Eliminar duplicados
+        const pedidosUnicos = new Map<string, Pedido>();
+        todosLosPedidos.forEach(pedido => {
+          if (pedido.nroPedido && !pedidosUnicos.has(pedido.nroPedido)) {
+            pedidosUnicos.set(pedido.nroPedido, pedido);
+          }
+        });
+
+        return Array.from(pedidosUnicos.values());
+      }
+
+      return this.pedidosPropiosCache || [];
     }
-
-    // Si no queremos mostrar pedidos en órdenes, solo retornar los pedidos normales
-    return this.orders;
   }
 
   agregarPedido(pedido: Pedido): void {
@@ -446,6 +668,13 @@ export class GenerarOrdenComponent implements OnInit {
   closeModal(): void {
     // Limpiar estado de pedidos movidos al cerrar
     this.limpiarEstadoPedidosMovidos();
+
+    // Limpiar cache solo en modo independiente
+    if (!this.usarPedidosPadre) {
+      this.pedidosPropiosCache = [];
+      this.totalPedidosEncontrados = 0;
+    }
+
     this.onClose.emit();
   }
 
@@ -855,7 +1084,7 @@ export class GenerarOrdenComponent implements OnInit {
 
     const fechaOrden =
       ordenEncontrada.fecha ||
-      ordenEncontrada.fechaEnvio ||
+      ordenEncontrada.fecha ||
       ordenEncontrada.fechaCreacion;
     const transportadorInfo =
       ordenEncontrada.transportador ||
@@ -1193,5 +1422,11 @@ export class GenerarOrdenComponent implements OnInit {
 
   printLabel(pedido: Pedido): void {
     this.onPrintLabel.emit(pedido);
+  }
+
+  // Método lifecycle para limpiar suscripciones
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
