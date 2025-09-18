@@ -6,8 +6,8 @@
 
 :root {
   // Dimensiones
-  --sidebar-width: 300px;
-  --sidebar-compact-width: 72px;
+  --sidebar-width: 260px;
+  --sidebar-compact-width: 64px;
   
   // Glassmorphism y fondos modernos
   --sidebar-bg: rgba(255, 255, 255, 0.85);
@@ -352,7 +352,7 @@
   // Efecto spotlight que sigue el cursor
   .sidebar-spotlight {
     position: absolute;
-    width: 300px;
+    width: 260px;
     height: 300px;
     background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
     border-radius: 50%;
@@ -411,7 +411,7 @@
     // En móviles: ocultar completamente
     @media (max-width: 991.98px) {
       transform: translateX(-100%);
-      width: 280px;
+      width: 240px;
       box-shadow: none;
       visibility: hidden;
       opacity: 0;
@@ -429,7 +429,7 @@
   
   // Estados específicos para móvil
   @media (max-width: 991.98px) {
-    width: 280px !important;
+    width: 240px !important;
     z-index: 1055 !important;
     transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
     
@@ -632,7 +632,7 @@
       }
       
       i {
-        font-size: 18px;
+        font-size: 14px;
         font-weight: bold;
         z-index: 1;
         transition: all var(--transition-bounce);
@@ -678,7 +678,7 @@
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-muted);
-      font-size: 14px;
+      font-size: 11px;
       pointer-events: none;
     }
     
@@ -689,7 +689,7 @@
       border: 1px solid var(--sidebar-border);
       border-radius: var(--radius-lg);
       background: var(--bg-hover);
-      font-size: 14px;
+      font-size: 11px;
       color: var(--text-primary);
       transition: all var(--transition-fast);
       
@@ -758,7 +758,7 @@
           width: 20px;
           margin-right: var(--spacing-md);
           color: var(--text-muted);
-          font-size: 14px;
+          font-size: 11px;
         }
         
         &:hover {
@@ -787,11 +787,11 @@
     padding: var(--spacing-lg);
     text-align: center;
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 11px;
     
     i {
       display: block;
-      font-size: 24px;
+      font-size: 18px;
       margin-bottom: var(--spacing-sm);
       opacity: 0.5;
     }
@@ -811,11 +811,11 @@
     display: flex;
     align-items: center;
     margin: 0 0 var(--spacing-md) 0;
-    font-size: 12px;
+    font-size: 9px;
     font-weight: 600;
     color: var(--primary-color);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     
     i {
       margin-right: var(--spacing-sm);
@@ -845,12 +845,12 @@
           width: 20px;
           margin-right: var(--spacing-md);
           color: #f1c40f;
-          font-size: 14px;
+          font-size: 11px;
         }
         
         span {
           flex: 1;
-          font-size: 13px;
+          font-size: 10px;
         }
         
         .remove-favorite-btn {
@@ -968,22 +968,22 @@
       margin-right: var(--spacing-md);
       
       i {
-        font-size: 12px;
+        font-size: 10px;
         color: var(--primary-color);
       }
     }
     
     .section-title {
       flex: 1;
-      font-size: 12px;
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.5px;
       text-align: left;
     }
     
     .section-chevron {
-      font-size: 12px;
+      font-size: 10px;
       transition: transform var(--transition-fast);
       
       &.rotated {
@@ -1122,7 +1122,7 @@
           transition: all var(--transition-normal);
             
           i {
-            font-size: 18px;
+            font-size: 14px;
             color: var(--primary-color);
             transition: all var(--transition-fast);
           }
@@ -1311,7 +1311,7 @@
         position: relative;
         
         i {
-          font-size: 18px;
+          font-size: 14px;
           color: var(--text-secondary);
           transition: all var(--transition-bounce);
           z-index: 1;
@@ -1320,7 +1320,7 @@
       
       .menu-text {
         flex: 1;
-        font-size: 15px;
+        font-size: 12px;
         font-weight: var(--font-weight-medium);
         text-align: left;
         letter-spacing: -0.01em;
@@ -1399,7 +1399,7 @@
         color: white;
         padding: var(--spacing-lg) var(--spacing-xl);
         border-radius: var(--radius-xl);
-        font-size: 14px;
+        font-size: 11px;
         font-weight: var(--font-weight-semibold);
         white-space: nowrap;
         opacity: 0;
@@ -1558,7 +1558,7 @@
       
       .submenu-text {
         flex: 1;
-        font-size: 13px;
+        font-size: 10px;
         text-align: left;
       }
       
@@ -1728,7 +1728,7 @@
     margin-right: 12px !important;
     
     i {
-      font-size: 16px !important;
+      font-size: 12px !important;
       font-family: FontAwesome !important;
     }
   }
@@ -1822,14 +1822,14 @@
     height: 40px !important;
   }
   
-  // Texto más grande en pantallas pequeñas
+  // Texto compacto en pantallas pequeñas
   .menu-text {
-    font-size: 15px !important;
+    font-size: 10px !important;
     font-weight: 500 !important;
   }
   
   .submenu-text {
-    font-size: 14px !important;
+    font-size: 9px !important;
     font-weight: 500 !important;
   }
   
@@ -1859,7 +1859,7 @@
     margin-right: 10px !important;
     
     i {
-      font-size: 14px !important;
+      font-size: 11px !important;
     }
   }
 }
@@ -1867,7 +1867,7 @@
 @media (max-width: 575px) {
   .sidebar-container {
     width: 100vw !important;
-    max-width: 280px !important;
+    max-width: 240px !important;
     z-index: 1055 !important;
   }
   
@@ -1880,7 +1880,7 @@
     z-index: 1070 !important;
     
     i {
-      font-size: 14px !important;
+      font-size: 11px !important;
     }
   }
   
@@ -1910,7 +1910,7 @@
           margin-right: 0;
           
           i {
-            font-size: 18px;
+            font-size: 14px;
           }
         }
         
@@ -1947,7 +1947,7 @@
   .tooltip {
     background: rgba(26, 32, 44, 0.95) !important;
     font-weight: 600;
-    font-size: 13px !important;
+    font-size: 10px !important;
     padding: var(--spacing-sm) var(--spacing-md) !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     
@@ -2300,7 +2300,7 @@
     z-index: 1070 !important;
     
     i {
-      font-size: 16px !important;
+      font-size: 12px !important;
     }
   }
   
@@ -2390,7 +2390,7 @@
   }
   
   i {
-    font-size: 20px;
+    font-size: 15px;
     font-family: FontAwesome !important;
     transition: all var(--transition-bounce);
     z-index: 1;
@@ -2494,7 +2494,7 @@
     opacity: 1 !important;
     
     i {
-      font-size: 18px;
+      font-size: 14px;
     }
     
     // Efecto cinematográfico de respiración
@@ -2590,7 +2590,7 @@
     z-index: 1070 !important;
     
     i {
-      font-size: 16px !important;
+      font-size: 12px !important;
     }
   }
   
@@ -2717,7 +2717,7 @@
       transition: all var(--transition-bounce);
       
       i {
-        font-size: 16px;
+        font-size: 12px;
         color: var(--primary-color);
         font-family: FontAwesome !important;
         transition: all var(--transition-fast);
@@ -2731,7 +2731,7 @@
       position: relative;
       
       .submenu-text {
-        font-size: 14px;
+        font-size: 11px;
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 2px;
@@ -2756,7 +2756,7 @@
       position: relative;
       
       .submenu-text {
-        font-size: 14px;
+        font-size: 11px;
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 2px;
@@ -2990,7 +2990,7 @@
     transition: transform 0.2s ease;
     
     .fa-bell {
-      font-size: 18px;
+      font-size: 14px;
       color: var(--text-secondary);
       transition: all 0.3s ease;
       
@@ -3031,7 +3031,7 @@
   
   .notification-label {
     flex: 1;
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 500;
     color: var(--text-primary);
     letter-spacing: -0.01em;
@@ -3075,7 +3075,7 @@
     border: 1px solid rgba(99, 102, 241, 0.15);
     border-radius: 8px;
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 11px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -3097,7 +3097,7 @@
     }
     
     i {
-      font-size: 14px;
+      font-size: 11px;
     }
   }
 }
@@ -3172,7 +3172,7 @@
         
         i {
           margin: 0 0 var(--spacing-sm) 0;
-          font-size: 16px;
+          font-size: 12px;
         }
         
         small {
@@ -3220,13 +3220,13 @@
     
     i {
       color: #f1c40f;
-      font-size: 14px;
+      font-size: 11px;
       margin-right: 6px;
     }
     
     small {
       font-weight: 600;
-      font-size: 13px;
+      font-size: 10px;
       color: var(--text-primary);
       margin-right: var(--spacing-sm);
     }
@@ -3386,13 +3386,13 @@
         align-items: baseline;
         
         .currency {
-          font-size: 18px;
+          font-size: 14px;
           margin-right: var(--spacing-xs);
           opacity: 0.9;
         }
         
         .amount {
-          font-size: 28px;
+          font-size: 21px;
           font-weight: 700;
           letter-spacing: 0.5px;
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -3475,7 +3475,7 @@
         
         i {
           margin-right: var(--spacing-sm);
-          font-size: 14px;
+          font-size: 11px;
         }
         
         &.upgrade {
@@ -3539,7 +3539,7 @@
         
         i {
           margin: 0 0 var(--spacing-sm) 0;
-          font-size: 16px;
+          font-size: 12px;
         }
         
         small {
@@ -3587,13 +3587,13 @@
     
     i {
       color: #f1c40f;
-      font-size: 14px;
+      font-size: 11px;
       margin-right: 6px;
     }
     
     small {
       font-weight: 600;
-      font-size: 13px;
+      font-size: 10px;
       color: var(--text-primary);
       margin-right: var(--spacing-sm);
     }
@@ -3753,13 +3753,13 @@
         align-items: baseline;
         
         .currency {
-          font-size: 18px;
+          font-size: 14px;
           margin-right: var(--spacing-xs);
           opacity: 0.9;
         }
         
         .amount {
-          font-size: 28px;
+          font-size: 21px;
           font-weight: 700;
           letter-spacing: 0.5px;
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -3842,7 +3842,7 @@
         
         i {
           margin-right: var(--spacing-sm);
-          font-size: 14px;
+          font-size: 11px;
         }
         
         &.upgrade {

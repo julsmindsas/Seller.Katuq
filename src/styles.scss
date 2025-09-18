@@ -312,3 +312,315 @@ body.modal-open {
   border-left: 4px solid var(--primary-color);
   background: linear-gradient(135deg, rgba(69, 155, 209, 0.05) 0%, rgba(69, 155, 209, 0.1) 100%);
 }
+
+/* Estilos globales para tipografía compacta */
+body {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+
+.card {
+  margin-bottom: 1.25rem !important;
+
+  .card-body {
+    padding: 1.25rem !important;
+    line-height: 1.4;
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Ajustes globales para PrimeNG - ALTA ESPECIFICIDAD */
+.p-component,
+.p-component * {
+  font-size: 0.7rem !important;
+}
+
+/* Inputs y campos de texto */
+.p-inputtext,
+.p-inputtext:enabled,
+.p-inputtext:enabled:focus,
+.p-inputnumber-input,
+.p-password input,
+.p-calendar input.p-inputtext,
+input.p-inputtext {
+  font-size: 0.7rem !important;
+  padding: 0.4rem 0.6rem !important;
+}
+
+/* Botones */
+.p-button,
+.p-button .p-button-label,
+.p-button-sm,
+.p-splitbutton .p-button {
+  font-size: 0.7rem !important;
+  padding: 0.4rem 0.7rem !important;
+}
+
+/* Dropdowns */
+.p-dropdown,
+.p-dropdown .p-dropdown-label,
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item,
+.p-dropdown-filter {
+  font-size: 0.7rem !important;
+}
+
+.p-dropdown .p-dropdown-label {
+  padding: 0.4rem 0.6rem !important;
+}
+
+/* Multiselect */
+.p-multiselect,
+.p-multiselect .p-multiselect-label,
+.p-multiselect-panel .p-multiselect-items .p-multiselect-item,
+.p-multiselect-filter-container .p-inputtext {
+  font-size: 0.7rem !important;
+}
+
+.p-multiselect .p-multiselect-label {
+  padding: 0.4rem 0.6rem !important;
+}
+
+/* Calendarios */
+.p-calendar,
+.p-calendar input,
+.p-calendar .p-inputtext,
+.p-datepicker table td span,
+.p-datepicker .p-datepicker-header,
+.p-timepicker span {
+  font-size: 0.7rem !important;
+}
+
+/* DataTable */
+.p-datatable {
+  font-size: 0.7rem !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  padding: 0.5rem !important;
+  font-size: 0.7rem !important;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.5rem !important;
+  line-height: 1.4 !important;
+  font-size: 0.7rem !important;
+}
+
+.p-datatable .p-datatable-tfoot > tr > td {
+  padding: 0.5rem !important;
+  font-size: 0.7rem !important;
+}
+
+/* Paginador */
+.p-paginator,
+.p-paginator .p-paginator-pages .p-paginator-page,
+.p-paginator .p-dropdown,
+.p-paginator .p-dropdown .p-dropdown-label,
+.p-paginator .p-paginator-current {
+  font-size: 0.7rem !important;
+}
+
+/* Checkbox y Radio */
+.p-checkbox-label,
+.p-radiobutton-label {
+  font-size: 0.7rem !important;
+}
+
+/* Menús */
+.p-menu .p-menuitem-link,
+.p-contextmenu .p-menuitem-link,
+.p-tieredmenu .p-menuitem-link {
+  font-size: 0.7rem !important;
+  padding: 0.4rem 0.6rem !important;
+}
+
+/* Diálogos */
+.p-dialog .p-dialog-header,
+.p-dialog .p-dialog-content,
+.p-dialog .p-dialog-footer {
+  font-size: 0.7rem !important;
+}
+
+.p-dialog .p-dialog-title {
+  font-size: 0.8rem !important;
+}
+
+/* Toast y mensajes */
+.p-toast .p-toast-message-content,
+.p-message .p-message-text {
+  font-size: 0.7rem !important;
+}
+
+/* Accordion */
+.p-accordion .p-accordion-header a,
+.p-accordion .p-accordion-content {
+  font-size: 0.7rem !important;
+}
+
+/* TabView */
+.p-tabview .p-tabview-nav li a,
+.p-tabview .p-tabview-panels .p-tabview-panel {
+  font-size: 0.7rem !important;
+}
+
+/* Panel */
+.p-panel .p-panel-header,
+.p-panel .p-panel-content {
+  font-size: 0.7rem !important;
+}
+
+/* Steps */
+.p-steps .p-steps-item .p-menuitem-link {
+  font-size: 0.7rem !important;
+}
+
+/* ProgressBar */
+.p-progressbar .p-progressbar-label {
+  font-size: 0.7rem !important;
+}
+
+/* Chips */
+.p-chips .p-chips-token,
+.p-chips .p-chips-input-token input {
+  font-size: 0.7rem !important;
+}
+
+/* FileUpload */
+.p-fileupload .p-button,
+.p-fileupload-choose {
+  font-size: 0.7rem !important;
+}
+
+/* Sidebar específico - Base pequeña */
+.sidebar-wrapper,
+.sidebar-container {
+  font-size: 9px !important;
+}
+
+/* Títulos y elementos específicos del sidebar */
+.sidebar-wrapper .favorites-title,
+.sidebar-wrapper .section-title,
+.sidebar-wrapper .company-name {
+  font-size: 9px !important;
+}
+
+.sidebar-wrapper .version {
+  font-size: 8px !important;
+}
+
+/* Iconos del sidebar proporcionados */
+.sidebar-wrapper i,
+.sidebar-wrapper .fa {
+  font-size: 10px !important;
+}
+
+/* Iconos de menú específicos un poco más grandes */
+.sidebar-wrapper .menu-link i,
+.sidebar-wrapper .menu-icon i {
+  font-size: 11px !important;
+}
+
+/* Botones del sidebar */
+.sidebar-wrapper .control-btn,
+.sidebar-wrapper .favorite-btn {
+  font-size: 8px !important;
+  padding: 0.3rem !important;
+}
+
+/* Items de menú del sidebar */
+.sidebar-wrapper .menu-link,
+.sidebar-wrapper .submenu-link {
+  font-size: 12px !important;
+  padding: 0.6rem 0.8rem !important;
+}
+
+.sidebar-wrapper .menu-text {
+  font-size: 12px !important;
+}
+
+.sidebar-wrapper .submenu-text {
+  font-size: 11px !important;
+}
+
+/* Headers de sección del sidebar */
+.sidebar-wrapper .section-header {
+  font-size: 9px !important;
+  padding: 0.5rem !important;
+}
+
+/* Menú y navegación */
+.nav-link {
+  font-size: 0.7rem !important;
+}
+
+.breadcrumb {
+  font-size: 0.7rem !important;
+}
+
+/* Títulos más pequeños */
+h1, .h1 {
+  font-size: 1.5rem !important;
+}
+
+h2, .h2 {
+  font-size: 1.3rem !important;
+}
+
+h3, .h3 {
+  font-size: 1.1rem !important;
+}
+
+h4, .h4 {
+  font-size: 0.9rem !important;
+}
+
+h5, .h5 {
+  font-size: 0.8rem !important;
+}
+
+h6, .h6 {
+  font-size: 0.7rem !important;
+}
+
+/* Espaciado mejorado entre elementos */
+.row {
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.mb-3 {
+  margin-bottom: 1.25rem !important;
+}
+
+/* Ajustes para modales */
+.modal-dialog {
+  .modal-body {
+    padding: 1.25rem !important;
+  }
+
+  .modal-title {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Labels y textos de formulario */
+.form-label,
+label {
+  font-size: 0.7rem !important;
+}
+
+/* Badges y alertas */
+.badge {
+  font-size: 0.6rem !important;
+}
+
+.alert {
+  font-size: 0.7rem !important;
+}

@@ -1,5 +1,8 @@
 @import "primeng/resources/themes/lara-light-blue/theme.css";
 
+/* Import PrimeNG overrides para reducir tamaños de fuente */
+@import "./primeng-overrides.scss";
+
 .backColorSwitch {
     background-image: url("../images/dashboard/bg-fondo-swy.png") !important;
     color: orange;
@@ -14,6 +17,38 @@
   }
 
 .p-datatable .p-sortable-column.p-highlight {
-    background: var(--secondary-light-color); 
-    color: var(--secondary-color); 
+    background: var(--secondary-light-color);
+    color: var(--secondary-color);
+}
+
+/* Overrides adicionales específicos para Katuq */
+.p-component {
+    font-size: 0.7rem !important;
+}
+
+.p-inputtext,
+.p-dropdown,
+.p-multiselect,
+.p-calendar,
+.p-button {
+    font-size: 0.7rem !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th,
+.p-datatable .p-datatable-tbody > tr > td {
+    font-size: 0.7rem !important;
+    padding: 0.5rem !important;
+}
+
+.p-paginator {
+    font-size: 0.7rem !important;
+}
+
+.p-dialog .p-dialog-title {
+    font-size: 0.8rem !important;
+}
+
+.p-dialog .p-dialog-content,
+.p-dialog .p-dialog-footer {
+    font-size: 0.7rem !important;
 }

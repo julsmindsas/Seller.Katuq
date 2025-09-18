@@ -73,7 +73,7 @@
   z-index: 1;
   background-color: $white;
   color: $primary-color;
-  font-size: 14px;
+  font-size: 11px;
   opacity: 1;
   margin-top: -70px;
   padding: 10px 0;
@@ -173,7 +173,7 @@ $primary-color: #459BD1;
         .form-group {
           .close-search {
             position: absolute;
-            font-size: 15px;
+            font-size: 12px;
             right: 30px;
             top: 30px;
             color: $dark-gray;
@@ -185,7 +185,7 @@ $primary-color: #459BD1;
             left: 30px;
             top: 30px;
             content: "\f002";
-            font-size: 16px;
+            font-size: 12px;
             color: $dark-gray;
             font-family: FontAwesome;
           }
@@ -217,13 +217,13 @@ $primary-color: #459BD1;
                 text-align: center;
 
                 i {
-                  font-size: 20px;
+                  font-size: 15px;
                   font-weight: 600;
                   transition: all 0.3s ease;
 
                   &.fa-lightbulb-o {
                     font-weight: 500;
-                    font-size: 22px;
+                    font-size: 16px;
                     transition: all 0.3s ease;
                     animation: zoomIn 300ms ease-in-out;
                   }
@@ -243,7 +243,7 @@ $primary-color: #459BD1;
                   }
 
                   p {
-                    font-size: 12px;
+                    font-size: 10px;
                     line-height: 1;
                     color: rgba($theme-body-font-color, 0.7);
                   }
@@ -270,7 +270,7 @@ $primary-color: #459BD1;
               right: -5px;
               top: -6px;
               padding: 2px 4px;
-              font-size: 11px;
+              font-size: 9px;
               font-weight: 700;
               font-family: work-Sans, sans-serif;
             }
@@ -291,12 +291,12 @@ $primary-color: #459BD1;
                   display: block;
 
                   a {
-                    font-size: 14px;
+                    font-size: 11px;
                     color: $dark-color;
 
                     i {
                       margin-left: 10px;
-                      font-size: 13px;
+                      font-size: 10px;
                       color: $dark-color;
                     }
                   }
@@ -306,7 +306,7 @@ $primary-color: #459BD1;
           }
 
           .flag-icon {
-            font-size: 16px;
+            font-size: 12px;
           }
         }
 
@@ -732,7 +732,7 @@ $primary-color: #459BD1;
         justify-content: flex-end;
 
         li {
-          font-size: 13px;
+          font-size: 10px;
           letter-spacing: 1px;
           font-family: $font-roboto, $font-serif;
         }
@@ -1032,7 +1032,7 @@ $primary-color: #459BD1;
                     .submenu-title {
                       h5 {
                         text-transform: uppercase;
-                        font-size: 14px;
+                        font-size: 11px;
                         margin-left: -13px;
                       }
                     }
@@ -1057,7 +1057,7 @@ $primary-color: #459BD1;
                           border-radius: 0 !important;
                           text-transform: capitalize;
                           padding: 3px 0;
-                          font-size: 13px;
+                          font-size: 10px;
                           display: block;
                           letter-spacing: 0.07em;
                           line-height: 1.9;
@@ -1120,7 +1120,7 @@ $primary-color: #459BD1;
         cursor: pointer;
 
         i {
-          font-size: 24px;
+          font-size: 18px;
         }
       }
     }
@@ -1150,8 +1150,8 @@ $primary-color: #459BD1;
   // left sidebar css
   &.compact-wrapper {
     .page-header {
-      margin-left: 280px;
-      width: calc(100% - 280px);
+      margin-left: 260px;
+      width: calc(100% - 260px);
 
       &.close_icon {
         margin-left: 90px;
@@ -1178,7 +1178,7 @@ $primary-color: #459BD1;
           height: auto;
           line-height: inherit;
           background: $white;
-          width: 280px;
+          width: 260px;
           text-align: left;
           transition: 0.3s;
           box-shadow: 0 0 21px 0 rgba($semi-dark, 0.1);
@@ -1240,7 +1240,7 @@ $primary-color: #459BD1;
             }
 
             &:hover {
-              width: 280px;
+              width: 260px;
               transition: all 0.3s ease;
 
               .badge {
@@ -1598,7 +1598,7 @@ $primary-color: #459BD1;
 
                     a {
                       padding: 7px 25px;
-                      font-size: 14px;
+                      font-size: 11px;
                       color: rgba($theme-body-font-color, 0.6);
                       display: block;
                       position: relative;
@@ -1662,7 +1662,7 @@ $primary-color: #459BD1;
                           margin-bottom: 0;
                           line-height: 1.9;
                           padding: 6px 25px 6px 45px;
-                          font-size: 14px;
+                          font-size: 11px;
                           position: relative;
                           color: rgba(43, 43, 43, 0.6);
                           display: block;
@@ -1689,7 +1689,7 @@ $primary-color: #459BD1;
                               margin-bottom: 0;
                               line-height: 1.9;
                               padding: 6px 25px 6px 45px;
-                              font-size: 14px;
+                              font-size: 11px;
                               position: relative;
                               color: rgba(43, 43, 43, 0.6);
                               display: block;
@@ -1794,7 +1794,7 @@ $primary-color: #459BD1;
               top: 6px;
 
               .sidebar-name {
-                font-size: 18px;
+                font-size: 14px;
                 padding-left: 5px;
                 text-transform: uppercase;
               }
@@ -1806,7 +1806,7 @@ $primary-color: #459BD1;
       .page-body {
         min-height: calc(100vh - 80px);
         margin-top: 80px;
-        margin-left: 280px;
+        margin-left: 260px;
         // animation: pagebody 1000ms ease-in-out;
       }
     }
@@ -2153,7 +2153,7 @@ $primary-color: #459BD1;
                     .submenu-title {
                       h5 {
                         position: relative;
-                        font-size: 14px;
+                        font-size: 11px;
                         font-weight: 400;
                         padding: 15px 15px 15px 40px;
                         letter-spacing: 1px;
@@ -2184,7 +2184,7 @@ $primary-color: #459BD1;
                 left: 53%;
                 top: 7px;
                 font-weight: 500;
-                font-size: 9px;
+                font-size: 8px;
               }
 
               .sidebar-link {
@@ -2199,7 +2199,7 @@ $primary-color: #459BD1;
                   display: block;
                   font-weight: 500;
                   letter-spacing: 1px;
-                  font-size: 14px;
+                  font-size: 11px;
                 }
 
                 .according-menu {
@@ -2986,7 +2986,7 @@ $primary-color: #459BD1;
                     color: $light-semi-font;
                     font-weight: 100;
                     transition: all 0.5s ease;
-                    font-size: 15px;
+                    font-size: 12px;
                     top: 5px;
                   }
                 }
@@ -3210,7 +3210,7 @@ $primary-color: #459BD1;
 @media screen and (max-width: 576px) {
   .toggle-nav {
     i {
-      font-size: 20px;
+      font-size: 15px;
     }
   }
 
@@ -3253,7 +3253,7 @@ $primary-color: #459BD1;
       align-items: center;
       padding: 6px 12px;
       color: $sidebar-text;
-      font-size: 13px;
+      font-size: 10px;
       font-weight: 500;
       transition: all 0.2s ease;
       position: relative;
@@ -3264,7 +3264,7 @@ $primary-color: #459BD1;
       app-feather-icons,
       i.fa {
         margin-right: 10px;
-        font-size: 14px;
+        font-size: 11px;
         color: $sidebar-text;
         width: 18px;
         text-align: center;
@@ -3280,7 +3280,7 @@ $primary-color: #459BD1;
         margin-left: auto;
 
         i.fa {
-          font-size: 11px;
+          font-size: 9px;
           margin-right: 0;
           color: $sidebar-text;
           transition: all 0.2s ease;
@@ -3336,7 +3336,7 @@ $primary-color: #459BD1;
     h6 {
       color: $primary-color;
       font-weight: 600;
-      font-size: 11px;
+      font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin: 0;
@@ -3349,12 +3349,12 @@ $primary-color: #459BD1;
 
       .section-icon {
         margin-right: 8px;
-        font-size: 13px;
+        font-size: 10px;
         opacity: 0.8;
       }
 
       i.fa {
-        font-size: 11px;
+        font-size: 9px;
         color: $primary-color;
         transition: all 0.3s ease;
         opacity: 0.8;
@@ -3405,7 +3405,7 @@ $primary-color: #459BD1;
 
     li a {
       padding-left: 32px;
-      font-size: 12.5px;
+      font-size: 10px;
       font-weight: 400;
       color: $sidebar-text;
       border-radius: 4px;
@@ -3418,7 +3418,7 @@ $primary-color: #459BD1;
 
     .nav-sub-childmenu li a {
       padding-left: 44px;
-      font-size: 12px;
+      font-size: 10px;
     }
 
     li.active>a {
@@ -3484,7 +3484,7 @@ $primary-color: #459BD1;
       gap: 8px;
 
       .plan-title {
-        font-size: 13px;
+        font-size: 10px;
         font-weight: 600;
         color: $sidebar-text;
       }
@@ -3494,7 +3494,7 @@ $primary-color: #459BD1;
         color: $primary-color;
         padding: 2px 6px;
         border-radius: 4px;
-        font-size: 11px;
+        font-size: 9px;
         font-weight: 500;
       }
     }
@@ -3508,11 +3508,11 @@ $primary-color: #459BD1;
         display: flex;
         align-items: center;
         gap: 4px;
-        font-size: 12px;
+        font-size: 10px;
         color: $sidebar-text;
 
         i {
-          font-size: 12px;
+          font-size: 10px;
           color: $primary-color;
         }
       }
@@ -3530,7 +3530,7 @@ $primary-color: #459BD1;
         transition: all 0.2s ease;
 
         i {
-          font-size: 10px;
+          font-size: 8px;
           color: $primary-color;
         }
 
@@ -3556,13 +3556,13 @@ $primary-color: #459BD1;
         align-items: center;
 
         .label {
-          font-size: 11px;
+          font-size: 9px;
           color: $sidebar-text;
           opacity: 0.8;
         }
 
         .value {
-          font-size: 12px;
+          font-size: 10px;
           font-weight: 500;
           color: $sidebar-text;
         }
@@ -3575,13 +3575,13 @@ $primary-color: #459BD1;
           margin-bottom: 4px;
 
           .label {
-            font-size: 11px;
+            font-size: 9px;
             color: $sidebar-text;
             opacity: 0.8;
           }
 
           .percentage {
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 500;
             color: $primary-color;
           }
@@ -3610,7 +3610,7 @@ $primary-color: #459BD1;
       color: $primary-color;
       border: none;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 500;
       display: flex;
       align-items: center;
@@ -3620,7 +3620,7 @@ $primary-color: #459BD1;
       transition: all 0.2s ease;
 
       i {
-        font-size: 12px;
+        font-size: 10px;
       }
 
       &:hover {

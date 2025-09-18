@@ -1,0 +1,422 @@
+/**
+ * PrimeNG Component Font Size Overrides
+ * Este archivo contiene reglas específicas para reducir el tamaño de fuente de todos los componentes PrimeNG
+ */
+
+/* === REGLAS GLOBALES === */
+:root {
+  --p-font-size: 0.7rem;
+  --p-line-height: 1.4;
+  --p-padding-sm: 0.4rem 0.6rem;
+  --p-padding-xs: 0.25rem 0.4rem;
+}
+
+/* Aplicar a todos los componentes PrimeNG */
+[class*="p-"] {
+  font-size: var(--p-font-size) !important;
+  line-height: var(--p-line-height) !important;
+}
+
+/* === COMPONENTES DE FORMULARIO === */
+
+/* Input Text */
+.p-inputtext,
+.p-inputtext:enabled,
+.p-inputtext:disabled,
+.p-inputtext:focus,
+.p-password input {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+  height: auto !important;
+}
+
+/* Input Number */
+.p-inputnumber input,
+.p-inputnumber .p-inputnumber-button {
+  font-size: var(--p-font-size) !important;
+}
+
+/* Textarea */
+.p-inputtextarea {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+/* === DROPDOWNS Y SELECTS === */
+
+/* Dropdown */
+.p-dropdown {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-dropdown .p-dropdown-label {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+.p-dropdown-panel {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-dropdown-filter {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+/* MultiSelect */
+.p-multiselect {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-multiselect .p-multiselect-label {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+.p-multiselect-panel .p-multiselect-items .p-multiselect-item {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-multiselect-panel .p-multiselect-header {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-multiselect-filter-container .p-inputtext {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+/* AutoComplete */
+.p-autocomplete .p-autocomplete-input {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+/* === CALENDARIOS === */
+
+.p-calendar {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-calendar input {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+.p-datepicker {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-datepicker table td span {
+  font-size: var(--p-font-size) !important;
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.p-datepicker .p-datepicker-header {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-datepicker .p-monthpicker-month,
+.p-datepicker .p-yearpicker-year {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-timepicker span {
+  font-size: var(--p-font-size) !important;
+}
+
+/* === BOTONES === */
+
+.p-button {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+.p-button .p-button-label {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-button-sm {
+  font-size: calc(var(--p-font-size) * 0.9) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-splitbutton .p-button {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+.p-speedial .p-button {
+  font-size: var(--p-font-size) !important;
+}
+
+/* === TABLAS === */
+
+.p-datatable {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  font-size: var(--p-font-size) !important;
+  padding: 0.5rem !important;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  font-size: var(--p-font-size) !important;
+  padding: 0.5rem !important;
+}
+
+.p-datatable .p-datatable-tfoot > tr > td {
+  font-size: var(--p-font-size) !important;
+  padding: 0.5rem !important;
+}
+
+.p-datatable .p-sortable-column .p-sortable-column-icon {
+  font-size: calc(var(--p-font-size) * 0.8) !important;
+}
+
+.p-datatable .p-datatable-scrollable-header,
+.p-datatable .p-datatable-scrollable-footer {
+  font-size: var(--p-font-size) !important;
+}
+
+/* === PAGINACIÓN === */
+
+.p-paginator {
+  font-size: var(--p-font-size) !important;
+  padding: 0.5rem !important;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page {
+  font-size: var(--p-font-size) !important;
+  min-width: 2rem !important;
+  height: 2rem !important;
+}
+
+.p-paginator .p-paginator-current {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-paginator .p-dropdown {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-paginator .p-dropdown .p-dropdown-label {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+/* === CHECKBOX Y RADIO === */
+
+.p-checkbox-label,
+.p-radiobutton-label {
+  font-size: var(--p-font-size) !important;
+  margin-left: 0.4rem !important;
+}
+
+.p-checkbox .p-checkbox-box,
+.p-radiobutton .p-radiobutton-box {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+/* === MENÚS === */
+
+.p-menu .p-menuitem-link {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-contextmenu .p-menuitem-link {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-tieredmenu .p-menuitem-link {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-megamenu .p-menuitem-link {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-menubar .p-menuitem-link {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+/* === DIÁLOGOS Y MODALES === */
+
+.p-dialog {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-dialog .p-dialog-header {
+  font-size: var(--p-font-size) !important;
+  padding: 1rem !important;
+}
+
+.p-dialog .p-dialog-title {
+  font-size: calc(var(--p-font-size) * 1.1) !important;
+  font-weight: 600 !important;
+}
+
+.p-dialog .p-dialog-content {
+  font-size: var(--p-font-size) !important;
+  padding: 1rem !important;
+}
+
+.p-dialog .p-dialog-footer {
+  font-size: var(--p-font-size) !important;
+  padding: 1rem !important;
+}
+
+.p-confirmDialog .p-confirm-dialog-message {
+  font-size: var(--p-font-size) !important;
+}
+
+/* === TOAST Y MENSAJES === */
+
+.p-toast .p-toast-message {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-toast .p-toast-message-content {
+  font-size: var(--p-font-size) !important;
+  padding: 0.75rem !important;
+}
+
+.p-toast .p-toast-summary {
+  font-size: calc(var(--p-font-size) * 1.05) !important;
+  font-weight: 600 !important;
+}
+
+.p-toast .p-toast-detail {
+  font-size: var(--p-font-size) !important;
+}
+
+.p-message .p-message-text {
+  font-size: var(--p-font-size) !important;
+}
+
+/* === ACCORDION === */
+
+.p-accordion .p-accordion-header a {
+  font-size: var(--p-font-size) !important;
+  padding: 0.75rem !important;
+}
+
+.p-accordion .p-accordion-content {
+  font-size: var(--p-font-size) !important;
+  padding: 0.75rem !important;
+}
+
+/* === TABVIEW === */
+
+.p-tabview .p-tabview-nav li a {
+  font-size: var(--p-font-size) !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.p-tabview .p-tabview-panels .p-tabview-panel {
+  font-size: var(--p-font-size) !important;
+  padding: 0.75rem !important;
+}
+
+/* === PANEL === */
+
+.p-panel .p-panel-header {
+  font-size: var(--p-font-size) !important;
+  padding: 0.75rem !important;
+}
+
+.p-panel .p-panel-content {
+  font-size: var(--p-font-size) !important;
+  padding: 0.75rem !important;
+}
+
+.p-panel .p-panel-title {
+  font-size: calc(var(--p-font-size) * 1.05) !important;
+  font-weight: 600 !important;
+}
+
+/* === OTROS COMPONENTES === */
+
+/* Steps */
+.p-steps .p-steps-item .p-menuitem-link {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-steps .p-steps-title {
+  font-size: var(--p-font-size) !important;
+}
+
+/* ProgressBar */
+.p-progressbar .p-progressbar-label {
+  font-size: var(--p-font-size) !important;
+}
+
+/* Chips */
+.p-chips .p-chips-token {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-xs) !important;
+}
+
+.p-chips .p-chips-input-token input {
+  font-size: var(--p-font-size) !important;
+}
+
+/* FileUpload */
+.p-fileupload .p-button {
+  font-size: var(--p-font-size) !important;
+  padding: var(--p-padding-sm) !important;
+}
+
+.p-fileupload .p-fileupload-buttonbar {
+  font-size: var(--p-font-size) !important;
+  padding: 0.75rem !important;
+}
+
+/* Rating */
+.p-rating .p-rating-icon {
+  font-size: var(--p-font-size) !important;
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+/* Slider */
+.p-slider {
+  height: 0.4rem !important;
+}
+
+.p-slider .p-slider-handle {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  :root {
+    --p-font-size: 0.65rem;
+    --p-padding-sm: 0.3rem 0.5rem;
+    --p-padding-xs: 0.2rem 0.3rem;
+  }
+}
