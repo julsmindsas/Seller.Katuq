@@ -603,9 +603,9 @@ export class OrdenesDespachoV2Component implements OnInit {
       }
     }
 
-    if (order.transportador && order.transportador !== 'mensajero_propio' && order.transportador !== 'Mensajero Propio') {
+  /*  if (order.transportador && order.transportador !== 'mensajero_propio' && order.transportador !== 'Mensajero Propio') {
       return true;
-    }
+    }*/
 
     if (order.esTransportadora === true || order.is_transportadora === true) {
       return true;
