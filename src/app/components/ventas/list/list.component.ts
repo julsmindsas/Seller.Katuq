@@ -1731,9 +1731,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       company: JSON.parse(localStorage.getItem("currentCompany")!)
         .nomComercial,
       tipoFecha: "fechaEntrega",
-      estadoProceso: this.isFromProduction
-        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente, EstadoProceso.ParaDespachar]
-        : ["Todos"],
+      estadoProceso: ["Todos"] 
+      //se comenta mientras salimos del dia de amor y amistad PARA ALMARA - 17/09/2025
+      /*this.isFromProduction
+        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente, EstadoProceso.ProducidoTotalmente, EstadoProceso.ParaDespachar]
+        : ["Todos"],*/
     };
 
     // Apply quick filters for payment status

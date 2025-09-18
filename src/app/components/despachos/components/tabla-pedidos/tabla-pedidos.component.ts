@@ -285,7 +285,7 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   // Método para verificar si un pedido puede ser manipulado
   puedeManipularPedido(pedido: Pedido): boolean {
     // Los pedidos en estado "Sin Producir" no pueden ser manipulados
-    if (pedido.estadoProceso === 'SinProducir') {
+    if (pedido.estadoProceso === EstadoProceso.SinProducir) {
       return false;
     }
     return true;
@@ -310,30 +310,66 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
 
     items.push({ separator: true });
 
-    if (pedido.estadoProceso !== 'Empacado' && pedido.estadoProceso !== 'Despachado' && pedido.estadoProceso !== 'Entregado') {
+    // Si está en SinProducir, solo puede cambiar a ProducidoTotalmente
+    if (pedido.estadoProceso === EstadoProceso.SinProducir) {
+      items.push({
+        label: 'Producir Totalmente',
+        icon: 'pi pi-cog',
+        disabled: false,
+        command: () => this.changeStatus(pedido, 0)
+      });
+    } else {
+      // Para otros estados, mostrar todas las opciones disponibles
+      
+      // ProducirTotalmente: Disponible para estados que pueden ser producidos (excepto SinProducir)
+      const puedeProducirTotalmente = puedeManipular && 
+                                     pedido.estadoProceso !== EstadoProceso.Empacado && 
+                                     pedido.estadoProceso !== EstadoProceso.Despachado && 
+                                     pedido.estadoProceso !== EstadoProceso.Entregado &&
+                                     pedido.estadoProceso !== EstadoProceso.EnDespacho &&
+                                     pedido.estadoProceso !== EstadoProceso.ProducidoTotalmente;
+      
+      items.push({
+        label: 'Producir Totalmente',
+        icon: 'pi pi-cog',
+        disabled: !puedeProducirTotalmente,
+        command: () => { if (puedeProducirTotalmente) this.changeStatus(pedido, 0); }
+      });
+
+      // Empacar: Siempre visible pero deshabilitado en ciertos estados
+      const puedeEmpacar = puedeManipular && 
+                           pedido.estadoProceso !== EstadoProceso.Empacado && 
+                           pedido.estadoProceso !== EstadoProceso.Despachado && 
+                           pedido.estadoProceso !== EstadoProceso.Entregado &&
+                           pedido.estadoProceso !== EstadoProceso.EnDespacho;
+      
       items.push({
         label: 'Empacar',
         icon: 'pi pi-inbox',
-        disabled: !puedeManipular,
-        command: () => { if (puedeManipular) this.changeStatus(pedido, 1); }
+        disabled: !puedeEmpacar,
+        command: () => { if (puedeEmpacar) this.changeStatus(pedido, 1); }
       });
-    }
 
-    if (pedido.estadoProceso === 'Empacado') {
-      items.push({ label: 'Desempacar', icon: 'pi pi-box', command: () => this.changeStatus(pedido, 2) });
-    }
+      if (pedido.estadoProceso === EstadoProceso.Empacado) {
+        items.push({ label: 'Desempacar', icon: 'pi pi-box', command: () => this.changeStatus(pedido, 2) });
+      }
 
-    if (pedido.estadoProceso !== 'Despachado' && pedido.estadoProceso !== 'Entregado') {
+      // Despachar: Siempre visible pero deshabilitado en ciertos estados
+      const puedeDespachar = puedeManipular && 
+                             pedido.estadoProceso !== EstadoProceso.Despachado && 
+                             pedido.estadoProceso !== EstadoProceso.Entregado &&
+                             pedido.estadoProceso !== EstadoProceso.EnDespacho;
+      
       items.push({
         label: 'Despachar',
         icon: 'pi pi-send',
-        disabled: !puedeManipular,
-        command: () => { if (puedeManipular) this.changeStatus(pedido, 4); }
+        disabled: !puedeDespachar,
+        command: () => { if (puedeDespachar) this.changeStatus(pedido, 4); }
       });
-    }
 
-    if (pedido.estadoProceso === 'Despachado') {
-      items.push({ label: 'Entregar', icon: 'pi pi-check-circle', command: () => this.changeStatus(pedido, 5) });
+      if (pedido.estadoProceso === EstadoProceso.Despachado) {
+        items.push({ label: 'Entregar', icon: 'pi pi-check-circle', command: () => this.changeStatus(pedido, 5) });
+      }
     }
 
     return items;

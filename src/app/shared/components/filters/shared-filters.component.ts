@@ -84,6 +84,7 @@ export class SharedFiltersComponent implements OnInit {
 
   datePresets: DatePreset[] = [
     { label: 'Hoy', value: 'today' },
+    { label: 'Mañana', value: 'tomorrow' },
     { label: 'Ayer', value: 'yesterday' },
     { label: 'Últimos 7 días', value: 'last7days' },
     { label: 'Últimos 30 días', value: 'last30days' },
@@ -178,6 +179,10 @@ export class SharedFiltersComponent implements OnInit {
     switch (preset) {
       case 'today':
         return { from: new Date(today), to: new Date(today) };
+      case 'tomorrow':
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return { from: tomorrow, to: tomorrow };
 
       case 'yesterday':
         const yesterday = new Date(today);
