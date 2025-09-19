@@ -2841,6 +2841,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         centered: true,
         fullscreen: false,
         ariaLabelledBy: "modal-basic-title",
+        backdrop: 'static', // 🔒 NUEVO: Prevenir cierre al hacer clic fuera del modal
+        keyboard: false, // 🔒 NUEVO: Prevenir cierre con tecla ESC
       });
       setTimeout(() => {
         this.inicializarComponenteClientes();

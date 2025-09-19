@@ -629,18 +629,44 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       return;
     }
 
-    if (!this.notasProduccionForm || !this.notasProduccionForm.valid) {
+    // 🔄 CORREGIDO: Solo validar si hay campos con contenido
+    if (!this.notasProduccionForm) {
       Swal.fire({
         icon: "warning",
-        title: "Formulario incompleto",
-        text: "Por favor, complete todos los campos requeridos.",
+        title: "Formulario no inicializado",
+        text: "El formulario de notas no está inicializado.",
         confirmButtonText: "Aceptar",
       });
       return;
     }
 
-    this.carritoActualizado = true;
+    // Verificar si hay al menos una nota válida (no vacía)
     const notasActualizadas = this.notasFormArray.value;
+    let hayNotasValidas = false;
+    
+    notasActualizadas.forEach((producto) => {
+      if (producto.notas && producto.notas.length > 0) {
+        producto.notas.forEach((nota) => {
+          if (nota && nota.trim() !== "") {
+            hayNotasValidas = true;
+          }
+        });
+      }
+    });
+
+    if (!hayNotasValidas) {
+      Swal.fire({
+        icon: "info",
+        title: "No hay notas para guardar",
+        text: "No se han escrito notas de producción. Puede continuar sin agregar notas.",
+        confirmButtonText: "Continuar",
+      });
+      // Permitir continuar sin notas
+      this.finalizarGuardadoNotas();
+      return;
+    }
+
+    this.carritoActualizado = true;
 
     if (this.pedido?.carrito) {
       // Inicializar notasPedido si no existe
