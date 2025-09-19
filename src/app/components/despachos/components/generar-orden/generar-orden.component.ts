@@ -1314,29 +1314,27 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   }
 
   getDeliveryRecipient(): string {
-    const envio = this.pedidoSeleccionadoDetalle?.envio;
-    if (!envio) return "N/A";
+    const pedido = this.pedidoSeleccionadoDetalle;
+    if (!pedido) return "N/A";
 
-    const nombres = envio.nombres || "";
-    const apellidos = envio.apellidos || "";
-
-    if (nombres || apellidos) {
-      return `${nombres} ${apellidos}`.trim();
-    }
-
-    // Fallback al cliente
-    const cliente = this.pedidoSeleccionadoDetalle?.cliente;
-    return cliente?.nombres_completos || cliente?.apellidos_completos || "N/A";
+    // Priorizar información del envío sobre la del cliente
+    const nombresEnvio = `${pedido.envio?.nombres || ""} ${pedido.envio?.apellidos || ""}`.trim();
+    const nombresCliente = pedido.cliente?.nombres_completos || 
+                          `${pedido.cliente?.nombres_completos || ""} ${pedido.cliente?.apellidos_completos || ""}`.trim();
+    
+    // Usar información del envío si está disponible, sino usar información del cliente
+    return nombresEnvio || nombresCliente || "N/A";
   }
 
   getDeliveryPhone(): string {
-    const envio = this.pedidoSeleccionadoDetalle?.envio;
-    return (
-      envio?.celular ||
-      envio?.otroNumero ||
-      this.pedidoSeleccionadoDetalle?.cliente?.numero_celular_comprador ||
-      "N/A"
-    );
+    const pedido = this.pedidoSeleccionadoDetalle;
+    if (!pedido) return "N/A";
+
+    // Priorizar información del envío sobre la del cliente
+    return pedido.envio?.celular || 
+           pedido.envio?.otroNumero ||
+           pedido.cliente?.numero_celular_comprador || 
+           "N/A";
   }
 
   getFullAddress(): string {

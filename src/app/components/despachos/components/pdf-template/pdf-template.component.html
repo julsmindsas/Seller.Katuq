@@ -59,7 +59,7 @@
           <td>
             <p class="cliente-nombre">{{ getClienteNombre(pedido) }}</p>
             <p class="cliente-direccion">{{ getDireccionCompleta(pedido) }}</p>
-            <p class="cliente-telefono">Tel: {{ getValorSeguro(pedido.envio?.celular) }}</p>
+            <p class="cliente-telefono">Tel: {{ getTelefonoDestinatario(pedido) }}</p>
           </td>
           <td>{{ getValorSeguro(pedido.envio?.zonaCobro) }}</td>
           <td>{{ getValorSeguro(pedido.horarioEntrega) }}</td>

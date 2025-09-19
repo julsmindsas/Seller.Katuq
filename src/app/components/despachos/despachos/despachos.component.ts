@@ -1714,18 +1714,11 @@ export class DespachosComponent implements OnInit {
         <td>$${(p.faltaPorPagar || 0).toLocaleString()}</td>
         <td>___________</td>
         <td>
-          <strong>Nombre:</strong> ${p.envio?.nombres || "N/A"} ${p.envio?.apellidos || "N/A"}<br>
-          <strong>Teléfono:</strong> ${p.envio?.celular || "N/A"}<br>
-          <strong>WhatsApp:</strong> ${p.envio?.celular || "N/A"}<br>
+          <strong>Nombre:</strong> ${this.getNombreDestinatario(p)}<br>
+          <strong>Teléfono:</strong> ${this.getTelefonoDestinatario(p)}<br>
+          <strong>WhatsApp:</strong> ${this.getTelefonoDestinatario(p)}<br>
           <strong>Otro Número:</strong> ${p.envio?.otroNumero || "N/A"}<br>
-          <strong>Dirección:</strong> ${[
-          p.envio?.direccionEntrega,
-          p.envio?.nombreUnidad,
-          p.envio?.especificacionesInternas,
-          p.envio?.observaciones,
-        ]
-          .filter(Boolean)
-          .join(", ")}
+          <strong>Dirección:</strong> ${this.getDireccionCompletaDestinatario(p)}
         </td>
         <td>${p.horarioEntrega || "N/A"}</td>
         <td>${p.envio?.ciudad || "N/A"}</td>
@@ -3422,6 +3415,14 @@ export class DespachosComponent implements OnInit {
               setTimeout(() => {
                 this.imprimirOrdenConDatosEspecificos(pedidosParaImprimir, nroOrdenParaImprimir, transportadorParaImprimir);
               }, 1000); // Delay de 1 segundo para asegurar que el modal se cierre completamente
+
+              // Recargar el componente ordenes-despacho-v2 para reflejar los cambios
+              setTimeout(() => {
+                if (this.ordenesDespachoV2Component) {
+                  console.log("🔄 Recargando componente ordenes-despacho-v2...");
+                  this.ordenesDespachoV2Component.loadInitialOrders();
+                }
+              }, 2000); // Delay de 2 segundos para asegurar que el despacho se complete
 
               // Limpiar datos después de tiempo suficiente para que termine todo el proceso
               setTimeout(() => {
@@ -6382,6 +6383,53 @@ export class DespachosComponent implements OnInit {
       fechaInicialDate: this.fechaInicialDate,
       fechaFinalDate: this.fechaFinalDate
     });
+  }
+
+  // ========== FUNCIONES UTILITARIAS PARA INFORMACIÓN DE ENVÍO ==========
+
+  /**
+   * Obtiene el nombre completo priorizando información del envío sobre la del cliente
+   * @param pedido - El pedido del cual obtener el nombre
+   * @returns El nombre completo del destinatario
+   */
+  getNombreDestinatario(pedido: Pedido): string {
+    // Priorizar información del envío sobre la del cliente
+    const nombresEnvio = `${pedido.envio?.nombres || ""} ${pedido.envio?.apellidos || ""}`.trim();
+    const nombresCliente = pedido.cliente?.nombres_completos || 
+                          `${pedido.cliente?.nombres_completos || ""} ${pedido.cliente?.apellidos_completos || ""}`.trim();
+    
+    // Usar información del envío si está disponible, sino usar información del cliente
+    return nombresEnvio || nombresCliente || "N/A";
+  }
+
+  /**
+   * Obtiene el teléfono priorizando información del envío sobre la del cliente
+   * @param pedido - El pedido del cual obtener el teléfono
+   * @returns El teléfono del destinatario
+   */
+  getTelefonoDestinatario(pedido: Pedido): string {
+    return pedido.envio?.celular || 
+           pedido.cliente?.numero_celular_comprador || 
+           "N/A";
+  }
+
+  /**
+   * Obtiene la dirección completa del envío
+   * @param pedido - El pedido del cual obtener la dirección
+   * @returns La dirección completa del destinatario
+   */
+  getDireccionCompletaDestinatario(pedido: Pedido): string {
+    const direccionParts = [
+      pedido.envio?.direccionEntrega,
+      pedido.envio?.nombreUnidad,
+      pedido.envio?.especificacionesInternas,
+      pedido.envio?.barrio,
+      pedido.envio?.ciudad,
+      pedido.envio?.departamento,
+      pedido.envio?.pais,
+    ].filter(Boolean);
+
+    return direccionParts.length > 0 ? direccionParts.join(", ") : "N/A";
   }
 }
 

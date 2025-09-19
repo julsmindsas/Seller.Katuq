@@ -48,10 +48,22 @@ export class PdfTemplateComponent implements OnInit {
   }
 
   getClienteNombre(pedido: Pedido): string {
-    const nombres =
-      pedido.cliente?.nombres_completos ||
-      `${pedido.envio?.nombres || ""} ${pedido.envio?.apellidos || ""}`.trim();
-    return nombres || "N/A";
+    // Priorizar información del envío sobre la del cliente
+    const nombresEnvio = `${pedido.envio?.nombres || ""} ${pedido.envio?.apellidos || ""}`.trim();
+    const nombresCliente = pedido.cliente?.nombres_completos || 
+                          `${pedido.cliente?.nombres_completos || ""} ${pedido.cliente?.apellidos_completos || ""}`.trim();
+    
+    // Usar información del envío si está disponible, sino usar información del cliente
+    return nombresEnvio || nombresCliente || "N/A";
+  }
+
+  /**
+   * Obtiene el teléfono priorizando información del envío sobre la del cliente
+   */
+  getTelefonoDestinatario(pedido: Pedido): string {
+    return pedido.envio?.celular || 
+           pedido.cliente?.numero_celular_comprador || 
+           "N/A";
   }
 
   getDireccionCompleta(pedido: Pedido): string {
