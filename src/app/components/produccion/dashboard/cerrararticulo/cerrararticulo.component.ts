@@ -460,4 +460,40 @@ export class CerrararticuloComponent implements OnInit {
 
     return pedidoActualizado;
   }
+
+  /**
+   * Obtiene la clase CSS para el estado de pago
+   * @param estadoPago - Estado del pago del pedido
+   * @returns string - Clase CSS correspondiente al estado
+   */
+  getPaymentStatusClass(estadoPago: string): string {
+    if (!estadoPago) return 'payment-status-unknown';
+    
+    const estado = estadoPago.toLowerCase().trim();
+    
+    switch (estado) {
+      case 'pagado':
+      case 'paid':
+      case 'completado':
+        return 'payment-status-paid';
+      case 'pendiente':
+      case 'pending':
+      case 'pendiente de pago':
+        return 'payment-status-pending';
+      case 'cancelado':
+      case 'cancelled':
+      case 'cancelado':
+        return 'payment-status-cancelled';
+      case 'rechazado':
+      case 'rejected':
+      case 'fallido':
+        return 'payment-status-failed';
+      case 'parcial':
+      case 'partial':
+      case 'pago parcial':
+        return 'payment-status-partial';
+      default:
+        return 'payment-status-unknown';
+    }
+  }
 }

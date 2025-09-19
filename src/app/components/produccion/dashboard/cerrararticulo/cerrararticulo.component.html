@@ -85,6 +85,10 @@
                         </div>
                         <div class="info-value">
                             <strong>{{detalle.nroPedido}}</strong>
+                            <span class="payment-status-badge" [ngClass]="getPaymentStatusClass(detalle.estadoPago)">
+                                <i class="pi pi-credit-card me-1"></i>
+                                {{detalle.estadoPago}}
+                            </span>
                             <button class="pdf-link-btn" 
                                     (click)="openPdfOrder(detalle.nroPedido)"
                                     title="Abrir PDF del pedido"
@@ -211,6 +215,61 @@
     
     .pdf-link-btn span {
         font-size: 0.8rem;
+    }
+    
+    /* Estilos para el estado de pago */
+    .payment-status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.6rem;
+        margin-left: 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+    
+    .payment-status-badge i {
+        font-size: 0.75rem;
+    }
+    
+    /* Estados específicos de pago */
+    .payment-status-paid {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    
+    .payment-status-pending {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+    
+    .payment-status-cancelled {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+    }
+    
+    .payment-status-failed {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+    
+    .payment-status-partial {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white;
+    }
+    
+    .payment-status-unknown {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+    }
+    
+    /* Efecto hover para el badge de estado de pago */
+    .payment-status-badge:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 </style>
 
