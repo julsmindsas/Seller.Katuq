@@ -1718,7 +1718,7 @@ export class DespachosComponent implements OnInit {
           <strong>Teléfono:</strong> ${this.getTelefonoDestinatario(p)}<br>
           <strong>WhatsApp:</strong> ${this.getTelefonoDestinatario(p)}<br>
           <strong>Otro Número:</strong> ${p.envio?.otroNumero || "N/A"}<br>
-          <strong>Dirección:</strong> ${this.getDireccionCompletaDestinatario(p)}
+          <strong>Información Adicional:</strong> ${this.getObservacionesCompletas(p)}
         </td>
         <td>${p.horarioEntrega || "N/A"}</td>
         <td>${p.envio?.ciudad || "N/A"}</td>
@@ -6414,9 +6414,9 @@ export class DespachosComponent implements OnInit {
   }
 
   /**
-   * Obtiene la dirección completa del envío
+   * Obtiene la dirección completa del envío con todos los detalles
    * @param pedido - El pedido del cual obtener la dirección
-   * @returns La dirección completa del destinatario
+   * @returns La dirección completa del destinatario con todos los detalles
    */
   getDireccionCompletaDestinatario(pedido: Pedido): string {
     const direccionParts = [
@@ -6430,6 +6430,115 @@ export class DespachosComponent implements OnInit {
     ].filter(Boolean);
 
     return direccionParts.length > 0 ? direccionParts.join(", ") : "N/A";
+  }
+
+  /**
+   * Obtiene información detallada de la dirección para impresión
+   * @param pedido - El pedido del cual obtener la información
+   * @returns Objeto con todos los detalles de la dirección
+   */
+  getInformacionDetalladaDireccion(pedido: Pedido): {
+    direccionPrincipal: string;
+    nombreUnidad: string;
+    especificacionesInternas: string;
+    barrio: string;
+    observaciones: string;
+    notasDespacho: string;
+    notasEntrega: string;
+  } {
+    return {
+      direccionPrincipal: pedido.envio?.direccionEntrega || "N/A",
+      nombreUnidad: pedido.envio?.nombreUnidad || "N/A",
+      especificacionesInternas: pedido.envio?.especificacionesInternas || "N/A",
+      barrio: pedido.envio?.barrio || "N/A",
+      observaciones: pedido.envio?.observaciones || "N/A",
+      notasDespacho: this.getNotasDespacho(pedido),
+      notasEntrega: this.getNotasEntrega(pedido)
+    };
+  }
+
+  /**
+   * Obtiene las notas de despacho del pedido
+   * @param pedido - El pedido del cual obtener las notas
+   * @returns Las notas de despacho formateadas
+   */
+  getNotasDespacho(pedido: Pedido): string {
+    if (!pedido.notasPedido?.notasDespachos || pedido.notasPedido.notasDespachos.length === 0) {
+      return "N/A";
+    }
+
+    return pedido.notasPedido.notasDespachos
+      .map(nota => `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`)
+      .join(" | ");
+  }
+
+  /**
+   * Obtiene las notas de entrega del pedido
+   * @param pedido - El pedido del cual obtener las notas
+   * @returns Las notas de entrega formateadas
+   */
+  getNotasEntrega(pedido: Pedido): string {
+    if (!pedido.notasPedido?.notasEntregas || pedido.notasPedido.notasEntregas.length === 0) {
+      return "N/A";
+    }
+
+    return pedido.notasPedido.notasEntregas
+      .map(nota => `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`)
+      .join(" | ");
+  }
+
+  /**
+   * Obtiene toda la información adicional combinada en un formato compacto
+   * @param pedido - El pedido del cual obtener la información
+   * @returns Toda la información adicional combinada
+   */
+  getObservacionesCompletas(pedido: Pedido): string {
+    const informacionAdicional: string[] = [];
+
+    // Agregar información de dirección
+    if (pedido.envio?.direccionEntrega && pedido.envio.direccionEntrega.trim() !== '') {
+      informacionAdicional.push(pedido.envio.direccionEntrega.trim());
+    }
+
+    // Agregar nombre de unidad/edificio
+    if (pedido.envio?.nombreUnidad && pedido.envio.nombreUnidad.trim() !== '') {
+      informacionAdicional.push(pedido.envio.nombreUnidad.trim());
+    }
+
+    // Agregar especificaciones internas
+    if (pedido.envio?.especificacionesInternas && pedido.envio.especificacionesInternas.trim() !== '') {
+      informacionAdicional.push(pedido.envio.especificacionesInternas.trim());
+    }
+
+    // Agregar barrio/sector
+    if (pedido.envio?.barrio && pedido.envio.barrio.trim() !== '') {
+      informacionAdicional.push(pedido.envio.barrio.trim());
+    }
+
+    // Agregar observaciones del envío
+    if (pedido.envio?.observaciones && pedido.envio.observaciones.trim() !== '') {
+      informacionAdicional.push(pedido.envio.observaciones.trim());
+    }
+
+    // Agregar notas de despacho
+    const notasDespacho = this.getNotasDespacho(pedido);
+    if (notasDespacho !== 'N/A') {
+      informacionAdicional.push(notasDespacho);
+    }
+
+    // Agregar notas de entrega
+    const notasEntrega = this.getNotasEntrega(pedido);
+    if (notasEntrega !== 'N/A') {
+      informacionAdicional.push(notasEntrega);
+    }
+
+    // Si no hay información adicional, retornar N/A
+    if (informacionAdicional.length === 0) {
+      return 'N/A';
+    }
+
+    // Combinar toda la información separada por comas
+    return informacionAdicional.join(', ');
   }
 }
 
