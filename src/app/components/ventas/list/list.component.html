@@ -1500,6 +1500,18 @@
                         </div>
                     </button>
 
+                    <!-- Limpiar Notas Huérfanas - SIEMPRE DISPONIBLE -->
+                    <button class="option-btn" type="button"
+                        (click)="limpiarNotasHuerfanasPedido(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon cleanup-icon">
+                            <i class="fa fa-broom"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Limpiar Notas Huérfanas' | translate }}</span>
+                            <small class="option-description">{{ 'Eliminar notas de productos eliminados' | translate }}</small>
+                        </div>
+                    </button>
+
                     <!-- Estado de Pago - Disponible para todos (opciones limitadas para usuarios normales) -->
                     <button class="option-btn" type="button"
                         (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
