@@ -2043,6 +2043,91 @@ export class DespachosComponent implements OnInit {
     }
   }
 
+  /**
+   * Método específico para imprimir orden con datos específicos después del despacho
+   * @param pedidosEspecificos - Array de pedidos para imprimir
+   * @param nroOrdenEspecifico - Número de orden específico
+   * @param transportadorEspecifico - Transportador específico
+   */
+  async imprimirOrdenConDatosEspecificos(
+    pedidosEspecificos: Pedido[], 
+    nroOrdenEspecifico: string, 
+    transportadorEspecifico: any
+  ) {
+    console.log("=== INICIO: Impresión de orden con datos específicos ===");
+
+    if (this.isGeneratingPDF) {
+      this.showInfoMessage("Ya se está generando un PDF. Por favor espere...");
+      return;
+    }
+
+    // Validaciones previas
+    if (!pedidosEspecificos || pedidosEspecificos.length === 0) {
+      this.showErrorMessage("No hay pedidos seleccionados para imprimir");
+      return;
+    }
+
+    if (!nroOrdenEspecifico) {
+      this.showErrorMessage("No hay número de orden de envío para imprimir");
+      return;
+    }
+
+    console.log("Iniciando impresión con datos específicos:", {
+      pedidosEspecificos: pedidosEspecificos.length,
+      nroOrdenEspecifico: nroOrdenEspecifico,
+      transportadorEspecifico: transportadorEspecifico
+    });
+
+    this.isGeneratingPDF = true;
+    this.pdfProgress = 0;
+    this.retryCount = 0;
+
+    try {
+      // Mostrar indicador de progreso
+      this.showProgressToast();
+
+      // Temporalmente asignar los datos específicos a las propiedades del componente
+      const pedidosOriginales = this.pedidosSeleccionados;
+      const nroOrdenOriginal = this.nroShippingOrder;
+      const transportadorOriginal = this.transportadorSeleccionado;
+
+      this.pedidosSeleccionados = pedidosEspecificos;
+      this.nroShippingOrder = nroOrdenEspecifico;
+      this.transportadorSeleccionado = transportadorEspecifico;
+
+      // Forzar detección de cambios para asegurar que el template esté renderizado
+      setTimeout(async () => {
+        try {
+          // Forzar detección de cambios antes de procesar
+          this.cdr.detectChanges();
+
+          await this.imprimirOrdenConHtml2Pdf();
+          // Mostrar mensaje de éxito
+          this.showSuccessMessage("PDF generado exitosamente");
+        } catch (error) {
+          console.error("Error generando PDF:", error);
+          await this.handlePDFGenerationError(error);
+        } finally {
+          // Restaurar los datos originales
+          this.pedidosSeleccionados = pedidosOriginales;
+          this.nroShippingOrder = nroOrdenOriginal;
+          this.transportadorSeleccionado = transportadorOriginal;
+          
+          this.isGeneratingPDF = false;
+          this.pdfProgress = 0;
+          this.hideProgressToast();
+        }
+      }, 100);
+
+    } catch (error) {
+      console.error("Error inicializando generación de PDF:", error);
+      this.isGeneratingPDF = false;
+      this.pdfProgress = 0;
+      this.hideProgressToast();
+      await this.handlePDFGenerationError(error);
+    }
+  }
+
   editOrder(order: Pedido) {
     if (order.carrito && order.carrito.length > 0) {
       const firstItem = order.carrito[0];
@@ -3317,31 +3402,35 @@ export class DespachosComponent implements OnInit {
             (response) => {
               Swal.fire("Éxito", "Orden despachada exitosamente", "success");
 
-              // Agregar delay para asegurar sincronización de datos antes de imprimir
-              setTimeout(() => {
-                console.log("=== IMPRESIÓN AUTOMÁTICA TRAS DESPACHO ===");
-                console.log("Datos antes de imprimir:", {
-                  pedidosSeleccionados: this.pedidosSeleccionados?.length || 0,
-                  nroShippingOrder: this.nroShippingOrder,
-                  transportadorSeleccionado: !!this.transportadorSeleccionado,
-                  transportadorNombre: this.transportadorSeleccionado?.nombre || this.transportadorSeleccionado
-                });
+              // Guardar una copia de los datos antes de cerrar el modal
+              const pedidosParaImprimir = [...this.pedidosSeleccionados];
+              const nroOrdenParaImprimir = this.nroShippingOrder;
+              const transportadorParaImprimir = this.transportadorSeleccionado;
 
-                // Ejecutar impresión sin await para respetar timeouts internos
-                this.imprimirOrden();
+              console.log("=== IMPRESIÓN AUTOMÁTICA TRAS DESPACHO ===");
+              console.log("Datos guardados para impresión:", {
+                pedidosSeleccionados: pedidosParaImprimir?.length || 0,
+                nroShippingOrder: nroOrdenParaImprimir,
+                transportadorSeleccionado: !!transportadorParaImprimir,
+                transportadorNombre: transportadorParaImprimir?.nombre || transportadorParaImprimir
+              });
 
-                // Limpiar datos después de tiempo suficiente para que termine todo el proceso
-                setTimeout(() => {
-                  console.log("Limpiando datos después de impresión completa...");
-                  this.pedidosSeleccionados = [];
-                  this.transportadorSeleccionado = null;
-                  this.nroShippingOrder = null;
-                  this.nuevaOrdenEnvio = null;
-                }, 3000); // 3 segundos para asegurar que todos los timeouts internos terminen
-
-              }, 500); // Delay de 500ms para sincronización
-
+              // Cerrar el modal primero
               this.modalService.dismissAll();
+
+              // Ejecutar impresión después de cerrar el modal con los datos guardados
+              setTimeout(() => {
+                this.imprimirOrdenConDatosEspecificos(pedidosParaImprimir, nroOrdenParaImprimir, transportadorParaImprimir);
+              }, 1000); // Delay de 1 segundo para asegurar que el modal se cierre completamente
+
+              // Limpiar datos después de tiempo suficiente para que termine todo el proceso
+              setTimeout(() => {
+                console.log("Limpiando datos después de impresión completa...");
+                this.pedidosSeleccionados = [];
+                this.transportadorSeleccionado = null;
+                this.nroShippingOrder = null;
+                this.nuevaOrdenEnvio = null;
+              }, 5000); // 5 segundos para asegurar que todos los timeouts internos terminen
             },
             (error) => {
               Swal.fire(
