@@ -865,8 +865,14 @@
                             <tr>
                                 <td [attr.colspan]="getVisibleColumnsCount()" class="text-center">
                                     <div class="p-4">
-                                        <span class="fs-18 text-muted">
-                                            {{'No hay datos.' | translate}}
+                                        <div class="mb-3">
+                                            <i class="pi pi-database text-muted" style="font-size: 2rem;"></i>
+                                        </div>
+                                        <span class="fs-18 text-muted d-block mb-2">
+                                            {{'No hay datos cargados.' | translate}}
+                                        </span>
+                                        <span class="fs-14 text-muted">
+                                            {{'Use los filtros de fecha y estado para cargar los pedidos.' | translate}}
                                         </span>
                                     </div>
                                 </td>

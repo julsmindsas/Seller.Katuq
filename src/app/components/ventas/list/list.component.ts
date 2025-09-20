@@ -80,7 +80,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("dt1") table: Table;
   @Input() isFromProduction: boolean = false;
   orders: Pedido[] = [];
-  loading: boolean = true;
+  loading: boolean = false; // ✅ CAMBIO: No mostrar loading inicialmente
   totalValorProductoBruto: number;
   totalDescuento: number;
   htmlModal: any;
@@ -1397,9 +1397,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Inicializar búsqueda local
     this.initializeLocalSearch();
 
-    if (!this.numberProduct) {
-      this.refrescarDatos();
-    }
+    // ✅ CAMBIO: No cargar datos automáticamente al inicializar
+    // Los datos se cargarán a demanda cuando el usuario lo solicite
+    // if (!this.numberProduct) {
+    //   this.refrescarDatos();
+    // }
     const context = this;
     this.maestroService.getBillingZone().subscribe({
       next(value: any) {
@@ -2129,6 +2131,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   refrescarDespuesDeCambio() {
     console.log("🔄 REFRESCANDO DESPUÉS DE CAMBIO IMPORTANTE");
     this.refrescarDatos(true); // Forzar refresco
+  }
+
+  // ✅ NUEVO: Método público para cargar datos a demanda
+  cargarDatos() {
+    console.log("📊 CARGANDO DATOS A DEMANDA");
+    this.loading = true;
+    this.refrescarDatos(true);
   }
 
   initForms(cliente: Cliente) {
