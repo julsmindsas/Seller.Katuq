@@ -32,8 +32,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // === Estados de carga según nueva arquitectura ===
   estadoCarga: EstadoCarga = {
-    core: true,
-    details: true,
+    core: false, // ✅ CAMBIO: No mostrar loading inicialmente
+    details: false, // ✅ CAMBIO: No mostrar loading inicialmente
     pedidos: false,
     logistica: false,
     error: null
@@ -160,7 +160,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.verificarConfiguracionEndpoints();
     this.configurarModulosPorRol();
     this.cargarPreferenciasAcordeon();
-    this.cargarDatos();
+    // ✅ CAMBIO: No cargar datos automáticamente al inicializar
+    // Los datos se cargarán a demanda cuando el usuario lo solicite
+    // this.cargarDatos();
     this.initializeRealTimeUpdates();
   }
 
@@ -225,6 +227,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.modulosExpandidos.logistica) {
       this.loadLogisticaData();
     }
+  }
+
+  // ✅ NUEVO: Método público para cargar datos a demanda
+  cargarDatosManual(): void {
+    console.log("📊 CARGANDO DATOS DEL DASHBOARD A DEMANDA");
+    this.cargarDatos();
   }
 
   private loadCoreData(): void {
