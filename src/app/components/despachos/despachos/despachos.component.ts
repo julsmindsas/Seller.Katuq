@@ -1714,18 +1714,11 @@ export class DespachosComponent implements OnInit {
         <td>$${(p.faltaPorPagar || 0).toLocaleString()}</td>
         <td>___________</td>
         <td>
-          <strong>Nombre:</strong> ${p.envio?.nombres || "N/A"} ${p.envio?.apellidos || "N/A"}<br>
-          <strong>Teléfono:</strong> ${p.envio?.celular || "N/A"}<br>
-          <strong>WhatsApp:</strong> ${p.envio?.celular || "N/A"}<br>
+          <strong>Nombre:</strong> ${this.getNombreDestinatario(p)}<br>
+          <strong>Teléfono:</strong> ${this.getTelefonoDestinatario(p)}<br>
+          <strong>WhatsApp:</strong> ${this.getTelefonoDestinatario(p)}<br>
           <strong>Otro Número:</strong> ${p.envio?.otroNumero || "N/A"}<br>
-          <strong>Dirección:</strong> ${[
-          p.envio?.direccionEntrega,
-          p.envio?.nombreUnidad,
-          p.envio?.especificacionesInternas,
-          p.envio?.observaciones,
-        ]
-          .filter(Boolean)
-          .join(", ")}
+          <strong>Información Adicional:</strong> ${this.getObservacionesCompletas(p)}
         </td>
         <td>${p.horarioEntrega || "N/A"}</td>
         <td>${p.envio?.ciudad || "N/A"}</td>
@@ -2028,6 +2021,91 @@ export class DespachosComponent implements OnInit {
           console.error("Error generando PDF:", error);
           await this.handlePDFGenerationError(error);
         } finally {
+          this.isGeneratingPDF = false;
+          this.pdfProgress = 0;
+          this.hideProgressToast();
+        }
+      }, 100);
+
+    } catch (error) {
+      console.error("Error inicializando generación de PDF:", error);
+      this.isGeneratingPDF = false;
+      this.pdfProgress = 0;
+      this.hideProgressToast();
+      await this.handlePDFGenerationError(error);
+    }
+  }
+
+  /**
+   * Método específico para imprimir orden con datos específicos después del despacho
+   * @param pedidosEspecificos - Array de pedidos para imprimir
+   * @param nroOrdenEspecifico - Número de orden específico
+   * @param transportadorEspecifico - Transportador específico
+   */
+  async imprimirOrdenConDatosEspecificos(
+    pedidosEspecificos: Pedido[], 
+    nroOrdenEspecifico: string, 
+    transportadorEspecifico: any
+  ) {
+    console.log("=== INICIO: Impresión de orden con datos específicos ===");
+
+    if (this.isGeneratingPDF) {
+      this.showInfoMessage("Ya se está generando un PDF. Por favor espere...");
+      return;
+    }
+
+    // Validaciones previas
+    if (!pedidosEspecificos || pedidosEspecificos.length === 0) {
+      this.showErrorMessage("No hay pedidos seleccionados para imprimir");
+      return;
+    }
+
+    if (!nroOrdenEspecifico) {
+      this.showErrorMessage("No hay número de orden de envío para imprimir");
+      return;
+    }
+
+    console.log("Iniciando impresión con datos específicos:", {
+      pedidosEspecificos: pedidosEspecificos.length,
+      nroOrdenEspecifico: nroOrdenEspecifico,
+      transportadorEspecifico: transportadorEspecifico
+    });
+
+    this.isGeneratingPDF = true;
+    this.pdfProgress = 0;
+    this.retryCount = 0;
+
+    try {
+      // Mostrar indicador de progreso
+      this.showProgressToast();
+
+      // Temporalmente asignar los datos específicos a las propiedades del componente
+      const pedidosOriginales = this.pedidosSeleccionados;
+      const nroOrdenOriginal = this.nroShippingOrder;
+      const transportadorOriginal = this.transportadorSeleccionado;
+
+      this.pedidosSeleccionados = pedidosEspecificos;
+      this.nroShippingOrder = nroOrdenEspecifico;
+      this.transportadorSeleccionado = transportadorEspecifico;
+
+      // Forzar detección de cambios para asegurar que el template esté renderizado
+      setTimeout(async () => {
+        try {
+          // Forzar detección de cambios antes de procesar
+          this.cdr.detectChanges();
+
+          await this.imprimirOrdenConHtml2Pdf();
+          // Mostrar mensaje de éxito
+          this.showSuccessMessage("PDF generado exitosamente");
+        } catch (error) {
+          console.error("Error generando PDF:", error);
+          await this.handlePDFGenerationError(error);
+        } finally {
+          // Restaurar los datos originales
+          this.pedidosSeleccionados = pedidosOriginales;
+          this.nroShippingOrder = nroOrdenOriginal;
+          this.transportadorSeleccionado = transportadorOriginal;
+          
           this.isGeneratingPDF = false;
           this.pdfProgress = 0;
           this.hideProgressToast();
@@ -3317,31 +3395,43 @@ export class DespachosComponent implements OnInit {
             (response) => {
               Swal.fire("Éxito", "Orden despachada exitosamente", "success");
 
-              // Agregar delay para asegurar sincronización de datos antes de imprimir
-              setTimeout(() => {
-                console.log("=== IMPRESIÓN AUTOMÁTICA TRAS DESPACHO ===");
-                console.log("Datos antes de imprimir:", {
-                  pedidosSeleccionados: this.pedidosSeleccionados?.length || 0,
-                  nroShippingOrder: this.nroShippingOrder,
-                  transportadorSeleccionado: !!this.transportadorSeleccionado,
-                  transportadorNombre: this.transportadorSeleccionado?.nombre || this.transportadorSeleccionado
-                });
+              // Guardar una copia de los datos antes de cerrar el modal
+              const pedidosParaImprimir = [...this.pedidosSeleccionados];
+              const nroOrdenParaImprimir = this.nroShippingOrder;
+              const transportadorParaImprimir = this.transportadorSeleccionado;
 
-                // Ejecutar impresión sin await para respetar timeouts internos
-                this.imprimirOrden();
+              console.log("=== IMPRESIÓN AUTOMÁTICA TRAS DESPACHO ===");
+              console.log("Datos guardados para impresión:", {
+                pedidosSeleccionados: pedidosParaImprimir?.length || 0,
+                nroShippingOrder: nroOrdenParaImprimir,
+                transportadorSeleccionado: !!transportadorParaImprimir,
+                transportadorNombre: transportadorParaImprimir?.nombre || transportadorParaImprimir
+              });
 
-                // Limpiar datos después de tiempo suficiente para que termine todo el proceso
-                setTimeout(() => {
-                  console.log("Limpiando datos después de impresión completa...");
-                  this.pedidosSeleccionados = [];
-                  this.transportadorSeleccionado = null;
-                  this.nroShippingOrder = null;
-                  this.nuevaOrdenEnvio = null;
-                }, 3000); // 3 segundos para asegurar que todos los timeouts internos terminen
-
-              }, 500); // Delay de 500ms para sincronización
-
+              // Cerrar el modal primero
               this.modalService.dismissAll();
+
+              // Ejecutar impresión después de cerrar el modal con los datos guardados
+              setTimeout(() => {
+                this.imprimirOrdenConDatosEspecificos(pedidosParaImprimir, nroOrdenParaImprimir, transportadorParaImprimir);
+              }, 1000); // Delay de 1 segundo para asegurar que el modal se cierre completamente
+
+              // Recargar el componente ordenes-despacho-v2 para reflejar los cambios
+              setTimeout(() => {
+                if (this.ordenesDespachoV2Component) {
+                  console.log("🔄 Recargando componente ordenes-despacho-v2...");
+                  this.ordenesDespachoV2Component.loadInitialOrders();
+                }
+              }, 2000); // Delay de 2 segundos para asegurar que el despacho se complete
+
+              // Limpiar datos después de tiempo suficiente para que termine todo el proceso
+              setTimeout(() => {
+                console.log("Limpiando datos después de impresión completa...");
+                this.pedidosSeleccionados = [];
+                this.transportadorSeleccionado = null;
+                this.nroShippingOrder = null;
+                this.nuevaOrdenEnvio = null;
+              }, 5000); // 5 segundos para asegurar que todos los timeouts internos terminen
             },
             (error) => {
               Swal.fire(
@@ -6293,6 +6383,162 @@ export class DespachosComponent implements OnInit {
       fechaInicialDate: this.fechaInicialDate,
       fechaFinalDate: this.fechaFinalDate
     });
+  }
+
+  // ========== FUNCIONES UTILITARIAS PARA INFORMACIÓN DE ENVÍO ==========
+
+  /**
+   * Obtiene el nombre completo priorizando información del envío sobre la del cliente
+   * @param pedido - El pedido del cual obtener el nombre
+   * @returns El nombre completo del destinatario
+   */
+  getNombreDestinatario(pedido: Pedido): string {
+    // Priorizar información del envío sobre la del cliente
+    const nombresEnvio = `${pedido.envio?.nombres || ""} ${pedido.envio?.apellidos || ""}`.trim();
+    const nombresCliente = pedido.cliente?.nombres_completos || 
+                          `${pedido.cliente?.nombres_completos || ""} ${pedido.cliente?.apellidos_completos || ""}`.trim();
+    
+    // Usar información del envío si está disponible, sino usar información del cliente
+    return nombresEnvio || nombresCliente || "N/A";
+  }
+
+  /**
+   * Obtiene el teléfono priorizando información del envío sobre la del cliente
+   * @param pedido - El pedido del cual obtener el teléfono
+   * @returns El teléfono del destinatario
+   */
+  getTelefonoDestinatario(pedido: Pedido): string {
+    return pedido.envio?.celular || 
+           pedido.cliente?.numero_celular_comprador || 
+           "N/A";
+  }
+
+  /**
+   * Obtiene la dirección completa del envío con todos los detalles
+   * @param pedido - El pedido del cual obtener la dirección
+   * @returns La dirección completa del destinatario con todos los detalles
+   */
+  getDireccionCompletaDestinatario(pedido: Pedido): string {
+    const direccionParts = [
+      pedido.envio?.direccionEntrega,
+      pedido.envio?.nombreUnidad,
+      pedido.envio?.especificacionesInternas,
+      pedido.envio?.barrio,
+      pedido.envio?.ciudad,
+      pedido.envio?.departamento,
+      pedido.envio?.pais,
+    ].filter(Boolean);
+
+    return direccionParts.length > 0 ? direccionParts.join(", ") : "N/A";
+  }
+
+  /**
+   * Obtiene información detallada de la dirección para impresión
+   * @param pedido - El pedido del cual obtener la información
+   * @returns Objeto con todos los detalles de la dirección
+   */
+  getInformacionDetalladaDireccion(pedido: Pedido): {
+    direccionPrincipal: string;
+    nombreUnidad: string;
+    especificacionesInternas: string;
+    barrio: string;
+    observaciones: string;
+    notasDespacho: string;
+    notasEntrega: string;
+  } {
+    return {
+      direccionPrincipal: pedido.envio?.direccionEntrega || "N/A",
+      nombreUnidad: pedido.envio?.nombreUnidad || "N/A",
+      especificacionesInternas: pedido.envio?.especificacionesInternas || "N/A",
+      barrio: pedido.envio?.barrio || "N/A",
+      observaciones: pedido.envio?.observaciones || "N/A",
+      notasDespacho: this.getNotasDespacho(pedido),
+      notasEntrega: this.getNotasEntrega(pedido)
+    };
+  }
+
+  /**
+   * Obtiene las notas de despacho del pedido
+   * @param pedido - El pedido del cual obtener las notas
+   * @returns Las notas de despacho formateadas
+   */
+  getNotasDespacho(pedido: Pedido): string {
+    if (!pedido.notasPedido?.notasDespachos || pedido.notasPedido.notasDespachos.length === 0) {
+      return "N/A";
+    }
+
+    return pedido.notasPedido.notasDespachos
+      .map(nota => `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`)
+      .join(" | ");
+  }
+
+  /**
+   * Obtiene las notas de entrega del pedido
+   * @param pedido - El pedido del cual obtener las notas
+   * @returns Las notas de entrega formateadas
+   */
+  getNotasEntrega(pedido: Pedido): string {
+    if (!pedido.notasPedido?.notasEntregas || pedido.notasPedido.notasEntregas.length === 0) {
+      return "N/A";
+    }
+
+    return pedido.notasPedido.notasEntregas
+      .map(nota => `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`)
+      .join(" | ");
+  }
+
+  /**
+   * Obtiene toda la información adicional combinada en un formato compacto
+   * @param pedido - El pedido del cual obtener la información
+   * @returns Toda la información adicional combinada
+   */
+  getObservacionesCompletas(pedido: Pedido): string {
+    const informacionAdicional: string[] = [];
+
+    // Agregar información de dirección
+    if (pedido.envio?.direccionEntrega && pedido.envio.direccionEntrega.trim() !== '') {
+      informacionAdicional.push(pedido.envio.direccionEntrega.trim());
+    }
+
+    // Agregar nombre de unidad/edificio
+    if (pedido.envio?.nombreUnidad && pedido.envio.nombreUnidad.trim() !== '') {
+      informacionAdicional.push(pedido.envio.nombreUnidad.trim());
+    }
+
+    // Agregar especificaciones internas
+    if (pedido.envio?.especificacionesInternas && pedido.envio.especificacionesInternas.trim() !== '') {
+      informacionAdicional.push(pedido.envio.especificacionesInternas.trim());
+    }
+
+    // Agregar barrio/sector
+    if (pedido.envio?.barrio && pedido.envio.barrio.trim() !== '') {
+      informacionAdicional.push(pedido.envio.barrio.trim());
+    }
+
+    // Agregar observaciones del envío
+    if (pedido.envio?.observaciones && pedido.envio.observaciones.trim() !== '') {
+      informacionAdicional.push(pedido.envio.observaciones.trim());
+    }
+
+    // Agregar notas de despacho
+    const notasDespacho = this.getNotasDespacho(pedido);
+    if (notasDespacho !== 'N/A') {
+      informacionAdicional.push(notasDespacho);
+    }
+
+    // Agregar notas de entrega
+    const notasEntrega = this.getNotasEntrega(pedido);
+    if (notasEntrega !== 'N/A') {
+      informacionAdicional.push(notasEntrega);
+    }
+
+    // Si no hay información adicional, retornar N/A
+    if (informacionAdicional.length === 0) {
+      return 'N/A';
+    }
+
+    // Combinar toda la información separada por comas
+    return informacionAdicional.join(', ');
   }
 }
 

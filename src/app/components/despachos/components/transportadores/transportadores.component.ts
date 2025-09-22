@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
@@ -6,7 +6,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   templateUrl: './transportadores.component.html',
   styleUrls: ['./transportadores.component.scss']
 })
-export class TransportadoresComponent implements OnInit {
+export class TransportadoresComponent implements OnInit, OnChanges {
   @Input() vendors: any[] = [];
   @Input() editMode: boolean = false;
   @Input() selectedTransporter: any = null;
@@ -17,6 +17,8 @@ export class TransportadoresComponent implements OnInit {
   @Output() onClose = new EventEmitter<void>();
 
   transportadorForm: FormGroup;
+  isLoading: boolean = false;
+  showForm: boolean = false;
 
   constructor(private formBuilder: FormBuilder) { }
 
@@ -24,9 +26,10 @@ export class TransportadoresComponent implements OnInit {
     this.initForm();
   }
 
-  ngOnChanges(): void {
-    if (this.selectedTransporter && this.editMode) {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedTransporter'] && this.selectedTransporter && this.editMode) {
       this.transportadorForm.patchValue(this.selectedTransporter);
+      this.showForm = true;
     }
   }
 
@@ -56,14 +59,21 @@ export class TransportadoresComponent implements OnInit {
       return;
     }
 
+    this.isLoading = true;
     const formData = this.transportadorForm.value;
+    
     if (this.editMode && this.selectedTransporter) {
       formData.id = this.selectedTransporter.id;
       formData.date_edit = this.selectedTransporter.date_edit;
-      this.onSave.emit(formData);
-    } else {
-      this.onSave.emit(formData);
     }
+    
+    // Simular delay para mostrar loading
+    setTimeout(() => {
+      this.onSave.emit(formData);
+      this.isLoading = false;
+      this.hideForm();
+      this.resetForm();
+    }, 500);
   }
 
   deleteTransporter(vendor: any): void {
@@ -74,6 +84,7 @@ export class TransportadoresComponent implements OnInit {
     this.transportadorForm.patchValue(vendor);
     this.editMode = true;
     this.selectedTransporter = vendor;
+    this.showForm = true;
     this.onEdit.emit(vendor);
   }
 
@@ -83,6 +94,24 @@ export class TransportadoresComponent implements OnInit {
 
   resetForm(): void {
     this.transportadorForm.reset();
+    this.editMode = false;
+    this.selectedTransporter = null;
+  }
+
+  showCreateForm(): void {
+    this.resetForm();
+    this.showForm = true;
+  }
+
+  hideForm(): void {
+    this.showForm = false;
+    this.resetForm();
+  }
+
+  confirmDelete(vendor: any): void {
+    if (confirm(`¿Está seguro de que desea eliminar al transportador ${vendor.nombres} ${vendor.apellidos}?`)) {
+      this.deleteTransporter(vendor);
+    }
   }
 
   // Utilidad para marcar todos los campos como touched
