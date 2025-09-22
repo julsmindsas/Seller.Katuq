@@ -1690,7 +1690,7 @@ export class CrearVentasComponent
                 departamento: "N/A",
                 ciudad: this.selectedCity || "N/A",
                 zonaCobro: "N/A",
-                valorZonaCobro: "0",
+                valorZonaCobro: 0,
                 codigoPV: "N/A",
               };
 
@@ -1927,7 +1927,7 @@ export class CrearVentasComponent
                     departamento: "N/A",
                     ciudad: this.selectedCity || "N/A",
                     zonaCobro: "N/A",
-                    valorZonaCobro: "0",
+                    valorZonaCobro: 0,
                     codigoPV: "N/A",
                   };
                   this.pedidoGral.envio = envioRecoge;
@@ -1998,7 +1998,7 @@ export class CrearVentasComponent
               ciudad:
                 this.pedidoGral.envio?.ciudad || this.selectedCity || "N/A",
               zonaCobro: "N/A",
-              valorZonaCobro: "0",
+              valorZonaCobro: 0,
               codigoPV: "N/A",
             };
             this.pedidoGral.envio = envioRecoge;

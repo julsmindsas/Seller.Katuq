@@ -1400,6 +1400,18 @@ export class PaymentService extends BaseService {
                 </td>
               </tr>
             </table>
+            ${(pedido.envio.observaciones && pedido.envio.observaciones.trim() !== '') ? `
+            <div style="margin-top: 8px; padding: 8px; background-color: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 4px;">
+              <p style="margin: 0; color: #92400e; font-size: 11px; font-weight: 500;">
+                <strong>📝 Observaciones de Entrega:</strong> ${pedido.envio.observaciones}
+              </p>
+            </div>` : ''}
+            ${pedido.envio.valorZonaCobro ? `
+            <div style="margin-top: 4px; padding: 4px 8px; background-color: #d1fae5; border-left: 3px solid #10b981; border-radius: 4px;">
+              <p style="margin: 0; color: #059669; font-size: 11px; font-weight: 500;">
+                <strong>💵 Valor Zona de Cobro:</strong> ${this.formatCurrency(pedido.envio.valorZonaCobro)}
+              </p>
+            </div>` : ''}
           </div>`
         : "";
 
