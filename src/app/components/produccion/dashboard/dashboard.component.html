@@ -795,8 +795,15 @@
         <button type="button" class="btn-modal-secondary" (click)="modal.close('Cross click')">
             <i class="pi pi-times me-2"></i>Cancelar
         </button>
-        <button type="button" class="btn-modal-primary" (click)="modal.close('cerrar')">
-            <i class="pi pi-check me-2"></i>Guardar
+        <button type="button"
+                class="btn-modal-primary"
+                [disabled]="cerrarArticuloApp.todosPedidosEstanCompletos()"
+                [ngClass]="{'disabled': cerrarArticuloApp.todosPedidosEstanCompletos()}"
+                (click)="modal.close('cerrar')"
+                [title]="cerrarArticuloApp.todosPedidosEstanCompletos() ? 'Todos los pedidos ya están completos' : 'Guardar cambios'">
+            <i class="pi pi-check me-2"></i>
+            <span *ngIf="!cerrarArticuloApp.todosPedidosEstanCompletos()">Guardar</span>
+            <span *ngIf="cerrarArticuloApp.todosPedidosEstanCompletos()">Todos Completos</span>
         </button>
     </div>
 </ng-template>

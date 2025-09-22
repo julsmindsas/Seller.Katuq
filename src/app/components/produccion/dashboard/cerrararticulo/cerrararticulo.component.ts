@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SafeHtml } from '@angular/platform-browser';
 import { Detalle, DetallePedido, PedidosParaProduccionEnsamble } from '../../../../shared/models/produccion/Produccion';
@@ -25,7 +25,7 @@ export class CerrararticuloComponent implements OnInit {
   totalPiezasProducidasSumadas = 0;
 
   formulario = new FormGroup({
-    cantidad: new FormControl('0'),
+    cantidad: new FormControl('0', [Validators.required, Validators.min(0)]),
     faltante: new FormControl(''),
     resumen: new FormControl(''),
     piezas: new FormControl(''),
@@ -49,16 +49,16 @@ export class CerrararticuloComponent implements OnInit {
     // Ordenar por fecha de entrega - Algoritmo mejorado y más robusto
     this.ordenarPorFechaEntrega();
 
-    this.formulario.controls['faltante'].setValue(this.getFaltante().toString());
-    this.formulario.controls['piezasFaltantesPorRepartir'].setValue(this.getFaltante().toString());
+    this.formulario.controls['faltante'].setValue(this.getCantidadRealmentePendiente().toString());
+    this.formulario.controls['piezasFaltantesPorRepartir'].setValue(this.getCantidadRealmentePendiente().toString());
     this.formulario.controls['totalHistoricoProducido'].setValue(this.getTotalHistoricoProducido().toString());
     this.formulario.controls['cantidad'].valueChanges.subscribe((value) => {
       if (value === '' || value === null) {
         this.formulario.controls['resumen'].setValue('');
-        this.formulario.controls['faltante'].setValue(this.getCantidadTotalProductoEnsamble().toString());
+        this.formulario.controls['faltante'].setValue(this.getCantidadRealmentePendiente().toString());
         return;
       }
-      
+
       if (value === '0') {
         this.formulario.controls['resumen'].setValue('');
         this.formulario.controls['faltante'].setValue(this.getFaltante().toString());
@@ -66,18 +66,30 @@ export class CerrararticuloComponent implements OnInit {
       }
 
       const cantidadIngresada = parseInt(value);
-      const cantidadTotal = this.getCantidadTotalProductoEnsamble();
-      
-      if (cantidadIngresada > cantidadTotal) {
-        this.formulario.controls['faltante'].setValue(cantidadTotal.toString());
-        this.formulario.controls['resumen'].setValue('La cantidad ingresada es mayor a la cantidad total de piezas a producir');
+
+      // Validación adicional para valores negativos
+      if (cantidadIngresada < 0) {
+        this.formulario.controls['cantidad'].setValue('0');
+        this.formulario.controls['resumen'].setValue('No se permiten valores negativos');
+        return;
+      }
+
+      // Usar la cantidad realmente pendiente en lugar del total general
+      const cantidadRealmentePendiente = this.getCantidadRealmentePendiente();
+      const totalHistorico = this.getTotalHistoricoProducido();
+
+      if (cantidadIngresada > cantidadRealmentePendiente) {
+        this.formulario.controls['cantidad'].setValue(cantidadRealmentePendiente.toString());
+        this.formulario.controls['resumen'].setValue(
+          `Máximo permitido: ${cantidadRealmentePendiente} piezas (ya se produjeron ${totalHistorico} en total)`
+        );
         return;
       }
       
       this.formulario.controls['faltante'].setValue(this.getFaltante().toString());
 
       // Algoritmo mejorado de distribución
-      this.distribuirPiezas(cantidadIngresada, cantidadTotal);
+      this.distribuirPiezas(cantidadIngresada, cantidadRealmentePendiente);
     });
   }
 
@@ -115,14 +127,41 @@ export class CerrararticuloComponent implements OnInit {
   }
 
   /**
-   * Ordena los pedidos por fecha de entrega de manera robusta,
+   * Ordena los pedidos priorizando incompletos y luego por fecha de entrega,
    * manejando casos de fechas nulas, indefinidas o inválidas
    */
   ordenarPorFechaEntrega(): void {
     // Definir una fecha futura lejana para pedidos sin fecha (baja prioridad)
     const fechaFutura = new Date();
     fechaFutura.setFullYear(fechaFutura.getFullYear() + 10);
-    
+
+    this.selectedOrdersEnsamble.forEach(orden => {
+      // Ordenar los pedidos dentro de cada orden por estado de completitud y fecha
+      orden.detallePedido.sort((a, b) => {
+        // Prioridad 1: Estado de completitud (incompletos primero)
+        const aCompleto = this.esPedidoCompletoParaArticulo(a);
+        const bCompleto = this.esPedidoCompletoParaArticulo(b);
+
+        if (aCompleto && !bCompleto) return 1;  // a completo va después
+        if (!aCompleto && bCompleto) return -1; // a incompleto va primero
+
+        // Prioridad 2: Si ambos tienen el mismo estado, ordenar por fecha
+        const fechaA = a.fechaEntrega ? new Date(a.fechaEntrega) : fechaFutura;
+        const fechaB = b.fechaEntrega ? new Date(b.fechaEntrega) : fechaFutura;
+
+        const tiempoA = !isNaN(fechaA.getTime()) ? fechaA.getTime() : fechaFutura.getTime();
+        const tiempoB = !isNaN(fechaB.getTime()) ? fechaB.getTime() : fechaFutura.getTime();
+
+        // Si las fechas son iguales, ordenar por cantidad (menor primero para equilibrar)
+        if (tiempoA === tiempoB) {
+          return a.cantidadArticulosPorPedido - b.cantidadArticulosPorPedido;
+        }
+
+        return tiempoA - tiempoB;
+      });
+    });
+
+    // También ordenar las órdenes principales por el mismo criterio
     this.selectedOrdersEnsamble.sort((a, b) => {
       // Función para obtener una fecha válida o la fecha futura por defecto
       const obtenerFechaValida = (orden: PedidosParaProduccionEnsamble): Date => {
@@ -167,18 +206,29 @@ export class CerrararticuloComponent implements OnInit {
    * @param cantidadTotal - Cantidad total de productos
    */
   distribuirPiezas(cantidadIngresada: number, cantidadTotal: number): void {
+    // Validar que la cantidad ingresada no sea negativa
+    if (cantidadIngresada < 0) {
+      cantidadIngresada = 0;
+      this.formulario.controls['cantidad'].setValue('0');
+    }
+
+    // Validar que cantidadTotal no sea negativa
+    if (cantidadTotal < 0) {
+      cantidadTotal = 0;
+    }
+
     // Paso 1: Preparar los datos para la distribución
     const pedidosDisponibles: DetallePedido[] = [];
     
     // Aplanar todos los detalles de pedido para trabajar con una única lista
     this.selectedOrdersEnsamble.forEach(orden => {
       orden.detallePedido.forEach(detalle => {
-        // Inicializar el proceso y establecer piezas a cero
+        // Inicializar el proceso y establecer piezas a cero (validar que no sea negativo)
         detalle.proceso = this.processSelected;
-        detalle.piezasProducidas = 0;
+        detalle.piezasProducidas = Math.max(0, detalle.piezasProducidas || 0);
         
-        // Agregar solo los pedidos con piezas pendientes
-        if (detalle.cantidadArticulosPorPedido > 0) {
+        // Agregar solo los pedidos con piezas pendientes y que NO estén completos
+        if (detalle.cantidadArticulosPorPedido > 0 && !this.esPedidoCompletoParaArticulo(detalle)) {
           pedidosDisponibles.push(detalle);
         }
       });
@@ -234,9 +284,9 @@ export class CerrararticuloComponent implements OnInit {
     
     if (minimoInicial > 0) {
       pedidosDisponibles.forEach(detalle => {
-        const asignacion = Math.min(minimoInicial, detalle.cantidadArticulosPorPedido);
-        detalle.piezasProducidas = asignacion;
-        piezasRestantes -= asignacion;
+        const asignacion = Math.max(0, Math.min(minimoInicial, detalle.cantidadArticulosPorPedido));
+        detalle.piezasProducidas = Math.max(0, asignacion);
+        piezasRestantes = Math.max(0, piezasRestantes - asignacion);
       });
     }
     
@@ -262,9 +312,9 @@ export class CerrararticuloComponent implements OnInit {
             // Ajustar si quedan menos piezas que la asignación
             asignacionAdicional = Math.min(asignacionAdicional, piezasRestantes);
             
-            // Actualizar piezas producidas y restantes
-            detalle.piezasProducidas = (detalle.piezasProducidas || 0) + asignacionAdicional;
-            piezasRestantes -= asignacionAdicional;
+            // Actualizar piezas producidas y restantes (validar que no sean negativos)
+            detalle.piezasProducidas = Math.max(0, (detalle.piezasProducidas || 0) + asignacionAdicional);
+            piezasRestantes = Math.max(0, piezasRestantes - asignacionAdicional);
           }
         }
         
@@ -280,9 +330,9 @@ export class CerrararticuloComponent implements OnInit {
         const piezasFaltantes = detalle.cantidadArticulosPorPedido - (detalle.piezasProducidas || 0);
         
         if (piezasFaltantes > 0) {
-          const asignacion = Math.min(piezasRestantes, piezasFaltantes);
-          detalle.piezasProducidas = (detalle.piezasProducidas || 0) + asignacion;
-          piezasRestantes -= asignacion;
+          const asignacion = Math.max(0, Math.min(piezasRestantes, piezasFaltantes));
+          detalle.piezasProducidas = Math.max(0, (detalle.piezasProducidas || 0) + asignacion);
+          piezasRestantes = Math.max(0, piezasRestantes - asignacion);
           this.actualizarPiezasPorRepartir(detalle);
         }
       }
@@ -308,9 +358,31 @@ export class CerrararticuloComponent implements OnInit {
     return this.selectedOrdersEnsamble.reduce((acc, item) => acc + (item.cantidadTotalProductoEnsamble || 0), 0);
   }
 
+  /**
+   * Calcula la cantidad que realmente está pendiente de producir,
+   * excluyendo los pedidos que ya están completos
+   * @returns number - Cantidad total realmente pendiente
+   */
+  getCantidadRealmentePendiente(): number {
+    return this.selectedOrdersEnsamble.reduce((total, orden) => {
+      return total + orden.detallePedido.reduce((subtotal, detalle) => {
+        // Solo contar si NO está completo
+        if (!this.esPedidoCompletoParaArticulo(detalle)) {
+          const necesario = detalle.cantidadArticulosPorPedido || 0;
+          const producidoHistorico = this.getTotalPiezasProducidasHistoricas(detalle);
+          const faltante = Math.max(0, necesario - producidoHistorico);
+          return subtotal + faltante;
+        }
+        return subtotal;
+      }, 0);
+    }, 0);
+  }
+
   getFaltante() {
     const cantidadIngresada = parseInt(this.formulario.controls['cantidad'].value || '0');
-    return (this.getCantidadTotalProductoEnsamble() - this.getTotalHistoricoProducido()) - cantidadIngresada;
+    // Usar la cantidad realmente pendiente (excluyendo pedidos completos)
+    const totalRealmentePendiente = this.getCantidadRealmentePendiente();
+    return Math.max(0, totalRealmentePendiente - cantidadIngresada);
   }
 
   onSubmit() {
@@ -318,9 +390,27 @@ export class CerrararticuloComponent implements OnInit {
   }
 
   actualizarPiezasPorRepartir(detalle: DetallePedido) {
+    // Validar que piezasProducidas no sea negativo
+    if (detalle.piezasProducidas < 0) {
+      detalle.piezasProducidas = 0;
+    }
+
     // Asegurar que piezasProducidas tenga un valor válido
     detalle.piezasProducidas = detalle.piezasProducidas || 0;
-    
+
+    // Nueva validación: No permitir más de lo que realmente falta considerando el histórico
+    const necesarioTotal = detalle.cantidadArticulosPorPedido || 0;
+    const producidoHistorico = this.getTotalPiezasProducidasHistoricas(detalle);
+    const realmenteFaltante = Math.max(0, necesarioTotal - producidoHistorico);
+
+    // Si el pedido ya está completo, no permitir añadir más piezas
+    if (realmenteFaltante === 0) {
+      detalle.piezasProducidas = 0;
+    } else if (detalle.piezasProducidas > realmenteFaltante) {
+      // No permitir más piezas de las que realmente faltan
+      detalle.piezasProducidas = realmenteFaltante;
+    }
+
     // Calcular piezas por repartir
     detalle.piezasPorRepartir = detalle.cantidadArticulosPorPedido - detalle.piezasProducidas;
 
@@ -345,27 +435,41 @@ export class CerrararticuloComponent implements OnInit {
   }
 
   getMaxActualizarPiezasPorRepartir(detalle: any) {
-    if (detalle.piezasProducidas !== null && detalle.piezasProducidas !== '' && 
-        this.formulario.value.piezasFaltantesPorRepartir !== '' && 
+    // Si el pedido está completo, no permitir edición
+    if (this.esPedidoCompletoParaArticulo(detalle)) {
+      return 0;
+    }
+
+    // Calcular cuánto REALMENTE falta para este pedido específico
+    const necesarioTotal = detalle.cantidadArticulosPorPedido || 0;
+    const producidoHistorico = this.getTotalPiezasProducidasHistoricas(detalle);
+    const realmenteFaltante = Math.max(0, necesarioTotal - producidoHistorico);
+
+    // Si no falta nada para este pedido, retornar 0
+    if (realmenteFaltante === 0) {
+      return 0;
+    }
+
+    if (detalle.piezasProducidas !== null && detalle.piezasProducidas !== '' &&
+        this.formulario.value.piezasFaltantesPorRepartir !== '' &&
         this.formulario.value.cantidad !== '') {
 
-      // Usar valores seguros con operadores de coalescencia nula
       const piezasFaltantesPorRepartir = parseInt(this.formulario.value.piezasFaltantesPorRepartir || '0');
-      const cantidad = parseInt(this.formulario.value.cantidad || '0');
+      const piezasActuales = Math.max(0, parseInt(detalle.piezasProducidas?.toString() || '0'));
 
-      if (piezasFaltantesPorRepartir === 0) {
-        return detalle.piezasProducidas;
-      }
+      // El máximo es el menor entre:
+      // 1. Lo que realmente falta para completar este pedido
+      // 2. Las piezas actuales + las disponibles para repartir
+      const maxPermitido = Math.min(
+        realmenteFaltante,  // No más de lo que realmente falta
+        piezasActuales + piezasFaltantesPorRepartir  // No más de lo disponible
+      );
 
-      const suma = cantidad - piezasFaltantesPorRepartir;
-
-      if (((suma - 1) > suma) && ((suma - 1) >= 0))
-        return suma - 1;
-      else
-        return suma;
+      return Math.max(0, maxPermitido);
     }
     else {
-      return 0;
+      // Si no hay datos del formulario, el máximo es lo que realmente falta
+      return realmenteFaltante;
     }
   }
 
@@ -468,9 +572,9 @@ export class CerrararticuloComponent implements OnInit {
    */
   getPaymentStatusClass(estadoPago: string): string {
     if (!estadoPago) return 'payment-status-unknown';
-    
+
     const estado = estadoPago.toLowerCase().trim();
-    
+
     switch (estado) {
       case 'pagado':
       case 'paid':
@@ -495,5 +599,167 @@ export class CerrararticuloComponent implements OnInit {
       default:
         return 'payment-status-unknown';
     }
+  }
+
+  /**
+   * Determina si un artículo está completamente terminado (100% producido)
+   * @param articuloEnsamble - Datos del artículo en ensamble
+   * @returns boolean - true si el artículo está 100% terminado
+   */
+  esArticuloCompletamenteTerminado(articuloEnsamble: any): boolean {
+    if (!articuloEnsamble || !articuloEnsamble.detallePedido) {
+      return false;
+    }
+
+    const totalNecesario = articuloEnsamble.cantidadTotalProductoEnsamble || 0;
+    if (totalNecesario === 0) {
+      return false;
+    }
+
+    // Sumar todas las piezas producidas históricamente para este proceso
+    const totalProducidoHistorico = articuloEnsamble.detallePedido.reduce((total: number, detalle: any) => {
+      if (!detalle.historialPiezasProducidas) {
+        return total;
+      }
+
+      const piezasDelProceso = detalle.historialPiezasProducidas
+        .filter((historial: any) => historial?.proceso === this.processSelected)
+        .reduce((acc: number, item: any) => acc + (item?.piezasProducidas || 0), 0);
+
+      return total + piezasDelProceso;
+    }, 0);
+
+    return totalProducidoHistorico >= totalNecesario;
+  }
+
+  /**
+   * Determina si un pedido específico está completo para el artículo actual
+   * @param detallePedido - Datos del detalle del pedido
+   * @returns boolean - true si el pedido está completo
+   */
+  esPedidoCompletoParaArticulo(detallePedido: DetallePedido): boolean {
+    if (!detallePedido) {
+      return false;
+    }
+
+    const cantidadNecesaria = detallePedido.cantidadArticulosPorPedido || 0;
+    if (cantidadNecesaria === 0) {
+      return false;
+    }
+
+    // Sumar todas las piezas producidas históricamente para este pedido y proceso
+    const totalProducidoHistorico = (detallePedido.historialPiezasProducidas || [])
+      .filter(historial => historial?.proceso === this.processSelected)
+      .reduce((acc, item) => acc + (item?.piezasProducidas || 0), 0);
+
+    return totalProducidoHistorico >= cantidadNecesaria;
+  }
+
+  /**
+   * Obtiene el porcentaje de completitud de un pedido específico
+   * @param detallePedido - Datos del detalle del pedido
+   * @returns number - Porcentaje de 0 a 100
+   */
+  getPorcentajeCompletitudPedido(detallePedido: DetallePedido): number {
+    if (!detallePedido) {
+      return 0;
+    }
+
+    const cantidadNecesaria = detallePedido.cantidadArticulosPorPedido || 0;
+    if (cantidadNecesaria === 0) {
+      return 0;
+    }
+
+    const totalProducidoHistorico = (detallePedido.historialPiezasProducidas || [])
+      .filter(historial => historial?.proceso === this.processSelected)
+      .reduce((acc, item) => acc + (item?.piezasProducidas || 0), 0);
+
+    return Math.min(100, Math.round((totalProducidoHistorico / cantidadNecesaria) * 100));
+  }
+
+  /**
+   * Obtiene el total de piezas producidas históricamente para un pedido específico
+   * @param detallePedido - Datos del detalle del pedido
+   * @returns number - Total de piezas producidas históricamente
+   */
+  getTotalPiezasProducidasHistoricas(detallePedido: DetallePedido): number {
+    if (!detallePedido) {
+      return 0;
+    }
+
+    return (detallePedido.historialPiezasProducidas || [])
+      .filter(historial => historial?.proceso === this.processSelected)
+      .reduce((acc, item) => acc + (item?.piezasProducidas || 0), 0);
+  }
+
+  /**
+   * Obtiene la fecha de la última producción para un pedido específico
+   * @param detallePedido - Datos del detalle del pedido
+   * @returns string - Fecha de la última producción o cadena vacía si no hay historial
+   */
+  getFechaUltimaProduccion(detallePedido: DetallePedido): string {
+    if (!detallePedido || !detallePedido.historialPiezasProducidas) {
+      return '';
+    }
+
+    const historialDelProceso = detallePedido.historialPiezasProducidas
+      .filter(historial => historial?.proceso === this.processSelected)
+      .sort((a, b) => {
+        const fechaA = new Date(a.fecha || 0).getTime();
+        const fechaB = new Date(b.fecha || 0).getTime();
+        return fechaB - fechaA; // Más reciente primero
+      });
+
+    return historialDelProceso.length > 0 ? historialDelProceso[0].fecha : '';
+  }
+
+  /**
+   * Obtiene el responsable de la última producción para un pedido específico
+   * @param detallePedido - Datos del detalle del pedido
+   * @returns string - Nombre del responsable o cadena vacía si no hay historial
+   */
+  getResponsableUltimaProduccion(detallePedido: DetallePedido): string {
+    if (!detallePedido || !detallePedido.historialPiezasProducidas) {
+      return '';
+    }
+
+    const historialDelProceso = detallePedido.historialPiezasProducidas
+      .filter(historial => historial?.proceso === this.processSelected)
+      .sort((a, b) => {
+        const fechaA = new Date(a.fecha || 0).getTime();
+        const fechaB = new Date(b.fecha || 0).getTime();
+        return fechaB - fechaA; // Más reciente primero
+      });
+
+    if (historialDelProceso.length > 0 && historialDelProceso[0].personaResponsable) {
+      return historialDelProceso[0].personaResponsable.name ||
+             historialDelProceso[0].personaResponsable.email ||
+             'Usuario no identificado';
+    }
+
+    return '';
+  }
+
+  /**
+   * Verifica si todos los pedidos están completamente terminados
+   * @returns boolean - true si todos los pedidos están 100% completos
+   */
+  todosPedidosEstanCompletos(): boolean {
+    if (!this.selectedOrdersEnsamble || this.selectedOrdersEnsamble.length === 0) {
+      return false;
+    }
+
+    // Verificar que TODOS los detalles de pedido estén completos
+    return this.selectedOrdersEnsamble.every(orden =>
+      orden.detallePedido.every(detalle => this.esPedidoCompletoParaArticulo(detalle))
+    );
+  }
+
+  /**
+   * Verifica si hay al menos un pedido incompleto
+   * @returns boolean - true si hay pedidos pendientes de completar
+   */
+  hayPedidosIncompletos(): boolean {
+    return !this.todosPedidosEstanCompletos();
   }
 }

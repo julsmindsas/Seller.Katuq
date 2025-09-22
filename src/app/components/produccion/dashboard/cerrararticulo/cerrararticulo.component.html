@@ -1,10 +1,22 @@
 <!-- Componente de Cierre de Artículo Modernizado -->
 <div class="cerrar-articulo-container">
+    <!-- Mensaje cuando todos los pedidos están completos -->
+    <div *ngIf="todosPedidosEstanCompletos()" class="all-completed-banner">
+        <div class="banner-content">
+            <i class="pi pi-check-circle"></i>
+            <div class="banner-text">
+                <h4>¡Producción Completada!</h4>
+                <p>Todos los pedidos de este artículo ya están 100% terminados para el proceso: <strong>{{processSelected}}</strong></p>
+            </div>
+        </div>
+    </div>
+
     <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
-        <div class="configuration-card">
+        <div class="configuration-card" [ngClass]="{'disabled-section': todosPedidosEstanCompletos()}">
             <div class="card-header">
                 <i class="pi pi-cog me-2"></i>
                 <span>Configuración de producción</span>
+                <span *ngIf="todosPedidosEstanCompletos()" class="disabled-label">(Deshabilitado - Todos completos)</span>
             </div>
             <div class="card-content">
                 <div class="form-grid">
@@ -13,7 +25,9 @@
                             <i class="pi pi-hashtag me-1"></i>Cantidad producidas:
                         </label>
                         <input type="number" id="cantidad" formControlName="cantidad" min="0"
-                            [max]="getCantidadTotalProductoEnsamble()" class="modern-input"
+                            [max]="getCantidadTotalProductoEnsamble()"
+                            [disabled]="todosPedidosEstanCompletos()"
+                            class="modern-input"
                             [ngClass]="{'is-invalid': formulario.controls.cantidad.invalid && (formulario.controls.cantidad.dirty || formulario.controls.cantidad.touched)}">
                         <div *ngIf="formulario.get('cantidad').invalid && formulario.get('cantidad').touched"
                             class="validation-error">
@@ -28,16 +42,18 @@
                     </div>
                     <div class="form-cell">
                         <label for="faltante" class="control-label">
-                            <i class="pi pi-minus-circle me-1"></i>Faltante por producir:
+                            <i class="pi pi-minus-circle me-1"></i>
+                            <span *ngIf="!todosPedidosEstanCompletos()">Faltante por producir:</span>
+                            <span *ngIf="todosPedidosEstanCompletos()">Total completado:</span>
                         </label>
-                        <div id="faltante" class="info-value">{{formulario.value.faltante}}</div>
+                        <div id="faltante" class="info-value">{{todosPedidosEstanCompletos() ? '0' : formulario.value.faltante}}</div>
                     </div>
                     <div class="form-cell">
                         <label for="cantidadPorRepartir" class="control-label">
                             <i class="pi pi-chart-bar me-1"></i>Cantidad por repartir:
                         </label>
                         <div id="cantidadPorRepartir" class="info-value">
-                            {{formulario.value.piezasFaltantesPorRepartir}}
+                            {{todosPedidosEstanCompletos() ? '0' : formulario.value.piezasFaltantesPorRepartir}}
                         </div>
                     </div>
                     <div class="form-cell">
@@ -49,12 +65,20 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Resumen con animación de fade-in cuando está presente -->
-                <div class="resumen-container" *ngIf="formulario.value.resumen !==''">
+                <div class="resumen-container" *ngIf="formulario.value.resumen !=='' && !todosPedidosEstanCompletos()">
                     <div class="resumen-message">
                         <i class="pi pi-info-circle me-2"></i>
                         <span>{{formulario.value.resumen}}</span>
+                    </div>
+                </div>
+
+                <!-- Mensaje especial cuando todos están completos -->
+                <div class="resumen-container" *ngIf="todosPedidosEstanCompletos()">
+                    <div class="completed-final-message">
+                        <i class="pi pi-trophy me-2"></i>
+                        <span>No hay más piezas por producir en este proceso. ¡Producción completada exitosamente!</span>
                     </div>
                 </div>
             </div>
@@ -65,6 +89,14 @@
         <div class="title-section">
             <i class="pi pi-sitemap me-2"></i>
             <h4>Repartición de piezas a cada pedido</h4>
+
+            <!-- Insignia de artículo completamente terminado -->
+            <span *ngIf="selectedOrdersEnsamble.length > 0 && esArticuloCompletamenteTerminado(selectedOrdersEnsamble[0])"
+                  class="completion-badge article-completed"
+                  title="¡Este artículo está 100% terminado en este proceso!">
+                <i class="pi pi-trophy"></i>
+                <span>Artículo Terminado</span>
+            </span>
         </div>
         <div class="stats-section">
             <div class="production-stat">
@@ -76,7 +108,9 @@
 
     <div class="orders-container">
         <div class="order-card" *ngFor="let item of selectedOrdersEnsamble">
-            <div class="order-detail" *ngFor="let detalle of item.detallePedido">
+            <div class="order-detail" *ngFor="let detalle of item.detallePedido"
+                 [ngClass]="{'completed-order': esPedidoCompletoParaArticulo(detalle),
+                             'editable-order': !esPedidoCompletoParaArticulo(detalle)}">
                 <div class="order-info">
                     <div class="info-row">
                         <div class="info-label">
@@ -89,7 +123,31 @@
                                 <i class="pi pi-credit-card me-1"></i>
                                 {{detalle.estadoPago}}
                             </span>
-                            <button class="pdf-link-btn" 
+
+                            <!-- Insignia de completitud del pedido -->
+                            <span *ngIf="esPedidoCompletoParaArticulo(detalle)"
+                                  class="completion-badge order-completed"
+                                  title="Este pedido está 100% completo para este artículo">
+                                <i class="pi pi-check-circle"></i>
+                                <span>Completo</span>
+                            </span>
+
+                            <!-- Insignia de progreso parcial -->
+                            <span *ngIf="!esPedidoCompletoParaArticulo(detalle) && getPorcentajeCompletitudPedido(detalle) > 0"
+                                  class="completion-badge partial-progress"
+                                  title="Progreso: {{getPorcentajeCompletitudPedido(detalle)}}%">
+                                <i class="pi pi-clock"></i>
+                                <span>{{getPorcentajeCompletitudPedido(detalle)}}%</span>
+                                <div class="progress-indicator">
+                                    <div class="mini-progress-bar">
+                                        <div class="mini-progress-fill"
+                                             [style.width.%]="getPorcentajeCompletitudPedido(detalle)">
+                                        </div>
+                                    </div>
+                                </div>
+                            </span>
+
+                            <button class="pdf-link-btn"
                                     (click)="openPdfOrder(detalle.nroPedido)"
                                     title="Abrir PDF del pedido"
                                     type="button">
@@ -115,23 +173,58 @@
                     <div class="info-row">
                         <div class="info-label">
                             <i class="pi pi-th-large me-2"></i>
-                            <span>Piezas a producir:</span>
+                            <span *ngIf="!esPedidoCompletoParaArticulo(detalle)">Piezas a producir:</span>
+                            <span *ngIf="esPedidoCompletoParaArticulo(detalle)">Total producido:</span>
                         </div>
                         <div class="info-value">
-                            <span class="quantity-badge total">{{detalle.cantidadArticulosPorPedido}}</span>
+                            <span class="quantity-badge"
+                                  [ngClass]="{'total': !esPedidoCompletoParaArticulo(detalle),
+                                             'completed': esPedidoCompletoParaArticulo(detalle)}">
+                                <span *ngIf="!esPedidoCompletoParaArticulo(detalle)">{{detalle.cantidadArticulosPorPedido}}</span>
+                                <span *ngIf="esPedidoCompletoParaArticulo(detalle)">{{getTotalPiezasProducidasHistoricas(detalle)}}</span>
+                            </span>
                         </div>
                     </div>
                 </div>
-                
-                <div class="production-input">
+
+                <!-- MODO LECTURA - Pedido Completo -->
+                <div *ngIf="esPedidoCompletoParaArticulo(detalle)" class="completed-read-only-section">
+                    <div class="completion-header">
+                        <i class="pi pi-check-circle"></i>
+                        <h5>Producción Completada</h5>
+                    </div>
+
+                    <div class="completion-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Producido:</span>
+                            <span class="stat-value success">{{getTotalPiezasProducidasHistoricas(detalle)}} piezas</span>
+                        </div>
+                        <div class="stat-item" *ngIf="getFechaUltimaProduccion(detalle)">
+                            <span class="stat-label">Completado el:</span>
+                            <span class="stat-value">{{getFechaUltimaProduccion(detalle) | date:'dd/MM/yyyy HH:mm'}}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Proceso:</span>
+                            <span class="stat-value">{{processSelected}}</span>
+                        </div>
+                        <div class="stat-item" *ngIf="getResponsableUltimaProduccion(detalle)">
+                            <span class="stat-label">Responsable:</span>
+                            <span class="stat-value">{{getResponsableUltimaProduccion(detalle)}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODO EDICIÓN - Pedido Incompleto -->
+                <div *ngIf="!esPedidoCompletoParaArticulo(detalle)" class="production-input">
                     <div class="input-group">
                         <label for="piezas" class="control-label">
                             <i class="pi pi-cog me-1"></i>Piezas producidas:
                         </label>
-                        <input type="number" 
-                            max="{{getMaxActualizarPiezasPorRepartir(detalle)}}" 
+                        <input type="number"
+                            min="0"
+                            max="{{getMaxActualizarPiezasPorRepartir(detalle)}}"
                             id="piezas"
-                            [(ngModel)]="detalle.piezasProducidas" 
+                            [(ngModel)]="detalle.piezasProducidas"
                             (ngModelChange)="actualizarPiezasPorRepartir(detalle)"
                             class="modern-input">
                     </div>
@@ -270,6 +363,447 @@
     .payment-status-badge:hover {
         transform: translateY(-1px);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Estilos para insignias de completitud */
+    .completion-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+        margin-left: 0.75rem;
+    }
+
+    .completion-badge i {
+        margin-right: 0.4rem;
+        font-size: 0.85rem;
+    }
+
+    /* Insignia de artículo completamente terminado */
+    .article-completed {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+        animation: completedPulse 2s infinite;
+    }
+
+    /* Insignia de pedido completo */
+    .order-completed {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    /* Insignia de progreso parcial */
+    .partial-progress {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    /* Animación para artículo completado */
+    @keyframes completedPulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(34, 197, 94, 0.4);
+        }
+    }
+
+    /* Efectos hover */
+    .completion-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .article-completed:hover {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+    }
+
+    .order-completed:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+
+    .partial-progress:hover {
+        background: linear-gradient(135deg, #d97706, #b45309);
+    }
+
+    /* Barra de progreso pequeña para pedidos parciales */
+    .progress-indicator {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.5rem;
+    }
+
+    .mini-progress-bar {
+        width: 30px;
+        height: 4px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-left: 0.3rem;
+    }
+
+    .mini-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ffffff, #f0f0f0);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+
+    /* Estilos para pedidos completos */
+    .completed-order {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-left: 4px solid #22c55e;
+        opacity: 0.85;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .completed-order::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-top: 25px solid #22c55e;
+        border-left: 25px solid transparent;
+        opacity: 0.3;
+    }
+
+    /* Estilos para inputs deshabilitados */
+    .disabled-input,
+    .modern-input:disabled {
+        background-color: #f3f4f6 !important;
+        cursor: not-allowed !important;
+        opacity: 0.6 !important;
+        border-color: #d1d5db !important;
+        color: #6b7280 !important;
+    }
+
+    .disabled-input:hover,
+    .modern-input:disabled:hover {
+        border-color: #d1d5db !important;
+        box-shadow: none !important;
+    }
+
+    /* Mensaje de pedido completo */
+    .completed-message {
+        display: flex;
+        align-items: center;
+        padding: 0.6rem 0.8rem;
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        color: #166534;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-top: 0.7rem;
+        border: 1px solid #a7f3d0;
+        box-shadow: 0 1px 3px rgba(34, 197, 94, 0.1);
+    }
+
+    .completed-message i {
+        color: #22c55e;
+        font-size: 0.9rem;
+    }
+
+    /* Animación sutil para pedidos completos */
+    .completed-order {
+        animation: completedGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes completedGlow {
+        0%, 100% {
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+        }
+        50% {
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+        }
+    }
+
+    /* Estilos mejorados para mejor contraste */
+    .completed-order .info-label {
+        color: #047857;
+        font-weight: 600;
+    }
+
+    .completed-order .quantity-badge.total {
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+    }
+
+    /* MODO LECTURA - Estilos para pedidos completos */
+    .completed-read-only-section {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        border: 2px solid #bbf7d0;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+    }
+
+    .completion-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        color: #047857;
+        border-bottom: 2px solid #a7f3d0;
+        padding-bottom: 0.75rem;
+    }
+
+    .completion-header i {
+        font-size: 1.8rem;
+        color: #22c55e;
+        margin-right: 0.75rem;
+        animation: completedCheck 2s ease-in-out infinite;
+    }
+
+    .completion-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    @keyframes completedCheck {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .completion-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 8px;
+        border: 1px solid #bbf7d0;
+        box-shadow: 0 2px 4px rgba(34, 197, 94, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(34, 197, 94, 0.15);
+        background: white;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .stat-value.success {
+        color: #059669;
+        font-size: 1.3rem;
+    }
+
+    /* Badge para completados */
+    .quantity-badge.completed {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+        padding: 0.4rem 1rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+        animation: completedBadge 3s ease-in-out infinite;
+    }
+
+    @keyframes completedBadge {
+        0%, 100% {
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+        }
+        50% {
+            box-shadow: 0 4px 8px rgba(34, 197, 94, 0.5);
+        }
+    }
+
+    /* Diferenciación visual clara entre estados */
+    .editable-order {
+        background: linear-gradient(to right, #f8fafc, #ffffff);
+        border-left: 4px solid #3b82f6;
+        position: relative;
+    }
+
+    .editable-order::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-top: 25px solid #3b82f6;
+        border-left: 25px solid transparent;
+        opacity: 0.2;
+    }
+
+    /* Mejorar visibilidad de pedidos editables */
+    .editable-order .info-label {
+        color: #1e40af;
+        font-weight: 600;
+    }
+
+    .editable-order .quantity-badge.total {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    /* Ajustar el mensaje de pedido completo legacy (ya no necesario) */
+    .completed-message {
+        display: none !important;
+    }
+
+    /* BANNER DE TODOS COMPLETOS */
+    .all-completed-banner {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        animation: completedBannerEntry 1s ease-out;
+    }
+
+    .banner-content {
+        display: flex;
+        align-items: center;
+        color: white;
+    }
+
+    .banner-content i {
+        font-size: 2.5rem;
+        margin-right: 1rem;
+        animation: completedPulse 2s infinite;
+    }
+
+    .banner-text h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+    }
+
+    .banner-text p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 1rem;
+    }
+
+    @keyframes completedBannerEntry {
+        0% {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* SECCIÓN DESHABILITADA */
+    .disabled-section {
+        opacity: 0.6;
+        pointer-events: none;
+        position: relative;
+    }
+
+    .disabled-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.1),
+            rgba(255, 255, 255, 0.1) 10px,
+            transparent 10px,
+            transparent 20px
+        );
+        border-radius: 8px;
+        z-index: 1;
+    }
+
+    .disabled-label {
+        color: #ef4444;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+        opacity: 0.8;
+    }
+
+    /* MENSAJE FINAL COMPLETADO */
+    .completed-final-message {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.2rem;
+        background: linear-gradient(135deg, #fef3c7, #fcd34d);
+        color: #92400e;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border: 2px solid #f59e0b;
+        box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+    }
+
+    .completed-final-message i {
+        color: #f59e0b;
+        font-size: 1.2rem;
+        animation: trophyGlow 2s infinite;
+    }
+
+    @keyframes trophyGlow {
+        0%, 100% {
+            transform: scale(1);
+            filter: brightness(1);
+        }
+        50% {
+            transform: scale(1.1);
+            filter: brightness(1.3);
+        }
+    }
+
+    /* BOTÓN DESHABILITADO EN MODAL */
+    .btn-modal-primary.disabled,
+    .btn-modal-primary:disabled {
+        background: #6b7280 !important;
+        cursor: not-allowed !important;
+        opacity: 0.7 !important;
+        border-color: #6b7280 !important;
+    }
+
+    .btn-modal-primary.disabled:hover,
+    .btn-modal-primary:disabled:hover {
+        background: #6b7280 !important;
+        transform: none !important;
+        box-shadow: none !important;
     }
 </style>
 
