@@ -1079,10 +1079,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         return;
       }
 
-      order.carrito.push(configuracionResult);
-      // actualizar valores del pedido
-      order = this.actualizarValoresPedido(order);
-      // this.editOrder(order);
+      // Solo agregar al carrito si se configuró correctamente el producto
+      if (configuracionResult?.producto?.identificacion?.referencia &&
+          configuracionResult?.configuracion) { // Verificar que tiene configuración válida
+        order.carrito.push(configuracionResult);
+        // actualizar valores del pedido
+        order = this.actualizarValoresPedido(order);
+        // this.editOrder(order);
+      }
     });
   }
   actualizarValoresPedido(order: Pedido) {

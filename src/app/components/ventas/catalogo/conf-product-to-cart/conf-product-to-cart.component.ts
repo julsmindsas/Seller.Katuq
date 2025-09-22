@@ -159,6 +159,7 @@ export class ConfProductToCartComponent
   @Input() public producto: Producto;
   @Input() public configuracionCarrito: Carrito;
   @Input() isEdit: boolean = false;
+  @Input() public modalRef: any; // Referencia al modal para cerrarlo selectivamente
 
   public cantidad: number = 1;
   public tipoEntrega: any[];
@@ -1480,6 +1481,18 @@ export class ConfProductToCartComponent
     }
   }
 
+  /**
+   * Cierra solo el modal de configuración sin cerrar el modal padre
+   */
+  dismissCurrentModal(result?: any) {
+    if (this.modalRef) {
+      this.modalRef.dismiss(result);
+    } else {
+      // Fallback: cerrar todos los modales si no hay referencia específica
+      this.modalService.dismissAll(result);
+    }
+  }
+
   addToCar() {
     console.log("Método addToCar ejecutado");
 
@@ -1568,10 +1581,10 @@ export class ConfProductToCartComponent
       if (!this.isEdit && !this.isRebuy) {
         console.log("Agregar al carrito...");
         this.carsingleton.addToCart(ProductoCompra);
-        this.modalService.dismissAll();
+        this.dismissCurrentModal();
       } else if (this.isEdit || this.isRebuy) {
         console.log("Actualizar carrito...");
-        this.modalService.dismissAll(ProductoCompra);
+        this.dismissCurrentModal(ProductoCompra);
       }
 
       this.toastrService.success("Producto agregado al carrito", "Éxito", {

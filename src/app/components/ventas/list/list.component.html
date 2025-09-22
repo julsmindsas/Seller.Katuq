@@ -761,6 +761,16 @@
                                                             style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
                                                     </button>
                                                     <button type="button" pButton pRipple
+                                                        [disabled]="!canModifyProducts(pedido)"
+                                                        [title]="canModifyProducts(pedido) ? 'Aplicar código de descuento' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
+                                                        (click)="aplicarCodigoDescuento(descuentoModal, pedido)"
+                                                        class="p-button-text p-button-rounded p-button-success"
+                                                        [ngClass]="{'disabled-btn': !canModifyProducts(pedido)}">
+                                                        <i class="fa fa-ticket"></i>
+                                                        <i *ngIf="!canModifyProducts(pedido)" class="fa fa-lock"
+                                                            style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
+                                                    </button>
+                                                    <button type="button" pButton pRipple
                                                         [disabled]="!canDeleteProducts(pedido) && !isGhostProduct(item)"
                                                         [title]="getDeleteButtonTitle(item, pedido)"
                                                         (click)="eliminarProductoDelPedido(item, pedido)"
@@ -1299,7 +1309,7 @@
     </div>
     <div class="modal-body">
         <app-conf-product-to-cart #confProductToCart [producto]="configuracionCarritoSeleccionado?.producto || productoSeleccionado"
-            [configuracionCarrito]="configuracionCarritoSeleccionado" [isEdit]="true"></app-conf-product-to-cart>
+            [configuracionCarrito]="configuracionCarritoSeleccionado" [isEdit]="true" [modalRef]="modal"></app-conf-product-to-cart>
     </div>
 </ng-template>
 
@@ -1633,6 +1643,59 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para aplicar código de descuento -->
+<ng-template #descuentoModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">{{'Aplicar Código de Descuento' | translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <label for="codigoDescuento">{{'Código de Descuento' | translate}}</label>
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fa fa-ticket"></i>
+                </span>
+                <input type="text" 
+                       class="form-control" 
+                       id="codigoDescuento"
+                       [(ngModel)]="codigoDescuentoIngresado"
+                       placeholder="{{'Ingresa tu código de cupón' | translate}}"
+                       [class.is-invalid]="errorCodigoDescuento">
+                <button class="btn btn-primary" 
+                        (click)="validarYAplicarDescuento(pedidoSeleccionadoDescuento)"
+                        [disabled]="!codigoDescuentoIngresado || validandoDescuento">
+                    <i class="fa fa-check me-2" *ngIf="!validandoDescuento"></i>
+                    <i class="fa fa-spinner fa-spin me-2" *ngIf="validandoDescuento"></i>
+                    <span translate="Aplicar"></span>
+                </button>
+            </div>
+            <div class="invalid-feedback" *ngIf="errorCodigoDescuento">
+                {{errorCodigoDescuento}}
+            </div>
+        </div>
+        
+        <!-- Mostrar información del descuento aplicado -->
+        <div class="alert alert-success" *ngIf="descuentoAplicado">
+            <i class="fa fa-check-circle me-2"></i>
+            <strong>{{'Descuento aplicado exitosamente' | translate}}</strong>
+            <div class="mt-2">
+                <p class="mb-1"><strong>{{'Código:' | translate}}</strong> {{descuentoAplicado.codigo}}</p>
+                <p class="mb-1"><strong>{{'Porcentaje:' | translate}}</strong> {{descuentoAplicado.porcentaje}}%</p>
+                <p class="mb-0"><strong>{{'Valor del descuento:' | translate}}</strong> {{descuentoAplicado.valor | currency:'USD':'symbol':'1.0-0'}}</p>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
+            <i class="fa fa-times me-1"></i>
+            {{'Cerrar' | translate}}
+        </button>
+    </div>
+</ng-template>
 
 <!--Fin Modales-->
 

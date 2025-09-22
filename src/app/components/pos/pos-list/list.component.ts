@@ -653,13 +653,16 @@ export class POSListOrdersComponent implements OnInit {
       if (configuracionResult == 'Cross click') {
         return;
       }
-      this.configuracionCarritoSeleccionado = configuracionResult;
-      const index = order.carrito.findIndex((carrito) => carrito.producto.identificacion.referencia === configuracionResult?.producto.identificacion.referencia);
-      if (index !== -1) {
-        order.carrito[index] = configuracionResult;
+      // Solo actualizar el carrito si se configuró correctamente el producto
+      if (configuracionResult?.producto?.identificacion?.referencia &&
+          configuracionResult?.configuracion) { // Verificar que tiene configuración válida
+        this.configuracionCarritoSeleccionado = configuracionResult;
+        const index = order.carrito.findIndex((carrito) => carrito.producto.identificacion.referencia === configuracionResult?.producto.identificacion.referencia);
+        if (index !== -1) {
+          order.carrito[index] = configuracionResult;
+        }
+        this.editOrder(order);
       }
-      this.editOrder(order);
-
     });
   }
 
@@ -679,13 +682,14 @@ export class POSListOrdersComponent implements OnInit {
       if (configuracionResult == 'Cross click') {
         return;
       }
-      order.carrito.push(configuracionResult);
-      // actualizar valores del pedido
-      order = this.actualizarValoresPedido(order);
-
-
-      this.editOrder(order);
-
+      // Solo agregar al carrito si se configuró correctamente el producto
+      if (configuracionResult?.producto?.identificacion?.referencia &&
+          configuracionResult?.configuracion) { // Verificar que tiene configuración válida
+        order.carrito.push(configuracionResult);
+        // actualizar valores del pedido
+        order = this.actualizarValoresPedido(order);
+        this.editOrder(order);
+      }
     });
   }
   actualizarValoresPedido(order: Pedido) {

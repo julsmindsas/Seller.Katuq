@@ -56,6 +56,18 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
     this.subs.forEach(sub => sub.unsubscribe());
   }
 
+  /**
+   * Cierra solo el modal de configuración sin cerrar el modal padre
+   */
+  dismissCurrentModal(result?: any) {
+    if (this.modalRef) {
+      this.modalRef.dismiss(result);
+    } else {
+      // Fallback: cerrar todos los modales si no hay referencia específica
+      this.modalService.dismissAll(result);
+    }
+  }
+
   @ViewChild("quickView", { static: false }) QuickView: TemplateRef<any>;
   @ViewChild('cantidad') cantidadControl: ElementRef;
   public closeResult: string;
@@ -65,6 +77,7 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
   @Input() public producto: Producto;
   @Input() public configuracionCarrito: POSCarrito
   @Input() isEdit: boolean = false;
+  @Input() public modalRef: any; // Referencia al modal para cerrarlo selectivamente
 
   public cantidad: number = 1;
   public tipoEntrega: any[];
@@ -608,10 +621,10 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
     };
     if (!this.isEdit && !this.isRebuy) {
       this.carsingleton.addToCart(ProductoCompra);
-      this.modalService.dismissAll();
+      this.dismissCurrentModal();
     }
     else if (this.isEdit || this.isRebuy) {
-      this.modalService.dismissAll(ProductoCompra);
+      this.dismissCurrentModal(ProductoCompra);
     }
 
     this.toastrService.success('Producto agregado al carrito', 'Éxito', {

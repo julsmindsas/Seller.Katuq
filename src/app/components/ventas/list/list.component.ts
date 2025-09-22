@@ -569,6 +569,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   configuracionCarritoSeleccionado: Carrito;
   fechaInicial: string;
   fechaFinal: string;
+  
+  // Propiedades para el código de descuento
+  codigoDescuentoIngresado: string = '';
+  validandoDescuento: boolean = false;
+  errorCodigoDescuento: string = '';
+  descuentoAplicado: any = null;
+  pedidoSeleccionadoDescuento: Pedido;
   // Date objects for p-calendar components
   fechaInicialDate: Date | null;
   fechaFinalDate: Date | null;
@@ -3533,9 +3540,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           ) {
             return;
           }
+          // Solo actualizar el carrito si se configuró correctamente el producto
           if (
             order.carrito &&
-            configuracionResult?.producto?.identificacion?.referencia
+            configuracionResult?.producto?.identificacion?.referencia &&
+            configuracionResult?.configuracion // Verificar que tiene configuración válida
           ) {
             const index = order.carrito.findIndex(
               (carrito) =>
@@ -3637,7 +3646,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (configuracionResult == "Cross click") {
             return;
           }
-          if (order.carrito) {
+          // Solo agregar al carrito si se configuró correctamente el producto
+          if (order.carrito && 
+              configuracionResult?.producto?.identificacion?.referencia &&
+              configuracionResult?.configuracion) { // Verificar que tiene configuración válida
             order.carrito.push(configuracionResult);
           }
 
@@ -3648,6 +3660,141 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.editOrder(order);
         },
       );
+  }
+
+  /**
+   * Abre el modal para aplicar código de descuento
+   * @param content Referencia del modal
+   * @param pedido Pedido al que se aplicará el descuento
+   */
+  aplicarCodigoDescuento(content: any, pedido: Pedido) {
+    if (!this.canModifyProducts(pedido)) {
+      this.toastrService.warning(
+        `No se pueden aplicar descuentos. El pedido está en estado: ${pedido.estadoProceso}`,
+        "Pedido Congelado",
+      );
+      return;
+    }
+
+    // Limpiar datos anteriores
+    this.codigoDescuentoIngresado = '';
+    this.errorCodigoDescuento = '';
+    this.descuentoAplicado = null;
+    this.pedidoSeleccionadoDescuento = pedido;
+
+    this.scrollStack.push(window.scrollY);
+    this.modalService
+      .open(content, {
+        size: "md",
+        scrollable: true,
+        centered: true,
+        ariaLabelledBy: "modal-basic-title",
+      })
+      .result.then(
+        (result) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
+        },
+        (reason) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
+        },
+      );
+  }
+
+  /**
+   * Valida y aplica el código de descuento al pedido
+   * @param pedido Pedido al que se aplicará el descuento
+   */
+  validarYAplicarDescuento(pedido: Pedido) {
+    if (!this.codigoDescuentoIngresado) {
+      this.errorCodigoDescuento = 'Por favor ingrese un código de cupón';
+      return;
+    }
+
+    this.validandoDescuento = true;
+    this.errorCodigoDescuento = '';
+
+    // Usar el mismo servicio que usa el carrito de venta asistida
+    this.ventasService.validateCupon({ code: this.codigoDescuentoIngresado }).subscribe({
+      next: (value) => {
+        this.validandoDescuento = false;
+        
+        if (!value || value.length === 0) {
+          this.errorCodigoDescuento = 'Cupón no válido';
+          return;
+        }
+
+        // Aplicar el descuento al pedido
+        const porcentajeDescuento = parseFloat(value[0]?.valor) || 0;
+        const totalSinDescuento = this.getTotalProductPriceInCart(pedido);
+        const valorDescuento = (totalSinDescuento * porcentajeDescuento) / 100;
+
+        // Actualizar el pedido
+        pedido.cuponAplicado = this.codigoDescuentoIngresado;
+        pedido.porceDescuento = porcentajeDescuento;
+        pedido.totalDescuento = valorDescuento;
+        pedido.totalPedididoConDescuento = totalSinDescuento - valorDescuento;
+
+        // Mostrar información del descuento aplicado
+        this.descuentoAplicado = {
+          codigo: this.codigoDescuentoIngresado,
+          porcentaje: porcentajeDescuento,
+          valor: valorDescuento
+        };
+
+        // Actualizar el pedido en la base de datos
+        this.editOrder(pedido);
+
+        this.toastrService.success(
+          `Cupón "${this.codigoDescuentoIngresado}" aplicado exitosamente. Descuento: $${valorDescuento.toLocaleString()}`,
+          "Descuento Aplicado",
+          {
+            timeOut: 5000,
+            progressBar: true,
+            positionClass: "toast-bottom-right",
+          }
+        );
+      },
+      error: (err) => {
+        this.validandoDescuento = false;
+        this.errorCodigoDescuento = 'Ocurrió un error al validar el cupón';
+        this.toastrService.error(
+          'Error al validar el cupón',
+          'Error',
+          {
+            timeOut: 4000,
+            progressBar: true,
+            positionClass: "toast-bottom-right",
+          }
+        );
+      },
+    });
+  }
+
+  /**
+   * Calcula el total de productos en el carrito del pedido
+   * @param pedido Pedido del cual calcular el total
+   * @returns Total del carrito
+   */
+  private getTotalProductPriceInCart(pedido: Pedido): number {
+    if (!pedido.carrito || pedido.carrito.length === 0) {
+      return 0;
+    }
+
+    return pedido.carrito.reduce((total, item) => {
+      const precioUnitario = item.producto?.precio?.precioUnitarioConIva || 0;
+      const cantidad = item.cantidad || 0;
+      return total + (precioUnitario * cantidad);
+    }, 0);
   }
 
   /**
