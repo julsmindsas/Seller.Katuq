@@ -544,7 +544,7 @@
                                                     [pSortableColumn]="col.field">
                                                     <div class="header-cell" pTooltip="{{ col.description }}"
                                                         tooltipPosition="top">
-                                                        <i [ngClass]="col.icon"></i>
+                                                        <i [class]="col.icon"></i>
                                                         <span>{{ col.header }}</span>
                                                         <p-sortIcon [field]="col.field"></p-sortIcon>
                                                         <p-columnFilter type="text" [field]="col.field" display="menu"
@@ -608,10 +608,11 @@
                                                     <ng-container [ngSwitch]="col.field">
                                                         <!-- Tracking/Proceso -->
                                                         <ng-container *ngSwitchCase="'tracking'">
-                                                            <button pButton icon="pi pi-cog" class="process-action-btn"
+                                                            <button type="button" class="process-action-btn"
                                                                 pTooltip="Ver proceso de fabricación"
                                                                 tooltipPosition="top"
                                                                 (click)="mostrarTracking(trackinModal, row)">
+                                                                <i class="pi pi-cog"></i>
                                                             </button>
                                                         </ng-container>
 
