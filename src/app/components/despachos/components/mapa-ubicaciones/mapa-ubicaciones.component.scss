@@ -714,6 +714,48 @@ $border-radius: 8px;
     font-size: 0.7rem;
     background: rgba(255, 255, 255, 0.8);
   }
+
+  // Marcador de ubicación del usuario
+  .user-location-marker {
+    background: none !important;
+    border: none !important;
+
+    .user-marker-container {
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
+// Animaciones para el marcador del usuario
+@keyframes user-location-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0,123,255,0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0,123,255,0.5);
+  }
+}
+
+@keyframes user-location-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 
 // Responsive

@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.09.22.8 - 22 de Septiembre 2025 (Beta)",
+  version: "2025.09.22.11 - 22 de Septiembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -28,11 +28,11 @@ export const environment = {
   useModelBig: false,
   geocoding: {
     openRouteService: {
-      apiKey: "AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I",
+      apiKey: "5b3ce3597851110001cf6248b2c4b1e9f8dd42fc8a1b4f7d1e2bb38c", // OpenRouteService API Key
       endpoint: "openroute-proxy",
     },
     googleMaps: {
-      apiKey: "AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I",
+      apiKey: "AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I", // Google Maps API Key
       endpoint: "gmaps-proxy",
     },
   },

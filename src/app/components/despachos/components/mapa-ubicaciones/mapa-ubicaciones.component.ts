@@ -75,6 +75,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   marcadores: any[] = [];
   private capaMensajeros: any = null;
   private mensajerosSubscription: Subscription | null = null;
+  private marcadorUbicacionUsuario: any = null;
   
   public mostrarMensajeros: boolean = true;
   public mensajeros: UbicacionMensajero[] = [];
@@ -84,6 +85,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   marcadoresAnimandose: Set<string> = new Set();
   ultimosLocationsProcesados: number = 0;
   private companyName: string;
+  private ubicacionUsuario: { lat: number; lng: number } | null = null;
+  private usandoUbicacionUsuario: boolean = false;
 
   // Configuración de íconos para diferentes estados
   iconosEstado = {
@@ -156,9 +159,37 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.mapa) {
       setTimeout(() => {
         this.mapa.invalidateSize();
+
+        // Recalcular centro inteligente con las nuevas ubicaciones
+        const centroInteligente = this.calcularCentroInteligente();
+        this.mapa.setView([centroInteligente.lat, centroInteligente.lng], centroInteligente.zoom);
+
+        this.agregarMarcadores();
         this.ajustarVistaAMarcadores();
       }, 100);
     }
+  }
+
+  /**
+   * Refresca la ubicación del usuario y luego actualiza el mapa
+   */
+  public async refrescarUbicacionYMapa(): Promise<void> {
+    console.log('🔄 Refrescando ubicación del usuario...');
+
+    try {
+      // Intentar obtener nueva ubicación del usuario
+      await this.obtenerUbicacionUsuario();
+      console.log('✅ Ubicación actualizada');
+
+      // Agregar o actualizar marcador de ubicación del usuario
+      this.agregarMarcadorUsuario();
+
+    } catch (error) {
+      console.warn('❌ No se pudo actualizar la ubicación del usuario:', error);
+    }
+
+    // Refrescar el mapa independientemente del resultado de geolocalización
+    this.refrescarMapa();
   }
 
   public async cargarLeaflet(): Promise<void> {
@@ -177,7 +208,14 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       
       // Inicializar el mapa una vez que Leaflet esté cargado
       if (this.mapaContainer) {
-        this.inicializarMapa();
+        // Intentar obtener ubicación del usuario antes de inicializar el mapa
+        this.obtenerUbicacionUsuario().then(() => {
+          this.inicializarMapa();
+        }).catch(() => {
+          // Si falla la geolocalización, inicializar mapa normal
+          console.log('Usando ubicación por defecto (Bogotá)');
+          this.inicializarMapa();
+        });
       }
     } catch (error) {
       console.error('Error cargando Leaflet:', error);
@@ -216,6 +254,185 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
+  /**
+   * Obtiene la ubicación actual del usuario usando navigator.geolocation
+   */
+  private obtenerUbicacionUsuario(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        console.warn('🚫 Geolocalización no es compatible con este navegador');
+        reject(new Error('Geolocalización no compatible'));
+        return;
+      }
+
+      console.log('📍 Solicitando ubicación del usuario...');
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.ubicacionUsuario = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          this.usandoUbicacionUsuario = true;
+          console.log(`✅ Ubicación obtenida: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
+          resolve();
+        },
+        (error) => {
+          console.warn('❌ Error obteniendo ubicación:', error.message);
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              console.warn('🚫 Usuario denegó el acceso a la ubicación');
+              break;
+            case error.POSITION_UNAVAILABLE:
+              console.warn('📍 Información de ubicación no disponible');
+              break;
+            case error.TIMEOUT:
+              console.warn('⏰ Tiempo de espera agotado para obtener ubicación');
+              break;
+          }
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000, // 10 segundos
+          maximumAge: 300000 // Caché por 5 minutos
+        }
+      );
+    });
+  }
+
+  /**
+   * Calcula el centro del mapa de forma inteligente basado en:
+   * 1. Promedio de ubicaciones de pedidos si existen
+   * 2. Ubicación del usuario si está disponible
+   * 3. Bogotá como fallback
+   */
+  private calcularCentroInteligente(): { lat: number; lng: number; zoom: number } {
+    const defaultCenter = { lat: 4.6097, lng: -74.0817, zoom: 11 }; // Bogotá
+
+    // 1. Si hay ubicaciones de pedidos, calcular el centroide
+    if (this.configuracion.ubicaciones && this.configuracion.ubicaciones.length > 0) {
+      const ubicacionesConCoordenadas = this.configuracion.ubicaciones.filter(
+        u => u.latitud && u.longitud
+      );
+
+      if (ubicacionesConCoordenadas.length > 0) {
+        const promedioLat = ubicacionesConCoordenadas.reduce((sum, u) => sum + u.latitud!, 0) / ubicacionesConCoordenadas.length;
+        const promedioLng = ubicacionesConCoordenadas.reduce((sum, u) => sum + u.longitud!, 0) / ubicacionesConCoordenadas.length;
+
+        // Calcular zoom basado en la dispersión de puntos
+        const latitudes = ubicacionesConCoordenadas.map(u => u.latitud!);
+        const longitudes = ubicacionesConCoordenadas.map(u => u.longitud!);
+        const rangeLat = Math.max(...latitudes) - Math.min(...latitudes);
+        const rangeLng = Math.max(...longitudes) - Math.min(...longitudes);
+        const maxRange = Math.max(rangeLat, rangeLng);
+
+        // Ajustar zoom según la dispersión
+        let zoom = 11;
+        if (maxRange < 0.01) zoom = 15;      // Muy concentrado
+        else if (maxRange < 0.05) zoom = 13; // Concentrado
+        else if (maxRange < 0.1) zoom = 11;  // Disperso
+        else zoom = 9;                       // Muy disperso
+
+        console.log(`🎯 Centro calculado desde pedidos: ${promedioLat.toFixed(4)}, ${promedioLng.toFixed(4)} (zoom: ${zoom})`);
+        return {
+          lat: promedioLat,
+          lng: promedioLng,
+          zoom: zoom
+        };
+      }
+    }
+
+    // 2. Si no hay pedidos pero sí ubicación del usuario
+    if (this.ubicacionUsuario && this.usandoUbicacionUsuario) {
+      console.log(`🌐 Centro desde ubicación del usuario: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
+      return {
+        lat: this.ubicacionUsuario.lat,
+        lng: this.ubicacionUsuario.lng,
+        zoom: 13 // Zoom más cercano para ubicación personal
+      };
+    }
+
+    // 3. Usar centro configurado o Bogotá por defecto
+    const centroConfig = this.configuracion.centroMapa || defaultCenter;
+    console.log(`🏢 Centro por defecto: ${centroConfig.lat}, ${centroConfig.lng}`);
+    return {
+      lat: centroConfig.lat,
+      lng: centroConfig.lng,
+      zoom: this.configuracion.zoom || defaultCenter.zoom
+    };
+  }
+
+  /**
+   * Agrega o actualiza el marcador de ubicación del usuario en el mapa
+   */
+  private agregarMarcadorUsuario(): void {
+    if (!this.mapa || !this.leafletCargado || !this.ubicacionUsuario) {
+      return;
+    }
+
+    const L = (window as any).L;
+
+    // Remover marcador anterior si existe
+    if (this.marcadorUbicacionUsuario) {
+      this.mapa.removeLayer(this.marcadorUbicacionUsuario);
+    }
+
+    // Crear nuevo marcador con ícono distintivo para el usuario
+    const iconoUsuario = L.divIcon({
+      className: 'user-location-marker',
+      html: `
+        <div class="user-marker-container" style="
+          background: linear-gradient(45deg, #007bff, #0056b3);
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 12px;
+          border: 3px solid white;
+          box-shadow: 0 2px 8px rgba(0,123,255,0.5);
+          animation: user-location-pulse 2s infinite;
+          position: relative;
+        ">
+          📍
+          <div style="
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 2px solid rgba(0,123,255,0.4);
+            border-radius: 50%;
+            animation: user-location-ring 2s infinite;
+          "></div>
+        </div>
+      `,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13]
+    });
+
+    // Crear el marcador
+    this.marcadorUbicacionUsuario = L.marker(
+      [this.ubicacionUsuario.lat, this.ubicacionUsuario.lng],
+      { icon: iconoUsuario }
+    ).addTo(this.mapa);
+
+    // Agregar popup informativo
+    this.marcadorUbicacionUsuario.bindPopup(`
+      <div style="text-align: center;">
+        <strong>📍 Tu ubicación</strong><br>
+        <small>Lat: ${this.ubicacionUsuario.lat.toFixed(6)}<br>
+        Lng: ${this.ubicacionUsuario.lng.toFixed(6)}</small>
+      </div>
+    `);
+
+    console.log(`📍 Marcador de usuario agregado en: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
+  }
+
   private inicializarMapa(): void {
     if (!this.leafletCargado || !this.mapaContainer) {
       return;
@@ -223,11 +440,14 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
     try {
       const L = (window as any).L;
-      
+
+      // Calcular el centro inteligente del mapa
+      const centroInteligente = this.calcularCentroInteligente();
+
       // Crear el mapa
       this.mapa = L.map(this.mapaContainer.nativeElement, {
-        center: [this.configuracion.centroMapa.lat, this.configuracion.centroMapa.lng],
-        zoom: this.configuracion.zoom,
+        center: [centroInteligente.lat, centroInteligente.lng],
+        zoom: centroInteligente.zoom,
         zoomControl: this.mostrarControles
       });
 
@@ -242,6 +462,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       // Agregar marcadores
       this.agregarMarcadores();
       this.actualizarMarcadoresMensajeros();
+
+      // Agregar marcador de ubicación del usuario si está disponible
+      if (this.ubicacionUsuario) {
+        this.agregarMarcadorUsuario();
+      }
 
       // Configurar actualización en tiempo real si está habilitada
       if (this.tiempoReal) {

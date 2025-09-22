@@ -288,7 +288,7 @@ export class DespachosComponent implements OnInit {
   private geocodingCache: Map<string, GeocodingResponse> = new Map();
   private readonly GEOCODING_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas
   configuracionMapa: any = {
-    centroMapa: { lat: 4.6097, lng: -74.0817 }, // Bogotá por defecto
+    centroMapa: { lat: 4.6097, lng: -74.0817 }, // Se actualizará dinámicamente
     zoom: 11,
     ubicaciones: []
   };
@@ -439,6 +439,24 @@ export class DespachosComponent implements OnInit {
         command: () => this.mostrarRecomendacionesOptimizacion()
       },
       {
+        label: 'Alertas Pedidos Urgentes',
+        icon: 'pi pi-exclamation-triangle',
+        command: () => this.mostrarAlertasPedidosUrgentes()
+      },
+      {
+        label: 'Alertas Sin Producir',
+        icon: 'pi pi-exclamation-circle',
+        command: () => this.mostrarAlertasPedidosSinProducir()
+      },
+      {
+        label: 'Resumen de Alertas',
+        icon: 'pi pi-info-circle',
+        command: () => this.mostrarResumenAlertas()
+      },
+      {
+        separator: true
+      },
+      {
         label: 'Geocodificar Todo',
         icon: 'pi pi-map-marker',
         command: () => this.forzarGeocodificacion()
@@ -469,7 +487,8 @@ export class DespachosComponent implements OnInit {
     if (event.index === 1) {
       setTimeout(() => {
         if (this.mapaComponent) {
-          this.mapaComponent.refrescarMapa();
+          // Refrescar ubicación del navegador y luego el mapa
+          this.mapaComponent.refrescarUbicacionYMapa();
         }
       }, 1);
     }
@@ -851,11 +870,6 @@ export class DespachosComponent implements OnInit {
 
   // Mostrar alertas para pedidos urgentes
   mostrarAlertasPedidosUrgentes() {
-    // Verificar si debe mostrar la alerta basado en la frecuencia
-    if (!this.deberMostrarAlerta("urgentes")) {
-      return;
-    }
-
     // Filtrar los pedidos urgentes excluyendo los despachados y entregados
     const pedidosUrgentesPendientes = this.pedidosUrgentes.filter(
       (pedido) =>
@@ -863,10 +877,7 @@ export class DespachosComponent implements OnInit {
         pedido.estadoProceso !== EstadoProceso.Entregado,
     );
 
-    if (pedidosUrgentesPendientes.length > 0 && this.mostrarAlertasAvanzadas) {
-      // Marcar que se mostró la alerta
-      this.ultimaAlertaPedidosUrgentes = new Date();
-
+    if (pedidosUrgentesPendientes.length > 0) {
       const cantidadUrgentes = pedidosUrgentesPendientes.length;
       const pedidosMasUrgentes = pedidosUrgentesPendientes
         .slice(0, Math.min(3, cantidadUrgentes))
@@ -886,6 +897,13 @@ export class DespachosComponent implements OnInit {
           </div>
         `,
         icon: "warning",
+        confirmButtonText: "Entendido",
+      });
+    } else {
+      Swal.fire({
+        title: "Sin Pedidos Urgentes",
+        text: "No hay pedidos urgentes que requieran atención inmediata en este momento.",
+        icon: "info",
         confirmButtonText: "Entendido",
       });
     }
@@ -1133,10 +1151,64 @@ export class DespachosComponent implements OnInit {
       this.actualizarConfiguracionMapa();
     }
 
+    // Calcular centro inteligente basado en las ubicaciones
+    const centroCalculado = this.calcularCentroInteligenteMapa();
+
     return {
       ubicaciones: this.configuracionMapa.ubicaciones || [],
-      centroMapa: this.configuracionMapa.centroMapa || { lat: 4.6097, lng: -74.0817 },
-      zoom: this.configuracionMapa.zoom || 11,
+      centroMapa: centroCalculado.centro,
+      zoom: centroCalculado.zoom,
+    };
+  }
+
+  /**
+   * Calcula el centro del mapa de forma inteligente
+   */
+  private calcularCentroInteligenteMapa(): { centro: { lat: number; lng: number }, zoom: number } {
+    const defaultCenter = { lat: 4.6097, lng: -74.0817 };
+    const defaultZoom = 11;
+
+    // Si hay ubicaciones, calcular el centroide
+    if (this.configuracionMapa.ubicaciones && this.configuracionMapa.ubicaciones.length > 0) {
+      const ubicacionesValidas = this.configuracionMapa.ubicaciones.filter(
+        u => u.latitud && u.longitud &&
+        u.latitud >= -90 && u.latitud <= 90 &&
+        u.longitud >= -180 && u.longitud <= 180
+      );
+
+      if (ubicacionesValidas.length > 0) {
+        // Calcular promedio de coordenadas
+        const promedioLat = ubicacionesValidas.reduce((sum, u) => sum + u.latitud!, 0) / ubicacionesValidas.length;
+        const promedioLng = ubicacionesValidas.reduce((sum, u) => sum + u.longitud!, 0) / ubicacionesValidas.length;
+
+        // Calcular dispersión para ajustar zoom
+        const latitudes = ubicacionesValidas.map(u => u.latitud!);
+        const longitudes = ubicacionesValidas.map(u => u.longitud!);
+        const rangeLat = Math.max(...latitudes) - Math.min(...latitudes);
+        const rangeLng = Math.max(...longitudes) - Math.min(...longitudes);
+        const maxRange = Math.max(rangeLat, rangeLng);
+
+        // Ajustar zoom según dispersión
+        let zoom = defaultZoom;
+        if (maxRange < 0.01) zoom = 15;      // Muy concentrado
+        else if (maxRange < 0.05) zoom = 13; // Concentrado
+        else if (maxRange < 0.1) zoom = 11;  // Moderado
+        else if (maxRange < 0.5) zoom = 9;   // Disperso
+        else zoom = 7;                       // Muy disperso
+
+        console.log(`🎯 Centro calculado: ${promedioLat.toFixed(4)}, ${promedioLng.toFixed(4)} (zoom: ${zoom}, dispersión: ${maxRange.toFixed(4)})`);
+
+        return {
+          centro: { lat: promedioLat, lng: promedioLng },
+          zoom: zoom
+        };
+      }
+    }
+
+    console.log(`🏢 Usando centro por defecto (Bogotá): ${defaultCenter.lat}, ${defaultCenter.lng}`);
+    return {
+      centro: defaultCenter,
+      zoom: defaultZoom
     };
   }
 
@@ -1330,17 +1402,9 @@ export class DespachosComponent implements OnInit {
 
   // Método para mostrar alertas de pedidos sin producir
   mostrarAlertasPedidosSinProducir() {
-    // Verificar si debe mostrar la alerta basado en la frecuencia
-    if (!this.deberMostrarAlerta("sinProducir")) {
-      return;
-    }
-
     const pedidosSinProducirUrgentes = this.obtenerPedidosSinProducirUrgentes();
 
-    if (pedidosSinProducirUrgentes.length > 0 && this.mostrarAlertasAvanzadas) {
-      // Marcar que se mostró la alerta
-      this.ultimaAlertaPedidosSinProducir = new Date();
-
+    if (pedidosSinProducirUrgentes.length > 0) {
       const cantidadUrgentes = pedidosSinProducirUrgentes.length;
       const pedidosMasUrgentes = pedidosSinProducirUrgentes
         .slice(0, Math.min(3, cantidadUrgentes))
@@ -1361,6 +1425,13 @@ export class DespachosComponent implements OnInit {
           </div>
         `,
         icon: "warning",
+        confirmButtonText: "Entendido",
+      });
+    } else {
+      Swal.fire({
+        title: "Sin Pedidos Sin Producir",
+        text: "No hay pedidos urgentes sin producir en este momento.",
+        icon: "info",
         confirmButtonText: "Entendido",
       });
     }
@@ -5286,6 +5357,26 @@ export class DespachosComponent implements OnInit {
 
     } catch (error) {
       console.error(`Error geocodificando ${direccionCompleta}:`, error);
+
+      // Intentar geocodificación de emergencia con coordenadas aproximadas
+      try {
+        const coordenadasAproximadas = this.obtenerCoordenadasAproximadas(pedido.envio.ciudad);
+        if (coordenadasAproximadas) {
+          console.log(`📍 Aplicando coordenadas aproximadas para ${pedido.envio.ciudad}`);
+          this.aplicarCoordenadasAPedido(pedido, {
+            id: `emergency_${Date.now()}`,
+            direccion: pedido.envio.direccionEntrega,
+            ciudad: pedido.envio.ciudad,
+            pais: 'Colombia',
+            latitud: coordenadasAproximadas.lat.toString(),
+            longitud: coordenadasAproximadas.lng.toString(),
+            coordDestino: `${coordenadasAproximadas.lat},${coordenadasAproximadas.lng}`,
+            quality: 30
+          });
+        }
+      } catch (emergencyError) {
+        console.error(`Error en geocodificación de emergencia:`, emergencyError);
+      }
     }
   }
 
@@ -5297,6 +5388,43 @@ export class DespachosComponent implements OnInit {
       pedido.envio.latitud = response.latitud;
       pedido.envio.longitud = response.longitud;
     }
+  }
+
+  /**
+   * Obtiene coordenadas aproximadas para ciudades conocidas
+   */
+  private obtenerCoordenadasAproximadas(ciudad: string): { lat: number, lng: number } | null {
+    const ciudadesConocidas: { [key: string]: { lat: number, lng: number } } = {
+      'medellín': { lat: 6.2442, lng: -75.5812 },
+      'medellin': { lat: 6.2442, lng: -75.5812 },
+      'bogotá': { lat: 4.6097, lng: -74.0817 },
+      'bogota': { lat: 4.6097, lng: -74.0817 },
+      'cali': { lat: 3.4516, lng: -76.5320 },
+      'barranquilla': { lat: 10.9639, lng: -74.7964 },
+      'cartagena': { lat: 10.3910, lng: -75.4794 },
+      'envigado': { lat: 6.1629, lng: -75.5891 },
+      'itagüí': { lat: 6.1644, lng: -75.5996 },
+      'itagui': { lat: 6.1644, lng: -75.5996 },
+      'bello': { lat: 6.3370, lng: -75.5559 },
+      'sabaneta': { lat: 6.1515, lng: -75.6166 },
+      'la estrella': { lat: 6.1581, lng: -75.6414 },
+      'caldas': { lat: 6.0930, lng: -75.6339 },
+      'copacabana': { lat: 6.3460, lng: -75.5076 },
+      'girardota': { lat: 6.3797, lng: -75.4473 }
+    };
+
+    if (!ciudad) return null;
+
+    const ciudadNormalizada = ciudad.toLowerCase()
+      .replace(/á/g, 'a')
+      .replace(/é/g, 'e')
+      .replace(/í/g, 'i')
+      .replace(/ó/g, 'o')
+      .replace(/ú/g, 'u')
+      .replace(/ñ/g, 'n')
+      .trim();
+
+    return ciudadesConocidas[ciudadNormalizada] || null;
   }
 
   /**
@@ -5844,7 +5972,7 @@ export class DespachosComponent implements OnInit {
     }
 
     // Apply existing logic
-    this.aplicarAlgoritmoPriorizacion(true);
+    this.aplicarAlgoritmoPriorizacion(false);
     this.calcularMetricas();
     this.loading = false;
 

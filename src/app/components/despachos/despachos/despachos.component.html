@@ -39,22 +39,6 @@
                     </div>
                 </div>
 
-                <!-- Alertas importantes (si existen) -->
-                <div class="px-4 py-3 bg-light border-top border-bottom" *ngIf="!loading && (obtenerConteoPedidosUrgentesNoDespachados() > 0 || obtenerConteoPedidosSinProducirUrgentes() > 0)">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-3">
-                            <div *ngIf="obtenerConteoPedidosUrgentesNoDespachados() > 0" class="d-flex align-items-center text-danger">
-                                <i class="pi pi-exclamation-triangle fs-5 me-2"></i>
-                                <span class="fw-bold">{{ obtenerConteoPedidosUrgentesNoDespachados() }} {{ 'Urgentes' | translate }}</span>
-                            </div>
-                            <div *ngIf="obtenerConteoPedidosSinProducirUrgentes() > 0" class="d-flex align-items-center text-info">
-                                <i class="pi pi-exclamation-circle fs-5 me-2"></i>
-                                <span class="fw-bold">{{ obtenerConteoPedidosSinProducirUrgentes() }} {{ 'Sin Producir' | translate }}</span>
-                            </div>
-                        </div>
-                        <button pButton type="button" label="{{ 'Ver Análisis' | translate }}" icon="pi pi-info-circle" class="p-button-text p-button-sm p-button-warning" (click)="mostrarResumenAlertas()"></button>
-                    </div>
-                </div>
 
                 <!-- Indicador de progreso de geocodificación -->
                 <div class="px-4 py-2 bg-info text-white" *ngIf="geocodingInProgress">
