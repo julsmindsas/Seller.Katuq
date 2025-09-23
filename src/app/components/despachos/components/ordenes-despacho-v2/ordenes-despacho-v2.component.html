@@ -180,13 +180,18 @@
           
           <div class="cell">
             <span class="cell-label">{{ 'Pedidos' | translate }}:</span>
-            <span class="badge bg-info">{{ getPedidosCount(order) }}</span>
+            <span class="badge bg-primary">{{ getPedidosCount(order) }}</span>
           </div>
           
           <div class="cell">
             <span class="cell-label">{{ 'Estado' | translate }}:</span>
-            <span class="badge" 
-                  [class]="getEstadoProceso(order) === 'Despachado' ? 'bg-success' : 'bg-warning'">
+            <span class="badge"
+                  [class]="{
+                    'bg-success': getEstadoProceso(order) === 'Entregado',
+                    'bg-info': getEstadoProceso(order) === 'Despachado',
+                    'bg-warning': getEstadoProceso(order) === 'Por despachar',
+                    'bg-secondary': getEstadoProceso(order) === 'Sin pedidos'
+                  }">
               {{ getEstadoProceso(order) }}
             </span>
           </div>
@@ -291,8 +296,13 @@
               <span class="order-date">{{ formatDate(order.fecha) }}</span>
             </div>
             <div class="order-status">
-              <span class="badge" 
-                    [class]="getEstadoProceso(order) === 'Despachado' ? 'bg-success' : 'bg-warning'">
+              <span class="badge"
+                    [class]="{
+                      'bg-success': getEstadoProceso(order) === 'Entregado',
+                      'bg-info': getEstadoProceso(order) === 'Despachado',
+                      'bg-warning': getEstadoProceso(order) === 'Por despachar',
+                      'bg-secondary': getEstadoProceso(order) === 'Sin pedidos'
+                    }">
                 {{ getEstadoProceso(order) }}
               </span>
             </div>

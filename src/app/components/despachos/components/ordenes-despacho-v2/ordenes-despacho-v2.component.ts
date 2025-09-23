@@ -2,6 +2,8 @@ import { Component, EventEmitter, OnInit, Output, Input, ViewChild, ElementRef, 
 import { Router } from '@angular/router';
 import { IntegrationsService, Integration, IntegrationCategory } from '../../../integrations/integrations.service';
 import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
+import { VentasService } from '../../../../shared/services/ventas/ventas.service';
+import { EstadoProceso } from '../../../ventas/modelo/pedido';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -61,7 +63,8 @@ export class OrdenesDespachoV2Component implements OnInit {
   constructor(
     private router: Router,
     private integrationsService: IntegrationsService,
-    private logisticaService: LogisticaServiceV2
+    private logisticaService: LogisticaServiceV2,
+    private ventasService: VentasService
   ) { }
 
   ngOnInit(): void {
@@ -164,6 +167,9 @@ export class OrdenesDespachoV2Component implements OnInit {
             order.pedidos.forEach((pedido: any) => {
               pedido.faltaPorPagar = this.getValorACobrarPorPedido(pedido);
             });
+
+            // Verificar y actualizar estado si tiene transportador asignado
+            this.updateOrderStateIfNeeded(order);
           }
         });
         
@@ -421,17 +427,60 @@ export class OrdenesDespachoV2Component implements OnInit {
 
   getEstadoProceso(order: any): string {
     if (!order.pedidos || order.pedidos.length === 0) return 'Sin pedidos';
-    return order.pedidos[0].estadoProceso === 'Despachado' ? 'Despachado' : 'Por despachar';
+
+    // Verificar si todos los pedidos están entregados
+    const todosEntregados = order.pedidos.every((pedido: any) =>
+      pedido.estadoProceso === EstadoProceso.Entregado
+    );
+    if (todosEntregados) return 'Entregado';
+
+    // Verificar si la orden tiene transportador asignado
+    const tieneTransportador = order.transportador &&
+                              order.transportador !== '' &&
+                              order.transportador !== 'N/A' &&
+                              order.transportador !== null;
+
+    // Verificar si todos los pedidos están despachados
+    const todosDespachados = order.pedidos.every((pedido: any) =>
+      pedido.estadoProceso === EstadoProceso.Despachado
+    );
+
+    // Si tiene transportador asignado o todos están despachados, es "Despachado"
+    if (tieneTransportador || todosDespachados) return 'Despachado';
+
+    // De lo contrario, está por despachar
+    return 'Por despachar';
   }
 
   canDispatchOrder(order: any): boolean {
     const estado = this.getEstadoProceso(order);
-    return estado === 'Por despachar';
+    // Solo permitir despachar si está "Por despachar" y NO tiene transportador asignado
+    const tieneTransportador = order.transportador &&
+                              order.transportador !== '' &&
+                              order.transportador !== 'N/A' &&
+                              order.transportador !== null;
+    return estado === 'Por despachar' && !tieneTransportador;
+  }
+
+  canEditOrder(order: any): boolean {
+    const estado = this.getEstadoProceso(order);
+    // No permitir editar si está entregado
+    return estado !== 'Entregado';
+  }
+
+  canPrintOrder(order: any): boolean {
+    // Siempre permitir imprimir
+    return true;
   }
 
   isOrderDispatched(order: any): boolean {
     const estado = this.getEstadoProceso(order);
     return estado === 'Despachado' || estado === 'Sin pedidos';
+  }
+
+  isOrderDelivered(order: any): boolean {
+    const estado = this.getEstadoProceso(order);
+    return estado === 'Entregado';
   }
 
   isPedidoDispatched(pedido: any): boolean {
@@ -524,10 +573,24 @@ export class OrdenesDespachoV2Component implements OnInit {
     this.logisticaService.createShipment(shipmentPayload).subscribe({
       next: () => {
         this.isDispatchingShipment = false;
-        
+
+        // Actualizar el transportador en la orden
+        order.transportador = this.selectedTransporter;
+
+        // Actualizar los pedidos a estado "Despachado"
+        const pedidosSinDespachar = order.pedidos.filter((pedido: any) =>
+          pedido.estadoProceso !== EstadoProceso.Despachado &&
+          pedido.estadoProceso !== EstadoProceso.Entregado
+        );
+
+        if (pedidosSinDespachar.length > 0) {
+          console.log(`🚚 Asignando transportador "${this.selectedTransporter}" y marcando ${pedidosSinDespachar.length} pedidos como despachados`);
+          this.updatePedidosToDispached(pedidosSinDespachar, order);
+        }
+
         // Emit dispatch event to parent component
         this.onDispatchOrder.emit(this.selectedOrderForDispatch);
-        
+
         // Show success message
         Swal.fire({
           icon: 'success',
@@ -536,10 +599,10 @@ export class OrdenesDespachoV2Component implements OnInit {
           timer: 2000,
           showConfirmButton: false
         });
-        
+
         // Reload orders to reflect updated status
         this.loadInitialOrders();
-        
+
         this.closeTransporterModal();
       },
       error: (error) => {
@@ -726,5 +789,62 @@ export class OrdenesDespachoV2Component implements OnInit {
     });
 
     return totalPrecioSinIVADef;
+  }
+
+  /**
+   * Verifica si una orden necesita actualizar el estado de sus pedidos basándose en el transportador asignado
+   */
+  private updateOrderStateIfNeeded(order: any): void {
+    if (!order || !order.pedidos || order.pedidos.length === 0) {
+      return;
+    }
+
+    // Verificar si la orden tiene transportador asignado
+    const tieneTransportador = order.transportador &&
+                              order.transportador !== '' &&
+                              order.transportador !== 'N/A' &&
+                              order.transportador !== null;
+
+    if (tieneTransportador) {
+      // Verificar si hay pedidos que no estén despachados
+      const pedidosSinDespachar = order.pedidos.filter((pedido: any) =>
+        pedido.estadoProceso !== EstadoProceso.Despachado &&
+        pedido.estadoProceso !== EstadoProceso.Entregado
+      );
+
+      if (pedidosSinDespachar.length > 0) {
+        console.log(`📦 Orden ${order.nroShippingOrder} tiene transportador "${order.transportador}" pero ${pedidosSinDespachar.length} pedidos sin marcar como despachados`);
+        this.updatePedidosToDispached(pedidosSinDespachar, order);
+      }
+    }
+  }
+
+  /**
+   * Actualiza una lista de pedidos a estado "Despachado"
+   */
+  private updatePedidosToDispached(pedidos: any[], order: any): void {
+    const user = localStorage.getItem('user');
+    const userLite = user ? JSON.parse(user) : null;
+
+    pedidos.forEach((pedido: any) => {
+      // Actualizar el estado del pedido localmente primero
+      pedido.estadoProceso = EstadoProceso.Despachado;
+      pedido.fechaYHorarioDespachado = new Date().toISOString();
+      pedido.despachador = userLite;
+      pedido.nroShippingOrder = order.nroShippingOrder;
+      pedido.transportador = order.transportador;
+
+      // Enviar la actualización al backend
+      this.ventasService.editOrder(pedido).subscribe({
+        next: (response) => {
+          console.log(`✅ Pedido ${pedido.nroPedido || pedido.referencia} actualizado automáticamente a "Despachado"`);
+        },
+        error: (error) => {
+          console.error(`❌ Error actualizando automáticamente pedido ${pedido.nroPedido || pedido.referencia}:`, error);
+          // Revertir el cambio local si falló el backend
+          pedido.estadoProceso = pedido.estadoProcesoAnterior || 'ParaDespachar';
+        }
+      });
+    });
   }
 }
