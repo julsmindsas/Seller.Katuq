@@ -559,19 +559,37 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private actualizarMarcadoresMensajeros(): void {
+    console.log('🗺️ [DEBUG] Actualizando marcadores de mensajeros...');
+    console.log('🗺️ [DEBUG] Mapa cargado:', !!this.mapa);
+    console.log('🗺️ [DEBUG] Leaflet cargado:', this.leafletCargado);
+    console.log('🗺️ [DEBUG] Capa mensajeros:', !!this.capaMensajeros);
+    console.log('🗺️ [DEBUG] Mostrar mensajeros:', this.mostrarMensajeros);
+
     if (!this.mapa || !this.leafletCargado || !this.capaMensajeros) {
+      console.log('🗺️ [DEBUG] No se puede actualizar marcadores - falta inicialización');
       return;
     }
 
     this.capaMensajeros.clearLayers();
-    
+
     if (!this.mostrarMensajeros) {
+      console.log('🗺️ [DEBUG] Mostrar mensajeros está desactivado');
       return;
     }
 
     const L = (window as any).L;
 
-    this.mensajeros.forEach(mensajero => {
+    console.log(`🗺️ [DEBUG] Procesando ${this.mensajeros.length} mensajeros para marcadores`);
+
+    this.mensajeros.forEach((mensajero, index) => {
+      console.log(`🗺️ [DEBUG] Mensajero ${index + 1}:`, {
+        id: mensajero.id,
+        nombre: mensajero.nombre,
+        lat: mensajero.lat,
+        lng: mensajero.lng,
+        timestamp: mensajero.timestamp
+      });
+
       if (mensajero.lat && mensajero.lng) {
         const iconoMensajero = L.divIcon({
           className: 'custom-marker-mensajero',
@@ -597,8 +615,17 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         `;
         marcador.bindPopup(popupContent);
         this.capaMensajeros.addLayer(marcador);
+
+        console.log(`✅ [DEBUG] Marcador de mensajero creado exitosamente para: ${mensajero.nombre || mensajero.id} en [${mensajero.lat}, ${mensajero.lng}]`);
+      } else {
+        console.log(`❌ [DEBUG] Mensajero ${mensajero.nombre || mensajero.id} no tiene coordenadas válidas:`, {
+          lat: mensajero.lat,
+          lng: mensajero.lng
+        });
       }
     });
+
+    console.log(`🗺️ [DEBUG] Actualización de marcadores completada. Total marcadores activos: ${this.mensajeros.filter(m => m.lat && m.lng).length}`);
   }
 
   private crearContenidoPopup(ubicacion: UbicacionPedido): string {
@@ -859,42 +886,126 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.mensajerosSubscription) {
       this.mensajerosSubscription.unsubscribe();
     }
-    
+
+    console.log('🔍 [DEBUG] Iniciando escucha de ubicaciones de mensajeros...');
+    console.log('🔍 [DEBUG] Nombre de empresa para filtrar:', this.companyName);
+
     const activeUsersRef = this.db.list('active_users');
     this.mensajerosSubscription = activeUsersRef.snapshotChanges().subscribe(snapshots => {
+      console.log('🔍 [DEBUG] Snapshots recibidos desde Firebase:', snapshots.length);
+
+      // Log de todas las claves recibidas para debugging
+      const allKeys = snapshots.map(s => s.key);
+      console.log('🔍 [DEBUG] Todas las claves en Firebase active_users:', allKeys);
+
       this.mensajeros = snapshots
         .filter(snapshot => {
           if (!this.companyName) {
+            console.log('🔍 [DEBUG] No hay nombre de empresa configurado');
             return false;
           }
           const key = snapshot.key as string;
           const keyParts = key.split('_');
-          
-          if (keyParts.length < 2) { // Asumiendo formato minimo: nombre_empresa
+
+          console.log(`🔍 [DEBUG] Procesando clave: "${key}" -> partes:`, keyParts);
+
+          // Nuevo filtro más flexible: buscar la empresa en cualquier parte de la clave
+          const keyUpperCase = key.toUpperCase();
+          const companyNameUpper = this.companyName.toUpperCase();
+
+          // Buscar coincidencias parciales en las partes de la clave
+          const hasCompanyMatch = keyParts.some(part => {
+            const partUpper = part.toUpperCase();
+            return partUpper.includes(companyNameUpper) || companyNameUpper.includes(partUpper);
+          });
+
+          // También buscar en la clave completa por si la empresa tiene espacios/guiones
+          const hasKeyMatch = keyUpperCase.includes(companyNameUpper) ||
+                             companyNameUpper.includes(keyUpperCase.replace(/_/g, ' '));
+
+          const match = hasCompanyMatch || hasKeyMatch;
+
+          console.log(`🔍 [DEBUG] Filtro flexible - Empresa: "${this.companyName}"`);
+          console.log(`🔍 [DEBUG] - ¿Coincidencia en partes?: ${hasCompanyMatch}`);
+          console.log(`🔍 [DEBUG] - ¿Coincidencia en clave?: ${hasKeyMatch}`);
+          console.log(`🔍 [DEBUG] - Resultado final: ${match}`);
+
+          return match;
+        })
+        .filter(snapshot => {
+          // Filtrar por timestamp - solo mostrar mensajeros activos del día actual
+          const data = snapshot.payload.val() as any;
+          const timestamp = data?.timestamp;
+
+          if (!timestamp) {
+            console.log(`🕒 [DEBUG] Mensajero ${snapshot.key} no tiene timestamp`);
             return false;
           }
 
-          const companyFromKey = (keyParts[keyParts.length - 1] || '').trim();
-          
-          return companyFromKey.toUpperCase() === this.companyName;
+          const timestampDate = new Date(timestamp);
+          const today = new Date();
+
+          // Comparar solo la fecha (año, mes, día) sin las horas
+          const isToday = timestampDate.getFullYear() === today.getFullYear() &&
+                         timestampDate.getMonth() === today.getMonth() &&
+                         timestampDate.getDate() === today.getDate();
+
+          const hoursAgo = (today.getTime() - timestampDate.getTime()) / (1000 * 60 * 60);
+
+          console.log(`🕒 [DEBUG] Mensajero ${snapshot.key}:`);
+          console.log(`🕒 [DEBUG] - Timestamp: ${timestamp}`);
+          console.log(`🕒 [DEBUG] - Fecha timestamp: ${timestampDate.toLocaleDateString()}`);
+          console.log(`🕒 [DEBUG] - Fecha hoy: ${today.toLocaleDateString()}`);
+          console.log(`🕒 [DEBUG] - ¿Es de hoy?: ${isToday}`);
+          console.log(`🕒 [DEBUG] - Horas transcurridas: ${hoursAgo.toFixed(1)}`);
+
+          return isToday;
         })
         .map(snapshot => {
           const key = snapshot.key as string;
           const keyParts = key.split('_');
-          keyParts.pop(); // Eliminar el nombre de la empresa del final
-          const nombreMensajero = keyParts.join(' '); // Reconstruir el nombre del mensajero
 
-          return {
+          // Reconstruir el nombre del mensajero de manera más inteligente
+          // Tomar las primeras partes que parecen ser nombres propios
+          const nombreParts = keyParts.slice(0, -2); // Asumir que las últimas 2 partes son apellidos o empresa
+          const nombreMensajero = nombreParts.length > 0
+            ? nombreParts.join(' ').replace(/[_-]/g, ' ')
+            : key.replace(/[_-]/g, ' ');
+
+          const data = snapshot.payload.val() as any;
+          const mensajero = {
             id: key,
             nombre: nombreMensajero,
-            ...(snapshot.payload.val() as any)
+            ...data
           };
+
+          console.log('🔍 [DEBUG] Mensajero encontrado:', mensajero);
+          return mensajero;
         });
+
+      console.log(`🔍 [DEBUG] ====== RESUMEN DE FILTROS ======`);
+      console.log(`🔍 [DEBUG] - Total snapshots de Firebase: ${snapshots.length}`);
+      console.log(`🔍 [DEBUG] - Después de filtro empresa: ${snapshots.filter(s => {
+        if (!this.companyName) return false;
+        const key = s.key as string;
+        const keyParts = key.split('_');
+        const keyUpperCase = key.toUpperCase();
+        const companyNameUpper = this.companyName.toUpperCase();
+        const hasCompanyMatch = keyParts.some(part => {
+          const partUpper = part.toUpperCase();
+          return partUpper.includes(companyNameUpper) || companyNameUpper.includes(partUpper);
+        });
+        const hasKeyMatch = keyUpperCase.includes(companyNameUpper) ||
+                           companyNameUpper.includes(keyUpperCase.replace(/_/g, ' '));
+        return hasCompanyMatch || hasKeyMatch;
+      }).length}`);
+      console.log(`🔍 [DEBUG] - Después de filtro timestamp (hoy): ${this.mensajeros.length}`);
+      console.log('🔍 [DEBUG] - Mensajeros finales:', this.mensajeros);
 
       this.actualizarMarcadoresMensajeros();
       this.cd.detectChanges(); // Forzar detección de cambios para el contador
     }, error => {
-      console.error('Error escuchando ubicación de mensajeros:', error);
+      console.error('❌ [ERROR] Error escuchando ubicación de mensajeros:', error);
     });
   }
 
