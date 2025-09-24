@@ -761,16 +761,6 @@
                                                             style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
                                                     </button>
                                                     <button type="button" pButton pRipple
-                                                        [disabled]="!canModifyProducts(pedido)"
-                                                        [title]="canModifyProducts(pedido) ? 'Aplicar código de descuento' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
-                                                        (click)="aplicarCodigoDescuento(descuentoModal, pedido)"
-                                                        class="p-button-text p-button-rounded p-button-success"
-                                                        [ngClass]="{'disabled-btn': !canModifyProducts(pedido)}">
-                                                        <i class="fa fa-ticket"></i>
-                                                        <i *ngIf="!canModifyProducts(pedido)" class="fa fa-lock"
-                                                            style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
-                                                    </button>
-                                                    <button type="button" pButton pRipple
                                                         [disabled]="!canDeleteProducts(pedido) && !isGhostProduct(item)"
                                                         [title]="getDeleteButtonTitle(item, pedido)"
                                                         (click)="eliminarProductoDelPedido(item, pedido)"
@@ -1592,6 +1582,18 @@
                         <div class="option-content">
                             <span class="option-title">{{ 'Historial Pagos' | translate }}</span>
                             <small class="option-description">{{ 'Ver historial de pagos' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Aplicar Código de Descuento -->
+                    <button *ngIf="!isFromProduction && canModifyProducts(selectedOrder)" class="option-btn" type="button"
+                        (click)="aplicarCodigoDescuento(descuentoModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon discount-icon">
+                            <i class="fa fa-ticket"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Aplicar Descuento' | translate }}</span>
+                            <small class="option-description">{{ 'Ingresar código de cupón' | translate }}</small>
                         </div>
                     </button>
 
