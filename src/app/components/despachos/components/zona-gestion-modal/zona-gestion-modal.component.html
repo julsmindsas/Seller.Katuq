@@ -1,0 +1,418 @@
+<div class="modal-header border-bottom-0 pb-2">
+  <h4 class="modal-title d-flex align-items-center">
+    <i class="pi pi-map me-2 text-primary"></i>
+    {{ 'Gestión de Zonas de Entrega' | translate }}
+  </h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="cancelarModal()"></button>
+</div>
+
+<div class="modal-body p-0" style="height: 80vh; overflow: hidden;">
+  <div class="row h-100 g-0">
+
+    <!-- Panel del Mapa (Izquierda) -->
+    <div class="col-md-8 h-100 position-relative">
+      <div class="modal-mapa-container h-100" [class.drawing-mode]="modoDibujo">
+
+        <!-- Toolbar de dibujo -->
+        <div class="drawing-toolbar position-absolute top-0 start-0 m-3" style="z-index: 1000;">
+          <div class="btn-group-vertical" role="group">
+
+            <button type="button"
+              class="btn btn-primary btn-sm"
+              [class.active]="modoDibujo"
+              (click)="iniciarDibujoZona()"
+              [disabled]="modoDibujo"
+              title="{{ 'Iniciar dibujo de zona' | translate }}">
+              <i class="pi pi-plus me-1"></i>
+              {{ 'Dibujar Zona' | translate }}
+            </button>
+
+            <button type="button"
+              class="btn btn-success btn-sm"
+              *ngIf="modoDibujo && puntosPoligonoActual.length >= 3"
+              (click)="finalizarDibujo()"
+              title="{{ 'Finalizar polígono' | translate }}">
+              <i class="pi pi-check me-1"></i>
+              {{ 'Finalizar' | translate }}
+            </button>
+
+            <button type="button"
+              class="btn btn-danger btn-sm"
+              *ngIf="modoDibujo"
+              (click)="cancelarDibujo()"
+              title="{{ 'Cancelar dibujo' | translate }}">
+              <i class="pi pi-times me-1"></i>
+              {{ 'Cancelar' | translate }}
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Indicador de puntos e instrucciones -->
+        <div class="drawing-info position-absolute top-0 end-0 m-3"
+             *ngIf="modoDibujo"
+             style="z-index: 1000;">
+          <div class="alert alert-info alert-sm mb-0">
+            <div class="d-flex align-items-center mb-1">
+              <i class="pi pi-info-circle me-2"></i>
+              <small class="fw-bold">{{ 'Modo Dibujo Activo' | translate }}</small>
+            </div>
+            <small class="d-block mb-1">
+              <i class="pi pi-hand-point-right me-1"></i>
+              {{ 'Haz clic en el mapa para agregar puntos' | translate }}
+            </small>
+            <small class="d-block">
+              {{ 'Puntos: ' + puntosPoligonoActual.length | translate }}
+              <span *ngIf="puntosPoligonoActual.length < 3" class="text-muted">
+                ({{ 'Mínimo 3 puntos' | translate }})
+              </span>
+              <span *ngIf="puntosPoligonoActual.length >= 3" class="text-success">
+                ({{ 'Listo para finalizar' | translate }})
+              </span>
+            </small>
+          </div>
+        </div>
+
+        <!-- Instrucciones generales cuando no está dibujando -->
+        <div class="general-info position-absolute top-0 end-0 m-3"
+             *ngIf="!modoDibujo && mapaComponent?.mapa"
+             style="z-index: 1000;">
+          <div class="alert alert-secondary alert-sm mb-0">
+            <div class="d-flex align-items-center">
+              <i class="pi pi-lightbulb me-2"></i>
+              <small>{{ 'Presiona "Dibujar Zona" para comenzar' | translate }}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado del mapa para debugging -->
+        <div class="mapa-debug-info position-absolute bottom-0 start-0 m-2 p-2 bg-dark text-white rounded"
+             style="z-index: 1000; font-size: 10px; opacity: 0.8; max-width: 250px;">
+          <div>Componente: {{ !!mapaComponent ? '✅' : '❌' }}</div>
+          <div>Mapa: {{ mapaComponent?.mapa ? '✅' : '❌' }}</div>
+          <div>Leaflet: {{ mapaComponent?.leafletCargado ? '✅' : '❌' }}</div>
+          <div>Container: {{ mapaComponent?.mapaContainer ? '✅' : '❌' }}</div>
+          <div>Altura: {{ mapaComponent?.altura || 'undefined' }}</div>
+          <div>Zonas: {{ zonas.length }}</div>
+          <button type="button"
+            class="btn btn-sm btn-light mt-1 w-100"
+            (click)="forzarRecargaMapa()">
+            <i class="pi pi-refresh"></i> Recargar Mapa
+          </button>
+          <button type="button"
+            class="btn btn-sm btn-info mt-1 w-100"
+            (click)="debugMapaInfo()">
+            <i class="pi pi-info"></i> Debug Info
+          </button>
+        </div>
+
+        <!-- Placeholder cuando el mapa no está cargado -->
+        <div class="mapa-placeholder d-flex align-items-center justify-content-center bg-light rounded"
+             *ngIf="!mapaComponent?.mapa"
+             style="height: 100%; min-height: 400px;">
+          <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+              <span class="visually-hidden">Cargando mapa...</span>
+            </div>
+            <h6 class="text-muted">Inicializando mapa interactivo...</h6>
+            <p class="text-muted small">
+              Si no carga en unos segundos, usa el botón "Recargar Mapa"
+            </p>
+          </div>
+        </div>
+
+        <!-- Componente del mapa -->
+        <app-mapa-ubicaciones
+          #mapaComponent
+          [configuracion]="configuracionMapa"
+          [configuracionZonas]="configuracionZonasActual"
+          [altura]="'100%'"
+          [mostrarControles]="false"
+          [tiempoReal]="false">
+        </app-mapa-ubicaciones>
+
+      </div>
+    </div>
+
+    <!-- Panel de Control (Derecha) -->
+    <div class="col-md-4 h-100 d-flex flex-column border-start">
+
+      <!-- Tabs de navegación -->
+      <div class="nav-tabs-container border-bottom">
+        <ul class="nav nav-tabs nav-fill" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link"
+              [class.active]="modoEdicion === 'visualizar'"
+              (click)="modoEdicion = 'visualizar'; limpiarFormulario()"
+              type="button">
+              <i class="pi pi-list me-1"></i>
+              {{ 'Zonas' | translate }}
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link"
+              [class.active]="modoEdicion === 'crear' || modoEdicion === 'editar'"
+              [disabled]="puntosPoligonoActual.length < 3 && modoEdicion === 'crear'"
+              (click)="modoEdicion = 'crear'"
+              type="button">
+              <i class="pi pi-plus me-1"></i>
+              {{ (modoEdicion === 'editar' ? 'Editar' : 'Nueva') | translate }}
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Contenido de tabs -->
+      <div class="tab-content flex-grow-1 overflow-auto">
+
+        <!-- Tab Lista de Zonas -->
+        <div class="tab-pane h-100"
+             [class.active]="modoEdicion === 'visualizar'"
+             [class.show]="modoEdicion === 'visualizar'">
+
+          <div class="p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">{{ 'Zonas Existentes' | translate }}</h6>
+              <span class="badge bg-secondary">{{ zonas.length }}</span>
+            </div>
+
+            <!-- Lista de zonas -->
+            <div class="zonas-list" *ngIf="zonas.length > 0; else noZonas">
+              <div class="zona-item card mb-2"
+                   *ngFor="let zona of zonas; let i = index"
+                   [class.border-success]="zona.activa"
+                   [class.border-secondary]="!zona.activa">
+
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="flex-grow-1">
+                      <h6 class="card-title mb-1 d-flex align-items-center">
+                        <div class="color-indicator me-2"
+                             [style.background-color]="zona.color"
+                             [style.border-color]="zona.colorBorde">
+                        </div>
+                        {{ zona.nombre }}
+                      </h6>
+                      <p class="card-text small text-muted mb-1" *ngIf="zona.descripcion">
+                        {{ zona.descripcion }}
+                      </p>
+                      <small class="text-muted">
+                        {{ zona.coordenadas.length }} {{ 'puntos' | translate }}
+                        <span *ngIf="zona.restricciones?.costoAdicional" class="ms-2">
+                          +${{ zona.restricciones.costoAdicional | number }}
+                        </span>
+                      </small>
+                    </div>
+
+                    <div class="form-check form-switch ms-2">
+                      <input class="form-check-input"
+                             type="checkbox"
+                             [id]="'zona-toggle-' + i"
+                             [checked]="zona.activa"
+                             (change)="toggleZona(zona)">
+                    </div>
+                  </div>
+
+                  <!-- Horarios -->
+                  <div class="mb-2" *ngIf="zona.restricciones?.horarioMinimo">
+                    <small class="text-muted">
+                      <i class="pi pi-clock me-1"></i>
+                      {{ zona.restricciones.horarioMinimo }} - {{ zona.restricciones.horarioMaximo }}
+                    </small>
+                  </div>
+
+                  <!-- Estadísticas -->
+                  <div class="row g-2 mb-2" *ngIf="zona.estadisticas">
+                    <div class="col-4 text-center">
+                      <small class="text-muted d-block">{{ 'Entregas' | translate }}</small>
+                      <strong class="text-primary">{{ zona.estadisticas.pedidosEntregados }}</strong>
+                    </div>
+                    <div class="col-4 text-center">
+                      <small class="text-muted d-block">{{ 'Tiempo' | translate }}</small>
+                      <strong class="text-warning">{{ zona.estadisticas.tiempoPromedioEntrega }}min</strong>
+                    </div>
+                    <div class="col-4 text-center">
+                      <small class="text-muted d-block">{{ 'Éxito' | translate }}</small>
+                      <strong class="text-success">{{ zona.estadisticas.porcentajeExitoso }}%</strong>
+                    </div>
+                  </div>
+
+                  <!-- Acciones -->
+                  <div class="d-flex gap-1">
+                    <button type="button"
+                      class="btn btn-outline-primary btn-sm flex-fill"
+                      (click)="editarZona(zona)"
+                      title="{{ 'Editar zona' | translate }}">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button type="button"
+                      class="btn btn-outline-danger btn-sm"
+                      (click)="eliminarZona(zona)"
+                      title="{{ 'Eliminar zona' | translate }}">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <ng-template #noZonas>
+              <div class="text-center p-4">
+                <i class="pi pi-map text-muted" style="font-size: 2rem;"></i>
+                <p class="text-muted mt-2 mb-0">{{ 'No hay zonas creadas' | translate }}</p>
+                <small class="text-muted">{{ 'Dibuja una zona en el mapa para comenzar' | translate }}</small>
+              </div>
+            </ng-template>
+
+          </div>
+        </div>
+
+        <!-- Tab Formulario -->
+        <div class="tab-pane h-100 overflow-auto"
+             [class.active]="modoEdicion === 'crear' || modoEdicion === 'editar'"
+             [class.show]="modoEdicion === 'crear' || modoEdicion === 'editar'">
+
+          <form [formGroup]="zonaForm" class="p-3">
+
+            <div class="mb-3">
+              <label class="form-label">
+                {{ 'Nombre de la zona' | translate }} *
+              </label>
+              <input type="text"
+                class="form-control form-control-sm"
+                formControlName="nombre"
+                [class.is-invalid]="zonaForm.get('nombre')?.touched && zonaForm.get('nombre')?.invalid"
+                placeholder="{{ 'Ej: Zona Norte' | translate }}">
+              <div class="invalid-feedback" *ngIf="zonaForm.get('nombre')?.touched && zonaForm.get('nombre')?.invalid">
+                {{ 'El nombre es requerido (mínimo 3 caracteres)' | translate }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">{{ 'Descripción' | translate }}</label>
+              <textarea class="form-control form-control-sm"
+                rows="2"
+                formControlName="descripcion"
+                placeholder="{{ 'Descripción opcional de la zona' | translate }}">
+              </textarea>
+            </div>
+
+            <!-- Colores -->
+            <div class="row mb-3">
+              <div class="col-6">
+                <label class="form-label">{{ 'Color' | translate }} *</label>
+                <div class="color-picker">
+                  <div class="row g-1">
+                    <div class="col-3" *ngFor="let color of coloresDisponibles">
+                      <div class="color-option"
+                           [class.selected]="zonaForm.get('color')?.value === color.valor"
+                           [style.background-color]="color.valor"
+                           [title]="color.nombre"
+                           (click)="zonaForm.patchValue({ color: color.valor, colorBorde: color.borde })">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="form-label">{{ 'Opacidad' | translate }}</label>
+                <input type="range"
+                  class="form-range"
+                  formControlName="opacidad"
+                  min="0.1"
+                  max="1"
+                  step="0.1">
+                <small class="text-muted">{{ (zonaForm.get('opacidad')?.value * 100) | number:'1.0-0' }}%</small>
+              </div>
+            </div>
+
+            <!-- Horarios -->
+            <div class="row mb-3">
+              <div class="col-6">
+                <label class="form-label">{{ 'Horario mínimo' | translate }}</label>
+                <input type="time"
+                  class="form-control form-control-sm"
+                  formControlName="horarioMinimo">
+              </div>
+              <div class="col-6">
+                <label class="form-label">{{ 'Horario máximo' | translate }}</label>
+                <input type="time"
+                  class="form-control form-control-sm"
+                  formControlName="horarioMaximo">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">{{ 'Costo adicional' | translate }}</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text">$</span>
+                <input type="number"
+                  class="form-control"
+                  formControlName="costoAdicional"
+                  min="0"
+                  placeholder="0">
+              </div>
+            </div>
+
+            <!-- Estado del polígono -->
+            <div class="alert alert-info alert-sm mb-3" *ngIf="modoDibujo">
+              <div class="d-flex align-items-center">
+                <i class="pi pi-info-circle me-2"></i>
+                <div>
+                  <small class="fw-bold">{{ 'Dibujando polígono...' | translate }}</small><br>
+                  <small>{{ 'Puntos agregados:' | translate }} {{ puntosPoligonoActual.length }}</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-warning alert-sm mb-3"
+                 *ngIf="!modoDibujo && puntosPoligonoActual.length === 0 && modoEdicion === 'crear'">
+              <small>
+                <i class="pi pi-exclamation-triangle me-1"></i>
+                {{ 'Primero dibuja una zona en el mapa' | translate }}
+              </small>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="d-grid gap-2">
+              <button type="button"
+                class="btn btn-primary"
+                [disabled]="!zonaForm.valid || puntosPoligonoActual.length < 3"
+                (click)="guardarZona()">
+                <i class="pi pi-save me-1"></i>
+                {{ (modoEdicion === 'editar' ? 'Actualizar' : 'Guardar') + ' Zona' | translate }}
+              </button>
+
+              <button type="button"
+                class="btn btn-outline-secondary"
+                (click)="limpiarFormulario()">
+                <i class="pi pi-times me-1"></i>
+                {{ 'Limpiar' | translate }}
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-footer border-top-0 pt-2">
+  <div class="d-flex justify-content-between w-100 align-items-center">
+    <small class="text-muted">
+      {{ zonas.length }} {{ 'zonas configuradas' | translate }}
+    </small>
+    <div>
+      <button type="button" class="btn btn-outline-secondary me-2" (click)="cancelarModal()">
+        {{ 'Cancelar' | translate }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="cerrarModal()">
+        <i class="pi pi-check me-1"></i>
+        {{ 'Aplicar Cambios' | translate }}
+      </button>
+    </div>
+  </div>
+</div>

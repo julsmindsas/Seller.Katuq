@@ -35,6 +35,35 @@ interface MapaMetricas {
   tiempoPromedioEstimado?: number;
 }
 
+interface ZonaEntrega {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  color: string;
+  colorBorde?: string;
+  opacidad?: number;
+  coordenadas: Array<{ lat: number; lng: number }>;
+  activa: boolean;
+  codigosPostales?: string[];
+  restricciones?: {
+    horarioMinimo?: string;
+    horarioMaximo?: string;
+    diasNoDisponibles?: number[]; // 0=domingo, 1=lunes, etc.
+    costoAdicional?: number;
+  };
+  estadisticas?: {
+    pedidosEntregados: number;
+    tiempoPromedioEntrega: number;
+    porcentajeExitoso: number;
+  };
+}
+
+interface ConfiguracionZonas {
+  zonas: ZonaEntrega[];
+  mostrarZonas: boolean;
+  tipoVisualizacion: 'relleno' | 'borde' | 'ambos';
+}
+
 interface ConfiguracionMapa {
   centroMapa: { lat: number; lng: number };
   zoom: number;
@@ -61,6 +90,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() geocodingInProgress: boolean = false;
   @Input() geocodingProgress: number = 0;
   @Input() verMensajeros: boolean = true;
+  @Input() configuracionZonas: ConfiguracionZonas = {
+    zonas: [],
+    mostrarZonas: true,
+    tipoVisualizacion: 'ambos'
+  };
   @Input() metricas: MapaMetricas = {
     despachados: 0,
     paraDespachar: 0,
@@ -74,10 +108,13 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   mapa: any = null;
   marcadores: any[] = [];
   private capaMensajeros: any = null;
+  private capaZonasEntrega: any = null;
+  private poligonosZonas: any[] = [];
   private mensajerosSubscription: Subscription | null = null;
   private marcadorUbicacionUsuario: any = null;
   
   public mostrarMensajeros: boolean = true;
+  public mostrarZonasEntrega: boolean = true;
   public mensajeros: UbicacionMensajero[] = [];
 
   intervalTimer: any = null;
@@ -149,9 +186,51 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
     if (this.mapa) {
       this.mapa.remove();
+      this.mapa = null;
     }
     if (this.mensajerosSubscription) {
       this.mensajerosSubscription.unsubscribe();
+    }
+
+    // Limpiar referencias del contenedor de Leaflet
+    if (this.mapaContainer?.nativeElement) {
+      const contenedor = this.mapaContainer.nativeElement;
+      contenedor._leaflet_id = undefined;
+      contenedor.innerHTML = '';
+    }
+  }
+
+  /**
+   * Método para reinicializar completamente el mapa
+   * Útil cuando hay problemas de inicialización
+   */
+  public reinicializarMapa(): void {
+    console.log('🔄 Reinicializando mapa completamente...');
+
+    // Limpiar mapa existente
+    if (this.mapa) {
+      this.mapa.remove();
+      this.mapa = null;
+    }
+
+    // Limpiar contenedor
+    if (this.mapaContainer?.nativeElement) {
+      const contenedor = this.mapaContainer.nativeElement;
+      contenedor._leaflet_id = undefined;
+      contenedor.innerHTML = '';
+    }
+
+    // Limpiar capas
+    this.capaMensajeros = null;
+    this.capaZonasEntrega = null;
+
+    // Reinicializar si Leaflet está disponible
+    if (this.leafletCargado) {
+      setTimeout(() => {
+        this.inicializarMapa();
+      }, 100);
+    } else {
+      this.cargarLeaflet();
     }
   }
 
@@ -197,6 +276,15 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       // Verificar si Leaflet ya está cargado
       if (typeof window !== 'undefined' && (window as any).L) {
         this.leafletCargado = true;
+
+        // Si Leaflet ya está cargado pero no hay mapa, inicializarlo
+        if (!this.mapa && this.mapaContainer) {
+          this.obtenerUbicacionUsuario().then(() => {
+            this.inicializarMapa();
+          }).catch(() => {
+            this.inicializarMapa();
+          });
+        }
         return;
       }
 
@@ -438,6 +526,21 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       return;
     }
 
+    // Verificar si el mapa ya está inicializado
+    if (this.mapa) {
+      console.log('🗺️ Mapa ya inicializado, omitiendo reinicialización');
+      return;
+    }
+
+    // Verificar si el contenedor ya tiene un mapa de Leaflet
+    const contenedor = this.mapaContainer.nativeElement;
+    if (contenedor._leaflet_id) {
+      console.log('🗺️ Contenedor ya tiene un mapa de Leaflet, limpiando...');
+      // Limpiar el contenedor
+      contenedor._leaflet_id = undefined;
+      contenedor.innerHTML = '';
+    }
+
     try {
       const L = (window as any).L;
 
@@ -458,10 +561,12 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       }).addTo(this.mapa);
 
       this.capaMensajeros = L.layerGroup().addTo(this.mapa);
+      this.capaZonasEntrega = L.layerGroup().addTo(this.mapa);
 
-      // Agregar marcadores
+      // Agregar marcadores y zonas
       this.agregarMarcadores();
       this.actualizarMarcadoresMensajeros();
+      this.dibujarZonasEntrega();
 
       // Agregar marcador de ubicación del usuario si está disponible
       if (this.ubicacionUsuario) {
@@ -1024,5 +1129,188 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       }
     }
     this.cd.detectChanges();
+  }
+
+  /**
+   * Dibuja las zonas de entrega como polígonos en el mapa
+   */
+  private dibujarZonasEntrega(): void {
+    if (!this.mapa || !this.leafletCargado || !this.capaZonasEntrega) {
+      console.log('🗺️ [DEBUG] No se pueden dibujar zonas - falta inicialización del mapa');
+      return;
+    }
+
+    console.log('🗺️ [DEBUG] Dibujando zonas de entrega...');
+    console.log('🗺️ [DEBUG] Zonas disponibles:', this.configuracionZonas.zonas.length);
+    console.log('🗺️ [DEBUG] Mostrar zonas:', this.configuracionZonas.mostrarZonas && this.mostrarZonasEntrega);
+
+    // Limpiar polígonos existentes
+    this.capaZonasEntrega.clearLayers();
+    this.poligonosZonas = [];
+
+    if (!this.configuracionZonas.mostrarZonas || !this.mostrarZonasEntrega) {
+      console.log('🗺️ [DEBUG] Zonas de entrega están ocultas');
+      return;
+    }
+
+    const L = (window as any).L;
+
+    this.configuracionZonas.zonas.forEach((zona, index) => {
+      if (!zona.activa || zona.coordenadas.length < 3) {
+        console.log(`🗺️ [DEBUG] Zona "${zona.nombre}" no activa o sin suficientes coordenadas`);
+        return;
+      }
+
+      console.log(`🗺️ [DEBUG] Dibujando zona: ${zona.nombre} con ${zona.coordenadas.length} coordenadas`);
+
+      // Convertir coordenadas al formato de Leaflet
+      const coordenadasLeaflet = zona.coordenadas.map(coord => [coord.lat, coord.lng]);
+
+      // Configurar estilo del polígono
+      const estiloPoligono = this.obtenerEstiloZona(zona);
+
+      // Crear polígono
+      const poligono = L.polygon(coordenadasLeaflet, estiloPoligono);
+
+      // Crear contenido del popup
+      const popupContent = this.crearContenidoPopupZona(zona);
+      poligono.bindPopup(popupContent);
+
+      // Agregar eventos
+      poligono.on('mouseover', () => {
+        poligono.setStyle({
+          weight: estiloPoligono.weight + 2,
+          opacity: Math.min(estiloPoligono.opacity + 0.3, 1)
+        });
+      });
+
+      poligono.on('mouseout', () => {
+        poligono.setStyle(estiloPoligono);
+      });
+
+      poligono.on('click', () => {
+        this.onZonaClick(zona);
+      });
+
+      // Agregar al mapa
+      this.capaZonasEntrega.addLayer(poligono);
+      this.poligonosZonas.push({
+        zona: zona,
+        poligono: poligono
+      });
+
+      console.log(`✅ [DEBUG] Zona "${zona.nombre}" dibujada exitosamente`);
+    });
+
+    console.log(`🗺️ [DEBUG] Total zonas dibujadas: ${this.poligonosZonas.length}`);
+  }
+
+  /**
+   * Obtiene el estilo para una zona específica
+   */
+  private obtenerEstiloZona(zona: ZonaEntrega): any {
+    const opacidad = zona.opacidad || 0.5;
+    const tipoVisualizacion = this.configuracionZonas.tipoVisualizacion;
+
+    return {
+      color: zona.colorBorde || zona.color,
+      weight: 2,
+      opacity: tipoVisualizacion === 'relleno' ? 0 : 0.8,
+      fillColor: zona.color,
+      fillOpacity: tipoVisualizacion === 'borde' ? 0 : opacidad,
+      interactive: true
+    };
+  }
+
+  /**
+   * Crea el contenido del popup para una zona
+   */
+  private crearContenidoPopupZona(zona: ZonaEntrega): string {
+    const restricciones = zona.restricciones;
+    const estadisticas = zona.estadisticas;
+
+    return `
+      <div style="font-size: 14px; line-height: 1.4;">
+        <h6 style="margin: 0 0 8px 0; color: ${zona.color};">
+          📍 ${zona.nombre}
+        </h6>
+        ${zona.descripcion ? `<p style="margin: 4px 0; color: #666;">${zona.descripcion}</p>` : ''}
+
+        ${restricciones ? `
+          <div style="margin: 8px 0;">
+            <strong>Restricciones:</strong>
+            ${restricciones.horarioMinimo && restricciones.horarioMaximo ?
+              `<br>🕐 Horario: ${restricciones.horarioMinimo} - ${restricciones.horarioMaximo}` : ''}
+            ${restricciones.costoAdicional ?
+              `<br>💰 Costo adicional: $${restricciones.costoAdicional.toLocaleString()}` : ''}
+          </div>
+        ` : ''}
+
+        ${estadisticas ? `
+          <div style="margin: 8px 0; padding: 6px; background: #f8f9fa; border-radius: 4px;">
+            <strong>Estadísticas:</strong>
+            <br>📦 Pedidos entregados: ${estadisticas.pedidosEntregados}
+            <br>⏱️ Tiempo promedio: ${estadisticas.tiempoPromedioEntrega} min
+            <br>✅ Éxito: ${estadisticas.porcentajeExitoso}%
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  /**
+   * Maneja el click en una zona
+   */
+  private onZonaClick(zona: ZonaEntrega): void {
+    console.log('🗺️ [DEBUG] Click en zona:', zona.nombre);
+    // Aquí se puede agregar lógica adicional como filtrar pedidos de esa zona
+  }
+
+  /**
+   * Toggle para mostrar/ocultar zonas de entrega
+   */
+  public toggleZonasEntrega(event: any): void {
+    this.mostrarZonasEntrega = event.target.checked;
+    this.dibujarZonasEntrega();
+    this.cd.detectChanges();
+  }
+
+  /**
+   * Actualiza las zonas cuando cambia la configuración
+   */
+  public actualizarZonas(): void {
+    if (this.mapa && this.leafletCargado) {
+      this.dibujarZonasEntrega();
+    }
+  }
+
+  /**
+   * Getter para obtener zonas activas
+   * Resuelve el problema de usar filter() directamente en el template
+   */
+  get zonasActivas(): ZonaEntrega[] {
+    return this.configuracionZonas.zonas.filter(z => z.activa);
+  }
+
+  /**
+   * Getter para verificar si hay zonas activas disponibles
+   */
+  get tieneZonasActivas(): boolean {
+    return this.zonasActivas.length > 0;
+  }
+
+  /**
+   * Getter para obtener el conteo de zonas activas
+   */
+  get contadorZonasActivas(): number {
+    return this.zonasActivas.length;
+  }
+
+  /**
+   * Getter para tiempo promedio estimado
+   * Resuelve el problema de llamar obtenerEstadisticas() en el template
+   */
+  get tiempoPromedioEstimado(): number {
+    return this.obtenerEstadisticas().tiempoPromedioEstimado || 0;
   }
 }

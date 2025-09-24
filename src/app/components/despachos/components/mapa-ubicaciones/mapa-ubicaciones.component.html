@@ -22,14 +22,27 @@
 
       <!-- Toggle para mensajeros -->
       <div class="form-check form-switch ms-2" title="{{ 'Mostrar/Ocultar mensajeros' | translate }}">
-        <input class="form-check-input" 
-               type="checkbox" 
-               role="switch" 
+        <input class="form-check-input"
+               type="checkbox"
+               role="switch"
                id="toggleMensajeros"
                [checked]="mostrarMensajeros"
                (change)="toggleMensajeros($event)">
         <label class="form-check-label" for="toggleMensajeros">
           <i class="pi pi-user"></i>
+        </label>
+      </div>
+
+      <!-- Toggle para zonas de entrega -->
+      <div class="form-check form-switch ms-2" title="{{ 'Mostrar/Ocultar zonas de entrega' | translate }}" *ngIf="configuracionZonas.zonas.length > 0">
+        <input class="form-check-input"
+               type="checkbox"
+               role="switch"
+               id="toggleZonas"
+               [checked]="mostrarZonasEntrega"
+               (change)="toggleZonasEntrega($event)">
+        <label class="form-check-label" for="toggleZonas">
+          <i class="pi pi-map"></i>
         </label>
       </div>
     </div>
@@ -57,6 +70,10 @@
       <div class="d-flex align-items-center" *ngIf="mostrarMensajeros && mensajeros.length > 0">
         <div class="leyenda-item mensajero me-2"></div>
         <small>{{ 'Mensajero' | translate }} ({{ mensajeros.length }})</small>
+      </div>
+      <div class="d-flex align-items-center" *ngIf="mostrarZonasEntrega && tieneZonasActivas">
+        <div class="leyenda-item zona-entrega me-2"></div>
+        <small>{{ 'Zonas de Entrega' | translate }} ({{ contadorZonasActivas }})</small>
       </div>
     </div>
   </div>
@@ -173,7 +190,7 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="info-card text-center p-2 bg-light rounded">
-          <div class="fw-bold text-info">{{ obtenerEstadisticas().tiempoPromedioEstimado || 0 }}</div>
+          <div class="fw-bold text-info">{{ tiempoPromedioEstimado }}</div>
           <small class="text-muted">{{ 'Min Promedio' | translate }}</small>
         </div>
       </div>
@@ -223,7 +240,7 @@
   </div>
 
   <!-- Mensaje cuando no hay datos -->
-  <div class="sin-datos text-center p-4" *ngIf="configuracion.ubicaciones.length === 0">
+  <div class="sin-datos text-center p-4" *ngIf="configuracion.ubicaciones.length === 0 && mostrarControles">
     <i class="pi pi-map text-muted fs-1 mb-3"></i>
     <h6 class="text-muted">{{ 'No hay pedidos para mostrar' | translate }}</h6>
     <p class="text-muted small">

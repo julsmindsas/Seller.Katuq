@@ -19,6 +19,7 @@ import { ToastModule } from "primeng/toast";
 import { TreeSelectModule } from "primeng/treeselect";
 import { VentasRoutingModule } from "../ventas/ventas-routing.module";
 import { LogisticaService } from "../../shared/services/despachos/logistica.services";
+import { ZonaManagementService } from "./services/zona-management.service";
 import { HttpClientModule } from "@angular/common/http";
 import { ButtonModule } from "primeng/button";
 import { TooltipModule } from "primeng/tooltip";
@@ -42,6 +43,7 @@ import { MapaUbicacionesComponent } from "./components/mapa-ubicaciones/mapa-ubi
 import { PdfTemplateComponent } from "./components/pdf-template/pdf-template.component";
 import { SeguimientoModalComponent } from "./components/seguimiento-modal/seguimiento-modal.component";
 import { AnalisisDespachosComponent } from "./components/analisis-despachos/analisis-despachos.component";
+import { ZonaGestionModalComponent } from "./components/zona-gestion-modal/zona-gestion-modal.component";
 
 // Pipes
 import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
@@ -76,7 +78,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
   ],
-  providers: [LogisticaService, DialogService],
+  providers: [LogisticaService, DialogService, ZonaManagementService],
   declarations: [
     DespachosComponent,
     TablaPedidosComponent,
@@ -92,6 +94,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     TotalValorACobrarPipe,
     SeguimientoModalComponent,
     AnalisisDespachosComponent,
+    ZonaGestionModalComponent,
   ],
   exports: [DetalleEntregaComponent],
 })

@@ -55,6 +55,13 @@ $border-radius: 8px;
         background-color: #ff5722;
         animation: pulse-orange 2s infinite;
       }
+
+      &.zona-entrega {
+        background: linear-gradient(45deg, #9c27b0, #673ab7);
+        border-radius: 3px;
+        width: 14px;
+        height: 14px;
+      }
     }
 
     small {

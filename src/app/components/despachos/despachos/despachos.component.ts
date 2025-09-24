@@ -53,6 +53,8 @@ import { AnalisisDespachosComponent } from '../components/analisis-despachos/ana
 import { SeguimientoModalComponent } from "../components/seguimiento-modal/seguimiento-modal.component";
 import { Integration, IntegrationCategory, IntegrationsService } from "../../integrations/integrations.service";
 import { PaginatedOrdersResponse } from "../interfaces/paginated-orders.interface";
+import { ZonaGestionModalComponent } from "../components/zona-gestion-modal/zona-gestion-modal.component";
+import { ToastrService } from 'ngx-toastr';
 
 interface MapaMetricas {
   despachados: number;
@@ -288,7 +290,7 @@ export class DespachosComponent implements OnInit {
   private geocodingCache: Map<string, GeocodingResponse> = new Map();
   private readonly GEOCODING_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas
   configuracionMapa: any = {
-    centroMapa: { lat: 4.6097, lng: -74.0817 }, // Se actualizará dinámicamente
+    centroMapa: { lat: 6.2486, lng: -75.5742 }, // Medellín - Se actualizará dinámicamente
     zoom: 11,
     ubicaciones: []
   };
@@ -365,7 +367,8 @@ export class DespachosComponent implements OnInit {
     private router: Router,
     private geocodingService: GeocodingService,
     private cdr: ChangeDetectorRef,
-    private integrationsService: IntegrationsService
+    private integrationsService: IntegrationsService,
+    private toastr: ToastrService
   ) {
     // Las fechas se inicializan en ngOnInit mediante initializeDefaultDates()
     // para evitar conflictos y asegurar consistencia
@@ -461,6 +464,11 @@ export class DespachosComponent implements OnInit {
         icon: 'pi pi-map-marker',
         command: () => this.forzarGeocodificacion()
       },
+     /* {
+        label: 'Gestionar Zonas de Entrega',
+        icon: 'pi pi-map',
+        command: () => this.openZonaGestionModal()
+      },*/
       {
         label: 'Administrar Transportadores',
         icon: 'pi pi-truck',
@@ -1162,10 +1170,21 @@ export class DespachosComponent implements OnInit {
   }
 
   /**
+   * Obtiene la configuración de zonas de entrega para el mapa
+   */
+  obtenerConfiguracionZonas() {
+    return {
+      zonas: this.generarZonasEntregaEjemplo(),
+      mostrarZonas: true,
+      tipoVisualizacion: 'ambos' as 'relleno' | 'borde' | 'ambos'
+    };
+  }
+
+  /**
    * Calcula el centro del mapa de forma inteligente
    */
   private calcularCentroInteligenteMapa(): { centro: { lat: number; lng: number }, zoom: number } {
-    const defaultCenter = { lat: 4.6097, lng: -74.0817 };
+    const defaultCenter = { lat: 6.2486, lng: -75.5742 }; // Medellín
     const defaultZoom = 11;
 
     // Si hay ubicaciones, calcular el centroide
@@ -6667,6 +6686,199 @@ export class DespachosComponent implements OnInit {
 
     // Combinar toda la información separada por comas
     return informacionAdicional.join(', ');
+  }
+
+  /**
+   * Genera zonas de entrega de ejemplo para demostración
+   * En producción, estas se cargarían desde una base de datos o servicio
+   */
+  private generarZonasEntregaEjemplo(): any[] {
+    // Coordenadas basadas en zonas típicas de Medellín
+    return [
+      {
+        id: 'zona-el-poblado',
+        nombre: 'El Poblado',
+        descripcion: 'El Poblado, Manila, Astorga, Provenza',
+        color: '#2196F3',
+        colorBorde: '#1976D2',
+        opacidad: 0.4,
+        activa: true,
+        coordenadas: [
+          { lat: 6.2073, lng: -75.5645 },
+          { lat: 6.2173, lng: -75.5545 },
+          { lat: 6.2073, lng: -75.5445 },
+          { lat: 6.1973, lng: -75.5545 },
+          { lat: 6.2073, lng: -75.5645 }
+        ],
+        restricciones: {
+          horarioMinimo: '08:00',
+          horarioMaximo: '20:00',
+          costoAdicional: 0
+        },
+        estadisticas: {
+          pedidosEntregados: 156,
+          tiempoPromedioEntrega: 25,
+          porcentajeExitoso: 96
+        }
+      },
+      {
+        id: 'zona-centro',
+        nombre: 'Centro de Medellín',
+        descripcion: 'Centro, La Candelaria, San Antonio, Prado Centro',
+        color: '#FF9800',
+        colorBorde: '#F57C00',
+        opacidad: 0.4,
+        activa: true,
+        coordenadas: [
+          { lat: 6.2473, lng: -75.5745 },
+          { lat: 6.2573, lng: -75.5645 },
+          { lat: 6.2473, lng: -75.5545 },
+          { lat: 6.2373, lng: -75.5645 },
+          { lat: 6.2473, lng: -75.5745 }
+        ],
+        restricciones: {
+          horarioMinimo: '09:00',
+          horarioMaximo: '17:00',
+          costoAdicional: 3000
+        },
+        estadisticas: {
+          pedidosEntregados: 89,
+          tiempoPromedioEntrega: 35,
+          porcentajeExitoso: 88
+        }
+      },
+      {
+        id: 'zona-sur',
+        nombre: 'Sur del Valle',
+        descripcion: 'Envigado, Sabaneta, Itagüí',
+        color: '#4CAF50',
+        colorBorde: '#388E3C',
+        opacidad: 0.4,
+        activa: true,
+        coordenadas: [
+          { lat: 6.1573, lng: -75.5845 },
+          { lat: 6.1673, lng: -75.5745 },
+          { lat: 6.1573, lng: -75.5645 },
+          { lat: 6.1473, lng: -75.5745 },
+          { lat: 6.1573, lng: -75.5845 }
+        ],
+        restricciones: {
+          horarioMinimo: '08:00',
+          horarioMaximo: '19:00',
+          costoAdicional: 5000
+        },
+        estadisticas: {
+          pedidosEntregados: 203,
+          tiempoPromedioEntrega: 40,
+          porcentajeExitoso: 93
+        }
+      },
+      {
+        id: 'zona-occidente',
+        nombre: 'Laureles y Belén',
+        descripcion: 'Laureles, Estadio, Belén, La América',
+        color: '#9C27B0',
+        colorBorde: '#7B1FA2',
+        opacidad: 0.4,
+        activa: true,
+        coordenadas: [
+          { lat: 6.2373, lng: -75.5945 },
+          { lat: 6.2473, lng: -75.5845 },
+          { lat: 6.2373, lng: -75.5745 },
+          { lat: 6.2273, lng: -75.5845 },
+          { lat: 6.2373, lng: -75.5945 }
+        ],
+        restricciones: {
+          horarioMinimo: '07:30',
+          horarioMaximo: '18:30',
+          costoAdicional: 2000
+        },
+        estadisticas: {
+          pedidosEntregados: 134,
+          tiempoPromedioEntrega: 32,
+          porcentajeExitoso: 94
+        }
+      },
+      {
+        id: 'zona-premium',
+        nombre: 'Zona Rosa Premium',
+        descripcion: 'Zona Rosa del Poblado, Llanogrande',
+        color: '#E91E63',
+        colorBorde: '#C2185B',
+        opacidad: 0.3,
+        activa: true,
+        coordenadas: [
+          { lat: 6.2073, lng: -75.5595 },
+          { lat: 6.2123, lng: -75.5545 },
+          { lat: 6.2073, lng: -75.5495 },
+          { lat: 6.2023, lng: -75.5545 },
+          { lat: 6.2073, lng: -75.5595 }
+        ],
+        restricciones: {
+          horarioMinimo: '10:00',
+          horarioMaximo: '21:00',
+          costoAdicional: 0
+        },
+        estadisticas: {
+          pedidosEntregados: 78,
+          tiempoPromedioEntrega: 20,
+          porcentajeExitoso: 98
+        }
+      }
+    ];
+  }
+
+  /**
+   * Abrir modal de gestión de zonas de entrega
+   */
+  openZonaGestionModal(): void {
+    const modalRef = this.modalService.open(ZonaGestionModalComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      keyboard: false,
+      windowClass: 'zona-management-modal',
+      centered: false
+    });
+
+    // Pasar las zonas actuales al modal
+    modalRef.componentInstance.zonasExistentes = this.configuracionMapa.zonas || this.obtenerConfiguracionZonas().zonas;
+
+    // Manejar el resultado del modal
+    modalRef.result.then((result) => {
+      if (result && result.zonas) {
+        console.log('🗺️ Zonas actualizadas desde el modal:', result.zonas.length);
+
+        // Actualizar la configuración del mapa con las nuevas zonas
+        this.configuracionMapa.zonas = result.zonas;
+
+        // Actualizar la configuración de zonas del mapa
+        const nuevaConfiguracion = {
+          zonas: result.zonas,
+          mostrarZonas: true,
+          tipoVisualizacion: 'ambos' as 'relleno' | 'borde' | 'ambos'
+        };
+
+        // Si hay un componente de mapa visible, actualizarlo
+        if (this.mapaComponent) {
+          this.mapaComponent.configuracionZonas = nuevaConfiguracion;
+          this.mapaComponent.actualizarZonas();
+        }
+
+        // Mostrar mensaje de éxito
+        this.toastr.success(
+          `Se han actualizado ${result.zonas.length} zonas de entrega`,
+          'Zonas Actualizadas',
+          { timeOut: 3000 }
+        );
+
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+      }
+    }).catch((dismissed) => {
+      if (dismissed !== 'backdrop-click' && dismissed !== 'esc') {
+        console.log('🗺️ Modal de zonas cancelado');
+      }
+    });
   }
 }
 
