@@ -141,203 +141,202 @@
       </div>
       <div class="step-info">
         <h6 class="step-title">Configuración de credenciales</h6>
-        <p class="step-description">Ingresa las credenciales necesarias para conectar con {{ getSelectedIntegrationName() }}</p>
-      </div>
-      <button *ngIf="!isEdit" 
-              class="btn btn-sm btn-outline-primary step-back-btn" 
-              (click)="goToPreviousStep()">
-        <i class="fa fa-chevron-left"></i> Cambiar servicio
-      </button>
-    </div>
-
-    <div class="integration-config-form">
-      <div class="alert alert-info d-flex" role="alert">
-        <div class="me-3">
-          <i class="fa fa-info-circle fa-lg"></i>
-        </div>
-        <div class="flex-grow-1">
-          <h6 class="alert-heading mb-2">¿Dónde encontrar las credenciales?</h6>
-          <p class="mb-2">Las credenciales de API son necesarias para conectar con {{ getSelectedIntegrationName() }}. 
-             Puedes encontrarlas en tu panel de administración.</p>
-          <a [href]="getDocumentationUrl(selectedIntegrationType)" 
-             target="_blank" 
-             class="btn btn-sm btn-outline-primary"
-             *ngIf="getDocumentationUrl(selectedIntegrationType)">
-            <i class="fa fa-external-link me-1"></i>Ver documentación
-          </a>
-        </div>
-      </div>
-    
-    <form [formGroup]="integrationForm" (ngSubmit)="saveIntegration()">
-      <!-- Configuración General -->
-      <div class="card mb-4">
-        <div class="card-header bg-light">
-          <h6 class="card-title mb-0">
-            <i class="fa fa-cog me-2"></i>Configuración General
-          </h6>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <!-- Nombre -->
-            <div class="col-md-6 mb-3">
-              <label for="integration-name" class="form-label fw-semibold">
-                <i class="fa fa-tag me-2 text-primary"></i>Nombre de la integración <span class="text-danger">*</span>
-              </label>
-              <input type="text" 
-                     class="form-control" 
-                     id="integration-name" 
-                     placeholder="Nombre descriptivo para identificar esta integración" 
-                     formControlName="name"
-                     [class.is-invalid]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
-              <div class="invalid-feedback" *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
-                El nombre es obligatorio
+                  <p class="step-description">Ingresa las credenciales necesarias para conectar con {{ selectedIntegrationName }}</p>
               </div>
+              <button *ngIf="!isEdit" 
+                      class="btn btn-sm btn-outline-primary step-back-btn" 
+                      (click)="goToPreviousStep()">
+                <i class="fa fa-chevron-left"></i> Cambiar servicio
+              </button>
             </div>
-            
-            <!-- Estado -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">
-                <i class="fa fa-power-off me-2 text-primary"></i>Estado:
-              </label>
-              <div class="form-check form-switch">
-                <input class="form-check-input" 
-                       type="checkbox" 
-                       id="integration-enabled" 
-                       formControlName="enabled">
-                <label class="form-check-label" for="integration-enabled">
-                  <span class="fw-semibold">{{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}</span>
-                </label>
-                <div class="form-text">
-                  Habilitar o deshabilitar esta integración
+        
+            <div class="integration-config-form">
+              <div class="alert alert-info d-flex" role="alert">
+                <div class="me-3">
+                  <i class="fa fa-info-circle fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="alert-heading mb-2">¿Dónde encontrar las credenciales?</h6>
+                  <p class="mb-2">Las credenciales de API son necesarias para conectar con {{ selectedIntegrationName }}. 
+                     Puedes encontrarlas en tu panel de administración.</p>
+                  <a [href]="documentationUrl" 
+                     target="_blank" 
+                     class="btn btn-sm btn-outline-primary"
+                     *ngIf="documentationUrl">
+                    <i class="fa fa-external-link me-1"></i>Ver documentación
+                  </a>
                 </div>
               </div>
-            </div>
             
-            <!-- Ambiente -->
-            <div class="col-12 mb-3">
-              <label for="integration-environment" class="form-label fw-semibold">
-                <i class="fa fa-server me-2 text-primary"></i>Ambiente
-              </label>
-              <select class="form-select" id="integration-environment" formControlName="environment">
-                <option value="production">Producción</option>
-                <option value="development">Desarrollo</option>
-                <option value="sandbox">Sandbox</option>
-              </select>
-              <div class="form-text">
-                El ambiente determina si se realizarán transacciones reales o de prueba
+            <form [formGroup]="integrationForm" (ngSubmit)="saveIntegration()">
+              <!-- Configuración General -->
+              <div class="card mb-4">
+                <div class="card-header bg-light">
+                  <h6 class="card-title mb-0">
+                    <i class="fa fa-cog me-2"></i>Configuración General
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <!-- Nombre -->
+                    <div class="col-md-6 mb-3">
+                      <label for="integration-name" class="form-label fw-semibold">
+                        <i class="fa fa-tag me-2 text-primary"></i>Nombre de la integración <span class="text-danger">*</span>
+                      </label>
+                      <input type="text" 
+                             class="form-control" 
+                             id="integration-name" 
+                             placeholder="Nombre descriptivo para identificar esta integración" 
+                             formControlName="name"
+                             [class.is-invalid]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
+                      <div class="invalid-feedback" *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
+                        El nombre es obligatorio
+                      </div>
+                    </div>
+                    
+                    <!-- Estado -->
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-semibold">
+                        <i class="fa fa-power-off me-2 text-primary"></i>Estado:
+                      </label>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               id="integration-enabled" 
+                               formControlName="enabled">
+                        <label class="form-check-label" for="integration-enabled">
+                          <span class="fw-semibold">{{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}</span>
+                        </label>
+                        <div class="form-text">
+                          Habilitar o deshabilitar esta integración
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Ambiente -->
+                    <div class="col-12 mb-3">
+                      <label for="integration-environment" class="form-label fw-semibold">
+                        <i class="fa fa-server me-2 text-primary"></i>Ambiente
+                      </label>
+                      <select class="form-select" id="integration-environment" formControlName="environment">
+                        <option value="production">Producción</option>
+                        <option value="development">Desarrollo</option>
+                        <option value="sandbox">Sandbox</option>
+                      </select>
+                      <div class="form-text">
+                        El ambiente determina si se realizarán transacciones reales o de prueba
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Credenciales de Acceso -->
-      <div class="card mb-4">
-        <div class="card-header bg-light">
-          <h6 class="card-title mb-0">
-            <i class="fa fa-shield-alt me-2"></i>Credenciales de Acceso
-          </h6>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <!-- Client ID -->
-            <div class="col-md-6 mb-3">
-              <label for="integration-clientid" class="form-label fw-semibold">
-                <i class="fa fa-user me-2 text-primary"></i>Client ID: <span class="text-danger">*</span>
-              </label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-user"></i></span>
-                <input type="text" 
-                       class="form-control" 
-                       id="integration-clientid" 
-                       placeholder="Ingresa tu Client ID" 
-                       formControlName="clientId"
-                       [class.is-invalid]="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
-              </div>
-              <div class="invalid-feedback" *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
-                El Client ID es obligatorio
-              </div>
-            </div>
-            
-            <!-- Public Key -->
-            <div class="col-md-6 mb-3">
-              <label for="integration-publickey" class="form-label fw-semibold">
-                <i class="fa fa-key me-2 text-primary"></i>Public Key: <span class="text-danger">*</span>
-              </label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-key"></i></span>
-                <input [type]="showApiKey ? 'text' : 'password'" 
-                       class="form-control" 
-                       id="integration-publickey" 
-                       placeholder="Ingresa tu Public Key" 
-                       formControlName="apiKey"
-                       [class.is-invalid]="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched">
-                <button class="btn btn-outline-secondary" type="button" (click)="toggleApiKeyVisibility()">
-                  <i class="fa" [ngClass]="showApiKey ? 'fa-eye-slash' : 'fa-eye'"></i>
-                </button>
-              </div>
-              <div class="invalid-feedback" *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched">
-                La Public Key es obligatoria
-              </div>
-            </div>
-            
-            <!-- Private Key -->
-            <div class="col-md-6 mb-3">
-              <label for="integration-privatekey" class="form-label fw-semibold">
-                <i class="fa fa-lock me-2 text-primary"></i>Private Key: <span class="text-danger">*</span>
-              </label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-lock"></i></span>
-                <input [type]="showApiSecret ? 'text' : 'password'" 
-                       class="form-control" 
-                       id="integration-privatekey" 
-                       placeholder="Ingresa tu Private Key" 
-                       formControlName="apiSecret"
-                       [class.is-invalid]="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched">
-                <button class="btn btn-outline-secondary" type="button" (click)="toggleApiSecretVisibility()">
-                  <i class="fa" [ngClass]="showApiSecret ? 'fa-eye-slash' : 'fa-eye'"></i>
-                </button>
-              </div>
-              <div class="invalid-feedback" *ngIf="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched">
-                La Private Key es obligatoria
-              </div>
-            </div>
-            
-            <!-- P_Key adicional -->
-            <div class="col-md-6 mb-3">
-              <label for="integration-pkey" class="form-label fw-semibold">
-                <i class="fa fa-key me-2 text-primary"></i>P_Key:
-              </label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-key"></i></span>
-                <input type="text" 
-                       class="form-control" 
-                       id="integration-pkey" 
-                       placeholder="Clave adicional (opcional)" 
-                       formControlName="pKey">
-              </div>
-              <div class="form-text">Clave adicional (opcional)</div>
-            </div>
-            
-            <!-- URL -->
-            <div class="col-12 mb-3" *ngIf="needsUrl()">
-              <label for="integration-url" class="form-label fw-semibold">
-                <i class="fa fa-globe me-2 text-primary"></i>URL de la API
-              </label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-globe"></i></span>
-                <input type="url" 
-                       class="form-control" 
-                       id="integration-url" 
-                       placeholder="https://api.example.com/v2/" 
-                       formControlName="apiUrl">
-              </div>
-              <div class="form-text">La URL base de la API del servicio</div>
-            </div>
-            
-            <!-- Campos adicionales específicos -->
-            <div *ngFor="let field of getAdditionalFields()" class="col-md-6 mb-3">
-              <label [for]="'integration-' + field.id" class="form-label fw-semibold">
+              
+              <!-- Credenciales de Acceso -->
+              <div class="card mb-4">
+                <div class="card-header bg-light">
+                  <h6 class="card-title mb-0">
+                    <i class="fa fa-shield-alt me-2"></i>Credenciales de Acceso
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <!-- Client ID -->
+                    <div class="col-md-6 mb-3">
+                      <label for="integration-clientid" class="form-label fw-semibold">
+                        <i class="fa fa-user me-2 text-primary"></i>Client ID: <span class="text-danger">*</span>
+                      </label>
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fa fa-user"></i></span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="integration-clientid" 
+                               placeholder="Ingresa tu Client ID" 
+                               formControlName="clientId"
+                               [class.is-invalid]="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
+                      </div>
+                      <div class="invalid-feedback" *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
+                        El Client ID es obligatorio
+                      </div>
+                    </div>
+                    
+                    <!-- Public Key -->
+                    <div class="col-md-6 mb-3">
+                      <label for="integration-publickey" class="form-label fw-semibold">
+                        <i class="fa fa-key me-2 text-primary"></i>Public Key: <span class="text-danger">*</span>
+                      </label>
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fa fa-key"></i></span>
+                        <input [type]="showApiKey ? 'text' : 'password'" 
+                               class="form-control" 
+                               id="integration-publickey" 
+                               placeholder="Ingresa tu Public Key" 
+                               formControlName="apiKey"
+                               [class.is-invalid]="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched">
+                        <button class="btn btn-outline-secondary" type="button" (click)="toggleApiKeyVisibility()">
+                          <i class="fa" [ngClass]="showApiKey ? 'fa-eye-slash' : 'fa-eye'"></i>
+                        </button>
+                      </div>
+                      <div class="invalid-feedback" *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched">
+                        La Public Key es obligatoria
+                      </div>
+                    </div>
+                    
+                    <!-- Private Key -->
+                    <div class="col-md-6 mb-3">
+                      <label for="integration-privatekey" class="form-label fw-semibold">
+                        <i class="fa fa-lock me-2 text-primary"></i>Private Key: <span class="text-danger">*</span>
+                      </label>
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fa fa-lock"></i></span>
+                        <input [type]="showApiSecret ? 'text' : 'password'" 
+                               class="form-control" 
+                               id="integration-privatekey" 
+                               placeholder="Ingresa tu Private Key" 
+                               formControlName="apiSecret"
+                               [class.is-invalid]="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched">
+                        <button class="btn btn-outline-secondary" type="button" (click)="toggleApiSecretVisibility()">
+                          <i class="fa" [ngClass]="showApiSecret ? 'fa-eye-slash' : 'fa-eye'"></i>
+                        </button>
+                      </div>
+                      <div class="invalid-feedback" *ngIf="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched">
+                        La Private Key es obligatoria
+                      </div>
+                    </div>
+                    
+                    <!-- P_Key adicional -->
+                    <div class="col-md-6 mb-3">
+                      <label for="integration-pkey" class="form-label fw-semibold">
+                        <i class="fa fa-key me-2 text-primary"></i>P_Key:
+                      </label>
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fa fa-key"></i></span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="integration-pkey" 
+                               placeholder="Clave adicional (opcional)" 
+                               formControlName="pKey">
+                      </div>
+                      <div class="form-text">Clave adicional (opcional)</div>
+                    </div>
+                    
+                    <!-- URL -->
+                    <div class="col-12 mb-3" *ngIf="needsUrl()">
+                      <label for="integration-url" class="form-label fw-semibold">
+                        <i class="fa fa-globe me-2 text-primary"></i>URL de la API
+                      </label>
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fa fa-globe"></i></span>
+                        <input type="url" 
+                               class="form-control" 
+                               id="integration-url" 
+                               placeholder="https://api.example.com/v2/" 
+                               formControlName="apiUrl">
+                      </div>
+                      <div class="form-text">La URL base de la API del servicio</div>
+                    </div>
+                    
+                    <!-- Campos adicionales específicos -->
+                    <div *ngFor="let field of additionalFields" class="col-md-6 mb-3">              <label [for]="'integration-' + field.id" class="form-label fw-semibold">
                 <i class="fa me-2 text-primary" [ngClass]="field.icon"></i>{{ field.label }}
                 <span class="text-danger" *ngIf="field.required">*</span>
               </label>
@@ -355,53 +354,47 @@
         </div>
       </div>
       
-              <!-- Indicador de fortaleza de credenciales -->
-        <app-credential-strength-indicator 
-          [validationResult]="credentialStrength"
-          [showRecommendations]="showAdvancedValidation"
-          *ngIf="credentialStrength">
-        </app-credential-strength-indicator>
-        
-        <!-- Loading para análisis de credenciales -->
-        <div *ngIf="isAnalyzingCredentials" class="alert alert-light border-0" role="alert">
-          <div class="d-flex align-items-center">
-            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
-              <span class="visually-hidden">Analizando...</span>
+      <!-- Panel de Herramientas de Validación -->
+      <div class="validation-tools-panel card mt-4">
+        <div class="card-body">
+          <!-- Controles manuales -->
+          <div class="manual-controls">
+            <h6 class="control-title">Herramientas de Verificación</h6>
+            <div class="btn-group">
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="manualValidateCredentials()" [disabled]="integrationForm.invalid">
+                <i class="fa fa-check-circle me-1"></i> Validar
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-info" (click)="manualAnalyzeCredentialStrength()" [disabled]="integrationForm.invalid">
+                <i class="fa fa-shield-alt me-1"></i> Analizar
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="manualLoadConfigSchema()">
+                <i class="fa fa-cog me-1"></i> Esquema
+              </button>
             </div>
-            <span>Analizando fortaleza de credenciales...</span>
           </div>
-        </div>
-        
-        <!-- Toggle para validación avanzada -->
-        <div class="mt-3">
-          <a href="javascript:void(0)" (click)="toggleAdvancedValidation()" class="text-info">
-            <i class="fa" [ngClass]="showAdvancedValidation ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-            {{ showAdvancedValidation ? 'Ocultar' : 'Mostrar' }} análisis de seguridad detallado
-          </a>
-        </div>
 
-        <!-- Botones de control manual -->
-        <div class="mt-3">
-          <div class="d-flex flex-wrap gap-2">
-            <button type="button" 
-                    class="btn btn-outline-info btn-sm" 
-                    (click)="manualValidateCredentials()"
-                    [disabled]="integrationForm.invalid">
-              <i class="fa fa-check-circle me-1"></i>Validar Credenciales
-            </button>
-            <button type="button" 
-                    class="btn btn-outline-warning btn-sm" 
-                    (click)="manualAnalyzeCredentialStrength()"
-                    [disabled]="integrationForm.invalid">
-              <i class="fa fa-shield-alt me-1"></i>Analizar Seguridad
-            </button>
-            <button type="button" 
-                    class="btn btn-outline-secondary btn-sm" 
-                    (click)="manualLoadConfigSchema()">
-              <i class="fa fa-cog me-1"></i>Cargar Esquema
-            </button>
+          <!-- Indicador de fortaleza -->
+          <div class="strength-indicator-wrapper">
+            <div *ngIf="isAnalyzingCredentials" class="analysis-loader">
+              <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+              <span>Analizando...</span>
+            </div>
+            
+            <app-credential-strength-indicator 
+              *ngIf="credentialStrength && !isAnalyzingCredentials"
+              [validationResult]="credentialStrength"
+              [showRecommendations]="showAdvancedValidation">
+            </app-credential-strength-indicator>
+
+            <div *ngIf="credentialStrength" class="advanced-toggle">
+              <a href="javascript:void(0)" (click)="toggleAdvancedValidation()">
+                <i class="fa" [ngClass]="showAdvancedValidation ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                {{ showAdvancedValidation ? 'Ocultar' : 'Mostrar' }} detalles
+              </a>
+            </div>
           </div>
         </div>
+      </div>
 
       <!-- Opciones Avanzadas -->
       <div class="card mb-4" *ngIf="showAdvancedOptions || !showAdvancedOptions">

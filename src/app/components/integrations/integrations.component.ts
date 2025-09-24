@@ -17,23 +17,23 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   @Input() isModalMode = true;
   @Input() preselectedCategory: IntegrationCategory | null = null; // Nueva propiedad
 
-  // Acceder a las constantes de categoría
+  // Propiedades para optimización de template
+  additionalFields: any[] = [];
+  selectedIntegrationName: string = '';
+  documentationUrl: string | null = '';
+
   categories = Object.values(IntegrationCategory);
   categoryLabels = CATEGORY_LABELS;
   
-  // Integraciones disponibles agrupadas por categoría
   availableIntegrations: { [category: string]: Array<{id: string, name: string, description: string, logo: string}> } = {};
   filteredIntegrations: { [category: string]: Array<{id: string, name: string, description: string, logo: string}> } = {};
   
-  // Categoría actualmente seleccionada
   selectedCategory: IntegrationCategory = IntegrationCategory.ECOMMERCE;
   
-  // Control de búsqueda y navegación
   searchTerm: string = '';
   isPlatformSelectorCollapsed: boolean = true;
   showOnlyForm: boolean = false;
   
-  // Missing properties for UI state
   isConfigurationMode: boolean = false;
   isStoreCollapsed: boolean = false;
   isCategoriesCollapsed: boolean = false;
@@ -72,32 +72,26 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   
   statusMessage: { type: 'success' | 'error', message: string } | null = null;
 
-  // Nuevas propiedades para validaciones mejoradas
   credentialStrength: ValidationResult | null = null;
   isAnalyzingCredentials = false;
   showAdvancedValidation = false;
 
-  // Validación en tiempo real V2
   validationResult: ValidationResponse | null = null;
   validationInProgress = false;
   currentSchema: ConfigSchema | null = null;
   
-  // Health check status
   healthStatus: { status: string; services: any; timestamp: string } | null = null;
   lastHealthCheck: Date | null = null;
   healthCheckInterval: any;
   
-  // Formularios dinámicos y preview
   isDynamicForm = false;
   configPreview: any = null;
   showPreview = false;
   fieldSuggestions: { [fieldName: string]: string[] } = {};
   fieldHelp: { [fieldName: string]: any } = {};
   
-  // Destroy subject para cleanup
   private destroy$ = new Subject<void>();
   
-  // Subject para validación debounced
   private validationSubject = new Subject<{ provider: string; config: any }>();
 
   constructor(
@@ -111,15 +105,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Cargar integraciones disponibles
     this.availableIntegrations = this.integrationsService.getAvailableIntegrations();
     this.initializeFilteredIntegrations();
     
-    // Si hay una categoría preseleccionada
     if (this.preselectedCategory) {
       this.selectedCategory = this.preselectedCategory;
       if (this.availableIntegrations[this.preselectedCategory]?.length > 0) {
-        // Seleccionar la primera integración de la categoría
         this.onSelectIntegrationType(this.availableIntegrations[this.preselectedCategory][0].id);
       }
     }
@@ -133,11 +124,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       this.loadIntegrations();
     }
 
-    // Configurar validación en tiempo real y health checks
     this.setupFormValidation();
     this.setupRealTimeValidation();
     this.startHealthChecks();
     this.loadConfigSchema();
+    this.updateTemplateProperties(); // Carga inicial
   }
 
   ngOnDestroy(): void {
@@ -151,26 +142,19 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   private setupFormValidation(): void {
     this.integrationForm.valueChanges.pipe(
+      debounceTime(300), // <-- OPTIMIZACIÓN
       takeUntil(this.destroy$)
     ).subscribe(formValue => {
-      // DESHABILITADO: Análisis automático de credenciales
-      // if (this.shouldAnalyzeCredentials(formValue)) {
-      //   this.analyzeCredentialStrength(formValue);
-      // }
-      
-      // DESHABILITADO: Validación V2 en tiempo real automática
-      // if (this.shouldTriggerValidation(formValue)) {
-      //   this.validationSubject.next({
-      //     provider: this.selectedIntegrationType,
-      //     config: this.buildCredentials(formValue)
-      //   });
-      // }
-      
-      // Actualizar sugerencias dinámicamente
       if (this.isDynamicForm && this.currentSchema) {
         this.updateDynamicSuggestions(formValue);
       }
     });
+  }
+
+  private updateTemplateProperties(): void {
+    this.selectedIntegrationName = this.getSelectedIntegrationName();
+    this.documentationUrl = this.getDocumentationUrl(this.selectedIntegrationType);
+    this.additionalFields = this.getAdditionalFields();
   }
 
   private setupRealTimeValidation(): void {

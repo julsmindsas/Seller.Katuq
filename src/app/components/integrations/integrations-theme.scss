@@ -1,6 +1,6 @@
 /*
 =================================================================================
-  MODERN INTEGRATION THEME V2 - Refined for a more modern, less "Windows-like" feel
+  MODERN INTEGRATION THEME V3 - Blue Palette Refresh
 =================================================================================
 */
 
@@ -11,19 +11,19 @@
   --intg-font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   // ========================================
-  // Color System - Professional Palette
+  // Color System - Professional Blue Palette
   // ========================================
   
-  // Primary Brand Colors
-  --intg-primary: #6366f1;
-  --intg-primary-50: #eef2ff;
-  --intg-primary-100: #e0e7ff;
-  --intg-primary-200: #c7d2fe;
-  --intg-primary-300: #a5b4fc;
-  --intg-primary-400: #818cf8;
-  --intg-primary-500: #6366f1;
-  --intg-primary-600: #4f46e5;
-  --intg-primary-700: #4338ca;
+  // Primary Brand Colors (Blue)
+  --intg-primary: #3b82f6;
+  --intg-primary-50: #eff6ff;
+  --intg-primary-100: #dbeafe;
+  --intg-primary-200: #bfdbfe;
+  --intg-primary-300: #93c5fd;
+  --intg-primary-400: #60a5fa;
+  --intg-primary-500: #3b82f6;
+  --intg-primary-600: #2563eb;
+  --intg-primary-700: #1d4ed8;
   
   // Semantic Colors
   --intg-success: #10b981;
@@ -50,10 +50,10 @@
   --intg-error-600: #dc2626;
   --intg-error-700: #b91c1c;
 
-  --intg-info: #3b82f6;
+  --intg-info: #3b82f6; // Using the new primary blue for info
   --intg-info-50: #eff6ff;
   --intg-info-500: #3b82f6;
-  --intg-info-800: #1e40af;
+  --intg-info-800: #1d4ed8;
 
   // Neutral Grays
   --intg-gray-25: #fcfcfd;
@@ -80,8 +80,8 @@
   --intg-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
   --intg-shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04);
 
-  // Focus Rings
-  --intg-ring-primary: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  // Focus Rings (Updated to blue)
+  --intg-ring-primary: 0 0 0 3px rgba(59, 130, 246, 0.25);
 
   // ========================================
   // Border Radius System - Softer
