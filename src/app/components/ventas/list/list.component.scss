@@ -3102,3 +3102,494 @@ $filter-border-color: #e0e0e0;
   75% { transform: rotate(15deg); }
   100% { transform: rotate(0deg); }
 }
+
+// ==========================================
+// ESTILOS PARA LA VISTA COMPACTA DE PRODUCTOS EXPANDIDOS
+// ==========================================
+
+.compact-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.compact-item-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+  }
+}
+
+.item-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.item-thumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0; // Para permitir que el texto se corte
+}
+
+.item-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9em;
+  color: #333;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  
+  // Truncar texto si es muy largo
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.item-subtitle {
+  display: block;
+  font-size: 0.8em;
+  color: #6c757d;
+  line-height: 1.2;
+  
+  // Truncar texto si es muy largo
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-pricing {
+  border-top: 1px solid #e9ecef;
+  padding-top: 8px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.price-label {
+  font-size: 0.85em;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.price-value {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.price-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  
+  small {
+    font-size: 0.75em;
+    color: #6c757d;
+    line-height: 1.2;
+  }
+}
+
+// ==========================================
+// ESTILOS PARA LA CARD DE EXPANSIÓN DE PRODUCTOS
+// ==========================================
+
+.products-expansion-card {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #ffffff;
+  max-width: 600px;
+  width: fit-content;
+  margin: 0;
+  
+  .card-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.4rem 0.6rem;
+    color: #495057;
+    
+    .card-title {
+      font-weight: 500;
+      font-size: 0.75rem;
+      color: #6c757d;
+      
+      i {
+        font-size: 0.9em;
+        color: #007bff;
+        margin-right: 0.3rem;
+      }
+    }
+    
+    .badge {
+      background-color: #e9ecef !important;
+      color: #495057;
+      font-weight: 500;
+      font-size: 0.7em;
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      min-width: 18px;
+      text-align: center;
+    }
+  }
+  
+  .card-body {
+    background: #ffffff;
+    
+    // Estilos para la lista vertical de productos
+    .products-vertical-list {
+      width: fit-content;
+      min-width: 400px;
+      max-width: 550px;
+    }
+    
+    .product-item-row {
+      border-bottom: 1px solid #eaecf4;
+      margin-bottom: 0.4rem;
+      padding-bottom: 0.4rem;
+      
+      &:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+    }
+    
+    .product-main-info {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      width: 100%;
+      min-width: 0;
+    }
+    
+    .product-image {
+      flex-shrink: 0;
+      
+      .product-thumb {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        object-fit: cover;
+      }
+    }
+    
+    .product-details {
+      flex: 1;
+      min-width: 0;
+      max-width: 200px; // Limitar el ancho del nombre
+      
+      .product-name {
+        font-size: 0.8em;
+        font-weight: 600;
+        color: #333;
+        line-height: 1.2;
+        margin-bottom: 0.1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 180px;
+      }
+      
+      .product-meta {
+        .quantity-info {
+          font-size: 0.7em;
+          color: #6c757d;
+          display: inline-flex;
+          align-items: center;
+          white-space: nowrap;
+          
+          i {
+            color: #007bff;
+            margin-right: 0.15rem;
+            font-size: 0.9em;
+          }
+        }
+      }
+    }
+    
+    // Contenedor para todos los botones agrupados
+    .product-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.15rem;
+      flex-shrink: 0;
+    }
+    
+    .product-actions-vertical {
+      display: flex;
+      gap: 0.15rem;
+      
+      .btn {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 3px;
+        font-size: 0.7em;
+        
+        i {
+          font-size: 0.75em;
+        }
+      }
+    }
+    
+    .expand-config-btn {
+      .btn {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 2px;
+        border: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        
+        &.active {
+          background-color: #007bff;
+          border-color: #007bff;
+          color: white;
+        }
+        
+        i {
+          font-size: 0.75em;
+          color: #6c757d;
+        }
+        
+        &.active i {
+          color: white;
+        }
+      }
+    }
+    
+    // Sección de configuración expandible
+    .product-config-section {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background: #f8f9fa;
+      border-radius: 3px;
+      border-left: 2px solid #007bff;
+    }
+    
+    .config-subsection {
+      margin-bottom: 0.75rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .config-title {
+        font-size: 0.8em;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.25rem;
+      }
+    }
+    
+    .config-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .config-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem;
+      background: white;
+      border-radius: 2px;
+      border: 1px solid #e9ecef;
+      
+      .config-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 2px;
+        border: 1px solid #dee2e6;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      
+      .config-info {
+        flex: 1;
+        min-width: 0;
+        
+        .config-name {
+          display: block;
+          font-size: 0.75em;
+          font-weight: 400;
+          color: #495057;
+          line-height: 1.2;
+          margin-bottom: 0.1rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        .config-price {
+          font-size: 0.7em;
+          color: #6c757d;
+          font-weight: 500;
+        }
+      }
+    }
+    
+    .no-products-message {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      color: #6c757d;
+      
+      i {
+        font-size: 1.5em;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+    }
+  }
+}
+
+// Responsive adjustments for the card
+@media (max-width: 768px) {
+  .products-expansion-card {
+    .card-header {
+      padding: 0.4rem 0.6rem;
+      
+      .d-flex {
+        flex-direction: row;
+        align-items: center !important;
+        gap: 0.3rem;
+      }
+      
+      .card-title {
+        font-size: 0.75rem;
+      }
+      
+      .badge {
+        font-size: 0.65em;
+        padding: 0.1em 0.4em;
+      }
+    }
+    
+    .card-body {
+      padding: 0.5rem;
+      
+      .products-vertical-list {
+        min-width: 300px;
+        max-width: 400px;
+      }
+      
+      .product-main-info {
+        gap: 0.3rem;
+      }
+      
+      .product-image .product-thumb {
+        width: 28px;
+        height: 28px;
+      }
+      
+      .product-details {
+        max-width: 150px;
+        
+        .product-name {
+          font-size: 0.75em;
+          max-width: 130px;
+        }
+        
+        .product-meta .quantity-info {
+          font-size: 0.65em;
+          
+          i {
+            margin-right: 0.1rem;
+            font-size: 0.8em;
+          }
+        }
+      }
+      
+      .product-controls {
+        gap: 0.1rem;
+      }
+      
+      .product-actions-vertical {
+        gap: 0.1rem;
+        
+        .btn {
+          width: 18px;
+          height: 18px;
+          
+          i {
+            font-size: 0.6em;
+          }
+        }
+      }
+      
+      .expand-config-btn {
+        .btn {
+          width: 18px;
+          height: 18px;
+          
+          i {
+            font-size: 0.6em;
+          }
+        }
+      }
+      
+      .product-config-section {
+        padding: 0.5rem;
+        
+        .config-title {
+          font-size: 0.75em;
+        }
+        
+        .config-item {
+          padding: 0.4rem;
+          
+          .config-thumb {
+            width: 20px;
+            height: 20px;
+          }
+          
+          .config-info {
+            .config-name {
+              font-size: 0.75em;
+            }
+            
+            .config-price {
+              font-size: 0.7em;
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -721,144 +721,123 @@
                                         <tr style="font-size: 0.85em;">
                                             <td [attr.colspan]="getVisibleColumnsCount()">
                                                 <div class="p-2">
-                                                    <p-table [value]="pedido.carrito" dataKey="pedido.carrito"
-                                                        styleClass="p-datatable-sm expanded-table">
-                                                        <ng-template pTemplate="header">
-                                        <tr>
-                                            <th style="width: 2rem;"></th>
-                                            <th>{{'Imagen' | translate}}</th>
-                                            <th>{{'Producto' | translate}}</th>
-                                            <th>{{'Cantidad' | translate}}</th>
-                                            <th *ngIf="!isFromProduction">{{'Configuración' | translate}}</th>
-                                        </tr>
-                                    </ng-template>
-
-                                    <ng-template pTemplate="body" let-item let-expanded="expanded">
-                                        <tr>
-                                            <td>
-                                                <button type="button" pButton pRipple [pRowToggler]="item"
-                                                    class="p-button-text p-button-rounded p-button-plain"
-                                                    [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
-                                            </td>
-                                            <td>
-                                                <img height="40" width="40"
-                                                    [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
-                                                    [alt]="item.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen"
-                                                    style="border:1px solid #ccc;" />
-                                            </td>
-                                            <td>{{ item.producto?.crearProducto?.titulo }}</td>
-                                            <td>{{ item.cantidad }}</td>
-                                            <td *ngIf="!isFromProduction">
-                                                <div class="product-actions">
-                                                    <button type="button" pButton pRipple
-                                                        [disabled]="!canModifyProducts(pedido)"
-                                                        [title]="canModifyProducts(pedido) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
-                                                        (click)="confProductToCart(confProductToCartModal,item,pedido)"
-                                                        class="p-button-text p-button-rounded p-button-plain"
-                                                        [ngClass]="{'disabled-btn': !canModifyProducts(pedido)}">
-                                                        <i class="fa fa-cogs"></i>
-                                                        <i *ngIf="!canModifyProducts(pedido)" class="fa fa-lock"
-                                                            style="font-size: 0.6em; position: absolute; top: 2px; right: 2px; color: red;"></i>
-                                                    </button>
-                                                    <button type="button" pButton pRipple
-                                                        [disabled]="!canDeleteProducts(pedido) && !isGhostProduct(item)"
-                                                        [title]="getDeleteButtonTitle(item, pedido)"
-                                                        (click)="eliminarProductoDelPedido(item, pedido)"
-                                                        class="p-button-text p-button-rounded p-button-danger"
-                                                        [ngClass]="{'disabled-btn': !canDeleteProducts(pedido) && !isGhostProduct(item)}">
-                                                        <i class="fa fa-trash"></i>
-                                                    </button>
+                                                    <!-- Card contenedora para la tabla de productos -->
+                                                    <div class="card products-expansion-card">
+                                                        <div class="card-header">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <small class="card-title mb-0">
+                                                                    <i class="fa fa-shopping-cart me-1"></i>
+                                                                    {{ 'Productos' | translate }}
+                                                                </small>
+                                                                <span class="badge bg-primary">
+                                                                    {{ pedido.carrito?.length || 0 }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body p-2">
+                                                            <!-- Lista vertical de productos sin tabla -->
+                                                            <div class="products-vertical-list">
+                                                                <div *ngFor="let item of pedido.carrito; let i = index" 
+                                                                     class="product-item-row">
+                                                                    
+                                                                    <!-- Información principal del producto en una sola fila -->
+                                                                    <div class="product-main-info">
+                                                                        <div class="product-image">
+                                                                            <img [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
+                                                                                 [alt]="item.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen"
+                                                                                 class="product-thumb" />
+                                                                        </div>
+                                                                        
+                                                                        <div class="product-details">
+                                                                            <div class="product-name">{{ item.producto?.crearProducto?.titulo }}</div>
+                                                                            <div class="product-meta">
+                                                                                <span class="quantity-info">
+                                                                                    <i class="fa fa-cubes"></i>
+                                                                                    {{ item.cantidad }}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <!-- Todos los controles agrupados -->
+                                                                        <div class="product-controls">
+                                                                            <!-- Acciones del producto -->
+                                                                            <div class="product-actions-vertical" *ngIf="!isFromProduction">
+                                                                                <button type="button" 
+                                                                                        class="btn btn-outline-primary"
+                                                                                        [disabled]="!canModifyProducts(pedido)"
+                                                                                        [title]="canModifyProducts(pedido) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
+                                                                                        (click)="confProductToCart(confProductToCartModal,item,pedido)">
+                                                                                    <i class="fa fa-cogs"></i>
+                                                                                </button>
+                                                                                <button type="button" 
+                                                                                        class="btn btn-outline-danger"
+                                                                                        [disabled]="!canDeleteProducts(pedido) && !isGhostProduct(item)"
+                                                                                        [title]="getDeleteButtonTitle(item, pedido)"
+                                                                                        (click)="eliminarProductoDelPedido(item, pedido)">
+                                                                                    <i class="fa fa-trash"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                            
+                                                                            <!-- Botón para expandir configuración -->
+                                                                            <div class="expand-config-btn">
+                                                                                <button type="button" 
+                                                                                        class="btn btn-outline-secondary"
+                                                                                        [class.active]="item.configExpanded"
+                                                                                        (click)="item.configExpanded = !item.configExpanded"
+                                                                                        *ngIf="(item?.configuracion?.preferencias?.length > 0) || (item?.configuracion?.adiciones?.length > 0)">
+                                                                                    <i class="fa" [class.fa-chevron-down]="item.configExpanded" [class.fa-chevron-right]="!item.configExpanded"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Configuración expandible -->
+                                                                    <div class="product-config-section" 
+                                                                         *ngIf="item.configExpanded && ((item?.configuracion?.preferencias?.length > 0) || (item?.configuracion?.adiciones?.length > 0))"
+                                                                         [@slideInOut]>
+                                                                        
+                                                                        <!-- Preferencias -->
+                                                                        <div *ngIf="item?.configuracion?.preferencias?.length > 0" class="config-subsection">
+                                                                            <h6 class="config-title">{{ 'Preferencias' | translate }}</h6>
+                                                                            <div class="config-items">
+                                                                                <div *ngFor="let pref of item?.configuracion?.preferencias" class="config-item">
+                                                                                    <img [src]="pref.imagen" class="config-thumb" [alt]="pref.titulo" />
+                                                                                    <div class="config-info">
+                                                                                        <span class="config-name">{{ pref.titulo }}</span>
+                                                                                        <small class="config-price">{{ pref.precioTotalConIva | currency }}</small>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <!-- Adiciones -->
+                                                                        <div *ngIf="item?.configuracion?.adiciones?.length > 0" class="config-subsection">
+                                                                            <h6 class="config-title">{{ 'Adiciones' | translate }}</h6>
+                                                                            <div class="config-items">
+                                                                                <div *ngFor="let addon of item?.configuracion?.adiciones" class="config-item">
+                                                                                    <img [src]="addon.imagen" class="config-thumb" [alt]="addon.titulo" />
+                                                                                    <div class="config-info">
+                                                                                        <span class="config-name">{{ addon.titulo }}</span>
+                                                                                        <small class="config-price">{{ addon.precioTotalConIva | currency }}</small>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <!-- Mensaje si no hay productos -->
+                                                                <div *ngIf="!pedido.carrito || pedido.carrito.length === 0" class="no-products-message">
+                                                                    <i class="fa fa-shopping-cart text-muted"></i>
+                                                                    <span class="text-muted">{{ 'No hay productos en el carrito para este pedido.' | translate }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
                                     </ng-template>
-
-                                    <ng-template pTemplate="rowexpansion" let-configuracion>
-                                        <tr>
-                                            <td colspan="7">
-                                                <div class="p-2">
-                                                    <h5>{{'Preferencias' | translate}}</h5>
-                                                    <p-table [value]="configuracion?.configuracion?.preferencias"
-                                                        dataKey="configuracion.id"
-                                                        styleClass="p-datatable-sm expanded-table">
-                                                        <ng-template pTemplate="header">
-                                        <tr>
-                                            <th>{{'Imagen' | translate}}</th>
-                                            <th>{{'Título' | translate}}</th>
-                                            <th>{{'SubTítulo' | translate}}</th>
-                                            <th>{{'Iva' | translate}}</th>
-                                            <th>{{'Total Iva' | translate}}</th>
-                                            <th>{{'Total sin Iva' | translate}}</th>
-                                            <th>{{'Cantidad' | translate}}</th>
-                                            <th>{{'Total con Iva' | translate}}</th>
-                                        </tr>
-                                    </ng-template>
-                                    <ng-template pTemplate="body" let-itemconf>
-                                        <tr>
-                                            <td>
-                                                <img height="40" width="40" [src]="itemconf.imagen"
-                                                    style="border:1px solid #ccc;" />
-                                            </td>
-                                            <td>{{ itemconf.titulo }}</td>
-                                            <td>{{ itemconf.subtitulo }}</td>
-                                            <td>{{ itemconf.porcentajeIva }}</td>
-                                            <td>{{ itemconf.valorIva | currency }}</td>
-                                            <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
-                                            <td>1</td>
-                                            <td>{{ itemconf.precioTotalConIva | currency }}</td>
-                                        </tr>
-                                    </ng-template>
-                                </p-table>
-
-                                <h5 *ngIf="configuracion?.configuracion?.adiciones.length > 0">{{'Adiciones' |
-                                    translate}}</h5>
-                                <p-table *ngIf="configuracion?.configuracion?.adiciones.length > 0"
-                                    [value]="configuracion?.configuracion?.adiciones" dataKey="configuracion.id"
-                                    styleClass="p-datatable-sm expanded-table">
-                                    <ng-template pTemplate="header">
-                                        <tr>
-                                            <th>{{'Imagen' | translate}}</th>
-                                            <th>{{'Título' | translate}}</th>
-                                            <th>{{'SubTítulo' | translate}}</th>
-                                            <th>{{'Iva' | translate}}</th>
-                                            <th>{{'Total Iva' | translate}}</th>
-                                            <th>{{'Total sin Iva' | translate}}</th>
-                                            <th>{{'Cantidad' | translate}}</th>
-                                            <th>{{'Total con Iva' | translate}}</th>
-                                        </tr>
-                                    </ng-template>
-                                    <ng-template pTemplate="body" let-itemconf>
-                                        <tr>
-                                            <td>
-                                                <img height="40" width="40" [src]="itemconf.imagen"
-                                                    style="border:1px solid #ccc;" />
-                                            </td>
-                                            <td>{{ itemconf.titulo }}</td>
-                                            <td>{{ itemconf.subtitulo }}</td>
-                                            <td>{{ itemconf.porcentajeIva }}</td>
-                                            <td>{{ itemconf.valorIva | currency }}</td>
-                                            <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
-                                            <td>1</td>
-                                            <td>{{ itemconf.precioTotalConIva | currency }}</td>
-                                        </tr>
-                                    </ng-template>
-                                </p-table>
-                            </div>
-                            </td>
-                            </tr>
-                            </ng-template>
-
-                            <ng-template pTemplate="emptymessage">
-                                <tr>
-                                    <td colspan="4">{{'No hay productos en el carrito para este pedido.' | translate}}
-                                    </td>
-                                </tr>
-                            </ng-template>
-                            </p-table>
-                        </div>
-                        </td>
-                        </tr>
-                        </ng-template>
 
                         <!-- MENSAJE SI LA TABLA ESTÁ VACÍA -->
                         <ng-template *ngIf="!isFromProduction" pTemplate="emptymessage">
